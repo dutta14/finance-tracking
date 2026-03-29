@@ -5,7 +5,7 @@ function Navigation({ currentPage, setCurrentPage }) {
     <nav className="navbar">
       <div className="nav-container">
         <div className="nav-logo">
-          💰 Finance Tracker
+          Finance Tracker
         </div>
         <ul className="nav-menu">
           <li className="nav-item">

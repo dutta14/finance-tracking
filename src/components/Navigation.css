@@ -1,7 +1,7 @@
 .navbar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: white;
   padding: 1rem 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e5e5;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -17,9 +17,10 @@
 }
 
 .nav-logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #000;
+  letter-spacing: -0.5px;
 }
 
 .nav-menu {
@@ -37,24 +38,23 @@
 .nav-link {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
+  color: #565758;
+  font-size: 0.95rem;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: all 0.3s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0;
+  transition: color 0.2s ease;
   font-weight: 500;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  color: #000;
 }
 
 .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.3);
-  color: white;
-  border-bottom: 2px solid white;
+  color: #000;
+  border-bottom: 2px solid #000;
+  padding-bottom: calc(0.5rem - 2px);
 }
 
 /* Responsive design for mobile */
@@ -64,7 +64,7 @@
   }
 
   .nav-logo {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   .nav-menu {
@@ -72,7 +72,7 @@
   }
 
   .nav-link {
-    font-size: 1rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.6rem;
   }
 }
