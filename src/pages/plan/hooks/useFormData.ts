@@ -45,9 +45,10 @@ export const useFormData = () => {
         [name]: checked
       }))
     } else {
+      const value = e.currentTarget.value
       setFormData(prev => ({
         ...prev,
-        [name]: e.currentTarget.value
+        [name]: value
       }))
     }
   }

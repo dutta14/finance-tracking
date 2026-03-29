@@ -150,17 +150,16 @@ const PlanForm: FC<PlanFormProps> = ({
           <div className="form-group">
             <label htmlFor="planEndYear">Plan End Year</label>
             <input
-              type="number"
+            type="date"
               id="planEndYear"
               name="planEndYear"
               value={formData.planEndYear}
               onChange={onInputChange}
-              min="2000"
-              step="1"
+
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group checkbox-group">
             <input
               type="checkbox"
               id="resetExpenseMonth"
