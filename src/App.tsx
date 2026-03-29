@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { FC, useState } from 'react'
+import { PageType } from './types'
 import Navigation from './components/Navigation'
 import Home from './pages/Home'
 import Plan from './pages/Plan'
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('home')
+const App: FC = () => {
+  const [currentPage, setCurrentPage] = useState<PageType>('home')
 
-  const renderPage = () => {
+  const renderPage = (): React.ReactNode => {
     switch (currentPage) {
       case 'plan':
         return <Plan />

@@ -1,6 +1,8 @@
+import { FC } from 'react'
+import { NavigationProps } from '../types'
 import './Navigation.css'
 
-function Navigation({ currentPage, setCurrentPage }) {
+const Navigation: FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
   return (
     <nav className="navbar">
       <div className="nav-container">

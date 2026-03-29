@@ -1,6 +1,7 @@
+import { FC } from 'react'
 import './Home.css'
 
-function Home() {
+const Home: FC = () => {
   return (
     <div className="home-page">
       <section className="hero">

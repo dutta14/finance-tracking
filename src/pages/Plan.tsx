@@ -1,23 +1,24 @@
-import { useState } from 'react'
+import { FC, useState, ChangeEvent, FormEvent } from 'react'
+import { FinancialPlan } from '../types'
 import './Plan.css'
 
-function Plan() {
-  const [formData, setFormData] = useState({})
-  const [plans, setPlans] = useState([])
+const Plan: FC = () => {
+  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [plans, setPlans] = useState<FinancialPlan[]>([])
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
+    const { name, value } = e.currentTarget
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
   }
 
-  const handleCreatePlan = (e) => {
+  const handleCreatePlan = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
     if (Object.keys(formData).length === 0) return
 
-    const newPlan = {
+    const newPlan: FinancialPlan = {
       id: Date.now(),
       ...formData,
       createdAt: new Date().toLocaleString()
@@ -27,7 +28,7 @@ function Plan() {
     setFormData({})
   }
 
-  const handleDeletePlan = (id) => {
+  const handleDeletePlan = (id: number): void => {
     setPlans(prev => prev.filter(plan => plan.id !== id))
   }
 
@@ -64,7 +65,7 @@ function Plan() {
                     id="description"
                     name="description"
                     placeholder="Describe your plan"
-                    rows="3"
+                    rows={3}
                     value={formData.description || ''}
                     onChange={handleInputChange}
                   ></textarea>
