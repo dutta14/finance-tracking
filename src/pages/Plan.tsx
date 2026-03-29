@@ -90,6 +90,8 @@ const Plan: FC = () => {
     }
   })
   const [error, setError] = useState<string>('')
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null)
+  const [editingPlanId, setEditingPlanId] = useState<number | null>(null)
 
   // Save plans to localStorage whenever they change
   useEffect(() => {
@@ -190,9 +192,9 @@ const Plan: FC = () => {
     const fiGoal = safeWithdrawalRateDecimal > 0 ? annualExpenseAtRetirement / safeWithdrawalRateDecimal : 0
 
     const newPlan: FinancialPlan = {
-      id: Date.now(),
+      id: editingPlanId || Date.now(),
       planName: formData.planName,
-      createdAt: new Date().toLocaleString(),
+      createdAt: editingPlanId ? plans.find(p => p.id === editingPlanId)?.createdAt || new Date().toLocaleString() : new Date().toLocaleString(),
       birthday: formData.birthday,
       planCreatedIn: formData.planCreatedIn,
       planEndYear: formData.planEndYear,
@@ -212,7 +214,15 @@ const Plan: FC = () => {
       progress: 0 // calculated
     }
 
-    setPlans(prev => [newPlan, ...prev])
+    if (editingPlanId) {
+      // Update existing plan
+      setPlans(prev => prev.map(plan => plan.id === editingPlanId ? newPlan : plan))
+      setEditingPlanId(null)
+    } else {
+      // Create new plan
+      setPlans(prev => [newPlan, ...prev])
+    }
+    
     setFormData({
       planName: '',
       birthday: '',
@@ -249,8 +259,48 @@ const Plan: FC = () => {
       safeWithdrawalRate: plan.safeWithdrawalRate.toString(),
       growth: plan.growth.toString()
     })
+    setEditingPlanId(null)
     // Scroll to form for better UX
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleEditPlan = (plan: FinancialPlan): void => {
+    setFormData({
+      planName: plan.planName,
+      birthday: plan.birthday,
+      planCreatedIn: plan.planCreatedIn,
+      planEndYear: plan.planEndYear,
+      resetExpenseMonth: plan.resetExpenseMonth,
+      retirementAge: plan.retirementAge.toString(),
+      expenseMonth: '',
+      expenseValue: plan.expenseValue.toString(),
+      monthlyExpenseValue: '',
+      inflationRate: plan.inflationRate.toString(),
+      safeWithdrawalRate: plan.safeWithdrawalRate.toString(),
+      growth: plan.growth.toString()
+    })
+    setEditingPlanId(plan.id)
+    // Scroll to form for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleCancelEdit = (): void => {
+    setFormData({
+      planName: '',
+      birthday: '',
+      planCreatedIn: new Date().toISOString().split('T')[0],
+      planEndYear: new Date().getFullYear().toString(),
+      resetExpenseMonth: false,
+      retirementAge: '',
+      expenseMonth: '',
+      expenseValue: '',
+      monthlyExpenseValue: '',
+      inflationRate: '',
+      safeWithdrawalRate: '',
+      growth: ''
+    })
+    setEditingPlanId(null)
+    setError('')
   }
 
   const planCreatedYear = formData.planCreatedIn ? new Date(formData.planCreatedIn).getFullYear() : new Date().getFullYear()
@@ -473,7 +523,16 @@ const Plan: FC = () => {
                 </div>
 
                 {error && <div className="form-error">{error}</div>}
-                <button type="submit" className="btn-create">Create Plan</button>
+                <div className="form-button-group">
+                  <button type="submit" className="btn-create">
+                    {editingPlanId ? 'Update Plan' : 'Create Plan'}
+                  </button>
+                  {editingPlanId && (
+                    <button type="button" className="btn-cancel" onClick={handleCancelEdit}>
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
 
@@ -485,25 +544,68 @@ const Plan: FC = () => {
                   <p>No plans created yet. Fill in the form and click "Create Plan" to get started.</p>
                 </div>
               ) : (
-                <div className="plans-grid">
-                  {plans.map(plan => (
-                    <div key={plan.id} className="plan-card">
+                <>
+                  {/* Mini Plan Cards (Top Row) */}
+                  <div className="plans-mini-grid">
+                    {plans.map(plan => (
+                      <div
+                        key={plan.id}
+                        className={`plan-mini-card ${selectedPlanId === plan.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedPlanId(selectedPlanId === plan.id ? null : plan.id)}
+                      >
+                        <h4>{plan.planName}</h4>
+                        <div className="mini-value">
+                          <span className="label">FI Goal:</span>
+                          <span className="amount">${plan.fiGoal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                        </div>
+                        <div className="mini-value">
+                          <span className="label">Progress:</span>
+                          <span className="amount">{plan.progress.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Detailed Plan View (Bottom) */}
+                  {selectedPlanId && (
+                    <div className="plan-detail-container">
+                      {plans.map(plan => {
+                        if (plan.id !== selectedPlanId) return null
+                        return (
+                          <div key={plan.id} className="plan-card">
                       <div className="plan-card-header">
                         <h3>{plan.planName}</h3>
                         <div className="plan-card-actions">
+                          <button
+                            className="btn-edit"
+                            onClick={() => handleEditPlan(plan)}
+                            title="Edit plan"
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
                           <button
                             className="btn-copy"
                             onClick={() => handleCopyPlan(plan)}
                             title="Copy plan to form"
                           >
-                            📋
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M8 16H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"></path>
+                            </svg>
                           </button>
                           <button
                             className="btn-delete"
                             onClick={() => handleDeletePlan(plan.id)}
                             title="Delete plan"
                           >
-                            ×
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -586,9 +688,12 @@ const Plan: FC = () => {
                         <small>Created: {plan.createdAt}</small>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )},
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -122,6 +122,33 @@
   background: #000;
 }
 
+.form-button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.form-button-group .btn-create {
+  flex: 1;
+  margin-top: 0;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #000;
+  border: 1px solid #d5d5d5;
+  border-radius: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+  border-color: #999;
+}
+
 .form-section {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -222,6 +249,65 @@
   gap: 1.2rem;
 }
 
+.plans-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.plan-mini-card {
+  padding: 1.25rem;
+  background: white;
+  border: 2px solid #e5e5e5;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.plan-mini-card:hover {
+  border-color: #999;
+}
+
+.plan-mini-card.selected {
+  border-color: #000;
+  background: #f7f7f7;
+}
+
+.plan-mini-card h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+  word-break: break-word;
+}
+
+.mini-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.mini-value:last-child {
+  margin-bottom: 0;
+}
+
+.mini-value .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.mini-value .amount {
+  font-weight: 600;
+  color: #000;
+}
+
+.plan-detail-container {
+  margin-top: 2rem;
+}
+
 .plan-card {
   padding: 1.5rem;
   background: white;
@@ -255,9 +341,8 @@
   background: none;
   border: none;
   color: #999;
-  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0;
+  padding: 0.25rem;
   width: 2rem;
   height: 2rem;
   display: flex;
@@ -277,10 +362,10 @@
   align-items: center;
 }
 
-.btn-copy {
+.btn-edit {
   background: none;
   border: none;
-  font-size: 1.2rem;
+  color: #999;
   cursor: pointer;
   padding: 0.25rem;
   width: 2rem;
@@ -288,12 +373,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s ease;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-edit:hover {
+  color: #000;
+}
+
+.btn-copy {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
   flex-shrink: 0;
 }
 
 .btn-copy:hover {
-  opacity: 0.7;
+  color: #000;
 }
 
 .plan-description {
