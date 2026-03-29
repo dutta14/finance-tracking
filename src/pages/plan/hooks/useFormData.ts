@@ -45,7 +45,10 @@ export const useFormData = () => {
         [name]: checked
       }))
     } else {
-      const value = e.currentTarget.value
+      let value = e.currentTarget.value
+      if (name === 'expenseValue') {
+        value = value.replace(/[^0-9]/g, '')
+      }
       setFormData(prev => ({
         ...prev,
         [name]: value

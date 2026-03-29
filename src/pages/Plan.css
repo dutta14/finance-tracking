@@ -62,24 +62,25 @@
 .plan-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 2.4rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.1rem;
+  margin-top: 1.2rem;
 }
 
 .form-group label {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: #000;
 }
 
 .form-group input,
 .form-group textarea {
-  padding: 0.75rem;
+  padding: 1rem;
   border: 1px solid #d5d5d5;
   border-radius: 0;
   font-size: 0.95rem;
@@ -150,8 +151,8 @@
 }
 
 .form-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 2.8rem;
+  padding-top: 2rem;
   border-top: 1px solid #d5d5d5;
 }
 
@@ -191,6 +192,7 @@
 
 .display-field {
   position: relative;
+  margin-top: 1rem;
 }
 
 .display-field label {

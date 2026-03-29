@@ -24,6 +24,13 @@ const PlanForm: FC<PlanFormProps> = ({
   onCancel,
   setError
 }) => {
+  const formatCurrency = (value: string): string => {
+    if (!value) return ''
+    const numeric = Number(value)
+    if (Number.isNaN(numeric)) return ''
+    return numeric.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+  }
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
 
@@ -211,45 +218,63 @@ const PlanForm: FC<PlanFormProps> = ({
           <div className="form-group">
             <label htmlFor="expenseValue">Annual Expense</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               id="expenseValue"
               name="expenseValue"
-              placeholder="e.g., 50000"
-              value={formData.expenseValue}
+              placeholder="e.g., $50,000"
+              value={formData.expenseValue ? formatCurrency(formData.expenseValue) : ''}
               onChange={onInputChange}
-              min="0"
-              step="1"
             />
           </div>
 
-          {formData.expenseValue && (
-            <div className="display-field">
-              <span className="label">Monthly Expense at creation:</span>
-              <span className="display-value">
-                ${(Number(formData.expenseValue) / 12).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-              </span>
-            </div>
+          {formData.expenseValue && formData.planCreatedIn && (
+            <>
+              <div className="display-field">
+                <span className="label">Monthly Expense at creation ({formatMonthYear(formData.planCreatedIn)}):</span>
+                <span className="display-value">
+                  ${(Number(formData.expenseValue) / 12).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="display-field">
+                <span className="label">Annual Expense at creation ({new Date(formData.planCreatedIn).getFullYear()}):</span>
+                <span className="display-value">
+                  ${Number(formData.expenseValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </>
           )}
 
           {formData.expenseValue && formData.birthday && formData.retirementAge && formData.planCreatedIn && (
-            <div className="display-field">
-              <span className="label">Monthly/Annual Expense at retirement:</span>
-              <span className="display-value">
-                {(() => {
-                  const metrics = calculatePlanMetrics(
-                    Number(formData.expenseValue),
-                    formData.birthday,
-                    Number(formData.retirementAge),
-                    formData.planCreatedIn,
-                    Number(formData.inflationRate) || 0,
-                    Number(formData.safeWithdrawalRate) || 0,
-                    getMonthsBetween,
-                    parseDate
-                  )
-                  return `$${metrics.monthlyExpenseAtRetirement.toLocaleString(undefined, { maximumFractionDigits: 2 })} / $${metrics.annualExpenseAtRetirement.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-                })()}
-              </span>
-            </div>
+            (() => {
+              const metrics = calculatePlanMetrics(
+                Number(formData.expenseValue),
+                formData.birthday,
+                Number(formData.retirementAge),
+                formData.planCreatedIn,
+                Number(formData.inflationRate) || 0,
+                Number(formData.safeWithdrawalRate) || 0,
+                getMonthsBetween,
+                parseDate
+              )
+              return (
+                <>
+                  <div className="display-field">
+                    <span className="label">Monthly Expense at retirement ({metrics.retirementDateFormatted}):</span>
+                    <span className="display-value">
+                      ${metrics.monthlyExpenseAtRetirement.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="display-field">
+                    <span className="label">Annual Expense at retirement ({new Date(metrics.retirementDate).getFullYear()}):</span>
+                    <span className="display-value">
+                      ${metrics.annualExpenseAtRetirement.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </>
+              )
+            })()
           )}
         </div>
 
