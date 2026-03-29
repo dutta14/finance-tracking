@@ -1,4 +1,4 @@
-import { FC, useState, ChangeEvent, FormEvent } from 'react'
+import { FC, useState, ChangeEvent, FormEvent, useEffect } from 'react'
 import { FinancialPlan } from '../types'
 import './Plan.css'
 
@@ -18,6 +18,50 @@ interface FormData {
 }
 
 const Plan: FC = () => {
+  // Helper function to calculate Future Value
+  const calculateFV = (monthlyRate: number, months: number, presentValue: number): number => {
+    return presentValue * Math.pow(1 + monthlyRate, months)
+  }
+
+  // Helper function to get months between two dates (matches Excel DATEDIF behavior)
+  const getMonthsBetween = (startDate: Date, endDate: Date): number => {
+    const yearsDiff = endDate.getFullYear() - startDate.getFullYear()
+    const monthsDiff = endDate.getMonth() - startDate.getMonth()
+    let totalMonths = yearsDiff * 12 + monthsDiff
+    
+    // DATEDIF counts complete months - if start day > end day, subtract 1
+    if (startDate.getDate() > endDate.getDate()) {
+      totalMonths--
+    }
+    
+    return totalMonths
+  }
+
+  // Helper function to parse date string "YYYY-MM-DD" safely
+  const parseDate = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-')
+    return new Date(Number(year), Number(month) - 1, Number(day))
+  }
+
+  // Helper function to format date as "Mmm YYYY"
+  const formatMonthYear = (dateString: string): string => {
+    const date = parseDate(dateString)
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  }
+
+  // Helper function to recalculate FI Goal for existing plans (backward compatibility)
+  const migratePlans = (plansToMigrate: FinancialPlan[]): FinancialPlan[] => {
+    return plansToMigrate.map(plan => {
+      if (plan.fiGoal === 0 && plan.expenseValue2047 > 0 && plan.safeWithdrawalRate > 0) {
+        const annualExpenseAtRetirement = plan.expenseValue2047
+        const safeWithdrawalRateDecimal = plan.safeWithdrawalRate / 100
+        const calculatedFiGoal = annualExpenseAtRetirement / safeWithdrawalRateDecimal
+        return { ...plan, fiGoal: calculatedFiGoal }
+      }
+      return plan
+    })
+  }
+
   const [formData, setFormData] = useState<FormData>({
     planName: '',
     birthday: '',
@@ -33,30 +77,28 @@ const Plan: FC = () => {
     growth: ''
   })
 
-  const [plans, setPlans] = useState<FinancialPlan[]>([])
+  // Initialize plans from localStorage
+  const [plans, setPlans] = useState<FinancialPlan[]>(() => {
+    try {
+      const savedPlans = localStorage.getItem('financialPlans')
+      const loadedPlans = savedPlans ? JSON.parse(savedPlans) : []
+      // Apply migration to recalculate FI Goal for old plans
+      return migratePlans(loadedPlans)
+    } catch (err) {
+      console.error('Failed to load plans from localStorage:', err)
+      return []
+    }
+  })
   const [error, setError] = useState<string>('')
 
-  // Helper function to calculate Future Value
-  const calculateFV = (monthlyRate: number, months: number, presentValue: number): number => {
-    return presentValue * Math.pow(1 + monthlyRate, months)
-  }
-
-  // Helper function to get months between two dates
-  const getMonthsBetween = (startDate: Date, endDate: Date): number => {
-    return (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth())
-  }
-
-  // Helper function to parse date string "YYYY-MM-DD" safely
-  const parseDate = (dateString: string): Date => {
-    const [year, month, day] = dateString.split('-')
-    return new Date(Number(year), Number(month) - 1, Number(day))
-  }
-
-  // Helper function to format date as "Mmm YYYY"
-  const formatMonthYear = (dateString: string): string => {
-    const date = parseDate(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-  }
+  // Save plans to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('financialPlans', JSON.stringify(plans))
+    } catch (err) {
+      console.error('Failed to save plans to localStorage:', err)
+    }
+  }, [plans])
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     const { name, type } = e.currentTarget
@@ -143,6 +185,10 @@ const Plan: FC = () => {
     const monthlyExpenseAtRetirement = calculateFV(inflationRateMonthly, monthsBetween, monthlyExpenseAtCreation)
     const annualExpenseAtRetirement = monthlyExpenseAtRetirement * 12
 
+    // Calculate FI Goal: (Monthly Expense at Retirement * 12) / (Safe Withdrawal Rate / 100)
+    const safeWithdrawalRateDecimal = (Number(formData.safeWithdrawalRate) || 0) / 100
+    const fiGoal = safeWithdrawalRateDecimal > 0 ? annualExpenseAtRetirement / safeWithdrawalRateDecimal : 0
+
     const newPlan: FinancialPlan = {
       id: Date.now(),
       planName: formData.planName,
@@ -162,7 +208,7 @@ const Plan: FC = () => {
       safeWithdrawalRate: Number(formData.safeWithdrawalRate) || 0,
       growth: Number(formData.growth) || 0,
       retirement: retirementDateFormatted,
-      fiGoal: 0, // calculated
+      fiGoal: fiGoal,
       progress: 0 // calculated
     }
 
@@ -186,6 +232,25 @@ const Plan: FC = () => {
 
   const handleDeletePlan = (id: number): void => {
     setPlans(prev => prev.filter(plan => plan.id !== id))
+  }
+
+  const handleCopyPlan = (plan: FinancialPlan): void => {
+    setFormData({
+      planName: plan.planName,
+      birthday: plan.birthday,
+      planCreatedIn: plan.planCreatedIn,
+      planEndYear: plan.planEndYear,
+      resetExpenseMonth: plan.resetExpenseMonth,
+      retirementAge: plan.retirementAge.toString(),
+      expenseMonth: '',
+      expenseValue: plan.expenseValue.toString(),
+      monthlyExpenseValue: '',
+      inflationRate: plan.inflationRate.toString(),
+      safeWithdrawalRate: plan.safeWithdrawalRate.toString(),
+      growth: plan.growth.toString()
+    })
+    // Scroll to form for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const planCreatedYear = formData.planCreatedIn ? new Date(formData.planCreatedIn).getFullYear() : new Date().getFullYear()
@@ -425,19 +490,32 @@ const Plan: FC = () => {
                     <div key={plan.id} className="plan-card">
                       <div className="plan-card-header">
                         <h3>{plan.planName}</h3>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDeletePlan(plan.id)}
-                          title="Delete plan"
-                        >
-                          ×
-                        </button>
+                        <div className="plan-card-actions">
+                          <button
+                            className="btn-copy"
+                            onClick={() => handleCopyPlan(plan)}
+                            title="Copy plan to form"
+                          >
+                            📋
+                          </button>
+                          <button
+                            className="btn-delete"
+                            onClick={() => handleDeletePlan(plan.id)}
+                            title="Delete plan"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
                       
                       <div className="plan-card-details">
                         <div className="detail-row">
                           <span className="label">Birthday:</span>
-                          <span className="value">{plan.birthday ? new Date(plan.birthday).toLocaleDateString() : 'N/A'}</span>
+                          <span className="value">{plan.birthday ? parseDate(plan.birthday).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Plan Creation Date:</span>
+                          <span className="value">{plan.planCreatedIn ? formatMonthYear(plan.planCreatedIn) : 'N/A'}</span>
                         </div>
                         <div className="detail-row">
                           <span className="label">Retirement Age:</span>
@@ -463,22 +541,33 @@ const Plan: FC = () => {
 
                       <div className="plan-card-calculations">
                         <h4>Expense Analysis</h4>
-                        <div className="detail-row">
-                          <span className="label">Annual Expense (Now):</span>
-                          <span className="value">${plan.expenseValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="label">Monthly Expense (Now):</span>
-                          <span className="value">${plan.monthlyExpenseValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="label">Monthly Expense at Retirement:</span>
-                          <span className="value">${plan.monthlyExpense2047.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="label">Annual Expense at Retirement:</span>
-                          <span className="value">${plan.expenseValue2047.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
+                        {(() => {
+                          const createdMonthYear = formatMonthYear(plan.planCreatedIn)
+                          const birthDate = parseDate(plan.birthday)
+                          const retirementDate = new Date(birthDate.getFullYear() + plan.retirementAge, birthDate.getMonth(), birthDate.getDate())
+                          const retirementMonthYear = retirementDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                          
+                          return (
+                            <>
+                              <div className="detail-row">
+                                <span className="label">Expense ({createdMonthYear}):</span>
+                                <span className="value">${plan.expenseValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="label">Monthly Expense ({createdMonthYear}):</span>
+                                <span className="value">${plan.monthlyExpenseValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="label">Monthly Expense ({retirementMonthYear}):</span>
+                                <span className="value">${plan.monthlyExpense2047.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="label">Expense ({retirementMonthYear}):</span>
+                                <span className="value">${plan.expenseValue2047.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                              </div>
+                            </>
+                          )
+                        })()}
                       </div>
 
                       <div className="plan-card-calculations">
@@ -499,7 +588,7 @@ const Plan: FC = () => {
                     </div>
                   ))}
                 </div>
-              )}
+              )},
             </div>
           </div>
         </div>
