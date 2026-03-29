@@ -4,10 +4,33 @@ export type PageType = 'home' | 'plan'
 
 export interface FinancialPlan {
   id: number
-  planName?: string
-  description?: string
+  planName: string
   createdAt: string
-  [key: string]: string | number | undefined
+  
+  // Personal & Timeline Info
+  birthday: string
+  planCreatedIn: string
+  planEndYear: string
+  resetExpenseMonth: boolean
+  retirementAge: number
+  
+  // Expense Details
+  expenseMonth: number
+  expenseValue: number
+  monthlyExpenseValue: number
+  expenseValueMar2026: number
+  expenseValue2047: number
+  monthlyExpense2047: number
+  
+  // Financial Parameters
+  inflationRate: number
+  safeWithdrawalRate: number
+  growth: number
+  
+  // Calculated Fields
+  retirement: string
+  fiGoal: number
+  progress: number
 }
 
 export interface NavigationProps {

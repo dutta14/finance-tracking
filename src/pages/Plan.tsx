@@ -2,35 +2,194 @@ import { FC, useState, ChangeEvent, FormEvent } from 'react'
 import { FinancialPlan } from '../types'
 import './Plan.css'
 
+interface FormData {
+  planName: string
+  birthday: string
+  planCreatedIn: string
+  planEndYear: string
+  resetExpenseMonth: boolean
+  retirementAge: string
+  expenseMonth: string
+  expenseValue: string
+  monthlyExpenseValue: string
+  inflationRate: string
+  safeWithdrawalRate: string
+  growth: string
+}
+
 const Plan: FC = () => {
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<FormData>({
+    planName: '',
+    birthday: '',
+    planCreatedIn: new Date().toISOString().split('T')[0],
+    planEndYear: new Date().getFullYear().toString(),
+    resetExpenseMonth: false,
+    retirementAge: '',
+    expenseMonth: '',
+    expenseValue: '',
+    monthlyExpenseValue: '',
+    inflationRate: '',
+    safeWithdrawalRate: '',
+    growth: ''
+  })
+
   const [plans, setPlans] = useState<FinancialPlan[]>([])
+  const [error, setError] = useState<string>('')
+
+  // Helper function to calculate Future Value
+  const calculateFV = (monthlyRate: number, months: number, presentValue: number): number => {
+    return presentValue * Math.pow(1 + monthlyRate, months)
+  }
+
+  // Helper function to get months between two dates
+  const getMonthsBetween = (startDate: Date, endDate: Date): number => {
+    return (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth())
+  }
+
+  // Helper function to parse date string "YYYY-MM-DD" safely
+  const parseDate = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-')
+    return new Date(Number(year), Number(month) - 1, Number(day))
+  }
+
+  // Helper function to format date as "Mmm YYYY"
+  const formatMonthYear = (dateString: string): string => {
+    const date = parseDate(dateString)
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  }
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
-    const { name, value } = e.currentTarget
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    const { name, type } = e.currentTarget
+    
+    if (type === 'checkbox') {
+      const checkbox = e.currentTarget as HTMLInputElement
+      setFormData(prev => ({
+        ...prev,
+        [name]: checkbox.checked
+      }))
+    } else {
+      const { value } = e.currentTarget
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   const handleCreatePlan = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-    if (Object.keys(formData).length === 0) return
+    setError('')
+    
+    // Validate all required fields
+    if (!formData.planName.trim()) {
+      setError('Please enter a plan name')
+      return
+    }
+    if (!formData.birthday) {
+      setError('Please enter your birthday')
+      return
+    }
+    if (!formData.planCreatedIn) {
+      setError('Please enter the plan creation date')
+      return
+    }
+    if (!formData.planEndYear) {
+      setError('Please enter the plan end year')
+      return
+    }
+    if (!formData.retirementAge || Number(formData.retirementAge) <= 0) {
+      setError('Please enter a valid retirement age')
+      return
+    }
+    if (!formData.expenseValue || Number(formData.expenseValue) <= 0) {
+      setError('Please enter a valid annual expense')
+      return
+    }
+    if (formData.inflationRate === '') {
+      setError('Please enter the inflation rate')
+      return
+    }
+    if (formData.safeWithdrawalRate === '') {
+      setError('Please enter the safe withdrawal rate')
+      return
+    }
+    if (formData.growth === '') {
+      setError('Please enter the growth rate')
+      return
+    }
+
+    // Calculate expense month (Mmm YYYY format)
+    const expenseMonthDisplay = formatMonthYear(formData.planCreatedIn)
+
+    // Calculate annual expense value
+    const annualExpense = Number(formData.expenseValue) || 0
+
+    // Calculate monthly expense at creation (annual / 12)
+    const monthlyExpenseAtCreation = annualExpense / 12
+
+    // Calculate retirement date
+    const birthDate = parseDate(formData.birthday)
+    const retirementAge = Number(formData.retirementAge)
+    const retirementDate = new Date(birthDate.getFullYear() + retirementAge, birthDate.getMonth(), birthDate.getDate())
+    const retirementDateFormatted = retirementDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+
+    // Calculate months between plan creation and retirement
+    const planCreatedDate = new Date(formData.planCreatedIn)
+    const monthsBetween = getMonthsBetween(planCreatedDate, retirementDate)
+
+    // Calculate monthly expense at retirement using FV formula
+    // FV = PV * (1 + r)^n
+    const inflationRateMonthly = (Number(formData.inflationRate) || 0) / 100 / 12
+    const monthlyExpenseAtRetirement = calculateFV(inflationRateMonthly, monthsBetween, monthlyExpenseAtCreation)
+    const annualExpenseAtRetirement = monthlyExpenseAtRetirement * 12
 
     const newPlan: FinancialPlan = {
       id: Date.now(),
-      ...formData,
-      createdAt: new Date().toLocaleString()
+      planName: formData.planName,
+      createdAt: new Date().toLocaleString(),
+      birthday: formData.birthday,
+      planCreatedIn: formData.planCreatedIn,
+      planEndYear: formData.planEndYear,
+      resetExpenseMonth: formData.resetExpenseMonth,
+      retirementAge: retirementAge,
+      expenseMonth: 0, // This is now a display field (expenseMonthDisplay)
+      expenseValue: annualExpense,
+      monthlyExpenseValue: monthlyExpenseAtCreation,
+      expenseValueMar2026: 0, // calculated
+      expenseValue2047: annualExpenseAtRetirement,
+      monthlyExpense2047: monthlyExpenseAtRetirement,
+      inflationRate: Number(formData.inflationRate) || 0,
+      safeWithdrawalRate: Number(formData.safeWithdrawalRate) || 0,
+      growth: Number(formData.growth) || 0,
+      retirement: retirementDateFormatted,
+      fiGoal: 0, // calculated
+      progress: 0 // calculated
     }
 
     setPlans(prev => [newPlan, ...prev])
-    setFormData({})
+    setFormData({
+      planName: '',
+      birthday: '',
+      planCreatedIn: new Date().toISOString().split('T')[0],
+      planEndYear: new Date().getFullYear().toString(),
+      resetExpenseMonth: false,
+      retirementAge: '',
+      expenseMonth: '',
+      expenseValue: '',
+      monthlyExpenseValue: '',
+      inflationRate: '',
+      safeWithdrawalRate: '',
+      growth: ''
+    })
+    setError('')
   }
 
   const handleDeletePlan = (id: number): void => {
     setPlans(prev => prev.filter(plan => plan.id !== id))
   }
+
+  const planCreatedYear = formData.planCreatedIn ? new Date(formData.planCreatedIn).getFullYear() : new Date().getFullYear()
+  const planCreatedMonthYear = formatMonthYear(formData.planCreatedIn)
 
   return (
     <div className="plan-page">
@@ -46,31 +205,209 @@ const Plan: FC = () => {
             <div className="plan-form-section">
               <h2>Create New Plan</h2>
               <form className="plan-form" onSubmit={handleCreatePlan}>
-                {/* Placeholder inputs - will be replaced with actual fields */}
+                
+                {/* Plan Name */}
                 <div className="form-group">
                   <label htmlFor="planName">Plan Name</label>
                   <input
                     type="text"
                     id="planName"
                     name="planName"
-                    placeholder="Enter plan name"
-                    value={formData.planName || ''}
+                    placeholder="e.g., Retirement Plan 2026"
+                    value={formData.planName}
                     onChange={handleInputChange}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="description">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    placeholder="Describe your plan"
-                    rows={3}
-                    value={formData.description || ''}
-                    onChange={handleInputChange}
-                  ></textarea>
+                {/* Personal & Timeline Section */}
+                <div className="form-section">
+                  <h3>Personal & Timeline</h3>
+                  
+                  <div className="form-group">
+                    <label htmlFor="birthday">Birthday</label>
+                    <input
+                      type="date"
+                      id="birthday"
+                      name="birthday"
+                      value={formData.birthday}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="planCreatedIn">Plan Created In</label>
+                    <input
+                      type="date"
+                      id="planCreatedIn"
+                      name="planCreatedIn"
+                      value={formData.planCreatedIn}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="planEndYear">Plan End Year</label>
+                    <input
+                      type="date"
+                      id="planEndYear"
+                      name="planEndYear"
+                      value={formData.planEndYear}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group checkbox-group">
+                    <label htmlFor="resetExpenseMonth">
+                      <input
+                        type="checkbox"
+                        id="resetExpenseMonth"
+                        name="resetExpenseMonth"
+                        checked={formData.resetExpenseMonth}
+                        onChange={handleInputChange}
+                      />
+                      <span>Reset Expense Month</span>
+                    </label>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="retirementAge">Retirement Age</label>
+                    <input
+                      type="number"
+                      id="retirementAge"
+                      name="retirementAge"
+                      placeholder="e.g., 65"
+                      value={formData.retirementAge}
+                      onChange={handleInputChange}
+                      min="0"
+                      max="150"
+                    />
+                  </div>
                 </div>
 
+                {/* Expense Details Section */}
+                <div className="form-section">
+                  <h3>Expense Details</h3>
+                  
+                  <div className="form-group">
+                    <label htmlFor="expenseValue">Expense ({planCreatedYear})</label>
+                    <input
+                      type="number"
+                      id="expenseValue"
+                      name="expenseValue"
+                      placeholder="Annual expense"
+                      value={formData.expenseValue}
+                      onChange={handleInputChange}
+                      min="0"
+                    />
+                  </div>
+
+                  <div className="form-group display-field">
+                    <label>Expense Month</label>
+                    <div className="display-value">{planCreatedMonthYear}</div>
+                  </div>
+
+                  <div className="form-group display-field">
+                    <label>Monthly Expense ({planCreatedYear})</label>
+                    <div className="display-value">${(Number(formData.expenseValue) / 12 || 0).toFixed(2)}</div>
+                  </div>
+
+                  {formData.birthday && formData.retirementAge && (
+                    <>
+                      <div className="form-group display-field">
+                        <label>Retirement Year</label>
+                        <div className="display-value">
+                          {(() => {
+                            const birthDate = parseDate(formData.birthday)
+                            const retirementAge = Number(formData.retirementAge)
+                            const retirementDate = new Date(birthDate.getFullYear() + retirementAge, birthDate.getMonth(), birthDate.getDate())
+                            return retirementDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="form-group display-field">
+                        <label>Monthly Expense (Retirement)</label>
+                        <div className="display-value">
+                          ${(() => {
+                            const birthDate = parseDate(formData.birthday)
+                            const retirementDate = new Date(birthDate.getFullYear() + Number(formData.retirementAge), birthDate.getMonth(), birthDate.getDate())
+                            const planCreatedDate = parseDate(formData.planCreatedIn)
+                            const monthsBetween = (retirementDate.getFullYear() - planCreatedDate.getFullYear()) * 12 + (retirementDate.getMonth() - planCreatedDate.getMonth())
+                            const monthlyExpenseNow = Number(formData.expenseValue) / 12
+                            const inflationRateMonthly = (Number(formData.inflationRate) || 0) / 100 / 12
+                            const futureMonthlyExpense = monthlyExpenseNow * Math.pow(1 + inflationRateMonthly, monthsBetween)
+                            return futureMonthlyExpense.toFixed(2)
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="form-group display-field">
+                        <label>Expense (Retirement Year)</label>
+                        <div className="display-value">
+                          ${(() => {
+                            const birthDate = parseDate(formData.birthday)
+                            const retirementDate = new Date(birthDate.getFullYear() + Number(formData.retirementAge), birthDate.getMonth(), birthDate.getDate())
+                            const planCreatedDate = parseDate(formData.planCreatedIn)
+                            const monthsBetween = (retirementDate.getFullYear() - planCreatedDate.getFullYear()) * 12 + (retirementDate.getMonth() - planCreatedDate.getMonth())
+                            const monthlyExpenseNow = Number(formData.expenseValue) / 12
+                            const inflationRateMonthly = (Number(formData.inflationRate) || 0) / 100 / 12
+                            const futureMonthlyExpense = monthlyExpenseNow * Math.pow(1 + inflationRateMonthly, monthsBetween)
+                            return (futureMonthlyExpense * 12).toFixed(2)
+                          })()}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Financial Parameters Section */}
+                <div className="form-section">
+                  <h3>Financial Parameters</h3>
+                  
+                  <div className="form-group">
+                    <label htmlFor="inflationRate">Inflation Rate (%)</label>
+                    <input
+                      type="number"
+                      id="inflationRate"
+                      name="inflationRate"
+                      placeholder="e.g., 3"
+                      value={formData.inflationRate}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="safeWithdrawalRate">Safe Withdrawal Rate (%)</label>
+                    <input
+                      type="number"
+                      id="safeWithdrawalRate"
+                      name="safeWithdrawalRate"
+                      placeholder="e.g., 4"
+                      value={formData.safeWithdrawalRate}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="growth">Growth (%)</label>
+                    <input
+                      type="number"
+                      id="growth"
+                      name="growth"
+                      placeholder="e.g., 7"
+                      value={formData.growth}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+                </div>
+
+                {error && <div className="form-error">{error}</div>}
                 <button type="submit" className="btn-create">Create Plan</button>
               </form>
             </div>
@@ -87,7 +424,7 @@ const Plan: FC = () => {
                   {plans.map(plan => (
                     <div key={plan.id} className="plan-card">
                       <div className="plan-card-header">
-                        <h3>{plan.planName || 'Untitled Plan'}</h3>
+                        <h3>{plan.planName}</h3>
                         <button
                           className="btn-delete"
                           onClick={() => handleDeletePlan(plan.id)}
@@ -96,7 +433,66 @@ const Plan: FC = () => {
                           ×
                         </button>
                       </div>
-                      <p className="plan-description">{plan.description}</p>
+                      
+                      <div className="plan-card-details">
+                        <div className="detail-row">
+                          <span className="label">Birthday:</span>
+                          <span className="value">{plan.birthday ? new Date(plan.birthday).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Retirement Age:</span>
+                          <span className="value">{plan.retirementAge}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Retirement Date:</span>
+                          <span className="value">{plan.retirement}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Inflation Rate:</span>
+                          <span className="value">{plan.inflationRate}%</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Safe Withdrawal Rate:</span>
+                          <span className="value">{plan.safeWithdrawalRate}%</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Growth:</span>
+                          <span className="value">{plan.growth}%</span>
+                        </div>
+                      </div>
+
+                      <div className="plan-card-calculations">
+                        <h4>Expense Analysis</h4>
+                        <div className="detail-row">
+                          <span className="label">Annual Expense (Now):</span>
+                          <span className="value">${plan.expenseValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Monthly Expense (Now):</span>
+                          <span className="value">${plan.monthlyExpenseValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Monthly Expense at Retirement:</span>
+                          <span className="value">${plan.monthlyExpense2047.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Annual Expense at Retirement:</span>
+                          <span className="value">${plan.expenseValue2047.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+
+                      <div className="plan-card-calculations">
+                        <h4>Financial Goals</h4>
+                        <div className="detail-row">
+                          <span className="label">FI Goal:</span>
+                          <span className="value">${plan.fiGoal.toLocaleString()}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">Progress:</span>
+                          <span className="value">{plan.progress.toFixed(1)}%</span>
+                        </div>
+                      </div>
+
                       <div className="plan-meta">
                         <small>Created: {plan.createdAt}</small>
                       </div>
