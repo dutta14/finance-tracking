@@ -2,7 +2,7 @@ import { FC, useState } from 'react'
 import { PageType } from './types'
 import Navigation from './components/Navigation'
 import Home from './pages/Home'
-import Plan from './pages/Plan'
+import Plan from './pages/plan/Plan'
 
 const App: FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('home')
