@@ -5,13 +5,12 @@ import PlansSection from './components/PlansSection'
 import { useFinancialPlans } from './hooks/useFinancialPlans'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
-
 import NewPlanButton from './components/NewPlanButton'
 
 const Plan: FC = () => {
   const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans()
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
-  const { selectedPlanId, editingPlanId, togglePlanSelection, startEditing, stopEditing } = useEditingState()
+  const { selectedPlanIds, editingPlanId, togglePlanSelection, startEditing, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
 
   const handleCreatePlan = (plan: FinancialPlan): void => {
@@ -45,8 +44,8 @@ const Plan: FC = () => {
     setShowForm(false)
   }
 
-  const handleSelectPlan = (planId: number): void => {
-    togglePlanSelection(planId)
+  const handleSelectPlan = (planId: number, multi: boolean): void => {
+    togglePlanSelection(planId, multi)
   }
 
   return (
@@ -81,7 +80,7 @@ const Plan: FC = () => {
               />
               <PlansSection
                 plans={plans}
-                selectedPlanId={selectedPlanId}
+                selectedPlanIds={selectedPlanIds}
                 onSelectPlan={handleSelectPlan}
                 onEditPlan={handleEditPlan}
                 onCopyPlan={handleCopyPlan}
@@ -92,7 +91,7 @@ const Plan: FC = () => {
             <div style={{ width: '100%' }}>
               <PlansSection
                 plans={plans}
-                selectedPlanId={selectedPlanId}
+                selectedPlanIds={selectedPlanIds}
                 onSelectPlan={handleSelectPlan}
                 onEditPlan={handleEditPlan}
                 onCopyPlan={handleCopyPlan}

@@ -4,19 +4,19 @@ import PlanMiniCard from '../../../components/PlanMiniCard'
 
 interface PlansMiniGridProps {
   plans: FinancialPlan[]
-  selectedPlanId: number | null
-  onSelectPlan: (planId: number) => void
+  selectedPlanIds: number[]
+  onSelectPlan: (planId: number, multi: boolean) => void
 }
 
-const PlansMiniGrid: FC<PlansMiniGridProps> = ({ plans, selectedPlanId, onSelectPlan }) => {
+const PlansMiniGrid: FC<PlansMiniGridProps> = ({ plans, selectedPlanIds, onSelectPlan }) => {
   return (
     <div className="plans-mini-grid">
       {plans.map(plan => (
         <PlanMiniCard
           key={plan.id}
           plan={plan}
-          isSelected={selectedPlanId === plan.id}
-          onClick={() => onSelectPlan(plan.id)}
+          isSelected={selectedPlanIds.includes(plan.id)}
+          onClick={(e) => onSelectPlan(plan.id, e.metaKey || e.ctrlKey)}
         />
       ))}
     </div>
@@ -24,3 +24,4 @@ const PlansMiniGrid: FC<PlansMiniGridProps> = ({ plans, selectedPlanId, onSelect
 }
 
 export default PlansMiniGrid
+

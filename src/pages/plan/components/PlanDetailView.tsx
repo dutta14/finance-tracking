@@ -6,7 +6,7 @@ import './PlanDiveDeep.css'
 
 interface PlanDetailViewProps {
   plans: FinancialPlan[]
-  selectedPlanId: number | null
+  selectedPlanIds: number[]
   onEditPlan: (plan: FinancialPlan) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
@@ -14,13 +14,14 @@ interface PlanDetailViewProps {
 
 const PlanDetailView: FC<PlanDetailViewProps> = ({
   plans,
-  selectedPlanId,
+  selectedPlanIds,
   onEditPlan,
   onCopyPlan,
   onDeletePlan
 }) => {
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
 
+  const selectedPlanId = selectedPlanIds[0] ?? null
   if (!selectedPlanId) return null
 
   const plan = plans.find(p => p.id === selectedPlanId)

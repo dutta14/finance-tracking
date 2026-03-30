@@ -1,11 +1,19 @@
 import { useState } from 'react'
 
 export const useEditingState = () => {
-  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null)
+  const [selectedPlanIds, setSelectedPlanIds] = useState<number[]>([])
   const [editingPlanId, setEditingPlanId] = useState<number | null>(null)
 
-  const togglePlanSelection = (planId: number): void => {
-    setSelectedPlanId(selectedPlanId === planId ? null : planId)
+  const togglePlanSelection = (planId: number, multi = false): void => {
+    if (multi) {
+      setSelectedPlanIds(prev =>
+        prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
+      )
+    } else {
+      setSelectedPlanIds(prev =>
+        prev.length === 1 && prev[0] === planId ? [] : [planId]
+      )
+    }
   }
 
   const startEditing = (planId: number): void => {
@@ -17,18 +25,18 @@ export const useEditingState = () => {
   }
 
   const resetState = (): void => {
-    setSelectedPlanId(null)
+    setSelectedPlanIds([])
     setEditingPlanId(null)
   }
 
   return {
-    selectedPlanId,
-    setSelectedPlanId,
+    selectedPlanIds,
+    setSelectedPlanIds,
     editingPlanId,
     setEditingPlanId,
     togglePlanSelection,
     startEditing,
     stopEditing,
-    resetState
+    resetState,
   }
 }

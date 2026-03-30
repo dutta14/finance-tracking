@@ -5,7 +5,7 @@ import '../styles/PlanMiniCard.css'
 interface PlanMiniCardProps {
   plan: FinancialPlan
   isSelected: boolean
-  onClick: () => void
+  onClick: (e: React.MouseEvent) => void
 }
 
 const PlanMiniCard: FC<PlanMiniCardProps> = ({ plan, isSelected, onClick }) => {
