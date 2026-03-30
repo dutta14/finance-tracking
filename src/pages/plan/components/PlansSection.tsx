@@ -2,7 +2,7 @@ import { FC } from 'react'
 import { FinancialPlan } from '../../../types'
 import PlanMiniCard from '../../../components/PlanMiniCard'
 import PlanDetailedCard from '../../../components/PlanDetailedCard'
-import '../../Plan.css'
+import '../../../styles/Plan.css'
 
 interface PlansSectionProps {
   plans: FinancialPlan[]

@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { FinancialPlan } from '../types'
 import { EditIcon, CopyIcon, DeleteIcon } from './Icons'
-import '../styles/components.css'
+import '../styles/PlanCardActions.css'
 
 interface PlanCardActionsProps {
   plan: FinancialPlan

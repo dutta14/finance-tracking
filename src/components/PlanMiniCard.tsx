@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { FinancialPlan } from '../types'
-import '../styles/components.css'
+import '../styles/PlanMiniCard.css'
 
 interface PlanMiniCardProps {
   plan: FinancialPlan

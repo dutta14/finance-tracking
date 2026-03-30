@@ -2,7 +2,7 @@
 import { FC, useState, useEffect } from 'react'
 import { NavigationProps } from '../types'
 import SettingsMenu from './SettingsMenu'
-import './Navigation.css'
+import '../styles/Navigation.css'
 
 
 const Navigation: FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {

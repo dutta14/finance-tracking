@@ -1,8 +1,8 @@
-import { FC, useState, useEffect } from 'react';
+import { FC } from 'react';
 import { NavigationProps } from '../types';
 import SidebarToggle from './SidebarToggle';
 import SettingsMenu from './SettingsMenu';
-import './SidebarNavigation.css';
+import '../styles/SidebarNavigation.css';
 
 interface SidebarNavigationProps extends NavigationProps {
   expanded: boolean;

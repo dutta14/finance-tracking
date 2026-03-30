@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import './Home.css'
+import '../styles/Home.css'
 
 const Home: FC = () => {
   return (

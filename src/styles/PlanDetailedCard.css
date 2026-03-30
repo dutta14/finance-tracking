@@ -1,0 +1,72 @@
+/* Detailed plan card dark mode overrides */
+/* Light mode base styles for .plan-card are in Plan.css */
+
+body.dark .plan-card {
+  background: #2c313a;
+  color: #e5e7eb;
+  border-color: #363c48;
+}
+
+body.dark .plan-card:hover {
+  border-color: #6b7280;
+}
+
+body.dark .plan-card h3 {
+  color: #fff;
+}
+
+body.dark .plan-card-header h3 {
+  color: #fff;
+}
+
+body.dark .plan-card-details {
+  border-top-color: #363c48;
+  border-bottom-color: #363c48;
+}
+
+body.dark .plan-card-details .label {
+  color: #e5e7eb;
+}
+
+body.dark .plan-card-details .value {
+  color: #bfc4cc;
+}
+
+body.dark .plan-card-calculations {
+  background: #2c313a;
+  color: #e5e7eb;
+  border-top-color: #363c48;
+}
+
+body.dark .plan-card-calculations h4 {
+  color: #e5e7eb;
+}
+
+body.dark .plan-card-calculations .label {
+  color: #e5e7eb;
+}
+
+body.dark .plan-card-calculations .value {
+  color: #bfc4cc;
+}
+
+body.dark .plan-meta {
+  color: #6b7280;
+  border-top-color: #363c48;
+}
+
+body.dark .plan-description {
+  color: #bfc4cc;
+}
+
+body.dark .detail-row {
+  color: #bfc4cc;
+}
+
+body.dark .detail-row .label {
+  color: #e5e7eb;
+}
+
+body.dark .detail-row .value {
+  color: #bfc4cc;
+}

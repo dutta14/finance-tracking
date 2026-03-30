@@ -3,7 +3,7 @@ import { FinancialPlan } from '../../../types'
 import { FormData } from '../hooks/useFormData'
 import { calculatePlanMetrics } from '../utils/planCalculations'
 import { parseDate, getMonthsBetween, formatMonthYear } from '../utils/dateHelpers'
-import '../../Plan.css'
+import '../../../styles/Plan.css'
 
 interface PlanFormProps {
   formData: FormData
