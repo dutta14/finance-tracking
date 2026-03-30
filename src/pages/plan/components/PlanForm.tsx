@@ -113,8 +113,8 @@ const PlanForm: FC<PlanFormProps> = ({
     onSubmit(newPlan)
   }
 
-  return (
-    <div className="plan-form-section">
+    return (
+      <div className="plan-form-section"> 
       <h2>Financial Plan</h2>
       <form className="plan-form" onSubmit={handleSubmit}>
         <div className="form-section">
@@ -220,7 +220,6 @@ const PlanForm: FC<PlanFormProps> = ({
             <input
               type="text"
               inputMode="numeric"
-              pattern="[0-9]*"
               id="expenseValue"
               name="expenseValue"
               placeholder="e.g., $50,000"
@@ -329,11 +328,9 @@ const PlanForm: FC<PlanFormProps> = ({
           <button type="submit" className="btn-create">
             {editingPlanId ? 'Update Plan' : 'Create Plan'}
           </button>
-          {editingPlanId && (
-            <button type="button" className="btn-cancel" onClick={onCancel}>
-              Cancel
-            </button>
-          )}
+          <button type="button" className="btn-cancel" onClick={onCancel}>
+            Cancel
+          </button>
         </div>
       </form>
     </div>

@@ -1,16 +1,18 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { FinancialPlan } from '../../types'
 import PlanForm from './components/PlanForm'
 import PlansSection from './components/PlansSection'
 import { useFinancialPlans } from './hooks/useFinancialPlans'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
-import '../Plan.css'
+
+import NewPlanButton from './components/NewPlanButton'
 
 const Plan: FC = () => {
   const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans()
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
   const { selectedPlanId, editingPlanId, togglePlanSelection, startEditing, stopEditing } = useEditingState()
+  const [showForm, setShowForm] = useState(false)
 
   const handleCreatePlan = (plan: FinancialPlan): void => {
     if (editingPlanId) {
@@ -20,23 +22,27 @@ const Plan: FC = () => {
       createPlan(plan)
     }
     resetForm()
+    setShowForm(false)
   }
 
   const handleEditPlan = (plan: FinancialPlan): void => {
     populateFromPlan(plan)
     startEditing(plan.id)
+    setShowForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleCopyPlan = (plan: FinancialPlan): void => {
     populateFromPlan(plan)
     stopEditing()
+    setShowForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleCancelEdit = (): void => {
     resetForm()
     stopEditing()
+    setShowForm(false)
   }
 
   const handleSelectPlan = (planId: number): void => {
@@ -46,32 +52,54 @@ const Plan: FC = () => {
   return (
     <section className="plan">
       <div className="plan-header">
-        <h1>Financial Planning</h1>
-        <p>Model different financial scenarios and track your progress</p>
+        <h1>Plan</h1>
+        <p>Model different financial scenarios</p>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 24px 1.2rem 0' }}>
+        <NewPlanButton
+          onClick={() => {
+            resetForm();
+            stopEditing();
+            setShowForm(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
       </div>
 
       <div className="plan-content">
         <div className="plan-container">
-          <div className="plan-layout">
-            <PlanForm
-              formData={formData}
-              error={error}
-              editingPlanId={editingPlanId}
-              onInputChange={handleInputChange}
-              onSubmit={handleCreatePlan}
-              onCancel={handleCancelEdit}
-              setError={setError}
-            />
-
-            <PlansSection
-              plans={plans}
-              selectedPlanId={selectedPlanId}
-              onSelectPlan={handleSelectPlan}
-              onEditPlan={handleEditPlan}
-              onCopyPlan={handleCopyPlan}
-              onDeletePlan={deletePlan}
-            />
-          </div>
+          {showForm ? (
+            <div className="plan-layout">
+              <PlanForm
+                formData={formData}
+                error={error}
+                editingPlanId={editingPlanId}
+                onInputChange={handleInputChange}
+                onSubmit={handleCreatePlan}
+                onCancel={handleCancelEdit}
+                setError={setError}
+              />
+              <PlansSection
+                plans={plans}
+                selectedPlanId={selectedPlanId}
+                onSelectPlan={handleSelectPlan}
+                onEditPlan={handleEditPlan}
+                onCopyPlan={handleCopyPlan}
+                onDeletePlan={deletePlan}
+              />
+            </div>
+          ) : (
+            <div style={{ width: '100%' }}>
+              <PlansSection
+                plans={plans}
+                selectedPlanId={selectedPlanId}
+                onSelectPlan={handleSelectPlan}
+                onEditPlan={handleEditPlan}
+                onCopyPlan={handleCopyPlan}
+                onDeletePlan={deletePlan}
+              />
+            </div>
+          )}
         </div>
       </div>
     </section>
