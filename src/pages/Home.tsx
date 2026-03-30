@@ -6,7 +6,7 @@ const Home: FC = () => {
     <div className="home-page">
       <section className="hero">
         <div className="hero-content">
-          <h1>Welcome to Finance Tracker</h1>
+          <h1>Finance Tracker</h1>
           <p>Take control of your financial future</p>
         </div>
       </section>
@@ -16,7 +16,7 @@ const Home: FC = () => {
           <div className="feature-card">
             <div className="feature-icon">📊</div>
             <h3>Track & Analyze</h3>
-            <p>Monitor your spending patterns and gain insights into your financial habits.</p>
+            <p>Monitor patterns and gain insights into your financial habits.</p>
           </div>
           
           <div className="feature-card">

@@ -115,7 +115,7 @@ const PlanForm: FC<PlanFormProps> = ({
 
     return (
       <div className="plan-form-section"> 
-      <h2>Financial Plan</h2>
+      <h2>Create New Plan</h2>
       <form className="plan-form" onSubmit={handleSubmit}>
         <div className="form-section">
           <h3>Personal & Timeline</h3>
@@ -144,7 +144,7 @@ const PlanForm: FC<PlanFormProps> = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="planCreatedIn">Plan Created In</label>
+            <label htmlFor="planCreatedIn">Plan Created on</label>
             <input
               type="date"
               id="planCreatedIn"
@@ -164,17 +164,6 @@ const PlanForm: FC<PlanFormProps> = ({
               onChange={onInputChange}
 
             />
-          </div>
-
-          <div className="form-group checkbox-group">
-            <input
-              type="checkbox"
-              id="resetExpenseMonth"
-              name="resetExpenseMonth"
-              checked={formData.resetExpenseMonth}
-              onChange={onInputChange}
-            />
-            <label htmlFor="resetExpenseMonth">Reset Expense Month</label>
           </div>
 
           <div className="form-group">
@@ -216,7 +205,7 @@ const PlanForm: FC<PlanFormProps> = ({
           <h3>Expense Details</h3>
 
           <div className="form-group">
-            <label htmlFor="expenseValue">Annual Expense</label>
+            <label htmlFor="expenseValue">Annual Expense ({formatMonthYear(formData.planCreatedIn)}) </label>
             <input
               type="text"
               inputMode="numeric"
@@ -242,8 +231,11 @@ const PlanForm: FC<PlanFormProps> = ({
                   ${Number(formData.expenseValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                 </span>
               </div>
+              
             </>
           )}
+
+         
 
           {formData.expenseValue && formData.birthday && formData.retirementAge && formData.planCreatedIn && (
             (() => {

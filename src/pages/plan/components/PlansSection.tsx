@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { FinancialPlan } from '../../../types'
-import PlanMiniCard from '../../../components/PlanMiniCard'
-import PlanDetailedCard from '../../../components/PlanDetailedCard'
+import PlansMiniGrid from './PlansMiniGrid'
+import PlanDetailView from './PlanDetailView'
 import '../../../styles/Plan.css'
 
 interface PlansSectionProps {
@@ -30,35 +30,18 @@ const PlansSection: FC<PlansSectionProps> = ({
         </div>
       ) : (
         <>
-          {/* Mini Plan Cards (Top Row) */}
-          <div className="plans-mini-grid">
-            {plans.map(plan => (
-              <PlanMiniCard
-                key={plan.id}
-                plan={plan}
-                isSelected={selectedPlanId === plan.id}
-                onClick={() => onSelectPlan(plan.id)}
-              />
-            ))}
-          </div>
-
-          {/* Detailed Plan View (Bottom) */}
-          {selectedPlanId && (
-            <div className="plan-detail-container">
-              {plans.map(plan => {
-                if (plan.id !== selectedPlanId) return null
-                return (
-                  <PlanDetailedCard
-                    key={plan.id}
-                    plan={plan}
-                    onEdit={onEditPlan}
-                    onCopy={onCopyPlan}
-                    onDelete={onDeletePlan}
-                  />
-                )
-              })}
-            </div>
-          )}
+          <PlansMiniGrid
+            plans={plans}
+            selectedPlanId={selectedPlanId}
+            onSelectPlan={onSelectPlan}
+          />
+          <PlanDetailView
+            plans={plans}
+            selectedPlanId={selectedPlanId}
+            onEditPlan={onEditPlan}
+            onCopyPlan={onCopyPlan}
+            onDeletePlan={onDeletePlan}
+          />
         </>
       )}
     </div>
@@ -66,3 +49,4 @@ const PlansSection: FC<PlansSectionProps> = ({
 }
 
 export default PlansSection
+

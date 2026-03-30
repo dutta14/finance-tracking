@@ -1,0 +1,100 @@
+.dive-deep-container {
+  margin-top: 1.5rem;
+  border: 1px solid #e5e5e5;
+  border-top: 3px solid #000;
+  padding: 2rem;
+  background: white;
+}
+
+.dive-deep-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  color: #000;
+}
+
+.dive-deep-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.dive-deep-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.dive-deep-section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #000;
+  margin: 0 0 0.5rem 0;
+}
+
+.dive-deep-placeholder {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+  font-style: italic;
+}
+
+.btn-dive-deep {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: none;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border-radius: 0;
+  font-family: inherit;
+}
+
+.btn-dive-deep:hover {
+  background: #000;
+  color: #fff;
+}
+
+.btn-dive-deep.active {
+  background: #000;
+  color: #fff;
+}
+
+/* Dark mode */
+body.dark .dive-deep-container {
+  background: #2c313a;
+  border-color: #363c48;
+  border-top-color: #e5e7eb;
+}
+
+body.dark .dive-deep-title {
+  color: #fff;
+}
+
+body.dark .dive-deep-section {
+  border-bottom-color: #363c48;
+}
+
+body.dark .dive-deep-section h4 {
+  color: #e5e7eb;
+}
+
+body.dark .dive-deep-placeholder {
+  color: #6b7280;
+}
+
+body.dark .btn-dive-deep {
+  border-color: #e5e7eb;
+  color: #e5e7eb;
+}
+
+body.dark .btn-dive-deep:hover,
+body.dark .btn-dive-deep.active {
+  background: #e5e7eb;
+  color: #181c20;
+}
