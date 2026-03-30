@@ -21,6 +21,12 @@ body.dark .sidebar-link:hover {
   background: #23272f;
 }
 
+body.dark .sidebar-settings-section {
+  border-top: 1px solid #23272f;
+}
+body.dark .settings-menu-trigger {
+  color: #bfc4cc !important;
+}
 body.dark .settings-menu-dropdown {
   background: #23272f !important;
   color: #e5e7eb !important;
@@ -106,6 +112,17 @@ body.dark .settings-menu-item:hover {
   --sidebar-toggle-color: #000;
 }
 
+.sidebar-settings-section {
+  margin-top: auto;
+  width: 100%;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 0.5rem;
+}
+
+.settings-menu-trigger {
+  color: #565758 !important;
+}
+
 .sidebar-toggle svg {
   color: var(--sidebar-toggle-color, #000);
   fill: var(--sidebar-toggle-color, #000);
@@ -117,12 +134,12 @@ body.dark .sidebar-toggle svg {
 
 @media (max-width: 900px) {
   .sidebar {
-    width: 56px;
-    padding-left: 0.5rem;
-    align-items: center;
+    width: 260px;
+    z-index: 200;
   }
   .sidebar.collapsed {
     width: 0;
     padding: 0;
+    overflow: hidden;
   }
 }

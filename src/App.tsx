@@ -8,12 +8,23 @@ import Plan from './pages/plan/Plan'
 const App: FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem('darkMode');
     if (stored === '1') return true;
     if (stored === '0') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 900;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (darkMode) {
@@ -39,16 +50,23 @@ const App: FC = () => {
       {sidebarOpen && (
         <SidebarNavigation
           currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
+          setCurrentPage={(page) => { setCurrentPage(page); if (isMobile) setSidebarOpen(false); }}
           expanded={sidebarOpen}
           setExpanded={setSidebarOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
         />
       )}
+      {/* Backdrop for mobile overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 199, background: 'rgba(0,0,0,0.4)' }}
+        />
+      )}
       <main
         className="main-content"
-        style={{ flex: 1, marginLeft: sidebarOpen ? 220 : 0, padding: 0, minHeight: '100vh', transition: 'margin-left 0.2s' }}
+        style={{ flex: 1, marginLeft: (!isMobile && sidebarOpen) ? 220 : 0, padding: 0, minHeight: '100vh', transition: 'margin-left 0.2s' }}
       >
         {!sidebarOpen && (
           <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 300 }}>

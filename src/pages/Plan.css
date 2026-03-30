@@ -2,6 +2,14 @@
   width: 100%;
 }
 
+section.plan {
+  background: white;
+}
+
+.plan-new-btn-row {
+  background: white;
+}
+
 .plan-header {
   background: white;
   color: #000;
@@ -417,6 +425,12 @@
   }
 }
 
+body.dark section.plan {
+  background: #23272f;
+}
+body.dark .plan-new-btn-row {
+  background: #23272f;
+}
 body.dark .plan-header {
   background: #181c20;
   color: #e5e7eb;
@@ -432,22 +446,115 @@ body.dark .plan-content {
   background: #23272f;
 }
 body.dark .plan-form-section {
-  background: #23272f;
-  border: 1px solid #23272f;
+  background: #2c313a;
+  border: 1px solid #363c48;
 }
 body.dark .plan-form-section h2 {
   color: #fff;
 }
-body.dark .btn-create.btn-small {
-  background: #fff !important;
-  color: #181c20 !important;
-  border: 1px solid #fff !important;
+body.dark .form-group label {
+  color: #e5e7eb;
 }
-body.dark .btn-create.btn-small:hover {
-  background: #e5e7eb !important;
-  color: #181c20 !important;
+body.dark .form-group input,
+body.dark .form-group textarea {
+  background: #181c20;
+  color: #e5e7eb;
+  border-color: #363c48;
+}
+body.dark .form-group input:focus,
+body.dark .form-group textarea:focus {
+  border-color: #6b7280;
+}
+body.dark .form-group input::placeholder,
+body.dark .form-group textarea::placeholder {
+  color: #6b7280;
+}
+body.dark .form-section {
+  border-top-color: #363c48;
+}
+body.dark .form-section h3 {
+  color: #bfc4cc;
+}
+body.dark .display-value {
+  background: #181c20;
+  border-color: #363c48;
+  color: #e5e7eb;
+}
+body.dark .display-field label {
+  color: #e5e7eb;
+}
+body.dark .btn-create {
+  background: #fff;
+  color: #181c20;
+  border: 1px solid #fff;
+}
+body.dark .btn-create:hover {
+  background: #e5e7eb;
+  color: #181c20;
+}
+body.dark .btn-cancel {
+  background: #2c313a;
+  color: #e5e7eb;
+  border-color: #363c48;
+}
+body.dark .btn-cancel:hover {
+  border-color: #6b7280;
 }
 body.dark .plan-results-section h2 {
-  color: #fff !important;
+  color: #fff;
+}
+body.dark .plan-card {
+  background: #2c313a;
+  border-color: #363c48;
+}
+body.dark .plan-card:hover {
+  border-color: #6b7280;
+}
+body.dark .plan-card h3 {
+  color: #fff;
+}
+body.dark .plan-description {
+  color: #bfc4cc;
+}
+body.dark .plan-card-details {
+  border-top-color: #363c48;
+  border-bottom-color: #363c48;
+}
+body.dark .plan-card-calculations h4 {
+  color: #e5e7eb;
+}
+body.dark .detail-row {
+  color: #bfc4cc;
+}
+body.dark .detail-row .label {
+  color: #e5e7eb;
+}
+body.dark .detail-row .value {
+  color: #bfc4cc;
+}
+body.dark .plan-meta {
+  color: #6b7280;
+  border-top-color: #363c48;
+}
+body.dark .empty-state {
+  background: #2c313a;
+  border-color: #363c48;
+}
+body.dark .empty-state p {
+  color: #bfc4cc;
+}
+body.dark .btn-delete {
+  color: #6b7280;
+}
+body.dark .btn-delete:hover {
+  color: #e5e7eb;
+}
+body.dark .checkbox-group label {
+  color: #e5e7eb;
+}
+body.dark .form-error {
+  background: #3a1c1c;
+  border-color: #7a2020;
+  color: #f87171;
 }
 

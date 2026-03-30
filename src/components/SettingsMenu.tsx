@@ -63,7 +63,7 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode }) => 
               textAlign: 'left',
               padding: '0.7rem 1.2rem',
               fontSize: '1rem',
-              color: 'inherit',
+              color: '#000',
               cursor: 'pointer',
               fontWeight: 400,
             }}

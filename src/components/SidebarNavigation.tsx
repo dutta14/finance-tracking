@@ -39,7 +39,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({ currentPage, setCurrent
         </ul>
       )}
       {expanded && (
-        <div style={{ marginTop: 'auto', width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div className="sidebar-settings-section">
           <SettingsMenu darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
         </div>
       )}

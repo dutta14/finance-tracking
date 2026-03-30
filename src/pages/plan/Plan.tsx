@@ -55,7 +55,7 @@ const Plan: FC = () => {
         <h1>Plan</h1>
         <p>Model different financial scenarios</p>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 24px 1.2rem 0' }}>
+      <div className="plan-new-btn-row" style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 24px 1.2rem 0' }}>
         <NewPlanButton
           onClick={() => {
             resetForm();

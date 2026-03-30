@@ -55,6 +55,10 @@ button {
 }
 
 /* Dark mode support (optional) */
+body:not(.dark) {
+  background-color: #ffffff !important;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #000;
