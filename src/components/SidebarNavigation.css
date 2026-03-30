@@ -1,3 +1,38 @@
+body.dark {
+  background: #181c20 !important;
+  color: #e5e7eb !important;
+}
+
+.sidebar.dark, body.dark .sidebar {
+  background: #181c20;
+  border-right: 1px solid #23272f;
+}
+
+body.dark .sidebar-logo {
+  color: #fff;
+}
+
+body.dark .sidebar-link {
+  color: #bfc4cc;
+}
+body.dark .sidebar-link.active,
+body.dark .sidebar-link:hover {
+  color: #fff;
+  background: #23272f;
+}
+
+body.dark .settings-menu-dropdown {
+  background: #23272f !important;
+  color: #e5e7eb !important;
+  border: 1px solid #23272f !important;
+}
+body.dark .settings-menu-item {
+  color: #e5e7eb !important;
+}
+body.dark .settings-menu-item:hover {
+  background: #181c20 !important;
+}
+
 .sidebar {
   position: fixed;
   top: 0;
@@ -68,6 +103,16 @@
 
 .sidebar-toggle {
   margin-bottom: 2rem;
+  --sidebar-toggle-color: #000;
+}
+
+.sidebar-toggle svg {
+  color: var(--sidebar-toggle-color, #000);
+  fill: var(--sidebar-toggle-color, #000);
+}
+body.dark .sidebar-toggle svg {
+  color: #e5e7eb !important;
+  fill: #e5e7eb !important;
 }
 
 @media (max-width: 900px) {

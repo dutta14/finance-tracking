@@ -417,3 +417,37 @@
   }
 }
 
+body.dark .plan-header {
+  background: #181c20;
+  color: #e5e7eb;
+  border-bottom: 1px solid #23272f;
+}
+body.dark .plan-header h1 {
+  color: #fff;
+}
+body.dark .plan-header p {
+  color: #bfc4cc;
+}
+body.dark .plan-content {
+  background: #23272f;
+}
+body.dark .plan-form-section {
+  background: #23272f;
+  border: 1px solid #23272f;
+}
+body.dark .plan-form-section h2 {
+  color: #fff;
+}
+body.dark .btn-create.btn-small {
+  background: #fff !important;
+  color: #181c20 !important;
+  border: 1px solid #fff !important;
+}
+body.dark .btn-create.btn-small:hover {
+  background: #e5e7eb !important;
+  color: #181c20 !important;
+}
+body.dark .plan-results-section h2 {
+  color: #fff !important;
+}
+

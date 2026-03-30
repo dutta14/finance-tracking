@@ -139,3 +139,43 @@
     padding: 3rem 1rem;
   }
 }
+
+body.dark .home-page {
+  background: #181c20;
+  color: #e5e7eb;
+}
+body.dark .hero {
+  background: #181c20;
+  color: #fff;
+}
+body.dark .hero-content h1 {
+  color: #fff;
+}
+body.dark .hero-content p {
+  color: #bfc4cc;
+}
+body.dark .features {
+  background: #23272f;
+  border-top: 1px solid #23272f;
+}
+body.dark .feature-card {
+  background: #23272f;
+  color: #e5e7eb;
+}
+body.dark .feature-card h3 {
+  color: #fff;
+}
+body.dark .feature-card p {
+  color: #bfc4cc;
+}
+body.dark .cta-section {
+  background: #181c20;
+  color: #fff;
+  border-top: 1px solid #23272f;
+}
+body.dark .cta-content h2 {
+  color: #fff;
+}
+body.dark .cta-content p {
+  color: #bfc4cc;
+}

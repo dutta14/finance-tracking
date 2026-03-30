@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, useEffect } from 'react'
 import { PageType } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
@@ -8,6 +8,21 @@ import Plan from './pages/plan/Plan'
 const App: FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('darkMode');
+    if (stored === '1') return true;
+    if (stored === '0') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode ? '1' : '0');
+  }, [darkMode]);
 
   const renderPage = (): React.ReactNode => {
     switch (currentPage) {
@@ -27,6 +42,8 @@ const App: FC = () => {
           setCurrentPage={setCurrentPage}
           expanded={sidebarOpen}
           setExpanded={setSidebarOpen}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
         />
       )}
       <main

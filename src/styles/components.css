@@ -76,3 +76,73 @@
 .btn-delete:hover {
   color: #000;
 }
+
+body.dark .plan-mini-card {
+  background: #23272f;
+  border-color: #23272f;
+}
+
+body.dark .plan-mini-card.selected {
+  background: #181c20;
+  border-color: #fff;
+}
+
+body.dark .plan-mini-card h4 {
+  color: #fff;
+}
+
+body.dark .mini-value .label {
+  color: #bfc4cc;
+}
+
+body.dark .mini-value .amount {
+  color: #fff;
+}
+
+body.dark .plan-card-actions button {
+  color: #bfc4cc;
+}
+
+body.dark .plan-card-actions button:hover {
+  color: #fff;
+}
+
+body.dark .plan-card {
+  background: #23272f;
+  color: #e5e7eb;
+  border: 1px solid #23272f;
+}
+
+body.dark .plan-card-header h3 {
+  color: #fff;
+}
+
+body.dark .plan-card-details .label {
+  color: #bfc4cc;
+}
+
+body.dark .plan-card-details .value {
+  color: #fff;
+}
+
+body.dark .plan-card-calculations {
+  background: #23272f;
+  color: #e5e7eb;
+  border-top: 1px solid #23272f;
+}
+
+body.dark .plan-card-calculations h4 {
+  color: #fff;
+}
+
+body.dark .plan-card-calculations .label {
+  color: #bfc4cc;
+}
+
+body.dark .plan-card-calculations .value {
+  color: #fff;
+}
+
+body.dark .plan-meta {
+  color: #bfc4cc;
+}

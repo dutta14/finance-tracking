@@ -1,14 +1,17 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { NavigationProps } from '../types';
 import SidebarToggle from './SidebarToggle';
+import SettingsMenu from './SettingsMenu';
 import './SidebarNavigation.css';
 
 interface SidebarNavigationProps extends NavigationProps {
   expanded: boolean;
   setExpanded: (open: boolean) => void;
+  darkMode: boolean;
+  setDarkMode: (v: boolean) => void;
 }
 
-const SidebarNavigation: FC<SidebarNavigationProps> = ({ currentPage, setCurrentPage, expanded, setExpanded }) => {
+const SidebarNavigation: FC<SidebarNavigationProps> = ({ currentPage, setCurrentPage, expanded, setExpanded, darkMode, setDarkMode }) => {
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>  
       <SidebarToggle expanded={expanded} onToggle={() => setExpanded(false)} />
@@ -34,6 +37,11 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({ currentPage, setCurrent
             </button>
           </li>
         </ul>
+      )}
+      {expanded && (
+        <div style={{ marginTop: 'auto', width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <SettingsMenu darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
+        </div>
       )}
     </nav>
   );
