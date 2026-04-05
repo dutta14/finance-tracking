@@ -223,7 +223,7 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
             </div>
           </div>
         )}
-        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} />
+        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} showTitle={false} />
         <button
           className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
           onClick={() => setDiveDeepOpen(v => !v)}

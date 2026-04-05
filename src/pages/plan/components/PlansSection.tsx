@@ -1,5 +1,5 @@
 import { FC, useState } from 'react'
-import { FinancialPlan } from '../../../types'
+import { FinancialPlan, GwPlan } from '../../../types'
 import PlansMiniGrid from './PlansMiniGrid'
 import PlanDetailPane from './PlanDetailPane'
 import PlanCompareView from './PlanCompareView'
@@ -11,6 +11,7 @@ import './PlanCompareView.css'
 interface PlansSectionProps {
   plans: FinancialPlan[]
   profileBirthday: string
+  gwPlans: GwPlan[]
   selectedPlanIds: number[]
   onSelectPlan: (planId: number, multi: boolean) => void
   onUpdatePlan: (planId: number, plan: FinancialPlan) => void
@@ -27,6 +28,7 @@ interface PlansSectionProps {
 const PlansSection: FC<PlansSectionProps> = ({
   plans,
   profileBirthday,
+  gwPlans,
   selectedPlanIds,
   onSelectPlan,
   onUpdatePlan,
@@ -116,6 +118,8 @@ const PlansSection: FC<PlansSectionProps> = ({
               onRenamePlan={onRenamePlan}
               onCopyPlan={onCopyPlan}
               onDeletePlan={onDeletePlan}
+              gwPlans={gwPlans}
+              profileBirthday={profileBirthday}
             />
           </div>
           {selectedPlans.length > 1 && (
@@ -127,6 +131,7 @@ const PlansSection: FC<PlansSectionProps> = ({
         <PlanDetailPane
           plan={selectedPlans[0]}
           profileBirthday={profileBirthday}
+          gwPlans={gwPlans}
           onClose={onClearSelection}
           onGoToPlan={onGoToPlan}
           onGoToPlanEdit={onGoToPlanEdit}

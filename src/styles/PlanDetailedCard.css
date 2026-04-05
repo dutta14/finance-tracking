@@ -16,6 +16,18 @@
   box-shadow: 0 2px 12px rgba(79, 137, 232, 0.13);
 }
 
+.fi-card--flat {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.fi-card--flat:hover {
+  box-shadow: none;
+}
+
 /* ── Warning banner ── */
 .fi-card-warning {
   display: flex;

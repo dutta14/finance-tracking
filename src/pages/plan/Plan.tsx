@@ -1,5 +1,5 @@
 import { FC, useState } from 'react'
-import { FinancialPlan } from '../../types'
+import { FinancialPlan, GwPlan } from '../../types'
 import PlanFormModal from './components/PlanFormModal'
 import PlansSection from './components/PlansSection'
 import { useFormData } from './hooks/useFormData'
@@ -20,9 +20,10 @@ interface PlanProps {
   onGoToPlan: (planId: number) => void
   onGoToPlanEdit: (planId: number) => void
   onCopyGwGoals: (sourcePlanId: number, newPlanId: number) => void
+  gwPlans: GwPlan[]
 }
 
-const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan, onGoToPlanEdit, onCopyGwGoals }) => {
+const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan, onGoToPlanEdit, onCopyGwGoals, gwPlans }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
   const { editingPlanId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -103,6 +104,7 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
           <PlansSection
             plans={plans}
             profileBirthday={profileBirthday}
+            gwPlans={gwPlans}
             selectedPlanIds={selectedPlanIds}
             onSelectPlan={handleSelectPlan}
             onUpdatePlan={updatePlan}

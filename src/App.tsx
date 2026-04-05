@@ -234,6 +234,7 @@ const App: FC = () => {
               onGoToPlan={handleGoToPlan}
               onGoToPlanEdit={handleGoToPlanEdit}
               onCopyGwGoals={handleCopyGwGoals}
+              gwPlans={gwPlans}
             />
           }
         />

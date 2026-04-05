@@ -1,14 +1,54 @@
 import { FC, useState, useRef, useEffect } from 'react'
-import { FinancialPlan } from '../../../types'
+import { FinancialPlan, GwPlan } from '../../../types'
 import PlanDetailedCard from '../../../components/PlanDetailedCard'
-import PlanDiveDeep from './PlanDiveDeep'
 import PlanActionsMenu from '../../../components/PlanActionsMenu'
-import './PlanDiveDeep.css'
 import '../../../styles/PlanDetailPane.css'
+
+const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
+
+const GwGoalSummary: FC<{ gw: GwPlan; plan: FinancialPlan; profileBirthday: string }> = ({ gw, plan, profileBirthday }) => {
+  const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
+  const created = new Date(plan.planCreatedIn)
+  const disburseYear = birthYear + gw.disburseAge
+  const retirementYear = birthYear + plan.retirementAge
+  const monthsToDisburse = Math.max(0,
+    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
+  )
+  const disbursementTarget = gw.disburseAmount * Math.pow(1 + plan.inflationRate / 100 / 12, monthsToDisburse)
+  const monthsRetToDisburse = Math.max(0, (gw.disburseAge - plan.retirementAge) * 12)
+  const pvAtRetirement = monthsRetToDisburse > 0
+    ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
+    : disbursementTarget
+  const progressPct = pvAtRetirement > 0
+    ? Math.min(100, Math.max(0, ((gw.currentSavings ?? 0) / pvAtRetirement) * 100))
+    : 0
+
+  return (
+    <div className="pane-gw-goal">
+      <div className="pane-gw-goal-header">
+        <span className="pane-gw-badge">GW</span>
+        <span className="pane-gw-goal-label">{gw.label || 'Unnamed goal'}</span>
+      </div>
+      <div className="pane-gw-goal-milestone">
+        <div className="pane-gw-goal-milestone-top">
+          <span className="pane-gw-goal-milestone-label">Goal by retirement ({retirementYear})</span>
+          <span className="pane-gw-goal-milestone-amount">{dollars(pvAtRetirement)}</span>
+        </div>
+        <div className="pane-gw-goal-progress-row">
+          <div className="pane-gw-goal-progress-track">
+            <div className="pane-gw-goal-progress-fill" style={{ width: `${progressPct}%` }} />
+          </div>
+          <span className="pane-gw-goal-progress-pct">{progressPct.toFixed(1)}%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface PlanDetailPaneProps {
   plan: FinancialPlan
   profileBirthday: string
+  gwPlans: GwPlan[]
   onClose: () => void
   onGoToPlan: (planId: number) => void
   onGoToPlanEdit: (planId: number) => void
@@ -19,16 +59,14 @@ interface PlanDetailPaneProps {
 }
 
 const PlanDetailPane: FC<PlanDetailPaneProps> = ({
-  plan, profileBirthday, onClose, onGoToPlan, onGoToPlanEdit, onUpdatePlan, onCopyPlan, onDeletePlan, onRenamePlan,
+  plan, profileBirthday, gwPlans, onClose, onGoToPlan, onGoToPlanEdit, onUpdatePlan, onCopyPlan, onDeletePlan, onRenamePlan,
 }) => {
-  const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [renameMode, setRenameMode] = useState(false)
   const [renameName, setRenameName] = useState('')
   const renameInputRef = useRef<HTMLInputElement>(null)
 
   // Reset state when a different plan is selected
   useEffect(() => {
-    setDiveDeepOpen(false)
     setRenameMode(false)
   }, [plan.id])
 
@@ -100,14 +138,14 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
       </div>
 
       <div className="plan-detail-pane-body">
-        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} />
-        <button
-          className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
-          onClick={() => setDiveDeepOpen(v => !v)}
-        >
-          {diveDeepOpen ? 'Close Deep Analysis ↑' : 'Dive Deep ↓'}
-        </button>
-        {diveDeepOpen && <PlanDiveDeep plan={plan} profileBirthday={profileBirthday} />}
+        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} condensed={true} showTitle={false} />
+        {gwPlans.filter(g => g.fiPlanId === plan.id).length > 0 && (
+          <div className="pane-gw-goals-section">
+            {gwPlans.filter(g => g.fiPlanId === plan.id).map(g => (
+              <GwGoalSummary key={g.id} gw={g} plan={plan} profileBirthday={profileBirthday} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

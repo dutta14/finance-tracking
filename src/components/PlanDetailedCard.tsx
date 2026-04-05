@@ -11,6 +11,8 @@ interface PlanDetailedCardProps {
   onDelete?: (planId: number) => void
   onUpdatePlan?: (planId: number, plan: FinancialPlan) => void
   showActions?: boolean
+  condensed?: boolean
+  showTitle?: boolean
 }
 
 // Helper functions
@@ -108,7 +110,7 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
   </span>
 )
 
-const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, onUpdatePlan, showActions = true }) => {
+const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, onUpdatePlan, showActions = true, condensed = false, showTitle = true }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
   const [suggesting, setSuggesting] = useState(false)
   const birthDate = parseDate(profileBirthday)
@@ -136,7 +138,7 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
   const progressClamped = Math.min(100, Math.max(0, plan.progress || 0))
 
   return (
-    <div className="fi-card">
+    <div className={`fi-card${condensed ? ' fi-card--flat' : ''}`}>
       {/* ── Warning banner ── */}
       {depletionMonth && (
         <div className="fi-card-warning">
@@ -155,18 +157,20 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
       )}
 
       {/* ── Header ── */}
+      {(showTitle || (showActions && onEdit && onCopy && onDelete)) && (
       <div className="fi-card-header">
         <div className="fi-card-title-row">
           <span className="fi-card-badge">FI</span>
-          <h3 className="fi-card-title">{plan.planName}</h3>
+          {showTitle && <h3 className="fi-card-title">{plan.planName}</h3>}
         </div>
         {showActions && onEdit && onCopy && onDelete && (
           <PlanCardActions plan={plan} onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} />
         )}
       </div>
+      )}
 
       {/* ── Parameters ── */}
-      <div className="fi-card-section">
+      {!condensed && <div className="fi-card-section">
         <div className="fi-card-section-title">Parameters</div>
         <div className="fi-card-rows">
           <div className="fi-card-row">
@@ -196,10 +200,10 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
             <span className="fi-card-row-value">{plan.growth}%</span>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* ── Expense Analysis ── */}
-      <div className="fi-card-section">
+      {!condensed && <div className="fi-card-section">
         <div className="fi-card-section-header">
           <div className="fi-card-section-title">Expenses</div>
           <div className="expense-toggle">
@@ -246,7 +250,7 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
             </>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* ── FI Goal callout ── */}
       <div className="fi-card-goal">
@@ -268,9 +272,9 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
         </div>
       </div>
 
-      <div className="fi-card-meta">
+      {!condensed && <div className="fi-card-meta">
         <small>Created {plan.createdAt}</small>
-      </div>
+      </div>}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react'
-import { FinancialPlan } from '../../../types'
+import { FinancialPlan, GwPlan } from '../../../types'
 import PlanMiniCard from '../../../components/PlanMiniCard'
 
 interface ContextMenuState { x: number; y: number; planId: number }
@@ -14,11 +14,13 @@ interface PlansMiniGridProps {
   onRenamePlan: (planId: number, name: string) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
+  gwPlans: GwPlan[]
+  profileBirthday: string
 }
 
 const PlansMiniGrid: FC<PlansMiniGridProps> = ({
   plans, selectedPlanIds, onSelectPlan, viewMode = 'grid', onReorderPlans,
-  onGoToPlan, onRenamePlan, onCopyPlan, onDeletePlan,
+  onGoToPlan, onRenamePlan, onCopyPlan, onDeletePlan, gwPlans, profileBirthday,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -139,6 +141,8 @@ const PlansMiniGrid: FC<PlansMiniGridProps> = ({
                   isSelected={selectedPlanIds.includes(plan.id)}
                   onClick={(e) => onSelectPlan(plan.id, e.metaKey || e.ctrlKey)}
                   viewMode={viewMode}
+                  gwPlans={gwPlans}
+                  profileBirthday={profileBirthday}
                 />
               )}
             </div>

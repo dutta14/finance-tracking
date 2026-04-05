@@ -103,6 +103,120 @@
   padding: 1.25rem;
 }
 
+/* ── GW goal condensed cards ── */
+.pane-gw-goals-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.pane-gw-goal {
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+  border-radius: 0.6rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.pane-gw-goal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.pane-gw-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.pane-gw-goal-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #14532d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pane-gw-goal-milestone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pane-gw-goal-milestone-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pane-gw-goal-milestone-label {
+  font-size: 0.75rem;
+  color: #166534;
+}
+
+.pane-gw-goal-milestone-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #15803d;
+  white-space: nowrap;
+}
+
+.pane-gw-goal-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pane-gw-goal-progress-track {
+  flex: 1;
+  height: 6px;
+  background: #bbf7d0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pane-gw-goal-progress-fill {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.pane-gw-goal-progress-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #15803d;
+  white-space: nowrap;
+  min-width: 36px;
+  text-align: right;
+}
+
+body.dark .pane-gw-goal {
+  background: #052e16;
+  border-color: #166534;
+}
+body.dark .pane-gw-badge {
+  background: #14532d;
+  border-color: #166534;
+  color: #4ade80;
+}
+body.dark .pane-gw-goal-label { color: #86efac; }
+body.dark .pane-gw-goal-milestone-label { color: #4ade80; }
+body.dark .pane-gw-goal-milestone-amount { color: #22c55e; }
+body.dark .pane-gw-goal-progress-track { background: #14532d; }
+body.dark .pane-gw-goal-progress-fill { background: #22c55e; }
+body.dark .pane-gw-goal-progress-pct { color: #4ade80; }
+
 /* Dark mode */
 body.dark .plan-detail-pane {
   background: #23272f;

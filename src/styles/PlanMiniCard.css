@@ -46,6 +46,17 @@
   color: #000;
 }
 
+.mini-amount--gw {
+  color: #15803d;
+}
+
+.mini-value--total {
+  border-top: 1px solid #e5e5e5;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  font-weight: 700;
+}
+
 body.dark .plan-mini-card {
   background: #2c313a;
   border-color: #363c48;
@@ -70,6 +81,14 @@ body.dark .mini-value .label {
 
 body.dark .mini-value .amount {
   color: #fff;
+}
+
+body.dark .mini-amount--gw {
+  color: #4ade80;
+}
+
+body.dark .mini-value--total {
+  border-top-color: #363c48;
 }
 
 /* List mode */
