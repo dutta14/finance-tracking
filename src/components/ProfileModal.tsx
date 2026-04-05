@@ -10,6 +10,7 @@ interface ProfileModalProps {
 
 const ProfileModal: FC<ProfileModalProps> = ({ profile, onSave, onClose }) => {
   const [name, setName] = useState(profile.name)
+  const [birthday, setBirthday] = useState(profile.birthday || '')
   const [avatarPreview, setAvatarPreview] = useState(profile.avatarDataUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -34,7 +35,7 @@ const ProfileModal: FC<ProfileModalProps> = ({ profile, onSave, onClose }) => {
   }
 
   const handleSave = () => {
-    onSave({ name: name.trim(), avatarDataUrl: avatarPreview })
+    onSave({ name: name.trim(), avatarDataUrl: avatarPreview, birthday })
     onClose()
   }
 
@@ -103,6 +104,18 @@ const ProfileModal: FC<ProfileModalProps> = ({ profile, onSave, onClose }) => {
               placeholder="Your name"
               onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
               autoFocus
+            />
+          </div>
+
+          {/* Birthday */}
+          <div className="profile-field">
+            <label className="profile-label" htmlFor="profile-birthday">Birthday</label>
+            <input
+              id="profile-birthday"
+              className="profile-input"
+              type="date"
+              value={birthday}
+              onChange={e => setBirthday(e.target.value)}
             />
           </div>
         </div>

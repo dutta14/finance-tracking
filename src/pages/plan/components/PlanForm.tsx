@@ -1,4 +1,4 @@
-import { FC, FormEvent } from 'react'
+import { FC, FormEvent, useEffect } from 'react'
 import { FinancialPlan } from '../../../types'
 import { FormData } from '../hooks/useFormData'
 import { calculatePlanMetrics } from '../utils/planCalculations'
@@ -9,6 +9,8 @@ interface PlanFormProps {
   formData: FormData
   error: string
   editingPlanId: number | null
+  profileBirthday: string
+  onOpenProfile: () => void
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   onSubmit: (plan: FinancialPlan) => void
   onCancel: () => void
@@ -19,11 +21,17 @@ const PlanForm: FC<PlanFormProps> = ({
   formData,
   error,
   editingPlanId,
+  profileBirthday,
+  onOpenProfile,
   onInputChange,
   onSubmit,
   onCancel,
   setError
 }) => {
+  useEffect(() => {
+    if (profileBirthday) setError('')
+  }, [profileBirthday])
+
   const formatCurrency = (value: string): string => {
     if (!value) return ''
     const numeric = Number(value)
@@ -39,8 +47,9 @@ const PlanForm: FC<PlanFormProps> = ({
       setError('Please enter a plan name')
       return
     }
-    if (!formData.birthday) {
-      setError('Please enter your birthday')
+    if (!profileBirthday) {
+      setError('Please set your birthday in Profile settings before creating a plan')
+      onOpenProfile()
       return
     }
     if (!formData.planCreatedIn) {
@@ -78,7 +87,7 @@ const PlanForm: FC<PlanFormProps> = ({
 
     const metrics = calculatePlanMetrics(
       annualExpense,
-      formData.birthday,
+      profileBirthday,
       retirementAge,
       formData.planCreatedIn,
       Number(formData.inflationRate) || 0,
@@ -91,7 +100,7 @@ const PlanForm: FC<PlanFormProps> = ({
       id: editingPlanId || Date.now(),
       planName: formData.planName,
       createdAt: new Date().toLocaleString(),
-      birthday: formData.birthday,
+      birthday: profileBirthday,
       planCreatedIn: formData.planCreatedIn,
       planEndYear: formData.planEndYear,
       resetExpenseMonth: formData.resetExpenseMonth,
@@ -128,17 +137,6 @@ const PlanForm: FC<PlanFormProps> = ({
               name="planName"
               placeholder="e.g., Conservative Plan"
               value={formData.planName}
-              onChange={onInputChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="birthday">Birthday</label>
-            <input
-              type="date"
-              id="birthday"
-              name="birthday"
-              value={formData.birthday}
               onChange={onInputChange}
             />
           </div>
@@ -187,12 +185,12 @@ const PlanForm: FC<PlanFormProps> = ({
             </div>
           )}
 
-          {formData.birthday && formData.retirementAge && (
+          {formData.retirementAge && profileBirthday && (
             <div className="display-field">
               <span className="label">Retirement Year:</span>
               <span className="display-value">
                 {(() => {
-                  const birthDate = parseDate(formData.birthday)
+                  const birthDate = parseDate(profileBirthday)
                   const retirementDate = new Date(birthDate.getFullYear() + Number(formData.retirementAge), birthDate.getMonth(), birthDate.getDate())
                   return retirementDate.getFullYear()
                 })()}
@@ -237,11 +235,11 @@ const PlanForm: FC<PlanFormProps> = ({
 
          
 
-          {formData.expenseValue && formData.birthday && formData.retirementAge && formData.planCreatedIn && (
+          {formData.expenseValue && profileBirthday && formData.retirementAge && formData.planCreatedIn && (
             (() => {
               const metrics = calculatePlanMetrics(
                 Number(formData.expenseValue),
-                formData.birthday,
+                profileBirthday,
                 Number(formData.retirementAge),
                 formData.planCreatedIn,
                 Number(formData.inflationRate) || 0,

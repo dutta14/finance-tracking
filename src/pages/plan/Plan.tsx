@@ -8,6 +8,8 @@ import NewPlanButton from './components/NewPlanButton'
 
 interface PlanProps {
   plans: FinancialPlan[];
+  profileBirthday: string;
+  onOpenProfile: () => void;
   createPlan: (plan: FinancialPlan) => void;
   updatePlan: (planId: number, plan: FinancialPlan) => void;
   deletePlan: (planId: number) => void;
@@ -18,7 +20,7 @@ interface PlanProps {
   onGoToPlan: (planId: number) => void;
 }
 
-const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
+const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
   const { editingPlanId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -91,6 +93,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
         <div className="plan-container">
           <PlansSection
             plans={plans}
+            profileBirthday={profileBirthday}
             selectedPlanIds={selectedPlanIds}
             onSelectPlan={handleSelectPlan}
             onUpdatePlan={updatePlan}
@@ -110,6 +113,8 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
           formData={formData}
           error={error}
           editingPlanId={editingPlanId}
+          profileBirthday={profileBirthday}
+          onOpenProfile={onOpenProfile}
           onInputChange={handleInputChange}
           onSubmit={handleCreatePlan}
           onCancel={handleCancelEdit}

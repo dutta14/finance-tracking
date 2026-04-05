@@ -9,7 +9,7 @@ interface SettingsMenuProps {
   onUpdateProfile?: (updates: Partial<Profile>) => void
 }
 
-const defaultProfile: Profile = { name: '', avatarDataUrl: '' }
+const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
 const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {} }) => {
   const [open, setOpen] = useState(false)

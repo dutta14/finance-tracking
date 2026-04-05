@@ -3,6 +3,7 @@ import { useState } from 'react'
 export interface Profile {
   name: string
   avatarDataUrl: string
+  birthday: string
 }
 
 const STORAGE_KEY = 'user-profile'
@@ -12,7 +13,7 @@ const loadProfile = (): Profile => {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return JSON.parse(stored)
   } catch { /* ignore */ }
-  return { name: '', avatarDataUrl: '' }
+  return { name: '', avatarDataUrl: '', birthday: '' }
 }
 
 export const useProfile = () => {

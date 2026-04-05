@@ -10,6 +10,7 @@ import './PlanCompareView.css'
 
 interface PlansSectionProps {
   plans: FinancialPlan[]
+  profileBirthday: string
   selectedPlanIds: number[]
   onSelectPlan: (planId: number, multi: boolean) => void
   onUpdatePlan: (planId: number, plan: FinancialPlan) => void
@@ -24,6 +25,7 @@ interface PlansSectionProps {
 
 const PlansSection: FC<PlansSectionProps> = ({
   plans,
+  profileBirthday,
   selectedPlanIds,
   onSelectPlan,
   onUpdatePlan,
@@ -122,6 +124,7 @@ const PlansSection: FC<PlansSectionProps> = ({
       {selectedPlans.length === 1 && (
         <PlanDetailPane
           plan={selectedPlans[0]}
+          profileBirthday={profileBirthday}
           onClose={onClearSelection}
           onGoToPlan={onGoToPlan}
           onUpdatePlan={onUpdatePlan}

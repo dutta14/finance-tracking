@@ -10,6 +10,7 @@ import '../../styles/PlanSoloPage.css'
 interface PlanSoloPageProps {
   plan: FinancialPlan
   plans: FinancialPlan[]
+  profileBirthday: string
   onBack: () => void
   onNavigate: (planId: number) => void
   onUpdatePlan: (planId: number, plan: FinancialPlan) => void
@@ -18,7 +19,6 @@ interface PlanSoloPageProps {
 
 interface EditFields {
   planName: string
-  birthday: string
   planCreatedIn: string
   planEndYear: string
   retirementAge: string
@@ -30,7 +30,6 @@ interface EditFields {
 
 const toEditFields = (p: FinancialPlan): EditFields => ({
   planName: p.planName,
-  birthday: p.birthday,
   planCreatedIn: p.planCreatedIn,
   planEndYear: p.planEndYear,
   retirementAge: String(p.retirementAge),
@@ -40,7 +39,7 @@ const toEditFields = (p: FinancialPlan): EditFields => ({
   growth: String(p.growth),
 })
 
-const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, onBack, onNavigate, onUpdatePlan, onDeletePlan }) => {
+const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onBack, onNavigate, onUpdatePlan, onDeletePlan }) => {
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [renaming, setRenaming] = useState(false)
@@ -75,21 +74,20 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, onBack, onNavigate, 
 
   const handleSave = () => {
     if (!fields.planName.trim()) { setSaveError('Plan name is required'); return }
-    if (!fields.birthday) { setSaveError('Birthday is required'); return }
     if (!fields.planCreatedIn) { setSaveError('Plan creation date is required'); return }
     if (!fields.retirementAge || Number(fields.retirementAge) <= 0) { setSaveError('Valid retirement age required'); return }
     if (!fields.expenseValue || Number(fields.expenseValue) <= 0) { setSaveError('Valid annual expense required'); return }
     const annualExpense = Number(fields.expenseValue)
     const retirementAge = Number(fields.retirementAge)
     const metrics = calculatePlanMetrics(
-      annualExpense, fields.birthday, retirementAge, fields.planCreatedIn,
+      annualExpense, profileBirthday, retirementAge, fields.planCreatedIn,
       Number(fields.inflationRate) || 0, Number(fields.safeWithdrawalRate) || 0,
       getMonthsBetween, parseDate,
     )
     onUpdatePlan(plan.id, {
       ...plan,
       planName: fields.planName.trim(),
-      birthday: fields.birthday,
+      birthday: profileBirthday,
       planCreatedIn: fields.planCreatedIn,
       planEndYear: fields.planEndYear,
       retirementAge,
@@ -179,10 +177,6 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, onBack, onNavigate, 
             {saveError && <p className="plan-solo-edit-error">{saveError}</p>}
             <div className="plan-solo-edit-grid">
               <div className="pane-edit-group">
-                <label className="pane-edit-label">Birthday</label>
-                <input className="pane-edit-input" type="date" value={fields.birthday} onChange={set('birthday')} />
-              </div>
-              <div className="pane-edit-group">
                 <label className="pane-edit-label">Plan Created On</label>
                 <input className="pane-edit-input" type="date" value={fields.planCreatedIn} onChange={set('planCreatedIn')} />
               </div>
@@ -213,7 +207,7 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, onBack, onNavigate, 
             </div>
           </div>
         )}
-        <PlanDetailedCard plan={plan} showActions={false} />
+        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} showActions={false} />
         <button
           className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
           onClick={() => setDiveDeepOpen(v => !v)}

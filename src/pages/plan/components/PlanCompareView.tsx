@@ -25,7 +25,6 @@ interface Row {
 
 const ROWS: Row[] = [
   { label: 'Plan Name',             render: p => p.planName },
-  { label: 'Birthday',              render: p => p.birthday ? parseDate(p.birthday).toLocaleDateString() : '—' },
   { label: 'Plan Created',          render: p => formatMonthYear(p.planCreatedIn) },
   { label: 'Plan End Year',         render: p => p.planEndYear ? String(new Date(p.planEndYear).getFullYear()) : '—' },
   { label: 'Retirement Age',        render: p => String(p.retirementAge) },

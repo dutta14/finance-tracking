@@ -3,7 +3,6 @@ import { FinancialPlan } from '../../../types'
 
 export interface FormData {
   planName: string
-  birthday: string
   planCreatedIn: string
   planEndYear: string
   resetExpenseMonth: boolean
@@ -18,7 +17,6 @@ export interface FormData {
 
 const defaultFormData: FormData = {
   planName: '',
-  birthday: '',
   planCreatedIn: new Date().toISOString().split('T')[0],
   planEndYear: new Date().getFullYear().toString(),
   resetExpenseMonth: false,
@@ -59,7 +57,6 @@ export const useFormData = () => {
   const populateFromPlan = (plan: FinancialPlan, nameSuffix?: string): void => {
     setFormData({
       planName: nameSuffix ? `${plan.planName} ${nameSuffix}` : plan.planName,
-      birthday: plan.birthday,
       planCreatedIn: plan.planCreatedIn,
       planEndYear: plan.planEndYear,
       resetExpenseMonth: plan.resetExpenseMonth,

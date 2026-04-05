@@ -9,9 +9,10 @@ import PlanSoloPage from './pages/plan/PlanSoloPage'
 import UndoToast from './components/UndoToast'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 import { useProfile } from './hooks/useProfile'
+import ProfileModal from './components/ProfileModal'
 
-interface PlanSoloRouteProps { plans: FinancialPlan[]; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void }
-const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, updatePlan, onDelete }) => {
+interface PlanSoloRouteProps { plans: FinancialPlan[]; profileBirthday: string; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void }
+const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updatePlan, onDelete }) => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const plan = plans.find(p => p.id === Number(id))
@@ -20,6 +21,7 @@ const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, updatePlan, onDelete }) 
     <PlanSoloPage
       plan={plan}
       plans={plans}
+      profileBirthday={profileBirthday}
       onBack={() => navigate('/plan')}
       onNavigate={(planId) => navigate(`/plan/${planId}`)}
       onUpdatePlan={updatePlan}
@@ -43,6 +45,8 @@ const App: FC = () => {
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
   const { profile, updateProfile } = useProfile();
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const handleOpenProfile = (): void => setProfileModalOpen(true);
 
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname.startsWith('/plan/')
@@ -188,6 +192,8 @@ const App: FC = () => {
           element={
             <Plan
               plans={visiblePlans}
+              profileBirthday={profile.birthday}
+              onOpenProfile={handleOpenProfile}
               createPlan={createPlan}
               updatePlan={updatePlan}
               deletePlan={handleDeletePlan}
@@ -199,7 +205,7 @@ const App: FC = () => {
             />
           }
         />
-        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} updatePlan={updatePlan} onDelete={handleDeletePlan} />} />
+        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} profileBirthday={profile.birthday} updatePlan={updatePlan} onDelete={handleDeletePlan} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -248,6 +254,13 @@ const App: FC = () => {
         )}
         {renderPage()}
       </main>
+      {profileModalOpen && (
+        <ProfileModal
+          profile={profile}
+          onSave={updateProfile}
+          onClose={() => setProfileModalOpen(false)}
+        />
+      )}
       {pendingDelete && (
         <UndoToast
           message={pendingDelete.message}

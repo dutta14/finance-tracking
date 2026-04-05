@@ -8,6 +8,8 @@ interface PlanFormModalProps {
   formData: FormData
   error: string
   editingPlanId: number | null
+  profileBirthday: string
+  onOpenProfile: () => void
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   onSubmit: (plan: FinancialPlan) => void
   onCancel: () => void

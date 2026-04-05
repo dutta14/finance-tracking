@@ -70,3 +70,136 @@ body.dark .detail-row .label {
 body.dark .detail-row .value {
   color: #bfc4cc;
 }
+
+.fi-goal-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+.expense-analysis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.expense-analysis-header h4 {
+  margin: 0;
+}
+
+.expense-toggle {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.expense-toggle-btn {
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #6b7280;
+  font-weight: 400;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.expense-toggle-btn.active {
+  background: #fff;
+  color: #111;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+body.dark .expense-toggle {
+  background: #1a1d23;
+}
+
+body.dark .expense-toggle-btn {
+  color: #9ca3af;
+}
+
+body.dark .expense-toggle-btn.active {
+  background: #2c313a;
+  color: #e5e7eb;
+}
+
+.fi-goal-info-icon {
+  color: #9ca3af;
+  cursor: default;
+  display: block;
+  flex-shrink: 0;
+}
+
+.fi-goal-info:hover .fi-goal-info-icon {
+  color: #3b82f6;
+}
+
+.fi-goal-tooltip {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  background: #1e2228;
+  color: #e5e7eb;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  z-index: 100;
+  pointer-events: none;
+  font-weight: 400;
+}
+
+.fi-goal-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: #1e2228;
+}
+
+.fi-goal-info:hover .fi-goal-tooltip {
+  display: block;
+}
+
+.fi-goal-tooltip--left {
+  left: auto;
+  right: calc(100% + 8px);
+  white-space: normal;
+  width: max-content;
+  max-width: 240px;
+}
+
+.fi-goal-tooltip--left::after {
+  right: auto;
+  left: 100%;
+  border-right-color: transparent;
+  border-left-color: #1e2228;
+}
+
+body.dark .fi-goal-tooltip--left::after {
+  border-left-color: #111827;
+}
+
+body.dark .fi-goal-tooltip {
+  background: #111827;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+body.dark .fi-goal-tooltip::after {
+  border-right-color: #111827;
+}

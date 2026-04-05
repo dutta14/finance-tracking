@@ -7,6 +7,7 @@ import './PlanDiveDeep.css'
 interface PlanDetailViewProps {
   plans: FinancialPlan[]
   selectedPlanIds: number[]
+  profileBirthday: string
   onEditPlan: (plan: FinancialPlan) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
@@ -15,6 +16,7 @@ interface PlanDetailViewProps {
 const PlanDetailView: FC<PlanDetailViewProps> = ({
   plans,
   selectedPlanIds,
+  profileBirthday,
   onEditPlan,
   onCopyPlan,
   onDeletePlan
@@ -31,6 +33,7 @@ const PlanDetailView: FC<PlanDetailViewProps> = ({
     <div className="plan-detail-container">
       <PlanDetailedCard
         plan={plan}
+        profileBirthday={profileBirthday}
         onEdit={onEditPlan}
         onCopy={onCopyPlan}
         onDelete={onDeletePlan}
