@@ -44,6 +44,16 @@ const App: FC = () => {
     if (isMobile) setSidebarOpen(false);
   };
 
+  const renamePlan = (planId: number, newName: string): void => {
+    const plan = plans.find(p => p.id === planId);
+    if (plan) updatePlan(planId, { ...plan, planName: newName });
+  };
+
+  const handleSidebarDeletePlan = (planId: number): void => {
+    deletePlan(planId);
+    if (selectedNavPlanId === planId) setSelectedNavPlanId(null);
+  };
+
   const renderPage = (): React.ReactNode => {
     switch (currentPage) {
       case 'plan':
@@ -76,6 +86,8 @@ const App: FC = () => {
           plans={plans}
           selectedNavPlanId={selectedNavPlanId}
           onSelectNavPlan={handleSelectNavPlan}
+          onRenamePlan={renamePlan}
+          onDeletePlan={handleSidebarDeletePlan}
         />
       )}
       {/* Backdrop for mobile overlay */}

@@ -138,6 +138,140 @@ body.dark .settings-menu-item:hover {
   width: 100%;
 }
 
+.sidebar-subitem-row {
+  display: flex;
+  align-items: center;
+  border-radius: 0.4rem;
+}
+
+.sidebar-subitem-row .sidebar-sublink {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  border-radius: 0.4rem;
+}
+
+.sidebar-overflow-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  margin-right: 0.25rem;
+}
+
+.sidebar-subitem-row:hover .sidebar-overflow-btn,
+.sidebar-subitem-row.menu-open .sidebar-overflow-btn {
+  opacity: 1;
+}
+
+.sidebar-overflow-btn:hover {
+  background: #e5e5e5;
+  color: #111;
+}
+
+body.dark .sidebar-overflow-btn:hover {
+  background: #363c48;
+  color: #e5e7eb;
+}
+
+/* Context menu */
+.sidebar-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 498;
+}
+
+.sidebar-overflow-menu {
+  position: fixed;
+  z-index: 500;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 140px;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-overflow-menu-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.35rem;
+  font-size: 0.875rem;
+  color: #111;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.sidebar-overflow-menu-item:hover {
+  background: #f2f2f2;
+}
+
+.sidebar-overflow-menu-item--danger {
+  color: #dc2626;
+}
+
+.sidebar-overflow-menu-item--danger:hover {
+  background: #fef2f2;
+}
+
+body.dark .sidebar-overflow-menu {
+  background: #23272f;
+  border-color: #363c48;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+body.dark .sidebar-overflow-menu-item {
+  color: #e5e7eb;
+}
+
+body.dark .sidebar-overflow-menu-item:hover {
+  background: #2d3748;
+}
+
+body.dark .sidebar-overflow-menu-item--danger {
+  color: #f87171;
+}
+
+body.dark .sidebar-overflow-menu-item--danger:hover {
+  background: #3b1c1c;
+}
+
+/* Inline rename input */
+.sidebar-rename-input {
+  background: #fff;
+  border: 1px solid #6b7280;
+  border-radius: 0.35rem;
+  font-size: 0.875rem;
+  color: #111;
+  padding: 0.35rem 0.6rem;
+  width: calc(100% - 0.5rem);
+  margin: 0.1rem 0.25rem;
+  outline: none;
+}
+
+.sidebar-rename-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+body.dark .sidebar-rename-input {
+  background: #181c20;
+  border-color: #6b7280;
+  color: #e5e7eb;
+}
+
 .sidebar-sublink {
   background: none;
   border: none;
