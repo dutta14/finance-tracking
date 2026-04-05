@@ -7,11 +7,18 @@ import '../../styles/PlanSoloPage.css'
 
 interface PlanSoloPageProps {
   plan: FinancialPlan
+  plans: FinancialPlan[]
   onBack: () => void
+  onNavigate: (planId: number) => void
 }
 
-const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, onBack }) => {
+const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, onBack, onNavigate }) => {
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
+
+  const currentIndex = plans.findIndex(p => p.id === plan.id)
+  const total = plans.length
+  const prevPlan = currentIndex > 0 ? plans[currentIndex - 1] : null
+  const nextPlan = currentIndex < total - 1 ? plans[currentIndex + 1] : null
 
   return (
     <section className="plan-solo">
@@ -19,6 +26,27 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, onBack }) => {
         <button className="plan-solo-back" onClick={onBack}>
           ← All Plans
         </button>
+        {total > 1 && (
+          <div className="plan-solo-stepper">
+            <button
+              className="plan-solo-step-btn"
+              onClick={() => prevPlan && onNavigate(prevPlan.id)}
+              disabled={!prevPlan}
+              aria-label="Previous plan"
+            >
+              ‹
+            </button>
+            <span className="plan-solo-step-label">{currentIndex + 1} of {total}</span>
+            <button
+              className="plan-solo-step-btn"
+              onClick={() => nextPlan && onNavigate(nextPlan.id)}
+              disabled={!nextPlan}
+              aria-label="Next plan"
+            >
+              ›
+            </button>
+          </div>
+        )}
       </div>
       <div className="plan-solo-header">
         <h1>{plan.planName}</h1>

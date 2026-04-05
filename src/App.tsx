@@ -15,7 +15,7 @@ const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans }) => {
   const navigate = useNavigate()
   const plan = plans.find(p => p.id === Number(id))
   if (!plan) return <Navigate to="/plan" replace />
-  return <PlanSoloPage plan={plan} onBack={() => navigate('/plan')} />
+  return <PlanSoloPage plan={plan} plans={plans} onBack={() => navigate('/plan')} onNavigate={(planId) => navigate(`/plan/${planId}`)} />
 }
 
 const App: FC = () => {
