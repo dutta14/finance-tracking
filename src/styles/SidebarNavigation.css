@@ -180,6 +180,18 @@ body.dark .settings-menu-item:hover {
   background: #fef2f2;
 }
 
+.sidebar-multiselect-btn--close {
+  border-color: #d1d5db;
+  color: #6b7280;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+}
+
+.sidebar-multiselect-btn--close:hover {
+  background: #f3f4f6;
+  color: #111;
+}
+
 body.dark .sidebar-multiselect-bar {
   background: #1e2a3a;
   border-color: #2d4a6e;
@@ -205,6 +217,16 @@ body.dark .sidebar-multiselect-btn--danger {
 
 body.dark .sidebar-multiselect-btn--danger:hover {
   background: #3b1c1c;
+}
+
+body.dark .sidebar-multiselect-btn--close {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+body.dark .sidebar-multiselect-btn--close:hover {
+  background: #23272f;
+  color: #e5e7eb;
 }
 
 .sidebar-subitem {
@@ -356,9 +378,24 @@ body.dark .sidebar-rename-input {
   width: 100%;
   text-align: left;
   transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.sidebar-sublink-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-checkbox {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .sidebar-sublink:hover {

@@ -11,7 +11,9 @@ interface SidebarNavigationProps extends NavigationProps {
   setDarkMode: (v: boolean) => void;
   plans: FinancialPlan[];
   selectedNavPlanIds: number[];
+  isMultiSelectMode: boolean;
   onSelectNavPlan: (id: number, multi: boolean) => void;
+  onExitMultiSelect: () => void;
   onRenamePlan: (id: number, newName: string) => void;
   onDeletePlan: (id: number) => void;
   onDeleteMultiple: (ids: number[]) => void;
@@ -23,7 +25,8 @@ interface ContextMenuState { x: number; y: number; planId: number }
 
 const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
-  darkMode, setDarkMode, plans, selectedNavPlanIds, onSelectNavPlan,
+  darkMode, setDarkMode, plans, selectedNavPlanIds, isMultiSelectMode,
+  onSelectNavPlan, onExitMultiSelect,
   onRenamePlan, onDeletePlan, onDeleteMultiple, onExport, onImport,
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => {
@@ -68,7 +71,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
     setRenamingPlanId(null);
   };
 
-  const multiSelected = selectedNavPlanIds.length > 1;
+  const multiSelected = isMultiSelectMode;
 
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>
@@ -119,12 +122,22 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                   <div className="sidebar-multiselect-bar">
                     <span className="sidebar-multiselect-count">{selectedNavPlanIds.length} selected</span>
                     <div className="sidebar-multiselect-actions">
+                      {selectedNavPlanIds.length > 0 && (
+                        <button
+                          className="sidebar-multiselect-btn sidebar-multiselect-btn--danger"
+                          title="Delete selected plans"
+                          onClick={() => onDeleteMultiple(selectedNavPlanIds)}
+                        >
+                          Delete
+                        </button>
+                      )}
                       <button
-                        className="sidebar-multiselect-btn sidebar-multiselect-btn--danger"
-                        title="Delete selected plans"
-                        onClick={() => onDeleteMultiple(selectedNavPlanIds)}
+                        className="sidebar-multiselect-btn sidebar-multiselect-btn--close"
+                        title="Exit selection"
+                        aria-label="Exit selection"
+                        onClick={onExitMultiSelect}
                       >
-                        Delete
+                        ✕
                       </button>
                     </div>
                   </div>
@@ -150,10 +163,24 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                           onContextMenu={e => { e.preventDefault(); openContextMenu(plan.id, e.clientX, e.clientY); }}
                         >
                           <button
-                            className={`sidebar-sublink${selectedNavPlanIds.includes(plan.id) && currentPage === 'plan' ? ' active' : ''}`}
+                            className={`sidebar-sublink${multiSelected ? (selectedNavPlanIds.includes(plan.id) ? ' active' : '') : (selectedNavPlanIds.includes(plan.id) && currentPage === 'plan' ? ' active' : '')}`}
                             onClick={e => onSelectNavPlan(plan.id, e.metaKey || e.ctrlKey)}
                           >
-                            {plan.planName}
+                            {multiSelected && (
+                              <span className="sidebar-checkbox" aria-hidden="true">
+                                {selectedNavPlanIds.includes(plan.id) ? (
+                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <rect x="0.5" y="0.5" width="13" height="13" rx="3" fill="#4f89e8" stroke="#4f89e8"/>
+                                    <polyline points="3,7.5 6,10.5 11,4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                ) : (
+                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <rect x="0.5" y="0.5" width="13" height="13" rx="3" stroke="#9ca3af" strokeWidth="1.2"/>
+                                  </svg>
+                                )}
+                              </span>
+                            )}
+                            <span className="sidebar-sublink-name">{plan.planName}</span>
                           </button>
                           <button
                             className="sidebar-overflow-btn"

@@ -9,13 +9,22 @@ import PlanSoloPage from './pages/plan/PlanSoloPage'
 import UndoToast from './components/UndoToast'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 
-interface PlanSoloRouteProps { plans: FinancialPlan[] }
-const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans }) => {
+interface PlanSoloRouteProps { plans: FinancialPlan[]; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void }
+const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, updatePlan, onDelete }) => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const plan = plans.find(p => p.id === Number(id))
   if (!plan) return <Navigate to="/plan" replace />
-  return <PlanSoloPage plan={plan} plans={plans} onBack={() => navigate('/plan')} onNavigate={(planId) => navigate(`/plan/${planId}`)} />
+  return (
+    <PlanSoloPage
+      plan={plan}
+      plans={plans}
+      onBack={() => navigate('/plan')}
+      onNavigate={(planId) => navigate(`/plan/${planId}`)}
+      onUpdatePlan={updatePlan}
+      onDeletePlan={onDelete}
+    />
+  )
 }
 
 const App: FC = () => {
@@ -30,6 +39,7 @@ const App: FC = () => {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { plans, createPlan, updatePlan, deletePlan, importPlans } = useFinancialPlans();
 
   // Derive currentPage from URL for sidebar nav compat
@@ -70,6 +80,7 @@ const App: FC = () => {
       setPendingDelete(null);
     }, 10_000);
     setSelectedNavPlanIds(prev => prev.filter(id => !ids.includes(id)));
+    setIsMultiSelectMode(false);
     setPendingDelete({ ids, savedPlans: affectedPlans, message, timerId });
   };
 
@@ -107,15 +118,20 @@ const App: FC = () => {
   }, [darkMode]);
 
   const handleSelectNavPlan = (planId: number, multi: boolean): void => {
-    navigate('/plan');
-    if (multi) {
+    if (multi || isMultiSelectMode) {
+      if (!isMultiSelectMode) setIsMultiSelectMode(true);
       setSelectedNavPlanIds(prev =>
         prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
       );
     } else {
-      setSelectedNavPlanIds([planId]);
+      navigate(`/plan/${planId}`);
       if (isMobile) setSidebarOpen(false);
     }
+  };
+
+  const handleExitMultiSelect = (): void => {
+    setIsMultiSelectMode(false);
+    setSelectedNavPlanIds([]);
   };
 
   const renamePlan = (planId: number, newName: string): void => {
@@ -177,7 +193,7 @@ const App: FC = () => {
             />
           }
         />
-        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} />} />
+        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} updatePlan={updatePlan} onDelete={handleDeletePlan} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -195,7 +211,9 @@ const App: FC = () => {
           setDarkMode={setDarkMode}
           plans={visiblePlans}
           selectedNavPlanIds={selectedNavPlanIds}
+          isMultiSelectMode={isMultiSelectMode}
           onSelectNavPlan={handleSelectNavPlan}
+          onExitMultiSelect={handleExitMultiSelect}
           onRenamePlan={renamePlan}
           onDeletePlan={handleSidebarDeletePlan}
           onDeleteMultiple={handleSidebarDeleteMultiple}

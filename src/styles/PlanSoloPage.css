@@ -9,6 +9,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .plan-solo-back {
@@ -111,4 +112,137 @@ body.dark .plan-solo-step-btn:hover:not(:disabled) {
 
 body.dark .plan-solo-step-label {
   color: #6b7280;
+}
+
+/* ── Action buttons ── */
+.plan-solo-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.plan-solo-action-btn {
+  background: none;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #555;
+  padding: 0.35rem 0.85rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.plan-solo-action-btn:hover {
+  background: #f7f7f7;
+  color: #111;
+  border-color: #999;
+}
+
+.plan-solo-action-btn--primary {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+.plan-solo-action-btn--primary:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+.plan-solo-action-btn--danger {
+  color: #e53e3e;
+  border-color: #fca5a5;
+}
+
+.plan-solo-action-btn--danger:hover {
+  background: #fff5f5;
+  border-color: #e53e3e;
+}
+
+body.dark .plan-solo-action-btn {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .plan-solo-action-btn:hover {
+  background: #2d3748;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+body.dark .plan-solo-action-btn--primary {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+body.dark .plan-solo-action-btn--primary:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+body.dark .plan-solo-action-btn--danger {
+  color: #fc8181;
+  border-color: #742a2a;
+}
+
+body.dark .plan-solo-action-btn--danger:hover {
+  background: #2d1515;
+  border-color: #fc8181;
+}
+
+/* ── Rename input ── */
+.plan-solo-rename-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111;
+  background: none;
+  border: none;
+  border-bottom: 2px solid #6366f1;
+  outline: none;
+  width: 100%;
+  padding: 0 0 2px;
+}
+
+body.dark .plan-solo-rename-input {
+  color: #e5e7eb;
+  border-bottom-color: #818cf8;
+}
+
+/* ── Edit form ── */
+.plan-solo-edit-form {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+body.dark .plan-solo-edit-form {
+  background: #1e2430;
+  border-color: #363c48;
+}
+
+.plan-solo-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+
+.plan-solo-edit-error {
+  font-size: 0.82rem;
+  color: #e53e3e;
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 0.75rem;
+}
+
+body.dark .plan-solo-edit-error {
+  background: #2d1515;
+  border-color: #742a2a;
+  color: #fc8181;
 }
