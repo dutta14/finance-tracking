@@ -141,6 +141,184 @@ body.dark .pane-overflow-menu-item:hover {
   background: #2d3748;
 }
 
+.pane-overflow-menu-item--danger {
+  color: #e53e3e;
+}
+body.dark .pane-overflow-menu-item--danger {
+  color: #fc8181;
+}
+
+/* ── Edit mode header ── */
+.pane-edit-name-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 8px;
+  outline: none;
+  background: #fff;
+  color: #111;
+}
+.pane-edit-name-input:focus {
+  border-color: #6366f1;
+}
+body.dark .pane-edit-name-input {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #e5e7eb;
+}
+body.dark .pane-edit-name-input:focus {
+  border-color: #818cf8;
+}
+
+.pane-save-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.pane-save-btn:hover {
+  background: #4f46e5;
+}
+
+/* ── Edit form body ── */
+.pane-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pane-edit-error {
+  font-size: 0.82rem;
+  color: #e53e3e;
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 0.75rem;
+}
+body.dark .pane-edit-error {
+  background: #2d1515;
+  border-color: #742a2a;
+  color: #fc8181;
+}
+
+.pane-edit-section {
+  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pane-edit-section:last-of-type {
+  border-bottom: none;
+}
+body.dark .pane-edit-section {
+  border-bottom-color: #2d3748;
+}
+
+.pane-edit-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  margin: 0 0 0.75rem;
+}
+
+.pane-edit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 0.6rem;
+}
+.pane-edit-group:last-child {
+  margin-bottom: 0;
+}
+
+.pane-edit-label {
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+body.dark .pane-edit-label {
+  color: #9ca3af;
+}
+
+.pane-edit-input {
+  font-size: 0.875rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 8px;
+  outline: none;
+  background: #fff;
+  color: #111;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.pane-edit-input:focus {
+  border-color: #6366f1;
+}
+body.dark .pane-edit-input {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #e5e7eb;
+}
+body.dark .pane-edit-input:focus {
+  border-color: #818cf8;
+}
+
+.pane-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.pane-edit-save-btn {
+  flex: 1;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pane-edit-save-btn:hover {
+  background: #4f46e5;
+}
+
+.pane-edit-cancel-btn {
+  flex: 1;
+  background: none;
+  border: 1.5px solid #d1d5db;
+  border-radius: 7px;
+  padding: 8px;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pane-edit-cancel-btn:hover {
+  background: #f3f4f6;
+}
+body.dark .pane-edit-cancel-btn {
+  border-color: #4a5568;
+  color: #d1d5db;
+}
+body.dark .pane-edit-cancel-btn:hover {
+  background: #2d3748;
+}
+
 @media (max-width: 600px) {
   .plan-detail-pane {
     width: 100vw;

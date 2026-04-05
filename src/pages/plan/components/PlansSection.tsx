@@ -12,7 +12,7 @@ interface PlansSectionProps {
   plans: FinancialPlan[]
   selectedPlanIds: number[]
   onSelectPlan: (planId: number, multi: boolean) => void
-  onEditPlan: (plan: FinancialPlan) => void
+  onUpdatePlan: (planId: number, plan: FinancialPlan) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
   onDeleteMultiple: (ids: number[]) => void
@@ -24,7 +24,7 @@ const PlansSection: FC<PlansSectionProps> = ({
   plans,
   selectedPlanIds,
   onSelectPlan,
-  onEditPlan,
+  onUpdatePlan,
   onCopyPlan,
   onDeletePlan,
   onDeleteMultiple,
@@ -115,7 +115,7 @@ const PlansSection: FC<PlansSectionProps> = ({
           plan={selectedPlans[0]}
           onClose={onClearSelection}
           onGoToPlan={onGoToPlan}
-          onEditPlan={onEditPlan}
+          onUpdatePlan={onUpdatePlan}
           onCopyPlan={onCopyPlan}
           onDeletePlan={onDeletePlan}
         />

@@ -19,7 +19,7 @@ interface PlanProps {
 
 const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
-  const { editingPlanId, startEditing, stopEditing } = useEditingState()
+  const { editingPlanId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
 
   const handleSelectPlan = (planId: number, multi: boolean): void => {
@@ -50,14 +50,6 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
     }
     resetForm()
     setShowForm(false)
-  }
-
-  const handleEditPlan = (plan: FinancialPlan): void => {
-    onSetSelectedPlanIds([])
-    populateFromPlan(plan)
-    startEditing(plan.id)
-    setShowForm(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleCopyPlan = (plan: FinancialPlan): void => {
@@ -108,7 +100,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
                 plans={plans}
                 selectedPlanIds={selectedPlanIds}
                 onSelectPlan={handleSelectPlan}
-                onEditPlan={handleEditPlan}
+                onUpdatePlan={updatePlan}
                 onCopyPlan={handleCopyPlan}
                 onDeletePlan={deletePlan}
                 onDeleteMultiple={handleDeleteMultiple}
@@ -122,7 +114,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
                 plans={plans}
                 selectedPlanIds={selectedPlanIds}
                 onSelectPlan={handleSelectPlan}
-                onEditPlan={handleEditPlan}
+                onUpdatePlan={updatePlan}
                 onCopyPlan={handleCopyPlan}
                 onDeletePlan={deletePlan}
                 onDeleteMultiple={handleDeleteMultiple}
