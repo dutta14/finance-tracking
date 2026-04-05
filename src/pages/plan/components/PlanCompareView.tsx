@@ -16,7 +16,7 @@ const formatMonthYear = (dateString: string): string => {
   return parseDate(dateString).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-const fmt = (n: number, decimals = 2) => n.toLocaleString(undefined, { maximumFractionDigits: decimals })
+const dollars = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
 interface Row {
   label: string
@@ -32,11 +32,11 @@ const ROWS: Row[] = [
   { label: 'Inflation Rate',        render: p => `${p.inflationRate}%` },
   { label: 'Safe Withdrawal Rate',  render: p => `${p.safeWithdrawalRate}%` },
   { label: 'Growth Rate',           render: p => `${p.growth}%` },
-  { label: 'Annual Expense (at creation)', render: p => `$${fmt(p.expenseValue)}` },
-  { label: 'Monthly Expense (at creation)', render: p => `$${fmt(p.monthlyExpenseValue)}` },
-  { label: 'Annual Expense (at retirement)', render: p => `$${fmt(p.expenseValue2047)}` },
-  { label: 'Monthly Expense (at retirement)', render: p => `$${fmt(p.monthlyExpense2047)}` },
-  { label: 'FI Goal',               render: p => `$${fmt(p.fiGoal, 0)}` },
+  { label: 'Annual Expense (at creation)', render: p => dollars(p.expenseValue) },
+  { label: 'Monthly Expense (at creation)', render: p => dollars(p.monthlyExpenseValue) },
+  { label: 'Annual Expense (at retirement)', render: p => dollars(p.expenseValue2047) },
+  { label: 'Monthly Expense (at retirement)', render: p => dollars(p.monthlyExpense2047) },
+  { label: 'FI Goal',               render: p => dollars(p.fiGoal) },
   { label: 'Progress',              render: p => `${p.progress.toFixed(1)}%` },
 ]
 
