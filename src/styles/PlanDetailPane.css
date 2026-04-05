@@ -1,0 +1,148 @@
+.plan-detail-pane {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: #fff;
+  border-left: 1px solid #e5e5e5;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  animation: pane-slide-in 0.2s ease;
+}
+
+@keyframes pane-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.plan-detail-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.plan-detail-pane-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.plan-detail-pane-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.pane-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pane-icon-btn:hover {
+  background: #f2f2f2;
+  color: #111;
+}
+
+.pane-overflow-wrapper {
+  position: relative;
+}
+
+.pane-overflow-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 130px;
+  padding: 0.3rem;
+  z-index: 10;
+}
+
+.pane-overflow-menu-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.35rem;
+  font-size: 0.875rem;
+  color: #111;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.pane-overflow-menu-item:hover {
+  background: #f2f2f2;
+}
+
+.plan-detail-pane-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.25rem;
+}
+
+/* Dark mode */
+body.dark .plan-detail-pane {
+  background: #23272f;
+  border-left-color: #363c48;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+body.dark .plan-detail-pane-header {
+  border-bottom-color: #363c48;
+}
+
+body.dark .plan-detail-pane-title {
+  color: #e5e7eb;
+}
+
+body.dark .pane-icon-btn {
+  color: #9ca3af;
+}
+
+body.dark .pane-icon-btn:hover {
+  background: #2d3748;
+  color: #e5e7eb;
+}
+
+body.dark .pane-overflow-menu {
+  background: #23272f;
+  border-color: #363c48;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+body.dark .pane-overflow-menu-item {
+  color: #e5e7eb;
+}
+
+body.dark .pane-overflow-menu-item:hover {
+  background: #2d3748;
+}
+
+@media (max-width: 600px) {
+  .plan-detail-pane {
+    width: 100vw;
+  }
+}

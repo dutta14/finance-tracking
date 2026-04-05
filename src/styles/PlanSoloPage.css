@@ -1,0 +1,60 @@
+.plan-solo {
+  padding: 2rem 2rem 3rem;
+  min-height: 100vh;
+  background: white;
+}
+
+.plan-solo-nav {
+  margin-bottom: 1.5rem;
+}
+
+.plan-solo-back {
+  background: none;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #555;
+  padding: 0.45rem 1rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.plan-solo-back:hover {
+  background: #f7f7f7;
+  color: #111;
+  border-color: #999;
+}
+
+.plan-solo-header {
+  margin-bottom: 1.5rem;
+}
+
+.plan-solo-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.plan-solo-content {
+  max-width: 760px;
+}
+
+body.dark .plan-solo {
+  background: #23272f;
+}
+
+body.dark .plan-solo-header h1 {
+  color: #e5e7eb;
+}
+
+body.dark .plan-solo-back {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .plan-solo-back:hover {
+  background: #2d3748;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
