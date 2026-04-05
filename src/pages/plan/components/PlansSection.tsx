@@ -1,7 +1,7 @@
 import { FC, useState } from 'react'
 import { FinancialPlan } from '../../../types'
 import PlansMiniGrid from './PlansMiniGrid'
-import PlanDetailView from './PlanDetailView'
+import PlanDetailPane from './PlanDetailPane'
 import PlanCompareView from './PlanCompareView'
 import '../../../styles/Plan.css'
 import './PlanCompareView.css'
@@ -15,6 +15,7 @@ interface PlansSectionProps {
   onDeletePlan: (planId: number) => void
   onDeleteMultiple: (ids: number[]) => void
   onClearSelection: () => void
+  onGoToPlan: (planId: number) => void
 }
 
 const PlansSection: FC<PlansSectionProps> = ({
@@ -26,6 +27,7 @@ const PlansSection: FC<PlansSectionProps> = ({
   onDeletePlan,
   onDeleteMultiple,
   onClearSelection,
+  onGoToPlan,
 }) => {
   const selectedPlans = plans.filter(p => selectedPlanIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -87,18 +89,20 @@ const PlansSection: FC<PlansSectionProps> = ({
             onSelectPlan={onSelectPlan}
             viewMode={viewMode}
           />
-          {selectedPlans.length > 1 ? (
+          {selectedPlans.length > 1 && (
             <PlanCompareView plans={selectedPlans} />
-          ) : (
-            <PlanDetailView
-              plans={plans}
-              selectedPlanIds={selectedPlanIds}
-              onEditPlan={onEditPlan}
-              onCopyPlan={onCopyPlan}
-              onDeletePlan={onDeletePlan}
-            />
           )}
         </>
+      )}
+      {selectedPlans.length === 1 && (
+        <PlanDetailPane
+          plan={selectedPlans[0]}
+          onClose={onClearSelection}
+          onGoToPlan={onGoToPlan}
+          onEditPlan={onEditPlan}
+          onCopyPlan={onCopyPlan}
+          onDeletePlan={onDeletePlan}
+        />
       )}
     </div>
   )

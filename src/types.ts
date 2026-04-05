@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react'
 
-export type PageType = 'home' | 'plan'
+export type PageType = 'home' | 'plan' | 'plan-solo'
 
 export interface FinancialPlan {
   id: number

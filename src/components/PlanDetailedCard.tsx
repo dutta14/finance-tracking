@@ -5,9 +5,10 @@ import '../styles/PlanDetailedCard.css'
 
 interface PlanDetailedCardProps {
   plan: FinancialPlan
-  onEdit: (plan: FinancialPlan) => void
-  onCopy: (plan: FinancialPlan) => void
-  onDelete: (planId: number) => void
+  onEdit?: (plan: FinancialPlan) => void
+  onCopy?: (plan: FinancialPlan) => void
+  onDelete?: (planId: number) => void
+  showActions?: boolean
 }
 
 // Helper functions
@@ -21,7 +22,7 @@ const formatMonthYear = (dateString: string): string => {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, onEdit, onCopy, onDelete }) => {
+const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, onEdit, onCopy, onDelete, showActions = true }) => {
   const createdMonthYear = formatMonthYear(plan.planCreatedIn)
   const birthDate = parseDate(plan.birthday)
   const retirementDate = new Date(birthDate.getFullYear() + plan.retirementAge, birthDate.getMonth(), birthDate.getDate())
@@ -31,7 +32,9 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, onEdit, onCopy, onD
     <div className="plan-card">
       <div className="plan-card-header">
         <h3>{plan.planName}</h3>
-        <PlanCardActions plan={plan} onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} />
+        {showActions && onEdit && onCopy && onDelete && (
+          <PlanCardActions plan={plan} onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} />
+        )}
       </div>
 
       <div className="plan-card-details">

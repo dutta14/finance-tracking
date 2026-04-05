@@ -4,6 +4,7 @@ import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
 import Plan from './pages/plan/Plan'
+import PlanSoloPage from './pages/plan/PlanSoloPage'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 
 const App: FC = () => {
@@ -17,7 +18,18 @@ const App: FC = () => {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
+  const [soloViewPlanId, setSoloViewPlanId] = useState<number | null>(null);
   const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans();
+
+  const handleDeletePlan = (planId: number): void => {
+    deletePlan(planId);
+    setSelectedNavPlanIds(prev => prev.filter(id => id !== planId));
+  };
+
+  const handleGoToPlan = (planId: number): void => {
+    setSoloViewPlanId(planId);
+    setCurrentPage('plan-solo');
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -56,8 +68,7 @@ const App: FC = () => {
   };
 
   const handleSidebarDeletePlan = (planId: number): void => {
-    deletePlan(planId);
-    setSelectedNavPlanIds(prev => prev.filter(id => id !== planId));
+    handleDeletePlan(planId);
   };
 
   const handleSidebarDeleteMultiple = (ids: number[]): void => {
@@ -73,11 +84,17 @@ const App: FC = () => {
             plans={plans}
             createPlan={createPlan}
             updatePlan={updatePlan}
-            deletePlan={deletePlan}
+            deletePlan={handleDeletePlan}
             selectedPlanIds={selectedNavPlanIds}
             onSetSelectedPlanIds={setSelectedNavPlanIds}
+            onGoToPlan={handleGoToPlan}
           />
         );
+      case 'plan-solo': {
+        const soloPlan = plans.find(p => p.id === soloViewPlanId);
+        if (!soloPlan) { setCurrentPage('plan'); return null; }
+        return <PlanSoloPage plan={soloPlan} onBack={() => setCurrentPage('plan')} />;
+      }
       case 'home':
       default:
         return <Home />;
