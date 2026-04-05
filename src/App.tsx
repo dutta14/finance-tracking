@@ -120,6 +120,12 @@ const App: FC = () => {
     deleteGwPlansForFiPlan(planId);
   };
 
+  const handleCopyGwGoals = (sourcePlanId: number, newPlanId: number): void => {
+    gwPlans
+      .filter(g => g.fiPlanId === sourcePlanId)
+      .forEach(g => createGwPlan({ ...g, fiPlanId: newPlanId }))
+  };
+
   const handleGoToPlan = (planId: number): void => {
     navigate(`/plan/${planId}`);
   };
@@ -227,6 +233,7 @@ const App: FC = () => {
               onSetSelectedPlanIds={setSelectedNavPlanIds}
               onGoToPlan={handleGoToPlan}
               onGoToPlanEdit={handleGoToPlanEdit}
+              onCopyGwGoals={handleCopyGwGoals}
             />
           }
         />

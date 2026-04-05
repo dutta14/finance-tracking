@@ -130,123 +130,145 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
     }, 0)
   }, [onUpdatePlan, plan, profileBirthday])
 
+  const creationYear = plan.planCreatedIn ? new Date(plan.planCreatedIn).getFullYear() : '—'
+  const retirementYear = retirementDate.getFullYear()
+  const inflationYears = Math.round(retirementYear - Number(creationYear))
+  const progressClamped = Math.min(100, Math.max(0, plan.progress || 0))
+
   return (
-    <div className="plan-card">
+    <div className="fi-card">
+      {/* ── Warning banner ── */}
       {depletionMonth && (
-        <div className="plan-card-warning">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }}>
+        <div className="fi-card-warning">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }}>
             <path d="M8 1.5L1 14.5h14L8 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
             <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.75" fill="currentColor"/>
             <rect x="7.25" y="11.5" width="1.5" height="1.5" rx="0.75" fill="currentColor"/>
           </svg>
           <span style={{ flex: 1 }}>Not sustainable beyond {depletionMonth}</span>
           {onUpdatePlan && (
-            <button
-              className="plan-card-warning-suggest"
-              onClick={handleSuggest}
-              disabled={suggesting}
-            >
+            <button className="fi-card-warning-suggest" onClick={handleSuggest} disabled={suggesting}>
               {suggesting ? 'Searching…' : 'Suggest SWR'}
             </button>
           )}
         </div>
       )}
-      <div className="plan-card-header">
-        <h3>{plan.planName}</h3>
+
+      {/* ── Header ── */}
+      <div className="fi-card-header">
+        <div className="fi-card-title-row">
+          <span className="fi-card-badge">FI</span>
+          <h3 className="fi-card-title">{plan.planName}</h3>
+        </div>
         {showActions && onEdit && onCopy && onDelete && (
           <PlanCardActions plan={plan} onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} />
         )}
       </div>
 
-      <div className="plan-card-details">
-        <div className="detail-row">
-          <span className="label">Plan Creation Date</span>
-          <span className="value">{plan.planCreatedIn ? formatMonthYear(plan.planCreatedIn) : 'N/A'}</span>
-        </div>
-        <div className="detail-row">
-          <span className="label">Retirement Date</span>
-          <span className="value">
-            {retirementDateLabel}
-            <InfoIcon tooltip={<>Birthday ({formatFullDate(profileBirthday)}) + retirement age ({plan.retirementAge})</>} align="left" />
-          </span>
-        </div>
-        <div className="detail-row">
-          <span className="label">Inflation Rate</span>
-          <span className="value">{plan.inflationRate}%</span>
-        </div>
-        <div className="detail-row">
-          <span className="label">Safe Withdrawal Rate</span>
-          <span className="value">{plan.safeWithdrawalRate}%</span>
-        </div>
-        <div className="detail-row">
-          <span className="label">Growth</span>
-          <span className="value">{plan.growth}%</span>
+      {/* ── Parameters ── */}
+      <div className="fi-card-section">
+        <div className="fi-card-section-title">Parameters</div>
+        <div className="fi-card-rows">
+          <div className="fi-card-row">
+            <span className="fi-card-row-label">Plan Created</span>
+            <span className="fi-card-row-value">{plan.planCreatedIn ? formatMonthYear(plan.planCreatedIn) : 'N/A'}</span>
+          </div>
+          <div className="fi-card-row">
+            <span className="fi-card-row-label">Retirement</span>
+            <span className="fi-card-row-value">
+              {retirementDateLabel}
+              <InfoIcon tooltip={<>Birthday ({formatFullDate(profileBirthday)}) + retirement age ({plan.retirementAge})</>} align="left" />
+            </span>
+          </div>
+          <div className="fi-card-row">
+            <span className="fi-card-row-label">Inflation</span>
+            <span className="fi-card-row-value">{plan.inflationRate}%</span>
+          </div>
+          <div className="fi-card-row">
+            <span className="fi-card-row-label">
+              Safe Withdrawal Rate
+              <InfoIcon tooltip="The % of your portfolio you withdraw annually in retirement." align="left" />
+            </span>
+            <span className="fi-card-row-value">{plan.safeWithdrawalRate}%</span>
+          </div>
+          <div className="fi-card-row">
+            <span className="fi-card-row-label">Portfolio Growth</span>
+            <span className="fi-card-row-value">{plan.growth}%</span>
+          </div>
         </div>
       </div>
 
-      <div className="plan-card-calculations">
-        <div className="expense-analysis-header">
-          <h4>Expense Analysis</h4>
+      {/* ── Expense Analysis ── */}
+      <div className="fi-card-section">
+        <div className="fi-card-section-header">
+          <div className="fi-card-section-title">Expenses</div>
           <div className="expense-toggle">
             <button
               className={`expense-toggle-btn${expenseView === 'creation' ? ' active' : ''}`}
               onClick={() => setExpenseView('creation')}
-              title={`Values as of ${new Date(plan.planCreatedIn).getFullYear()}`}
+              title={`Values as of ${creationYear}`}
             >At Creation</button>
             <button
               className={`expense-toggle-btn${expenseView === 'retirement' ? ' active' : ''}`}
               onClick={() => setExpenseView('retirement')}
-              title={`Values as of ${retirementDate.getFullYear()}`}
+              title={`Values as of ${retirementYear}`}
             >At Retirement</button>
           </div>
         </div>
-        {expenseView === 'creation' ? (
-          <>
-            <div className="detail-row">
-              <span className="label">Monthly Expense</span>
-              <span className="value">{dollars(plan.monthlyExpenseValue)}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Annual Expense</span>
-              <span className="value">{dollars(plan.expenseValue)}</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="detail-row">
-              <span className="label">
-                Monthly Expense
-                <InfoIcon tooltip={<>Monthly expense at creation inflated at {plan.inflationRate}% for {Math.round((retirementDate.getFullYear() - new Date(plan.planCreatedIn).getFullYear()))} yrs.<br/>{dollars(plan.monthlyExpenseValue)} → {dollars(plan.monthlyExpense2047)}</>} />
-              </span>
-              <span className="value">{dollars(plan.monthlyExpense2047)}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">
-                Annual Expense
-                <InfoIcon tooltip={<>Annual expense at creation inflated at {plan.inflationRate}% for {Math.round((retirementDate.getFullYear() - new Date(plan.planCreatedIn).getFullYear()))} yrs.<br/>{dollars(plan.expenseValue)} → {dollars(plan.expenseValue2047)}</>} />
-              </span>
-              <span className="value">{dollars(plan.expenseValue2047)}</span>
-            </div>
-          </>
-        )}
+        <div className="fi-card-rows">
+          {expenseView === 'creation' ? (
+            <>
+              <div className="fi-card-row">
+                <span className="fi-card-row-label">Monthly</span>
+                <span className="fi-card-row-value">{dollars(plan.monthlyExpenseValue)}</span>
+              </div>
+              <div className="fi-card-row">
+                <span className="fi-card-row-label">Annual</span>
+                <span className="fi-card-row-value">{dollars(plan.expenseValue)}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="fi-card-row">
+                <span className="fi-card-row-label">
+                  Monthly
+                  <InfoIcon tooltip={<>Inflated at {plan.inflationRate}% for {inflationYears} yrs.<br />{dollars(plan.monthlyExpenseValue)} → {dollars(plan.monthlyExpense2047)}</>} />
+                </span>
+                <span className="fi-card-row-value">{dollars(plan.monthlyExpense2047)}</span>
+              </div>
+              <div className="fi-card-row">
+                <span className="fi-card-row-label">
+                  Annual
+                  <InfoIcon tooltip={<>Inflated at {plan.inflationRate}% for {inflationYears} yrs.<br />{dollars(plan.expenseValue)} → {dollars(plan.expenseValue2047)}</>} />
+                </span>
+                <span className="fi-card-row-value">{dollars(plan.expenseValue2047)}</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="plan-card-calculations">
-        <h4>Financial Goals</h4>
-        <div className="detail-row">
-          <span className="label">
+      {/* ── FI Goal callout ── */}
+      <div className="fi-card-goal">
+        <div className="fi-card-goal-top">
+          <span className="fi-card-goal-label">
             FI Goal
-            <InfoIcon tooltip={<>Annual expense at retirement ÷ safe withdrawal rate.<br/>{dollars(plan.expenseValue2047)} ÷ {plan.safeWithdrawalRate}% = {dollars(plan.fiGoal)}</>} />
+            <InfoIcon tooltip={<>Annual expense at retirement ÷ SWR.<br />{dollars(plan.expenseValue2047)} ÷ {plan.safeWithdrawalRate}% = {dollars(plan.fiGoal)}</>} />
           </span>
-          <span className="value">{dollars(plan.fiGoal)}</span>
+          <span className="fi-card-goal-amount">{dollars(plan.fiGoal)}</span>
         </div>
-        <div className="detail-row">
-          <span className="label">Progress</span>
-          <span className="value">{plan.progress.toFixed(1)}%</span>
+        <div className="fi-card-progress-row">
+          <div className="fi-card-progress-bar-track">
+            <div
+              className="fi-card-progress-bar-fill"
+              style={{ width: `${progressClamped}%` }}
+            />
+          </div>
+          <span className="fi-card-progress-pct">{plan.progress.toFixed(1)}%</span>
         </div>
       </div>
 
-      <div className="plan-meta">
+      <div className="fi-card-meta">
         <small>Created {plan.createdAt}</small>
       </div>
     </div>

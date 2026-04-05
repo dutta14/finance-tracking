@@ -41,6 +41,7 @@ export interface GwPlan {
   disburseAge: number
   disburseAmount: number   // in plan-creation-year (today's) dollars
   growthRate: number       // % per year, independent of FI growth rate
+  currentSavings: number   // current savings allocated toward this goal
 }
 
 export interface NavigationProps {

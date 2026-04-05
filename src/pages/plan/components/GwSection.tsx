@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, useEffect, useRef } from 'react'
 import { FinancialPlan, GwPlan } from '../../../types'
 import '../../../styles/GwSection.css'
 
@@ -35,13 +35,20 @@ interface GwFormFields {
 
 const EMPTY_FORM: GwFormFields = { label: '', disburseAge: '', disburseAmount: '', growthRate: '7' }
 
+type GwDollarView = 'creation' | 'disbursement'
+
 const GwGoalCard: FC<{
   gw: GwPlan
   currentAge: number
   creationYear: number
+  inflationRate: number
+  retirementAge: number
+  planCreatedIn: string
+  profileBirthday: string
+  dollarView: GwDollarView
   onEdit: (fields: GwFormFields) => void
   onDelete: () => void
-}> = ({ gw, currentAge, creationYear, onEdit, onDelete }) => {
+}> = ({ gw, currentAge, creationYear, inflationRate, retirementAge, planCreatedIn, profileBirthday, dollarView, onEdit, onDelete }) => {
   const [editing, setEditing] = useState(false)
   const [editFields, setEditFields] = useState<GwFormFields>({
     label: gw.label,
@@ -50,6 +57,22 @@ const GwGoalCard: FC<{
     growthRate: String(gw.growthRate),
   })
   const [editError, setEditError] = useState('')
+  const [pendingDelete, setPendingDelete] = useState(false)
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current) }, [])
+
+  const handleDeleteClick = () => {
+    setPendingDelete(true)
+    deleteTimerRef.current = setTimeout(() => {
+      onDelete()
+    }, 10_000)
+  }
+
+  const handleUndoDelete = () => {
+    if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current)
+    setPendingDelete(false)
+  }
 
   const setEF = (k: keyof GwFormFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setEditFields(f => ({ ...f, [k]: e.target.value }))
@@ -81,8 +104,33 @@ const GwGoalCard: FC<{
   }
 
   const years = gw.disburseAge - currentAge
-  const setAsideToday =
-    years > 0 ? gw.disburseAmount / Math.pow(1 + gw.growthRate / 100, years) : gw.disburseAmount
+
+  // Exact month count: creation month → birthday month of disbursement year
+  const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
+  const created = new Date(planCreatedIn)
+  const disburseYear = birthYear + gw.disburseAge
+  const retirementYear = birthYear + retirementAge
+  const monthsToDisburse = Math.max(
+    0,
+    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
+  )
+  const displayTarget =
+    dollarView === 'creation'
+      ? gw.disburseAmount
+      : gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsToDisburse)
+  const displayYear = dollarView === 'creation' ? creationYear : disburseYear
+
+  // PV at retirement: inflation-adjust target to disbursement year, then discount back to retirement
+  // This gives the nominal $ needed at retirement — constant regardless of creation/disbursement toggle
+  const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsToDisburse)
+  const monthsRetToDisburse = Math.max(0, (gw.disburseAge - retirementAge) * 12)
+  const pvAtRetirement =
+    monthsRetToDisburse > 0
+      ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
+      : disbursementTarget
+  const progressPct = pvAtRetirement > 0
+    ? Math.min(100, Math.max(0, ((gw.currentSavings ?? 0) / pvAtRetirement) * 100))
+    : 0
 
   return (
     <div className={`gw-goal-card${editing ? ' gw-goal-card--editing' : ''}`}>
@@ -105,7 +153,7 @@ const GwGoalCard: FC<{
               </svg>
             </button>
           )}
-          <button className="gw-goal-delete" onClick={onDelete} aria-label="Delete GW goal">
+          <button className="gw-goal-delete" onClick={handleDeleteClick} aria-label="Delete GW goal">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
               <path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
             </svg>
@@ -113,7 +161,13 @@ const GwGoalCard: FC<{
         </div>
       </div>
 
-      {editing ? (
+      {pendingDelete ? (
+        <div className="gw-goal-undo-bar">
+          <span className="gw-goal-undo-msg">Goal will be deleted in 10s</span>
+          <button className="gw-goal-undo-btn" onClick={handleUndoDelete}>Undo</button>
+          <div className="gw-goal-undo-progress"><div className="gw-goal-undo-progress-fill" /></div>
+        </div>
+      ) : editing ? (
         <div className="gw-card-edit-form">
           {editError && <p className="gw-form-error">{editError}</p>}
           <div className="gw-form-grid">
@@ -147,24 +201,25 @@ const GwGoalCard: FC<{
               <span className="gw-goal-row-value">{gw.disburseAge} yrs</span>
             </div>
             <div className="gw-goal-row">
-              <span className="gw-goal-row-label">Horizon</span>
-              <span className="gw-goal-row-value">{years > 0 ? `${years} yrs` : '—'}</span>
-            </div>
-            <div className="gw-goal-row">
-              <span className="gw-goal-row-label">Target ({creationYear} dollars)</span>
-              <span className="gw-goal-row-value gw-goal-row-value--highlight">{dollars(gw.disburseAmount)}</span>
-            </div>
-            <div className="gw-goal-row">
               <span className="gw-goal-row-label">Growth rate</span>
               <span className="gw-goal-row-value">{gw.growthRate}% / yr</span>
             </div>
+            <div className="gw-goal-row">
+              <span className="gw-goal-row-label">Target ({displayYear} $)</span>
+              <span className="gw-goal-row-value gw-goal-row-value--highlight">{dollars(displayTarget)}</span>
+            </div>
           </div>
 
-          <div className="gw-goal-pv">
-            <div className="gw-goal-pv-label">Set aside today</div>
-            <div className="gw-goal-pv-amount">{dollars(setAsideToday)}</div>
-            <div className="gw-goal-pv-note">
-              grows to {dollars(gw.disburseAmount)} ({creationYear} $) in {years > 0 ? `${years} yrs` : '—'} at {gw.growthRate}%
+          <div className="gw-goal-milestone">
+            <div className="gw-goal-milestone-top">
+              <span className="gw-goal-milestone-label">GW Goal by retirement ({retirementYear})</span>
+              <span className="gw-goal-milestone-amount">{dollars(pvAtRetirement)}</span>
+            </div>
+            <div className="gw-goal-progress-row">
+              <div className="gw-goal-progress-track">
+                <div className="gw-goal-progress-fill" style={{ width: `${progressPct}%` }} />
+              </div>
+              <span className="gw-goal-progress-pct">{progressPct.toFixed(1)}%</span>
             </div>
           </div>
         </>
@@ -177,6 +232,7 @@ const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreat
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState<GwFormFields>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
+  const [dollarView, setDollarView] = useState<GwDollarView>('creation')
 
   const planGoals = gwPlans.filter(g => g.fiPlanId === plan.id)
   const currentAge = ageAtCreation(profileBirthday, plan.planCreatedIn)
@@ -202,6 +258,7 @@ const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreat
       disburseAge,
       disburseAmount,
       growthRate,
+      currentSavings: 0,
     })
     setForm(EMPTY_FORM)
     setFormError('')
@@ -246,12 +303,32 @@ const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreat
 
       {planGoals.length > 0 && (
         <div className="gw-goals-list">
+          <div className="gw-dollar-toggle-row">
+            <span className="gw-dollar-toggle-label">Target in</span>
+            <div className="gw-dollar-toggle">
+              <button
+                className={`gw-dollar-toggle-btn${dollarView === 'creation' ? ' active' : ''}`}
+                onClick={() => setDollarView('creation')}
+                title={`${new Date(plan.planCreatedIn).getFullYear()} dollars (as entered)`}
+              >Creation</button>
+              <button
+                className={`gw-dollar-toggle-btn${dollarView === 'disbursement' ? ' active' : ''}`}
+                onClick={() => setDollarView('disbursement')}
+                title={`Inflated to each goal's disbursement year at ${plan.inflationRate}% / yr`}
+              >Disbursement</button>
+            </div>
+          </div>
           {planGoals.map(gw => (
             <GwGoalCard
               key={gw.id}
               gw={gw}
               currentAge={currentAge}
               creationYear={new Date(plan.planCreatedIn).getFullYear()}
+              inflationRate={plan.inflationRate}
+              retirementAge={plan.retirementAge}
+              planCreatedIn={plan.planCreatedIn}
+              profileBirthday={profileBirthday}
+              dollarView={dollarView}
               onEdit={fields => onUpdateGwPlan(gw.id, {
                 label: fields.label.trim(),
                 disburseAge: Number(fields.disburseAge),

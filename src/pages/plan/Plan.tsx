@@ -19,12 +19,14 @@ interface PlanProps {
   onSetSelectedPlanIds: (ids: number[]) => void
   onGoToPlan: (planId: number) => void
   onGoToPlanEdit: (planId: number) => void
+  onCopyGwGoals: (sourcePlanId: number, newPlanId: number) => void
 }
 
-const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan, onGoToPlanEdit }) => {
+const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan, onGoToPlanEdit, onCopyGwGoals }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
   const { editingPlanId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
+  const [copySourcePlanId, setCopySourcePlanId] = useState<number | null>(null)
 
   const handleSelectPlan = (planId: number, multi: boolean): void => {
     if (multi) {
@@ -51,6 +53,10 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
       stopEditing()
     } else {
       createPlan(plan)
+      if (copySourcePlanId !== null) {
+        onCopyGwGoals(copySourcePlanId, plan.id)
+        setCopySourcePlanId(null)
+      }
     }
     resetForm()
     setShowForm(false)
@@ -58,6 +64,7 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
 
   const handleCopyPlan = (plan: FinancialPlan): void => {
     onSetSelectedPlanIds([])
+    setCopySourcePlanId(plan.id)
     populateFromPlan(plan, '- Duplicate')
     stopEditing()
     setShowForm(true)
@@ -71,6 +78,7 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
   const handleCancelEdit = (): void => {
     resetForm()
     stopEditing()
+    setCopySourcePlanId(null)
     setShowForm(false)
   }
 
