@@ -56,9 +56,9 @@ export const useFormData = () => {
     }
   }
 
-  const populateFromPlan = (plan: FinancialPlan): void => {
+  const populateFromPlan = (plan: FinancialPlan, nameSuffix?: string): void => {
     setFormData({
-      planName: plan.planName,
+      planName: nameSuffix ? `${plan.planName} ${nameSuffix}` : plan.planName,
       birthday: plan.birthday,
       planCreatedIn: plan.planCreatedIn,
       planEndYear: plan.planEndYear,

@@ -1,7 +1,7 @@
 import { FC, useState } from 'react'
 import { FinancialPlan } from '../../types'
-import PlanForm from './components/PlanForm'
 import PlansSection from './components/PlansSection'
+import PlanFormModal from './components/PlanFormModal'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
 import NewPlanButton from './components/NewPlanButton'
@@ -55,10 +55,9 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
 
   const handleCopyPlan = (plan: FinancialPlan): void => {
     onSetSelectedPlanIds([])
-    populateFromPlan(plan)
+    populateFromPlan(plan, '- Duplicate')
     stopEditing()
     setShowForm(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleRenamePlan = (planId: number, name: string): void => {
@@ -84,57 +83,39 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
             resetForm();
             stopEditing();
             setShowForm(true);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
       </div>
 
       <div className="plan-content">
         <div className="plan-container">
-          {showForm ? (
-            <div className="plan-layout">
-              <PlanForm
-                formData={formData}
-                error={error}
-                editingPlanId={editingPlanId}
-                onInputChange={handleInputChange}
-                onSubmit={handleCreatePlan}
-                onCancel={handleCancelEdit}
-                setError={setError}
-              />
-              <PlansSection
-                plans={plans}
-                selectedPlanIds={selectedPlanIds}
-                onSelectPlan={handleSelectPlan}
-                onUpdatePlan={updatePlan}
-                onCopyPlan={handleCopyPlan}
-                onDeletePlan={deletePlan}
-                onDeleteMultiple={handleDeleteMultiple}
-                onClearSelection={() => onSetSelectedPlanIds([])}
-                onGoToPlan={onGoToPlan}
-                onReorderPlans={reorderPlans}
-                onRenamePlan={handleRenamePlan}
-              />
-            </div>
-          ) : (
-            <div style={{ width: '100%' }}>
-              <PlansSection
-                plans={plans}
-                selectedPlanIds={selectedPlanIds}
-                onSelectPlan={handleSelectPlan}
-                onUpdatePlan={updatePlan}
-                onCopyPlan={handleCopyPlan}
-                onDeletePlan={deletePlan}
-                onDeleteMultiple={handleDeleteMultiple}
-                onClearSelection={() => onSetSelectedPlanIds([])}
-                onGoToPlan={onGoToPlan}
-                onReorderPlans={reorderPlans}
-                onRenamePlan={handleRenamePlan}
-              />
-            </div>
-          )}
+          <PlansSection
+            plans={plans}
+            selectedPlanIds={selectedPlanIds}
+            onSelectPlan={handleSelectPlan}
+            onUpdatePlan={updatePlan}
+            onCopyPlan={handleCopyPlan}
+            onDeletePlan={deletePlan}
+            onDeleteMultiple={handleDeleteMultiple}
+            onClearSelection={() => onSetSelectedPlanIds([])}
+            onGoToPlan={onGoToPlan}
+            onReorderPlans={reorderPlans}
+            onRenamePlan={handleRenamePlan}
+          />
         </div>
       </div>
+
+      {showForm && (
+        <PlanFormModal
+          formData={formData}
+          error={error}
+          editingPlanId={editingPlanId}
+          onInputChange={handleInputChange}
+          onSubmit={handleCreatePlan}
+          onCancel={handleCancelEdit}
+          setError={setError}
+        />
+      )}
     </section>
   )
 }
