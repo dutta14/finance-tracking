@@ -6,12 +6,13 @@ interface PlanMiniCardProps {
   plan: FinancialPlan
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
+  viewMode?: 'grid' | 'list'
 }
 
-const PlanMiniCard: FC<PlanMiniCardProps> = ({ plan, isSelected, onClick }) => {
+const PlanMiniCard: FC<PlanMiniCardProps> = ({ plan, isSelected, onClick, viewMode = 'grid' }) => {
   return (
     <div
-      className={`plan-mini-card ${isSelected ? 'selected' : ''}`}
+      className={`plan-mini-card${isSelected ? ' selected' : ''}${viewMode === 'list' ? ' list' : ''}`}
       onClick={onClick}
     >
       <h4>{plan.planName}</h4>
