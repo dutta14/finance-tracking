@@ -4,6 +4,7 @@ import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
 import Plan from './pages/plan/Plan'
+import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 
 const App: FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
@@ -15,6 +16,8 @@ const App: FC = () => {
     if (stored === '0') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+  const [selectedNavPlanId, setSelectedNavPlanId] = useState<number | null>(null);
+  const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans();
 
   useEffect(() => {
     const handleResize = () => {
@@ -35,10 +38,25 @@ const App: FC = () => {
     localStorage.setItem('darkMode', darkMode ? '1' : '0');
   }, [darkMode]);
 
+  const handleSelectNavPlan = (planId: number): void => {
+    setCurrentPage('plan');
+    setSelectedNavPlanId(planId);
+    if (isMobile) setSidebarOpen(false);
+  };
+
   const renderPage = (): React.ReactNode => {
     switch (currentPage) {
       case 'plan':
-        return <Plan />;
+        return (
+          <Plan
+            plans={plans}
+            createPlan={createPlan}
+            updatePlan={updatePlan}
+            deletePlan={deletePlan}
+            selectedNavPlanId={selectedNavPlanId}
+            onClearNavPlanId={() => setSelectedNavPlanId(null)}
+          />
+        );
       case 'home':
       default:
         return <Home />;
@@ -55,6 +73,9 @@ const App: FC = () => {
           setExpanded={setSidebarOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
+          plans={plans}
+          selectedNavPlanId={selectedNavPlanId}
+          onSelectNavPlan={handleSelectNavPlan}
         />
       )}
       {/* Backdrop for mobile overlay */}

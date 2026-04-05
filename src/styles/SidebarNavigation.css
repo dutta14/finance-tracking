@@ -107,6 +107,76 @@ body.dark .settings-menu-item:hover {
   background: #f7f7f7;
 }
 
+.sidebar-link--accordion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-chevron {
+  display: inline-block;
+  font-size: 0.85rem;
+  transition: transform 0.2s;
+  transform: rotate(-90deg);
+  line-height: 1;
+}
+
+.sidebar-chevron.open {
+  transform: rotate(0deg);
+}
+
+.sidebar-submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0.3rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sidebar-subitem {
+  width: 100%;
+}
+
+.sidebar-sublink {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.45rem 1rem 0.45rem 1.75rem;
+  border-radius: 0.4rem;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-sublink:hover {
+  color: #111;
+  background: #f7f7f7;
+}
+
+.sidebar-sublink.active {
+  color: #111;
+  background: #e8f0fe;
+  font-weight: 500;
+}
+
+body.dark .sidebar-sublink {
+  color: #9ca3af;
+}
+body.dark .sidebar-sublink:hover {
+  color: #e5e7eb;
+  background: #23272f;
+}
+body.dark .sidebar-sublink.active {
+  color: #fff;
+  background: #2d3748;
+}
+
 .sidebar-toggle {
   margin-bottom: 2rem;
   --sidebar-toggle-color: #000;

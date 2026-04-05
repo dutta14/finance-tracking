@@ -1,17 +1,31 @@
-import { FC, useState } from 'react'
+import { FC, useState, useEffect } from 'react'
 import { FinancialPlan } from '../../types'
 import PlanForm from './components/PlanForm'
 import PlansSection from './components/PlansSection'
-import { useFinancialPlans } from './hooks/useFinancialPlans'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
 import NewPlanButton from './components/NewPlanButton'
 
-const Plan: FC = () => {
-  const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans()
+interface PlanProps {
+  plans: FinancialPlan[];
+  createPlan: (plan: FinancialPlan) => void;
+  updatePlan: (planId: number, plan: FinancialPlan) => void;
+  deletePlan: (planId: number) => void;
+  selectedNavPlanId: number | null;
+  onClearNavPlanId: () => void;
+}
+
+const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, selectedNavPlanId, onClearNavPlanId }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
-  const { selectedPlanIds, editingPlanId, togglePlanSelection, startEditing, stopEditing } = useEditingState()
+  const { selectedPlanIds, setSelectedPlanIds, editingPlanId, togglePlanSelection, startEditing, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
+
+  useEffect(() => {
+    if (selectedNavPlanId !== null) {
+      setSelectedPlanIds([selectedNavPlanId]);
+      onClearNavPlanId();
+    }
+  }, [selectedNavPlanId]);
 
   const handleCreatePlan = (plan: FinancialPlan): void => {
     if (editingPlanId) {
