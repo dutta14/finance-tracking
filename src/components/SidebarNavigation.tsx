@@ -15,6 +15,8 @@ interface SidebarNavigationProps extends NavigationProps {
   onRenamePlan: (id: number, newName: string) => void;
   onDeletePlan: (id: number) => void;
   onDeleteMultiple: (ids: number[]) => void;
+  onExport: () => void;
+  onImport: (file: File) => void;
 }
 
 interface ContextMenuState { x: number; y: number; planId: number }
@@ -22,7 +24,7 @@ interface ContextMenuState { x: number; y: number; planId: number }
 const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
   darkMode, setDarkMode, plans, selectedNavPlanIds, onSelectNavPlan,
-  onRenamePlan, onDeletePlan, onDeleteMultiple,
+  onRenamePlan, onDeletePlan, onDeleteMultiple, onExport, onImport,
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => {
     const stored = localStorage.getItem('sidebar-plans-open');
@@ -177,6 +179,33 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             )}
           </li>
         </ul>
+      )}
+      {expanded && (
+        <div className="sidebar-data-section">
+          <button className="sidebar-data-btn" onClick={onExport}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M8 2v9M4 7l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <rect x="2" y="12" width="12" height="2" rx="1" fill="currentColor"/>
+            </svg>
+            Export
+          </button>
+          <label className="sidebar-data-btn sidebar-data-btn--import" title="Import plans from a .json file">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M8 11V2M4 6l4-4 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <rect x="2" y="12" width="12" height="2" rx="1" fill="currentColor"/>
+            </svg>
+            Import
+            <input
+              type="file"
+              accept=".json,application/json"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files?.[0]
+                if (file) { onImport(file); e.target.value = '' }
+              }}
+            />
+          </label>
+        </div>
       )}
       {expanded && (
         <div className="sidebar-settings-section">

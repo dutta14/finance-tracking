@@ -30,10 +30,15 @@ export const useFinancialPlans = () => {
     setPlans(prev => prev.filter(plan => plan.id !== planId))
   }
 
+  const importPlans = (incoming: FinancialPlan[]): void => {
+    setPlans(migratePlans(incoming))
+  }
+
   return {
     plans,
     createPlan,
     updatePlan,
-    deletePlan
+    deletePlan,
+    importPlans,
   }
 }

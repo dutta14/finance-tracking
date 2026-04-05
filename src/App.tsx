@@ -30,7 +30,7 @@ const App: FC = () => {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
-  const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans();
+  const { plans, createPlan, updatePlan, deletePlan, importPlans } = useFinancialPlans();
 
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname.startsWith('/plan/')
@@ -131,6 +131,33 @@ const App: FC = () => {
     handleDeleteWithUndo(ids);
   };
 
+  const handleExport = (): void => {
+    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), plans }, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `finance-plans-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  };
+
+  const handleImport = (file: File): void => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target?.result as string)
+        const incoming = Array.isArray(parsed) ? parsed : parsed?.plans
+        if (!Array.isArray(incoming)) throw new Error('Invalid format')
+        importPlans(incoming)
+        setSelectedNavPlanIds([])
+      } catch {
+        alert('Could not import: the file is not a valid finance plans export.')
+      }
+    }
+    reader.readAsText(file)
+  };
+
   const renderPage = (): React.ReactNode => {
     return (
       <Routes>
@@ -172,6 +199,8 @@ const App: FC = () => {
           onRenamePlan={renamePlan}
           onDeletePlan={handleSidebarDeletePlan}
           onDeleteMultiple={handleSidebarDeleteMultiple}
+          onExport={handleExport}
+          onImport={handleImport}
         />
       )}
       {/* Backdrop for mobile overlay */}
