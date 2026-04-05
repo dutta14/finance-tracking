@@ -1,4 +1,5 @@
 import { FC, useState, useEffect } from 'react'
+import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom'
 import { PageType, FinancialPlan } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
@@ -8,8 +9,18 @@ import PlanSoloPage from './pages/plan/PlanSoloPage'
 import UndoToast from './components/UndoToast'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 
+interface PlanSoloRouteProps { plans: FinancialPlan[] }
+const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans }) => {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const plan = plans.find(p => p.id === Number(id))
+  if (!plan) return <Navigate to="/plan" replace />
+  return <PlanSoloPage plan={plan} onBack={() => navigate('/plan')} />
+}
+
 const App: FC = () => {
-  const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
   const [darkMode, setDarkMode] = useState(() => {
@@ -19,8 +30,19 @@ const App: FC = () => {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
-  const [soloViewPlanId, setSoloViewPlanId] = useState<number | null>(null);
   const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans();
+
+  // Derive currentPage from URL for sidebar nav compat
+  const currentPage: PageType = location.pathname.startsWith('/plan/')
+    ? 'plan-solo'
+    : location.pathname === '/plan'
+    ? 'plan'
+    : 'home'
+
+  const setCurrentPage = (page: PageType): void => {
+    if (page === 'home') navigate('/')
+    else if (page === 'plan') navigate('/plan')
+  }
 
   const [pendingDelete, setPendingDelete] = useState<{
     ids: number[]
@@ -62,8 +84,7 @@ const App: FC = () => {
   };
 
   const handleGoToPlan = (planId: number): void => {
-    setSoloViewPlanId(planId);
-    setCurrentPage('plan-solo');
+    navigate(`/plan/${planId}`);
   };
 
   useEffect(() => {
@@ -86,7 +107,7 @@ const App: FC = () => {
   }, [darkMode]);
 
   const handleSelectNavPlan = (planId: number, multi: boolean): void => {
-    setCurrentPage('plan');
+    navigate('/plan');
     if (multi) {
       setSelectedNavPlanIds(prev =>
         prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
@@ -111,29 +132,28 @@ const App: FC = () => {
   };
 
   const renderPage = (): React.ReactNode => {
-    switch (currentPage) {
-      case 'plan':
-        return (
-          <Plan
-            plans={visiblePlans}
-            createPlan={createPlan}
-            updatePlan={updatePlan}
-            deletePlan={handleDeletePlan}
-            onDeleteMultiplePlans={handleDeleteWithUndo}
-            selectedPlanIds={selectedNavPlanIds}
-            onSetSelectedPlanIds={setSelectedNavPlanIds}
-            onGoToPlan={handleGoToPlan}
-          />
-        );
-      case 'plan-solo': {
-        const soloPlan = plans.find(p => p.id === soloViewPlanId);
-        if (!soloPlan) { setCurrentPage('plan'); return null; }
-        return <PlanSoloPage plan={soloPlan} onBack={() => setCurrentPage('plan')} />;
-      }
-      case 'home':
-      default:
-        return <Home />;
-    }
+    return (
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/plan"
+          element={
+            <Plan
+              plans={visiblePlans}
+              createPlan={createPlan}
+              updatePlan={updatePlan}
+              deletePlan={handleDeletePlan}
+              onDeleteMultiplePlans={handleDeleteWithUndo}
+              selectedPlanIds={selectedNavPlanIds}
+              onSetSelectedPlanIds={setSelectedNavPlanIds}
+              onGoToPlan={handleGoToPlan}
+            />
+          }
+        />
+        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    )
   };
 
   return (
