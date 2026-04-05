@@ -3,7 +3,9 @@ import { FinancialPlan } from '../../../types'
 import PlansMiniGrid from './PlansMiniGrid'
 import PlanDetailPane from './PlanDetailPane'
 import PlanCompareView from './PlanCompareView'
+import PlanFilterBar, { PlanFilters, DEFAULT_FILTERS, applyFilters } from './PlanFilterBar'
 import '../../../styles/Plan.css'
+import '../../../styles/PlanFilterBar.css'
 import './PlanCompareView.css'
 
 interface PlansSectionProps {
@@ -31,11 +33,15 @@ const PlansSection: FC<PlansSectionProps> = ({
 }) => {
   const selectedPlans = plans.filter(p => selectedPlanIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [filters, setFilters] = useState<PlanFilters>(DEFAULT_FILTERS)
+
+  const filteredPlans = applyFilters(plans, filters)
+  const isFiltered = filteredPlans.length !== plans.length
 
   return (
     <div className="plan-results-section">
       <div className="plan-results-header">
-        <h2>Saved Plans ({plans.length})</h2>
+        <h2>Saved Plans ({isFiltered ? `${filteredPlans.length} of ${plans.length}` : plans.length})</h2>
         <div className="view-mode-toggle">
           <button
             className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
@@ -64,6 +70,7 @@ const PlansSection: FC<PlansSectionProps> = ({
           </button>
         </div>
       </div>
+      <PlanFilterBar plans={plans} filters={filters} onChange={setFilters} />
       {selectedPlanIds.length > 1 && (
         <div className="plan-selection-bar">
           <span className="plan-selection-count">{selectedPlanIds.length} plans selected</span>
@@ -81,10 +88,14 @@ const PlansSection: FC<PlansSectionProps> = ({
         <div className="empty-state">
           <p>No plans created yet. Fill in the form and click "Create Plan" to get started.</p>
         </div>
+      ) : filteredPlans.length === 0 ? (
+        <div className="empty-state">
+          <p>No plans match the current filters.</p>
+        </div>
       ) : (
         <>
           <PlansMiniGrid
-            plans={plans}
+            plans={filteredPlans}
             selectedPlanIds={selectedPlanIds}
             onSelectPlan={onSelectPlan}
             viewMode={viewMode}
