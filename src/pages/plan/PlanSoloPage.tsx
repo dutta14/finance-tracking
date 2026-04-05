@@ -5,6 +5,7 @@ import PlanDiveDeep from './components/PlanDiveDeep'
 import { calculatePlanMetrics } from './utils/planCalculations'
 import { parseDate, getMonthsBetween } from './utils/dateHelpers'
 import './components/PlanDiveDeep.css'
+import '../../styles/PlanDetailPane.css'
 import '../../styles/PlanSoloPage.css'
 
 interface PlanSoloPageProps {
@@ -56,6 +57,11 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
     setRenaming(false)
     setSaveError('')
   }, [plan.id])
+
+  // Sync fields if plan values change externally while not editing (e.g. Suggest SWR)
+  useEffect(() => {
+    if (!editMode) setFields(toEditFields(plan))
+  }, [plan.safeWithdrawalRate, plan.fiGoal, plan.inflationRate, plan.growth, plan.retirementAge, plan.expenseValue])
 
   useEffect(() => {
     if (renaming) renameInputRef.current?.select()
@@ -207,7 +213,7 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
             </div>
           </div>
         )}
-        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} showActions={false} />
+        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} />
         <button
           className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
           onClick={() => setDiveDeepOpen(v => !v)}

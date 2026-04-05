@@ -28,16 +28,19 @@ const PlanForm: FC<PlanFormProps> = ({
   onCancel,
   setError
 }) => {
-  useEffect(() => {
-    if (profileBirthday) setError('')
-  }, [profileBirthday])
-
   const formatCurrency = (value: string): string => {
     if (!value) return ''
     const numeric = Number(value)
     if (Number.isNaN(numeric)) return ''
     return numeric.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
   }
+
+  // Clear birthday error once profile birthday is set
+  useEffect(() => {
+    if (profileBirthday && error === 'Please add your birthday in your profile before creating a plan') {
+      setError('')
+    }
+  }, [profileBirthday])
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
@@ -48,7 +51,7 @@ const PlanForm: FC<PlanFormProps> = ({
       return
     }
     if (!profileBirthday) {
-      setError('Please set your birthday in Profile settings before creating a plan')
+      setError('Please add your birthday in your profile before creating a plan')
       onOpenProfile()
       return
     }
@@ -185,7 +188,7 @@ const PlanForm: FC<PlanFormProps> = ({
             </div>
           )}
 
-          {formData.retirementAge && profileBirthday && (
+          {profileBirthday && formData.retirementAge && (
             <div className="display-field">
               <span className="label">Retirement Year:</span>
               <span className="display-value">

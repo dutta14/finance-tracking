@@ -1,48 +1,40 @@
 import { FC, useState } from 'react'
 import { FinancialPlan } from '../../types'
-import PlansSection from './components/PlansSection'
 import PlanFormModal from './components/PlanFormModal'
+import PlansSection from './components/PlansSection'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
 import NewPlanButton from './components/NewPlanButton'
 
 interface PlanProps {
-  plans: FinancialPlan[];
-  profileBirthday: string;
-  onOpenProfile: () => void;
-  createPlan: (plan: FinancialPlan) => void;
-  updatePlan: (planId: number, plan: FinancialPlan) => void;
-  deletePlan: (planId: number) => void;
-  onDeleteMultiplePlans: (ids: number[]) => void;
-  reorderPlans: (orderedIds: number[]) => void;
-  selectedPlanIds: number[];
-  onSetSelectedPlanIds: (ids: number[]) => void;
-  onGoToPlan: (planId: number) => void;
+  plans: FinancialPlan[]
+  profileBirthday: string
+  onOpenProfile: () => void
+  createPlan: (plan: FinancialPlan) => void
+  updatePlan: (planId: number, plan: FinancialPlan) => void
+  deletePlan: (planId: number) => void
+  onDeleteMultiplePlans: (ids: number[]) => void
+  reorderPlans: (orderedIds: number[]) => void
+  selectedPlanIds: number[]
+  onSetSelectedPlanIds: (ids: number[]) => void
+  onGoToPlan: (planId: number) => void
 }
 
-const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
+const Plan: FC<PlanProps> = ({
+  plans,
+  profileBirthday,
+  onOpenProfile,
+  createPlan,
+  updatePlan,
+  deletePlan,
+  reorderPlans,
+  selectedPlanIds,
+  onSetSelectedPlanIds,
+  onGoToPlan,
+}) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
-  const { editingPlanId, stopEditing } = useEditingState()
+  const { editingPlanId, startEditing, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
-
-  const handleSelectPlan = (planId: number, multi: boolean): void => {
-    if (multi) {
-      onSetSelectedPlanIds(
-        selectedPlanIds.includes(planId)
-          ? selectedPlanIds.filter(id => id !== planId)
-          : [...selectedPlanIds, planId]
-      );
-    } else {
-      onSetSelectedPlanIds(
-        selectedPlanIds.length === 1 && selectedPlanIds[0] === planId ? [] : [planId]
-      );
-    }
-  }
-
-  const handleDeleteMultiple = (ids: number[]): void => {
-    onDeleteMultiplePlans(ids)
-    onSetSelectedPlanIds([])
-  }
 
   const handleCreatePlan = (plan: FinancialPlan): void => {
     if (editingPlanId) {
@@ -55,22 +47,34 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
     setShowForm(false)
   }
 
-  const handleCopyPlan = (plan: FinancialPlan): void => {
-    onSetSelectedPlanIds([])
-    populateFromPlan(plan, '- Duplicate')
-    stopEditing()
+  const handleEditPlan = (plan: FinancialPlan): void => {
+    populateFromPlan(plan)
+    startEditing(plan.id)
     setShowForm(true)
   }
 
-  const handleRenamePlan = (planId: number, name: string): void => {
-    const plan = plans.find(p => p.id === planId)
-    if (plan) updatePlan(planId, { ...plan, planName: name })
+  const handleCopyPlan = (plan: FinancialPlan): void => {
+    populateFromPlan(plan, '(Copy)')
+    stopEditing()
+    setShowForm(true)
   }
 
   const handleCancelEdit = (): void => {
     resetForm()
     stopEditing()
     setShowForm(false)
+  }
+
+  const handleSelectPlan = (planId: number, multi: boolean): void => {
+    if (multi) {
+      onSetSelectedPlanIds(
+        selectedPlanIds.includes(planId)
+          ? selectedPlanIds.filter(id => id !== planId)
+          : [...selectedPlanIds, planId]
+      )
+    } else {
+      onSetSelectedPlanIds(selectedPlanIds.includes(planId) ? [] : [planId])
+    }
   }
 
   return (
@@ -82,9 +86,9 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
       <div className="plan-new-btn-row" style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 24px 1.2rem 0' }}>
         <NewPlanButton
           onClick={() => {
-            resetForm();
-            stopEditing();
-            setShowForm(true);
+            resetForm()
+            stopEditing()
+            setShowForm(true)
           }}
         />
       </div>
@@ -96,14 +100,16 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
             profileBirthday={profileBirthday}
             selectedPlanIds={selectedPlanIds}
             onSelectPlan={handleSelectPlan}
-            onUpdatePlan={updatePlan}
+            onGoToPlan={onGoToPlan}
+            onEditPlan={handleEditPlan}
             onCopyPlan={handleCopyPlan}
             onDeletePlan={deletePlan}
-            onDeleteMultiple={handleDeleteMultiple}
-            onClearSelection={() => onSetSelectedPlanIds([])}
-            onGoToPlan={onGoToPlan}
-            onReorderPlans={reorderPlans}
-            onRenamePlan={handleRenamePlan}
+            onUpdatePlan={updatePlan}
+            onRenamePlan={(planId, name) => {
+              const plan = plans.find(p => p.id === planId)
+              if (plan) updatePlan(planId, { ...plan, planName: name })
+            }}
+            reorderPlans={reorderPlans}
           />
         </div>
       </div>
@@ -126,3 +132,4 @@ const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan
 }
 
 export default Plan
+

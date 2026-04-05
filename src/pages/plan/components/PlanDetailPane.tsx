@@ -64,6 +64,11 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
     setSaveError('')
   }, [plan.id])
 
+  // Sync fields if plan values change externally while not editing (e.g. Suggest SWR)
+  useEffect(() => {
+    if (!editMode) setFields(toEditFields(plan))
+  }, [plan.safeWithdrawalRate, plan.fiGoal, plan.inflationRate, plan.growth, plan.retirementAge, plan.expenseValue])
+
   useEffect(() => {
     if (renameMode) renameInputRef.current?.focus()
   }, [renameMode])
@@ -256,7 +261,7 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
           </div>
         ) : (
           <>
-            <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} showActions={false} />
+            <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} />
             <button
               className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
               onClick={() => setDiveDeepOpen(v => !v)}

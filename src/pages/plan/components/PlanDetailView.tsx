@@ -11,6 +11,7 @@ interface PlanDetailViewProps {
   onEditPlan: (plan: FinancialPlan) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
+  onUpdatePlan: (planId: number, plan: FinancialPlan) => void
 }
 
 const PlanDetailView: FC<PlanDetailViewProps> = ({
@@ -19,7 +20,8 @@ const PlanDetailView: FC<PlanDetailViewProps> = ({
   profileBirthday,
   onEditPlan,
   onCopyPlan,
-  onDeletePlan
+  onDeletePlan,
+  onUpdatePlan,
 }) => {
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
 
@@ -37,6 +39,7 @@ const PlanDetailView: FC<PlanDetailViewProps> = ({
         onEdit={onEditPlan}
         onCopy={onCopyPlan}
         onDelete={onDeletePlan}
+        onUpdatePlan={onUpdatePlan}
       />
       <button
         className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}

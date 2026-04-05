@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useCallback } from 'react'
 import { FinancialPlan } from '../types'
 import PlanCardActions from './PlanCardActions'
 import '../styles/PlanDetailedCard.css'
@@ -9,6 +9,7 @@ interface PlanDetailedCardProps {
   onEdit?: (plan: FinancialPlan) => void
   onCopy?: (plan: FinancialPlan) => void
   onDelete?: (planId: number) => void
+  onUpdatePlan?: (planId: number, plan: FinancialPlan) => void
   showActions?: boolean
 }
 
@@ -33,10 +34,35 @@ const formatRetirementDate = (date: Date): string =>
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
+function runProjection(
+  plan: FinancialPlan,
+  profileBirthday: string,
+  fiGoal: number,
+): { remaining: number }[] {
+  if (!profileBirthday || !plan.planEndYear || !fiGoal) return []
+  const [by, bm, bd] = profileBirthday.split('-').map(Number)
+  const retirementDate = new Date(by + plan.retirementAge, bm - 1, bd)
+  const endDate = new Date(plan.planEndYear)
+  if (retirementDate >= endDate) return []
+  const monthlyInflation = (plan.inflationRate || 0) / 100 / 12
+  const monthlyGrowth = (plan.growth || 0) / 100 / 12
+  let expense = plan.monthlyExpense2047
+  let remaining = fiGoal
+  const rows: { remaining: number }[] = []
+  const cursor = new Date(retirementDate.getFullYear(), retirementDate.getMonth(), 1)
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
+  while (cursor <= end) {
+    rows.push({ remaining })
+    remaining = remaining * (1 + monthlyGrowth) - expense
+    expense = expense * (1 + monthlyInflation)
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+  return rows
+}
+
 const findDepletionMonth = (plan: FinancialPlan, profileBirthday: string): string | null => {
-  const birthday = profileBirthday || plan.birthday
-  if (!birthday || !plan.planEndYear || !plan.fiGoal) return null
-  const [by, bm, bd] = birthday.split('-').map(Number)
+  if (!profileBirthday || !plan.planEndYear || !plan.fiGoal) return null
+  const [by, bm, bd] = profileBirthday.split('-').map(Number)
   const retirementDate = new Date(by + plan.retirementAge, bm - 1, bd)
   const endDate = new Date(plan.planEndYear)
   if (retirementDate >= endDate) return null
@@ -57,6 +83,20 @@ const findDepletionMonth = (plan: FinancialPlan, profileBirthday: string): strin
   return null
 }
 
+function suggestSWR(plan: FinancialPlan, profileBirthday: string): number | null {
+  if (!plan.expenseValue2047) return null
+  for (
+    let swr = Math.round((plan.safeWithdrawalRate - 0.1) * 10) / 10;
+    swr >= 0.1;
+    swr = Math.round((swr - 0.1) * 10) / 10
+  ) {
+    const newFiGoal = plan.expenseValue2047 / (swr / 100)
+    const rows = runProjection(plan, profileBirthday, newFiGoal)
+    if (rows.length > 0 && rows[rows.length - 1].remaining >= 0) return swr
+  }
+  return null
+}
+
 const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ tooltip, align = 'right' }) => (
   <span className="fi-goal-info">
     <svg className="fi-goal-info-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -68,12 +108,27 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
   </span>
 )
 
-const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, showActions = true }) => {
+const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, onUpdatePlan, showActions = true }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
+  const [suggesting, setSuggesting] = useState(false)
   const birthDate = parseDate(profileBirthday)
   const retirementDate = new Date(birthDate.getFullYear() + plan.retirementAge, birthDate.getMonth(), birthDate.getDate())
   const retirementDateLabel = formatRetirementDate(retirementDate)
   const depletionMonth = useMemo(() => findDepletionMonth(plan, profileBirthday), [plan, profileBirthday])
+
+  const handleSuggest = useCallback(() => {
+    if (!onUpdatePlan) return
+    setSuggesting(true)
+    // run in macrotask so the 'Searching…' label renders first
+    setTimeout(() => {
+      const swr = suggestSWR(plan, profileBirthday)
+      if (swr !== null) {
+        const newFiGoal = plan.expenseValue2047 / (swr / 100)
+        onUpdatePlan(plan.id, { ...plan, safeWithdrawalRate: swr, fiGoal: newFiGoal })
+      }
+      setSuggesting(false)
+    }, 0)
+  }, [onUpdatePlan, plan, profileBirthday])
 
   return (
     <div className="plan-card">
@@ -84,7 +139,16 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
             <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.75" fill="currentColor"/>
             <rect x="7.25" y="11.5" width="1.5" height="1.5" rx="0.75" fill="currentColor"/>
           </svg>
-          Not sustainable beyond {depletionMonth}
+          <span style={{ flex: 1 }}>Not sustainable beyond {depletionMonth}</span>
+          {onUpdatePlan && (
+            <button
+              className="plan-card-warning-suggest"
+              onClick={handleSuggest}
+              disabled={suggesting}
+            >
+              {suggesting ? 'Searching…' : 'Suggest SWR'}
+            </button>
+          )}
         </div>
       )}
       <div className="plan-card-header">

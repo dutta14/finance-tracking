@@ -146,7 +146,7 @@ const PlanDiveDeep: FC<PlanDiveDeepProps> = ({ plan, profileBirthday }) => {
                       width={72}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <ReferenceLine y={0} stroke="#dc2626" strokeDasharray="4 2" strokeWidth={1.5} />
+                    <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="4 2" strokeWidth={1} />
                     <Line
                       type="monotone"
                       dataKey="remaining"
@@ -182,21 +182,6 @@ const PlanDiveDeep: FC<PlanDiveDeepProps> = ({ plan, profileBirthday }) => {
             )}
           </>
         )}
-      </div>
-
-      <div className="dive-deep-section">
-        <h4>Inflation Impact</h4>
-        <p className="dive-deep-placeholder">Coming soon: how {plan.inflationRate}% inflation erodes purchasing power over time.</p>
-      </div>
-
-      <div className="dive-deep-section">
-        <h4>Withdrawal Simulation</h4>
-        <p className="dive-deep-placeholder">Coming soon: safe withdrawal scenario at {plan.safeWithdrawalRate}% rate against your FI goal of {dollars(plan.fiGoal)}.</p>
-      </div>
-
-      <div className="dive-deep-section">
-        <h4>Portfolio Growth</h4>
-        <p className="dive-deep-placeholder">Coming soon: projected portfolio growth at {plan.growth}% annually.</p>
       </div>
     </div>
   )

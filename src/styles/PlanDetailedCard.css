@@ -15,6 +15,38 @@
   margin-bottom: 1rem;
 }
 
+.plan-card-warning-suggest {
+  flex-shrink: 0;
+  background: #fbbf24;
+  color: #78350f;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.plan-card-warning-suggest:hover:not(:disabled) {
+  background: #f59e0b;
+}
+
+.plan-card-warning-suggest:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+body.dark .plan-card-warning-suggest {
+  background: #78490a;
+  color: #fde68a;
+}
+
+body.dark .plan-card-warning-suggest:hover:not(:disabled) {
+  background: #92400e;
+}
+
 body.dark .plan-card-warning {
   background: #3b2e0d;
   color: #fcd34d;
