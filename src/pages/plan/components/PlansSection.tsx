@@ -19,6 +19,7 @@ interface PlansSectionProps {
   onClearSelection: () => void
   onGoToPlan: (planId: number) => void
   onReorderPlans: (orderedIds: number[]) => void
+  onRenamePlan: (planId: number, name: string) => void
 }
 
 const PlansSection: FC<PlansSectionProps> = ({
@@ -32,6 +33,7 @@ const PlansSection: FC<PlansSectionProps> = ({
   onClearSelection,
   onGoToPlan,
   onReorderPlans,
+  onRenamePlan,
 }) => {
   const selectedPlans = plans.filter(p => selectedPlanIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -106,6 +108,10 @@ const PlansSection: FC<PlansSectionProps> = ({
               onSelectPlan={onSelectPlan}
               viewMode={viewMode}
               onReorderPlans={isFiltered ? undefined : onReorderPlans}
+              onGoToPlan={onGoToPlan}
+              onRenamePlan={onRenamePlan}
+              onCopyPlan={onCopyPlan}
+              onDeletePlan={onDeletePlan}
             />
           </div>
           {selectedPlans.length > 1 && (
@@ -121,6 +127,7 @@ const PlansSection: FC<PlansSectionProps> = ({
           onUpdatePlan={onUpdatePlan}
           onCopyPlan={onCopyPlan}
           onDeletePlan={onDeletePlan}
+          onRenamePlan={onRenamePlan}
         />
       )}
     </div>

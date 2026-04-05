@@ -61,6 +61,11 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleRenamePlan = (planId: number, name: string): void => {
+    const plan = plans.find(p => p.id === planId)
+    if (plan) updatePlan(planId, { ...plan, planName: name })
+  }
+
   const handleCancelEdit = (): void => {
     resetForm()
     stopEditing()
@@ -108,6 +113,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
                 onClearSelection={() => onSetSelectedPlanIds([])}
                 onGoToPlan={onGoToPlan}
                 onReorderPlans={reorderPlans}
+                onRenamePlan={handleRenamePlan}
               />
             </div>
           ) : (
@@ -123,6 +129,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
                 onClearSelection={() => onSetSelectedPlanIds([])}
                 onGoToPlan={onGoToPlan}
                 onReorderPlans={reorderPlans}
+                onRenamePlan={handleRenamePlan}
               />
             </div>
           )}

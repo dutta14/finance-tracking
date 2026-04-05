@@ -14,6 +14,7 @@ interface PlanDetailPaneProps {
   onUpdatePlan: (planId: number, plan: FinancialPlan) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
+  onRenamePlan: (planId: number, name: string) => void
 }
 
 interface EditFields {
@@ -41,14 +42,17 @@ const toEditFields = (plan: FinancialPlan): EditFields => ({
 })
 
 const PlanDetailPane: FC<PlanDetailPaneProps> = ({
-  plan, onClose, onGoToPlan, onUpdatePlan, onCopyPlan, onDeletePlan,
+  plan, onClose, onGoToPlan, onUpdatePlan, onCopyPlan, onDeletePlan, onRenamePlan,
 }) => {
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
+  const [renameMode, setRenameMode] = useState(false)
+  const [renameName, setRenameName] = useState('')
   const [fields, setFields] = useState<EditFields>(toEditFields(plan))
   const [saveError, setSaveError] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
+  const renameInputRef = useRef<HTMLInputElement>(null)
 
   const set = (k: keyof EditFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFields(f => ({ ...f, [k]: e.target.value }))
@@ -57,8 +61,13 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
   useEffect(() => {
     setFields(toEditFields(plan))
     setEditMode(false)
+    setRenameMode(false)
     setSaveError('')
   }, [plan.id])
+
+  useEffect(() => {
+    if (renameMode) renameInputRef.current?.focus()
+  }, [renameMode])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -71,7 +80,8 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (editMode) { setEditMode(false); setFields(toEditFields(plan)); setSaveError('') }
+        if (renameMode) { setRenameMode(false) }
+        else if (editMode) { setEditMode(false); setFields(toEditFields(plan)); setSaveError('') }
         else onClose()
       }
     }
@@ -81,6 +91,12 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
 
   const enterEdit = () => { setFields(toEditFields(plan)); setEditMode(true); setMenuOpen(false) }
   const cancelEdit = () => { setEditMode(false); setFields(toEditFields(plan)); setSaveError('') }
+
+  const enterRename = () => { setRenameName(plan.planName); setRenameMode(true); setMenuOpen(false) }
+  const commitRename = () => {
+    if (renameName.trim()) onRenamePlan(plan.id, renameName.trim())
+    setRenameMode(false)
+  }
 
   const handleSave = () => {
     if (!fields.planName.trim()) { setSaveError('Plan name is required'); return }
@@ -125,7 +141,29 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
   return (
     <div className="plan-detail-pane">
       <div className="plan-detail-pane-header">
-        {editMode ? (
+        {renameMode ? (
+          <>
+            <input
+              ref={renameInputRef}
+              className="pane-edit-name-input"
+              value={renameName}
+              onChange={e => setRenameName(e.target.value)}
+              placeholder="Plan name"
+              onKeyDown={e => {
+                if (e.key === 'Enter') commitRename()
+                if (e.key === 'Escape') setRenameMode(false)
+              }}
+            />
+            <div className="plan-detail-pane-controls">
+              <button className="pane-save-btn" onClick={commitRename}>Save</button>
+              <button className="pane-icon-btn" onClick={() => setRenameMode(false)} aria-label="Cancel rename">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </>
+        ) : editMode ? (
           <>
             <input
               className="pane-edit-name-input"
@@ -158,6 +196,7 @@ const PlanDetailPane: FC<PlanDetailPaneProps> = ({
                 {menuOpen && (
                   <div className="pane-overflow-menu">
                     <button className="pane-overflow-menu-item" onClick={enterEdit}>Edit</button>
+                    <button className="pane-overflow-menu-item" onClick={enterRename}>Rename</button>
                     <button className="pane-overflow-menu-item" onClick={() => { setMenuOpen(false); onGoToPlan(plan.id) }}>Go to Plan</button>
                     <button className="pane-overflow-menu-item" onClick={() => { setMenuOpen(false); onCopyPlan(plan) }}>Duplicate</button>
                     <button className="pane-overflow-menu-item pane-overflow-menu-item--danger" onClick={() => { setMenuOpen(false); onDeletePlan(plan.id) }}>Delete</button>
