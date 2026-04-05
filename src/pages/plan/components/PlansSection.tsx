@@ -97,7 +97,7 @@ const PlansSection: FC<PlansSectionProps> = ({
         </div>
       ) : (
         <>
-          <div style={selectedPlans.length === 1 ? { paddingRight: 440, transition: 'padding-right 0.2s' } : { transition: 'padding-right 0.2s' }}>
+          <div className={selectedPlans.length === 1 ? 'plans-grid-wrapper plans-grid-wrapper--pane-open' : 'plans-grid-wrapper'}>
             <PlansMiniGrid
               plans={filteredPlans}
               selectedPlanIds={selectedPlanIds}

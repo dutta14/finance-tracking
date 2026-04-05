@@ -268,6 +268,20 @@ section.plan {
   margin-bottom: 2rem;
 }
 
+.plans-grid-wrapper {
+  transition: padding-right 0.2s;
+}
+
+.plans-grid-wrapper--pane-open {
+  padding-right: 440px;
+}
+
+@media (max-width: 600px) {
+  .plans-grid-wrapper--pane-open {
+    padding-right: 0;
+  }
+}
+
 .plans-mini-list {
   display: flex;
   flex-direction: column;
