@@ -1,0 +1,89 @@
+.undo-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  background: #1e1e2e;
+  color: #fff;
+  border-radius: 10px;
+  padding: 12px 14px 15px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
+  z-index: 9999;
+  min-width: 260px;
+  max-width: 420px;
+  overflow: hidden;
+}
+
+.undo-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.undo-toast-message {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.undo-toast-undo {
+  background: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+.undo-toast-undo:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.undo-toast-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.undo-toast-close:hover {
+  color: #fff;
+}
+
+.undo-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.undo-toast-progress-bar {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.45);
+  animation: undo-drain linear forwards;
+}
+
+@keyframes undo-drain {
+  from { width: 100%; }
+  to   { width: 0%; }
+}

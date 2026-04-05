@@ -11,12 +11,13 @@ interface PlanProps {
   createPlan: (plan: FinancialPlan) => void;
   updatePlan: (planId: number, plan: FinancialPlan) => void;
   deletePlan: (planId: number) => void;
+  onDeleteMultiplePlans: (ids: number[]) => void;
   selectedPlanIds: number[];
   onSetSelectedPlanIds: (ids: number[]) => void;
   onGoToPlan: (planId: number) => void;
 }
 
-const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
+const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
   const { editingPlanId, startEditing, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -36,7 +37,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
   }
 
   const handleDeleteMultiple = (ids: number[]): void => {
-    ids.forEach(id => deletePlan(id))
+    onDeleteMultiplePlans(ids)
     onSetSelectedPlanIds([])
   }
 

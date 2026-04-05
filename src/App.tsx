@@ -1,10 +1,11 @@
 import { FC, useState, useEffect } from 'react'
-import { PageType } from './types'
+import { PageType, FinancialPlan } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
 import Plan from './pages/plan/Plan'
 import PlanSoloPage from './pages/plan/PlanSoloPage'
+import UndoToast from './components/UndoToast'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 
 const App: FC = () => {
@@ -21,9 +22,43 @@ const App: FC = () => {
   const [soloViewPlanId, setSoloViewPlanId] = useState<number | null>(null);
   const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans();
 
+  const [pendingDelete, setPendingDelete] = useState<{
+    ids: number[]
+    savedPlans: FinancialPlan[]
+    message: string
+    timerId: ReturnType<typeof setTimeout>
+  } | null>(null);
+
+  const visiblePlans = pendingDelete
+    ? plans.filter(p => !pendingDelete.ids.includes(p.id))
+    : plans;
+
+  const handleDeleteWithUndo = (ids: number[]): void => {
+    // Commit any existing pending delete before starting a new one
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timerId);
+      pendingDelete.ids.forEach(id => deletePlan(id));
+      setPendingDelete(null);
+    }
+    const affectedPlans = plans.filter(p => ids.includes(p.id));
+    const name = affectedPlans[0]?.planName ?? 'Plan';
+    const message = ids.length === 1 ? `"${name}" deleted` : `${ids.length} plans deleted`;
+    const timerId = setTimeout(() => {
+      ids.forEach(id => deletePlan(id));
+      setPendingDelete(null);
+    }, 10_000);
+    setSelectedNavPlanIds(prev => prev.filter(id => !ids.includes(id)));
+    setPendingDelete({ ids, savedPlans: affectedPlans, message, timerId });
+  };
+
+  const handleUndoDelete = (): void => {
+    if (!pendingDelete) return;
+    clearTimeout(pendingDelete.timerId);
+    setPendingDelete(null);
+  };
+
   const handleDeletePlan = (planId: number): void => {
-    deletePlan(planId);
-    setSelectedNavPlanIds(prev => prev.filter(id => id !== planId));
+    handleDeleteWithUndo([planId]);
   };
 
   const handleGoToPlan = (planId: number): void => {
@@ -68,12 +103,11 @@ const App: FC = () => {
   };
 
   const handleSidebarDeletePlan = (planId: number): void => {
-    handleDeletePlan(planId);
+    handleDeleteWithUndo([planId]);
   };
 
   const handleSidebarDeleteMultiple = (ids: number[]): void => {
-    ids.forEach(id => deletePlan(id));
-    setSelectedNavPlanIds([]);
+    handleDeleteWithUndo(ids);
   };
 
   const renderPage = (): React.ReactNode => {
@@ -81,10 +115,11 @@ const App: FC = () => {
       case 'plan':
         return (
           <Plan
-            plans={plans}
+            plans={visiblePlans}
             createPlan={createPlan}
             updatePlan={updatePlan}
             deletePlan={handleDeletePlan}
+            onDeleteMultiplePlans={handleDeleteWithUndo}
             selectedPlanIds={selectedNavPlanIds}
             onSetSelectedPlanIds={setSelectedNavPlanIds}
             onGoToPlan={handleGoToPlan}
@@ -111,7 +146,7 @@ const App: FC = () => {
           setExpanded={setSidebarOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
-          plans={plans}
+          plans={visiblePlans}
           selectedNavPlanIds={selectedNavPlanIds}
           onSelectNavPlan={handleSelectNavPlan}
           onRenamePlan={renamePlan}
@@ -137,6 +172,18 @@ const App: FC = () => {
         )}
         {renderPage()}
       </main>
+      {pendingDelete && (
+        <UndoToast
+          message={pendingDelete.message}
+          onUndo={handleUndoDelete}
+          onDismiss={() => {
+            clearTimeout(pendingDelete.timerId);
+            pendingDelete.ids.forEach(id => deletePlan(id));
+            setPendingDelete(null);
+          }}
+          duration={10000}
+        />
+      )}
     </div>
   );
 }
