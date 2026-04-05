@@ -32,7 +32,10 @@ const PlansSection: FC<PlansSectionProps> = ({
   onGoToPlan,
 }) => {
   const selectedPlans = plans.filter(p => selectedPlanIds.includes(p.id))
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    const stored = localStorage.getItem('plan-view-mode')
+    return stored === 'list' ? 'list' : 'grid'
+  })
   const [filters, setFilters] = useState<PlanFilters>(DEFAULT_FILTERS)
 
   const filteredPlans = applyFilters(plans, filters)
@@ -45,7 +48,7 @@ const PlansSection: FC<PlansSectionProps> = ({
         <div className="view-mode-toggle">
           <button
             className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
-            onClick={() => setViewMode('grid')}
+            onClick={() => { setViewMode('grid'); localStorage.setItem('plan-view-mode', 'grid') }}
             aria-label="Grid view"
             title="Grid view"
           >
@@ -58,7 +61,7 @@ const PlansSection: FC<PlansSectionProps> = ({
           </button>
           <button
             className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
-            onClick={() => setViewMode('list')}
+            onClick={() => { setViewMode('list'); localStorage.setItem('plan-view-mode', 'list') }}
             aria-label="List view"
             title="List view"
           >
@@ -94,12 +97,14 @@ const PlansSection: FC<PlansSectionProps> = ({
         </div>
       ) : (
         <>
-          <PlansMiniGrid
-            plans={filteredPlans}
-            selectedPlanIds={selectedPlanIds}
-            onSelectPlan={onSelectPlan}
-            viewMode={viewMode}
-          />
+          <div style={selectedPlans.length === 1 ? { paddingRight: 440, transition: 'padding-right 0.2s' } : { transition: 'padding-right 0.2s' }}>
+            <PlansMiniGrid
+              plans={filteredPlans}
+              selectedPlanIds={selectedPlanIds}
+              onSelectPlan={onSelectPlan}
+              viewMode={viewMode}
+            />
+          </div>
           {selectedPlans.length > 1 && (
             <PlanCompareView plans={selectedPlans} />
           )}

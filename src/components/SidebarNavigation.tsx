@@ -24,7 +24,11 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   darkMode, setDarkMode, plans, selectedNavPlanIds, onSelectNavPlan,
   onRenamePlan, onDeletePlan, onDeleteMultiple,
 }) => {
-  const [plansOpen, setPlansOpen] = useState(() => currentPage === 'plan');
+  const [plansOpen, setPlansOpen] = useState(() => {
+    const stored = localStorage.getItem('sidebar-plans-open');
+    if (stored !== null) return stored === '1';
+    return currentPage === 'plan';
+  });
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [renamingPlanId, setRenamingPlanId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -82,11 +86,30 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           <li className="sidebar-item">
             <button
               className={`sidebar-link sidebar-link--accordion${currentPage === 'plan' && selectedNavPlanIds.length === 0 ? ' active' : ''}`}
-              onClick={() => { setCurrentPage('plan'); setPlansOpen(open => !open); }}
+              onClick={() => {
+                setCurrentPage('plan');
+                setPlansOpen(open => {
+                  localStorage.setItem('sidebar-plans-open', !open ? '1' : '0');
+                  return !open;
+                });
+              }}
               aria-label="Plan"
             >
               <span>Plan</span>
-              <span className={`sidebar-chevron${plansOpen ? ' open' : ''}`}>▾</span>
+              <svg
+                className="sidebar-chevron"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                {plansOpen
+                  ? <polyline points="2,9 7,4 12,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  : <polyline points="2,5 7,10 12,5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                }
+              </svg>
             </button>
             {plansOpen && plans.length > 0 && (
               <>
