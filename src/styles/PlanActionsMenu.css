@@ -1,0 +1,85 @@
+.plan-actions-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.plan-actions-menu-trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.plan-actions-menu-trigger:hover {
+  background: #f2f2f2;
+  color: #111;
+}
+
+body.dark .plan-actions-menu-trigger {
+  color: #9ca3af;
+}
+
+body.dark .plan-actions-menu-trigger:hover {
+  background: #2d3748;
+  color: #e5e7eb;
+}
+
+.plan-actions-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 130px;
+  padding: 0.3rem;
+  z-index: 500;
+  white-space: nowrap;
+}
+
+body.dark .plan-actions-menu-dropdown {
+  background: #23272f;
+  border-color: #363c48;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.plan-actions-menu-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.35rem;
+  font-size: 0.875rem;
+  color: #111;
+  width: 100%;
+  display: block;
+  transition: background 0.15s;
+}
+
+.plan-actions-menu-item:hover {
+  background: #f2f2f2;
+}
+
+body.dark .plan-actions-menu-item {
+  color: #e5e7eb;
+}
+
+body.dark .plan-actions-menu-item:hover {
+  background: #2d3748;
+}
+
+.plan-actions-menu-item--danger {
+  color: #e53e3e;
+}
+
+body.dark .plan-actions-menu-item--danger {
+  color: #fc8181;
+}
