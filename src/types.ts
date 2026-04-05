@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react'
+import { FC } from 'react'
 
 export type PageType = 'home' | 'plan' | 'plan-solo'
 

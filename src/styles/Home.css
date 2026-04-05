@@ -22,6 +22,45 @@
   line-height: 1.2;
 }
 
+/* Avatar in hero */
+.hero-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.hero-avatar-btn {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 3px solid #e5e5e5;
+  background: #f3f4f6;
+  cursor: default;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: border-color 0.2s;
+}
+
+.hero-avatar-btn--empty {
+  cursor: pointer;
+}
+
+.hero-avatar-btn--empty:hover {
+  border-color: #9ca3af;
+  color: #6b7280;
+}
+
+.hero-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .hero-content p {
   font-size: 1.25rem;
   margin: 0;

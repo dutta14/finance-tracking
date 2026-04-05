@@ -8,6 +8,7 @@ import Plan from './pages/plan/Plan'
 import PlanSoloPage from './pages/plan/PlanSoloPage'
 import UndoToast from './components/UndoToast'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
+import { useProfile } from './hooks/useProfile'
 
 interface PlanSoloRouteProps { plans: FinancialPlan[]; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void }
 const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, updatePlan, onDelete }) => {
@@ -41,6 +42,7 @@ const App: FC = () => {
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
+  const { profile, updateProfile } = useProfile();
 
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname.startsWith('/plan/')
@@ -148,7 +150,7 @@ const App: FC = () => {
   };
 
   const handleExport = (): void => {
-    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), plans }, null, 2)
+    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), plans, profile }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -167,6 +169,9 @@ const App: FC = () => {
         if (!Array.isArray(incoming)) throw new Error('Invalid format')
         importPlans(incoming)
         setSelectedNavPlanIds([])
+        if (parsed?.profile && typeof parsed.profile === 'object') {
+          updateProfile(parsed.profile)
+        }
       } catch {
         alert('Could not import: the file is not a valid finance plans export.')
       }
@@ -177,7 +182,7 @@ const App: FC = () => {
   const renderPage = (): React.ReactNode => {
     return (
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home profile={profile} onUpdateProfile={updateProfile} />} />
         <Route
           path="/plan"
           element={
@@ -221,6 +226,8 @@ const App: FC = () => {
           onReorderPlans={reorderPlans}
           onExport={handleExport}
           onImport={handleImport}
+          profile={profile}
+          onUpdateProfile={updateProfile}
         />
       )}
       {/* Backdrop for mobile overlay */}

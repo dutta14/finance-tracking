@@ -1,5 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react';
 import { NavigationProps, FinancialPlan } from '../types';
+import { Profile } from '../hooks/useProfile';
 import SidebarToggle from './SidebarToggle';
 import SettingsMenu from './SettingsMenu';
 import '../styles/SidebarNavigation.css';
@@ -20,6 +21,8 @@ interface SidebarNavigationProps extends NavigationProps {
   onReorderPlans: (orderedIds: number[]) => void;
   onExport: () => void;
   onImport: (file: File) => void;
+  profile: Profile;
+  onUpdateProfile: (updates: Partial<Profile>) => void;
 }
 
 interface ContextMenuState { x: number; y: number; planId: number }
@@ -29,6 +32,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   darkMode, setDarkMode, plans, selectedNavPlanIds, isMultiSelectMode,
   onSelectNavPlan, onExitMultiSelect,
   onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans, onExport, onImport,
+  profile, onUpdateProfile,
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => {
     const stored = localStorage.getItem('sidebar-plans-open');
@@ -284,7 +288,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
       )}
       {expanded && (
         <div className="sidebar-settings-section">
-          <SettingsMenu darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
+          <SettingsMenu darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} profile={profile} onUpdateProfile={onUpdateProfile} />
         </div>
       )}
       {contextMenu && (
