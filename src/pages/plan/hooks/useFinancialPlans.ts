@@ -34,11 +34,19 @@ export const useFinancialPlans = () => {
     setPlans(migratePlans(incoming))
   }
 
+  const reorderPlans = (orderedIds: number[]): void => {
+    setPlans(prev => {
+      const map = new Map(prev.map(p => [p.id, p]))
+      return orderedIds.map(id => map.get(id)).filter((p): p is FinancialPlan => p !== undefined)
+    })
+  }
+
   return {
     plans,
     createPlan,
     updatePlan,
     deletePlan,
     importPlans,
+    reorderPlans,
   }
 }

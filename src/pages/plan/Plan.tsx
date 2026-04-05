@@ -12,12 +12,13 @@ interface PlanProps {
   updatePlan: (planId: number, plan: FinancialPlan) => void;
   deletePlan: (planId: number) => void;
   onDeleteMultiplePlans: (ids: number[]) => void;
+  reorderPlans: (orderedIds: number[]) => void;
   selectedPlanIds: number[];
   onSetSelectedPlanIds: (ids: number[]) => void;
   onGoToPlan: (planId: number) => void;
 }
 
-const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
+const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
   const { editingPlanId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -106,6 +107,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
                 onDeleteMultiple={handleDeleteMultiple}
                 onClearSelection={() => onSetSelectedPlanIds([])}
                 onGoToPlan={onGoToPlan}
+                onReorderPlans={reorderPlans}
               />
             </div>
           ) : (
@@ -120,6 +122,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, onDele
                 onDeleteMultiple={handleDeleteMultiple}
                 onClearSelection={() => onSetSelectedPlanIds([])}
                 onGoToPlan={onGoToPlan}
+                onReorderPlans={reorderPlans}
               />
             </div>
           )}

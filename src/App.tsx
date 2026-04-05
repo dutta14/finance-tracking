@@ -40,7 +40,7 @@ const App: FC = () => {
   });
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const { plans, createPlan, updatePlan, deletePlan, importPlans } = useFinancialPlans();
+  const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
 
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname.startsWith('/plan/')
@@ -187,6 +187,7 @@ const App: FC = () => {
               updatePlan={updatePlan}
               deletePlan={handleDeletePlan}
               onDeleteMultiplePlans={handleDeleteWithUndo}
+              reorderPlans={reorderPlans}
               selectedPlanIds={selectedNavPlanIds}
               onSetSelectedPlanIds={setSelectedNavPlanIds}
               onGoToPlan={handleGoToPlan}
@@ -217,6 +218,7 @@ const App: FC = () => {
           onRenamePlan={renamePlan}
           onDeletePlan={handleSidebarDeletePlan}
           onDeleteMultiple={handleSidebarDeleteMultiple}
+          onReorderPlans={reorderPlans}
           onExport={handleExport}
           onImport={handleImport}
         />

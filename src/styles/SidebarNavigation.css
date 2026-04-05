@@ -231,12 +231,39 @@ body.dark .sidebar-multiselect-btn--close:hover {
 
 .sidebar-subitem {
   width: 100%;
+  position: relative;
 }
+
+/* Sidebar drag indicators */
+.sidebar-subitem--dragging .sidebar-subitem-row {
+  opacity: 0.35;
+}
+
+.sidebar-subitem--drag-before::before,
+.sidebar-subitem--drag-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #4f89e8;
+  border-radius: 1px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.sidebar-subitem--drag-before::before { top: 0; }
+.sidebar-subitem--drag-after::after  { bottom: 0; }
 
 .sidebar-subitem-row {
   display: flex;
   align-items: center;
   border-radius: 0.4rem;
+  cursor: grab;
+}
+
+.sidebar-subitem-row:active {
+  cursor: grabbing;
 }
 
 .sidebar-subitem-row .sidebar-sublink {

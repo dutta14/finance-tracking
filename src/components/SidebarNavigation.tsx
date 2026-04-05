@@ -17,6 +17,7 @@ interface SidebarNavigationProps extends NavigationProps {
   onRenamePlan: (id: number, newName: string) => void;
   onDeletePlan: (id: number) => void;
   onDeleteMultiple: (ids: number[]) => void;
+  onReorderPlans: (orderedIds: number[]) => void;
   onExport: () => void;
   onImport: (file: File) => void;
 }
@@ -27,7 +28,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
   darkMode, setDarkMode, plans, selectedNavPlanIds, isMultiSelectMode,
   onSelectNavPlan, onExitMultiSelect,
-  onRenamePlan, onDeletePlan, onDeleteMultiple, onExport, onImport,
+  onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans, onExport, onImport,
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => {
     const stored = localStorage.getItem('sidebar-plans-open');
@@ -72,6 +73,42 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   };
 
   const multiSelected = isMultiSelectMode;
+
+  const [draggedPlanId, setDraggedPlanId] = useState<number | null>(null)
+  const [dragOverPlanId, setDragOverPlanId] = useState<number | null>(null)
+  const [dragOverSide, setDragOverSide] = useState<'before' | 'after'>('after')
+
+  const handleSidebarDragStart = (e: React.DragEvent, id: number) => {
+    setDraggedPlanId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleSidebarDragOver = (e: React.DragEvent<HTMLLIElement>, id: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (id === draggedPlanId) { setDragOverPlanId(null); return }
+    const rect = e.currentTarget.getBoundingClientRect()
+    setDragOverSide(e.clientY < rect.top + rect.height / 2 ? 'before' : 'after')
+    setDragOverPlanId(id)
+  }
+
+  const handleSidebarDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault()
+    if (draggedPlanId === null || draggedPlanId === targetId) return
+    const ids = plans.map(p => p.id)
+    const withoutDragged = ids.filter(id => id !== draggedPlanId)
+    const targetIdx = withoutDragged.indexOf(targetId)
+    const insertIdx = dragOverSide === 'before' ? targetIdx : targetIdx + 1
+    withoutDragged.splice(insertIdx, 0, draggedPlanId)
+    onReorderPlans(withoutDragged)
+    setDraggedPlanId(null)
+    setDragOverPlanId(null)
+  }
+
+  const handleSidebarDragEnd = () => {
+    setDraggedPlanId(null)
+    setDragOverPlanId(null)
+  }
 
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>
@@ -143,8 +180,18 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                   </div>
                 )}
                 <ul className="sidebar-submenu">
-                  {plans.map(plan => (
-                    <li key={plan.id} className="sidebar-subitem">
+                  {plans.map(plan => {
+                    let liClass = 'sidebar-subitem'
+                    if (draggedPlanId === plan.id) liClass += ' sidebar-subitem--dragging'
+                    else if (dragOverPlanId === plan.id) liClass += ` sidebar-subitem--drag-${dragOverSide}`
+                    return (
+                    <li key={plan.id} className={liClass}
+                      draggable={renamingPlanId !== plan.id}
+                      onDragStart={renamingPlanId !== plan.id ? e => handleSidebarDragStart(e, plan.id) : undefined}
+                      onDragOver={renamingPlanId !== plan.id ? e => handleSidebarDragOver(e, plan.id) : undefined}
+                      onDrop={renamingPlanId !== plan.id ? e => handleSidebarDrop(e, plan.id) : undefined}
+                      onDragEnd={handleSidebarDragEnd}
+                    >
                       {renamingPlanId === plan.id ? (
                         <input
                           ref={renameInputRef}
@@ -200,7 +247,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                         </div>
                       )}
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               </>
             )}
