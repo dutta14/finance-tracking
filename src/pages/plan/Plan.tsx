@@ -20,21 +20,29 @@ interface PlanProps {
   onGoToPlan: (planId: number) => void
 }
 
-const Plan: FC<PlanProps> = ({
-  plans,
-  profileBirthday,
-  onOpenProfile,
-  createPlan,
-  updatePlan,
-  deletePlan,
-  reorderPlans,
-  selectedPlanIds,
-  onSetSelectedPlanIds,
-  onGoToPlan,
-}) => {
+const Plan: FC<PlanProps> = ({ plans, profileBirthday, onOpenProfile, createPlan, updatePlan, deletePlan, onDeleteMultiplePlans, reorderPlans, selectedPlanIds, onSetSelectedPlanIds, onGoToPlan }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
-  const { editingPlanId, startEditing, stopEditing } = useEditingState()
+  const { editingPlanId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
+
+  const handleSelectPlan = (planId: number, multi: boolean): void => {
+    if (multi) {
+      onSetSelectedPlanIds(
+        selectedPlanIds.includes(planId)
+          ? selectedPlanIds.filter(id => id !== planId)
+          : [...selectedPlanIds, planId]
+      )
+    } else {
+      onSetSelectedPlanIds(
+        selectedPlanIds.length === 1 && selectedPlanIds[0] === planId ? [] : [planId]
+      )
+    }
+  }
+
+  const handleDeleteMultiple = (ids: number[]): void => {
+    onDeleteMultiplePlans(ids)
+    onSetSelectedPlanIds([])
+  }
 
   const handleCreatePlan = (plan: FinancialPlan): void => {
     if (editingPlanId) {
@@ -47,34 +55,22 @@ const Plan: FC<PlanProps> = ({
     setShowForm(false)
   }
 
-  const handleEditPlan = (plan: FinancialPlan): void => {
-    populateFromPlan(plan)
-    startEditing(plan.id)
+  const handleCopyPlan = (plan: FinancialPlan): void => {
+    onSetSelectedPlanIds([])
+    populateFromPlan(plan, '- Duplicate')
+    stopEditing()
     setShowForm(true)
   }
 
-  const handleCopyPlan = (plan: FinancialPlan): void => {
-    populateFromPlan(plan, '(Copy)')
-    stopEditing()
-    setShowForm(true)
+  const handleRenamePlan = (planId: number, name: string): void => {
+    const plan = plans.find(p => p.id === planId)
+    if (plan) updatePlan(planId, { ...plan, planName: name })
   }
 
   const handleCancelEdit = (): void => {
     resetForm()
     stopEditing()
     setShowForm(false)
-  }
-
-  const handleSelectPlan = (planId: number, multi: boolean): void => {
-    if (multi) {
-      onSetSelectedPlanIds(
-        selectedPlanIds.includes(planId)
-          ? selectedPlanIds.filter(id => id !== planId)
-          : [...selectedPlanIds, planId]
-      )
-    } else {
-      onSetSelectedPlanIds(selectedPlanIds.includes(planId) ? [] : [planId])
-    }
   }
 
   return (
@@ -100,16 +96,14 @@ const Plan: FC<PlanProps> = ({
             profileBirthday={profileBirthday}
             selectedPlanIds={selectedPlanIds}
             onSelectPlan={handleSelectPlan}
-            onGoToPlan={onGoToPlan}
-            onEditPlan={handleEditPlan}
+            onUpdatePlan={updatePlan}
             onCopyPlan={handleCopyPlan}
             onDeletePlan={deletePlan}
-            onUpdatePlan={updatePlan}
-            onRenamePlan={(planId, name) => {
-              const plan = plans.find(p => p.id === planId)
-              if (plan) updatePlan(planId, { ...plan, planName: name })
-            }}
-            reorderPlans={reorderPlans}
+            onDeleteMultiple={handleDeleteMultiple}
+            onClearSelection={() => onSetSelectedPlanIds([])}
+            onGoToPlan={onGoToPlan}
+            onReorderPlans={reorderPlans}
+            onRenamePlan={handleRenamePlan}
           />
         </div>
       </div>

@@ -320,12 +320,13 @@ section.plan {
   transition: padding-right 0.2s;
 }
 
-.plans-grid-wrapper--pane-open {
+.plan-results-section--pane-open {
   padding-right: 440px;
+  transition: padding-right 0.2s;
 }
 
 @media (max-width: 600px) {
-  .plans-grid-wrapper--pane-open {
+  .plan-results-section--pane-open {
     padding-right: 0;
   }
 }
