@@ -134,6 +134,83 @@ body.dark .settings-menu-item:hover {
   gap: 0.15rem;
 }
 
+.sidebar-multiselect-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.3rem 0;
+  padding: 0.4rem 0.5rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.4rem;
+}
+
+.sidebar-multiselect-count {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.sidebar-multiselect-actions {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.sidebar-multiselect-btn {
+  background: none;
+  border: 1px solid #93c5fd;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  color: #1d4ed8;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.sidebar-multiselect-btn:hover {
+  background: #dbeafe;
+}
+
+.sidebar-multiselect-btn--danger {
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.sidebar-multiselect-btn--danger:hover {
+  background: #fef2f2;
+}
+
+body.dark .sidebar-multiselect-bar {
+  background: #1e2a3a;
+  border-color: #2d4a6e;
+}
+
+body.dark .sidebar-multiselect-count {
+  color: #93c5fd;
+}
+
+body.dark .sidebar-multiselect-btn {
+  border-color: #2d4a6e;
+  color: #93c5fd;
+}
+
+body.dark .sidebar-multiselect-btn:hover {
+  background: #1e3a5f;
+}
+
+body.dark .sidebar-multiselect-btn--danger {
+  border-color: #7f1d1d;
+  color: #f87171;
+}
+
+body.dark .sidebar-multiselect-btn--danger:hover {
+  background: #3b1c1c;
+}
+
 .sidebar-subitem {
   width: 100%;
 }

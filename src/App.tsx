@@ -16,7 +16,7 @@ const App: FC = () => {
     if (stored === '0') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  const [selectedNavPlanId, setSelectedNavPlanId] = useState<number | null>(null);
+  const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
   const { plans, createPlan, updatePlan, deletePlan } = useFinancialPlans();
 
   useEffect(() => {
@@ -38,10 +38,16 @@ const App: FC = () => {
     localStorage.setItem('darkMode', darkMode ? '1' : '0');
   }, [darkMode]);
 
-  const handleSelectNavPlan = (planId: number): void => {
+  const handleSelectNavPlan = (planId: number, multi: boolean): void => {
     setCurrentPage('plan');
-    setSelectedNavPlanId(planId);
-    if (isMobile) setSidebarOpen(false);
+    if (multi) {
+      setSelectedNavPlanIds(prev =>
+        prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
+      );
+    } else {
+      setSelectedNavPlanIds([planId]);
+      if (isMobile) setSidebarOpen(false);
+    }
   };
 
   const renamePlan = (planId: number, newName: string): void => {
@@ -51,7 +57,12 @@ const App: FC = () => {
 
   const handleSidebarDeletePlan = (planId: number): void => {
     deletePlan(planId);
-    if (selectedNavPlanId === planId) setSelectedNavPlanId(null);
+    setSelectedNavPlanIds(prev => prev.filter(id => id !== planId));
+  };
+
+  const handleSidebarDeleteMultiple = (ids: number[]): void => {
+    ids.forEach(id => deletePlan(id));
+    setSelectedNavPlanIds([]);
   };
 
   const renderPage = (): React.ReactNode => {
@@ -63,8 +74,8 @@ const App: FC = () => {
             createPlan={createPlan}
             updatePlan={updatePlan}
             deletePlan={deletePlan}
-            selectedNavPlanId={selectedNavPlanId}
-            onClearNavPlanId={() => setSelectedNavPlanId(null)}
+            selectedPlanIds={selectedNavPlanIds}
+            onSetSelectedPlanIds={setSelectedNavPlanIds}
           />
         );
       case 'home':
@@ -84,10 +95,11 @@ const App: FC = () => {
           darkMode={darkMode}
           setDarkMode={setDarkMode}
           plans={plans}
-          selectedNavPlanId={selectedNavPlanId}
+          selectedNavPlanIds={selectedNavPlanIds}
           onSelectNavPlan={handleSelectNavPlan}
           onRenamePlan={renamePlan}
           onDeletePlan={handleSidebarDeletePlan}
+          onDeleteMultiple={handleSidebarDeleteMultiple}
         />
       )}
       {/* Backdrop for mobile overlay */}

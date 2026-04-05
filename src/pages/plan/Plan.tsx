@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState } from 'react'
 import { FinancialPlan } from '../../types'
 import PlanForm from './components/PlanForm'
 import PlansSection from './components/PlansSection'
@@ -11,21 +11,33 @@ interface PlanProps {
   createPlan: (plan: FinancialPlan) => void;
   updatePlan: (planId: number, plan: FinancialPlan) => void;
   deletePlan: (planId: number) => void;
-  selectedNavPlanId: number | null;
-  onClearNavPlanId: () => void;
+  selectedPlanIds: number[];
+  onSetSelectedPlanIds: (ids: number[]) => void;
 }
 
-const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, selectedNavPlanId, onClearNavPlanId }) => {
+const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, selectedPlanIds, onSetSelectedPlanIds }) => {
   const { formData, error, setError, handleInputChange, populateFromPlan, resetForm } = useFormData()
-  const { selectedPlanIds, setSelectedPlanIds, editingPlanId, togglePlanSelection, startEditing, stopEditing } = useEditingState()
+  const { editingPlanId, startEditing, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
 
-  useEffect(() => {
-    if (selectedNavPlanId !== null) {
-      setSelectedPlanIds([selectedNavPlanId]);
-      onClearNavPlanId();
+  const handleSelectPlan = (planId: number, multi: boolean): void => {
+    if (multi) {
+      onSetSelectedPlanIds(
+        selectedPlanIds.includes(planId)
+          ? selectedPlanIds.filter(id => id !== planId)
+          : [...selectedPlanIds, planId]
+      );
+    } else {
+      onSetSelectedPlanIds(
+        selectedPlanIds.length === 1 && selectedPlanIds[0] === planId ? [] : [planId]
+      );
     }
-  }, [selectedNavPlanId]);
+  }
+
+  const handleDeleteMultiple = (ids: number[]): void => {
+    ids.forEach(id => deletePlan(id))
+    onSetSelectedPlanIds([])
+  }
 
   const handleCreatePlan = (plan: FinancialPlan): void => {
     if (editingPlanId) {
@@ -56,15 +68,6 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
     resetForm()
     stopEditing()
     setShowForm(false)
-  }
-
-  const handleSelectPlan = (planId: number, multi: boolean): void => {
-    togglePlanSelection(planId, multi)
-  }
-
-  const handleDeleteMultiple = (ids: number[]): void => {
-    ids.forEach(id => deletePlan(id))
-    setSelectedPlanIds([])
   }
 
   return (
@@ -105,7 +108,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
                 onCopyPlan={handleCopyPlan}
                 onDeletePlan={deletePlan}
                 onDeleteMultiple={handleDeleteMultiple}
-                onClearSelection={() => setSelectedPlanIds([])}
+                onClearSelection={() => onSetSelectedPlanIds([])}
               />
             </div>
           ) : (
@@ -118,7 +121,7 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
                 onCopyPlan={handleCopyPlan}
                 onDeletePlan={deletePlan}
                 onDeleteMultiple={handleDeleteMultiple}
-                onClearSelection={() => setSelectedPlanIds([])}
+                onClearSelection={() => onSetSelectedPlanIds([])}
               />
             </div>
           )}

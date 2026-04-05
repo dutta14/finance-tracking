@@ -10,18 +10,19 @@ interface SidebarNavigationProps extends NavigationProps {
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
   plans: FinancialPlan[];
-  selectedNavPlanId: number | null;
-  onSelectNavPlan: (id: number) => void;
+  selectedNavPlanIds: number[];
+  onSelectNavPlan: (id: number, multi: boolean) => void;
   onRenamePlan: (id: number, newName: string) => void;
   onDeletePlan: (id: number) => void;
+  onDeleteMultiple: (ids: number[]) => void;
 }
 
 interface ContextMenuState { x: number; y: number; planId: number }
 
 const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
-  darkMode, setDarkMode, plans, selectedNavPlanId, onSelectNavPlan,
-  onRenamePlan, onDeletePlan,
+  darkMode, setDarkMode, plans, selectedNavPlanIds, onSelectNavPlan,
+  onRenamePlan, onDeletePlan, onDeleteMultiple,
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => currentPage === 'plan');
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -61,6 +62,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
     setRenamingPlanId(null);
   };
 
+  const multiSelected = selectedNavPlanIds.length > 1;
+
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>
       <SidebarToggle expanded={expanded} onToggle={() => setExpanded(false)} />
@@ -78,7 +81,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           </li>
           <li className="sidebar-item">
             <button
-              className={`sidebar-link sidebar-link--accordion${currentPage === 'plan' && selectedNavPlanId === null ? ' active' : ''}`}
+              className={`sidebar-link sidebar-link--accordion${currentPage === 'plan' && selectedNavPlanIds.length === 0 ? ' active' : ''}`}
               onClick={() => { setCurrentPage('plan'); setPlansOpen(open => !open); }}
               aria-label="Plan"
             >
@@ -86,52 +89,68 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
               <span className={`sidebar-chevron${plansOpen ? ' open' : ''}`}>▾</span>
             </button>
             {plansOpen && plans.length > 0 && (
-              <ul className="sidebar-submenu">
-                {plans.map(plan => (
-                  <li key={plan.id} className="sidebar-subitem">
-                    {renamingPlanId === plan.id ? (
-                      <input
-                        ref={renameInputRef}
-                        className="sidebar-rename-input"
-                        value={renameValue}
-                        onChange={e => setRenameValue(e.target.value)}
-                        onBlur={() => commitRename(plan.id)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') commitRename(plan.id);
-                          if (e.key === 'Escape') setRenamingPlanId(null);
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className={`sidebar-subitem-row${contextMenu?.planId === plan.id ? ' menu-open' : ''}`}
-                        onContextMenu={e => { e.preventDefault(); openContextMenu(plan.id, e.clientX, e.clientY); }}
+              <>
+                {multiSelected && (
+                  <div className="sidebar-multiselect-bar">
+                    <span className="sidebar-multiselect-count">{selectedNavPlanIds.length} selected</span>
+                    <div className="sidebar-multiselect-actions">
+                      <button
+                        className="sidebar-multiselect-btn sidebar-multiselect-btn--danger"
+                        title="Delete selected plans"
+                        onClick={() => onDeleteMultiple(selectedNavPlanIds)}
                       >
-                        <button
-                          className={`sidebar-sublink${selectedNavPlanId === plan.id && currentPage === 'plan' ? ' active' : ''}`}
-                          onClick={() => onSelectNavPlan(plan.id)}
-                        >
-                          {plan.planName}
-                        </button>
-                        <button
-                          className="sidebar-overflow-btn"
-                          onClick={e => {
-                            e.stopPropagation();
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            openContextMenu(plan.id, rect.left, rect.bottom + 4);
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <ul className="sidebar-submenu">
+                  {plans.map(plan => (
+                    <li key={plan.id} className="sidebar-subitem">
+                      {renamingPlanId === plan.id ? (
+                        <input
+                          ref={renameInputRef}
+                          className="sidebar-rename-input"
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onBlur={() => commitRename(plan.id)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') commitRename(plan.id);
+                            if (e.key === 'Escape') setRenamingPlanId(null);
                           }}
-                          aria-label="Plan options"
+                        />
+                      ) : (
+                        <div
+                          className={`sidebar-subitem-row${contextMenu?.planId === plan.id ? ' menu-open' : ''}`}
+                          onContextMenu={e => { e.preventDefault(); openContextMenu(plan.id, e.clientX, e.clientY); }}
                         >
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                            <circle cx="3" cy="8" r="1.5"/>
-                            <circle cx="8" cy="8" r="1.5"/>
-                            <circle cx="13" cy="8" r="1.5"/>
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
+                          <button
+                            className={`sidebar-sublink${selectedNavPlanIds.includes(plan.id) && currentPage === 'plan' ? ' active' : ''}`}
+                            onClick={e => onSelectNavPlan(plan.id, e.metaKey || e.ctrlKey)}
+                          >
+                            {plan.planName}
+                          </button>
+                          <button
+                            className="sidebar-overflow-btn"
+                            onClick={e => {
+                              e.stopPropagation();
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              openContextMenu(plan.id, rect.left, rect.bottom + 4);
+                            }}
+                            aria-label="Plan options"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                              <circle cx="3" cy="8" r="1.5"/>
+                              <circle cx="8" cy="8" r="1.5"/>
+                              <circle cx="13" cy="8" r="1.5"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </li>
         </ul>
