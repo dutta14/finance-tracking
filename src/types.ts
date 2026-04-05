@@ -33,6 +33,16 @@ export interface FinancialPlan {
   progress: number
 }
 
+export interface GwPlan {
+  id: number
+  fiPlanId: number
+  label: string
+  createdAt: string
+  disburseAge: number
+  disburseAmount: number   // in plan-creation-year (today's) dollars
+  growthRate: number       // % per year, independent of FI growth rate
+}
+
 export interface NavigationProps {
   currentPage: PageType
   setCurrentPage: (page: PageType) => void

@@ -1,9 +1,10 @@
 import { FC, useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { FinancialPlan } from '../../types'
+import { FinancialPlan, GwPlan } from '../../types'
 import PlanDetailedCard from '../../components/PlanDetailedCard'
 import PlanActionsMenu from '../../components/PlanActionsMenu'
 import PlanDiveDeep from './components/PlanDiveDeep'
+import GwSection from './components/GwSection'
 import { calculatePlanMetrics } from './utils/planCalculations'
 import { parseDate, getMonthsBetween } from './utils/dateHelpers'
 import './components/PlanDiveDeep.css'
@@ -18,6 +19,10 @@ interface PlanSoloPageProps {
   onNavigate: (planId: number) => void
   onUpdatePlan: (planId: number, plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
+  gwPlans: GwPlan[]
+  onCreateGwPlan: (plan: Omit<GwPlan, 'id' | 'createdAt'>) => void
+  onUpdateGwPlan: (id: number, updates: Partial<Omit<GwPlan, 'id' | 'createdAt' | 'fiPlanId'>>) => void
+  onDeleteGwPlan: (id: number) => void
 }
 
 interface EditFields {
@@ -42,7 +47,7 @@ const toEditFields = (p: FinancialPlan): EditFields => ({
   growth: String(p.growth),
 })
 
-const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onBack, onNavigate, onUpdatePlan, onDeletePlan }) => {
+const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onBack, onNavigate, onUpdatePlan, onDeletePlan, gwPlans, onCreateGwPlan, onUpdateGwPlan, onDeleteGwPlan }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
@@ -226,6 +231,16 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
           {diveDeepOpen ? 'Close Deep Analysis ↑' : 'Dive Deep ↓'}
         </button>
         {diveDeepOpen && <PlanDiveDeep plan={plan} profileBirthday={profileBirthday} />}
+        {plan.fiGoal > 0 && (
+          <GwSection
+            plan={plan}
+            profileBirthday={profileBirthday}
+            gwPlans={gwPlans}
+            onCreateGwPlan={onCreateGwPlan}
+            onUpdateGwPlan={onUpdateGwPlan}
+            onDeleteGwPlan={onDeleteGwPlan}
+          />
+        )}
       </div>
     </section>
   )

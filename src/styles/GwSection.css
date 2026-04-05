@@ -1,0 +1,476 @@
+/* ── GW Section ─────────────────────────────────────────── */
+
+.gw-section {
+  margin-top: 2.5rem;
+  border-top: 2px solid #d1fae5;
+  padding-top: 2rem;
+}
+
+/* Header */
+.gw-section-header {
+  margin-bottom: 1.5rem;
+}
+
+.gw-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.gw-section-badge {
+  background: #22c55e;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.gw-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.gw-section-subtitle {
+  font-size: 0.855rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.55;
+  max-width: 480px;
+}
+
+/* Empty state */
+.gw-empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 2px dashed #d1fae5;
+  border-radius: 0.75rem;
+}
+
+.gw-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 0.75rem;
+  color: #22c55e;
+}
+
+.gw-empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.gw-empty-text {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0 0 1rem;
+}
+
+/* Add buttons */
+.gw-add-btn {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.gw-add-btn:hover {
+  background: #16a34a;
+}
+
+.gw-add-btn--inline {
+  margin-top: 0.75rem;
+  background: transparent;
+  color: #22c55e;
+  border: 1px solid #22c55e;
+  font-weight: 500;
+}
+
+.gw-add-btn--inline:hover {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+/* Goals list */
+.gw-goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Goal card */
+.gw-goal-card {
+  border: 1px solid #d1fae5;
+  border-radius: 0.7rem;
+  padding: 1rem 1.1rem;
+  background: #f0fdf4;
+  transition: box-shadow 0.15s;
+}
+
+.gw-goal-card:hover {
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.12);
+}
+
+.gw-goal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.gw-goal-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.gw-goal-edit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.gw-goal-edit:hover {
+  color: #22c55e;
+  background: #f0fdf4;
+}
+
+.gw-goal-label--editing {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4b7c5e;
+  font-style: italic;
+}
+
+.gw-goal-card--editing {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+.gw-card-edit-form {
+  margin-top: 0.25rem;
+}
+
+.gw-goal-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #166534;
+}
+
+.gw-goal-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.gw-goal-delete:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.gw-goal-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.85rem;
+}
+
+.gw-goal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.gw-goal-row-label {
+  color: #4b7c5e;
+}
+
+.gw-goal-row-value {
+  font-weight: 500;
+  color: #166534;
+}
+
+.gw-goal-row-value--highlight {
+  font-weight: 700;
+}
+
+/* Present-value callout */
+.gw-goal-pv {
+  background: #dcfce7;
+  border-radius: 0.45rem;
+  padding: 0.65rem 0.85rem;
+  text-align: center;
+}
+
+.gw-goal-pv-label {
+  font-size: 0.72rem;
+  color: #4b7c5e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.gw-goal-pv-amount {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #166534;
+  line-height: 1.2;
+}
+
+.gw-goal-pv-note {
+  font-size: 0.74rem;
+  color: #4b7c5e;
+  margin-top: 0.2rem;
+}
+
+/* Add form */
+.gw-form {
+  border: 1px solid #d1fae5;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: #f0fdf4;
+  margin-top: 0.5rem;
+}
+
+.gw-form-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #166534;
+  margin: 0 0 1rem;
+}
+
+.gw-form-error {
+  font-size: 0.82rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  margin: 0 0 0.9rem;
+}
+
+.gw-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.gw-form-group--full {
+  grid-column: 1 / -1;
+}
+
+.gw-form-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4b7c5e;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gw-form-input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #a7f3d0;
+  border-radius: 0.4rem;
+  font-size: 0.875rem;
+  background: #fff;
+  color: #111;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.gw-form-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.gw-form-hint {
+  display: block;
+  font-size: 0.73rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.gw-form-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.gw-form-save {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.gw-form-save:hover {
+  background: #16a34a;
+}
+
+.gw-form-cancel {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.gw-form-cancel:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+/* ── Dark mode ───────────────────────────────────────────── */
+
+body.dark .gw-section {
+  border-top-color: #1a3d2b;
+}
+
+body.dark .gw-section-title {
+  color: #d1fae5;
+}
+
+body.dark .gw-section-subtitle {
+  color: #6b7280;
+}
+
+body.dark .gw-empty-state {
+  border-color: #1a3d2b;
+}
+
+body.dark .gw-empty-text {
+  color: #6b7280;
+}
+
+body.dark .gw-add-btn--inline {
+  color: #4ade80;
+  border-color: #166534;
+}
+
+body.dark .gw-add-btn--inline:hover {
+  background: #14532d;
+  color: #86efac;
+}
+
+body.dark .gw-goal-card {
+  background: #14532d22;
+  border-color: #166534;
+}
+
+body.dark .gw-goal-card:hover {
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.08);
+}
+
+body.dark .gw-goal-label {
+  color: #86efac;
+}
+
+body.dark .gw-goal-row-label {
+  color: #4ade8088;
+}
+
+body.dark .gw-goal-row-value {
+  color: #86efac;
+}
+
+body.dark .gw-goal-pv {
+  background: #14532d44;
+}
+
+body.dark .gw-goal-pv-label {
+  color: #4ade8088;
+}
+
+body.dark .gw-goal-pv-amount {
+  color: #86efac;
+}
+
+body.dark .gw-goal-pv-note {
+  color: #4ade8077;
+}
+
+body.dark .gw-goal-delete:hover {
+  background: #3f0f0f;
+}
+
+body.dark .gw-goal-edit:hover {
+  color: #4ade80;
+  background: #14532d44;
+}
+
+body.dark .gw-goal-card--editing {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
+}
+
+body.dark .gw-form {
+  background: #14532d22;
+  border-color: #166534;
+}
+
+body.dark .gw-form-title {
+  color: #86efac;
+}
+
+body.dark .gw-form-label {
+  color: #4ade8088;
+}
+
+body.dark .gw-form-input {
+  background: #1a2332;
+  border-color: #166534;
+  color: #e5e7eb;
+}
+
+body.dark .gw-form-input:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+body.dark .gw-form-hint {
+  color: #4b5563;
+}
+
+body.dark .gw-form-cancel {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+body.dark .gw-form-cancel:hover {
+  background: #1f2937;
+  color: #d1d5db;
+}

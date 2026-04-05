@@ -1,18 +1,29 @@
 import { FC, useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom'
-import { PageType, FinancialPlan } from './types'
+import { PageType, FinancialPlan, GwPlan } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
 import Plan from './pages/plan/Plan'
 import PlanSoloPage from './pages/plan/PlanSoloPage'
+import GwUnlockModal from './components/GwUnlockModal'
 import UndoToast from './components/UndoToast'
 import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
+import { useGwPlans } from './pages/plan/hooks/useGwPlans'
 import { useProfile } from './hooks/useProfile'
 import ProfileModal from './components/ProfileModal'
 
-interface PlanSoloRouteProps { plans: FinancialPlan[]; profileBirthday: string; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void }
-const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updatePlan, onDelete }) => {
+interface PlanSoloRouteProps {
+  plans: FinancialPlan[]
+  profileBirthday: string
+  updatePlan: (id: number, p: FinancialPlan) => void
+  onDelete: (id: number) => void
+  gwPlans: GwPlan[]
+  onCreateGwPlan: (plan: Omit<GwPlan, 'id' | 'createdAt'>) => void
+  onUpdateGwPlan: (id: number, updates: Partial<Omit<GwPlan, 'id' | 'createdAt' | 'fiPlanId'>>) => void
+  onDeleteGwPlan: (id: number) => void
+}
+const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updatePlan, onDelete, gwPlans, onCreateGwPlan, onUpdateGwPlan, onDeleteGwPlan }) => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const plan = plans.find(p => p.id === Number(id))
@@ -26,6 +37,10 @@ const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updateP
       onNavigate={(planId) => navigate(`/plan/${planId}`)}
       onUpdatePlan={updatePlan}
       onDeletePlan={onDelete}
+      gwPlans={gwPlans}
+      onCreateGwPlan={onCreateGwPlan}
+      onUpdateGwPlan={onUpdateGwPlan}
+      onDeleteGwPlan={onDeleteGwPlan}
     />
   )
 }
@@ -44,8 +59,12 @@ const App: FC = () => {
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
+  const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan, deleteGwPlansForFiPlan } = useGwPlans();
   const { profile, updateProfile } = useProfile();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [gwUnlockSeen, setGwUnlockSeen] = useState(
+    () => localStorage.getItem('gw-intro-seen') === '1'
+  );
   const handleOpenProfile = (): void => setProfileModalOpen(true);
 
   // Derive currentPage from URL for sidebar nav compat
@@ -98,6 +117,7 @@ const App: FC = () => {
 
   const handleDeletePlan = (planId: number): void => {
     handleDeleteWithUndo([planId]);
+    deleteGwPlansForFiPlan(planId);
   };
 
   const handleGoToPlan = (planId: number): void => {
@@ -210,7 +230,18 @@ const App: FC = () => {
             />
           }
         />
-        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} profileBirthday={profile.birthday} updatePlan={updatePlan} onDelete={handleDeletePlan} />} />
+        <Route path="/plan/:id" element={
+          <PlanSoloRoute
+            plans={visiblePlans}
+            profileBirthday={profile.birthday}
+            updatePlan={updatePlan}
+            onDelete={handleDeletePlan}
+            gwPlans={gwPlans}
+            onCreateGwPlan={createGwPlan}
+            onUpdateGwPlan={updateGwPlan}
+            onDeleteGwPlan={deleteGwPlan}
+          />
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -276,6 +307,14 @@ const App: FC = () => {
             setPendingDelete(null);
           }}
           duration={10000}
+        />
+      )}
+      {!gwUnlockSeen && visiblePlans.some(p => p.fiGoal > 0) && (
+        <GwUnlockModal
+          onDismiss={() => {
+            localStorage.setItem('gw-intro-seen', '1');
+            setGwUnlockSeen(true);
+          }}
         />
       )}
     </div>
