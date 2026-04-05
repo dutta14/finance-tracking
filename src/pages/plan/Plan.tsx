@@ -62,6 +62,11 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
     togglePlanSelection(planId, multi)
   }
 
+  const handleDeleteMultiple = (ids: number[]): void => {
+    ids.forEach(id => deletePlan(id))
+    setSelectedPlanIds([])
+  }
+
   return (
     <section className="plan">
       <div className="plan-header">
@@ -99,6 +104,8 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
                 onEditPlan={handleEditPlan}
                 onCopyPlan={handleCopyPlan}
                 onDeletePlan={deletePlan}
+                onDeleteMultiple={handleDeleteMultiple}
+                onClearSelection={() => setSelectedPlanIds([])}
               />
             </div>
           ) : (
@@ -110,6 +117,8 @@ const Plan: FC<PlanProps> = ({ plans, createPlan, updatePlan, deletePlan, select
                 onEditPlan={handleEditPlan}
                 onCopyPlan={handleCopyPlan}
                 onDeletePlan={deletePlan}
+                onDeleteMultiple={handleDeleteMultiple}
+                onClearSelection={() => setSelectedPlanIds([])}
               />
             </div>
           )}

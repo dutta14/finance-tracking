@@ -286,6 +286,84 @@ section.plan {
   margin: 0;
 }
 
+.plan-selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+}
+
+.plan-selection-count {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1d4ed8;
+}
+
+.plan-selection-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.plan-selection-btn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  color: #374151;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.plan-selection-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.plan-selection-btn--danger {
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.plan-selection-btn--danger:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+body.dark .plan-selection-bar {
+  background: #1e2a3a;
+  border-color: #2d4a6e;
+}
+
+body.dark .plan-selection-count {
+  color: #93c5fd;
+}
+
+body.dark .plan-selection-btn {
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+body.dark .plan-selection-btn:hover {
+  background: #2d3748;
+  border-color: #6b7280;
+}
+
+body.dark .plan-selection-btn--danger {
+  border-color: #7f1d1d;
+  color: #f87171;
+}
+
+body.dark .plan-selection-btn--danger:hover {
+  background: #3b1c1c;
+  border-color: #ef4444;
+}
+
 .view-mode-toggle {
   display: flex;
   gap: 0.25rem;

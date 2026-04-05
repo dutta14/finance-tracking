@@ -13,6 +13,8 @@ interface PlansSectionProps {
   onEditPlan: (plan: FinancialPlan) => void
   onCopyPlan: (plan: FinancialPlan) => void
   onDeletePlan: (planId: number) => void
+  onDeleteMultiple: (ids: number[]) => void
+  onClearSelection: () => void
 }
 
 const PlansSection: FC<PlansSectionProps> = ({
@@ -21,7 +23,9 @@ const PlansSection: FC<PlansSectionProps> = ({
   onSelectPlan,
   onEditPlan,
   onCopyPlan,
-  onDeletePlan
+  onDeletePlan,
+  onDeleteMultiple,
+  onClearSelection,
 }) => {
   const selectedPlans = plans.filter(p => selectedPlanIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -58,6 +62,19 @@ const PlansSection: FC<PlansSectionProps> = ({
           </button>
         </div>
       </div>
+      {selectedPlanIds.length > 1 && (
+        <div className="plan-selection-bar">
+          <span className="plan-selection-count">{selectedPlanIds.length} plans selected</span>
+          <div className="plan-selection-actions">
+            <button className="plan-selection-btn plan-selection-btn--danger" onClick={() => onDeleteMultiple(selectedPlanIds)}>
+              Delete selected
+            </button>
+            <button className="plan-selection-btn" onClick={onClearSelection}>
+              Clear selection
+            </button>
+          </div>
+        </div>
+      )}
       {plans.length === 0 ? (
         <div className="empty-state">
           <p>No plans created yet. Fill in the form and click "Create Plan" to get started.</p>
