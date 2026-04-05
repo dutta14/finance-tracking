@@ -97,7 +97,6 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   }
 
   const handleSidebarDrop = (e: React.DragEvent, targetId: number) => {
-    e.preventDefault()
     if (draggedPlanId === null || draggedPlanId === targetId) return
     const ids = plans.map(p => p.id)
     const withoutDragged = ids.filter(id => id !== draggedPlanId)
@@ -139,9 +138,9 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                   return !open;
                 });
               }}
-              aria-label="Plan"
+              aria-label="Plans"
             >
-              <span>Plan</span>
+              <span>Plans</span>
               <svg
                 className="sidebar-chevron"
                 width="14"
@@ -305,4 +304,3 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
 };
 
 export default SidebarNavigation;
-

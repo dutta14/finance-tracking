@@ -104,6 +104,10 @@ const App: FC = () => {
     navigate(`/plan/${planId}`);
   };
 
+  const handleGoToPlanEdit = (planId: number): void => {
+    navigate(`/plan/${planId}?edit=1`);
+  };
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 900;
@@ -202,6 +206,7 @@ const App: FC = () => {
               selectedPlanIds={selectedNavPlanIds}
               onSetSelectedPlanIds={setSelectedNavPlanIds}
               onGoToPlan={handleGoToPlan}
+              onGoToPlanEdit={handleGoToPlanEdit}
             />
           }
         />

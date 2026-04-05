@@ -1,6 +1,8 @@
 import { FC, useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { FinancialPlan } from '../../types'
 import PlanDetailedCard from '../../components/PlanDetailedCard'
+import PlanActionsMenu from '../../components/PlanActionsMenu'
 import PlanDiveDeep from './components/PlanDiveDeep'
 import { calculatePlanMetrics } from './utils/planCalculations'
 import { parseDate, getMonthsBetween } from './utils/dateHelpers'
@@ -41,6 +43,7 @@ const toEditFields = (p: FinancialPlan): EditFields => ({
 })
 
 const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onBack, onNavigate, onUpdatePlan, onDeletePlan }) => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [renaming, setRenaming] = useState(false)
@@ -52,10 +55,13 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
     setFields(f => ({ ...f, [k]: e.target.value }))
 
   useEffect(() => {
+    const startEditing = searchParams.get('edit') === '1'
     setFields(toEditFields(plan))
-    setEditMode(false)
+    setEditMode(startEditing)
     setRenaming(false)
     setSaveError('')
+    if (startEditing) setSearchParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id])
 
   // Sync fields if plan values change externally while not editing (e.g. Suggest SWR)
@@ -146,18 +152,17 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
           </div>
         )}
         <div className="plan-solo-actions">
-          {!editMode && (
-            <>
-              <button className="plan-solo-action-btn" onClick={() => { setEditMode(true); setRenaming(false) }}>Edit</button>
-              <button className="plan-solo-action-btn" onClick={() => { setRenaming(true); setEditMode(false) }}>Rename</button>
-              <button className="plan-solo-action-btn plan-solo-action-btn--danger" onClick={handleDelete}>Delete</button>
-            </>
-          )}
-          {editMode && (
+          {editMode ? (
             <>
               <button className="plan-solo-action-btn plan-solo-action-btn--primary" onClick={handleSave}>Save</button>
               <button className="plan-solo-action-btn" onClick={() => { setEditMode(false); setFields(toEditFields(plan)); setSaveError('') }}>Cancel</button>
             </>
+          ) : (
+            <PlanActionsMenu
+              onEdit={() => { setEditMode(true); setRenaming(false) }}
+              onRename={() => { setRenaming(true); setEditMode(false) }}
+              onDelete={handleDelete}
+            />
           )}
         </div>
       </div>

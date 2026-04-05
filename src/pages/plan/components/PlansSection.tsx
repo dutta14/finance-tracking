@@ -19,6 +19,7 @@ interface PlansSectionProps {
   onDeleteMultiple: (ids: number[]) => void
   onClearSelection: () => void
   onGoToPlan: (planId: number) => void
+  onGoToPlanEdit: (planId: number) => void
   onReorderPlans: (orderedIds: number[]) => void
   onRenamePlan: (planId: number, name: string) => void
 }
@@ -34,6 +35,7 @@ const PlansSection: FC<PlansSectionProps> = ({
   onDeleteMultiple,
   onClearSelection,
   onGoToPlan,
+  onGoToPlanEdit,
   onReorderPlans,
   onRenamePlan,
 }) => {
@@ -127,6 +129,7 @@ const PlansSection: FC<PlansSectionProps> = ({
           profileBirthday={profileBirthday}
           onClose={onClearSelection}
           onGoToPlan={onGoToPlan}
+          onGoToPlanEdit={onGoToPlanEdit}
           onUpdatePlan={onUpdatePlan}
           onCopyPlan={onCopyPlan}
           onDeletePlan={onDeletePlan}
