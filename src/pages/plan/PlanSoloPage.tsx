@@ -214,7 +214,7 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
         >
           {diveDeepOpen ? 'Close Deep Analysis ↑' : 'Dive Deep ↓'}
         </button>
-        {diveDeepOpen && <PlanDiveDeep plan={plan} />}
+        {diveDeepOpen && <PlanDiveDeep plan={plan} profileBirthday={profileBirthday} />}
       </div>
     </section>
   )

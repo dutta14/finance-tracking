@@ -98,3 +98,230 @@ body.dark .btn-dive-deep.active {
   background: #e5e7eb;
   color: #181c20;
 }
+
+/* Projection controls row */
+.projection-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Projection interval toggle */
+.projection-interval-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.projection-interval-btn {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  border-right: 1px solid #d1d5db;
+  cursor: pointer;
+  color: #374151;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.projection-interval-btn:last-child {
+  border-right: none;
+}
+
+.projection-interval-btn:hover {
+  background: #f3f4f6;
+}
+
+.projection-interval-btn.active {
+  background: #111827;
+  color: #fff;
+}
+
+body.dark .projection-interval-toggle {
+  border-color: #4b5563;
+}
+
+body.dark .projection-interval-btn {
+  color: #e5e7eb;
+  border-right-color: #4b5563;
+}
+
+body.dark .projection-interval-btn:hover {
+  background: #374151;
+}
+
+body.dark .projection-interval-btn.active {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.projection-view-toggle {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #374151;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.projection-view-toggle:hover {
+  background: #f3f4f6;
+}
+
+body.dark .projection-view-toggle {
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+body.dark .projection-view-toggle:hover {
+  background: #374151;
+}
+
+/* Chart */
+.projection-chart-wrapper {
+  width: 100%;
+  background: var(--projection-chart-bg, #fff);
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  padding: 0.5rem 0;
+}
+
+body.dark .projection-chart-wrapper {
+  background: #1e2329;
+  border-color: #363c48;
+  --projection-grid: #2c313a;
+  --projection-axis: #6b7280;
+}
+
+.projection-tooltip {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.82rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  min-width: 180px;
+}
+
+.projection-tooltip-month {
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  color: #111827;
+}
+
+.projection-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #374151;
+  padding: 0.1rem 0;
+}
+
+.projection-tooltip-row.negative {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+body.dark .projection-tooltip {
+  background: #2c313a;
+  border-color: #363c48;
+}
+
+body.dark .projection-tooltip-month {
+  color: #e5e7eb;
+}
+
+body.dark .projection-tooltip-row {
+  color: #d1d5db;
+}
+
+body.dark .projection-tooltip-row.negative {
+  color: #f87171;
+}
+
+/* Projection table */
+.projection-table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 480px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+}
+
+.projection-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.projection-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f5f5f5;
+}
+
+.projection-table th {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e5e5;
+  white-space: nowrap;
+}
+
+.projection-table td {
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.projection-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.projection-table td:nth-child(2),
+.projection-table td:nth-child(3),
+.projection-table th:nth-child(2),
+.projection-table th:nth-child(3) {
+  text-align: right;
+}
+
+.projection-row--negative td {
+  color: #dc2626;
+}
+
+/* Dark mode */
+body.dark .projection-table-wrapper {
+  border-color: #363c48;
+}
+
+body.dark .projection-table thead {
+  background: #1e2329;
+}
+
+body.dark .projection-table th {
+  border-bottom-color: #363c48;
+  color: #e5e7eb;
+}
+
+body.dark .projection-table td {
+  border-bottom-color: #2c313a;
+  color: #e5e7eb;
+}
+
+body.dark .projection-row--negative td {
+  color: #f87171;
+}

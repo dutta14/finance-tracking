@@ -1,6 +1,26 @@
 /* Detailed plan card dark mode overrides */
 /* Light mode base styles for .plan-card are in Plan.css */
 
+.plan-card-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 4px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+body.dark .plan-card-warning {
+  background: #3b2e0d;
+  color: #fcd34d;
+  border-color: #78490a;
+}
+
 body.dark .plan-card {
   background: #2c313a;
   color: #e5e7eb;
