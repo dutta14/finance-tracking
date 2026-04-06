@@ -1,0 +1,932 @@
+/* Settings Modal */
+.settings-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.settings-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.settings-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.settings-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.settings-modal-close:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.settings-modal-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Master nav */
+.settings-modal-nav {
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  border-right: 1px solid #e5e5e5;
+  background: #f9fafb;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.settings-modal-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #4b5563;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.settings-modal-nav-item:hover {
+  background: #eff2f5;
+}
+
+.settings-modal-nav-item.active {
+  background: #ffffff;
+  color: #2563eb;
+  font-weight: 500;
+  border-left: 3px solid #2563eb;
+  padding-left: calc(1rem - 3px);
+}
+
+.settings-modal-nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.settings-modal-badge {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-left: auto;
+}
+
+/* Detail panel */
+.settings-modal-detail {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.settings-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.settings-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Avatar section */
+.settings-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.settings-avatar-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #e5e5e5;
+  background: #f9fafb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.15s;
+}
+
+.settings-avatar-btn:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.settings-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+.settings-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: white;
+}
+
+.settings-avatar-btn:hover .settings-avatar-overlay {
+  opacity: 1;
+}
+
+.settings-avatar-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.settings-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.settings-input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #ffffff;
+  color: #1f2937;
+  transition: border 0.15s;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.settings-description {
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.settings-btn {
+  align-self: flex-start;
+  padding: 0.6rem 1rem;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.settings-btn:hover {
+  background: #1d4ed8;
+}
+
+.settings-btn--danger {
+  background: #dc2626;
+}
+
+.settings-btn--danger:hover {
+  background: #b91c1c;
+}
+
+.settings-btn--outline {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+}
+
+.settings-btn--outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Subtle GitHub Sync buttons */
+.ghsync-btn {
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  color: #2563eb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ghsync-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #60a5fa;
+  color: #1d4ed8;
+}
+
+.ghsync-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Restore button hidden by default in commit history */
+.ghsync-commit-restore-btn {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+
+.ghsync-commit-item:hover .ghsync-commit-restore-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Reset confirmation */
+.settings-reset-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+.settings-reset-warning {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.settings-reset-warning svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.settings-reset-title {
+  margin: 0;
+  font-weight: 600;
+  color: #dc2626;
+  font-size: 0.95rem;
+}
+
+.settings-reset-message {
+  margin: 0.4rem 0 0 0;
+  font-size: 0.9rem;
+  color: #991b1b;
+  line-height: 1.5;
+}
+
+.settings-reset-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Toggle */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-toggle-label {
+  font-size: 0.95rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.settings-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 2px;
+  transition: background 0.15s;
+}
+
+.settings-toggle:hover {
+  background: #bfdbfe;
+}
+
+.settings-toggle[aria-pressed="true"] {
+  background: #2563eb;
+}
+
+.settings-toggle-thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  transition: left 0.15s;
+}
+
+.settings-toggle[aria-pressed="true"] .settings-toggle-thumb {
+  left: 22px;
+}
+
+.settings-hint {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* Theme selector */
+.settings-theme-selector {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.settings-theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0;
+  background: none;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+  padding: 0.75rem;
+  position: relative;
+}
+
+.settings-theme-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.settings-theme-option.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.settings-theme-option.active:after {
+  content: '✓';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 1rem;
+  color: #2563eb;
+}
+
+.settings-theme-preview {
+  width: 100%;
+  height: 100px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+}
+
+.settings-theme-light {
+  background: #ffffff;
+  border-color: #e5e5e5;
+}
+
+.settings-theme-dark {
+  background: #1e2329;
+  border-color: #363c48;
+}
+
+.settings-theme-toolbar {
+  height: 20px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.settings-theme-dark .settings-theme-toolbar {
+  background: #2c313a;
+  border-bottom-color: #363c48;
+}
+
+.settings-theme-content {
+  flex: 1;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.settings-theme-bar {
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.settings-theme-dark .settings-theme-bar {
+  background: #4b5563;
+}
+
+.settings-theme-bar.short {
+  width: 60%;
+}
+
+.settings-theme-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* Dark mode */
+body.dark .settings-modal {
+  background: #1e2329;
+  color: #e5e7eb;
+}
+
+body.dark .settings-modal-header {
+  border-bottom-color: #363c48;
+}
+
+body.dark .settings-modal-title {
+  color: #e5e7eb;
+}
+
+body.dark .settings-modal-close {
+  color: #9ca3af;
+}
+
+body.dark .settings-modal-close:hover {
+  background: #2c313a;
+  color: #e5e7eb;
+}
+
+body.dark .settings-modal-nav {
+  border-right-color: #363c48;
+  background: #161b22;
+}
+
+body.dark .settings-modal-nav-item {
+  color: #9ca3af;
+}
+
+body.dark .settings-modal-nav-item:hover {
+  background: #2c313a;
+}
+
+body.dark .settings-modal-nav-item.active {
+  background: #1e2329;
+  color: #60a5fa;
+}
+
+body.dark .settings-section h3 {
+  color: #e5e7eb;
+}
+
+body.dark .settings-label {
+  color: #9ca3af;
+}
+
+body.dark .settings-input {
+  background: #2c313a;
+  border-color: #363c48;
+  color: #e5e7eb;
+}
+
+body.dark .settings-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+body.dark .settings-description {
+  color: #9ca3af;
+}
+
+body.dark .settings-toggle-label {
+  color: #e5e7eb;
+}
+
+body.dark .settings-toggle {
+  background: #363c48;
+}
+
+body.dark .settings-toggle:hover {
+  background: #2c5aa0;
+}
+
+body.dark .settings-toggle-thumb {
+  background: #e5e7eb;
+}
+
+body.dark .settings-hint {
+  color: #6b7280;
+}
+
+body.dark .settings-theme-option {
+  border-color: #363c48;
+}
+
+body.dark .settings-theme-option:hover {
+  border-color: #4b5563;
+  background: #2c313a;
+}
+
+body.dark .settings-theme-option.active {
+  border-color: #60a5fa;
+  background: #1e3a5f;
+}
+
+body.dark .settings-theme-option.active:after {
+  color: #60a5fa;
+}
+
+body.dark .settings-avatar-btn {
+  border-color: #363c48;
+  background: #2c313a;
+}
+
+body.dark .settings-avatar-btn:hover {
+  border-color: #60a5fa;
+  background: #1e3a5f;
+}
+
+body.dark .settings-avatar-placeholder {
+  color: #6b7280;
+}
+
+body.dark .settings-avatar-hint {
+  color: #9ca3af;
+}
+
+body.dark .settings-btn--outline {
+  background: #2c313a;
+  color: #e5e7eb;
+  border-color: #363c48;
+}
+
+body.dark .settings-btn--outline:hover {
+  background: #363c48;
+  border-color: #4b5563;
+}
+
+body.dark .settings-reset-confirm {
+  background: #7f1d1d;
+  border-color: #991b1b;
+}
+
+body.dark .settings-reset-warning svg {
+  color: #fca5a5;
+}
+
+body.dark .settings-reset-title {
+  color: #fca5a5;
+}
+
+body.dark .settings-reset-message {
+  color: #fed7d7;
+}
+
+body.dark .settings-theme-name {
+  color: #e5e7eb;
+}
+
+/* GitHub Sync Status Bar */
+.ghsync-status-bar {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.ghsync-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Tab navigation */
+.ghsync-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+}
+
+.ghsync-tab-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-weight: 400;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.ghsync-tab-btn.active {
+  font-weight: 600;
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+/* GitHub form fields */
+.ghsync-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ghsync-field-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.ghsync-field-input {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  background: #ffffff;
+  color: #1f2937;
+  transition: border 0.15s;
+}
+
+.ghsync-field-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ghsync-field-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Status messages */
+.ghsync-result-success {
+  font-size: 0.85rem;
+  color: #059669;
+  margin: 0;
+}
+
+.ghsync-result-error {
+  font-size: 0.85rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+.ghsync-warning-box {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.ghsync-warning-item {
+  font-size: 0.85rem;
+  color: #92400e;
+  margin: 0.25rem 0;
+}
+
+/* Commit history */
+.ghsync-commit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ghsync-commit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.6rem;
+  transition: background 0.12s;
+}
+
+.ghsync-commit-item:hover {
+  background: #f9fafb;
+}
+
+.ghsync-commit-link {
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ghsync-commit-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.ghsync-commit-sha {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.ghsync-commit-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.ghsync-commit-message {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Dark mode theming for GitHub Sync */
+body.dark .ghsync-status-bar {
+  color: #9ca3af;
+}
+
+body.dark .ghsync-tabs {
+  border-bottom-color: #363c48;
+}
+
+body.dark .ghsync-tab-btn {
+  color: #6b7280;
+}
+
+body.dark .ghsync-tab-btn.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+body.dark .ghsync-field-label {
+  color: #9ca3af;
+}
+
+body.dark .ghsync-field-input {
+  background: #2c313a;
+  border-color: #363c48;
+  color: #e5e7eb;
+}
+
+body.dark .ghsync-field-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+body.dark .ghsync-field-hint {
+  color: #9ca3af;
+}
+
+body.dark .ghsync-warning-box {
+  background: #7c2d12;
+  border-color: #92400e;
+}
+
+body.dark .ghsync-warning-item {
+  color: #fedba9;
+}
+
+body.dark .ghsync-commit-item {
+  border-color: #363c48;
+}
+
+body.dark .ghsync-commit-item:hover {
+  background: #2c313a;
+}
+
+body.dark .ghsync-commit-sha {
+  background: #2c313a;
+  color: #9ca3af;
+}
+
+body.dark .ghsync-commit-date {
+  color: #6b7280;
+}
+
+body.dark .ghsync-commit-message {
+  color: #9ca3af;
+}
+
+/* Dark mode for subtle GitHub buttons */
+body.dark .ghsync-btn {
+  color: #60a5fa;
+  border-color: #363c48;
+  background: transparent;
+}
+
+body.dark .ghsync-btn:hover:not(:disabled) {
+  background: #1e3a5f;
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+/* Scrollbar styling */
+.settings-modal-nav::-webkit-scrollbar,
+.settings-modal-detail::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-modal-nav::-webkit-scrollbar-track,
+.settings-modal-detail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-modal-nav::-webkit-scrollbar-thumb,
+.settings-modal-detail::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.settings-modal-nav::-webkit-scrollbar-thumb:hover,
+.settings-modal-detail::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+body.dark .settings-modal-nav::-webkit-scrollbar-thumb,
+body.dark .settings-modal-detail::-webkit-scrollbar-thumb {
+  background: #363c48;
+}
+
+body.dark .settings-modal-nav::-webkit-scrollbar-thumb:hover,
+body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}

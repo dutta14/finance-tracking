@@ -87,6 +87,7 @@ const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label }) => {
 const PlanDiveDeep: FC<PlanDiveDeepProps> = ({ plan, profileBirthday }) => {
   const [interval, setInterval] = useState<ViewInterval>('yearly')
   const [viewMode, setViewMode] = useState<ViewMode>('chart')
+  const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set())
   const projection = useMemo(() => buildProjection(plan, profileBirthday), [plan, profileBirthday])
 
   const intervalMonths = INTERVAL_LABELS.find(i => i.value === interval)!.months
@@ -95,6 +96,27 @@ const PlanDiveDeep: FC<PlanDiveDeepProps> = ({ plan, profileBirthday }) => {
     const last = projection.length - 1
     return projection.filter((_, idx) => idx === 0 || idx === last || idx % intervalMonths === 0)
   }, [projection, intervalMonths])
+
+  // Group rows by year for monthly collapse view
+  const groupedByYear = useMemo(() => {
+    if (interval !== 'monthly') return null
+    const groups = new Map<string, ProjectionRow[]>()
+    filteredRows.forEach(row => {
+      const year = row.month.split(' ')[1] // Extract year from "MMM YYYY"
+      if (!groups.has(year)) groups.set(year, [])
+      groups.get(year)!.push(row)
+    })
+    return groups
+  }, [filteredRows, interval])
+
+  const toggleYearExpand = (year: string) => {
+    setExpandedYears(prev => {
+      const next = new Set(prev)
+      if (next.has(year)) next.delete(year)
+      else next.add(year)
+      return next
+    })
+  }
 
   return (
     <div className="dive-deep-container">
@@ -169,13 +191,42 @@ const PlanDiveDeep: FC<PlanDiveDeepProps> = ({ plan, profileBirthday }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredRows.map(row => (
-                      <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
-                        <td>{row.month}</td>
-                        <td>{dollars(row.expense)}</td>
-                        <td>{dollars(row.remaining)}</td>
-                      </tr>
-                    ))}
+                    {interval === 'monthly' && groupedByYear
+                      ? Array.from(groupedByYear.entries()).flatMap(([year, rows]) => [
+                        <tr key={`year-${year}`} className="projection-year-header">
+                          <td colSpan={3}>
+                            <button
+                              className="projection-year-toggle"
+                              onClick={() => toggleYearExpand(year)}
+                              aria-expanded={expandedYears.has(year)}
+                            >
+                              <svg className="projection-year-chevron" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                {expandedYears.has(year) ? (
+                                  <path d="M3.5 10.5L8 6l4.5 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                ) : (
+                                  <path d="M12.5 5.5L8 10l-4.5-4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                )}
+                              </svg>
+                              {year}
+                            </button>
+                          </td>
+                        </tr>,
+                        ...(expandedYears.has(year) ? rows.map(row => (
+                          <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
+                            <td>{row.month}</td>
+                            <td>{dollars(row.expense)}</td>
+                            <td>{dollars(row.remaining)}</td>
+                          </tr>
+                        )) : []),
+                      ])
+                      : filteredRows.map(row => (
+                        <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
+                          <td>{row.month}</td>
+                          <td>{dollars(row.expense)}</td>
+                          <td>{dollars(row.remaining)}</td>
+                        </tr>
+                      ))
+                    }
                   </tbody>
                 </table>
               </div>

@@ -143,7 +143,17 @@ export const useGitHubSync = () => {
   const updateConfig = useCallback((updates: Partial<GitHubSyncConfig>) => {
     setConfigState(prev => {
       const next = { ...prev, ...updates }
-      localStorage.setItem(CONFIG_KEY, JSON.stringify(next))
+      // Ensure we persist all config fields to localStorage
+      try {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(next))
+        // Verify it was written successfully by reading it back
+        const verify = localStorage.getItem(CONFIG_KEY)
+        if (!verify) {
+          console.warn('Failed to persist GitHub config to localStorage')
+        }
+      } catch (e) {
+        console.error('Error saving GitHub config:', e)
+      }
       return next
     })
   }, [])
@@ -253,7 +263,7 @@ export const useGitHubSync = () => {
     if (!isConfigured) return
     try {
       const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/commits?path=${encodeURIComponent(config.filePath)}&per_page=10`,
+        `https://api.github.com/repos/${config.owner}/${config.repo}/commits?path=${encodeURIComponent(config.filePath)}&per_page=100`,
         { headers: apiHeaders(activeToken) }
       )
       if (!res.ok) return
@@ -312,6 +322,27 @@ export const useGitHubSync = () => {
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, usingLegacyToken])
 
+  const restoreFromCommit = useCallback(async (commitSha: string): Promise<RestoreResult> => {
+    if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}?ref=${commitSha}`,
+        { headers: apiHeaders(activeToken) }
+      )
+      if (res.status === 404) return { ok: false, message: 'Backup file not found in this commit.' }
+      if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}` }
+      const file = await res.json() as { content?: string; encoding?: string }
+      if (!file.content || file.encoding !== 'base64') {
+        return { ok: false, message: 'Backup file format is not supported.' }
+      }
+      const decoded = fromBase64(file.content.replace(/\n/g, ''))
+      const parsed = JSON.parse(decoded)
+      return { ok: true, message: `Restored from commit ${commitSha.slice(0, 7)}.`, data: parsed }
+    } catch {
+      return { ok: false, message: 'Could not restore backup from GitHub.' }
+    }
+  }, [activeToken, apiHeaders, config.filePath, config.owner, config.repo, isConfigured])
+
   const restoreLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
     try {
@@ -348,6 +379,13 @@ export const useGitHubSync = () => {
     }, DEBOUNCE_MS)
   }, [config.autoSync, isConfigured, syncNow])
 
+  const markRestored = useCallback(() => {
+    setLastSyncAt(new Date().toISOString())
+    setSyncStatus('success')
+    setHasPendingChanges(false)
+    setLastError(null)
+  }, [])
+
   useEffect(() => () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
   }, [])
@@ -372,6 +410,8 @@ export const useGitHubSync = () => {
     fetchHistory,
     testConnection,
     restoreLatest,
+    restoreFromCommit,
+    markRestored,
     updateData,
   }
 }

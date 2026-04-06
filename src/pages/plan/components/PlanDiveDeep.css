@@ -282,10 +282,16 @@ body.dark .projection-tooltip-row.negative {
   white-space: nowrap;
 }
 
+.projection-table th {
+  color: #1f2937;
+}
+
 .projection-table td {
   padding: 0.45rem 1rem;
   border-bottom: 1px solid #f0f0f0;
   white-space: nowrap;
+  color: #374151;
+  background: #ffffff;
 }
 
 .projection-table tbody tr:last-child td {
@@ -301,6 +307,42 @@ body.dark .projection-tooltip-row.negative {
 
 .projection-row--negative td {
   color: #dc2626;
+}
+
+/* Year group collapse */
+.projection-year-header td {
+  padding: 0 !important;
+}
+
+.projection-year-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: #f3f4f6;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  color: #1f2937;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+
+.projection-year-toggle:hover {
+  background: #e5e7eb;
+}
+
+.projection-year-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  flex-shrink: 0;
+  transition: transform 0.2s;
 }
 
 /* Dark mode */
@@ -320,8 +362,18 @@ body.dark .projection-table th {
 body.dark .projection-table td {
   border-bottom-color: #2c313a;
   color: #e5e7eb;
+  background: #161b22;
 }
 
 body.dark .projection-row--negative td {
   color: #f87171;
+}
+
+body.dark .projection-year-toggle {
+  background: #2c313a;
+  color: #e5e7eb;
+}
+
+body.dark .projection-year-toggle:hover {
+  background: #363c48;
 }

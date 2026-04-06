@@ -1,144 +1,93 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { FC, useState } from 'react'
 import { Profile } from '../hooks/useProfile'
-import ProfileModal from './ProfileModal'
+import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync'
+import SettingsModal from './SettingsModal'
 
 interface SettingsMenuProps {
   darkMode: boolean
   onToggleDarkMode: () => void
   profile?: Profile
   onUpdateProfile?: (updates: Partial<Profile>) => void
-  onOpenGitHubSync?: () => void
   hasPendingChanges?: boolean
+  ghConfig?: GitHubSyncConfig
+  ghIsConfigured?: boolean
+  ghSyncStatus?: SyncStatus
+  ghLastSyncAt?: string | null
+  ghLastError?: string | null
+  ghHistory?: CommitEntry[]
+  ghHasStoredToken?: boolean
+  ghTokenUnlocked?: boolean
+  ghUsingLegacyToken?: boolean
+  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
+  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
+  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
+  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
+  onGhLockToken?: () => void
+  onGhSyncNow?: (data: object, message?: string) => Promise<void>
+  onGhFetchHistory?: () => Promise<void>
+  onGhTestConnection?: () => Promise<ConnectionTestResult>
+  onGhRestoreLatest?: () => Promise<RestoreResult>
+  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
+  onGhApplyRestore?: (data: unknown) => Promise<void>
+  ghData?: object
+  onFactoryReset?: () => void
 }
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, onOpenGitHubSync, hasPendingChanges = false }) => {
-  const [open, setOpen] = useState(false)
-  const [profileModalOpen, setProfileModalOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  // Close menu on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    if (open) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
+const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, hasPendingChanges = false, ghConfig, ghIsConfigured = false, ghSyncStatus = 'idle', ghLastSyncAt, ghLastError, ghHistory = [], ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false, onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken, onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit, onGhApplyRestore, ghData, onFactoryReset = () => {} }) => {
+  const [modalOpen, setModalOpen] = useState(false)
 
   return (
     <>
-      <div className="settings-menu-container" ref={menuRef} style={{ position: 'relative', width: '100%' }}>
-        <button
-          className="settings-menu-trigger"
-          aria-label="Settings"
-          onClick={() => setOpen((v) => !v)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.7rem 1.2rem',
-            width: '100%',
-            textAlign: 'left',
-            fontSize: '1rem',
-            fontWeight: 500,
-            color: 'inherit',
-          }}
-        >
-          Settings
-        </button>
-        {open && (
-          <div className="settings-menu-dropdown" style={{
-            position: 'absolute',
-            left: '100%',
-            bottom: 0,
-            background: 'var(--settings-bg, #fff)',
-            border: '1px solid #e5e5e5',
-            borderRadius: 8,
-            boxShadow: '0 2px 12px 0 rgba(60,80,120,0.13)',
-            minWidth: 180,
-            zIndex: 1000,
-            padding: '0.5rem 0',
-            marginLeft: 8,
-            marginBottom: 12,
-          }}>
-            <button
-              className="settings-menu-item"
-              style={{
-                width: '100%',
-                background: 'none',
-                border: 'none',
-                textAlign: 'left',
-                padding: '0.7rem 1.2rem',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                fontWeight: 400,
-              }}
-              onClick={() => {
-                setProfileModalOpen(true)
-                setOpen(false)
-              }}
-            >
-              Profile
-            </button>
-            <button
-              className="settings-menu-item"
-              style={{
-                width: '100%',
-                background: 'none',
-                border: 'none',
-                textAlign: 'left',
-                padding: '0.7rem 1.2rem',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                fontWeight: 400,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-              onClick={() => {
-                if (onOpenGitHubSync) onOpenGitHubSync()
-                setOpen(false)
-              }}
-            >
-              GitHub Sync
-              {hasPendingChanges && (
-                <span style={{
-                  width: 7, height: 7, borderRadius: '50%',
-                  background: '#f59e0b', flexShrink: 0,
-                }} />
-              )}
-            </button>
-            <button
-              className="settings-menu-item"
-              style={{
-                width: '100%',
-                background: 'none',
-                border: 'none',
-                textAlign: 'left',
-                padding: '0.7rem 1.2rem',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                fontWeight: 400,
-              }}
-              onClick={() => {
-                onToggleDarkMode()
-                setOpen(false)
-              }}
-            >
-              {darkMode ? 'Light Mode' : 'Dark Mode'}
-            </button>
-          </div>
-        )}
-      </div>
-      {profileModalOpen && (
-        <ProfileModal
+      <button
+        className="settings-menu-trigger"
+        aria-label="Settings"
+        onClick={() => setModalOpen(true)}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '0.7rem 1.2rem',
+          width: '100%',
+          textAlign: 'left',
+          fontSize: '1rem',
+          fontWeight: 500,
+          color: 'inherit',
+        }}
+      >
+        Settings
+      </button>
+      {modalOpen && (
+        <SettingsModal
+          darkMode={darkMode}
+          onToggleDarkMode={onToggleDarkMode}
           profile={profile}
-          onSave={onUpdateProfile}
-          onClose={() => setProfileModalOpen(false)}
+          onUpdateProfile={onUpdateProfile}
+          hasPendingChanges={hasPendingChanges}
+          ghConfig={ghConfig}
+          ghIsConfigured={ghIsConfigured}
+          ghSyncStatus={ghSyncStatus}
+          ghLastSyncAt={ghLastSyncAt}
+          ghLastError={ghLastError}
+          ghHistory={ghHistory}
+          ghHasStoredToken={ghHasStoredToken}
+          ghTokenUnlocked={ghTokenUnlocked}
+          ghUsingLegacyToken={ghUsingLegacyToken}
+          onGhUpdateConfig={onGhUpdateConfig}
+          onGhSaveEncryptedToken={onGhSaveEncryptedToken}
+          onGhMigrateLegacyToken={onGhMigrateLegacyToken}
+          onGhUnlockToken={onGhUnlockToken}
+          onGhLockToken={onGhLockToken}
+          onGhSyncNow={onGhSyncNow}
+          onGhFetchHistory={onGhFetchHistory}
+          onGhTestConnection={onGhTestConnection}
+          onGhRestoreLatest={onGhRestoreLatest}
+          onGhRestoreFromCommit={onGhRestoreFromCommit}
+          onGhApplyRestore={onGhApplyRestore}
+          ghData={ghData}
+          onFactoryReset={onFactoryReset}
+          onClose={() => setModalOpen(false)}
         />
       )}
     </>
@@ -146,3 +95,4 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
 }
 
 export default SettingsMenu
+

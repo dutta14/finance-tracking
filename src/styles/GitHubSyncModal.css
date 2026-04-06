@@ -378,6 +378,12 @@
 
 .ghsync-btn--outline:not(:disabled):hover { background: #f3f4f6; }
 
+.ghsync-btn--sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
 /* ── History tab ── */
 .ghsync-history { }
 
@@ -392,8 +398,10 @@
 }
 
 .ghsync-commit {
-  display: block;
-  text-decoration: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.45rem;
   padding: 0.6rem 0.8rem;
@@ -403,6 +411,16 @@
 .ghsync-commit:hover {
   background: #f9fafb;
   border-color: #d1d5db;
+}
+
+.ghsync-commit-content {
+  flex: 1;
+}
+
+.ghsync-commit-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .ghsync-commit-top {

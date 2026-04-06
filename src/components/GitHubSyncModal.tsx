@@ -22,9 +22,10 @@ interface GitHubSyncModalProps {
   onFetchHistory: () => Promise<void>
   onTestConnection: () => Promise<ConnectionTestResult>
   onRestoreLatest: () => Promise<RestoreResult>
+  onRestoreFromCommit: (commitSha: string) => Promise<RestoreResult>
   onClose: () => void
   data: object
-  onApplyRestore: (data: unknown) => void
+  onApplyRestore: (data: unknown) => Promise<void>
 }
 
 const formatRelative = (iso: string): string => {
@@ -48,7 +49,7 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
   isConfigured, hasStoredToken, tokenUnlocked, usingLegacyToken,
   onUpdateConfig, onSaveEncryptedToken, onMigrateLegacyToken,
   onUnlockToken, onLockToken, onSyncNow, onFetchHistory,
-  onTestConnection, onRestoreLatest, onClose, data, onApplyRestore,
+  onTestConnection, onRestoreLatest, onRestoreFromCommit, onClose, data, onApplyRestore,
 }) => {
   const [tab, setTab] = useState<'config' | 'history'>('config')
   const [showToken, setShowToken] = useState(false)
@@ -61,6 +62,7 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
   const [restoreResult, setRestoreResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [testing, setTesting] = useState(false)
   const [restoring, setRestoring] = useState(false)
+  const [restoringCommitSha, setRestoringCommitSha] = useState<string | null>(null)
   const [savingToken, setSavingToken] = useState(false)
 
   useEffect(() => {
@@ -122,10 +124,23 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
     setRestoreResult(null)
     const result = await onRestoreLatest()
     if (result.ok && result.data) {
-      onApplyRestore(result.data)
+      // Wait for the restore to complete and persist to localStorage
+      await onApplyRestore(result.data)
     }
     setRestoreResult({ ok: result.ok, message: result.message })
     setRestoring(false)
+  }
+
+  const handleRestoreCommit = async (commitSha: string) => {
+    setRestoringCommitSha(commitSha)
+    setRestoreResult(null)
+    const result = await onRestoreFromCommit(commitSha)
+    if (result.ok && result.data) {
+      // Wait for the restore to complete and persist to localStorage
+      await onApplyRestore(result.data)
+    }
+    setRestoreResult({ ok: result.ok, message: result.message })
+    setRestoringCommitSha(null)
   }
 
   const syncing = syncStatus === 'syncing'
@@ -328,13 +343,24 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
               ) : (
                 <div className="ghsync-commits">
                   {history.map(c => (
-                    <a key={c.sha} href={c.url} target="_blank" rel="noopener noreferrer" className="ghsync-commit">
-                      <div className="ghsync-commit-top">
-                        <span className="ghsync-commit-sha">{c.sha}</span>
-                        <span className="ghsync-commit-date">{formatDate(c.date)}</span>
+                    <div key={c.sha} className="ghsync-commit">
+                      <div className="ghsync-commit-content">
+                        <a href={c.url} target="_blank" rel="noopener noreferrer" className="ghsync-commit-link">
+                          <div className="ghsync-commit-top">
+                            <span className="ghsync-commit-sha">{c.sha}</span>
+                            <span className="ghsync-commit-date">{formatDate(c.date)}</span>
+                          </div>
+                          <div className="ghsync-commit-msg">{c.message}</div>
+                        </a>
                       </div>
-                      <div className="ghsync-commit-msg">{c.message}</div>
-                    </a>
+                      <button
+                        className="ghsync-btn ghsync-btn--sm ghsync-btn--outline"
+                        onClick={() => handleRestoreCommit(c.sha)}
+                        disabled={restoring || restoringCommitSha === c.sha}
+                      >
+                        {restoringCommitSha === c.sha ? 'Restoring…' : 'Restore'}
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}

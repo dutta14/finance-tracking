@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useRef } from 'react';
 import { NavigationProps, FinancialPlan } from '../types';
 import { Profile } from '../hooks/useProfile';
+import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync';
 import SidebarToggle from './SidebarToggle';
 import SettingsMenu from './SettingsMenu';
 import '../styles/SidebarNavigation.css';
@@ -23,8 +24,29 @@ interface SidebarNavigationProps extends NavigationProps {
   onImport: (file: File) => void;
   profile: Profile;
   onUpdateProfile: (updates: Partial<Profile>) => void;
-  onOpenGitHubSync?: () => void;
   hasPendingGitHubChanges?: boolean;
+  ghConfig?: GitHubSyncConfig;
+  ghIsConfigured?: boolean;
+  ghSyncStatus?: SyncStatus;
+  ghLastSyncAt?: string | null;
+  ghLastError?: string | null;
+  ghHistory?: CommitEntry[];
+  ghHasStoredToken?: boolean;
+  ghTokenUnlocked?: boolean;
+  ghUsingLegacyToken?: boolean;
+  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void;
+  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>;
+  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>;
+  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>;
+  onGhLockToken?: () => void;
+  onGhSyncNow?: (data: object, message?: string) => Promise<void>;
+  onGhFetchHistory?: () => Promise<void>;
+  onGhTestConnection?: () => Promise<ConnectionTestResult>;
+  onGhRestoreLatest?: () => Promise<RestoreResult>;
+  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>;
+  ghDataToSync?: object;
+  onGhApplyRestore?: (data: unknown) => Promise<void>;
+  onFactoryReset?: () => void;
 }
 
 interface ContextMenuState { x: number; y: number; planId: number }
@@ -34,7 +56,13 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   darkMode, setDarkMode, plans, selectedNavPlanIds, isMultiSelectMode,
   onSelectNavPlan, onExitMultiSelect,
   onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans, onExport, onImport,
-  profile, onUpdateProfile, onOpenGitHubSync, hasPendingGitHubChanges = false,
+  profile, onUpdateProfile, hasPendingGitHubChanges = false,
+  ghConfig, ghIsConfigured = false, ghSyncStatus, ghLastSyncAt, ghLastError, ghHistory = [],
+  ghHasStoredToken, ghTokenUnlocked, ghUsingLegacyToken,
+  onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken,
+  onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit,
+  ghDataToSync, onGhApplyRestore,
+  onFactoryReset = () => {},
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => {
     const stored = localStorage.getItem('sidebar-plans-open');
@@ -294,8 +322,29 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             onToggleDarkMode={() => setDarkMode(!darkMode)}
             profile={profile}
             onUpdateProfile={onUpdateProfile}
-            onOpenGitHubSync={onOpenGitHubSync}
             hasPendingChanges={hasPendingGitHubChanges}
+            ghConfig={ghConfig}
+            ghIsConfigured={ghIsConfigured}
+            ghSyncStatus={ghSyncStatus}
+            ghLastSyncAt={ghLastSyncAt}
+            ghLastError={ghLastError}
+            ghHistory={ghHistory}
+            ghHasStoredToken={ghHasStoredToken}
+            ghTokenUnlocked={ghTokenUnlocked}
+            ghUsingLegacyToken={ghUsingLegacyToken}
+            onGhUpdateConfig={onGhUpdateConfig}
+            onGhSaveEncryptedToken={onGhSaveEncryptedToken}
+            onGhMigrateLegacyToken={onGhMigrateLegacyToken}
+            onGhUnlockToken={onGhUnlockToken}
+            onGhLockToken={onGhLockToken}
+            onGhSyncNow={onGhSyncNow}
+            onGhFetchHistory={onGhFetchHistory}
+            onGhTestConnection={onGhTestConnection}
+            onGhRestoreLatest={onGhRestoreLatest}
+            onGhRestoreFromCommit={onGhRestoreFromCommit}
+            ghData={ghDataToSync}
+            onGhApplyRestore={onGhApplyRestore}
+            onFactoryReset={onFactoryReset}
           />
         </div>
       )}
