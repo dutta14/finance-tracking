@@ -304,7 +304,6 @@ const SettingsModal: FC<SettingsModalProps> = ({
 
             {activeSection === 'github' && (
               <div className="settings-section">
-                <h3>GitHub Sync</h3>
                 <div  className="settings-section-content" style={{ overflow: 'auto', maxHeight: '60vh' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                     <div className="ghsync-status-bar" style={{ margin: 0, flex: 1 }}>
@@ -323,10 +322,10 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       </>}
                     </div>
                     <button 
-                      className="ghsync-btn"
+                      className="ghsync-mini-btn"
                       onClick={handleGhSyncNow}
                       disabled={!ghIsConfigured || ghSyncStatus === 'syncing'}
-                      style={{ minWidth: '80px', flexShrink: 0, marginLeft: '0.75rem' }}
+                      style={{ minWidth: '70px', flexShrink: 0, marginLeft: '0.75rem' }}
                       title="Sync current plan data to GitHub"
                     >
                       {ghSyncStatus === 'syncing' ? 'Syncing…' : 'Sync'}
@@ -366,7 +365,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                               onChange={e => setGhUnlockPassphrase(e.target.value)}
                               placeholder="Passphrase to unlock token"
                             />
-                            <button className="ghsync-btn" onClick={handleGhUnlock} style={{ minWidth: '100px' }}>Unlock</button>
+                            <button className="ghsync-mini-btn" onClick={handleGhUnlock} style={{ minWidth: '80px' }}>Unlock</button>
                           </div>
                         )}
                         {ghTokenUnlocked && (
@@ -388,6 +387,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                           />
                           <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setGhShowToken(v => !v)}>{ghShowToken ? 'Hide' : 'Show'}</button>
                         </div>
+                        <p className="ghsync-pat-hint">Create a fine-grained PAT at <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>github.com/settings/tokens</a> with Contents write access</p>
                       </div>
 
                       <div>
@@ -404,19 +404,19 @@ const SettingsModal: FC<SettingsModalProps> = ({
 
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button 
-                          className="ghsync-btn"
+                          className="ghsync-mini-btn"
                           onClick={handleGhSaveToken}
                           disabled={ghSavingToken || !ghTokenInput || !ghPassphrase}
                         >
-                          {ghSavingToken ? 'Saving…' : 'Save Encrypted Token'}
+                          {ghSavingToken ? 'Saving…' : 'Save Token'}
                         </button>
                         {ghUsingLegacyToken && (
                           <button 
-                            className="ghsync-btn"
+                            className="ghsync-mini-btn"
                             onClick={handleGhMigrateLegacy}
                             disabled={ghSavingToken || !ghPassphrase}
                           >
-                            Encrypt Legacy Token
+                            Encrypt Legacy
                           </button>
                         )}
                       </div>
@@ -472,7 +472,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       </label>
 
                       <button 
-                        className="ghsync-btn"
+                        className="ghsync-mini-btn"
                         onClick={handleGhTest}
                         disabled={ghTesting}
                       >
@@ -496,12 +496,12 @@ const SettingsModal: FC<SettingsModalProps> = ({
                   {ghTab === 'history' && (
                     <div>
                       <button 
-                        className="ghsync-btn"
+                        className="ghsync-mini-btn"
                         onClick={handleGhRestoreLatest}
                         disabled={!ghIsConfigured || ghRestoring}
                         style={{ marginBottom: '1rem' }}
                       >
-                        {ghRestoring ? 'Restoring…' : 'Restore Latest From GitHub'}
+                        {ghRestoring ? 'Restoring…' : 'Restore Latest'}
                       </button>
                       {ghRestoreResult && (
                         <p className={ghRestoreResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'} style={{ marginBottom: '1rem' }}>
@@ -524,10 +524,10 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                 <div className="ghsync-commit-message">{c.message}</div>
                               </a>
                               <button
-                                className="ghsync-btn ghsync-commit-restore-btn"
+                                className="ghsync-mini-btn ghsync-commit-restore-btn"
                                 onClick={() => handleGhRestoreCommit(c.sha)}
                                 disabled={ghRestoring || ghRestoringCommitSha === c.sha}
-                                style={{ minWidth: '80px' }}
+                                style={{ minWidth: '70px' }}
                               >
                                 {ghRestoringCommitSha === c.sha ? 'Restoring…' : 'Restore'}
                               </button>
