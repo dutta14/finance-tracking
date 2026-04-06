@@ -178,7 +178,7 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
                   <rect x="7.25" y="7" width="1.5" height="5" rx=".75" fill="currentColor"/>
                   <rect x="7.25" y="4" width="1.5" height="1.5" rx=".75" fill="currentColor"/>
                 </svg>
-                Use a <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer">fine-grained PAT</a> with <strong>Contents: Read &amp; Write</strong> on only this backup repo.
+                <span>Requires a <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer">fine-grained PAT</a> with <strong>Contents: Read &amp; Write</strong> scoped to this repo only.</span>
               </div>
 
               <div className="ghsync-field">

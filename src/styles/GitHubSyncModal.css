@@ -178,7 +178,7 @@
   line-height: 1.5;
 }
 
-.ghsync-notice svg { flex-shrink: 0; margin-top: 1px; color: #3b82f6; }
+.ghsync-notice svg { flex-shrink: 0; margin-top: 0; color: #3b82f6; align-self: center; }
 
 .ghsync-notice a {
   color: #2563eb;
