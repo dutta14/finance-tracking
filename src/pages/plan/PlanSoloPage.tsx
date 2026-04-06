@@ -1,12 +1,9 @@
 import { FC, useState, useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { FinancialPlan, GwPlan } from '../../types'
 import PlanDetailedCard from '../../components/PlanDetailedCard'
 import PlanActionsMenu from '../../components/PlanActionsMenu'
 import PlanDiveDeep from './components/PlanDiveDeep'
 import GwSection from './components/GwSection'
-import { calculatePlanMetrics } from './utils/planCalculations'
-import { parseDate, getMonthsBetween } from './utils/dateHelpers'
 import './components/PlanDiveDeep.css'
 import '../../styles/PlanDetailPane.css'
 import '../../styles/PlanSoloPage.css'
@@ -25,54 +22,17 @@ interface PlanSoloPageProps {
   onDeleteGwPlan: (id: number) => void
 }
 
-interface EditFields {
-  planName: string
-  planCreatedIn: string
-  planEndYear: string
-  retirementAge: string
-  expenseValue: string
-  inflationRate: string
-  safeWithdrawalRate: string
-  growth: string
-}
-
-const toEditFields = (p: FinancialPlan): EditFields => ({
-  planName: p.planName,
-  planCreatedIn: p.planCreatedIn,
-  planEndYear: p.planEndYear,
-  retirementAge: String(p.retirementAge),
-  expenseValue: String(p.expenseValue),
-  inflationRate: String(p.inflationRate),
-  safeWithdrawalRate: String(p.safeWithdrawalRate),
-  growth: String(p.growth),
-})
-
 const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onBack, onNavigate, onUpdatePlan, onDeletePlan, gwPlans, onCreateGwPlan, onUpdateGwPlan, onDeleteGwPlan }) => {
-  const [searchParams, setSearchParams] = useSearchParams()
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
-  const [editMode, setEditMode] = useState(false)
   const [renaming, setRenaming] = useState(false)
-  const [fields, setFields] = useState<EditFields>(toEditFields(plan))
-  const [saveError, setSaveError] = useState('')
+  const [renameValue, setRenameValue] = useState(plan.planName)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
-  const set = (k: keyof EditFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFields(f => ({ ...f, [k]: e.target.value }))
-
   useEffect(() => {
-    const startEditing = searchParams.get('edit') === '1'
-    setFields(toEditFields(plan))
-    setEditMode(startEditing)
     setRenaming(false)
-    setSaveError('')
-    if (startEditing) setSearchParams({}, { replace: true })
+    setRenameValue(plan.planName)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id])
-
-  // Sync fields if plan values change externally while not editing (e.g. Suggest SWR)
-  useEffect(() => {
-    if (!editMode) setFields(toEditFields(plan))
-  }, [plan.safeWithdrawalRate, plan.fiGoal, plan.inflationRate, plan.growth, plan.retirementAge, plan.expenseValue])
 
   useEffect(() => {
     if (renaming) renameInputRef.current?.select()
@@ -84,42 +44,9 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
   const nextPlan = currentIndex < total - 1 ? plans[currentIndex + 1] : null
 
   const commitRename = () => {
-    const name = fields.planName.trim()
+    const name = renameValue.trim()
     if (name && name !== plan.planName) onUpdatePlan(plan.id, { ...plan, planName: name })
     setRenaming(false)
-  }
-
-  const handleSave = () => {
-    if (!fields.planName.trim()) { setSaveError('Plan name is required'); return }
-    if (!fields.planCreatedIn) { setSaveError('Plan creation date is required'); return }
-    if (!fields.retirementAge || Number(fields.retirementAge) <= 0) { setSaveError('Valid retirement age required'); return }
-    if (!fields.expenseValue || Number(fields.expenseValue) <= 0) { setSaveError('Valid annual expense required'); return }
-    const annualExpense = Number(fields.expenseValue)
-    const retirementAge = Number(fields.retirementAge)
-    const metrics = calculatePlanMetrics(
-      annualExpense, profileBirthday, retirementAge, fields.planCreatedIn,
-      Number(fields.inflationRate) || 0, Number(fields.safeWithdrawalRate) || 0,
-      getMonthsBetween, parseDate,
-    )
-    onUpdatePlan(plan.id, {
-      ...plan,
-      planName: fields.planName.trim(),
-      birthday: profileBirthday,
-      planCreatedIn: fields.planCreatedIn,
-      planEndYear: fields.planEndYear,
-      retirementAge,
-      expenseValue: annualExpense,
-      monthlyExpenseValue: metrics.monthlyExpenseAtCreation,
-      expenseValue2047: metrics.annualExpenseAtRetirement,
-      monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
-      inflationRate: Number(fields.inflationRate) || 0,
-      safeWithdrawalRate: Number(fields.safeWithdrawalRate) || 0,
-      growth: Number(fields.growth) || 0,
-      retirement: metrics.retirementDateFormatted,
-      fiGoal: metrics.fiGoal,
-    })
-    setSaveError('')
-    setEditMode(false)
   }
 
   const handleDelete = () => {
@@ -157,18 +84,10 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
           </div>
         )}
         <div className="plan-solo-actions">
-          {editMode ? (
-            <>
-              <button className="plan-solo-action-btn plan-solo-action-btn--primary" onClick={handleSave}>Save</button>
-              <button className="plan-solo-action-btn" onClick={() => { setEditMode(false); setFields(toEditFields(plan)); setSaveError('') }}>Cancel</button>
-            </>
-          ) : (
-            <PlanActionsMenu
-              onEdit={() => { setEditMode(true); setRenaming(false) }}
-              onRename={() => { setRenaming(true); setEditMode(false) }}
-              onDelete={handleDelete}
-            />
-          )}
+          <PlanActionsMenu
+            onRename={() => { setRenaming(true) }}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
 
@@ -177,10 +96,10 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
           <input
             ref={renameInputRef}
             className="plan-solo-rename-input"
-            value={fields.planName}
-            onChange={set('planName')}
+            value={renameValue}
+            onChange={e => setRenameValue(e.target.value)}
             onBlur={commitRename}
-            onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setRenaming(false); setFields(f => ({ ...f, planName: plan.planName })) } }}
+            onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setRenaming(false); setRenameValue(plan.planName) } }}
           />
         ) : (
           <h1>{plan.planName}</h1>
@@ -188,42 +107,13 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
       </div>
 
       <div className="plan-solo-content">
-        {editMode && (
-          <div className="plan-solo-edit-form">
-            {saveError && <p className="plan-solo-edit-error">{saveError}</p>}
-            <div className="plan-solo-edit-grid">
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Plan Created On</label>
-                <input className="pane-edit-input" type="date" value={fields.planCreatedIn} onChange={set('planCreatedIn')} />
-              </div>
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Plan End Year</label>
-                <input className="pane-edit-input" type="date" value={fields.planEndYear} onChange={set('planEndYear')} />
-              </div>
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Retirement Age</label>
-                <input className="pane-edit-input" type="number" value={fields.retirementAge} onChange={set('retirementAge')} min="0" step="1" />
-              </div>
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Annual Expense ($)</label>
-                <input className="pane-edit-input" type="number" value={fields.expenseValue} onChange={set('expenseValue')} min="0" />
-              </div>
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Inflation Rate (%)</label>
-                <input className="pane-edit-input" type="number" value={fields.inflationRate} onChange={set('inflationRate')} step="0.1" />
-              </div>
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Safe Withdrawal Rate (%)</label>
-                <input className="pane-edit-input" type="number" value={fields.safeWithdrawalRate} onChange={set('safeWithdrawalRate')} step="0.1" />
-              </div>
-              <div className="pane-edit-group">
-                <label className="pane-edit-label">Growth Rate (%)</label>
-                <input className="pane-edit-input" type="number" value={fields.growth} onChange={set('growth')} step="0.1" />
-              </div>
-            </div>
-          </div>
-        )}
-        <PlanDetailedCard plan={plan} profileBirthday={profileBirthday} onUpdatePlan={onUpdatePlan} showActions={false} showTitle={false} />
+        <PlanDetailedCard 
+          plan={plan} 
+          profileBirthday={profileBirthday} 
+          onUpdatePlan={onUpdatePlan} 
+          showActions={false} 
+          showTitle={false} 
+        />
         <button
           className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
           onClick={() => setDiveDeepOpen(v => !v)}

@@ -156,8 +156,8 @@ const GwGoalCard: FC<{
             </button>
           )}
           <button className="gw-goal-delete" onClick={handleDeleteClick} aria-label="Delete GW goal">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <path d="M2.5 3.5h11M6.5 6.5v5M9.5 6.5v5M3.5 3.5l0.5 10c0 0.3 0.2 0.5 0.5 0.5h7c0.3 0 0.5-0.2 0.5-0.5l0.5-10M5.5 3.5V2.5c0-0.3 0.2-0.5 0.5-0.5h4c0.3 0 0.5 0.2 0.5 0.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </div>

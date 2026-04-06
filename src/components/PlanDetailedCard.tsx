@@ -1,7 +1,19 @@
-import { FC, useState, useMemo, useCallback } from 'react'
+import { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { FinancialPlan } from '../types'
 import PlanCardActions from './PlanCardActions'
+import { calculatePlanMetrics } from '../pages/plan/utils/planCalculations'
+import { parseDate as utilParseDate, getMonthsBetween } from '../pages/plan/utils/dateHelpers'
 import '../styles/PlanDetailedCard.css'
+
+interface EditFields {
+  planCreatedIn: string
+  planEndYear: string
+  retirementAge: string
+  expenseValue: string
+  inflationRate: string
+  safeWithdrawalRate: string
+  growth: string
+}
 
 interface PlanDetailedCardProps {
   plan: FinancialPlan
@@ -10,10 +22,21 @@ interface PlanDetailedCardProps {
   onCopy?: (plan: FinancialPlan) => void
   onDelete?: (planId: number) => void
   onUpdatePlan?: (planId: number, plan: FinancialPlan) => void
+  onEditClick?: () => void
   showActions?: boolean
   condensed?: boolean
   showTitle?: boolean
 }
+
+const toEditFields = (p: FinancialPlan): EditFields => ({
+  planCreatedIn: p.planCreatedIn,
+  planEndYear: p.planEndYear,
+  retirementAge: String(p.retirementAge),
+  expenseValue: String(p.expenseValue),
+  inflationRate: String(p.inflationRate),
+  safeWithdrawalRate: String(p.safeWithdrawalRate),
+  growth: String(p.growth),
+})
 
 // Helper functions
 const parseDate = (dateString: string): Date => {
@@ -110,10 +133,62 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
   </span>
 )
 
-const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, onUpdatePlan, showActions = true, condensed = false, showTitle = true }) => {
+const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, onUpdatePlan, onEditClick, showActions = true, condensed = false, showTitle = true }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
   const [amountView, setAmountView] = useState<'annual' | 'monthly'>('annual')
   const [suggesting, setSuggesting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editFields, setEditFields] = useState<EditFields>(toEditFields(plan))
+  const [editError, setEditError] = useState('')
+
+  useEffect(() => {
+    setEditFields(toEditFields(plan))
+  }, [plan.id])
+
+  // Sync fields if plan values change externally while not editing (e.g. Suggest SWR)
+  useEffect(() => {
+    if (!editing) setEditFields(toEditFields(plan))
+  }, [editing, plan.safeWithdrawalRate, plan.fiGoal, plan.inflationRate, plan.growth, plan.retirementAge, plan.expenseValue])
+
+  const setEF = (k: keyof EditFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setEditFields(f => ({ ...f, [k]: e.target.value }))
+
+  const handleEditSave = () => {
+    if (!editFields.planCreatedIn) { setEditError('Plan creation date is required'); return }
+    if (!editFields.retirementAge || Number(editFields.retirementAge) <= 0) { setEditError('Valid retirement age required'); return }
+    if (!editFields.expenseValue || Number(editFields.expenseValue) <= 0) { setEditError('Valid annual expense required'); return }
+    const annualExpense = Number(editFields.expenseValue)
+    const retirementAge = Number(editFields.retirementAge)
+    const metrics = calculatePlanMetrics(
+      annualExpense, profileBirthday, retirementAge, editFields.planCreatedIn,
+      Number(editFields.inflationRate) || 0, Number(editFields.safeWithdrawalRate) || 0,
+      getMonthsBetween, utilParseDate,
+    )
+    onUpdatePlan?.(plan.id, {
+      ...plan,
+      planCreatedIn: editFields.planCreatedIn,
+      planEndYear: editFields.planEndYear,
+      retirementAge,
+      expenseValue: annualExpense,
+      monthlyExpenseValue: metrics.monthlyExpenseAtCreation,
+      expenseValue2047: metrics.annualExpenseAtRetirement,
+      monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
+      inflationRate: Number(editFields.inflationRate) || 0,
+      safeWithdrawalRate: Number(editFields.safeWithdrawalRate) || 0,
+      growth: Number(editFields.growth) || 0,
+      retirement: metrics.retirementDateFormatted,
+      fiGoal: metrics.fiGoal,
+    })
+    setEditError('')
+    setEditing(false)
+  }
+
+  const handleEditCancel = () => {
+    setEditFields(toEditFields(plan))
+    setEditError('')
+    setEditing(false)
+  }
+
   const birthDate = parseDate(profileBirthday)
   const retirementDate = new Date(birthDate.getFullYear() + plan.retirementAge, birthDate.getMonth(), birthDate.getDate())
   const retirementDateLabel = formatRetirementDate(retirementDate)
@@ -170,8 +245,65 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
       </div>
       )}
 
-      {/* ── Parameters ── */}
-      {!condensed && <div className="fi-card-section">
+      {/* ── Edit Button (Solo Page) ── */}
+      {!showActions && onUpdatePlan && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+          <button
+            className="fi-card-edit-btn"
+            onClick={() => setEditing(true)}
+            title="Edit plan"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M1.5 14.5h2.25L12.5 5.25 10.25 3 1.5 11.75v2.75z" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10.75 2.5l2.25 2.25" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Edit
+          </button>
+        </div>
+      )}
+
+      {editing && onUpdatePlan ? (
+        <div className="fi-card-edit-form">
+          {editError && <p className="fi-form-error">{editError}</p>}
+          <div className="fi-form-grid">
+            <div className="fi-form-group">
+              <label className="fi-form-label">Plan Creation Date</label>
+              <input className="fi-form-input" type="date" value={editFields.planCreatedIn} onChange={setEF('planCreatedIn')} />
+            </div>
+            <div className="fi-form-group">
+              <label className="fi-form-label">Plan End Year</label>
+              <input className="fi-form-input" type="date" value={editFields.planEndYear} onChange={setEF('planEndYear')} />
+            </div>
+            <div className="fi-form-group">
+              <label className="fi-form-label">Retirement Age</label>
+              <input className="fi-form-input" type="number" value={editFields.retirementAge} onChange={setEF('retirementAge')} min="0" step="1" />
+            </div>
+            <div className="fi-form-group">
+              <label className="fi-form-label">Annual Expense ($)</label>
+              <input className="fi-form-input" type="number" value={editFields.expenseValue} onChange={setEF('expenseValue')} min="0" />
+            </div>
+            <div className="fi-form-group">
+              <label className="fi-form-label">Inflation Rate (%)</label>
+              <input className="fi-form-input" type="number" value={editFields.inflationRate} onChange={setEF('inflationRate')} step="0.1" />
+            </div>
+            <div className="fi-form-group">
+              <label className="fi-form-label">Safe Withdrawal Rate (%)</label>
+              <input className="fi-form-input" type="number" value={editFields.safeWithdrawalRate} onChange={setEF('safeWithdrawalRate')} step="0.1" />
+            </div>
+            <div className="fi-form-group">
+              <label className="fi-form-label">Growth Rate (%)</label>
+              <input className="fi-form-input" type="number" value={editFields.growth} onChange={setEF('growth')} step="0.1" />
+            </div>
+          </div>
+          <div className="fi-form-actions">
+            <button className="fi-form-save" onClick={handleEditSave}>Save</button>
+            <button className="fi-form-cancel" onClick={handleEditCancel}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* ── Parameters ── */}
+          {!condensed && <div className="fi-card-section">
         <div className="fi-card-section-title">Parameters</div>
         <div className="fi-card-rows">
           <div className="fi-card-row">
@@ -269,6 +401,8 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
       {!condensed && <div className="fi-card-meta">
         <small>Created {plan.createdAt}</small>
       </div>}
+        </>
+      )}
     </div>
   )
 }
