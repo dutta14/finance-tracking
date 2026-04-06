@@ -12,6 +12,8 @@ import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
 import { useGwPlans } from './pages/plan/hooks/useGwPlans'
 import { useProfile } from './hooks/useProfile'
 import ProfileModal from './components/ProfileModal'
+import { useGitHubSync } from './hooks/useGitHubSync'
+import GitHubSyncModal from './components/GitHubSyncModal'
 
 interface PlanSoloRouteProps {
   plans: FinancialPlan[]
@@ -62,6 +64,14 @@ const App: FC = () => {
   const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan, deleteGwPlansForFiPlan, importGwPlans } = useGwPlans();
   const { profile, updateProfile } = useProfile();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [gitHubSyncModalOpen, setGitHubSyncModalOpen] = useState(false);
+  const {
+    config: ghConfig, updateConfig: updateGhConfig, isConfigured: ghIsConfigured,
+    syncStatus, lastSyncAt, lastError, hasPendingChanges, history: ghHistory,
+    hasStoredToken, tokenUnlocked, usingLegacyToken,
+    saveEncryptedToken, migrateLegacyToken, unlockToken, lockToken,
+    syncNow, fetchHistory, testConnection, restoreLatest, updateData: ghUpdateData,
+  } = useGitHubSync();
   const [gwUnlockSeen, setGwUnlockSeen] = useState(
     () => localStorage.getItem('gw-intro-seen') === '1'
   );
@@ -153,6 +163,11 @@ const App: FC = () => {
     localStorage.setItem('darkMode', darkMode ? '1' : '0');
   }, [darkMode]);
 
+  // Drive auto-sync whenever plans, gwPlans, or profile change
+  useEffect(() => {
+    ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), plans, gwPlans, profile });
+  }, [plans, gwPlans, profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSelectNavPlan = (planId: number, multi: boolean): void => {
     if (multi || isMultiSelectMode) {
       if (!isMultiSelectMode) setIsMultiSelectMode(true);
@@ -215,6 +230,26 @@ const App: FC = () => {
     }
     reader.readAsText(file)
   };
+
+  const applyRestoredSnapshot = (data: unknown): void => {
+    try {
+      const parsed = data as { plans?: unknown; profile?: unknown; gwPlans?: unknown }
+      const incoming = Array.isArray(parsed) ? parsed : parsed?.plans
+      if (!Array.isArray(incoming)) throw new Error('Invalid snapshot')
+      importPlans(incoming as FinancialPlan[])
+      if (parsed?.profile && typeof parsed.profile === 'object') {
+        updateProfile(parsed.profile as Partial<typeof profile>)
+      }
+      if (Array.isArray(parsed?.gwPlans)) {
+        importGwPlans(parsed.gwPlans as GwPlan[])
+      }
+      setSelectedNavPlanIds([])
+      setIsMultiSelectMode(false)
+      alert('Restored latest backup from GitHub.')
+    } catch {
+      alert('Could not apply restore: backup file format is invalid.')
+    }
+  }
 
   const renderPage = (): React.ReactNode => {
     return (
@@ -282,6 +317,8 @@ const App: FC = () => {
           onImport={handleImport}
           profile={profile}
           onUpdateProfile={updateProfile}
+          onOpenGitHubSync={() => setGitHubSyncModalOpen(true)}
+          hasPendingGitHubChanges={hasPendingChanges}
         />
       )}
       {/* Backdrop for mobile overlay */}
@@ -307,6 +344,32 @@ const App: FC = () => {
           profile={profile}
           onSave={updateProfile}
           onClose={() => setProfileModalOpen(false)}
+        />
+      )}
+      {gitHubSyncModalOpen && (
+        <GitHubSyncModal
+          config={ghConfig}
+          syncStatus={syncStatus}
+          lastSyncAt={lastSyncAt}
+          lastError={lastError}
+          hasPendingChanges={hasPendingChanges}
+          history={ghHistory}
+          isConfigured={ghIsConfigured}
+          hasStoredToken={hasStoredToken}
+          tokenUnlocked={tokenUnlocked}
+          usingLegacyToken={usingLegacyToken}
+          onUpdateConfig={updateGhConfig}
+          onSaveEncryptedToken={saveEncryptedToken}
+          onMigrateLegacyToken={migrateLegacyToken}
+          onUnlockToken={unlockToken}
+          onLockToken={lockToken}
+          onSyncNow={syncNow}
+          onFetchHistory={fetchHistory}
+          onTestConnection={testConnection}
+          onRestoreLatest={restoreLatest}
+          onClose={() => setGitHubSyncModalOpen(false)}
+          data={{ version: 2, exportedAt: new Date().toISOString(), plans, profile, gwPlans }}
+          onApplyRestore={applyRestoredSnapshot}
         />
       )}
       {pendingDelete && (

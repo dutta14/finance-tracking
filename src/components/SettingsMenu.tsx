@@ -7,11 +7,13 @@ interface SettingsMenuProps {
   onToggleDarkMode: () => void
   profile?: Profile
   onUpdateProfile?: (updates: Partial<Profile>) => void
+  onOpenGitHubSync?: () => void
+  hasPendingChanges?: boolean
 }
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {} }) => {
+const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, onOpenGitHubSync, hasPendingChanges = false }) => {
   const [open, setOpen] = useState(false)
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -81,6 +83,34 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
               }}
             >
               Profile
+            </button>
+            <button
+              className="settings-menu-item"
+              style={{
+                width: '100%',
+                background: 'none',
+                border: 'none',
+                textAlign: 'left',
+                padding: '0.7rem 1.2rem',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                fontWeight: 400,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+              onClick={() => {
+                if (onOpenGitHubSync) onOpenGitHubSync()
+                setOpen(false)
+              }}
+            >
+              GitHub Sync
+              {hasPendingChanges && (
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: '#f59e0b', flexShrink: 0,
+                }} />
+              )}
             </button>
             <button
               className="settings-menu-item"

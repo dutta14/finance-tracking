@@ -23,6 +23,8 @@ interface SidebarNavigationProps extends NavigationProps {
   onImport: (file: File) => void;
   profile: Profile;
   onUpdateProfile: (updates: Partial<Profile>) => void;
+  onOpenGitHubSync?: () => void;
+  hasPendingGitHubChanges?: boolean;
 }
 
 interface ContextMenuState { x: number; y: number; planId: number }
@@ -32,7 +34,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   darkMode, setDarkMode, plans, selectedNavPlanIds, isMultiSelectMode,
   onSelectNavPlan, onExitMultiSelect,
   onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans, onExport, onImport,
-  profile, onUpdateProfile,
+  profile, onUpdateProfile, onOpenGitHubSync, hasPendingGitHubChanges = false,
 }) => {
   const [plansOpen, setPlansOpen] = useState(() => {
     const stored = localStorage.getItem('sidebar-plans-open');
@@ -287,7 +289,14 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
       )}
       {expanded && (
         <div className="sidebar-settings-section">
-          <SettingsMenu darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} profile={profile} onUpdateProfile={onUpdateProfile} />
+          <SettingsMenu
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            profile={profile}
+            onUpdateProfile={onUpdateProfile}
+            onOpenGitHubSync={onOpenGitHubSync}
+            hasPendingChanges={hasPendingGitHubChanges}
+          />
         </div>
       )}
       {contextMenu && (
