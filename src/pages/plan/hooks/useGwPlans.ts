@@ -36,5 +36,9 @@ export const useGwPlans = () => {
     setGwPlans(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
   }
 
-  return { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan, deleteGwPlansForFiPlan }
+  const importGwPlans = (incoming: GwPlan[]): void => {
+    setGwPlans(incoming)
+  }
+
+  return { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan, deleteGwPlansForFiPlan, importGwPlans }
 }

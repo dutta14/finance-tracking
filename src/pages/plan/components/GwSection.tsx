@@ -4,6 +4,7 @@ import '../../../styles/GwSection.css'
 
 interface GwSectionProps {
   plan: FinancialPlan
+  plans: FinancialPlan[]
   profileBirthday: string
   gwPlans: GwPlan[]
   onCreateGwPlan: (plan: Omit<GwPlan, 'id' | 'createdAt'>) => void
@@ -46,9 +47,10 @@ const GwGoalCard: FC<{
   planCreatedIn: string
   profileBirthday: string
   dollarView: GwDollarView
+  onSetDollarView: (v: GwDollarView) => void
   onEdit: (fields: GwFormFields) => void
   onDelete: () => void
-}> = ({ gw, currentAge, creationYear, inflationRate, retirementAge, planCreatedIn, profileBirthday, dollarView, onEdit, onDelete }) => {
+}> = ({ gw, currentAge, creationYear, inflationRate, retirementAge, planCreatedIn, profileBirthday, dollarView, onSetDollarView, onEdit, onDelete }) => {
   const [editing, setEditing] = useState(false)
   const [editFields, setEditFields] = useState<GwFormFields>({
     label: gw.label,
@@ -205,7 +207,12 @@ const GwGoalCard: FC<{
               <span className="gw-goal-row-value">{gw.growthRate}% / yr</span>
             </div>
             <div className="gw-goal-row">
-              <span className="gw-goal-row-label">Target ({displayYear} $)</span>
+              <span className="gw-goal-row-label">
+                <span className="gw-dollar-toggle">
+                  <button className={`gw-dollar-toggle-btn${dollarView === 'creation' ? ' active' : ''}`} onClick={() => onSetDollarView('creation')} title={`${creationYear} dollars (as entered)`}>Creation</button>
+                  <button className={`gw-dollar-toggle-btn${dollarView === 'disbursement' ? ' active' : ''}`} onClick={() => onSetDollarView('disbursement')} title={`Inflated to disbursement year`}>Disbursement</button>
+                </span>
+              </span>
               <span className="gw-goal-row-value gw-goal-row-value--highlight">{dollars(displayTarget)}</span>
             </div>
           </div>
@@ -228,14 +235,28 @@ const GwGoalCard: FC<{
   )
 }
 
-const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreateGwPlan, onUpdateGwPlan, onDeleteGwPlan }) => {
+const GwSection: FC<GwSectionProps> = ({ plan, plans, profileBirthday, gwPlans, onCreateGwPlan, onUpdateGwPlan, onDeleteGwPlan }) => {
   const [formOpen, setFormOpen] = useState(false)
+  const [importPickerOpen, setImportPickerOpen] = useState(false)
   const [form, setForm] = useState<GwFormFields>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [dollarView, setDollarView] = useState<GwDollarView>('creation')
 
   const planGoals = gwPlans.filter(g => g.fiPlanId === plan.id)
+  const otherGoals = gwPlans.filter(g => g.fiPlanId !== plan.id)
   const currentAge = ageAtCreation(profileBirthday, plan.planCreatedIn)
+
+  const handleImport = (gw: GwPlan) => {
+    onCreateGwPlan({
+      fiPlanId: plan.id,
+      label: gw.label,
+      disburseAge: gw.disburseAge,
+      disburseAmount: gw.disburseAmount,
+      growthRate: gw.growthRate,
+      currentSavings: 0,
+    })
+    setImportPickerOpen(false)
+  }
 
   const setField = (k: keyof GwFormFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
@@ -295,29 +316,36 @@ const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreat
             </svg>
           </div>
           <p className="gw-empty-text">No generational wealth goals yet.</p>
-          <button className="gw-add-btn" onClick={() => setFormOpen(true)}>
-            + Add your first GW goal
-          </button>
+          <div className="gw-empty-actions">
+            <button className="gw-add-btn" onClick={() => { setFormOpen(true); setImportPickerOpen(false) }}>
+              + New GW goal
+            </button>
+            {otherGoals.length > 0 && (
+              <button className="gw-add-btn gw-add-btn--copy" onClick={() => setImportPickerOpen(v => !v)}>
+                Copy from existing
+              </button>
+            )}
+          </div>
+          {importPickerOpen && (
+            <div className="gw-import-picker">
+              {plans.filter(p => otherGoals.some(g => g.fiPlanId === p.id)).map(srcPlan => (
+                <div key={srcPlan.id} className="gw-import-group">
+                  <div className="gw-import-group-label">{srcPlan.planName}</div>
+                  {otherGoals.filter(g => g.fiPlanId === srcPlan.id).map(gw => (
+                    <button key={gw.id} className="gw-import-item" onClick={() => handleImport(gw)}>
+                      <span className="gw-import-item-label">{gw.label}</span>
+                      <span className="gw-import-item-meta">Age {gw.disburseAge} · ${Math.round(gw.disburseAmount).toLocaleString()}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {planGoals.length > 0 && (
         <div className="gw-goals-list">
-          <div className="gw-dollar-toggle-row">
-            <span className="gw-dollar-toggle-label">Target in</span>
-            <div className="gw-dollar-toggle">
-              <button
-                className={`gw-dollar-toggle-btn${dollarView === 'creation' ? ' active' : ''}`}
-                onClick={() => setDollarView('creation')}
-                title={`${new Date(plan.planCreatedIn).getFullYear()} dollars (as entered)`}
-              >Creation</button>
-              <button
-                className={`gw-dollar-toggle-btn${dollarView === 'disbursement' ? ' active' : ''}`}
-                onClick={() => setDollarView('disbursement')}
-                title={`Inflated to each goal's disbursement year at ${plan.inflationRate}% / yr`}
-              >Disbursement</button>
-            </div>
-          </div>
           {planGoals.map(gw => (
             <GwGoalCard
               key={gw.id}
@@ -329,6 +357,7 @@ const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreat
               planCreatedIn={plan.planCreatedIn}
               profileBirthday={profileBirthday}
               dollarView={dollarView}
+              onSetDollarView={setDollarView}
               onEdit={fields => onUpdateGwPlan(gw.id, {
                 label: fields.label.trim(),
                 disburseAge: Number(fields.disburseAge),
@@ -339,9 +368,31 @@ const GwSection: FC<GwSectionProps> = ({ plan, profileBirthday, gwPlans, onCreat
             />
           ))}
           {!formOpen && (
-            <button className="gw-add-btn gw-add-btn--inline" onClick={() => setFormOpen(true)}>
-              + Add another GW goal
-            </button>
+            <div className="gw-inline-footer">
+              <button className="gw-add-btn gw-add-btn--inline" onClick={() => { setFormOpen(true); setImportPickerOpen(false) }}>
+                + Add another GW goal
+              </button>
+              {otherGoals.length > 0 && (
+                <button className="gw-add-btn gw-add-btn--copy gw-add-btn--inline" onClick={() => setImportPickerOpen(v => !v)}>
+                  Copy from existing
+                </button>
+              )}
+              {importPickerOpen && (
+                <div className="gw-import-picker">
+                  {plans.filter(p => otherGoals.some(g => g.fiPlanId === p.id)).map(srcPlan => (
+                    <div key={srcPlan.id} className="gw-import-group">
+                      <div className="gw-import-group-label">{srcPlan.planName}</div>
+                      {otherGoals.filter(g => g.fiPlanId === srcPlan.id).map(gw => (
+                        <button key={gw.id} className="gw-import-item" onClick={() => handleImport(gw)}>
+                          <span className="gw-import-item-label">{gw.label}</span>
+                          <span className="gw-import-item-meta">Age {gw.disburseAge} · ${Math.round(gw.disburseAmount).toLocaleString()}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

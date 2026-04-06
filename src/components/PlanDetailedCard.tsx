@@ -112,6 +112,7 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
 
 const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, onEdit, onCopy, onDelete, onUpdatePlan, showActions = true, condensed = false, showTitle = true }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
+  const [amountView, setAmountView] = useState<'annual' | 'monthly'>('annual')
   const [suggesting, setSuggesting] = useState(false)
   const birthDate = parseDate(profileBirthday)
   const retirementDate = new Date(birthDate.getFullYear() + plan.retirementAge, birthDate.getMonth(), birthDate.getDate())
@@ -191,7 +192,7 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
           <div className="fi-card-row">
             <span className="fi-card-row-label">
               Safe Withdrawal Rate
-              <InfoIcon tooltip="The % of your portfolio you withdraw annually in retirement." align="left" />
+              <InfoIcon tooltip="The % of your portfolio you withdraw annually in retirement." />
             </span>
             <span className="fi-card-row-value">{plan.safeWithdrawalRate}%</span>
           </div>
@@ -221,33 +222,26 @@ const PlanDetailedCard: FC<PlanDetailedCardProps> = ({ plan, profileBirthday, on
         </div>
         <div className="fi-card-rows">
           {expenseView === 'creation' ? (
-            <>
-              <div className="fi-card-row">
-                <span className="fi-card-row-label">Monthly</span>
-                <span className="fi-card-row-value">{dollars(plan.monthlyExpenseValue)}</span>
-              </div>
-              <div className="fi-card-row">
-                <span className="fi-card-row-label">Annual</span>
-                <span className="fi-card-row-value">{dollars(plan.expenseValue)}</span>
-              </div>
-            </>
+            <div className="fi-card-row">
+              <span className="fi-card-row-label">
+                <span className="expense-toggle">
+                  <button className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`} onClick={() => setAmountView('annual')}>Annual</button>
+                  <button className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`} onClick={() => setAmountView('monthly')}>Monthly</button>
+                </span>
+              </span>
+              <span className="fi-card-row-value">{dollars(amountView === 'annual' ? plan.expenseValue : plan.monthlyExpenseValue)}</span>
+            </div>
           ) : (
-            <>
-              <div className="fi-card-row">
-                <span className="fi-card-row-label">
-                  Monthly
-                  <InfoIcon tooltip={<>Inflated at {plan.inflationRate}% for {inflationYears} yrs.<br />{dollars(plan.monthlyExpenseValue)} → {dollars(plan.monthlyExpense2047)}</>} />
+            <div className="fi-card-row">
+              <span className="fi-card-row-label">
+                <span className="expense-toggle">
+                  <button className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`} onClick={() => setAmountView('annual')}>Annual</button>
+                  <button className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`} onClick={() => setAmountView('monthly')}>Monthly</button>
                 </span>
-                <span className="fi-card-row-value">{dollars(plan.monthlyExpense2047)}</span>
-              </div>
-              <div className="fi-card-row">
-                <span className="fi-card-row-label">
-                  Annual
-                  <InfoIcon tooltip={<>Inflated at {plan.inflationRate}% for {inflationYears} yrs.<br />{dollars(plan.expenseValue)} → {dollars(plan.expenseValue2047)}</>} />
-                </span>
-                <span className="fi-card-row-value">{dollars(plan.expenseValue2047)}</span>
-              </div>
-            </>
+                <InfoIcon tooltip={<>Inflated at {plan.inflationRate}% for {inflationYears} yrs.<br />{dollars(amountView === 'annual' ? plan.expenseValue : plan.monthlyExpenseValue)} → {dollars(amountView === 'annual' ? plan.expenseValue2047 : plan.monthlyExpense2047)}</>} />
+              </span>
+              <span className="fi-card-row-value">{dollars(amountView === 'annual' ? plan.expenseValue2047 : plan.monthlyExpense2047)}</span>
+            </div>
           )}
         </div>
       </div>}

@@ -101,6 +101,86 @@
   color: #16a34a;
 }
 
+.gw-add-btn--copy {
+  background: transparent;
+  color: #3b82f6;
+  border: 1px solid #93c5fd;
+}
+
+.gw-add-btn--copy:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.gw-empty-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gw-inline-footer {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  flex-direction: column;
+  margin-top: 0.25rem;
+}
+
+.gw-import-picker {
+  background: #fff;
+  border: 1px solid #d1fae5;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-top: 0.5rem;
+}
+
+.gw-import-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+  padding: 0.1rem 0.4rem 0.3rem;
+}
+
+.gw-import-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.gw-import-item:hover {
+  background: #f0fdf4;
+}
+
+.gw-import-item-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.gw-import-item-meta {
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+  margin-left: 0.75rem;
+}
+
 /* Goals list */
 .gw-goals-list {
   display: flex;
@@ -589,6 +669,38 @@ body.dark .gw-add-btn--inline {
 body.dark .gw-add-btn--inline:hover {
   background: #14532d;
   color: #86efac;
+}
+
+body.dark .gw-add-btn--copy {
+  color: #93c5fd;
+  border-color: #1e3a5f;
+}
+
+body.dark .gw-add-btn--copy:hover {
+  background: #1e2a47;
+  color: #60a5fa;
+}
+
+body.dark .gw-import-picker {
+  background: #1e2535;
+  border-color: #1a3d2b;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+body.dark .gw-import-group-label {
+  color: #4b5563;
+}
+
+body.dark .gw-import-item:hover {
+  background: #14291f;
+}
+
+body.dark .gw-import-item-label {
+  color: #e5e7eb;
+}
+
+body.dark .gw-import-item-meta {
+  color: #6b7280;
 }
 
 body.dark .gw-dollar-toggle-label {

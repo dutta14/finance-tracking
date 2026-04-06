@@ -59,7 +59,7 @@ const App: FC = () => {
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
-  const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan, deleteGwPlansForFiPlan } = useGwPlans();
+  const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan, deleteGwPlansForFiPlan, importGwPlans } = useGwPlans();
   const { profile, updateProfile } = useProfile();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [gwUnlockSeen, setGwUnlockSeen] = useState(
@@ -184,7 +184,7 @@ const App: FC = () => {
   };
 
   const handleExport = (): void => {
-    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), plans, profile }, null, 2)
+    const json = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), plans, profile, gwPlans }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -205,6 +205,9 @@ const App: FC = () => {
         setSelectedNavPlanIds([])
         if (parsed?.profile && typeof parsed.profile === 'object') {
           updateProfile(parsed.profile)
+        }
+        if (Array.isArray(parsed?.gwPlans)) {
+          importGwPlans(parsed.gwPlans as GwPlan[])
         }
       } catch {
         alert('Could not import: the file is not a valid finance plans export.')
@@ -235,6 +238,7 @@ const App: FC = () => {
               onGoToPlanEdit={handleGoToPlanEdit}
               onCopyGwGoals={handleCopyGwGoals}
               gwPlans={gwPlans}
+              onCreateGwPlan={createGwPlan}
             />
           }
         />

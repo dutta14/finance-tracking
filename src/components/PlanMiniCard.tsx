@@ -59,10 +59,6 @@ const PlanMiniCard: FC<PlanMiniCardProps> = ({ plan, isSelected, onClick, viewMo
           <span className="amount">{dollars(totalGoals)}</span>
         </div>
       )}
-      <div className="mini-value">
-        <span className="label">FI Progress</span>
-        <span className="amount">{plan.progress.toFixed(1)}%</span>
-      </div>
     </div>
   )
 }

@@ -123,7 +123,7 @@ const PlansSection: FC<PlansSectionProps> = ({
             />
           </div>
           {selectedPlans.length > 1 && (
-            <PlanCompareView plans={selectedPlans} />
+            <PlanCompareView plans={selectedPlans} gwPlans={gwPlans} profileBirthday={profileBirthday} />
           )}
         </>
       )}

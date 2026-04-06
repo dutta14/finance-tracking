@@ -234,6 +234,7 @@ const PlanSoloPage: FC<PlanSoloPageProps> = ({ plan, plans, profileBirthday, onB
         {plan.fiGoal > 0 && (
           <GwSection
             plan={plan}
+            plans={plans}
             profileBirthday={profileBirthday}
             gwPlans={gwPlans}
             onCreateGwPlan={onCreateGwPlan}
