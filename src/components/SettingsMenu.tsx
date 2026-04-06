@@ -31,11 +31,13 @@ interface SettingsMenuProps {
   onGhApplyRestore?: (data: unknown) => Promise<void>
   ghData?: object
   onFactoryReset?: () => void
+  onExport?: () => void
+  onImport?: (file: File) => void
 }
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, hasPendingChanges = false, ghConfig, ghIsConfigured = false, ghSyncStatus = 'idle', ghLastSyncAt, ghLastError, ghHistory = [], ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false, onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken, onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit, onGhApplyRestore, ghData, onFactoryReset = () => {} }) => {
+const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, hasPendingChanges = false, ghConfig, ghIsConfigured = false, ghSyncStatus = 'idle', ghLastSyncAt, ghLastError, ghHistory = [], ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false, onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken, onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit, onGhApplyRestore, ghData, onFactoryReset = () => {}, onExport = () => {}, onImport = () => {} }) => {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
@@ -87,6 +89,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
           onGhApplyRestore={onGhApplyRestore}
           ghData={ghData}
           onFactoryReset={onFactoryReset}
+          onExport={onExport}
+          onImport={onImport}
           onClose={() => setModalOpen(false)}
         />
       )}

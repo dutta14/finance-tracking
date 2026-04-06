@@ -460,47 +460,6 @@ body.dark .sidebar-sublink.active {
   padding-top: 0.5rem;
 }
 
-.sidebar-data-section {
-  width: 100%;
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.6rem 0.8rem 0.3rem;
-  border-top: 1px solid #e5e5e5;
-}
-
-.sidebar-data-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 5px 0;
-  border-radius: 6px;
-  border: 1.5px solid #d1d5db;
-  background: none;
-  color: #374151;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-.sidebar-data-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-}
-
-body.dark .sidebar-data-section {
-  border-top-color: #23272f;
-}
-body.dark .sidebar-data-btn {
-  border-color: #4a5568;
-  color: #d1d5db;
-}
-body.dark .sidebar-data-btn:hover {
-  background: #2d3748;
-  border-color: #718096;
-}
-
 .settings-menu-trigger {
   color: #565758 !important;
 }

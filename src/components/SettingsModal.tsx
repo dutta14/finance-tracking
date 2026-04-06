@@ -31,6 +31,8 @@ interface SettingsModalProps {
   onGhApplyRestore?: (data: unknown) => Promise<void>
   ghData?: object
   onFactoryReset?: () => void
+  onExport?: () => void
+  onImport?: (file: File) => void
   onClose?: () => void
 }
 
@@ -48,7 +50,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
   onGhTestConnection = async () => ({ ok: false, message: '', warnings: [] }),
   onGhRestoreLatest = async () => ({ ok: false, message: '' }),
   onGhRestoreFromCommit = async () => ({ ok: false, message: '' }),
-  onGhApplyRestore = async () => {}, ghData = {}, onFactoryReset = () => {}, onClose = () => {},
+  onGhApplyRestore = async () => {}, ghData = {}, onFactoryReset = () => {}, onExport = () => {}, onImport = () => {}, onClose = () => {},
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
   const [name, setName] = useState(profile.name || '')
@@ -56,6 +58,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
   const [avatarPreview, setAvatarPreview] = useState(profile.avatarDataUrl || '')
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const importFileInputRef = useRef<HTMLInputElement>(null)
   
   // GitHub Sync state
   const [ghTab, setGhTab] = useState<'config' | 'history'>('config')
@@ -170,6 +173,21 @@ const SettingsModal: FC<SettingsModalProps> = ({
 
   const handleGitHubClick = () => {
     setActiveSection('github')
+  }
+
+  const handleImportClick = () => {
+    importFileInputRef.current?.click()
+  }
+
+  const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      onImport?.(file)
+      // Reset the input
+      if (importFileInputRef.current) {
+        importFileInputRef.current.value = ''
+      }
+    }
   }
 
   return (
@@ -318,7 +336,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       </>}
                       {ghSyncStatus === 'idle' && <>
                         <span style={{ color: '#9ca3af', marginRight: '0.5rem' }}>●</span>
-                        {ghIsConfigured ? (ghHasStoredToken ? 'Ready to sync' : 'Token not unlocked') : 'Not configured'}
+                        {ghConfig?.owner && ghConfig?.repo && ghConfig?.filePath ? (ghHasStoredToken ? (ghTokenUnlocked ? 'Ready to sync' : 'Token locked') : 'Token not set up') : 'Missing configuration'}
                       </>}
                     </div>
                     <button 
@@ -587,6 +605,36 @@ const SettingsModal: FC<SettingsModalProps> = ({
                 <h3>Advanced</h3>
                 <div className="settings-section-content">
                   <p className="settings-description">Manage app data and reset your application</p>
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <button 
+                      className="settings-btn settings-btn--secondary" 
+                      onClick={() => onExport?.()}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M8 2v9M4 7l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <rect x="2" y="12" width="12" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                      Export
+                    </button>
+                    <button 
+                      className="settings-btn settings-btn--secondary" 
+                      onClick={handleImportClick}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M8 11V2M4 6l4-4 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <rect x="2" y="12" width="12" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                      Import
+                    </button>
+                    <input 
+                      ref={importFileInputRef} 
+                      type="file" 
+                      accept=".json" 
+                      onChange={handleImportFileChange} 
+                      style={{ display: 'none' }} 
+                    />
+                  </div>
                   
                   {!resetConfirmOpen ? (
                     <button className="settings-btn settings-btn--danger" onClick={() => setResetConfirmOpen(true)}>

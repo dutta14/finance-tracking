@@ -175,7 +175,7 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
           </>}
           {syncStatus === 'idle' && <>
             <span className="ghsync-dot ghsync-dot--gray" />
-            {isConfigured ? (hasPendingChanges ? 'Unsaved changes — sync when ready' : 'Ready to sync') : 'Not configured'}
+            {config.owner && config.repo && config.filePath ? (hasPendingChanges ? 'Unsaved changes — sync when ready' : (hasStoredToken ? (tokenUnlocked ? 'Ready to sync' : 'Token locked') : 'Token not set up')) : 'Missing configuration'}
           </>}
         </div>
 
