@@ -11,6 +11,7 @@ interface GoalFormModalProps {
   profileBirthday: string
   onOpenProfile: () => void
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  onSetFormFields: (fields: Partial<FormData>) => void
   onSubmit: (goal: FinancialGoal) => void
   onCancel: () => void
   setError: (error: string) => void

@@ -26,6 +26,7 @@ interface GoalDetailedCardProps {
   showActions?: boolean
   condensed?: boolean
   showTitle?: boolean
+  initialEditing?: boolean
 }
 
 const toEditFields = (p: FinancialGoal): EditFields => ({
@@ -133,11 +134,11 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
   </span>
 )
 
-const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, onEdit, onCopy, onDelete, onUpdateGoal, onEditClick, showActions = true, condensed = false, showTitle = true }) => {
+const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, onEdit, onCopy, onDelete, onUpdateGoal, onEditClick, showActions = true, condensed = false, showTitle = true, initialEditing = false }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
   const [amountView, setAmountView] = useState<'annual' | 'monthly'>('annual')
   const [suggesting, setSuggesting] = useState(false)
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(initialEditing)
   const [editFields, setEditFields] = useState<EditFields>(toEditFields(goal))
   const [editError, setEditError] = useState('')
 
@@ -246,7 +247,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
       )}
 
       {/* ── Edit Button (Solo Page) ── */}
-      {!showActions && onUpdateGoal && (
+      {!showActions && onUpdateGoal && !editing && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
           <button
             className="fi-card-edit-btn"

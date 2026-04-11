@@ -114,7 +114,7 @@ const App: FC = () => {
   };
 
   const handleGoToGoalEdit = (goalId: number): void => {
-    navigate(`/goal/${goalId}`);
+    navigate(`/goal/${goalId}?edit=1`);
   };
 
   const handleCopyGwGoals = (sourcePlanId: number, newPlanId: number): void => {

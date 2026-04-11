@@ -35,8 +35,12 @@
 .goal-form-modal .goal-form-section {
   border: none;
   border-radius: 0.6rem;
-  padding: 2rem 2rem 1.5rem;
+  padding: 0;
   position: static;
+}
+
+.goal-form-modal .goal-form-section.goal-wizard {
+  padding: 0;
 }
 
 body.dark .goal-form-modal {

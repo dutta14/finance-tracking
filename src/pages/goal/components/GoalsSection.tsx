@@ -115,6 +115,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               viewMode={viewMode}
               onReorderGoals={isFiltered ? undefined : onReorderGoals}
               onGoToGoal={onGoToGoal}
+              onGoToGoalEdit={onGoToGoalEdit}
               onRenameGoal={onRenameGoal}
               onCopyGoal={onCopyGoal}
               onDeleteGoal={onDeleteGoal}

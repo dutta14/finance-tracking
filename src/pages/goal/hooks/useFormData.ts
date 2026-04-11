@@ -18,7 +18,7 @@ export interface FormData {
 const defaultFormData: FormData = {
   goalName: '',
   goalCreatedIn: new Date().toISOString().split('T')[0],
-  goalEndYear: new Date().getFullYear().toString(),
+  goalEndYear: '',
   resetExpenseMonth: false,
   retirementAge: '',
   expenseMonth: '',

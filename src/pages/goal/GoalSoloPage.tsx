@@ -1,4 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
 import GoalDetailedCard from '../../components/GoalDetailedCard'
 import GoalActionsMenu from '../../components/GoalActionsMenu'
@@ -23,6 +24,8 @@ interface GoalSoloPageProps {
 }
 
 const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onBack, onNavigate, onUpdateGoal, onDeleteGoal, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [startEditing] = useState(() => searchParams.get('edit') === '1')
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState(goal.goalName)
@@ -31,6 +34,11 @@ const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onB
   useEffect(() => {
     setRenaming(false)
     setRenameValue(goal.goalName)
+    // Clear edit param after first render
+    if (searchParams.has('edit')) {
+      searchParams.delete('edit')
+      setSearchParams(searchParams, { replace: true })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal.id])
 
@@ -113,6 +121,7 @@ const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onB
           onUpdateGoal={onUpdateGoal} 
           showActions={false} 
           showTitle={false} 
+          initialEditing={startEditing}
         />
         <button
           className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}

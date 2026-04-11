@@ -26,7 +26,7 @@ interface GoalProps {
 }
 
 const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onGoToGoal, onGoToGoalEdit, onCopyGwGoals, gwGoals, onCreateGwGoal }) => {
-  const { formData, error, setError, handleInputChange, populateFromGoal, resetForm } = useFormData()
+  const { formData, setFormData, error, setError, handleInputChange, populateFromGoal, resetForm } = useFormData()
   const { editingGoalId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
   const [copySourceGoalId, setCopySourceGoalId] = useState<number | null>(null)
@@ -148,6 +148,7 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
           profileBirthday={profileBirthday}
           onOpenProfile={onOpenProfile}
           onInputChange={handleInputChange}
+          onSetFormFields={(fields) => setFormData(prev => ({ ...prev, ...fields }))}
           onSubmit={handleCreateGoal}
           onCancel={handleCancelEdit}
           setError={setError}

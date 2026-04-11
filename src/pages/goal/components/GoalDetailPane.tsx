@@ -121,7 +121,6 @@ const GoalDetailPane: FC<GoalDetailPaneProps> = ({
             <span className="goal-detail-pane-title">{goal.goalName}</span>
             <div className="goal-detail-pane-controls">
               <GoalActionsMenu
-                onEdit={() => onGoToGoalEdit(goal.id)}
                 onRename={enterRename}
                 onGoToGoal={() => onGoToGoal(goal.id)}
                 onDuplicate={() => onCopyGoal(goal)}
@@ -138,7 +137,7 @@ const GoalDetailPane: FC<GoalDetailPaneProps> = ({
       </div>
 
       <div className="goal-detail-pane-body">
-        <GoalDetailedCard goal={goal} profileBirthday={profileBirthday} onUpdateGoal={onUpdateGoal} showActions={false} condensed={true} showTitle={false} />
+        <GoalDetailedCard goal={goal} profileBirthday={profileBirthday} showActions={false} condensed={true} showTitle={false} />
         {gwGoals.filter(g => g.fiGoalId === goal.id).length > 0 && (
           <div className="pane-gw-goals-section">
             {gwGoals.filter(g => g.fiGoalId === goal.id).map(g => (
