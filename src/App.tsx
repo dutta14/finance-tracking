@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom'
-import { PageType, FinancialPlan } from './types'
+import { PageType, FinancialPlan, GwPlan } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
@@ -13,11 +13,10 @@ import { useProfile } from './hooks/useProfile'
 import ProfileModal from './components/ProfileModal'
 import './styles/colorThemes.css'
 
-interface PlanSoloRouteProps { plans: FinancialPlan[]; profileBirthday: string; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void }
-const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updatePlan, onDelete }) => {
+interface PlanSoloRouteProps { plans: FinancialPlan[]; profileBirthday: string; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void; gwPlans: GwPlan[]; createGwPlan: (p: Omit<GwPlan, 'id' | 'createdAt'>) => void; updateGwPlan: (id: number, u: Partial<Omit<GwPlan, 'id' | 'createdAt' | 'fiPlanId'>>) => void; deleteGwPlan: (id: number) => void }
+const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updatePlan, onDelete, gwPlans, createGwPlan, updateGwPlan, deleteGwPlan }) => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan } = useGwPlans()
   const plan = plans.find(p => p.id === Number(id))
   if (!plan) return <Navigate to="/plan" replace />
   return (
@@ -53,6 +52,7 @@ const App: FC = () => {
   const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
+  const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan } = useGwPlans();
   const { profile, updateProfile } = useProfile();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
@@ -111,6 +111,16 @@ const App: FC = () => {
 
   const handleGoToPlan = (planId: number): void => {
     navigate(`/plan/${planId}`);
+  };
+
+  const handleGoToPlanEdit = (planId: number): void => {
+    navigate(`/plan/${planId}`);
+  };
+
+  const handleCopyGwGoals = (sourcePlanId: number, newPlanId: number): void => {
+    gwPlans
+      .filter(g => g.fiPlanId === sourcePlanId)
+      .forEach(g => createGwPlan({ fiPlanId: newPlanId, label: g.label, disburseAge: g.disburseAge, disburseAmount: g.disburseAmount, growthRate: g.growthRate, currentSavings: 0 }))
   };
 
   useEffect(() => {
@@ -212,6 +222,7 @@ const App: FC = () => {
             <Plan
               plans={visiblePlans}
               profileBirthday={profile.birthday}
+              onOpenProfile={handleOpenProfile}
               createPlan={createPlan}
               updatePlan={updatePlan}
               deletePlan={handleDeletePlan}
@@ -220,10 +231,14 @@ const App: FC = () => {
               selectedPlanIds={selectedNavPlanIds}
               onSetSelectedPlanIds={setSelectedNavPlanIds}
               onGoToPlan={handleGoToPlan}
+              onGoToPlanEdit={handleGoToPlanEdit}
+              onCopyGwGoals={handleCopyGwGoals}
+              gwPlans={gwPlans}
+              onCreateGwPlan={createGwPlan}
             />
           }
         />
-        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} profileBirthday={profile.birthday} updatePlan={updatePlan} onDelete={handleDeletePlan} />} />
+        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} profileBirthday={profile.birthday} updatePlan={updatePlan} onDelete={handleDeletePlan} gwPlans={gwPlans} createGwPlan={createGwPlan} updateGwPlan={updateGwPlan} deleteGwPlan={deleteGwPlan} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -252,8 +267,6 @@ const App: FC = () => {
           onDeletePlan={handleSidebarDeletePlan}
           onDeleteMultiple={handleSidebarDeleteMultiple}
           onReorderPlans={reorderPlans}
-          onExport={handleExport}
-          onImport={handleImport}
           profile={profile}
           onUpdateProfile={updateProfile}
         />

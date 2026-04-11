@@ -23,8 +23,6 @@ interface SidebarNavigationProps extends NavigationProps {
   onDeletePlan: (planId: number) => void;
   onDeleteMultiple: (ids: number[]) => void;
   onReorderPlans: (orderedIds: number[]) => void;
-  onExport: () => void;
-  onImport: (file: File) => void;
   profile: Profile;
   onUpdateProfile: (updates: Partial<Profile>) => void;
 }
@@ -36,7 +34,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   darkMode, setDarkMode, fiTheme, onFiThemeChange, gwTheme, onGwThemeChange,
   plans, selectedNavPlanIds, isMultiSelectMode, onSelectNavPlan, onExitMultiSelect,
   onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans,
-  onExport, onImport, profile, onUpdateProfile,
+  profile, onUpdateProfile,
 }) => {
   const [planAccordionOpen, setPlanAccordionOpen] = useState(true);
   const [overflowMenu, setOverflowMenu] = useState<OverflowMenu | null>(null);
@@ -47,7 +45,6 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   const [dragOverSide, setDragOverSide] = useState<'before' | 'after'>('after');
   const overflowMenuRef = useRef<HTMLDivElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!overflowMenu) return;
@@ -221,32 +218,6 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             )}
           </li>
         </ul>
-      )}
-      {expanded && (
-        <div className="sidebar-data-section">
-          <button className="sidebar-data-btn" onClick={onExport} title="Export plans">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6.5 1v7M3.5 5l3 3 3-3M1.5 9.5v1a1 1 0 001 1h8a1 1 0 001-1v-1"/>
-            </svg>
-            Export
-          </button>
-          <button className="sidebar-data-btn" onClick={() => importInputRef.current?.click()} title="Import plans">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6.5 9V2M3.5 5l3-3 3 3M1.5 9.5v1a1 1 0 001 1h8a1 1 0 001-1v-1"/>
-            </svg>
-            Import
-          </button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={e => {
-              const file = e.target.files?.[0];
-              if (file) { onImport(file); e.target.value = ''; }
-            }}
-          />
-        </div>
       )}
       {expanded && (
         <div className="sidebar-settings-section">
