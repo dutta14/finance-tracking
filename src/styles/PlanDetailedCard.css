@@ -456,3 +456,127 @@ body.dark .fi-goal-info-icon {
 body.dark .fi-goal-info:hover .fi-goal-info-icon {
   color: var(--fi-text-mid);
 }
+
+/* ── Inline edit button ── */
+.fi-card-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--fi-text-mid);
+  background: var(--fi-toggle-bg);
+  border: 1px solid var(--fi-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.fi-card-edit-btn:hover {
+  background: var(--fi-goal-bg);
+  color: var(--fi-text-dark);
+  border-color: var(--fi-accent);
+}
+
+/* ── Inline edit form ── */
+.fi-card-edit-form {
+  background: var(--fi-section-bg);
+  border: 1px solid var(--fi-border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.fi-form-error {
+  font-size: 0.82rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-bottom: 0.75rem;
+}
+
+body.dark .fi-form-error {
+  background: #2d1515;
+  border-color: #742a2a;
+  color: #f87171;
+}
+
+.fi-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.fi-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fi-form-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fi-text-mid);
+}
+
+.fi-form-input {
+  font-size: 0.875rem;
+  border: 1.5px solid var(--fi-border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+  background: var(--fi-card-bg);
+  color: var(--fi-text-dark);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.fi-form-input:focus {
+  border-color: var(--fi-accent);
+  box-shadow: 0 0 0 3px var(--fi-hover-shadow);
+}
+
+.fi-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fi-form-save {
+  flex: 1;
+  background: var(--fi-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.fi-form-save:hover {
+  background: var(--fi-text-mid);
+}
+
+.fi-form-cancel {
+  flex: 1;
+  background: none;
+  border: 1.5px solid var(--fi-border);
+  border-radius: 6px;
+  padding: 7px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fi-text-mid);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fi-form-cancel:hover {
+  background: var(--fi-toggle-bg);
+  border-color: var(--fi-accent);
+}

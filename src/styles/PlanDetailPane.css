@@ -276,7 +276,7 @@ body.dark .pane-overflow-menu-item--danger {
   color: #111;
 }
 .pane-edit-name-input:focus {
-  border-color: #6366f1;
+  border-color: var(--fi-accent);
 }
 body.dark .pane-edit-name-input {
   background: #2d3748;
@@ -284,13 +284,13 @@ body.dark .pane-edit-name-input {
   color: #e5e7eb;
 }
 body.dark .pane-edit-name-input:focus {
-  border-color: #818cf8;
+  border-color: var(--fi-accent);
 }
 
 .pane-save-btn {
   font-size: 0.8rem;
   font-weight: 600;
-  background: #6366f1;
+  background: var(--fi-accent);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -300,7 +300,7 @@ body.dark .pane-edit-name-input:focus {
   transition: background 0.15s;
 }
 .pane-save-btn:hover {
-  background: #4f46e5;
+  background: var(--fi-text-mid);
 }
 
 /* ── Edit form body ── */
@@ -378,7 +378,7 @@ body.dark .pane-edit-label {
   transition: border-color 0.15s;
 }
 .pane-edit-input:focus {
-  border-color: #6366f1;
+  border-color: var(--fi-accent);
 }
 body.dark .pane-edit-input {
   background: #2d3748;
@@ -386,7 +386,7 @@ body.dark .pane-edit-input {
   color: #e5e7eb;
 }
 body.dark .pane-edit-input:focus {
-  border-color: #818cf8;
+  border-color: var(--fi-accent);
 }
 
 .pane-edit-actions {
@@ -397,7 +397,7 @@ body.dark .pane-edit-input:focus {
 
 .pane-edit-save-btn {
   flex: 1;
-  background: #6366f1;
+  background: var(--fi-accent);
   color: #fff;
   border: none;
   border-radius: 7px;
@@ -408,7 +408,7 @@ body.dark .pane-edit-input:focus {
   transition: background 0.15s;
 }
 .pane-edit-save-btn:hover {
-  background: #4f46e5;
+  background: var(--fi-text-mid);
 }
 
 .pane-edit-cancel-btn {

@@ -140,14 +140,14 @@ body.dark .plan-solo-step-label {
 }
 
 .plan-solo-action-btn--primary {
-  background: #6366f1;
+  background: var(--fi-accent);
   color: #fff;
-  border-color: #6366f1;
+  border-color: var(--fi-accent);
 }
 
 .plan-solo-action-btn--primary:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: var(--fi-text-mid);
+  border-color: var(--fi-text-mid);
   color: #fff;
 }
 
@@ -173,14 +173,14 @@ body.dark .plan-solo-action-btn:hover {
 }
 
 body.dark .plan-solo-action-btn--primary {
-  background: #6366f1;
+  background: var(--fi-accent);
   color: #fff;
-  border-color: #6366f1;
+  border-color: var(--fi-accent);
 }
 
 body.dark .plan-solo-action-btn--primary:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: var(--fi-text-mid);
+  border-color: var(--fi-text-mid);
 }
 
 body.dark .plan-solo-action-btn--danger {
@@ -200,7 +200,7 @@ body.dark .plan-solo-action-btn--danger:hover {
   color: #111;
   background: none;
   border: none;
-  border-bottom: 2px solid #6366f1;
+  border-bottom: 2px solid var(--fi-accent);
   outline: none;
   width: 100%;
   padding: 0 0 2px;
@@ -208,21 +208,21 @@ body.dark .plan-solo-action-btn--danger:hover {
 
 body.dark .plan-solo-rename-input {
   color: #e5e7eb;
-  border-bottom-color: #818cf8;
+  border-bottom-color: var(--fi-accent);
 }
 
 /* ── Edit form ── */
 .plan-solo-edit-form {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--fi-section-bg);
+  border: 1px solid var(--fi-border);
   border-radius: 10px;
   padding: 1.25rem 1.5rem 1rem;
   margin-bottom: 1.5rem;
 }
 
 body.dark .plan-solo-edit-form {
-  background: #1e2430;
-  border-color: #363c48;
+  background: var(--fi-section-bg);
+  border-color: var(--fi-border);
 }
 
 .plan-solo-edit-grid {
