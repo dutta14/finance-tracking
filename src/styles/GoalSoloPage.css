@@ -1,0 +1,248 @@
+.goal-solo {
+  padding: 2rem 2rem 3rem;
+  min-height: 100vh;
+  background: white;
+}
+
+.goal-solo-nav {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.goal-solo-back {
+  background: none;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #555;
+  padding: 0.45rem 1rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.goal-solo-back:hover {
+  background: #f7f7f7;
+  color: #111;
+  border-color: #999;
+}
+
+.goal-solo-header {
+  margin-bottom: 1.5rem;
+}
+
+.goal-solo-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.goal-solo-content {
+  max-width: 560px;
+}
+
+body.dark .goal-solo {
+  background: #23272f;
+}
+
+body.dark .goal-solo-header h1 {
+  color: #e5e7eb;
+}
+
+body.dark .goal-solo-back {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .goal-solo-back:hover {
+  background: #2d3748;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+.goal-solo-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.goal-solo-step-btn {
+  background: none;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #555;
+  padding: 0.3rem 0.6rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.goal-solo-step-btn:hover:not(:disabled) {
+  background: #f7f7f7;
+  color: #111;
+  border-color: #999;
+}
+
+.goal-solo-step-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.goal-solo-step-label {
+  font-size: 0.82rem;
+  color: #6b7280;
+  min-width: 48px;
+  text-align: center;
+}
+
+body.dark .goal-solo-step-btn {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .goal-solo-step-btn:hover:not(:disabled) {
+  background: #2d3748;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+body.dark .goal-solo-step-label {
+  color: #6b7280;
+}
+
+/* ── Action buttons ── */
+.goal-solo-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.goal-solo-action-btn {
+  background: none;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #555;
+  padding: 0.35rem 0.85rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.goal-solo-action-btn:hover {
+  background: #f7f7f7;
+  color: #111;
+  border-color: #999;
+}
+
+.goal-solo-action-btn--primary {
+  background: var(--fi-accent);
+  color: #fff;
+  border-color: var(--fi-accent);
+}
+
+.goal-solo-action-btn--primary:hover {
+  background: var(--fi-text-mid);
+  border-color: var(--fi-text-mid);
+  color: #fff;
+}
+
+.goal-solo-action-btn--danger {
+  color: #e53e3e;
+  border-color: #fca5a5;
+}
+
+.goal-solo-action-btn--danger:hover {
+  background: #fff5f5;
+  border-color: #e53e3e;
+}
+
+body.dark .goal-solo-action-btn {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .goal-solo-action-btn:hover {
+  background: #2d3748;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+body.dark .goal-solo-action-btn--primary {
+  background: var(--fi-accent);
+  color: #fff;
+  border-color: var(--fi-accent);
+}
+
+body.dark .goal-solo-action-btn--primary:hover {
+  background: var(--fi-text-mid);
+  border-color: var(--fi-text-mid);
+}
+
+body.dark .goal-solo-action-btn--danger {
+  color: #fc8181;
+  border-color: #742a2a;
+}
+
+body.dark .goal-solo-action-btn--danger:hover {
+  background: #2d1515;
+  border-color: #fc8181;
+}
+
+/* ── Rename input ── */
+.goal-solo-rename-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111;
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--fi-accent);
+  outline: none;
+  width: 100%;
+  padding: 0 0 2px;
+}
+
+body.dark .goal-solo-rename-input {
+  color: #e5e7eb;
+  border-bottom-color: var(--fi-accent);
+}
+
+/* ── Edit form ── */
+.goal-solo-edit-form {
+  background: var(--fi-section-bg);
+  border: 1px solid var(--fi-border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+body.dark .goal-solo-edit-form {
+  background: var(--fi-section-bg);
+  border-color: var(--fi-border);
+}
+
+.goal-solo-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+
+.goal-solo-edit-error {
+  font-size: 0.82rem;
+  color: #e53e3e;
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 0.75rem;
+}
+
+body.dark .goal-solo-edit-error {
+  background: #2d1515;
+  border-color: #742a2a;
+  color: #fc8181;
+}

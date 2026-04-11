@@ -68,8 +68,8 @@ const Home: FC<HomeProps> = ({ profile, onUpdateProfile }) => {
           
           <div className="feature-card">
             <div className="feature-icon">🎯</div>
-            <h3>Plan Ahead</h3>
-            <p>Create and model different financial plans to achieve your goals.</p>
+            <h3>Goal Ahead</h3>
+            <p>Create and model different financial goals to achieve your goals.</p>
           </div>
           
           <div className="feature-card">

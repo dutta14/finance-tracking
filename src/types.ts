@@ -1,16 +1,16 @@
 import { FC } from 'react'
 
-export type PageType = 'home' | 'plan' | 'plan-solo'
+export type PageType = 'home' | 'goal' | 'goal-solo'
 
-export interface FinancialPlan {
+export interface FinancialGoal {
   id: number
-  planName: string
+  goalName: string
   createdAt: string
   
   // Personal & Timeline Info
   birthday: string
-  planCreatedIn: string
-  planEndYear: string
+  goalCreatedIn: string
+  goalEndYear: string
   resetExpenseMonth: boolean
   retirementAge: number
   
@@ -33,13 +33,13 @@ export interface FinancialPlan {
   progress: number
 }
 
-export interface GwPlan {
+export interface GwGoal {
   id: number
-  fiPlanId: number
+  fiGoalId: number
   label: string
   createdAt: string
   disburseAge: number
-  disburseAmount: number   // in plan-creation-year (today's) dollars
+  disburseAmount: number   // in goal-creation-year (today's) dollars
   growthRate: number       // % per year, independent of FI growth rate
   currentSavings: number   // current savings allocated toward this goal
 }

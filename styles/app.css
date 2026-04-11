@@ -84,12 +84,12 @@ body:not(.dark) {
   }
 
   .hero,
-  .plan-content {
+  .goal-content {
     background: #000;
     color: #fff;
   }
 
-  .plan-header {
+  .goal-header {
     background: #000;
     border-bottom-color: #2d2d2d;
   }
@@ -101,15 +101,15 @@ body:not(.dark) {
   }
 
   .feature-card h3,
-  .plan-info h2 {
+  .goal-info h2 {
     color: #fff;
   }
 
   .feature-card p,
-  .plan-info p,
+  .goal-info p,
   .hero-content p,
-  .plan-header p,
-  .plan-info ul,
+  .goal-header p,
+  .goal-info ul,
   .cta-content p {
     color: #b0b0b0;
   }

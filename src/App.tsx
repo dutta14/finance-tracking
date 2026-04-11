@@ -1,37 +1,37 @@
 import { FC, useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom'
-import { PageType, FinancialPlan, GwPlan } from './types'
+import { PageType, FinancialGoal, GwGoal } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
-import Plan from './pages/plan/Plan'
-import PlanSoloPage from './pages/plan/PlanSoloPage'
+import Goal from './pages/goal/Goal'
+import GoalSoloPage from './pages/goal/GoalSoloPage'
 import UndoToast from './components/UndoToast'
-import { useFinancialPlans } from './pages/plan/hooks/useFinancialPlans'
-import { useGwPlans } from './pages/plan/hooks/useGwPlans'
+import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
+import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
 import ProfileModal from './components/ProfileModal'
 import './styles/colorThemes.css'
 
-interface PlanSoloRouteProps { plans: FinancialPlan[]; profileBirthday: string; updatePlan: (id: number, p: FinancialPlan) => void; onDelete: (id: number) => void; gwPlans: GwPlan[]; createGwPlan: (p: Omit<GwPlan, 'id' | 'createdAt'>) => void; updateGwPlan: (id: number, u: Partial<Omit<GwPlan, 'id' | 'createdAt' | 'fiPlanId'>>) => void; deleteGwPlan: (id: number) => void }
-const PlanSoloRoute: FC<PlanSoloRouteProps> = ({ plans, profileBirthday, updatePlan, onDelete, gwPlans, createGwPlan, updateGwPlan, deleteGwPlan }) => {
+interface GoalSoloRouteProps { goals: FinancialGoal[]; profileBirthday: string; updateGoal: (id: number, p: FinancialGoal) => void; onDelete: (id: number) => void; gwGoals: GwGoal[]; createGwGoal: (p: Omit<GwGoal, 'id' | 'createdAt'>) => void; updateGwGoal: (id: number, u: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void; deleteGwGoal: (id: number) => void }
+const GoalSoloRoute: FC<GoalSoloRouteProps> = ({ goals, profileBirthday, updateGoal, onDelete, gwGoals, createGwGoal, updateGwGoal, deleteGwGoal }) => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const plan = plans.find(p => p.id === Number(id))
-  if (!plan) return <Navigate to="/plan" replace />
+  const goal = goals.find(p => p.id === Number(id))
+  if (!goal) return <Navigate to="/goal" replace />
   return (
-    <PlanSoloPage
-      plan={plan}
-      plans={plans}
+    <GoalSoloPage
+      goal={goal}
+      goals={goals}
       profileBirthday={profileBirthday}
-      onBack={() => navigate('/plan')}
-      onNavigate={(planId) => navigate(`/plan/${planId}`)}
-      onUpdatePlan={updatePlan}
-      onDeletePlan={onDelete}
-      gwPlans={gwPlans}
-      onCreateGwPlan={createGwPlan}
-      onUpdateGwPlan={updateGwPlan}
-      onDeleteGwPlan={deleteGwPlan}
+      onBack={() => navigate('/goal')}
+      onNavigate={(goalId) => navigate(`/goal/${goalId}`)}
+      onUpdateGoal={updateGoal}
+      onDeleteGoal={onDelete}
+      gwGoals={gwGoals}
+      onCreateGwGoal={createGwGoal}
+      onUpdateGwGoal={updateGwGoal}
+      onDeleteGwGoal={deleteGwGoal}
     />
   )
 }
@@ -49,54 +49,54 @@ const App: FC = () => {
   });
   const [fiTheme, setFiTheme] = useState(() => localStorage.getItem('fiTheme') || 'blue');
   const [gwTheme, setGwTheme] = useState(() => localStorage.getItem('gwTheme') || 'green');
-  const [selectedNavPlanIds, setSelectedNavPlanIds] = useState<number[]>([]);
+  const [selectedNavGoalIds, setSelectedNavGoalIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const { plans, createPlan, updatePlan, deletePlan, importPlans, reorderPlans } = useFinancialPlans();
-  const { gwPlans, createGwPlan, updateGwPlan, deleteGwPlan } = useGwPlans();
+  const { goals, createGoal, updateGoal, deleteGoal, importGoals, reorderGoals } = useFinancialGoals();
+  const { gwGoals, createGwGoal, updateGwGoal, deleteGwGoal } = useGwGoals();
   const { profile, updateProfile } = useProfile();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
 
   // Derive currentPage from URL for sidebar nav compat
-  const currentPage: PageType = location.pathname.startsWith('/plan/')
-    ? 'plan-solo'
-    : location.pathname === '/plan'
-    ? 'plan'
+  const currentPage: PageType = location.pathname.startsWith('/goal/')
+    ? 'goal-solo'
+    : location.pathname === '/goal'
+    ? 'goal'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
     if (page === 'home') navigate('/')
-    else if (page === 'plan') navigate('/plan')
+    else if (page === 'goal') navigate('/goal')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
     ids: number[]
-    savedPlans: FinancialPlan[]
+    savedGoals: FinancialGoal[]
     message: string
     timerId: ReturnType<typeof setTimeout>
   } | null>(null);
 
-  const visiblePlans = pendingDelete
-    ? plans.filter(p => !pendingDelete.ids.includes(p.id))
-    : plans;
+  const visibleGoals = pendingDelete
+    ? goals.filter(p => !pendingDelete.ids.includes(p.id))
+    : goals;
 
   const handleDeleteWithUndo = (ids: number[]): void => {
     // Commit any existing pending delete before starting a new one
     if (pendingDelete) {
       clearTimeout(pendingDelete.timerId);
-      pendingDelete.ids.forEach(id => deletePlan(id));
+      pendingDelete.ids.forEach(id => deleteGoal(id));
       setPendingDelete(null);
     }
-    const affectedPlans = plans.filter(p => ids.includes(p.id));
-    const name = affectedPlans[0]?.planName ?? 'Plan';
-    const message = ids.length === 1 ? `"${name}" deleted` : `${ids.length} plans deleted`;
+    const affectedGoals = goals.filter(p => ids.includes(p.id));
+    const name = affectedGoals[0]?.goalName ?? 'Goal';
+    const message = ids.length === 1 ? `"${name}" deleted` : `${ids.length} goals deleted`;
     const timerId = setTimeout(() => {
-      ids.forEach(id => deletePlan(id));
+      ids.forEach(id => deleteGoal(id));
       setPendingDelete(null);
     }, 10_000);
-    setSelectedNavPlanIds(prev => prev.filter(id => !ids.includes(id)));
+    setSelectedNavGoalIds(prev => prev.filter(id => !ids.includes(id)));
     setIsMultiSelectMode(false);
-    setPendingDelete({ ids, savedPlans: affectedPlans, message, timerId });
+    setPendingDelete({ ids, savedGoals: affectedGoals, message, timerId });
   };
 
   const handleUndoDelete = (): void => {
@@ -105,22 +105,22 @@ const App: FC = () => {
     setPendingDelete(null);
   };
 
-  const handleDeletePlan = (planId: number): void => {
-    handleDeleteWithUndo([planId]);
+  const handleDeleteGoal = (goalId: number): void => {
+    handleDeleteWithUndo([goalId]);
   };
 
-  const handleGoToPlan = (planId: number): void => {
-    navigate(`/plan/${planId}`);
+  const handleGoToGoal = (goalId: number): void => {
+    navigate(`/goal/${goalId}`);
   };
 
-  const handleGoToPlanEdit = (planId: number): void => {
-    navigate(`/plan/${planId}`);
+  const handleGoToGoalEdit = (goalId: number): void => {
+    navigate(`/goal/${goalId}`);
   };
 
   const handleCopyGwGoals = (sourcePlanId: number, newPlanId: number): void => {
-    gwPlans
-      .filter(g => g.fiPlanId === sourcePlanId)
-      .forEach(g => createGwPlan({ fiPlanId: newPlanId, label: g.label, disburseAge: g.disburseAge, disburseAmount: g.disburseAmount, growthRate: g.growthRate, currentSavings: 0 }))
+    gwGoals
+      .filter(g => g.fiGoalId === sourcePlanId)
+      .forEach(g => createGwGoal({ fiGoalId: newPlanId, label: g.label, disburseAge: g.disburseAge, disburseAmount: g.disburseAmount, growthRate: g.growthRate, currentSavings: 0 }))
   };
 
   useEffect(() => {
@@ -152,30 +152,30 @@ const App: FC = () => {
     localStorage.setItem('gwTheme', gwTheme);
   }, [gwTheme]);
 
-  const handleSelectNavPlan = (planId: number, multi: boolean): void => {
+  const handleSelectNavGoal = (goalId: number, multi: boolean): void => {
     if (multi || isMultiSelectMode) {
       if (!isMultiSelectMode) setIsMultiSelectMode(true);
-      setSelectedNavPlanIds(prev =>
-        prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
+      setSelectedNavGoalIds(prev =>
+        prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]
       );
     } else {
-      navigate(`/plan/${planId}`);
+      navigate(`/goal/${goalId}`);
       if (isMobile) setSidebarOpen(false);
     }
   };
 
   const handleExitMultiSelect = (): void => {
     setIsMultiSelectMode(false);
-    setSelectedNavPlanIds([]);
+    setSelectedNavGoalIds([]);
   };
 
-  const renamePlan = (planId: number, newName: string): void => {
-    const plan = plans.find(p => p.id === planId);
-    if (plan) updatePlan(planId, { ...plan, planName: newName });
+  const renameGoal = (goalId: number, newName: string): void => {
+    const goal = goals.find(p => p.id === goalId);
+    if (goal) updateGoal(goalId, { ...goal, goalName: newName });
   };
 
-  const handleSidebarDeletePlan = (planId: number): void => {
-    handleDeleteWithUndo([planId]);
+  const handleSidebarDeleteGoal = (goalId: number): void => {
+    handleDeleteWithUndo([goalId]);
   };
 
   const handleSidebarDeleteMultiple = (ids: number[]): void => {
@@ -183,12 +183,12 @@ const App: FC = () => {
   };
 
   const handleExport = (): void => {
-    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), plans, profile }, null, 2)
+    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), goals, profile }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `finance-plans-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `finance-goals-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
   };
@@ -198,15 +198,15 @@ const App: FC = () => {
     reader.onload = (e) => {
       try {
         const parsed = JSON.parse(e.target?.result as string)
-        const incoming = Array.isArray(parsed) ? parsed : parsed?.plans
+        const incoming = Array.isArray(parsed) ? parsed : (parsed?.goals || parsed?.plans)
         if (!Array.isArray(incoming)) throw new Error('Invalid format')
-        importPlans(incoming)
-        setSelectedNavPlanIds([])
+        importGoals(incoming)
+        setSelectedNavGoalIds([])
         if (parsed?.profile && typeof parsed.profile === 'object') {
           updateProfile(parsed.profile)
         }
       } catch {
-        alert('Could not import: the file is not a valid finance plans export.')
+        alert('Could not import: the file is not a valid finance goals export.')
       }
     }
     reader.readAsText(file)
@@ -217,28 +217,28 @@ const App: FC = () => {
       <Routes>
         <Route path="/" element={<Home profile={profile} onUpdateProfile={updateProfile} />} />
         <Route
-          path="/plan"
+          path="/goal"
           element={
-            <Plan
-              plans={visiblePlans}
+            <Goal
+              goals={visibleGoals}
               profileBirthday={profile.birthday}
               onOpenProfile={handleOpenProfile}
-              createPlan={createPlan}
-              updatePlan={updatePlan}
-              deletePlan={handleDeletePlan}
-              onDeleteMultiplePlans={handleDeleteWithUndo}
-              reorderPlans={reorderPlans}
-              selectedPlanIds={selectedNavPlanIds}
-              onSetSelectedPlanIds={setSelectedNavPlanIds}
-              onGoToPlan={handleGoToPlan}
-              onGoToPlanEdit={handleGoToPlanEdit}
+              createGoal={createGoal}
+              updateGoal={updateGoal}
+              deleteGoal={handleDeleteGoal}
+              onDeleteMultipleGoals={handleDeleteWithUndo}
+              reorderGoals={reorderGoals}
+              selectedGoalIds={selectedNavGoalIds}
+              onSetSelectedGoalIds={setSelectedNavGoalIds}
+              onGoToGoal={handleGoToGoal}
+              onGoToGoalEdit={handleGoToGoalEdit}
               onCopyGwGoals={handleCopyGwGoals}
-              gwPlans={gwPlans}
-              onCreateGwPlan={createGwPlan}
+              gwGoals={gwGoals}
+              onCreateGwGoal={createGwGoal}
             />
           }
         />
-        <Route path="/plan/:id" element={<PlanSoloRoute plans={visiblePlans} profileBirthday={profile.birthday} updatePlan={updatePlan} onDelete={handleDeletePlan} gwPlans={gwPlans} createGwPlan={createGwPlan} updateGwPlan={updateGwPlan} deleteGwPlan={deleteGwPlan} />} />
+        <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -258,15 +258,15 @@ const App: FC = () => {
           onFiThemeChange={setFiTheme}
           gwTheme={gwTheme}
           onGwThemeChange={setGwTheme}
-          plans={visiblePlans}
-          selectedNavPlanIds={selectedNavPlanIds}
+          goals={visibleGoals}
+          selectedNavGoalIds={selectedNavGoalIds}
           isMultiSelectMode={isMultiSelectMode}
-          onSelectNavPlan={handleSelectNavPlan}
+          onSelectNavGoal={handleSelectNavGoal}
           onExitMultiSelect={handleExitMultiSelect}
-          onRenamePlan={renamePlan}
-          onDeletePlan={handleSidebarDeletePlan}
+          onRenameGoal={renameGoal}
+          onDeleteGoal={handleSidebarDeleteGoal}
           onDeleteMultiple={handleSidebarDeleteMultiple}
-          onReorderPlans={reorderPlans}
+          onReorderGoals={reorderGoals}
           profile={profile}
           onUpdateProfile={updateProfile}
         />
@@ -302,7 +302,7 @@ const App: FC = () => {
           onUndo={handleUndoDelete}
           onDismiss={() => {
             clearTimeout(pendingDelete.timerId);
-            pendingDelete.ids.forEach(id => deletePlan(id));
+            pendingDelete.ids.forEach(id => deleteGoal(id));
             setPendingDelete(null);
           }}
           duration={10000}

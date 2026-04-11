@@ -36,7 +36,7 @@ const CONFIG_KEY = 'github-sync-config'
 const DEFAULT_CONFIG: GitHubSyncConfig = {
   owner: '',
   repo: '',
-  filePath: 'finance-plans.json',
+  filePath: 'finance-goals.json',
   autoSync: false,
 }
 

@@ -22,8 +22,8 @@ finance-tracking/
 │   ├── pages/           # Page components
 │   │   ├── Home.jsx
 │   │   ├── Home.css
-│   │   ├── Plan.jsx
-│   │   └── Plan.css
+│   │   ├── Goal.jsx
+│   │   └── Goal.css
 │   ├── App.jsx          # Main App component with routing
 │   └── main.jsx         # React entry point
 ├── styles/              # Global styles
@@ -100,7 +100,7 @@ All styles are kept modular and separate:
 
 - **Global Styles**: `styles/normalize.css` and `styles/app.css`
 - **Component Styles**: Each component has its own CSS file (e.g., `Navigation.css`)
-- **Page Styles**: Each page has its own CSS file (e.g., `Home.css`, `Plan.css`)
+- **Page Styles**: Each page has its own CSS file (e.g., `Home.css`, `Goal.css`)
 
 This keeps the codebase maintainable and easy to extend.
 
@@ -120,7 +120,7 @@ This keeps the codebase maintainable and easy to extend.
 - Feature cards highlighting app capabilities
 - Call-to-action section
 
-### Plan Page
+### Goal Page
 
 - Placeholder for financial planning features
 - Ready for detailed implementation
@@ -131,9 +131,9 @@ Simple client-side routing using React state to switch between pages without pag
 
 ## Next Steps for Development
 
-Once basic setup is complete, you can expand the Plan page with:
+Once basic setup is complete, you can expand the Goal page with:
 
-1. Financial plan creation and management forms
+1. Financial goal creation and management forms
 2. Scenario modeling tools
 3. Data visualization with charts
 4. Local storage or backend API integration

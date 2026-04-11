@@ -31,10 +31,10 @@ const Navigation: FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
           </li>
           <li className="nav-item">
             <button
-              className={`nav-link ${currentPage === 'plan' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('plan')}
+              className={`nav-link ${currentPage === 'goal' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('goal')}
             >
-              Plan
+              Goal
             </button>
           </li>
         </ul>

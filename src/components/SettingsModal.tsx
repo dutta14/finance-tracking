@@ -361,7 +361,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       onClick={handleGhSyncNow}
                       disabled={!ghIsConfigured || ghSyncStatus === 'syncing'}
                       style={{ minWidth: '70px', flexShrink: 0, marginLeft: '0.75rem' }}
-                      title="Sync current plan data to GitHub"
+                      title="Sync current goal data to GitHub"
                     >
                       {ghSyncStatus === 'syncing' ? 'Syncing…' : 'Sync'}
                     </button>
@@ -492,7 +492,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                           type="text"
                           value={ghConfig?.filePath || ''}
                           onChange={e => onGhUpdateConfig?.({ filePath: e.target.value })}
-                          placeholder="finance-plans.json"
+                          placeholder="finance-goals.json"
                         />
                       </div>
 
@@ -713,7 +713,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                         </svg>
                         <div>
                           <p className="settings-reset-title">Permanently reset the app?</p>
-                          <p className="settings-reset-message">This will erase all plans, data, and settings. This action cannot be undone.</p>
+                          <p className="settings-reset-message">This will erase all goals, data, and settings. This action cannot be undone.</p>
                         </div>
                       </div>
                       <div className="settings-reset-actions">

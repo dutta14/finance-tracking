@@ -1,7 +1,7 @@
 /* ====================================================
    colorThemes.css — FI & GW Color Palette Themes
 
-   FI cards use  --fi-* CSS variables (PlanDetailedCard.css)
+   FI cards use  --fi-* CSS variables (GoalDetailedCard.css)
    GW section uses --gw-* CSS variables (GwSection.css)
 
    Defaults: FI = blue, GW = green

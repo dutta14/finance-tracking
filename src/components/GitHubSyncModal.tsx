@@ -277,7 +277,7 @@ const GitHubSyncModal: FC<GitHubSyncModalProps> = ({
 
               <div className="ghsync-field">
                 <label className="ghsync-label">File path in repo</label>
-                <input className="ghsync-input" type="text" value={config.filePath} onChange={e => onUpdateConfig({ filePath: e.target.value })} placeholder="finance-plans.json" />
+                <input className="ghsync-input" type="text" value={config.filePath} onChange={e => onUpdateConfig({ filePath: e.target.value })} placeholder="finance-goals.json" />
               </div>
 
               <div className="ghsync-autosync-row">

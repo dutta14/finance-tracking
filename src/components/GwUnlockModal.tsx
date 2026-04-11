@@ -24,7 +24,7 @@ const GwUnlockModal: FC<GwUnlockModalProps> = ({ onDismiss }) => {
         </div>
 
         <h2 id="gw-unlock-title" className="gw-unlock-title">
-          Your FI plan is set — now plant the seeds for generational wealth
+          Your FI goal is set — now plant the seeds for generational wealth
         </h2>
 
         <p className="gw-unlock-body">
@@ -48,7 +48,7 @@ const GwUnlockModal: FC<GwUnlockModalProps> = ({ onDismiss }) => {
         </ul>
 
         <p className="gw-unlock-footer-note">
-          Your GW goals are attached to each FI plan — you'll find them at the bottom of any plan's detail page.
+          Your GW goals are attached to each FI goal — you'll find them at the bottom of any goal's detail page.
         </p>
 
         <button className="gw-unlock-cta" onClick={onDismiss}>

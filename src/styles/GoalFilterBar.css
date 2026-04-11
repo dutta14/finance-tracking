@@ -1,0 +1,258 @@
+.goal-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.goal-filter-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Pill + dropdown wrapper */
+.filter-pill-group {
+  position: relative;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f7f7f7;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: #555;
+  padding: 0.35rem 0.75rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  background: #ebebeb;
+  border-color: #ccc;
+  color: #111;
+}
+
+.filter-pill--active {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+
+.filter-pill--active:hover {
+  background: #333;
+  border-color: #333;
+}
+
+.filter-pill--open {
+  background: #ebebeb;
+  border-color: #999;
+  color: #111;
+}
+
+.filter-pill--active.filter-pill--open {
+  background: #333;
+  border-color: #333;
+  color: #fff;
+}
+
+.filter-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #111;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.filter-pill--active .filter-pill-badge {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+.filter-pill-chevron {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+/* Dropdown panel */
+.filter-dropdown-wrapper {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 300;
+}
+
+.filter-dropdown-panel {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.6rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  padding: 0.5rem 0.5rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #222;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.filter-option:hover {
+  background: #f2f2f2;
+}
+
+.filter-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #111;
+  flex-shrink: 0;
+}
+
+.filter-option--dim {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.filter-option--dim:hover {
+  background: none;
+}
+
+.filter-dropdown-clear {
+  margin-top: 0.35rem;
+  background: none;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #555;
+  padding: 0.35rem 0;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.filter-dropdown-clear:hover {
+  background: #f2f2f2;
+}
+
+.filter-empty {
+  font-size: 0.8rem;
+  color: #999;
+  padding: 0.25rem 0.5rem;
+  margin: 0;
+}
+
+/* Right side: active count + clear all */
+.goal-filter-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.goal-filter-active-count {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.goal-filter-clear-all {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #dc2626;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+
+.goal-filter-clear-all:hover {
+  color: #b91c1c;
+}
+
+/* Dark mode */
+body.dark .filter-pill {
+  background: #23272f;
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .filter-pill:hover {
+  background: #2d3748;
+  border-color: #6b7280;
+  color: #e5e7eb;
+}
+
+body.dark .filter-pill--active {
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  color: #111;
+}
+
+body.dark .filter-pill--active:hover {
+  background: #d1d5db;
+  border-color: #d1d5db;
+}
+
+body.dark .filter-pill--open {
+  background: #2d3748;
+  border-color: #6b7280;
+  color: #e5e7eb;
+}
+
+body.dark .filter-pill--active .filter-pill-badge {
+  color: #111;
+}
+
+body.dark .filter-dropdown-panel {
+  background: #23272f;
+  border-color: #363c48;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark .filter-option {
+  color: #e5e7eb;
+}
+
+body.dark .filter-option:hover {
+  background: #2d3748;
+}
+
+body.dark .filter-option input[type="checkbox"] {
+  accent-color: #e5e7eb;
+}
+
+body.dark .filter-dropdown-clear {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .filter-dropdown-clear:hover {
+  background: #2d3748;
+}
+
+body.dark .goal-filter-active-count {
+  color: #6b7280;
+}

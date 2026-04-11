@@ -1,0 +1,36 @@
+.goal-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-edit,
+.btn-copy,
+.btn-delete {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-edit:hover,
+.btn-copy:hover,
+.btn-delete:hover {
+  color: #000;
+}
+
+body.dark .goal-card-actions button {
+  color: #6b7280;
+}
+
+body.dark .goal-card-actions button:hover {
+  color: #e5e7eb;
+}
