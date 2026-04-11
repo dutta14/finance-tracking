@@ -89,7 +89,6 @@
 }
 
 .gw-add-btn--inline {
-  margin-top: 0.75rem;
   background: transparent;
   color: var(--gw-accent);
   border: 1px solid var(--gw-accent);
@@ -103,13 +102,14 @@
 
 .gw-add-btn--copy {
   background: transparent;
-  color: #3b82f6;
-  border: 1px solid #93c5fd;
+  color: var(--gw-accent, #22c55e);
+  border: 1px solid var(--gw-accent, #22c55e);
+  font-weight: 500;
 }
 
 .gw-add-btn--copy:hover {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--gw-card-bg, #f0fdf4);
+  color: var(--gw-accent-hover, #16a34a);
 }
 
 .gw-empty-actions {
@@ -123,8 +123,8 @@
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-  align-items: flex-start;
-  flex-direction: column;
+  align-items: center;
+  flex-direction: row;
   margin-top: 0.25rem;
 }
 
@@ -139,6 +139,36 @@
   gap: 0.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   margin-top: 0.5rem;
+}
+
+.gw-import-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.15rem 0.4rem;
+}
+
+.gw-import-picker-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gw-text-dark, #166534);
+}
+
+.gw-import-picker-cancel {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.gw-import-picker-cancel:hover {
+  color: #374151;
+  background: #f3f4f6;
 }
 
 .gw-import-group-label {
@@ -676,19 +706,32 @@ body.dark .gw-add-btn--inline:hover {
 }
 
 body.dark .gw-add-btn--copy {
-  color: #93c5fd;
-  border-color: #1e3a5f;
+  color: var(--gw-accent, #4ade80);
+  border-color: var(--gw-goal-border, #166534);
 }
 
 body.dark .gw-add-btn--copy:hover {
-  background: #1e2a47;
-  color: #60a5fa;
+  background: var(--gw-card-bg, rgba(20, 83, 45, 0.13));
+  color: var(--gw-accent-hover, #4ade80);
 }
 
 body.dark .gw-import-picker {
   background: #1e2535;
   border-color: var(--gw-border);
   box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+body.dark .gw-import-picker-title {
+  color: var(--gw-text-dark, #86efac);
+}
+
+body.dark .gw-import-picker-cancel {
+  color: #6b7280;
+}
+
+body.dark .gw-import-picker-cancel:hover {
+  color: #e5e7eb;
+  background: #2d3748;
 }
 
 body.dark .gw-import-group-label {

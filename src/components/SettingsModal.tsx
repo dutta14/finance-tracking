@@ -72,6 +72,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
   onGhApplyRestore = async () => {}, ghData = {}, onFactoryReset = () => {}, onExport = () => {}, onImport = () => {}, onClose = () => {},
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
+  const [accentTarget, setAccentTarget] = useState<'home' | 'fi' | 'gw'>('home')
   const [name, setName] = useState(profile.name || '')
   const [birthday, setBirthday] = useState(profile.birthday || '')
   const [avatarPreview, setAvatarPreview] = useState(profile.avatarDataUrl || '')
@@ -616,75 +617,55 @@ const SettingsModal: FC<SettingsModalProps> = ({
                     </button>
                   </div>
 
-                  {/* FI Goals color palette */}
+                  {/* Accent colors — unified picker */}
                   <div className="settings-palette-group">
-                    <p className="settings-palette-label">FI Goals color</p>
-                    <div className="settings-palette-swatches">
-                      {COLOR_PALETTES.map(p => (
+                    <p className="settings-palette-label">Accent colors</p>
+                    <p className="settings-palette-hint">Click a label to assign that accent to a color. Active assignments shown below each swatch.</p>
+                    <div className="settings-accent-tabs">
+                      {([['home', 'Home page', homeTheme], ['fi', 'FI goals', fiTheme], ['gw', 'GW goals', gwTheme]] as const).map(([key, label, value]) => (
                         <button
-                          key={p.id}
-                          className={`settings-palette-swatch${fiTheme === p.id ? ' active' : ''}`}
-                          style={{ '--swatch-color': p.color } as React.CSSProperties}
-                          onClick={() => onFiThemeChange(p.id)}
-                          title={p.label}
-                          aria-label={`FI Goals: ${p.label}${fiTheme === p.id ? ' (selected)' : ''}`}
-                          aria-pressed={fiTheme === p.id}
+                          key={key}
+                          className={`settings-accent-tab${accentTarget === key ? ' active' : ''}`}
+                          style={{ '--tab-color': COLOR_PALETTES.find(p => p.id === value)?.color } as React.CSSProperties}
+                          onClick={() => setAccentTarget(key)}
                         >
-                          {fiTheme === p.id && (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
+                          <span className="settings-accent-tab-dot" />
+                          {label}
                         </button>
                       ))}
                     </div>
-                  </div>
-
-                  {/* GW Goals color palette */}
-                  <div className="settings-palette-group">
-                    <p className="settings-palette-label">Gratitude Wealth Goals color</p>
                     <div className="settings-palette-swatches">
-                      {COLOR_PALETTES.map(p => (
-                        <button
-                          key={p.id}
-                          className={`settings-palette-swatch${gwTheme === p.id ? ' active' : ''}`}
-                          style={{ '--swatch-color': p.color } as React.CSSProperties}
-                          onClick={() => onGwThemeChange(p.id)}
-                          title={p.label}
-                          aria-label={`GW Goals: ${p.label}${gwTheme === p.id ? ' (selected)' : ''}`}
-                          aria-pressed={gwTheme === p.id}
-                        >
-                          {gwTheme === p.id && (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Home page accent color */}
-                  <div className="settings-palette-group">
-                    <p className="settings-palette-label">Home page accent</p>
-                    <div className="settings-palette-swatches">
-                      {COLOR_PALETTES.map(p => (
-                        <button
-                          key={p.id}
-                          className={`settings-palette-swatch${homeTheme === p.id ? ' active' : ''}`}
-                          style={{ '--swatch-color': p.color } as React.CSSProperties}
-                          onClick={() => onHomeThemeChange(p.id)}
-                          title={p.label}
-                          aria-label={`Home page: ${p.label}${homeTheme === p.id ? ' (selected)' : ''}`}
-                          aria-pressed={homeTheme === p.id}
-                        >
-                          {homeTheme === p.id && (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </button>
-                      ))}
+                      {COLOR_PALETTES.map(p => {
+                        const activeFor: string[] = []
+                        if (homeTheme === p.id) activeFor.push('H')
+                        if (fiTheme === p.id) activeFor.push('FI')
+                        if (gwTheme === p.id) activeFor.push('GW')
+                        const isSelected = accentTarget === 'home' ? homeTheme === p.id : accentTarget === 'fi' ? fiTheme === p.id : gwTheme === p.id
+                        const handleClick = accentTarget === 'home' ? onHomeThemeChange : accentTarget === 'fi' ? onFiThemeChange : onGwThemeChange
+                        return (
+                          <div key={p.id} className="settings-swatch-col">
+                            <button
+                              className={`settings-palette-swatch${isSelected ? ' active' : ''}`}
+                              style={{ '--swatch-color': p.color } as React.CSSProperties}
+                              onClick={() => handleClick(p.id)}
+                              title={p.label}
+                              aria-label={`${p.label}${isSelected ? ' (selected)' : ''}`}
+                              aria-pressed={isSelected}
+                            >
+                              {isSelected && (
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                                  <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </button>
+                            {activeFor.length > 0 && (
+                              <span className="settings-swatch-tags">
+                                {activeFor.join(' · ')}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 </div>

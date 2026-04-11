@@ -328,6 +328,10 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
           </div>
           {importPickerOpen && (
             <div className="gw-import-picker">
+              <div className="gw-import-picker-header">
+                <span className="gw-import-picker-title">Copy from existing</span>
+                <button className="gw-import-picker-cancel" onClick={() => setImportPickerOpen(false)}>Cancel</button>
+              </div>
               {goals.filter(p => otherGoals.some(g => g.fiGoalId === p.id)).map(srcGoal => (
                 <div key={srcGoal.id} className="gw-import-group">
                   <div className="gw-import-group-label">{srcGoal.goalName}</div>
@@ -379,6 +383,10 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
               )}
               {importPickerOpen && (
                 <div className="gw-import-picker">
+                  <div className="gw-import-picker-header">
+                    <span className="gw-import-picker-title">Copy from existing</span>
+                    <button className="gw-import-picker-cancel" onClick={() => setImportPickerOpen(false)}>Cancel</button>
+                  </div>
                   {goals.filter(p => otherGoals.some(g => g.fiGoalId === p.id)).map(srcGoal => (
                     <div key={srcGoal.id} className="gw-import-group">
                       <div className="gw-import-group-label">{srcGoal.goalName}</div>

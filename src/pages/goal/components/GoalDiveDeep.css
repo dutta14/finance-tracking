@@ -45,23 +45,23 @@
   margin-top: 1rem;
   padding: 0.6rem 1.2rem;
   background: none;
-  border: 1px solid #000;
-  color: #000;
+  border: 1px solid var(--fi-accent, #3b82f6);
+  color: var(--fi-accent, #3b82f6);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
-  border-radius: 0;
+  border-radius: 0.4rem;
   font-family: inherit;
 }
 
 .btn-dive-deep:hover {
-  background: #000;
+  background: var(--fi-accent, #3b82f6);
   color: #fff;
 }
 
 .btn-dive-deep.active {
-  background: #000;
+  background: var(--fi-accent, #3b82f6);
   color: #fff;
 }
 
@@ -89,14 +89,14 @@ body.dark .dive-deep-placeholder {
 }
 
 body.dark .btn-dive-deep {
-  border-color: #e5e7eb;
-  color: #e5e7eb;
+  border-color: var(--fi-accent, #3b82f6);
+  color: var(--fi-accent, #3b82f6);
 }
 
 body.dark .btn-dive-deep:hover,
 body.dark .btn-dive-deep.active {
-  background: #e5e7eb;
-  color: #181c20;
+  background: var(--fi-accent, #3b82f6);
+  color: #fff;
 }
 
 /* Projection controls row */

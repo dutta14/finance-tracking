@@ -984,13 +984,76 @@ body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  margin: 0 0 0.6rem 0;
+  margin: 0 0 0.25rem 0;
 }
 
+.settings-palette-hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin: 0 0 0.75rem 0;
+}
+
+/* Accent target tabs */
+.settings-accent-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.settings-accent-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.settings-accent-tab:hover {
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.settings-accent-tab.active {
+  border-color: var(--tab-color, #3b82f6);
+  background: color-mix(in srgb, var(--tab-color, #3b82f6) 8%, transparent);
+  color: #111;
+}
+
+.settings-accent-tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tab-color, #3b82f6);
+  flex-shrink: 0;
+}
+
+/* Swatch column with tags */
 .settings-palette-swatches {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.settings-swatch-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.settings-swatch-tags {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .settings-palette-swatch {
@@ -1026,6 +1089,30 @@ body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
 /* Dark mode for palette group */
 body.dark .settings-palette-label {
   color: #9ca3af;
+}
+
+body.dark .settings-palette-hint {
+  color: #6b7280;
+}
+
+body.dark .settings-accent-tab {
+  border-color: #363c48;
+  color: #9ca3af;
+}
+
+body.dark .settings-accent-tab:hover {
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+body.dark .settings-accent-tab.active {
+  border-color: var(--tab-color, #3b82f6);
+  background: color-mix(in srgb, var(--tab-color, #3b82f6) 12%, transparent);
+  color: #f3f4f6;
+}
+
+body.dark .settings-swatch-tags {
+  color: #6b7280;
 }
 
 body.dark .settings-palette-swatch:focus-visible {
