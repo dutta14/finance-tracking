@@ -9,6 +9,10 @@ interface SettingsModalProps {
   profile: Profile
   onUpdateProfile: (updates: Partial<Profile>) => void
   hasPendingChanges: boolean
+  fiTheme?: string
+  onFiThemeChange?: (theme: string) => void
+  gwTheme?: string
+  onGwThemeChange?: (theme: string) => void
   ghConfig?: GitHubSyncConfig
   ghIsConfigured?: boolean
   ghSyncStatus?: SyncStatus
@@ -38,9 +42,22 @@ interface SettingsModalProps {
 
 type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced'
 
+const COLOR_PALETTES = [
+  { id: 'blue',   label: 'Blue',   color: '#3b82f6' },
+  { id: 'green',  label: 'Green',  color: '#22c55e' },
+  { id: 'red',    label: 'Red',    color: '#ef4444' },
+  { id: 'amber',  label: 'Amber',  color: '#f59e0b' },
+  { id: 'purple', label: 'Purple', color: '#a855f7' },
+  { id: 'orange', label: 'Orange', color: '#f97316' },
+  { id: 'teal',   label: 'Teal',   color: '#14b8a6' },
+  { id: 'rose',   label: 'Rose',   color: '#f43f5e' },
+  { id: 'slate',  label: 'Slate',  color: '#64748b' },
+]
+
 const SettingsModal: FC<SettingsModalProps> = ({
   darkMode, onToggleDarkMode, profile, onUpdateProfile,
-  hasPendingChanges = false, ghConfig, ghIsConfigured = false,
+  hasPendingChanges = false, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {},
+  ghConfig, ghIsConfigured = false,
   ghSyncStatus = 'idle', ghLastSyncAt = null, ghLastError = null, ghHistory = [],
   ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false,
   onGhUpdateConfig = () => {}, onGhSaveEncryptedToken = async () => ({ ok: false, message: '' }),
@@ -595,6 +612,54 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       </div>
                       <span className="settings-theme-name">Dark</span>
                     </button>
+                  </div>
+
+                  {/* FI Goals color palette */}
+                  <div className="settings-palette-group">
+                    <p className="settings-palette-label">FI Goals color</p>
+                    <div className="settings-palette-swatches">
+                      {COLOR_PALETTES.map(p => (
+                        <button
+                          key={p.id}
+                          className={`settings-palette-swatch${fiTheme === p.id ? ' active' : ''}`}
+                          style={{ '--swatch-color': p.color } as React.CSSProperties}
+                          onClick={() => onFiThemeChange(p.id)}
+                          title={p.label}
+                          aria-label={`FI Goals: ${p.label}${fiTheme === p.id ? ' (selected)' : ''}`}
+                          aria-pressed={fiTheme === p.id}
+                        >
+                          {fiTheme === p.id && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* GW Goals color palette */}
+                  <div className="settings-palette-group">
+                    <p className="settings-palette-label">Gratitude Wealth Goals color</p>
+                    <div className="settings-palette-swatches">
+                      {COLOR_PALETTES.map(p => (
+                        <button
+                          key={p.id}
+                          className={`settings-palette-swatch${gwTheme === p.id ? ' active' : ''}`}
+                          style={{ '--swatch-color': p.color } as React.CSSProperties}
+                          onClick={() => onGwThemeChange(p.id)}
+                          title={p.label}
+                          aria-label={`GW Goals: ${p.label}${gwTheme === p.id ? ' (selected)' : ''}`}
+                          aria-pressed={gwTheme === p.id}
+                        >
+                          {gwTheme === p.id && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

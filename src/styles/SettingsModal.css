@@ -974,3 +974,65 @@ body.dark .settings-modal-nav::-webkit-scrollbar-thumb:hover,
 body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
+
+/* ── Color palette picker (Appearance section) ── */
+.settings-palette-group {
+  margin-top: 1.25rem;
+}
+
+.settings-palette-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 0.6rem 0;
+}
+
+.settings-palette-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.settings-palette-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background-color: var(--swatch-color, #3b82f6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  outline: none;
+  position: relative;
+}
+
+.settings-palette-swatch:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.settings-palette-swatch:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+
+.settings-palette-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--swatch-color, #3b82f6), 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+/* Dark mode for palette group */
+body.dark .settings-palette-label {
+  color: #9ca3af;
+}
+
+body.dark .settings-palette-swatch:focus-visible {
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.4);
+}
+
+body.dark .settings-palette-swatch.active {
+  border-color: #1e2329;
+  box-shadow: 0 0 0 2px var(--swatch-color, #3b82f6), 0 2px 8px rgba(0, 0, 0, 0.4);
+}

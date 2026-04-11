@@ -1,7 +1,6 @@
-import { FC, useState, useEffect, useRef } from 'react';
-import { NavigationProps, FinancialPlan } from '../types';
+import { FC, useState, useRef, useEffect } from 'react';
+import { FinancialPlan, NavigationProps } from '../types';
 import { Profile } from '../hooks/useProfile';
-import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync';
 import SidebarToggle from './SidebarToggle';
 import SettingsMenu from './SettingsMenu';
 import '../styles/SidebarNavigation.css';
@@ -11,141 +10,114 @@ interface SidebarNavigationProps extends NavigationProps {
   setExpanded: (open: boolean) => void;
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
+  fiTheme?: string;
+  onFiThemeChange?: (theme: string) => void;
+  gwTheme?: string;
+  onGwThemeChange?: (theme: string) => void;
   plans: FinancialPlan[];
   selectedNavPlanIds: number[];
   isMultiSelectMode: boolean;
-  onSelectNavPlan: (id: number, multi: boolean) => void;
+  onSelectNavPlan: (planId: number, multi: boolean) => void;
   onExitMultiSelect: () => void;
-  onRenamePlan: (id: number, newName: string) => void;
-  onDeletePlan: (id: number) => void;
+  onRenamePlan: (planId: number, name: string) => void;
+  onDeletePlan: (planId: number) => void;
   onDeleteMultiple: (ids: number[]) => void;
   onReorderPlans: (orderedIds: number[]) => void;
   onExport: () => void;
   onImport: (file: File) => void;
   profile: Profile;
   onUpdateProfile: (updates: Partial<Profile>) => void;
-  hasPendingGitHubChanges?: boolean;
-  ghConfig?: GitHubSyncConfig;
-  ghIsConfigured?: boolean;
-  ghSyncStatus?: SyncStatus;
-  ghLastSyncAt?: string | null;
-  ghLastError?: string | null;
-  ghHistory?: CommitEntry[];
-  ghHasStoredToken?: boolean;
-  ghTokenUnlocked?: boolean;
-  ghUsingLegacyToken?: boolean;
-  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void;
-  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>;
-  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>;
-  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>;
-  onGhLockToken?: () => void;
-  onGhSyncNow?: (data: object, message?: string) => Promise<void>;
-  onGhFetchHistory?: () => Promise<void>;
-  onGhTestConnection?: () => Promise<ConnectionTestResult>;
-  onGhRestoreLatest?: () => Promise<RestoreResult>;
-  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>;
-  ghDataToSync?: object;
-  onGhApplyRestore?: (data: unknown) => Promise<void>;
-  onFactoryReset?: () => void;
 }
 
-interface ContextMenuState { x: number; y: number; planId: number }
+interface OverflowMenu { planId: number; x: number; y: number }
 
 const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
-  darkMode, setDarkMode, plans, selectedNavPlanIds, isMultiSelectMode,
-  onSelectNavPlan, onExitMultiSelect,
-  onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans, onExport, onImport,
-  profile, onUpdateProfile, hasPendingGitHubChanges = false,
-  ghConfig, ghIsConfigured = false, ghSyncStatus, ghLastSyncAt, ghLastError, ghHistory = [],
-  ghHasStoredToken, ghTokenUnlocked, ghUsingLegacyToken,
-  onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken,
-  onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit,
-  ghDataToSync, onGhApplyRestore,
-  onFactoryReset = () => {},
+  darkMode, setDarkMode, fiTheme, onFiThemeChange, gwTheme, onGwThemeChange,
+  plans, selectedNavPlanIds, isMultiSelectMode, onSelectNavPlan, onExitMultiSelect,
+  onRenamePlan, onDeletePlan, onDeleteMultiple, onReorderPlans,
+  onExport, onImport, profile, onUpdateProfile,
 }) => {
-  const [plansOpen, setPlansOpen] = useState(() => {
-    const stored = localStorage.getItem('sidebar-plans-open');
-    if (stored !== null) return stored === '1';
-    return currentPage === 'plan';
-  });
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-  const [renamingPlanId, setRenamingPlanId] = useState<number | null>(null);
+  const [planAccordionOpen, setPlanAccordionOpen] = useState(true);
+  const [overflowMenu, setOverflowMenu] = useState<OverflowMenu | null>(null);
+  const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [dragOverSide, setDragOverSide] = useState<'before' | 'after'>('after');
+  const overflowMenuRef = useRef<HTMLDivElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (currentPage === 'plan') setPlansOpen(true);
-  }, [currentPage]);
+    if (!overflowMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (overflowMenuRef.current && !overflowMenuRef.current.contains(e.target as Node)) {
+        setOverflowMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [overflowMenu]);
 
   useEffect(() => {
-    if (renamingPlanId !== null) {
-      renameInputRef.current?.focus();
-      renameInputRef.current?.select();
-    }
-  }, [renamingPlanId]);
+    if (renamingId !== null) renameInputRef.current?.focus();
+  }, [renamingId]);
 
-  const openContextMenu = (planId: number, x: number, y: number) => setContextMenu({ planId, x, y });
-  const closeContextMenu = () => setContextMenu(null);
-
-  const handleRenameStart = () => {
-    if (!contextMenu) return;
-    const plan = plans.find(p => p.id === contextMenu.planId);
-    if (plan) { setRenamingPlanId(plan.id); setRenameValue(plan.planName); }
-    closeContextMenu();
+  const openOverflow = (e: React.MouseEvent, planId: number) => {
+    e.stopPropagation();
+    const menuW = 150, menuH = 130;
+    const x = e.clientX + menuW > window.innerWidth ? e.clientX - menuW : e.clientX;
+    const y = e.clientY + menuH > window.innerHeight ? e.clientY - menuH : e.clientY;
+    setOverflowMenu({ planId, x, y });
   };
 
-  const handleDelete = () => {
-    if (!contextMenu) return;
-    onDeletePlan(contextMenu.planId);
-    closeContextMenu();
+  const startRename = (planId: number, name: string) => {
+    setOverflowMenu(null);
+    setRenamingId(planId);
+    setRenameValue(name);
   };
 
   const commitRename = (planId: number) => {
     if (renameValue.trim()) onRenamePlan(planId, renameValue.trim());
-    setRenamingPlanId(null);
+    setRenamingId(null);
   };
 
-  const multiSelected = isMultiSelectMode;
+  const handleDragStart = (e: React.DragEvent, id: number) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
-  const [draggedPlanId, setDraggedPlanId] = useState<number | null>(null)
-  const [dragOverPlanId, setDragOverPlanId] = useState<number | null>(null)
-  const [dragOverSide, setDragOverSide] = useState<'before' | 'after'>('after')
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>, id: number) => {
+    e.preventDefault();
+    if (id === draggedId) { setDragOverId(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOverId(id);
+    setDragOverSide(e.clientY < rect.top + rect.height / 2 ? 'before' : 'after');
+  };
 
-  const handleSidebarDragStart = (e: React.DragEvent, id: number) => {
-    setDraggedPlanId(id)
-    e.dataTransfer.effectAllowed = 'move'
-  }
+  const handleDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const ids = plans.map(p => p.id);
+    const without = ids.filter(id => id !== draggedId);
+    const targetIdx = without.indexOf(targetId);
+    const insertIdx = dragOverSide === 'before' ? targetIdx : targetIdx + 1;
+    without.splice(insertIdx, 0, draggedId);
+    onReorderPlans(without);
+    setDraggedId(null);
+    setDragOverId(null);
+  };
 
-  const handleSidebarDragOver = (e: React.DragEvent<HTMLLIElement>, id: number) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    if (id === draggedPlanId) { setDragOverPlanId(null); return }
-    const rect = e.currentTarget.getBoundingClientRect()
-    setDragOverSide(e.clientY < rect.top + rect.height / 2 ? 'before' : 'after')
-    setDragOverPlanId(id)
-  }
+  const handleDragEnd = () => { setDraggedId(null); setDragOverId(null); };
 
-  const handleSidebarDrop = (e: React.DragEvent, targetId: number) => {
-    if (draggedPlanId === null || draggedPlanId === targetId) return
-    const ids = plans.map(p => p.id)
-    const withoutDragged = ids.filter(id => id !== draggedPlanId)
-    const targetIdx = withoutDragged.indexOf(targetId)
-    const insertIdx = dragOverSide === 'before' ? targetIdx : targetIdx + 1
-    withoutDragged.splice(insertIdx, 0, draggedPlanId)
-    onReorderPlans(withoutDragged)
-    setDraggedPlanId(null)
-    setDragOverPlanId(null)
-  }
-
-  const handleSidebarDragEnd = () => {
-    setDraggedPlanId(null)
-    setDragOverPlanId(null)
-  }
+  const isPlanActive = currentPage === 'plan' || currentPage === 'plan-solo';
 
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>
-      <SidebarToggle expanded={expanded} onToggle={() => setExpanded(false)} />
+      <div className="sidebar-toggle">
+        <SidebarToggle expanded={expanded} onToggle={() => setExpanded(false)} />
+      </div>
       {expanded && <div className="sidebar-logo">Finance Tracker</div>}
       {expanded && (
         <ul className="sidebar-menu">
@@ -153,134 +125,96 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <button
               className={`sidebar-link${currentPage === 'home' ? ' active' : ''}`}
               onClick={() => setCurrentPage('home')}
-              aria-label="Home"
             >
               Home
             </button>
           </li>
           <li className="sidebar-item">
             <button
-              className={`sidebar-link sidebar-link--accordion${currentPage === 'plan' && selectedNavPlanIds.length === 0 ? ' active' : ''}`}
+              className={`sidebar-link sidebar-link--accordion${isPlanActive ? ' active' : ''}`}
               onClick={() => {
                 setCurrentPage('plan');
-                setPlansOpen(open => {
-                  localStorage.setItem('sidebar-plans-open', !open ? '1' : '0');
-                  return !open;
-                });
+                setPlanAccordionOpen(o => !o);
               }}
-              aria-label="Plans"
             >
-              <span>Plans</span>
-              <svg
-                className="sidebar-chevron"
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                {plansOpen
-                  ? <polyline points="2,9 7,4 12,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  : <polyline points="2,5 7,10 12,5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                }
-              </svg>
+              Plans
+              <span className="sidebar-chevron" style={{ transform: planAccordionOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </button>
-            {plansOpen && plans.length > 0 && (
+            {planAccordionOpen && (
               <>
-                {multiSelected && (
+                {isMultiSelectMode && selectedNavPlanIds.length > 0 && (
                   <div className="sidebar-multiselect-bar">
                     <span className="sidebar-multiselect-count">{selectedNavPlanIds.length} selected</span>
                     <div className="sidebar-multiselect-actions">
-                      {selectedNavPlanIds.length > 0 && (
-                        <button
-                          className="sidebar-multiselect-btn sidebar-multiselect-btn--danger"
-                          title="Delete selected plans"
-                          onClick={() => onDeleteMultiple(selectedNavPlanIds)}
-                        >
-                          Delete
-                        </button>
-                      )}
-                      <button
-                        className="sidebar-multiselect-btn sidebar-multiselect-btn--close"
-                        title="Exit selection"
-                        aria-label="Exit selection"
-                        onClick={onExitMultiSelect}
-                      >
-                        ✕
+                      <button className="sidebar-multiselect-btn sidebar-multiselect-btn--danger"
+                        onClick={() => { onDeleteMultiple(selectedNavPlanIds); onExitMultiSelect(); }}>
+                        Delete
                       </button>
+                      <button className="sidebar-multiselect-btn sidebar-multiselect-btn--close" onClick={onExitMultiSelect}>✕</button>
                     </div>
                   </div>
                 )}
                 <ul className="sidebar-submenu">
                   {plans.map(plan => {
-                    let liClass = 'sidebar-subitem'
-                    if (draggedPlanId === plan.id) liClass += ' sidebar-subitem--dragging'
-                    else if (dragOverPlanId === plan.id) liClass += ` sidebar-subitem--drag-${dragOverSide}`
+                    let cls = 'sidebar-subitem';
+                    if (draggedId === plan.id) cls += ' sidebar-subitem--dragging';
+                    else if (dragOverId === plan.id) cls += ` sidebar-subitem--drag-${dragOverSide}`;
+                    const isSelected = selectedNavPlanIds.includes(plan.id);
                     return (
-                    <li key={plan.id} className={liClass}
-                      draggable={renamingPlanId !== plan.id}
-                      onDragStart={renamingPlanId !== plan.id ? e => handleSidebarDragStart(e, plan.id) : undefined}
-                      onDragOver={renamingPlanId !== plan.id ? e => handleSidebarDragOver(e, plan.id) : undefined}
-                      onDrop={renamingPlanId !== plan.id ? e => handleSidebarDrop(e, plan.id) : undefined}
-                      onDragEnd={handleSidebarDragEnd}
-                    >
-                      {renamingPlanId === plan.id ? (
-                        <input
-                          ref={renameInputRef}
-                          className="sidebar-rename-input"
-                          value={renameValue}
-                          onChange={e => setRenameValue(e.target.value)}
-                          onBlur={() => commitRename(plan.id)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') commitRename(plan.id);
-                            if (e.key === 'Escape') setRenamingPlanId(null);
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className={`sidebar-subitem-row${contextMenu?.planId === plan.id ? ' menu-open' : ''}`}
-                          onContextMenu={e => { e.preventDefault(); openContextMenu(plan.id, e.clientX, e.clientY); }}
-                        >
-                          <button
-                            className={`sidebar-sublink${multiSelected ? (selectedNavPlanIds.includes(plan.id) ? ' active' : '') : (selectedNavPlanIds.includes(plan.id) && currentPage === 'plan' ? ' active' : '')}`}
-                            onClick={e => onSelectNavPlan(plan.id, e.metaKey || e.ctrlKey)}
-                          >
-                            {multiSelected && (
-                              <span className="sidebar-checkbox" aria-hidden="true">
-                                {selectedNavPlanIds.includes(plan.id) ? (
-                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <rect x="0.5" y="0.5" width="13" height="13" rx="3" fill="#4f89e8" stroke="#4f89e8"/>
-                                    <polyline points="3,7.5 6,10.5 11,4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                  </svg>
-                                ) : (
-                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <rect x="0.5" y="0.5" width="13" height="13" rx="3" stroke="#9ca3af" strokeWidth="1.2"/>
-                                  </svg>
-                                )}
+                      <li
+                        key={plan.id}
+                        className={cls}
+                        draggable={renamingId !== plan.id}
+                        onDragStart={renamingId !== plan.id ? e => handleDragStart(e, plan.id) : undefined}
+                        onDragOver={e => handleDragOver(e, plan.id)}
+                        onDrop={e => handleDrop(e, plan.id)}
+                        onDragEnd={handleDragEnd}
+                      >
+                        {renamingId === plan.id ? (
+                          <input
+                            ref={renameInputRef}
+                            className="sidebar-rename-input"
+                            value={renameValue}
+                            onChange={e => setRenameValue(e.target.value)}
+                            onBlur={() => commitRename(plan.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') commitRename(plan.id);
+                              if (e.key === 'Escape') setRenamingId(null);
+                            }}
+                          />
+                        ) : (
+                          <div className={`sidebar-subitem-row${overflowMenu?.planId === plan.id ? ' menu-open' : ''}`}>
+                            {isMultiSelectMode && (
+                              <span className="sidebar-checkbox" style={{ paddingLeft: '0.5rem' }}>
+                                <input type="checkbox" checked={isSelected} readOnly style={{ cursor: 'pointer' }}
+                                  onClick={e => { e.stopPropagation(); onSelectNavPlan(plan.id, true); }} />
                               </span>
                             )}
-                            <span className="sidebar-sublink-name">{plan.planName}</span>
-                          </button>
-                          <button
-                            className="sidebar-overflow-btn"
-                            onClick={e => {
-                              e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              openContextMenu(plan.id, rect.left, rect.bottom + 4);
-                            }}
-                            aria-label="Plan options"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                              <circle cx="3" cy="8" r="1.5"/>
-                              <circle cx="8" cy="8" r="1.5"/>
-                              <circle cx="13" cy="8" r="1.5"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                    </li>
-                    )
+                            <button
+                              className={`sidebar-sublink${isSelected ? ' active' : ''}`}
+                              onClick={e => onSelectNavPlan(plan.id, e.metaKey || e.ctrlKey)}
+                              title={plan.planName}
+                            >
+                              <span className="sidebar-sublink-name">{plan.planName}</span>
+                            </button>
+                            <button
+                              className="sidebar-overflow-btn"
+                              title="More options"
+                              onClick={e => openOverflow(e, plan.id)}
+                              aria-label="More options"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                                <circle cx="7" cy="2.5" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </li>
+                    );
                   })}
                 </ul>
               </>
@@ -289,49 +223,63 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
         </ul>
       )}
       {expanded && (
+        <div className="sidebar-data-section">
+          <button className="sidebar-data-btn" onClick={onExport} title="Export plans">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6.5 1v7M3.5 5l3 3 3-3M1.5 9.5v1a1 1 0 001 1h8a1 1 0 001-1v-1"/>
+            </svg>
+            Export
+          </button>
+          <button className="sidebar-data-btn" onClick={() => importInputRef.current?.click()} title="Import plans">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6.5 9V2M3.5 5l3-3 3 3M1.5 9.5v1a1 1 0 001 1h8a1 1 0 001-1v-1"/>
+            </svg>
+            Import
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) { onImport(file); e.target.value = ''; }
+            }}
+          />
+        </div>
+      )}
+      {expanded && (
         <div className="sidebar-settings-section">
           <SettingsMenu
             darkMode={darkMode}
             onToggleDarkMode={() => setDarkMode(!darkMode)}
             profile={profile}
             onUpdateProfile={onUpdateProfile}
-            hasPendingChanges={hasPendingGitHubChanges}
-            ghConfig={ghConfig}
-            ghIsConfigured={ghIsConfigured}
-            ghSyncStatus={ghSyncStatus}
-            ghLastSyncAt={ghLastSyncAt}
-            ghLastError={ghLastError}
-            ghHistory={ghHistory}
-            ghHasStoredToken={ghHasStoredToken}
-            ghTokenUnlocked={ghTokenUnlocked}
-            ghUsingLegacyToken={ghUsingLegacyToken}
-            onGhUpdateConfig={onGhUpdateConfig}
-            onGhSaveEncryptedToken={onGhSaveEncryptedToken}
-            onGhMigrateLegacyToken={onGhMigrateLegacyToken}
-            onGhUnlockToken={onGhUnlockToken}
-            onGhLockToken={onGhLockToken}
-            onGhSyncNow={onGhSyncNow}
-            onGhFetchHistory={onGhFetchHistory}
-            onGhTestConnection={onGhTestConnection}
-            onGhRestoreLatest={onGhRestoreLatest}
-            onGhRestoreFromCommit={onGhRestoreFromCommit}
-            ghData={ghDataToSync}
-            onGhApplyRestore={onGhApplyRestore}
-            onFactoryReset={onFactoryReset}
-            onExport={onExport}
-            onImport={onImport}
+            fiTheme={fiTheme}
+            onFiThemeChange={onFiThemeChange}
+            gwTheme={gwTheme}
+            onGwThemeChange={onGwThemeChange}
           />
         </div>
       )}
-      {contextMenu && (
-        <>
-          <div className="sidebar-menu-overlay" onClick={closeContextMenu} />
-          <div className="sidebar-overflow-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
-            <button className="sidebar-overflow-menu-item" onClick={handleRenameStart}>Rename</button>
-            <button className="sidebar-overflow-menu-item sidebar-overflow-menu-item--danger" onClick={handleDelete}>Delete</button>
-          </div>
-        </>
-      )}
+      {overflowMenu && (() => {
+        const plan = plans.find(p => p.id === overflowMenu.planId);
+        if (!plan) return null;
+        return (
+          <>
+            <div className="sidebar-menu-overlay" onClick={() => setOverflowMenu(null)} />
+            <div
+              ref={overflowMenuRef}
+              className="sidebar-overflow-menu"
+              style={{ top: overflowMenu.y, left: overflowMenu.x }}
+            >
+              <button className="sidebar-overflow-menu-item" onClick={() => { setOverflowMenu(null); onSelectNavPlan(plan.id, false); }}>Open</button>
+              <button className="sidebar-overflow-menu-item" onClick={() => startRename(plan.id, plan.planName)}>Rename</button>
+              <button className="sidebar-overflow-menu-item sidebar-overflow-menu-item--danger" onClick={() => { setOverflowMenu(null); onDeletePlan(plan.id); }}>Delete</button>
+            </div>
+          </>
+        );
+      })()}
     </nav>
   );
 };
