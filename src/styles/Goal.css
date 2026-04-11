@@ -262,6 +262,25 @@ body.dark .btn-use-recommended:hover {
   font-size: 0.9rem;
   margin-bottom: 1rem;
   border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.random-name-btn {
+  background: none;
+  border: 1px solid #c00;
+  color: #c00;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+}
+.random-name-btn:hover {
+  background: #c00;
+  color: #fff;
 }
 
 /* Results Section */
@@ -801,6 +820,14 @@ body.dark .form-error {
   background: #3a1c1c;
   border-color: #7a2020;
   color: #f87171;
+}
+body.dark .random-name-btn {
+  border-color: #f87171;
+  color: #f87171;
+}
+body.dark .random-name-btn:hover {
+  background: #f87171;
+  color: #1a1a1a;
 }
 
 /* ══════════════════════════════════════

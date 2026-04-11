@@ -27,12 +27,13 @@ interface GoalMiniCardProps {
   goal: FinancialGoal
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
+  onAddGwGoal?: (goalId: number) => void
   viewMode?: 'grid' | 'list'
   gwGoals: GwGoal[]
   profileBirthday: string
 }
 
-const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMode = 'grid', gwGoals, profileBirthday }) => {
+const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, onAddGwGoal, viewMode = 'grid', gwGoals, profileBirthday }) => {
   const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday)
   const hasGw = gwTotal > 0
   const totalGoals = goal.fiGoal + gwTotal
@@ -58,6 +59,14 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMo
           <span className="label">Total</span>
           <span className="amount">{dollars(totalGoals)}</span>
         </div>
+      )}
+      {!hasGw && onAddGwGoal && (
+        <button
+          className="mini-card-add-gw"
+          onClick={(e) => { e.stopPropagation(); onAddGwGoal(goal.id) }}
+        >
+          + Add GW Goal
+        </button>
       )}
     </div>
   )

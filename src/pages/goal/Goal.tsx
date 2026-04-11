@@ -20,12 +20,13 @@ interface GoalProps {
   onSetSelectedGoalIds: (ids: number[]) => void
   onGoToGoal: (goalId: number) => void
   onGoToGoalEdit: (goalId: number) => void
+  onGoToGoalAddGw: (goalId: number) => void
   onCopyGwGoals: (sourcePlanId: number, newPlanId: number) => void
   gwGoals: GwGoal[]
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
 }
 
-const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onGoToGoal, onGoToGoalEdit, onCopyGwGoals, gwGoals, onCreateGwGoal }) => {
+const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onGoToGoal, onGoToGoalEdit, onGoToGoalAddGw, onCopyGwGoals, gwGoals, onCreateGwGoal }) => {
   const { formData, setFormData, error, setError, handleInputChange, populateFromGoal, resetForm } = useFormData()
   const { editingGoalId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -134,6 +135,7 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
             onClearSelection={() => onSetSelectedGoalIds([])}
             onGoToGoal={onGoToGoal}
             onGoToGoalEdit={onGoToGoalEdit}
+            onGoToGoalAddGw={onGoToGoalAddGw}
             onReorderGoals={reorderGoals}
             onRenameGoal={handleRenameGoal}
           />

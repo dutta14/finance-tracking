@@ -253,7 +253,10 @@ const SettingsModal: FC<SettingsModalProps> = ({
                 {darkMode ? (
                   <path d="M8.5 3a5.5 5.5 0 0 0 4.384 8.624A5.5 5.5 0 1 1 8.5 3z" />
                 ) : (
-                  <circle cx="8" cy="8" r="2.5" />
+                  <>
+                    <circle cx="8" cy="8" r="3" />
+                    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  </>
                 )}
               </svg>
               Appearance

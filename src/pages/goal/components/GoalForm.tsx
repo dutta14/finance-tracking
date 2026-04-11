@@ -1,4 +1,4 @@
-import { FC, FormEvent, useEffect, useState, useRef } from 'react'
+import { FC, FormEvent, useEffect, useState, useRef, useCallback } from 'react'
 import { FinancialGoal } from '../../../types'
 import { FormData } from '../hooks/useFormData'
 import { calculateGoalMetrics } from '../utils/goalCalculations'
@@ -36,6 +36,33 @@ const GoalForm: FC<GoalFormProps> = ({
   const [step, setStep] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const RANDOM_NAMES = [
+    'Retire to a Beach', 'Golden Years Express', 'The Great Escape',
+    'Freedom Fund', 'Coast to FIRE', 'Hammock Mode',
+    'Savings Speedrun', 'FI or Bust', 'Early Bird Special',
+    'Nest Egg Supreme', 'Operation Chill', 'The Money Garden',
+    'Passport to Freedom', 'Zero Alarm Clocks', 'Latte & Leisure',
+    'Compound Interest Club', 'Debt-Free Dreams', 'Mountain Retreat Fund',
+    'Sunflower Savings', 'Wanderlust Wallet', 'Cabin in the Woods',
+    'Coastline Goal', 'Rainy Day Rocket', 'Tropical Endgame',
+  ]
+
+  const pickRandomName = useCallback(() => {
+    const name = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)]
+    onSetFormFields({ goalName: name })
+    setError('')
+  }, [onSetFormFields, setError])
+
+  const setEndTo100thBirthday = useCallback(() => {
+    if (!profileBirthday) return
+    const bd = new Date(profileBirthday)
+    const y = bd.getFullYear() + 100
+    const m = String(bd.getMonth() + 1).padStart(2, '0')
+    const d = String(bd.getDate()).padStart(2, '0')
+    onSetFormFields({ goalEndYear: `${y}-${m}-${d}` })
+    setError('')
+  }, [profileBirthday, onSetFormFields, setError])
+
   const formatCurrency = (value: string): string => {
     if (!value) return ''
     const numeric = Number(value)
@@ -64,6 +91,12 @@ const GoalForm: FC<GoalFormProps> = ({
       case 1:
         if (!formData.goalCreatedIn) { setError('Please enter the goal creation date'); return false }
         if (!formData.goalEndYear) { setError('Please enter the goal end year'); return false }
+        if (formData.goalCreatedIn && formData.goalEndYear && formData.goalEndYear <= formData.goalCreatedIn) { setError('Goal end date must be after the start date'); return false }
+        if (profileBirthday && formData.goalEndYear) {
+          const bYear = new Date(profileBirthday).getFullYear()
+          const eYear = new Date(formData.goalEndYear).getFullYear()
+          if (eYear - bYear > 100) { setError('Goal end date must be within 100 years of your date of birth'); return false }
+        }
         if (!formData.retirementAge || Number(formData.retirementAge) <= 0) { setError('Please enter a valid retirement age'); return false }
         return true
       case 2:
@@ -351,7 +384,17 @@ const GoalForm: FC<GoalFormProps> = ({
           </div>
         )}
 
-        {error && <div className="form-error">{error}</div>}
+        {error && (
+          <div className="form-error">
+            {error}
+            {step === 0 && error === 'Please enter a goal name' && (
+              <button type="button" className="random-name-btn" onClick={pickRandomName}>🎲 Pick random name</button>
+            )}
+            {step === 1 && (error === 'Goal end date must be within 100 years of your date of birth' || error === 'Please enter the goal end year') && (
+              <button type="button" className="random-name-btn" onClick={setEndTo100thBirthday}>Set to 100th birthday</button>
+            )}
+          </div>
+        )}
 
         <div className="wizard-nav">
           {step > 0 ? (

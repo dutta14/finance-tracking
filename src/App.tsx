@@ -122,6 +122,11 @@ const App: FC = () => {
     navigate(`/goal/${goalId}?edit=1`);
   };
 
+  const handleGoToGoalAddGw = (goalId: number): void => {
+    setSelectedNavGoalIds([goalId]);
+    navigate(`/goal/${goalId}?gw=1`);
+  };
+
   const handleCopyGwGoals = (sourcePlanId: number, newPlanId: number): void => {
     gwGoals
       .filter(g => g.fiGoalId === sourcePlanId)
@@ -255,6 +260,7 @@ const App: FC = () => {
               onSetSelectedGoalIds={setSelectedHomeGoalIds}
               onGoToGoal={handleGoToGoal}
               onGoToGoalEdit={handleGoToGoalEdit}
+              onGoToGoalAddGw={handleGoToGoalAddGw}
               onCopyGwGoals={handleCopyGwGoals}
               gwGoals={gwGoals}
               onCreateGwGoal={createGwGoal}

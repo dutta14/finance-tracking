@@ -47,11 +47,11 @@
 
 .mini-value .amount {
   font-weight: 600;
-  color: var(--fi-text-dark, #1e3a8a);
+  color: var(--home-accent, #3b82f6);
 }
 
 .mini-amount--gw {
-  color: var(--gw-text-dark, #166534);
+  color: var(--home-text-heading, #166534);
 }
 
 .mini-value--total {
@@ -90,11 +90,11 @@ body.dark .mini-value .label {
 }
 
 body.dark .mini-value .amount {
-  color: var(--fi-text-dark, #93c5fd);
+  color: var(--home-accent, #93c5fd);
 }
 
 body.dark .mini-amount--gw {
-  color: var(--gw-text-dark, #86efac);
+  color: var(--home-text-heading, #86efac);
 }
 
 body.dark .mini-value--total {
@@ -103,6 +103,33 @@ body.dark .mini-value--total {
 
 body.dark .mini-value--total .amount {
   color: #f3f4f6;
+}
+
+/* Add GW Goal CTA */
+.mini-card-add-gw {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gw-accent, #16a34a);
+  background: none;
+  border: 1px dashed var(--gw-accent, #16a34a);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mini-card-add-gw:hover {
+  background: var(--gw-accent, #16a34a);
+  color: #fff;
+}
+body.dark .mini-card-add-gw {
+  color: var(--gw-accent, #4ade80);
+  border-color: var(--gw-accent, #4ade80);
+}
+body.dark .mini-card-add-gw:hover {
+  background: var(--gw-accent, #4ade80);
+  color: #111;
 }
 
 /* List mode */

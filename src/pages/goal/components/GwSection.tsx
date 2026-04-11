@@ -10,6 +10,7 @@ interface GwSectionProps {
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
   onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
   onDeleteGwGoal: (id: number) => void
+  initialFormOpen?: boolean
 }
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
@@ -235,8 +236,8 @@ const GwGoalCard: FC<{
   )
 }
 
-const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
-  const [formOpen, setFormOpen] = useState(false)
+const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal, initialFormOpen }) => {
+  const [formOpen, setFormOpen] = useState(initialFormOpen ?? false)
   const [importPickerOpen, setImportPickerOpen] = useState(false)
   const [form, setForm] = useState<GwFormFields>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
@@ -470,6 +471,11 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
             <button className="gw-form-save" onClick={handleAdd}>Add goal</button>
             <button className="gw-form-cancel" onClick={handleCancel}>Cancel</button>
           </div>
+          {otherGoals.length > 0 && (
+            <p className="gw-form-copy-hint">
+              or <button type="button" className="gw-form-copy-link" onClick={() => { setFormOpen(false); setImportPickerOpen(true) }}>copy from an existing goal</button>
+            </p>
+          )}
         </div>
       )}
     </section>

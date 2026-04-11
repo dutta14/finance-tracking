@@ -669,6 +669,29 @@ body.dark .gw-goal-undo-progress {
   color: #374151;
 }
 
+.gw-form-copy-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.gw-form-copy-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--gw-accent, #16a34a);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gw-form-copy-link:hover {
+  color: var(--gw-accent-hover, #15803d);
+}
+
 /* ── Dark mode ───────────────────────────────────────────── */
 
 body.dark .gw-section {
@@ -896,4 +919,16 @@ body.dark .gw-form-cancel {
 body.dark .gw-form-cancel:hover {
   background: #1f2937;
   color: #d1d5db;
+}
+
+body.dark .gw-form-copy-hint {
+  color: #6b7280;
+}
+
+body.dark .gw-form-copy-link {
+  color: var(--gw-accent, #4ade80);
+}
+
+body.dark .gw-form-copy-link:hover {
+  color: var(--gw-accent-hover, #86efac);
 }

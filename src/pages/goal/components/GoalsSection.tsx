@@ -21,6 +21,7 @@ interface GoalsSectionProps {
   onClearSelection: () => void
   onGoToGoal: (goalId: number) => void
   onGoToGoalEdit: (goalId: number) => void
+  onGoToGoalAddGw: (goalId: number) => void
   onReorderGoals: (orderedIds: number[]) => void
   onRenameGoal: (goalId: number, name: string) => void
 }
@@ -38,6 +39,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   onClearSelection,
   onGoToGoal,
   onGoToGoalEdit,
+  onGoToGoalAddGw,
   onReorderGoals,
   onRenameGoal,
 }) => {
@@ -116,6 +118,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               onReorderGoals={isFiltered ? undefined : onReorderGoals}
               onGoToGoal={onGoToGoal}
               onGoToGoalEdit={onGoToGoalEdit}
+              onGoToGoalAddGw={onGoToGoalAddGw}
               onRenameGoal={onRenameGoal}
               onCopyGoal={onCopyGoal}
               onDeleteGoal={onDeleteGoal}

@@ -26,6 +26,7 @@ interface GoalSoloPageProps {
 const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onBack, onNavigate, onUpdateGoal, onDeleteGoal, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [startEditing] = useState(() => searchParams.get('edit') === '1')
+  const [startGwForm] = useState(() => searchParams.get('gw') === '1')
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState(goal.goalName)
@@ -37,6 +38,10 @@ const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onB
     // Clear edit param after first render
     if (searchParams.has('edit')) {
       searchParams.delete('edit')
+      setSearchParams(searchParams, { replace: true })
+    }
+    if (searchParams.has('gw')) {
+      searchParams.delete('gw')
       setSearchParams(searchParams, { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,6 +144,7 @@ const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onB
             onCreateGwGoal={onCreateGwGoal}
             onUpdateGwGoal={onUpdateGwGoal}
             onDeleteGwGoal={onDeleteGwGoal}
+            initialFormOpen={startGwForm}
           />
         )}
       </div>

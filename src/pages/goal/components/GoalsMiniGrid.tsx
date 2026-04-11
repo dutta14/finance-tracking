@@ -12,6 +12,7 @@ interface GoalsMiniGridProps {
   onReorderGoals?: (orderedIds: number[]) => void
   onGoToGoal: (goalId: number) => void
   onGoToGoalEdit: (goalId: number) => void
+  onGoToGoalAddGw: (goalId: number) => void
   onRenameGoal: (goalId: number, name: string) => void
   onCopyGoal: (goal: FinancialGoal) => void
   onDeleteGoal: (goalId: number) => void
@@ -21,7 +22,7 @@ interface GoalsMiniGridProps {
 
 const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   goals, selectedGoalIds, onSelectGoal, viewMode = 'grid', onReorderGoals,
-  onGoToGoal, onGoToGoalEdit, onRenameGoal, onCopyGoal, onDeleteGoal, gwGoals, profileBirthday,
+  onGoToGoal, onGoToGoalEdit, onGoToGoalAddGw, onRenameGoal, onCopyGoal, onDeleteGoal, gwGoals, profileBirthday,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -141,6 +142,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                   goal={goal}
                   isSelected={selectedGoalIds.includes(goal.id)}
                   onClick={(e) => onSelectGoal(goal.id, e.metaKey || e.ctrlKey)}
+                  onAddGwGoal={onGoToGoalAddGw}
                   viewMode={viewMode}
                   gwGoals={gwGoals}
                   profileBirthday={profileBirthday}
