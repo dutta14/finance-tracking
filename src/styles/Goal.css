@@ -3,38 +3,42 @@
 }
 
 section.goal {
-  background: white;
+  background: #f8f9fb;
 }
 
 .goal-new-btn-row {
-  background: white;
+  background: transparent;
 }
 
 .goal-header {
   background: white;
   color: #000;
-  padding: 5rem 2rem;
+  padding: 3.5rem 2rem 2.5rem;
   text-align: center;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: none;
 }
 
 .goal-header h1 {
-  font-size: 2.8rem;
-  margin: 0 0 0.75rem 0;
+  font-size: 2.4rem;
+  margin: 0 0 0.5rem 0;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--home-gradient-from, #3b82f6), var(--home-gradient-to, #1e40af));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .goal-header p {
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
-  color: #565758;
+  color: #6b7280;
   font-weight: 400;
 }
 
 .goal-content {
-  padding: 3rem 2rem;
-  background-color: white;
+  padding: 2rem 2rem 3rem;
+  background-color: transparent;
   min-height: calc(100vh - 300px);
 }
 
@@ -111,24 +115,24 @@ section.goal {
 
 .btn-create {
   padding: 0.75rem 1.5rem;
-  background: #000;
+  background: var(--home-accent, #3b82f6);
   color: white;
   border: none;
-  border-radius: 0;
+  border-radius: 0.5rem;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, filter 0.2s ease;
   margin-top: 1.5rem;
   width: 100%;
 }
 
 .btn-create:hover {
-  background: #333;
+  filter: brightness(1.1);
 }
 
 .btn-create:active {
-  background: #000;
+  filter: brightness(0.95);
 }
 
 .form-button-group {
@@ -145,17 +149,18 @@ section.goal {
 .btn-cancel {
   padding: 0.75rem 1.5rem;
   background: white;
-  color: #000;
-  border: 1px solid #d5d5d5;
-  border-radius: 0;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .btn-cancel:hover {
-  border-color: #999;
+  border-color: #9ca3af;
+  background: #f9fafb;
 }
 
 .form-section {
@@ -268,15 +273,15 @@ body.dark .btn-use-recommended:hover {
 }
 
 .empty-state {
-  padding: 2rem;
+  padding: 2.5rem 2rem;
   text-align: center;
-  background: #f7f7f7;
-  border: 1px solid #e5e5e5;
-  border-radius: 0;
+  background: white;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 0.75rem;
 }
 
 .empty-state p {
-  color: #565758;
+  color: #6b7280;
   margin: 0;
   font-size: 0.95rem;
 }
@@ -316,7 +321,7 @@ body.dark .btn-use-recommended:hover {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #4f89e8;
+  background: var(--home-accent, #3b82f6);
   border-radius: 2px;
   z-index: 10;
   pointer-events: none;
@@ -333,7 +338,7 @@ body.dark .btn-use-recommended:hover {
   left: 0;
   right: 0;
   height: 3px;
-  background: #4f89e8;
+  background: var(--home-accent, #3b82f6);
   border-radius: 2px;
   z-index: 10;
   pointer-events: none;
@@ -382,15 +387,15 @@ body.dark .btn-use-recommended:hover {
   gap: 1rem;
   padding: 0.6rem 1rem;
   margin-bottom: 1rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 0.5rem;
+  background: var(--home-selection-bg, #eff6ff);
+  border: 1px solid var(--home-selection-border, #bfdbfe);
+  border-radius: 0.6rem;
 }
 
 .goal-selection-count {
   font-size: 0.9rem;
   font-weight: 500;
-  color: #1d4ed8;
+  color: var(--home-selection-text, #1d4ed8);
 }
 
 .goal-selection-actions {
@@ -425,12 +430,12 @@ body.dark .btn-use-recommended:hover {
 }
 
 body.dark .goal-selection-bar {
-  background: #1e2a3a;
-  border-color: #2d4a6e;
+  background: var(--home-selection-bg, rgba(59, 130, 246, 0.08));
+  border-color: var(--home-selection-border, rgba(59, 130, 246, 0.2));
 }
 
 body.dark .goal-selection-count {
-  color: #93c5fd;
+  color: var(--home-selection-text, #93c5fd);
 }
 
 body.dark .goal-selection-btn {
@@ -456,38 +461,38 @@ body.dark .goal-selection-btn--danger:hover {
 .view-mode-toggle {
   display: flex;
   gap: 0.25rem;
-  border: 1px solid #e5e5e5;
-  border-radius: 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
   padding: 0.2rem;
-  background: #f7f7f7;
+  background: #f3f4f6;
 }
 
 .view-mode-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #888;
+  color: #9ca3af;
   padding: 0.3rem 0.5rem;
-  border-radius: 0.3rem;
+  border-radius: 0.35rem;
   display: flex;
   align-items: center;
   transition: background 0.15s, color 0.15s;
 }
 
 .view-mode-btn:hover {
-  color: #333;
-  background: #ebebeb;
+  color: #374151;
+  background: #e5e7eb;
 }
 
 .view-mode-btn.active {
-  color: #000;
+  color: var(--home-accent, #3b82f6);
   background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 body.dark .view-mode-toggle {
-  border-color: #363c48;
-  background: #23272f;
+  border-color: #2d3344;
+  background: #1e2230;
 }
 
 body.dark .view-mode-btn {
@@ -500,8 +505,8 @@ body.dark .view-mode-btn:hover {
 }
 
 body.dark .view-mode-btn.active {
-  color: #fff;
-  background: #363c48;
+  color: var(--home-accent, #3b82f6);
+  background: #2d3344;
   box-shadow: none;
 }
 
@@ -663,28 +668,31 @@ body.dark .view-mode-btn.active {
 }
 
 body.dark section.goal {
-  background: #23272f;
+  background: #161a22;
 }
 body.dark .goal-new-btn-row {
-  background: #23272f;
+  background: transparent;
 }
 body.dark .goal-header {
-  background: #181c20;
+  background: #1a1e27;
   color: #e5e7eb;
-  border-bottom: 1px solid #23272f;
+  border-bottom: none;
 }
 body.dark .goal-header h1 {
-  color: #fff;
+  background: linear-gradient(135deg, var(--home-gradient-from, #3b82f6), var(--home-gradient-to, #60a5fa));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 body.dark .goal-header p {
-  color: #bfc4cc;
+  color: #9ca3af;
 }
 body.dark .goal-content {
-  background: #23272f;
+  background: transparent;
 }
 body.dark .goal-form-section {
-  background: #2c313a;
-  border: 1px solid #363c48;
+  background: #1e2230;
+  border: 1px solid #2d3344;
 }
 body.dark .goal-form-section h2 {
   color: #fff;
@@ -694,9 +702,9 @@ body.dark .form-group label {
 }
 body.dark .form-group input,
 body.dark .form-group textarea {
-  background: #181c20;
+  background: #161a22;
   color: #e5e7eb;
-  border-color: #363c48;
+  border-color: #2d3344;
 }
 body.dark .form-group input:focus,
 body.dark .form-group textarea:focus {
@@ -713,39 +721,39 @@ body.dark .form-section h3 {
   color: #bfc4cc;
 }
 body.dark .display-value {
-  background: #181c20;
-  border-color: #363c48;
+  background: #161a22;
+  border-color: #2d3344;
   color: #e5e7eb;
 }
 body.dark .display-field label {
   color: #e5e7eb;
 }
 body.dark .btn-create {
-  background: #fff;
-  color: #181c20;
-  border: 1px solid #fff;
+  background: var(--home-accent, #3b82f6);
+  color: #fff;
+  border: none;
 }
 body.dark .btn-create:hover {
-  background: #e5e7eb;
-  color: #181c20;
+  filter: brightness(1.15);
 }
 body.dark .btn-cancel {
-  background: #2c313a;
+  background: #1e2230;
   color: #e5e7eb;
   border-color: #363c48;
 }
 body.dark .btn-cancel:hover {
   border-color: #6b7280;
+  background: #262c38;
 }
 body.dark .goal-results-section h2 {
   color: #fff;
 }
 body.dark .goal-card {
-  background: #2c313a;
-  border-color: #363c48;
+  background: #1e2230;
+  border-color: #2d3344;
 }
 body.dark .goal-card:hover {
-  border-color: #6b7280;
+  border-color: #4b5563;
 }
 body.dark .goal-card h3 {
   color: #fff;
@@ -754,8 +762,8 @@ body.dark .goal-description {
   color: #bfc4cc;
 }
 body.dark .goal-card-details {
-  border-top-color: #363c48;
-  border-bottom-color: #363c48;
+  border-top-color: #2d3344;
+  border-bottom-color: #2d3344;
 }
 body.dark .goal-card-calculations h4 {
   color: #e5e7eb;
@@ -771,14 +779,14 @@ body.dark .detail-row .value {
 }
 body.dark .goal-meta {
   color: #6b7280;
-  border-top-color: #363c48;
+  border-top-color: #2d3344;
 }
 body.dark .empty-state {
-  background: #2c313a;
-  border-color: #363c48;
+  background: #1e2230;
+  border-color: #2d3344;
 }
 body.dark .empty-state p {
-  color: #bfc4cc;
+  color: #9ca3af;
 }
 body.dark .btn-delete {
   color: #6b7280;

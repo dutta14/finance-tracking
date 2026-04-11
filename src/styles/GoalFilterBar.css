@@ -23,8 +23,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #f7f7f7;
-  border: 1px solid #e5e5e5;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
   border-radius: 999px;
   cursor: pointer;
   font-size: 0.825rem;
@@ -36,32 +36,29 @@
 }
 
 .filter-pill:hover {
-  background: #ebebeb;
-  border-color: #ccc;
+  background: #e5e7eb;
+  border-color: #d1d5db;
   color: #111;
 }
 
 .filter-pill--active {
-  background: #111;
-  border-color: #111;
+  background: var(--home-accent, #3b82f6);
+  border-color: var(--home-accent, #3b82f6);
   color: #fff;
 }
 
 .filter-pill--active:hover {
-  background: #333;
-  border-color: #333;
+  filter: brightness(1.1);
 }
 
 .filter-pill--open {
-  background: #ebebeb;
-  border-color: #999;
+  background: #e5e7eb;
+  border-color: #d1d5db;
   color: #111;
 }
 
 .filter-pill--active.filter-pill--open {
-  background: #333;
-  border-color: #333;
-  color: #fff;
+  filter: brightness(0.95);
 }
 
 .filter-pill-badge {
@@ -128,7 +125,7 @@
   width: 14px;
   height: 14px;
   cursor: pointer;
-  accent-color: #111;
+  accent-color: var(--home-accent, #3b82f6);
   flex-shrink: 0;
 }
 
@@ -206,14 +203,13 @@ body.dark .filter-pill:hover {
 }
 
 body.dark .filter-pill--active {
-  background: #e5e7eb;
-  border-color: #e5e7eb;
-  color: #111;
+  background: var(--home-accent, #3b82f6);
+  border-color: var(--home-accent, #3b82f6);
+  color: #fff;
 }
 
 body.dark .filter-pill--active:hover {
-  background: #d1d5db;
-  border-color: #d1d5db;
+  filter: brightness(1.15);
 }
 
 body.dark .filter-pill--open {
@@ -223,12 +219,12 @@ body.dark .filter-pill--open {
 }
 
 body.dark .filter-pill--active .filter-pill-badge {
-  color: #111;
+  color: #fff;
 }
 
 body.dark .filter-dropdown-panel {
-  background: #23272f;
-  border-color: #363c48;
+  background: #1e2230;
+  border-color: #2d3344;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -241,7 +237,7 @@ body.dark .filter-option:hover {
 }
 
 body.dark .filter-option input[type="checkbox"] {
-  accent-color: #e5e7eb;
+  accent-color: var(--home-accent, #3b82f6);
 }
 
 body.dark .filter-dropdown-clear {

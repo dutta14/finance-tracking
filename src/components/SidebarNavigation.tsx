@@ -14,6 +14,8 @@ interface SidebarNavigationProps extends NavigationProps {
   onFiThemeChange?: (theme: string) => void;
   gwTheme?: string;
   onGwThemeChange?: (theme: string) => void;
+  homeTheme?: string;
+  onHomeThemeChange?: (theme: string) => void;
   goals: FinancialGoal[];
   selectedNavGoalIds: number[];
   isMultiSelectMode: boolean;
@@ -31,7 +33,7 @@ interface OverflowMenu { goalId: number; x: number; y: number }
 
 const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
-  darkMode, setDarkMode, fiTheme, onFiThemeChange, gwTheme, onGwThemeChange,
+  darkMode, setDarkMode, fiTheme, onFiThemeChange, gwTheme, onGwThemeChange, homeTheme, onHomeThemeChange,
   goals, selectedNavGoalIds, isMultiSelectMode, onSelectNavGoal, onExitMultiSelect,
   onRenameGoal, onDeleteGoal, onDeleteMultiple, onReorderGoals,
   profile, onUpdateProfile,
@@ -230,6 +232,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             onFiThemeChange={onFiThemeChange}
             gwTheme={gwTheme}
             onGwThemeChange={onGwThemeChange}
+            homeTheme={homeTheme}
+            onHomeThemeChange={onHomeThemeChange}
           />
         </div>
       )}

@@ -13,6 +13,8 @@ interface SettingsModalProps {
   onFiThemeChange?: (theme: string) => void
   gwTheme?: string
   onGwThemeChange?: (theme: string) => void
+  homeTheme?: string
+  onHomeThemeChange?: (theme: string) => void
   ghConfig?: GitHubSyncConfig
   ghIsConfigured?: boolean
   ghSyncStatus?: SyncStatus
@@ -56,7 +58,7 @@ const COLOR_PALETTES = [
 
 const SettingsModal: FC<SettingsModalProps> = ({
   darkMode, onToggleDarkMode, profile, onUpdateProfile,
-  hasPendingChanges = false, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {},
+  hasPendingChanges = false, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {},
   ghConfig, ghIsConfigured = false,
   ghSyncStatus = 'idle', ghLastSyncAt = null, ghLastError = null, ghHistory = [],
   ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false,
@@ -653,6 +655,30 @@ const SettingsModal: FC<SettingsModalProps> = ({
                           aria-pressed={gwTheme === p.id}
                         >
                           {gwTheme === p.id && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Home page accent color */}
+                  <div className="settings-palette-group">
+                    <p className="settings-palette-label">Home page accent</p>
+                    <div className="settings-palette-swatches">
+                      {COLOR_PALETTES.map(p => (
+                        <button
+                          key={p.id}
+                          className={`settings-palette-swatch${homeTheme === p.id ? ' active' : ''}`}
+                          style={{ '--swatch-color': p.color } as React.CSSProperties}
+                          onClick={() => onHomeThemeChange(p.id)}
+                          title={p.label}
+                          aria-label={`Home page: ${p.label}${homeTheme === p.id ? ' (selected)' : ''}`}
+                          aria-pressed={homeTheme === p.id}
+                        >
+                          {homeTheme === p.id && (
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
                               <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>

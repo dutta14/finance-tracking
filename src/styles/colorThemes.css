@@ -779,3 +779,168 @@ body.dark[data-gw-theme="slate"] {
   --gw-focus-ring: rgba(100, 116, 139, 0.12);
   --gw-title-dark: #e2e8f0;
 }
+
+/* ════════════════════════════════════════════════════════
+   HOME PAGE PALETTE
+   Controls the Goals home page: header gradient, cards,
+   buttons, selection bar, filter pills, drag indicators.
+   Override via data-home-theme on <body>.
+   Default: blue
+   ════════════════════════════════════════════════════════ */
+
+/* ── DEFAULT (Blue) ── */
+:root {
+  --home-accent: #3b82f6;
+  --home-accent-hover: #2563eb;
+  --home-card-hover-shadow: rgba(59, 130, 246, 0.08);
+  --home-card-sel-bg: #eff6ff;
+  --home-card-sel-border: #3b82f6;
+  --home-card-sel-ring: rgba(59, 130, 246, 0.12);
+  --home-text-heading: #1e3a8a;
+  --home-selection-bg: #eff6ff;
+  --home-selection-border: #bfdbfe;
+  --home-selection-text: #1d4ed8;
+  --home-gradient-from: #3b82f6;
+  --home-gradient-to: #1e40af;
+}
+
+body.dark {
+  --home-accent: #3b82f6;
+  --home-accent-hover: #60a5fa;
+  --home-card-hover-shadow: rgba(59, 130, 246, 0.15);
+  --home-card-sel-bg: rgba(59, 130, 246, 0.1);
+  --home-card-sel-border: #3b82f6;
+  --home-card-sel-ring: rgba(59, 130, 246, 0.15);
+  --home-text-heading: #93c5fd;
+  --home-selection-bg: rgba(59, 130, 246, 0.08);
+  --home-selection-border: rgba(59, 130, 246, 0.2);
+  --home-selection-text: #93c5fd;
+  --home-gradient-from: #3b82f6;
+  --home-gradient-to: #60a5fa;
+}
+
+/* ── Home: Blue (explicit) ── */
+body[data-home-theme="blue"] {
+  --home-accent: #3b82f6; --home-accent-hover: #2563eb;
+  --home-card-hover-shadow: rgba(59,130,246,0.08); --home-card-sel-bg: #eff6ff; --home-card-sel-border: #3b82f6; --home-card-sel-ring: rgba(59,130,246,0.12);
+  --home-text-heading: #1e3a8a; --home-selection-bg: #eff6ff; --home-selection-border: #bfdbfe; --home-selection-text: #1d4ed8;
+  --home-gradient-from: #3b82f6; --home-gradient-to: #1e40af;
+}
+body.dark[data-home-theme="blue"] {
+  --home-accent: #3b82f6; --home-accent-hover: #60a5fa;
+  --home-card-hover-shadow: rgba(59,130,246,0.15); --home-card-sel-bg: rgba(59,130,246,0.1); --home-card-sel-border: #3b82f6; --home-card-sel-ring: rgba(59,130,246,0.15);
+  --home-text-heading: #93c5fd; --home-selection-bg: rgba(59,130,246,0.08); --home-selection-border: rgba(59,130,246,0.2); --home-selection-text: #93c5fd;
+  --home-gradient-from: #3b82f6; --home-gradient-to: #60a5fa;
+}
+
+/* ── Home: Green ── */
+body[data-home-theme="green"] {
+  --home-accent: #16a34a; --home-accent-hover: #15803d;
+  --home-card-hover-shadow: rgba(22,163,74,0.08); --home-card-sel-bg: #f0fdf4; --home-card-sel-border: #16a34a; --home-card-sel-ring: rgba(22,163,74,0.12);
+  --home-text-heading: #166534; --home-selection-bg: #f0fdf4; --home-selection-border: #bbf7d0; --home-selection-text: #166534;
+  --home-gradient-from: #16a34a; --home-gradient-to: #166534;
+}
+body.dark[data-home-theme="green"] {
+  --home-accent: #22c55e; --home-accent-hover: #4ade80;
+  --home-card-hover-shadow: rgba(34,197,94,0.15); --home-card-sel-bg: rgba(34,197,94,0.1); --home-card-sel-border: #22c55e; --home-card-sel-ring: rgba(34,197,94,0.15);
+  --home-text-heading: #86efac; --home-selection-bg: rgba(34,197,94,0.08); --home-selection-border: rgba(34,197,94,0.2); --home-selection-text: #86efac;
+  --home-gradient-from: #22c55e; --home-gradient-to: #4ade80;
+}
+
+/* ── Home: Red ── */
+body[data-home-theme="red"] {
+  --home-accent: #ef4444; --home-accent-hover: #dc2626;
+  --home-card-hover-shadow: rgba(239,68,68,0.08); --home-card-sel-bg: #fef2f2; --home-card-sel-border: #ef4444; --home-card-sel-ring: rgba(239,68,68,0.12);
+  --home-text-heading: #991b1b; --home-selection-bg: #fef2f2; --home-selection-border: #fecaca; --home-selection-text: #991b1b;
+  --home-gradient-from: #ef4444; --home-gradient-to: #b91c1c;
+}
+body.dark[data-home-theme="red"] {
+  --home-accent: #ef4444; --home-accent-hover: #f87171;
+  --home-card-hover-shadow: rgba(239,68,68,0.15); --home-card-sel-bg: rgba(239,68,68,0.1); --home-card-sel-border: #ef4444; --home-card-sel-ring: rgba(239,68,68,0.15);
+  --home-text-heading: #fca5a5; --home-selection-bg: rgba(239,68,68,0.08); --home-selection-border: rgba(239,68,68,0.2); --home-selection-text: #fca5a5;
+  --home-gradient-from: #ef4444; --home-gradient-to: #f87171;
+}
+
+/* ── Home: Amber ── */
+body[data-home-theme="amber"] {
+  --home-accent: #f59e0b; --home-accent-hover: #d97706;
+  --home-card-hover-shadow: rgba(245,158,11,0.08); --home-card-sel-bg: #fffbeb; --home-card-sel-border: #f59e0b; --home-card-sel-ring: rgba(245,158,11,0.12);
+  --home-text-heading: #92400e; --home-selection-bg: #fffbeb; --home-selection-border: #fde68a; --home-selection-text: #92400e;
+  --home-gradient-from: #f59e0b; --home-gradient-to: #b45309;
+}
+body.dark[data-home-theme="amber"] {
+  --home-accent: #f59e0b; --home-accent-hover: #fbbf24;
+  --home-card-hover-shadow: rgba(245,158,11,0.15); --home-card-sel-bg: rgba(245,158,11,0.1); --home-card-sel-border: #f59e0b; --home-card-sel-ring: rgba(245,158,11,0.15);
+  --home-text-heading: #fde68a; --home-selection-bg: rgba(245,158,11,0.08); --home-selection-border: rgba(245,158,11,0.2); --home-selection-text: #fde68a;
+  --home-gradient-from: #f59e0b; --home-gradient-to: #fbbf24;
+}
+
+/* ── Home: Purple ── */
+body[data-home-theme="purple"] {
+  --home-accent: #a855f7; --home-accent-hover: #9333ea;
+  --home-card-hover-shadow: rgba(168,85,247,0.08); --home-card-sel-bg: #faf5ff; --home-card-sel-border: #a855f7; --home-card-sel-ring: rgba(168,85,247,0.12);
+  --home-text-heading: #6b21a8; --home-selection-bg: #faf5ff; --home-selection-border: #e9d5ff; --home-selection-text: #6b21a8;
+  --home-gradient-from: #a855f7; --home-gradient-to: #7c3aed;
+}
+body.dark[data-home-theme="purple"] {
+  --home-accent: #a855f7; --home-accent-hover: #c084fc;
+  --home-card-hover-shadow: rgba(168,85,247,0.15); --home-card-sel-bg: rgba(168,85,247,0.1); --home-card-sel-border: #a855f7; --home-card-sel-ring: rgba(168,85,247,0.15);
+  --home-text-heading: #d8b4fe; --home-selection-bg: rgba(168,85,247,0.08); --home-selection-border: rgba(168,85,247,0.2); --home-selection-text: #d8b4fe;
+  --home-gradient-from: #a855f7; --home-gradient-to: #c084fc;
+}
+
+/* ── Home: Orange ── */
+body[data-home-theme="orange"] {
+  --home-accent: #f97316; --home-accent-hover: #ea580c;
+  --home-card-hover-shadow: rgba(249,115,22,0.08); --home-card-sel-bg: #fff7ed; --home-card-sel-border: #f97316; --home-card-sel-ring: rgba(249,115,22,0.12);
+  --home-text-heading: #9a3412; --home-selection-bg: #fff7ed; --home-selection-border: #fed7aa; --home-selection-text: #9a3412;
+  --home-gradient-from: #f97316; --home-gradient-to: #c2410c;
+}
+body.dark[data-home-theme="orange"] {
+  --home-accent: #f97316; --home-accent-hover: #fb923c;
+  --home-card-hover-shadow: rgba(249,115,22,0.15); --home-card-sel-bg: rgba(249,115,22,0.1); --home-card-sel-border: #f97316; --home-card-sel-ring: rgba(249,115,22,0.15);
+  --home-text-heading: #fdba74; --home-selection-bg: rgba(249,115,22,0.08); --home-selection-border: rgba(249,115,22,0.2); --home-selection-text: #fdba74;
+  --home-gradient-from: #f97316; --home-gradient-to: #fb923c;
+}
+
+/* ── Home: Teal ── */
+body[data-home-theme="teal"] {
+  --home-accent: #14b8a6; --home-accent-hover: #0d9488;
+  --home-card-hover-shadow: rgba(20,184,166,0.08); --home-card-sel-bg: #f0fdfa; --home-card-sel-border: #14b8a6; --home-card-sel-ring: rgba(20,184,166,0.12);
+  --home-text-heading: #115e59; --home-selection-bg: #f0fdfa; --home-selection-border: #99f6e4; --home-selection-text: #115e59;
+  --home-gradient-from: #14b8a6; --home-gradient-to: #0f766e;
+}
+body.dark[data-home-theme="teal"] {
+  --home-accent: #14b8a6; --home-accent-hover: #2dd4bf;
+  --home-card-hover-shadow: rgba(20,184,166,0.15); --home-card-sel-bg: rgba(20,184,166,0.1); --home-card-sel-border: #14b8a6; --home-card-sel-ring: rgba(20,184,166,0.15);
+  --home-text-heading: #5eead4; --home-selection-bg: rgba(20,184,166,0.08); --home-selection-border: rgba(20,184,166,0.2); --home-selection-text: #5eead4;
+  --home-gradient-from: #14b8a6; --home-gradient-to: #2dd4bf;
+}
+
+/* ── Home: Rose ── */
+body[data-home-theme="rose"] {
+  --home-accent: #f43f5e; --home-accent-hover: #e11d48;
+  --home-card-hover-shadow: rgba(244,63,94,0.08); --home-card-sel-bg: #fff1f2; --home-card-sel-border: #f43f5e; --home-card-sel-ring: rgba(244,63,94,0.12);
+  --home-text-heading: #9f1239; --home-selection-bg: #fff1f2; --home-selection-border: #fecdd3; --home-selection-text: #9f1239;
+  --home-gradient-from: #f43f5e; --home-gradient-to: #be123c;
+}
+body.dark[data-home-theme="rose"] {
+  --home-accent: #f43f5e; --home-accent-hover: #fb7185;
+  --home-card-hover-shadow: rgba(244,63,94,0.15); --home-card-sel-bg: rgba(244,63,94,0.1); --home-card-sel-border: #f43f5e; --home-card-sel-ring: rgba(244,63,94,0.15);
+  --home-text-heading: #fda4af; --home-selection-bg: rgba(244,63,94,0.08); --home-selection-border: rgba(244,63,94,0.2); --home-selection-text: #fda4af;
+  --home-gradient-from: #f43f5e; --home-gradient-to: #fb7185;
+}
+
+/* ── Home: Slate ── */
+body[data-home-theme="slate"] {
+  --home-accent: #64748b; --home-accent-hover: #475569;
+  --home-card-hover-shadow: rgba(100,116,139,0.08); --home-card-sel-bg: #f8fafc; --home-card-sel-border: #64748b; --home-card-sel-ring: rgba(100,116,139,0.12);
+  --home-text-heading: #334155; --home-selection-bg: #f8fafc; --home-selection-border: #cbd5e1; --home-selection-text: #334155;
+  --home-gradient-from: #64748b; --home-gradient-to: #475569;
+}
+body.dark[data-home-theme="slate"] {
+  --home-accent: #94a3b8; --home-accent-hover: #cbd5e1;
+  --home-card-hover-shadow: rgba(148,163,184,0.15); --home-card-sel-bg: rgba(148,163,184,0.1); --home-card-sel-border: #94a3b8; --home-card-sel-ring: rgba(148,163,184,0.15);
+  --home-text-heading: #cbd5e1; --home-selection-bg: rgba(148,163,184,0.08); --home-selection-border: rgba(148,163,184,0.2); --home-selection-text: #cbd5e1;
+  --home-gradient-from: #94a3b8; --home-gradient-to: #cbd5e1;
+}

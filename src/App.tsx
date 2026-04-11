@@ -49,6 +49,7 @@ const App: FC = () => {
   });
   const [fiTheme, setFiTheme] = useState(() => localStorage.getItem('fiTheme') || 'blue');
   const [gwTheme, setGwTheme] = useState(() => localStorage.getItem('gwTheme') || 'green');
+  const [homeTheme, setHomeTheme] = useState(() => localStorage.getItem('homeTheme') || 'blue');
   const [selectedNavGoalIds, setSelectedNavGoalIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { goals, createGoal, updateGoal, deleteGoal, importGoals, reorderGoals } = useFinancialGoals();
@@ -151,6 +152,11 @@ const App: FC = () => {
     document.body.dataset.gwTheme = gwTheme;
     localStorage.setItem('gwTheme', gwTheme);
   }, [gwTheme]);
+
+  useEffect(() => {
+    document.body.dataset.homeTheme = homeTheme;
+    localStorage.setItem('homeTheme', homeTheme);
+  }, [homeTheme]);
 
   const handleSelectNavGoal = (goalId: number, multi: boolean): void => {
     if (multi || isMultiSelectMode) {
@@ -258,6 +264,8 @@ const App: FC = () => {
           onFiThemeChange={setFiTheme}
           gwTheme={gwTheme}
           onGwThemeChange={setGwTheme}
+          homeTheme={homeTheme}
+          onHomeThemeChange={setHomeTheme}
           goals={visibleGoals}
           selectedNavGoalIds={selectedNavGoalIds}
           isMultiSelectMode={isMultiSelectMode}

@@ -1,26 +1,30 @@
 .goal-mini-card {
   padding: 1.25rem;
   background: white;
-  border: 2px solid #e5e5e5;
-  border-radius: 0;
+  border: 1.5px solid #e8eaed;
+  border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .goal-mini-card:hover {
-  border-color: #999;
+  border-color: #d0d3d8;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 .goal-mini-card.selected {
-  border-color: #000;
-  background: #f7f7f7;
+  border-color: var(--home-card-sel-border, #3b82f6);
+  background: var(--home-card-sel-bg, #eff6ff);
+  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.12));
 }
 
 .goal-mini-card h4 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #000;
+  color: #111;
   word-break: break-word;
 }
 
@@ -37,58 +41,68 @@
 }
 
 .mini-value .label {
-  color: #666;
+  color: #6b7280;
   font-weight: 500;
 }
 
 .mini-value .amount {
   font-weight: 600;
-  color: #000;
+  color: var(--fi-text-dark, #1e3a8a);
 }
 
 .mini-amount--gw {
-  color: #15803d;
+  color: var(--gw-text-dark, #166534);
 }
 
 .mini-value--total {
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid #e8eaed;
   margin-top: 0.25rem;
   padding-top: 0.5rem;
   font-weight: 700;
 }
 
+.mini-value--total .amount {
+  color: #111;
+}
+
 body.dark .goal-mini-card {
-  background: #2c313a;
-  border-color: #363c48;
+  background: #1e2230;
+  border-color: #2d3344;
 }
 
 body.dark .goal-mini-card:hover {
-  border-color: #6b7280;
+  border-color: #4b5563;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
 body.dark .goal-mini-card.selected {
-  background: #181c20;
-  border-color: #fff;
+  background: var(--home-card-sel-bg, rgba(59, 130, 246, 0.1));
+  border-color: var(--home-card-sel-border, #3b82f6);
+  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.15));
 }
 
 body.dark .goal-mini-card h4 {
-  color: #fff;
+  color: #f3f4f6;
 }
 
 body.dark .mini-value .label {
-  color: #bfc4cc;
+  color: #9ca3af;
 }
 
 body.dark .mini-value .amount {
-  color: #fff;
+  color: var(--fi-text-dark, #93c5fd);
 }
 
 body.dark .mini-amount--gw {
-  color: #4ade80;
+  color: var(--gw-text-dark, #86efac);
 }
 
 body.dark .mini-value--total {
-  border-top-color: #363c48;
+  border-top-color: #2d3344;
+}
+
+body.dark .mini-value--total .amount {
+  color: #f3f4f6;
 }
 
 /* List mode */
@@ -109,6 +123,12 @@ body.dark .mini-value--total {
   margin-bottom: 0;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.goal-mini-card.list .mini-value--total {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .goal-mini-card.list .mini-value .label {
@@ -184,8 +204,9 @@ body.dark .card-context-menu-item--danger:hover {
 .goal-rename-inline {
   padding: 1rem 1.25rem;
   background: white;
-  border: 2px solid #4f89e8;
-  border-radius: 0;
+  border: 1.5px solid var(--home-accent, #3b82f6);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.12));
 }
 
 .goal-rename-input {
@@ -193,7 +214,7 @@ body.dark .card-context-menu-item--danger:hover {
   font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-bottom: 2px solid #4f89e8;
+  border-bottom: 2px solid var(--home-accent, #3b82f6);
   outline: none;
   padding: 0.25rem 0;
   background: transparent;
@@ -208,8 +229,9 @@ body.dark .card-context-menu-item--danger:hover {
 }
 
 body.dark .goal-rename-inline {
-  background: #2c313a;
-  border-color: #4f89e8;
+  background: #1e2230;
+  border-color: var(--home-accent, #3b82f6);
+  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.15));
 }
 
 body.dark .goal-rename-input {

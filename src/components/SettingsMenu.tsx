@@ -11,11 +11,13 @@ interface SettingsMenuProps {
   onFiThemeChange?: (theme: string) => void
   gwTheme?: string
   onGwThemeChange?: (theme: string) => void
+  homeTheme?: string
+  onHomeThemeChange?: (theme: string) => void
 }
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {} }) => {
+const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {} }) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
 
   return (
@@ -51,6 +53,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
           onFiThemeChange={onFiThemeChange}
           gwTheme={gwTheme}
           onGwThemeChange={onGwThemeChange}
+          homeTheme={homeTheme}
+          onHomeThemeChange={onHomeThemeChange}
           onClose={() => setSettingsModalOpen(false)}
         />
       )}
