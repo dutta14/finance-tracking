@@ -51,6 +51,7 @@ const App: FC = () => {
   const [gwTheme, setGwTheme] = useState(() => localStorage.getItem('gwTheme') || 'green');
   const [homeTheme, setHomeTheme] = useState(() => localStorage.getItem('homeTheme') || 'blue');
   const [selectedNavGoalIds, setSelectedNavGoalIds] = useState<number[]>([]);
+  const [selectedHomeGoalIds, setSelectedHomeGoalIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { goals, createGoal, updateGoal, deleteGoal, importGoals, reorderGoals } = useFinancialGoals();
   const { gwGoals, createGwGoal, updateGwGoal, deleteGwGoal } = useGwGoals();
@@ -96,6 +97,7 @@ const App: FC = () => {
       setPendingDelete(null);
     }, 10_000);
     setSelectedNavGoalIds(prev => prev.filter(id => !ids.includes(id)));
+    setSelectedHomeGoalIds(prev => prev.filter(id => !ids.includes(id)));
     setIsMultiSelectMode(false);
     setPendingDelete({ ids, savedGoals: affectedGoals, message, timerId });
   };
@@ -111,10 +113,12 @@ const App: FC = () => {
   };
 
   const handleGoToGoal = (goalId: number): void => {
+    setSelectedNavGoalIds([goalId]);
     navigate(`/goal/${goalId}`);
   };
 
   const handleGoToGoalEdit = (goalId: number): void => {
+    setSelectedNavGoalIds([goalId]);
     navigate(`/goal/${goalId}?edit=1`);
   };
 
@@ -158,6 +162,17 @@ const App: FC = () => {
     localStorage.setItem('homeTheme', homeTheme);
   }, [homeTheme]);
 
+  // Sync nav pane selection with solo page URL (handles prev/next navigation)
+  useEffect(() => {
+    const match = location.pathname.match(/^\/goal\/(\d+)$/);
+    if (match) {
+      const id = Number(match[1]);
+      setSelectedNavGoalIds([id]);
+    } else {
+      setSelectedNavGoalIds([]);
+    }
+  }, [location.pathname]);
+
   const handleSelectNavGoal = (goalId: number, multi: boolean): void => {
     if (multi || isMultiSelectMode) {
       if (!isMultiSelectMode) setIsMultiSelectMode(true);
@@ -165,6 +180,7 @@ const App: FC = () => {
         prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]
       );
     } else {
+      setSelectedNavGoalIds([goalId]);
       navigate(`/goal/${goalId}`);
       if (isMobile) setSidebarOpen(false);
     }
@@ -208,6 +224,7 @@ const App: FC = () => {
         if (!Array.isArray(incoming)) throw new Error('Invalid format')
         importGoals(incoming)
         setSelectedNavGoalIds([])
+        setSelectedHomeGoalIds([])
         if (parsed?.profile && typeof parsed.profile === 'object') {
           updateProfile(parsed.profile)
         }
@@ -234,8 +251,8 @@ const App: FC = () => {
               deleteGoal={handleDeleteGoal}
               onDeleteMultipleGoals={handleDeleteWithUndo}
               reorderGoals={reorderGoals}
-              selectedGoalIds={selectedNavGoalIds}
-              onSetSelectedGoalIds={setSelectedNavGoalIds}
+              selectedGoalIds={selectedHomeGoalIds}
+              onSetSelectedGoalIds={setSelectedHomeGoalIds}
               onGoToGoal={handleGoToGoal}
               onGoToGoalEdit={handleGoToGoalEdit}
               onCopyGwGoals={handleCopyGwGoals}

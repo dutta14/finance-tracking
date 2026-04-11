@@ -65,6 +65,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
 
   const openOverflow = (e: React.MouseEvent, goalId: number) => {
     e.stopPropagation();
+    e.preventDefault();
     const menuW = 150, menuH = 130;
     const x = e.clientX + menuW > window.innerWidth ? e.clientX - menuW : e.clientX;
     const y = e.clientY + menuH > window.innerHeight ? e.clientY - menuH : e.clientY;
@@ -172,6 +173,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                         onDragOver={e => handleDragOver(e, goal.id)}
                         onDrop={e => handleDrop(e, goal.id)}
                         onDragEnd={handleDragEnd}
+                        onContextMenu={e => openOverflow(e, goal.id)}
                       >
                         {renamingId === goal.id ? (
                           <input
