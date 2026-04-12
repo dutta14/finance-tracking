@@ -2,9 +2,9 @@ import { FC, useState, useRef } from 'react'
 import { Profile } from '../../hooks/useProfile'
 import '../../styles/Data.css'
 
-type AccountType = 'checking' | 'savings' | 'investment' | 'retirement' | 'credit' | 'other'
+type AccountType = 'retirement' | 'non-retirement' | 'liquid' | 'illiquid'
 type AccountOwner = 'primary' | 'partner' | 'joint'
-type AccountGoalType = 'fi' | 'gw' | 'none'
+type AccountGoalType = 'fi' | 'gw'
 type AccountStatus = 'active' | 'inactive'
 
 export interface Account {
@@ -27,27 +27,34 @@ export interface BalanceEntry {
 interface DataProps {
   profile: Profile
   allowCsvImport?: boolean
+  onDataChange?: (accounts: Account[], balances: BalanceEntry[]) => void
 }
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  checking: 'Checking',
-  savings: 'Savings',
-  investment: 'Investment',
   retirement: 'Retirement',
-  credit: 'Credit',
-  other: 'Other',
+  'non-retirement': 'Non-Retirement',
+  liquid: 'Liquid',
+  illiquid: 'Illiquid',
 }
 
-const OWNER_LABELS: Record<AccountOwner, string> = {
-  primary: 'Primary',
-  partner: 'Partner',
+const FI_TYPES: AccountType[] = ['retirement', 'non-retirement']
+const GW_TYPES: AccountType[] = ['liquid', 'illiquid']
+
+const getTypesForGoal = (goal: AccountGoalType): AccountType[] =>
+  goal === 'fi' ? FI_TYPES : GW_TYPES
+
+const getDefaultType = (goal: AccountGoalType): AccountType =>
+  goal === 'fi' ? 'retirement' : 'liquid'
+
+const getOwnerLabels = (profile: Profile): Record<AccountOwner, string> => ({
+  primary: profile.name || 'Primary',
+  partner: profile.partner?.name || 'Partner',
   joint: 'Joint',
-}
+})
 
 const GOAL_TYPE_LABELS: Record<AccountGoalType, string> = {
   fi: 'FI',
   gw: 'GW',
-  none: 'None',
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -60,7 +67,7 @@ const formatMonth = (ym: string) => {
 const formatCurrency = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
-const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
+const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) => {
   const [accounts, setAccounts] = useState<Account[]>(() => {
     const stored = localStorage.getItem('data-accounts')
     return stored ? JSON.parse(stored) : []
@@ -74,15 +81,18 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
   const [showAccountsModal, setShowAccountsModal] = useState(false)
   const [inlineEntry, setInlineEntry] = useState<{ month: string; values: Record<number, string> } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
+  const [showInactive, setShowInactive] = useState(false)
 
   const saveAccounts = (updated: Account[]) => {
     setAccounts(updated)
     localStorage.setItem('data-accounts', JSON.stringify(updated))
+    onDataChange?.(updated, balances)
   }
 
   const saveBalances = (updated: BalanceEntry[]) => {
     setBalances(updated)
     localStorage.setItem('data-balances', JSON.stringify(updated))
+    onDataChange?.(accounts, updated)
   }
 
   /* Account CRUD */
@@ -93,6 +103,10 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
 
   const handleUpdateAccount = (id: number, updates: Partial<Account>) => {
     saveAccounts(accounts.map(a => a.id === id ? { ...a, ...updates } : a))
+  }
+
+  const handleBulkUpdateAccounts = (ids: Set<number>, updates: Partial<Account>) => {
+    saveAccounts(accounts.map(a => ids.has(a.id) ? { ...a, ...updates } : a))
   }
 
   const handleDeleteAccount = (id: number) => {
@@ -185,10 +199,10 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
         const newAccount: Account = {
           id: nextAccountId++,
           name: col.accountName,
-          type: 'other',
+          type: 'retirement',
           owner: 'primary',
           status: 'active',
-          goalType: 'none',
+          goalType: 'fi',
           institution: col.institution || undefined,
         }
         newAccounts.push(newAccount)
@@ -247,13 +261,13 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
     e.target.value = ''
   }
 
-  const hasPartner = !!profile.partner
   const hasAccounts = accounts.length > 0
   const activeAccounts = accounts.filter(a => a.status === 'active')
 
   // Build spreadsheet-style table data: months as rows, all active accounts as columns
   const allMonths = [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a))
-  const spreadsheetAccounts = activeAccounts
+  const spreadsheetAccounts = showInactive ? accounts : activeAccounts
+  const allAccountsWithBalances = accounts // for total calculation
 
   // Build a lookup map for fast access
   const balanceMap = new Map<string, number>()
@@ -316,9 +330,15 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
           <>
             <div className="data-toolbar">
               <span className="data-entry-count">{balances.length} balance {balances.length === 1 ? 'entry' : 'entries'}</span>
-              <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
-                + Add Entry
-              </button>
+              <div className="data-toolbar-actions">
+                <label className="data-filter-toggle">
+                  <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
+                  Show inactive
+                </label>
+                <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
+                  + Add Entry
+                </button>
+              </div>
             </div>
 
             {balances.length === 0 && !inlineEntry ? (
@@ -343,13 +363,13 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
                   <thead>
                     <tr>
                       <th className="data-spreadsheet-corner"></th>
+                      <th className="data-spreadsheet-col-header data-spreadsheet-total-col">Total</th>
                       {spreadsheetAccounts.map(a => (
                         <th key={a.id} className="data-spreadsheet-col-header">
                           <span className="data-spreadsheet-account-name">{a.name}</span>
                           {a.institution && <span className="data-spreadsheet-institution">{a.institution}</span>}
                         </th>
                       ))}
-                      <th className="data-spreadsheet-col-header data-spreadsheet-total-col">Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -363,6 +383,20 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
                             value={inlineEntry.month}
                             onChange={e => setInlineEntry({ ...inlineEntry, month: e.target.value })}
                           />
+                        </td>
+                        <td className="data-spreadsheet-cell data-spreadsheet-total-cell">
+                          <div className="data-inline-actions">
+                            <button className="data-inline-save" onClick={handleSaveInlineEntry} title="Save">
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path d="M4 10l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                            <button className="data-inline-cancel" onClick={handleCancelInlineEntry} title="Cancel">
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                              </svg>
+                            </button>
+                          </div>
                         </td>
                         {spreadsheetAccounts.map(a => (
                           <td key={a.id} className="data-spreadsheet-cell data-spreadsheet-inline-cell">
@@ -379,37 +413,25 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
                             />
                           </td>
                         ))}
-                        <td className="data-spreadsheet-cell data-spreadsheet-total-cell">
-                          <div className="data-inline-actions">
-                            <button className="data-inline-save" onClick={handleSaveInlineEntry} title="Save">
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                <path d="M4 10l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
-                            <button className="data-inline-cancel" onClick={handleCancelInlineEntry} title="Cancel">
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
                       </tr>
                     )}
                     {allMonths.map(month => {
-                      let rowTotal = 0
+                      const rowTotal = allAccountsWithBalances.reduce((sum, a) => {
+                        const val = balanceMap.get(`${a.id}:${month}`)
+                        return val !== undefined ? sum + val : sum
+                      }, 0)
                       return (
                         <tr key={month}>
                           <td className="data-spreadsheet-row-header">{formatMonth(month)}</td>
+                          <td className="data-spreadsheet-cell data-spreadsheet-total-cell">{formatCurrency(rowTotal)}</td>
                           {spreadsheetAccounts.map(a => {
                             const val = balanceMap.get(`${a.id}:${month}`)
-                            if (val !== undefined) rowTotal += val
                             return (
                               <td key={a.id} className="data-spreadsheet-cell">
                                 {val !== undefined ? formatCurrency(val) : ''}
                               </td>
                             )
                           })}
-                          <td className="data-spreadsheet-cell data-spreadsheet-total-cell">{formatCurrency(rowTotal)}</td>
                         </tr>
                       )
                     })}
@@ -425,9 +447,10 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
       {showAccountsModal && (
         <AccountsModal
           accounts={accounts}
-          hasPartner={hasPartner}
+          profile={profile}
           onAdd={handleAddAccount}
           onUpdate={handleUpdateAccount}
+          onBulkUpdate={handleBulkUpdateAccounts}
           onDelete={handleDeleteAccount}
           onToggleStatus={handleToggleStatus}
           onClose={() => setShowAccountsModal(false)}
@@ -443,22 +466,90 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false }) => {
    ═══════════════════════════════════════════ */
 interface AccountsModalProps {
   accounts: Account[]
-  hasPartner: boolean
+  profile: Profile
   onAdd: (account: Omit<Account, 'id'>) => void
   onUpdate: (id: number, updates: Partial<Account>) => void
+  onBulkUpdate: (ids: Set<number>, updates: Partial<Account>) => void
   onDelete: (id: number) => void
   onToggleStatus: (id: number) => void
   onClose: () => void
 }
 
-const AccountsModal: FC<AccountsModalProps> = ({ accounts, hasPartner, onAdd, onUpdate, onDelete, onToggleStatus, onClose }) => {
+const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpdate, onBulkUpdate, onDelete, onToggleStatus, onClose }) => {
+  const ownerLabels = getOwnerLabels(profile)
+  const hasPartner = !!profile.partner
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const lastSelectedRef = useRef<number | null>(null)
 
   const filteredAccounts = filter === 'all'
     ? accounts
     : accounts.filter(a => a.status === filter)
+
+  const allFilteredSelected = filteredAccounts.length > 0 && filteredAccounts.every(a => selectedIds.has(a.id))
+
+  const toggleSelect = (id: number) => {
+    lastSelectedRef.current = id
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const rangeSelect = (id: number) => {
+    const lastId = lastSelectedRef.current
+    if (lastId == null) { toggleSelect(id); return }
+    const ids = filteredAccounts.map(a => a.id)
+    const from = ids.indexOf(lastId)
+    const to = ids.indexOf(id)
+    if (from === -1 || to === -1) { toggleSelect(id); return }
+    const start = Math.min(from, to)
+    const end = Math.max(from, to)
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      for (let i = start; i <= end; i++) next.add(ids[i])
+      return next
+    })
+    lastSelectedRef.current = id
+  }
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        for (const a of filteredAccounts) next.delete(a.id)
+        return next
+      })
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        for (const a of filteredAccounts) next.add(a.id)
+        return next
+      })
+    }
+  }
+
+  const applyBulkUpdate = (updates: Partial<Account>) => {
+    onBulkUpdate(selectedIds, updates)
+  }
+
+  const selectedCount = filteredAccounts.filter(a => selectedIds.has(a.id)).length
+
+  const handleRowClick = (id: number, e: React.MouseEvent) => {
+    if (e.shiftKey && selectedIds.size > 0) {
+      e.preventDefault()
+      rangeSelect(id)
+    } else if (e.metaKey || e.ctrlKey) {
+      e.preventDefault()
+      toggleSelect(id)
+    }
+  }
+
+  const showMultiSelect = selectedCount >= 2
 
   return (
     <div className="data-modal-backdrop" onClick={onClose}>
@@ -483,10 +574,36 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, hasPartner, onAdd, on
 
           {showAddForm && (
             <AccountForm
-              hasPartner={hasPartner}
+              profile={profile}
               onSave={(data) => { onAdd(data); setShowAddForm(false) }}
               onCancel={() => setShowAddForm(false)}
             />
+          )}
+
+          {selectedCount >= 2 && (
+            <div className="data-bulk-bar">
+              <span className="data-bulk-count">{selectedCount} selected</span>
+              <select defaultValue="" onChange={e => { if (e.target.value) { const g = e.target.value as AccountGoalType; applyBulkUpdate({ goalType: g, type: getDefaultType(g) }); e.target.value = '' } }}>
+                <option value="" disabled>Goal…</option>
+                {Object.entries(GOAL_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <select defaultValue="" onChange={e => { if (e.target.value) { applyBulkUpdate({ type: e.target.value as AccountType }); e.target.value = '' } }}>
+                <option value="" disabled>Type…</option>
+                {Object.entries(ACCOUNT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <select defaultValue="" onChange={e => { if (e.target.value) { applyBulkUpdate({ owner: e.target.value as AccountOwner }); e.target.value = '' } }}>
+                <option value="" disabled>Owner…</option>
+                <option value="primary">{ownerLabels.primary}</option>
+                {hasPartner && <option value="partner">{ownerLabels.partner}</option>}
+                <option value="joint">{ownerLabels.joint}</option>
+              </select>
+              <select defaultValue="" onChange={e => { if (e.target.value) { applyBulkUpdate({ status: e.target.value as AccountStatus }); e.target.value = '' } }}>
+                <option value="" disabled>Status…</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <button className="data-bulk-clear" onClick={() => setSelectedIds(new Set())}>Clear</button>
+            </div>
           )}
 
           {filteredAccounts.length === 0 ? (
@@ -499,10 +616,11 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, hasPartner, onAdd, on
               <table className="data-table">
                 <thead>
                   <tr>
+                    {showMultiSelect && <th className="data-th-checkbox"><input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} /></th>}
                     <th>Account</th>
+                    <th>Goal</th>
                     <th>Type</th>
                     <th>Owner</th>
-                    <th>Goal</th>
                     <th>Status</th>
                     <th></th>
                   </tr>
@@ -511,9 +629,9 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, hasPartner, onAdd, on
                   {filteredAccounts.map(account => (
                     editingId === account.id ? (
                       <tr key={account.id} className="data-row--editing">
-                        <td colSpan={6}>
+                        <td colSpan={showMultiSelect ? 8 : 7}>
                           <AccountForm
-                            hasPartner={hasPartner}
+                              profile={profile}
                             initial={account}
                             onSave={(updates) => { onUpdate(account.id, updates); setEditingId(null) }}
                             onCancel={() => setEditingId(null)}
@@ -521,16 +639,17 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, hasPartner, onAdd, on
                         </td>
                       </tr>
                     ) : (
-                      <tr key={account.id} className={account.status === 'inactive' ? 'data-row--inactive' : ''}>
+                      <tr key={account.id} className={`${account.status === 'inactive' ? 'data-row--inactive' : ''}${selectedIds.has(account.id) ? ' data-row--selected' : ''}`} onClick={e => handleRowClick(account.id, e)}>
+                        {showMultiSelect && <td className="data-td-checkbox"><input type="checkbox" checked={selectedIds.has(account.id)} onChange={() => toggleSelect(account.id)} /></td>}
                         <td>
                           <div className="data-account-name">
                             <span>{account.name}</span>
                             {account.institution && <span className="data-account-institution">{account.institution}</span>}
                           </div>
                         </td>
-                        <td><span className="data-badge data-badge--type">{ACCOUNT_TYPE_LABELS[account.type]}</span></td>
-                        <td><span className={`data-badge data-badge--owner-${account.owner}`}>{OWNER_LABELS[account.owner]}</span></td>
                         <td><span className={`data-badge data-badge--goal-${account.goalType}`}>{GOAL_TYPE_LABELS[account.goalType]}</span></td>
+                        <td><span className="data-badge data-badge--type">{ACCOUNT_TYPE_LABELS[account.type]}</span></td>
+                        <td><span className={`data-badge data-badge--owner-${account.owner}`}>{ownerLabels[account.owner]}</span></td>
                         <td>
                           <button className={`data-status-toggle ${account.status}`} onClick={() => onToggleStatus(account.id)} title={`Mark as ${account.status === 'active' ? 'inactive' : 'active'}`}>
                             {account.status === 'active' ? 'Active' : 'Inactive'}
@@ -567,17 +686,19 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, hasPartner, onAdd, on
    Account Form (shared by modal)
    ═══════════════════════════════════════════ */
 interface AccountFormProps {
-  hasPartner: boolean
+  profile: Profile
   initial?: Account
   onSave: (data: Omit<Account, 'id'>) => void
   onCancel: () => void
 }
 
-const AccountForm: FC<AccountFormProps> = ({ hasPartner, initial, onSave, onCancel }) => {
+const AccountForm: FC<AccountFormProps> = ({ profile, initial, onSave, onCancel }) => {
+  const hasPartner = !!profile.partner
+  const ownerLabels = getOwnerLabels(profile)
   const [name, setName] = useState(initial?.name || '')
-  const [type, setType] = useState<AccountType>(initial?.type || 'checking')
+  const [goalType, setGoalType] = useState<AccountGoalType>(initial?.goalType || 'fi')
+  const [type, setType] = useState<AccountType>(initial?.type || getDefaultType(initial?.goalType || 'fi'))
   const [owner, setOwner] = useState<AccountOwner>(initial?.owner || 'primary')
-  const [goalType, setGoalType] = useState<AccountGoalType>(initial?.goalType || 'none')
   const [status, setStatus] = useState<AccountStatus>(initial?.status || 'active')
   const [institution, setInstitution] = useState(initial?.institution || '')
 
@@ -601,25 +722,28 @@ const AccountForm: FC<AccountFormProps> = ({ hasPartner, initial, onSave, onCanc
       </div>
       <div className="data-form-row">
         <div className="data-form-field">
+          <label>Goal Allocation</label>
+          <select value={goalType} onChange={e => {
+            const g = e.target.value as AccountGoalType
+            setGoalType(g)
+            setType(getDefaultType(g))
+          }}>
+            <option value="fi">FI</option>
+            <option value="gw">GW</option>
+          </select>
+        </div>
+        <div className="data-form-field">
           <label>Type</label>
           <select value={type} onChange={e => setType(e.target.value as AccountType)}>
-            {Object.entries(ACCOUNT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {getTypesForGoal(goalType).map(t => <option key={t} value={t}>{ACCOUNT_TYPE_LABELS[t]}</option>)}
           </select>
         </div>
         <div className="data-form-field">
           <label>Owner</label>
           <select value={owner} onChange={e => setOwner(e.target.value as AccountOwner)}>
-            <option value="primary">Primary</option>
-            {hasPartner && <option value="partner">Partner</option>}
-            <option value="joint">Joint</option>
-          </select>
-        </div>
-        <div className="data-form-field">
-          <label>Goal Allocation</label>
-          <select value={goalType} onChange={e => setGoalType(e.target.value as AccountGoalType)}>
-            <option value="none">None</option>
-            <option value="fi">FI</option>
-            <option value="gw">GW</option>
+            <option value="primary">{ownerLabels.primary}</option>
+            {hasPartner && <option value="partner">{ownerLabels.partner}</option>}
+            <option value="joint">{ownerLabels.joint}</option>
           </select>
         </div>
         <div className="data-form-field">

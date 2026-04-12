@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import Goal from './pages/goal/Goal'
 import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
+import type { Account, BalanceEntry } from './pages/data/Data'
 import UndoToast from './components/UndoToast'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
@@ -65,6 +66,7 @@ const App: FC = () => {
     hasStoredToken, tokenUnlocked, usingLegacyToken,
     saveEncryptedToken, migrateLegacyToken, unlockToken, lockToken,
     syncNow, fetchHistory, testConnection, restoreLatest, restoreFromCommit, markRestored, updateData: ghUpdateData,
+    updateDataFile: ghUpdateDataFile, syncDataNow: ghSyncDataNow, restoreDataLatest,
   } = useGitHubSync();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
@@ -189,6 +191,19 @@ const App: FC = () => {
     ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } });
   }, [goals, gwGoals, profile, fiTheme, gwTheme, homeTheme, darkMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Callback when Data page accounts/balances change → sync data file
+  const handleDataChange = (accounts: Account[], balances: BalanceEntry[]): void => {
+    ghUpdateDataFile({ version: 1, exportedAt: new Date().toISOString(), accounts, balances });
+  };
+
+  const getDataSnapshot = (): { accounts: Account[]; balances: BalanceEntry[] } => {
+    try {
+      const accounts = JSON.parse(localStorage.getItem('data-accounts') || '[]')
+      const balances = JSON.parse(localStorage.getItem('data-balances') || '[]')
+      return { accounts, balances }
+    } catch { return { accounts: [], balances: [] } }
+  };
+
   // Sync nav pane selection with solo page URL (handles prev/next navigation)
   useEffect(() => {
     const match = location.pathname.match(/^\/goal\/(\d+)$/);
@@ -231,8 +246,19 @@ const App: FC = () => {
     handleDeleteWithUndo(ids);
   };
 
+  const handleSyncNow = async (data: object, message?: string): Promise<void> => {
+    await syncNow(data, message)
+    const dataSnapshot = getDataSnapshot()
+    await ghSyncDataNow({ version: 1, exportedAt: new Date().toISOString(), accounts: dataSnapshot.accounts, balances: dataSnapshot.balances }, message ? `Data: ${message}` : undefined)
+  };
+
   const handleExport = (): void => {
-    const json = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } }, null, 2)
+    const dataSnapshot = getDataSnapshot()
+    const json = JSON.stringify({
+      version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile,
+      settings: { fiTheme, gwTheme, homeTheme, darkMode },
+      dataAccounts: dataSnapshot.accounts, dataBalances: dataSnapshot.balances,
+    }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -264,6 +290,12 @@ const App: FC = () => {
           if (s.gwTheme) setGwTheme(s.gwTheme)
           if (s.homeTheme) setHomeTheme(s.homeTheme)
           if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
+        }
+        if (Array.isArray(parsed?.dataAccounts)) {
+          localStorage.setItem('data-accounts', JSON.stringify(parsed.dataAccounts))
+        }
+        if (Array.isArray(parsed?.dataBalances)) {
+          localStorage.setItem('data-balances', JSON.stringify(parsed.dataBalances))
         }
       } catch {
         alert('Could not import: the file is not a valid finance goals export.')
@@ -321,8 +353,19 @@ const App: FC = () => {
           localStorage.setItem('gw-goals', JSON.stringify(restoreGwGoals))
           localStorage.setItem('user-profile', JSON.stringify(restoreProfile || profile))
           localStorage.setItem('github-sync-config', JSON.stringify(restoredGhConfig))
-          markRestored()
-          setTimeout(() => resolve(), 100)
+          // Also restore data file from GitHub
+          restoreDataLatest().then(dataResult => {
+            if (dataResult.ok && dataResult.data) {
+              const d = dataResult.data as { accounts?: unknown; balances?: unknown }
+              if (Array.isArray(d.accounts)) localStorage.setItem('data-accounts', JSON.stringify(d.accounts))
+              if (Array.isArray(d.balances)) localStorage.setItem('data-balances', JSON.stringify(d.balances))
+            }
+            markRestored()
+            setTimeout(() => resolve(), 100)
+          }).catch(() => {
+            markRestored()
+            setTimeout(() => resolve(), 100)
+          })
         }, 300)
       } catch (e) {
         console.error('Restore error:', e instanceof Error ? e.message : e)
@@ -364,7 +407,7 @@ const App: FC = () => {
           }
         />
         <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
-        <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} />} />
+        <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -414,7 +457,7 @@ const App: FC = () => {
           onGhMigrateLegacyToken={migrateLegacyToken}
           onGhUnlockToken={unlockToken}
           onGhLockToken={lockToken}
-          onGhSyncNow={syncNow}
+          onGhSyncNow={handleSyncNow}
           onGhFetchHistory={fetchHistory}
           onGhTestConnection={testConnection}
           onGhRestoreLatest={restoreLatest}

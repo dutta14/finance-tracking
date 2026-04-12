@@ -131,8 +131,10 @@ export const useGitHubSync = () => {
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
 
   const pendingDataRef = useRef<object | null>(null)
+  const pendingDataFileRef = useRef<object | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSyncedJsonRef = useRef<string | null>(null)
+  const lastSyncedDataJsonRef = useRef<string | null>(null)
 
   const hasStoredToken = !!(config.encryptedToken || config.legacyToken)
   const usingLegacyToken = !!config.legacyToken
@@ -211,18 +213,24 @@ export const useGitHubSync = () => {
     }
   }, [config])
 
-  const getFileSha = useCallback(async (): Promise<string | null> => {
+  const dataFilePath = config.filePath.replace(/\.json$/, '-data.json')
+
+  const getFileShaForPath = useCallback(async (path: string): Promise<string | null> => {
     if (!activeToken) throw new Error('Token is not unlocked.')
     const res = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`,
+      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`,
       { headers: apiHeaders(activeToken) }
     )
-    if (res.status === 404) return null  // file doesn't exist yet — will be created on first sync
+    if (res.status === 404) return null
     if (res.status === 401) throw new Error('Invalid token — check the token is correct and not expired.')
     if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
     const data = await res.json()
     return data.sha as string
-  }, [activeToken, config.owner, config.repo, config.filePath, apiHeaders])
+  }, [activeToken, config.owner, config.repo, apiHeaders])
+
+  const getFileSha = useCallback(async (): Promise<string | null> => {
+    return getFileShaForPath(config.filePath)
+  }, [getFileShaForPath, config.filePath])
 
   const syncNow = useCallback(async (data: object, message?: string): Promise<void> => {
     if (!isConfigured) return
@@ -258,6 +266,35 @@ export const useGitHubSync = () => {
       setLastError(e instanceof Error ? e.message : String(e))
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, config.filePath, getFileSha, isConfigured])
+
+  const syncDataNow = useCallback(async (data: object, message?: string): Promise<void> => {
+    if (!isConfigured) return
+    try {
+      const canonicalJson = JSON.stringify(data)
+      const prettyJson = JSON.stringify(data, null, 2)
+      const content = toBase64(prettyJson)
+      const sha = await getFileShaForPath(dataFilePath)
+      const commitMessage =
+        message ||
+        `Data sync: ${new Date().toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        })}`
+      const body: Record<string, string> = { message: commitMessage, content }
+      if (sha) body.sha = sha
+      const res = await fetch(
+        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${dataFilePath}`,
+        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+      )
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+      }
+      lastSyncedDataJsonRef.current = canonicalJson
+    } catch (e) {
+      console.error('Data file sync error:', e instanceof Error ? e.message : e)
+    }
+  }, [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured])
 
   const fetchHistory = useCallback(async (): Promise<void> => {
     if (!isConfigured) return
@@ -364,6 +401,27 @@ export const useGitHubSync = () => {
     }
   }, [activeToken, apiHeaders, config.filePath, config.owner, config.repo, isConfigured])
 
+  const restoreDataLatest = useCallback(async (): Promise<RestoreResult> => {
+    if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${dataFilePath}`,
+        { headers: apiHeaders(activeToken) }
+      )
+      if (res.status === 404) return { ok: true, message: 'No data file found.', data: null }
+      if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}` }
+      const file = await res.json() as { content?: string; encoding?: string }
+      if (!file.content || file.encoding !== 'base64') {
+        return { ok: false, message: 'Data file format is not supported.' }
+      }
+      const decoded = fromBase64(file.content.replace(/\n/g, ''))
+      const parsed = JSON.parse(decoded)
+      return { ok: true, message: 'Data file restored.', data: parsed }
+    } catch {
+      return { ok: false, message: 'Could not restore data file from GitHub.' }
+    }
+  }, [activeToken, apiHeaders, dataFilePath, config.owner, config.repo, isConfigured])
+
   const updateData = useCallback((data: object) => {
     const json = JSON.stringify(data)
     if (json === lastSyncedJsonRef.current) {
@@ -376,8 +434,21 @@ export const useGitHubSync = () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     debounceTimerRef.current = setTimeout(() => {
       if (pendingDataRef.current) syncNow(pendingDataRef.current)
+      if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
     }, DEBOUNCE_MS)
-  }, [config.autoSync, isConfigured, syncNow])
+  }, [config.autoSync, isConfigured, syncNow, syncDataNow])
+
+  const updateDataFile = useCallback((data: object) => {
+    const json = JSON.stringify(data)
+    if (json === lastSyncedDataJsonRef.current) return
+    pendingDataFileRef.current = data
+    if (!config.autoSync || !isConfigured) return
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    debounceTimerRef.current = setTimeout(() => {
+      if (pendingDataRef.current) syncNow(pendingDataRef.current)
+      if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
+    }, DEBOUNCE_MS)
+  }, [config.autoSync, isConfigured, syncNow, syncDataNow])
 
   const markRestored = useCallback(() => {
     setLastSyncAt(new Date().toISOString())
@@ -413,5 +484,8 @@ export const useGitHubSync = () => {
     restoreFromCommit,
     markRestored,
     updateData,
+    updateDataFile,
+    syncDataNow,
+    restoreDataLatest,
   }
 }
