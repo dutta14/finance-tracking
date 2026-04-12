@@ -18,7 +18,8 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 700px;
-  max-height: 90vh;
+  height: 80vh;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -200,6 +201,167 @@
   margin: 0;
 }
 
+/* Partner section */
+.settings-profile-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.settings-profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.settings-profile-card-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settings-profile-card--view {
+  align-items: center;
+  text-align: center;
+  padding: 1.25rem;
+}
+
+.settings-profile-view-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+}
+
+.settings-profile-view-avatar .settings-avatar-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.settings-profile-view-avatar .settings-avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+.settings-profile-view-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.settings-profile-view-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settings-profile-view-birthday {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.settings-profile-view-role {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.settings-profile-card-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 200px;
+}
+
+.settings-save-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.settings-save-flash {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #10b981;
+  animation: settings-save-fade 2s ease-out forwards;
+}
+
+@keyframes settings-save-fade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.settings-partner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-partner-remove {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.settings-partner-remove:hover {
+  background: #fef2f2;
+}
+
+.settings-add-partner-btn {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 8px;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.settings-add-partner-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.settings-avatar-btn--small {
+  width: 56px;
+  height: 56px;
+}
+
+.settings-avatar-btn--small .settings-avatar-placeholder {
+  width: 56px;
+  height: 56px;
+}
+
+.settings-avatar-btn--small .settings-avatar-img {
+  width: 56px;
+  height: 56px;
+}
+
 .settings-field {
   display: flex;
   flex-direction: column;
@@ -272,25 +434,21 @@
 }
 
 .settings-btn--secondary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 5px 0;
+  padding: 0.6rem 1rem;
   border-radius: 6px;
-  border: 1.5px solid #d1d5db;
+  border: 1px solid #d1d5db;
   background: none;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  color: #374151;
-  flex: 1;
+  color: #4b5563;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .settings-btn--secondary:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
+  color: #1f2937;
 }
 
 /* GitHub Sync mini buttons */
@@ -651,6 +809,46 @@ body.dark .settings-avatar-placeholder {
 
 body.dark .settings-avatar-hint {
   color: #9ca3af;
+}
+
+body.dark .settings-partner-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+body.dark .settings-profile-card {
+  border-color: #2d3344;
+  background: #1a1e2a;
+}
+
+body.dark .settings-profile-card-title {
+  color: #d1d5db;
+}
+
+body.dark .settings-profile-view-avatar {
+  background: #2c313a;
+}
+
+body.dark .settings-profile-view-name {
+  color: #e5e7eb;
+}
+
+body.dark .settings-profile-view-birthday {
+  color: #9ca3af;
+}
+
+body.dark .settings-profile-view-role {
+  color: #6b7280;
+}
+
+body.dark .settings-add-partner-btn {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+body.dark .settings-add-partner-btn:hover {
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #e5e7eb;
 }
 
 body.dark .settings-btn--outline {

@@ -1,6 +1,7 @@
 import { FC, useState, useRef, useEffect } from 'react';
 import { FinancialGoal, NavigationProps } from '../types';
 import { Profile } from '../hooks/useProfile';
+import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync';
 import SidebarToggle from './SidebarToggle';
 import SettingsMenu from './SettingsMenu';
 import '../styles/SidebarNavigation.css';
@@ -25,8 +26,33 @@ interface SidebarNavigationProps extends NavigationProps {
   onDeleteGoal: (goalId: number) => void;
   onDeleteMultiple: (ids: number[]) => void;
   onReorderGoals: (orderedIds: number[]) => void;
+  onExport: () => void;
+  onImport: (file: File) => void;
   profile: Profile;
   onUpdateProfile: (updates: Partial<Profile>) => void;
+  hasPendingGitHubChanges?: boolean;
+  ghConfig?: GitHubSyncConfig;
+  ghIsConfigured?: boolean;
+  ghSyncStatus?: SyncStatus;
+  ghLastSyncAt?: string | null;
+  ghLastError?: string | null;
+  ghHistory?: CommitEntry[];
+  ghHasStoredToken?: boolean;
+  ghTokenUnlocked?: boolean;
+  ghUsingLegacyToken?: boolean;
+  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void;
+  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>;
+  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>;
+  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>;
+  onGhLockToken?: () => void;
+  onGhSyncNow?: (data: object, message?: string) => Promise<void>;
+  onGhFetchHistory?: () => Promise<void>;
+  onGhTestConnection?: () => Promise<ConnectionTestResult>;
+  onGhRestoreLatest?: () => Promise<RestoreResult>;
+  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>;
+  ghDataToSync?: object;
+  onGhApplyRestore?: (data: unknown) => Promise<void>;
+  onFactoryReset?: () => void;
 }
 
 interface OverflowMenu { goalId: number; x: number; y: number }
@@ -35,8 +61,14 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   currentPage, setCurrentPage, expanded, setExpanded,
   darkMode, setDarkMode, fiTheme, onFiThemeChange, gwTheme, onGwThemeChange, homeTheme, onHomeThemeChange,
   goals, selectedNavGoalIds, isMultiSelectMode, onSelectNavGoal, onExitMultiSelect,
-  onRenameGoal, onDeleteGoal, onDeleteMultiple, onReorderGoals,
-  profile, onUpdateProfile,
+  onRenameGoal, onDeleteGoal, onDeleteMultiple, onReorderGoals, onExport, onImport,
+  profile, onUpdateProfile, hasPendingGitHubChanges = false,
+  ghConfig, ghIsConfigured = false, ghSyncStatus, ghLastSyncAt, ghLastError, ghHistory = [],
+  ghHasStoredToken, ghTokenUnlocked, ghUsingLegacyToken,
+  onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken,
+  onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit,
+  ghDataToSync, onGhApplyRestore,
+  onFactoryReset = () => {},
 }) => {
   const [goalAccordionOpen, setGoalAccordionOpen] = useState(true);
   const [overflowMenu, setOverflowMenu] = useState<OverflowMenu | null>(null);
@@ -236,6 +268,31 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             onGwThemeChange={onGwThemeChange}
             homeTheme={homeTheme}
             onHomeThemeChange={onHomeThemeChange}
+            hasPendingChanges={hasPendingGitHubChanges}
+            ghConfig={ghConfig}
+            ghIsConfigured={ghIsConfigured}
+            ghSyncStatus={ghSyncStatus}
+            ghLastSyncAt={ghLastSyncAt}
+            ghLastError={ghLastError}
+            ghHistory={ghHistory}
+            ghHasStoredToken={ghHasStoredToken}
+            ghTokenUnlocked={ghTokenUnlocked}
+            ghUsingLegacyToken={ghUsingLegacyToken}
+            onGhUpdateConfig={onGhUpdateConfig}
+            onGhSaveEncryptedToken={onGhSaveEncryptedToken}
+            onGhMigrateLegacyToken={onGhMigrateLegacyToken}
+            onGhUnlockToken={onGhUnlockToken}
+            onGhLockToken={onGhLockToken}
+            onGhSyncNow={onGhSyncNow}
+            onGhFetchHistory={onGhFetchHistory}
+            onGhTestConnection={onGhTestConnection}
+            onGhRestoreLatest={onGhRestoreLatest}
+            onGhRestoreFromCommit={onGhRestoreFromCommit}
+            ghData={ghDataToSync}
+            onGhApplyRestore={onGhApplyRestore}
+            onFactoryReset={onFactoryReset}
+            onExport={onExport}
+            onImport={onImport}
           />
         </div>
       )}

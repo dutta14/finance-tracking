@@ -11,6 +11,7 @@ import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
 import ProfileModal from './components/ProfileModal'
+import { useGitHubSync } from './hooks/useGitHubSync'
 import './styles/colorThemes.css'
 
 interface GoalSoloRouteProps { goals: FinancialGoal[]; profileBirthday: string; updateGoal: (id: number, p: FinancialGoal) => void; onDelete: (id: number) => void; gwGoals: GwGoal[]; createGwGoal: (p: Omit<GwGoal, 'id' | 'createdAt'>) => void; updateGwGoal: (id: number, u: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void; deleteGwGoal: (id: number) => void }
@@ -54,8 +55,15 @@ const App: FC = () => {
   const [selectedHomeGoalIds, setSelectedHomeGoalIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { goals, createGoal, updateGoal, deleteGoal, importGoals, reorderGoals } = useFinancialGoals();
-  const { gwGoals, createGwGoal, updateGwGoal, deleteGwGoal } = useGwGoals();
+  const { gwGoals, createGwGoal, updateGwGoal, deleteGwGoal, importGwGoals } = useGwGoals();
   const { profile, updateProfile } = useProfile();
+  const {
+    config: ghConfig, updateConfig: updateGhConfig, isConfigured: ghIsConfigured,
+    syncStatus, lastSyncAt, lastError, hasPendingChanges: hasPendingGhChanges, history: ghHistory,
+    hasStoredToken, tokenUnlocked, usingLegacyToken,
+    saveEncryptedToken, migrateLegacyToken, unlockToken, lockToken,
+    syncNow, fetchHistory, testConnection, restoreLatest, restoreFromCommit, markRestored, updateData: ghUpdateData,
+  } = useGitHubSync();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
 
@@ -167,6 +175,11 @@ const App: FC = () => {
     localStorage.setItem('homeTheme', homeTheme);
   }, [homeTheme]);
 
+  // Drive auto-sync whenever goals, gwGoals, profile, or themes change
+  useEffect(() => {
+    ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } });
+  }, [goals, gwGoals, profile, fiTheme, gwTheme, homeTheme, darkMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sync nav pane selection with solo page URL (handles prev/next navigation)
   useEffect(() => {
     const match = location.pathname.match(/^\/goal\/(\d+)$/);
@@ -210,7 +223,7 @@ const App: FC = () => {
   };
 
   const handleExport = (): void => {
-    const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), goals, profile }, null, 2)
+    const json = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -233,11 +246,85 @@ const App: FC = () => {
         if (parsed?.profile && typeof parsed.profile === 'object') {
           updateProfile(parsed.profile)
         }
+        if (Array.isArray(parsed?.gwGoals || parsed?.gwPlans)) {
+          importGwGoals((parsed.gwGoals || parsed.gwPlans) as GwGoal[])
+        }
+        if (parsed?.settings && typeof parsed.settings === 'object') {
+          const s = parsed.settings as Record<string, string>
+          if (s.fiTheme) setFiTheme(s.fiTheme)
+          if (s.gwTheme) setGwTheme(s.gwTheme)
+          if (s.homeTheme) setHomeTheme(s.homeTheme)
+          if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
+        }
       } catch {
         alert('Could not import: the file is not a valid finance goals export.')
       }
     }
     reader.readAsText(file)
+  };
+
+  const applyRestoredSnapshot = async (data: unknown): Promise<void> => {
+    return new Promise((resolve) => {
+      try {
+        const parsed = data as { version?: number; goals?: unknown; plans?: unknown; profile?: unknown; gwGoals?: unknown; gwPlans?: unknown; settings?: unknown; gitHubConfig?: unknown }
+        const incomingGoals = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.goals) ? parsed.goals : Array.isArray(parsed?.plans) ? parsed.plans : [])
+        if (!Array.isArray(incomingGoals) || incomingGoals.length === 0) {
+          throw new Error('No valid goals data in backup')
+        }
+        importGoals(incomingGoals as FinancialGoal[])
+        let restoreProfile: Partial<typeof profile> = profile
+        if (parsed?.profile && typeof parsed.profile === 'object') {
+          restoreProfile = parsed.profile as Partial<typeof profile>
+          updateProfile(restoreProfile)
+        }
+        let restoreGwGoals: GwGoal[] = []
+        if (Array.isArray(parsed?.gwGoals || parsed?.gwPlans)) {
+          restoreGwGoals = ((parsed.gwGoals || parsed.gwPlans) as GwGoal[])
+          importGwGoals(restoreGwGoals)
+        }
+        if (parsed?.settings && typeof parsed.settings === 'object') {
+          const s = parsed.settings as Record<string, unknown>
+          if (s.fiTheme) setFiTheme(s.fiTheme as string)
+          if (s.gwTheme) setGwTheme(s.gwTheme as string)
+          if (s.homeTheme) setHomeTheme(s.homeTheme as string)
+          if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
+        }
+        let restoredGhConfig = ghConfig
+        if (parsed?.gitHubConfig && typeof parsed.gitHubConfig === 'object') {
+          const cfg = parsed.gitHubConfig as Record<string, unknown>
+          restoredGhConfig = {
+            owner: (cfg.owner as string) || '',
+            repo: (cfg.repo as string) || '',
+            filePath: (cfg.filePath as string) || 'finance-goals.json',
+            autoSync: (cfg.autoSync as boolean) || false,
+            encryptedToken: ghConfig.encryptedToken,
+            tokenSalt: ghConfig.tokenSalt,
+            tokenIv: ghConfig.tokenIv,
+            legacyToken: ghConfig.legacyToken,
+          }
+          updateGhConfig(restoredGhConfig)
+        }
+        setSelectedNavGoalIds([])
+        setSelectedHomeGoalIds([])
+        setIsMultiSelectMode(false)
+        setTimeout(() => {
+          localStorage.setItem('financialGoals', JSON.stringify(incomingGoals))
+          localStorage.setItem('gw-goals', JSON.stringify(restoreGwGoals))
+          localStorage.setItem('user-profile', JSON.stringify(restoreProfile || profile))
+          localStorage.setItem('github-sync-config', JSON.stringify(restoredGhConfig))
+          markRestored()
+          setTimeout(() => resolve(), 100)
+        }, 300)
+      } catch (e) {
+        console.error('Restore error:', e instanceof Error ? e.message : e)
+        resolve()
+      }
+    })
+  };
+
+  const handleFactoryReset = (): void => {
+    localStorage.clear()
+    window.location.reload()
   };
 
   const renderPage = (): React.ReactNode => {
@@ -298,8 +385,33 @@ const App: FC = () => {
           onDeleteGoal={handleSidebarDeleteGoal}
           onDeleteMultiple={handleSidebarDeleteMultiple}
           onReorderGoals={reorderGoals}
+          onExport={handleExport}
+          onImport={handleImport}
           profile={profile}
           onUpdateProfile={updateProfile}
+          hasPendingGitHubChanges={hasPendingGhChanges}
+          ghConfig={ghConfig}
+          ghIsConfigured={ghIsConfigured}
+          ghSyncStatus={syncStatus}
+          ghLastSyncAt={lastSyncAt}
+          ghLastError={lastError}
+          ghHistory={ghHistory}
+          ghHasStoredToken={hasStoredToken}
+          ghTokenUnlocked={tokenUnlocked}
+          ghUsingLegacyToken={usingLegacyToken}
+          onGhUpdateConfig={updateGhConfig}
+          onGhSaveEncryptedToken={saveEncryptedToken}
+          onGhMigrateLegacyToken={migrateLegacyToken}
+          onGhUnlockToken={unlockToken}
+          onGhLockToken={lockToken}
+          onGhSyncNow={syncNow}
+          onGhFetchHistory={fetchHistory}
+          onGhTestConnection={testConnection}
+          onGhRestoreLatest={restoreLatest}
+          onGhRestoreFromCommit={restoreFromCommit}
+          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } }}
+          onGhApplyRestore={applyRestoredSnapshot}
+          onFactoryReset={handleFactoryReset}
         />
       )}
       {/* Backdrop for mobile overlay */}

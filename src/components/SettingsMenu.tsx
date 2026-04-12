@@ -1,5 +1,6 @@
 import { FC, useState } from 'react'
 import { Profile } from '../hooks/useProfile'
+import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync'
 import SettingsModal from './SettingsModal'
 
 interface SettingsMenuProps {
@@ -13,11 +14,36 @@ interface SettingsMenuProps {
   onGwThemeChange?: (theme: string) => void
   homeTheme?: string
   onHomeThemeChange?: (theme: string) => void
+  hasPendingChanges?: boolean
+  ghConfig?: GitHubSyncConfig
+  ghIsConfigured?: boolean
+  ghSyncStatus?: SyncStatus
+  ghLastSyncAt?: string | null
+  ghLastError?: string | null
+  ghHistory?: CommitEntry[]
+  ghHasStoredToken?: boolean
+  ghTokenUnlocked?: boolean
+  ghUsingLegacyToken?: boolean
+  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
+  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
+  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
+  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
+  onGhLockToken?: () => void
+  onGhSyncNow?: (data: object, message?: string) => Promise<void>
+  onGhFetchHistory?: () => Promise<void>
+  onGhTestConnection?: () => Promise<ConnectionTestResult>
+  onGhRestoreLatest?: () => Promise<RestoreResult>
+  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
+  ghData?: object
+  onGhApplyRestore?: (data: unknown) => Promise<void>
+  onFactoryReset?: () => void
+  onExport?: () => void
+  onImport?: (file: File) => void
 }
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {} }) => {
+const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {}, ...rest }) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
 
   return (
@@ -48,13 +74,37 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
           onToggleDarkMode={onToggleDarkMode}
           profile={profile}
           onUpdateProfile={onUpdateProfile}
-          hasPendingChanges={false}
           fiTheme={fiTheme}
           onFiThemeChange={onFiThemeChange}
           gwTheme={gwTheme}
           onGwThemeChange={onGwThemeChange}
           homeTheme={homeTheme}
           onHomeThemeChange={onHomeThemeChange}
+          hasPendingChanges={rest.hasPendingChanges ?? false}
+          ghConfig={rest.ghConfig}
+          ghIsConfigured={rest.ghIsConfigured}
+          ghSyncStatus={rest.ghSyncStatus}
+          ghLastSyncAt={rest.ghLastSyncAt}
+          ghLastError={rest.ghLastError}
+          ghHistory={rest.ghHistory}
+          ghHasStoredToken={rest.ghHasStoredToken}
+          ghTokenUnlocked={rest.ghTokenUnlocked}
+          ghUsingLegacyToken={rest.ghUsingLegacyToken}
+          onGhUpdateConfig={rest.onGhUpdateConfig}
+          onGhSaveEncryptedToken={rest.onGhSaveEncryptedToken}
+          onGhMigrateLegacyToken={rest.onGhMigrateLegacyToken}
+          onGhUnlockToken={rest.onGhUnlockToken}
+          onGhLockToken={rest.onGhLockToken}
+          onGhSyncNow={rest.onGhSyncNow}
+          onGhFetchHistory={rest.onGhFetchHistory}
+          onGhTestConnection={rest.onGhTestConnection}
+          onGhRestoreLatest={rest.onGhRestoreLatest}
+          onGhRestoreFromCommit={rest.onGhRestoreFromCommit}
+          ghData={rest.ghData}
+          onGhApplyRestore={rest.onGhApplyRestore}
+          onFactoryReset={rest.onFactoryReset}
+          onExport={rest.onExport}
+          onImport={rest.onImport}
           onClose={() => setSettingsModalOpen(false)}
         />
       )}

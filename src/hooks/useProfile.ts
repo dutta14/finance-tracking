@@ -4,6 +4,11 @@ export interface Profile {
   name: string
   avatarDataUrl: string
   birthday: string
+  partner?: {
+    name: string
+    avatarDataUrl: string
+    birthday: string
+  } | null
 }
 
 const STORAGE_KEY = 'user-profile'
