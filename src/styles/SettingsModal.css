@@ -584,6 +584,50 @@
   left: 22px;
 }
 
+.settings-toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 2px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.settings-toggle-switch:hover {
+  background: #bfdbfe;
+}
+
+.settings-toggle-switch.on {
+  background: #2563eb;
+}
+
+.settings-toggle-knob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  transition: left 0.15s;
+}
+
+.settings-toggle-switch.on .settings-toggle-knob {
+  left: 22px;
+}
+
+.settings-toggle-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 0.15rem;
+}
+
 .settings-hint {
   font-size: 0.85rem;
   color: #9ca3af;
@@ -769,6 +813,26 @@ body.dark .settings-toggle:hover {
 
 body.dark .settings-toggle-thumb {
   background: #e5e7eb;
+}
+
+body.dark .settings-toggle-switch {
+  background: #4b5563;
+}
+
+body.dark .settings-toggle-switch:hover {
+  background: #1e3a5f;
+}
+
+body.dark .settings-toggle-switch.on {
+  background: #3b82f6;
+}
+
+body.dark .settings-toggle-knob {
+  background: #e5e7eb;
+}
+
+body.dark .settings-toggle-hint {
+  color: #6b7280;
 }
 
 body.dark .settings-hint {

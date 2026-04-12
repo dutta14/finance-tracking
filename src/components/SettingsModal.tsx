@@ -37,6 +37,8 @@ interface SettingsModalProps {
   onGhApplyRestore?: (data: unknown) => Promise<void>
   ghData?: object
   onFactoryReset?: () => void
+  allowCsvImport?: boolean
+  onToggleAllowCsvImport?: () => void
   onExport?: () => void
   onImport?: (file: File) => void
   onClose?: () => void
@@ -69,7 +71,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
   onGhTestConnection = async () => ({ ok: false, message: '', warnings: [] }),
   onGhRestoreLatest = async () => ({ ok: false, message: '' }),
   onGhRestoreFromCommit = async () => ({ ok: false, message: '' }),
-  onGhApplyRestore = async () => {}, ghData = {}, onFactoryReset = () => {}, onExport = () => {}, onImport = () => {}, onClose = () => {},
+  onGhApplyRestore = async () => {}, ghData = {}, onFactoryReset = () => {}, allowCsvImport = false, onToggleAllowCsvImport = () => {}, onExport = () => {}, onImport = () => {}, onClose = () => {},
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
   const [accentTarget, setAccentTarget] = useState<'home' | 'fi' | 'gw'>('home')
@@ -846,6 +848,21 @@ const SettingsModal: FC<SettingsModalProps> = ({
                 <h3>Advanced</h3>
                 <div className="settings-section-content">
                   <p className="settings-description">Manage app data and reset your application</p>
+
+                  <div className="settings-toggle-row" style={{ marginBottom: '1rem' }}>
+                    <div>
+                      <span className="settings-toggle-label">Allow CSV imports &amp; resets</span>
+                      <span className="settings-toggle-hint">Show import and reset buttons on the Data page</span>
+                    </div>
+                    <button
+                      className={`settings-toggle-switch${allowCsvImport ? ' on' : ''}`}
+                      onClick={onToggleAllowCsvImport}
+                      role="switch"
+                      aria-checked={allowCsvImport}
+                    >
+                      <span className="settings-toggle-knob" />
+                    </button>
+                  </div>
                   
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                     <button 

@@ -37,6 +37,8 @@ interface SettingsMenuProps {
   ghData?: object
   onGhApplyRestore?: (data: unknown) => Promise<void>
   onFactoryReset?: () => void
+  allowCsvImport?: boolean
+  onToggleAllowCsvImport?: () => void
   onExport?: () => void
   onImport?: (file: File) => void
 }
@@ -103,6 +105,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
           ghData={rest.ghData}
           onGhApplyRestore={rest.onGhApplyRestore}
           onFactoryReset={rest.onFactoryReset}
+          allowCsvImport={rest.allowCsvImport}
+          onToggleAllowCsvImport={rest.onToggleAllowCsvImport}
           onExport={rest.onExport}
           onImport={rest.onImport}
           onClose={() => setSettingsModalOpen(false)}

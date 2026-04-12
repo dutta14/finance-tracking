@@ -6,6 +6,7 @@ import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/Home'
 import Goal from './pages/goal/Goal'
 import GoalSoloPage from './pages/goal/GoalSoloPage'
+import Data from './pages/data/Data'
 import UndoToast from './components/UndoToast'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
@@ -51,6 +52,7 @@ const App: FC = () => {
   const [fiTheme, setFiTheme] = useState(() => localStorage.getItem('fiTheme') || 'blue');
   const [gwTheme, setGwTheme] = useState(() => localStorage.getItem('gwTheme') || 'green');
   const [homeTheme, setHomeTheme] = useState(() => localStorage.getItem('homeTheme') || 'blue');
+  const [allowCsvImport, setAllowCsvImport] = useState(() => localStorage.getItem('allowCsvImport') === '1');
   const [selectedNavGoalIds, setSelectedNavGoalIds] = useState<number[]>([]);
   const [selectedHomeGoalIds, setSelectedHomeGoalIds] = useState<number[]>([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -72,11 +74,14 @@ const App: FC = () => {
     ? 'goal-solo'
     : location.pathname === '/goal'
     ? 'goal'
+    : location.pathname === '/data'
+    ? 'data'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
     if (page === 'home') navigate('/')
     else if (page === 'goal') navigate('/goal')
+    else if (page === 'data') navigate('/data')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -169,6 +174,10 @@ const App: FC = () => {
     document.body.dataset.gwTheme = gwTheme;
     localStorage.setItem('gwTheme', gwTheme);
   }, [gwTheme]);
+
+  useEffect(() => {
+    localStorage.setItem('allowCsvImport', allowCsvImport ? '1' : '0');
+  }, [allowCsvImport]);
 
   useEffect(() => {
     document.body.dataset.homeTheme = homeTheme;
@@ -355,6 +364,7 @@ const App: FC = () => {
           }
         />
         <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
+        <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -412,6 +422,8 @@ const App: FC = () => {
           ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } }}
           onGhApplyRestore={applyRestoredSnapshot}
           onFactoryReset={handleFactoryReset}
+          allowCsvImport={allowCsvImport}
+          onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}
         />
       )}
       {/* Backdrop for mobile overlay */}

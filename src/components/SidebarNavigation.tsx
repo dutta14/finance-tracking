@@ -53,6 +53,8 @@ interface SidebarNavigationProps extends NavigationProps {
   ghDataToSync?: object;
   onGhApplyRestore?: (data: unknown) => Promise<void>;
   onFactoryReset?: () => void;
+  allowCsvImport?: boolean;
+  onToggleAllowCsvImport?: () => void;
 }
 
 interface OverflowMenu { goalId: number; x: number; y: number }
@@ -69,6 +71,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit,
   ghDataToSync, onGhApplyRestore,
   onFactoryReset = () => {},
+  allowCsvImport = false,
+  onToggleAllowCsvImport = () => {},
 }) => {
   const [goalAccordionOpen, setGoalAccordionOpen] = useState(true);
   const [overflowMenu, setOverflowMenu] = useState<OverflowMenu | null>(null);
@@ -253,6 +257,14 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
               </>
             )}
           </li>
+          <li className="sidebar-item">
+            <button
+              className={`sidebar-link${currentPage === 'data' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('data')}
+            >
+              Data
+            </button>
+          </li>
         </ul>
       )}
       {expanded && (
@@ -291,6 +303,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             ghData={ghDataToSync}
             onGhApplyRestore={onGhApplyRestore}
             onFactoryReset={onFactoryReset}
+            allowCsvImport={allowCsvImport}
+            onToggleAllowCsvImport={onToggleAllowCsvImport}
             onExport={onExport}
             onImport={onImport}
           />
