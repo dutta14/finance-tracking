@@ -66,6 +66,10 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
     ))
   }
 
+  const handleRenameGroup = (oldName: string, newName: string) => {
+    saveAccounts(accounts.map(a => a.group === oldName ? { ...a, group: newName } : a))
+  }
+
   /* Balance entry inline editing */
   const activeAccounts = accounts.filter(a => a.status === 'active')
 
@@ -95,6 +99,10 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
     }
     saveBalances(updated)
     setInlineEntry(null)
+  }
+
+  const handleDeleteMonth = (month: string) => {
+    saveBalances(balances.filter(b => b.month !== month))
   }
 
   /* CSV import */
@@ -218,6 +226,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
                 onInlineEntryChange={setInlineEntry}
                 onSaveInlineEntry={handleSaveInlineEntry}
                 onCancelInlineEntry={() => setInlineEntry(null)}
+                onDeleteMonth={handleDeleteMonth}
               />
             )}
           </>
@@ -233,6 +242,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
           onBulkUpdate={handleBulkUpdateAccounts}
           onDelete={handleDeleteAccount}
           onToggleStatus={handleToggleStatus}
+          onRenameGroup={handleRenameGroup}
           onClose={() => setShowAccountsModal(false)}
         />
       )}

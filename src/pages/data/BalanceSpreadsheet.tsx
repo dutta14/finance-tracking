@@ -19,16 +19,18 @@ interface BalanceSpreadsheetProps {
   onInlineEntryChange: (entry: { month: string; values: Record<number, string> }) => void
   onSaveInlineEntry: () => void
   onCancelInlineEntry: () => void
+  onDeleteMonth: (month: string) => void
 }
 
 const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
   spreadsheetAccounts, allAccounts, allMonths, balanceMap, profile,
-  inlineEntry, onInlineEntryChange, onSaveInlineEntry, onCancelInlineEntry,
+  inlineEntry, onInlineEntryChange, onSaveInlineEntry, onCancelInlineEntry, onDeleteMonth,
 }) => {
   const [activeL1, setActiveL1] = useState<L1Filter | null>(null)
   const [dateFilter, setDateFilter] = useState<DateFilter>('all')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
+  const [pendingDeleteMonth, setPendingDeleteMonth] = useState<string | null>(null)
   const [ownerFilter, setOwnerFilter] = useState<Set<AccountOwner>>(new Set())
   const [goalFilter, setGoalFilter] = useState<Set<AccountGoalType>>(new Set())
   const [typeFilter, setTypeFilter] = useState<Set<AccountType>>(new Set())
@@ -81,6 +83,71 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
   /* Total includes active + inactive matching filters */
   const totalAccounts = useMemo(() =>
     allAccounts.filter(matchesFilters), [allAccounts, ownerFilter, goalFilter, typeFilter, natureFilter, allocationFilter])
+
+  /* Parent/child grouping */
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+  type DisplayCol =
+    | { kind: 'single'; account: Account }
+    | { kind: 'group'; groupName: string; children: Account[] }
+    | { kind: 'child'; account: Account; groupName: string; isFirst: boolean; isLast: boolean }
+
+  const displayColumns = useMemo(() => {
+    // Group visible accounts by group name
+    const grouped = new Map<string, Account[]>()
+    const ungrouped: Account[] = []
+
+    for (const a of visibleAccounts) {
+      if (a.group) {
+        const list = grouped.get(a.group) || []
+        list.push(a)
+        grouped.set(a.group, list)
+      } else {
+        ungrouped.push(a)
+      }
+    }
+
+    const cols: DisplayCol[] = []
+    const handledGroups = new Set<string>()
+
+    // Maintain order: walk visibleAccounts, emit group on first encounter
+    for (const a of visibleAccounts) {
+      if (a.group) {
+        if (handledGroups.has(a.group)) continue
+        handledGroups.add(a.group)
+        const children = grouped.get(a.group)!
+        if (children.length === 1) {
+          // Single member — just show as standalone
+          cols.push({ kind: 'single', account: children[0] })
+        } else if (expandedGroups.has(a.group)) {
+          children.forEach((c, i) => cols.push({
+            kind: 'child', account: c, groupName: a.group!,
+            isFirst: i === 0, isLast: i === children.length - 1,
+          }))
+        } else {
+          cols.push({ kind: 'group', groupName: a.group, children })
+        }
+      } else {
+        cols.push({ kind: 'single', account: a })
+      }
+    }
+
+    return cols
+  }, [visibleAccounts, expandedGroups])
+
+  const toggleGroupExpand = (groupName: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      next.has(groupName) ? next.delete(groupName) : next.add(groupName)
+      return next
+    })
+  }
+
+  const sumGroupForMonth = (children: Account[], month: string) =>
+    children.reduce((sum, c) => {
+      const val = balanceMap.get(`${c.id}:${month}`)
+      return val !== undefined ? sum + val : sum
+    }, 0)
 
   /* Date filtering */
   const availableYears = useMemo(() => {
@@ -233,15 +300,67 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
     <div className="data-spreadsheet-wrap">
     <table className="data-spreadsheet">
       <thead>
+        <tr className="data-spreadsheet-owner-row">
+          <th className="data-spreadsheet-owner-corner"></th>
+          <th className="data-spreadsheet-owner-cell data-spreadsheet-total-col"></th>
+          {displayColumns.map(col => {
+            const owner: AccountOwner = col.kind === 'group'
+              ? (new Set(col.children.map(c => c.owner)).size === 1 ? col.children[0].owner : 'joint')
+              : col.account.owner
+            const key = col.kind === 'group' ? `owner-g-${col.groupName}` : `owner-${col.account.id}`
+            const primaryInitial = (profile.name || 'P')[0].toUpperCase()
+            const partnerInitial = (profile.partner?.name || 'S')[0].toUpperCase()
+            return (
+              <th key={key} className="data-spreadsheet-owner-cell">
+                {owner === 'joint' ? (
+                  <div className="data-owner-avatar-group">
+                    <div className="data-owner-avatar data-owner-avatar-primary">
+                      {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" /> : primaryInitial}
+                    </div>
+                    <div className="data-owner-avatar data-owner-avatar-partner">
+                      {profile.partner?.avatarDataUrl ? <img src={profile.partner.avatarDataUrl} alt="" /> : partnerInitial}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`data-owner-avatar ${owner === 'partner' ? 'data-owner-avatar-partner' : 'data-owner-avatar-primary'}`}>
+                    {owner === 'partner'
+                      ? (profile.partner?.avatarDataUrl ? <img src={profile.partner.avatarDataUrl} alt="" /> : partnerInitial)
+                      : (profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" /> : primaryInitial)}
+                  </div>
+                )}
+              </th>
+            )
+          })}
+        </tr>
         <tr>
           <th className="data-spreadsheet-corner"></th>
           <th className="data-spreadsheet-col-header data-spreadsheet-total-col">Total</th>
-          {visibleAccounts.map(a => (
-            <th key={a.id} className="data-spreadsheet-col-header">
-              <span className="data-spreadsheet-account-name">{a.name}</span>
-              {a.institution && <span className="data-spreadsheet-institution">{a.institution}</span>}
-            </th>
-          ))}
+          {displayColumns.map(col => {
+            if (col.kind === 'group') {
+              const allInactive = col.children.every(c => c.status === 'inactive')
+              return (
+                <th key={`g-${col.groupName}`} className={`data-spreadsheet-col-header data-spreadsheet-group-header${allInactive ? ' data-spreadsheet-inactive' : ''}`}>
+                  <button className="data-split-btn" onClick={() => toggleGroupExpand(col.groupName)} title="Split into sub-accounts">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 4v4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                  <span className="data-spreadsheet-account-name">{col.groupName}</span>
+                </th>
+              )
+            }
+            const a = col.account
+            const inactive = a.status === 'inactive'
+            return (
+              <th key={a.id} className={`data-spreadsheet-col-header${col.kind === 'child' ? ' data-spreadsheet-child-header' : ''}${inactive ? ' data-spreadsheet-inactive' : ''}`}>
+                {col.kind === 'child' && col.isFirst && (
+                  <button className="data-merge-btn" onClick={() => toggleGroupExpand(col.groupName)} title="Merge sub-accounts">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M6 4l4 4 4-4M10 8v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                )}
+                <span className="data-spreadsheet-account-name">{a.name}</span>
+                {a.institution && <span className="data-spreadsheet-institution">{a.institution}</span>}
+              </th>
+            )
+          })}
         </tr>
       </thead>
       <tbody>
@@ -269,21 +388,31 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
                 </button>
               </div>
             </td>
-            {visibleAccounts.map(a => (
-              <td key={a.id} className="data-spreadsheet-cell data-spreadsheet-inline-cell">
-                <input
-                  type="number"
-                  step="0.01"
-                  className="data-inline-balance-input"
-                  placeholder="—"
-                  value={inlineEntry.values[a.id] || ''}
-                  onChange={e => onInlineEntryChange({
-                    ...inlineEntry,
-                    values: { ...inlineEntry.values, [a.id]: e.target.value }
-                  })}
-                />
-              </td>
-            ))}
+            {displayColumns.map(col => {
+              if (col.kind === 'group') {
+                return (
+                  <td key={`g-${col.groupName}`} className="data-spreadsheet-cell data-spreadsheet-inline-cell data-spreadsheet-group-cell">
+                    {/* Group cells are read-only in inline mode — edit sub-accounts individually */}
+                  </td>
+                )
+              }
+              const a = col.account
+              return (
+                <td key={a.id} className={`data-spreadsheet-cell data-spreadsheet-inline-cell${col.kind === 'child' ? ' data-spreadsheet-child-cell' : ''}`}>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="data-inline-balance-input"
+                    placeholder="—"
+                    value={inlineEntry.values[a.id] || ''}
+                    onChange={e => onInlineEntryChange({
+                      ...inlineEntry,
+                      values: { ...inlineEntry.values, [a.id]: e.target.value }
+                    })}
+                  />
+                </td>
+              )
+            })}
           </tr>
         )}
         {filteredMonths.map(month => {
@@ -293,12 +422,33 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
           }, 0)
           return (
             <tr key={month}>
-              <td className="data-spreadsheet-row-header">{formatMonth(month)}</td>
+              <td className="data-spreadsheet-row-header">
+                <span className="data-spreadsheet-month-label">{formatMonth(month)}</span>
+                <button
+                  className="data-delete-row-btn"
+                  title={`Delete ${formatMonth(month)}`}
+                  onClick={() => setPendingDeleteMonth(month)}
+                >
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                    <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </td>
               <td className="data-spreadsheet-cell data-spreadsheet-total-cell">{formatCurrency(rowTotal)}</td>
-              {visibleAccounts.map(a => {
-                const val = balanceMap.get(`${a.id}:${month}`)
+              {displayColumns.map(col => {
+                if (col.kind === 'group') {
+                  const groupVal = sumGroupForMonth(col.children, month)
+                  const allInactive = col.children.every(c => c.status === 'inactive')
+                  return (
+                    <td key={`g-${col.groupName}`} className={`data-spreadsheet-cell data-spreadsheet-group-cell${allInactive ? ' data-spreadsheet-inactive' : ''}`}>
+                      {groupVal !== 0 ? formatCurrency(groupVal) : ''}
+                    </td>
+                  )
+                }
+                const val = balanceMap.get(`${col.account.id}:${month}`)
+                const inactive = col.account.status === 'inactive'
                 return (
-                  <td key={a.id} className="data-spreadsheet-cell">
+                  <td key={col.account.id} className={`data-spreadsheet-cell${col.kind === 'child' ? ' data-spreadsheet-child-cell' : ''}${inactive ? ' data-spreadsheet-inactive' : ''}`}>
                     {val !== undefined ? formatCurrency(val) : ''}
                   </td>
                 )
@@ -309,6 +459,21 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
       </tbody>
     </table>
   </div>
+
+  {pendingDeleteMonth && (
+    <div className="data-confirm-overlay" onClick={() => setPendingDeleteMonth(null)}>
+      <div className="data-confirm-dialog" onClick={e => e.stopPropagation()}>
+        <p className="data-confirm-message">
+          Delete all balance entries for <strong>{formatMonth(pendingDeleteMonth)}</strong>?<br/>
+          This cannot be undone.
+        </p>
+        <div className="data-confirm-actions">
+          <button className="data-confirm-cancel" onClick={() => setPendingDeleteMonth(null)}>Cancel</button>
+          <button className="data-confirm-delete" onClick={() => { onDeleteMonth(pendingDeleteMonth); setPendingDeleteMonth(null) }}>Delete</button>
+        </div>
+      </div>
+    </div>
+  )}
   </>
   )
 }

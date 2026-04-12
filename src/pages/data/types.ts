@@ -17,6 +17,7 @@ export interface Account {
   nature: AccountNature
   allocation: AssetAllocation
   institution?: string
+  group?: string
 }
 
 export interface BalanceEntry {
