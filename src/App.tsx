@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 're
 import { PageType, FinancialGoal, GwGoal } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
-import Home from './pages/Home'
+import Home from './pages/home/Home'
 import Goal from './pages/goal/Goal'
 import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
@@ -382,7 +382,7 @@ const App: FC = () => {
   const renderPage = (): React.ReactNode => {
     return (
       <Routes>
-        <Route path="/" element={<Home profile={profile} onUpdateProfile={updateProfile} />} />
+        <Route path="/" element={<Home profile={profile} goals={visibleGoals} gwGoals={gwGoals} onGoToGoal={handleGoToGoal} />} />
         <Route
           path="/goal"
           element={
