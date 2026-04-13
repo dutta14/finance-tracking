@@ -41,13 +41,13 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       const prevBals = balances.filter(b => b.month === prevMonthKey)
       const prevMap = new Map<number, number>()
       for (const b of prevBals) prevMap.set(b.accountId, b.balance)
-      prevNwVal = accounts.filter(a => a.status === 'active').reduce((s, a) => s + (prevMap.get(a.id) ?? 0), 0)
+      prevNwVal = accounts.reduce((s, a) => s + (prevMap.get(a.id) ?? 0), 0)
     }
 
     const sum = (accs: Account[]) => accs.reduce((s, a) => s + (balMap.get(a.id) ?? 0), 0)
 
-    const fiAccounts = accounts.filter(a => a.goalType === 'fi' && a.status === 'active')
-    const gwAccounts = accounts.filter(a => a.goalType === 'gw' && a.status === 'active')
+    const fiAccounts = accounts.filter(a => a.goalType === 'fi')
+    const gwAccounts = accounts.filter(a => a.goalType === 'gw')
 
     const fiRetirement = fiAccounts.filter(a => a.type === 'retirement')
     const fiNonRetirement = fiAccounts.filter(a => a.type === 'non-retirement')
@@ -56,7 +56,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
     const fiTotal = sum(fiAccounts)
     const gwTotal = sum(gwAccounts)
-    const nw = sum(accounts.filter(a => a.status === 'active'))
+    const nw = sum(accounts)
 
     const tree: TreeNode[] = [
       {
