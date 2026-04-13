@@ -1,5 +1,6 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { getLatestGoalTotals } from '../../data/types'
 import './GoalCompareView.css'
 
 interface GoalCompareViewProps {
@@ -52,11 +53,19 @@ const FI_ROWS: FiRow[] = [
   { label: 'Annual Expense (at creation)',   render: p => dollars(p.expenseValue) },
   { label: 'Annual Expense (at retirement)', render: p => dollars(p.expenseValue2047) },
   { label: 'FI Goal',                        render: p => dollars(p.fiGoal) },
-  { label: 'Progress',                       render: p => `${p.progress.toFixed(1)}%` },
 ]
 
 const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday }) => {
   const colCount = goals.length + 1
+  const { fiTotal } = useMemo(() => getLatestGoalTotals(), [])
+
+  const fiRows: FiRow[] = useMemo(() => [
+    ...FI_ROWS,
+    { label: 'Progress', render: p => {
+      if (p.fiGoal <= 0) return '0.0%'
+      return `${Math.min(100, Math.max(0, (fiTotal / p.fiGoal) * 100)).toFixed(1)}%`
+    }},
+  ], [fiTotal])
 
   const gwByGoal = goals.map(goal => gwGoals.filter(g => g.fiGoalId === goal.id))
 
@@ -91,7 +100,7 @@ const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirt
             <tr className="compare-section-header">
               <td colSpan={colCount}>Financial Independence</td>
             </tr>
-            {FI_ROWS.map(row => (
+            {fiRows.map(row => (
               <tr key={row.label}>
                 <td className="compare-row-label">{row.label}</td>
                 {goals.map(goal => (

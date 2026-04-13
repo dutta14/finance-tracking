@@ -1,16 +1,17 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { FC, useState, useRef, useEffect, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { getLatestGoalTotals } from '../../data/types'
 import GoalDetailedCard from '../../../components/GoalDetailedCard'
 import GoalActionsMenu from '../../../components/GoalActionsMenu'
 import '../../../styles/GoalDetailPane.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
-const GwGoalSummary: FC<{ gw: GwGoal; goal: FinancialGoal; profileBirthday: string }> = ({ gw, goal, profileBirthday }) => {
+const GwGoalSummary: FC<{ gw: GwGoal; goal: FinancialGoal; profileBirthday: string; gwProgressPct: number }> = ({ gw, goal, profileBirthday, gwProgressPct }) => {
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(goal.goalCreatedIn)
-  const disburseYear = birthYear + gw.disburseAge
   const retirementYear = birthYear + goal.retirementAge
+  const disburseYear = birthYear + gw.disburseAge
   const monthsToDisburse = Math.max(0,
     (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
   )
@@ -19,9 +20,7 @@ const GwGoalSummary: FC<{ gw: GwGoal; goal: FinancialGoal; profileBirthday: stri
   const pvAtRetirement = monthsRetToDisburse > 0
     ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
     : disbursementTarget
-  const progressPct = pvAtRetirement > 0
-    ? Math.min(100, Math.max(0, ((gw.currentSavings ?? 0) / pvAtRetirement) * 100))
-    : 0
+  const progressPct = gwProgressPct
 
   return (
     <div className="pane-gw-goal">
@@ -64,6 +63,23 @@ const GoalDetailPane: FC<GoalDetailPaneProps> = ({
   const [renameMode, setRenameMode] = useState(false)
   const [renameName, setRenameName] = useState('')
   const renameInputRef = useRef<HTMLInputElement>(null)
+
+  const paneGwProgress = useMemo(() => {
+    const goalsForPlan = gwGoals.filter(g => g.fiGoalId === goal.id)
+    if (goalsForPlan.length === 0) return 0
+    const { gwTotal } = getLatestGoalTotals()
+    const [by, bm] = profileBirthday.split('-').map(Number)
+    const created = new Date(goal.goalCreatedIn)
+    const totalNeeded = goalsForPlan.reduce((sum, gw) => {
+      const disburseYear = by + gw.disburseAge
+      const months = Math.max(0, (disburseYear - created.getFullYear()) * 12 + (bm - (created.getMonth() + 1)))
+      const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
+      const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
+      const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
+      return sum + pv
+    }, 0)
+    return totalNeeded > 0 ? Math.min(100, Math.max(0, (gwTotal / totalNeeded) * 100)) : 0
+  }, [gwGoals, goal, profileBirthday])
 
   // Reset state when a different goal is selected
   useEffect(() => {
@@ -141,7 +157,7 @@ const GoalDetailPane: FC<GoalDetailPaneProps> = ({
         {gwGoals.filter(g => g.fiGoalId === goal.id).length > 0 && (
           <div className="pane-gw-goals-section">
             {gwGoals.filter(g => g.fiGoalId === goal.id).map(g => (
-              <GwGoalSummary key={g.id} gw={g} goal={goal} profileBirthday={profileBirthday} />
+              <GwGoalSummary key={g.id} gw={g} goal={goal} profileBirthday={profileBirthday} gwProgressPct={paneGwProgress} />
             ))}
           </div>
         )}

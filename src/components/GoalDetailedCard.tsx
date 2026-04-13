@@ -3,6 +3,7 @@ import { FinancialGoal } from '../types'
 import GoalCardActions from './GoalCardActions'
 import { calculateGoalMetrics } from '../pages/goal/utils/goalCalculations'
 import { parseDate as utilParseDate, getMonthsBetween } from '../pages/goal/utils/dateHelpers'
+import { getLatestGoalTotals } from '../pages/data/types'
 import '../styles/GoalDetailedCard.css'
 
 interface EditFields {
@@ -212,7 +213,13 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
   const creationYear = goal.goalCreatedIn ? new Date(goal.goalCreatedIn).getFullYear() : '—'
   const retirementYear = retirementDate.getFullYear()
   const inflationYears = Math.round(retirementYear - Number(creationYear))
-  const progressClamped = Math.min(100, Math.max(0, goal.progress || 0))
+
+  const fiProgress = useMemo(() => {
+    if (goal.fiGoal <= 0) return 0
+    const { fiTotal } = getLatestGoalTotals()
+    return Math.min(100, Math.max(0, (fiTotal / goal.fiGoal) * 100))
+  }, [goal.fiGoal])
+  const progressClamped = fiProgress
 
   return (
     <div className={`fi-card${condensed ? ' fi-card--flat' : ''}`}>
@@ -395,7 +402,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
               style={{ width: `${progressClamped}%` }}
             />
           </div>
-          <span className="fi-card-progress-pct">{goal.progress.toFixed(1)}%</span>
+          <span className="fi-card-progress-pct">{fiProgress.toFixed(1)}%</span>
         </div>
       </div>
 

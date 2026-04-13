@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { Account, BalanceEntry, ALLOCATION_LABELS, AssetAllocation, formatCurrency, getDefaultAllocation } from '../data/types'
 
@@ -18,6 +18,8 @@ const ALLOC_COLORS: Record<AssetAllocation, string> = {
 }
 
 const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances }) => {
+  const [legendMode, setLegendMode] = useState<'pct' | 'val'>('pct')
+  const [chartMode, setChartMode] = useState<'pie' | 'bar'>('bar')
 
   const { fiData, gwData } = useMemo(() => {
     if (balances.length === 0) return { fiData: [], gwData: [] }
@@ -74,7 +76,23 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
   const tooltipBg = isDark ? '#1f2937' : '#fff'
   const tooltipBorder = isDark ? '#374151' : '#e5e7eb'
 
-  const renderPie = (data: { name: string; value: number; color: string }[], label: string) => {
+  const renderLegend = (data: { name: string; value: number; color: string }[], total: number) => (
+    <div className="alloc-legend">
+      {data.map((entry, i) => (
+        <div key={i} className="alloc-legend-row">
+          <span className="alloc-legend-dot" style={{ background: entry.color }} />
+          <span className="alloc-legend-label">{entry.name}</span>
+          <span className="alloc-legend-pct">
+            {legendMode === 'pct'
+              ? `${((entry.value / total) * 100).toFixed(0)}%`
+              : formatCurrency(entry.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+
+  const renderSection = (data: { name: string; value: number; color: string }[], label: string) => {
     if (data.length === 0) {
       return (
         <div className="alloc-section">
@@ -85,6 +103,31 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
     }
 
     const total = data.reduce((s, d) => s + d.value, 0)
+
+    if (chartMode === 'bar') {
+      return (
+        <div className="alloc-section">
+          <h4 className="alloc-section-title">{label}</h4>
+          <div className="alloc-bar-wrap">
+            <div className="alloc-stacked-bar">
+              {data.map((entry, i) => {
+                const pct = ((entry.value / total) * 100).toFixed(1)
+                return (
+                  <div
+                    key={i}
+                    className="alloc-bar-seg"
+                    style={{ width: `${pct}%`, background: entry.color }}
+                  >
+                    <span className="alloc-bar-tooltip">{entry.name}: {pct}% — {formatCurrency(entry.value)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          {renderLegend(data, total)}
+        </div>
+      )
+    }
 
     return (
       <div className="alloc-section">
@@ -114,15 +157,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="alloc-legend">
-            {data.map((entry, i) => (
-              <div key={i} className="alloc-legend-row">
-                <span className="alloc-legend-dot" style={{ background: entry.color }} />
-                <span className="alloc-legend-label">{entry.name}</span>
-                <span className="alloc-legend-pct">{((entry.value / total) * 100).toFixed(0)}%</span>
-              </div>
-            ))}
-          </div>
+          {renderLegend(data, total)}
         </div>
       </div>
     )
@@ -132,13 +167,27 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
     <div className="home-card home-card--alloc">
       <div className="home-card-header">
         <h3>Asset Allocation</h3>
+        <div className="alloc-toggles">
+          <div className="alloc-toggle">
+            <button className={`alloc-toggle-btn${chartMode === 'bar' ? ' active' : ''}`} onClick={() => setChartMode('bar')} title="Stacked bar">
+              <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6"/><rect x="1" y="8" width="8" height="3" rx="1" fill="currentColor"/></svg>
+            </button>
+            <button className={`alloc-toggle-btn${chartMode === 'pie' ? ' active' : ''}`} onClick={() => setChartMode('pie')} title="Donut chart">
+              <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="10 21.4" strokeDashoffset="0"/><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="8 23.4" strokeDashoffset="-10" opacity=".5"/></svg>
+            </button>
+          </div>
+          <div className="alloc-toggle">
+            <button className={`alloc-toggle-btn${legendMode === 'pct' ? ' active' : ''}`} onClick={() => setLegendMode('pct')}>%</button>
+            <button className={`alloc-toggle-btn${legendMode === 'val' ? ' active' : ''}`} onClick={() => setLegendMode('val')}>$</button>
+          </div>
+        </div>
       </div>
       {balances.length === 0 ? (
         <div className="home-card-empty">No balance data yet</div>
       ) : (
-        <div className="alloc-grid">
-          {renderPie(fiData, 'FI')}
-          {renderPie(gwData, 'GW')}
+        <div className={`alloc-grid${chartMode === 'bar' ? ' alloc-grid--vertical' : ''}`}>
+          {renderSection(fiData, 'FI')}
+          {renderSection(gwData, 'GW')}
         </div>
       )}
     </div>

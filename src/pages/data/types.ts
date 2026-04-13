@@ -82,3 +82,27 @@ export const formatMonth = (ym: string) => {
 
 export const formatCurrency = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+
+/** Read accounts + balances from localStorage and return the latest-month FI and GW totals. */
+export const getLatestGoalTotals = (): { fiTotal: number; gwTotal: number } => {
+  try {
+    const accounts: Account[] = JSON.parse(localStorage.getItem('data-accounts') || '[]')
+    const balances: BalanceEntry[] = JSON.parse(localStorage.getItem('data-balances') || '[]')
+    if (accounts.length === 0 || balances.length === 0) return { fiTotal: 0, gwTotal: 0 }
+    const months = [...new Set(balances.map(b => b.month))].sort()
+    const latest = months[months.length - 1]
+    const balMap = new Map<number, number>()
+    for (const b of balances) if (b.month === latest) balMap.set(b.accountId, b.balance)
+    let fiTotal = 0
+    let gwTotal = 0
+    for (const a of accounts) {
+      if (a.status !== 'active') continue
+      const bal = balMap.get(a.id) ?? 0
+      if (a.goalType === 'fi') fiTotal += bal
+      else if (a.goalType === 'gw') gwTotal += bal
+    }
+    return { fiTotal, gwTotal }
+  } catch {
+    return { fiTotal: 0, gwTotal: 0 }
+  }
+}

@@ -1,5 +1,6 @@
-import { FC, useState, useEffect, useRef } from 'react'
+import { FC, useState, useEffect, useRef, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { getLatestGoalTotals } from '../../data/types'
 import '../../../styles/GwSection.css'
 
 interface GwSectionProps {
@@ -51,7 +52,8 @@ const GwGoalCard: FC<{
   onSetDollarView: (v: GwDollarView) => void
   onEdit: (fields: GwFormFields) => void
   onDelete: () => void
-}> = ({ gw, currentAge, creationYear, inflationRate, retirementAge, goalCreatedIn, profileBirthday, dollarView, onSetDollarView, onEdit, onDelete }) => {
+  gwProgressPct: number
+}> = ({ gw, currentAge, creationYear, inflationRate, retirementAge, goalCreatedIn, profileBirthday, dollarView, onSetDollarView, onEdit, onDelete, gwProgressPct }) => {
   const [editing, setEditing] = useState(false)
   const [editFields, setEditFields] = useState<GwFormFields>({
     label: gw.label,
@@ -131,9 +133,7 @@ const GwGoalCard: FC<{
     monthsRetToDisburse > 0
       ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
       : disbursementTarget
-  const progressPct = pvAtRetirement > 0
-    ? Math.min(100, Math.max(0, ((gw.currentSavings ?? 0) / pvAtRetirement) * 100))
-    : 0
+  const progressPct = gwProgressPct
 
   return (
     <div className={`gw-goal-card${editing ? ' gw-goal-card--editing' : ''}`}>
@@ -246,6 +246,22 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
   const goalGoals = gwGoals.filter(g => g.fiGoalId === goal.id)
   const otherGoals = gwGoals.filter(g => g.fiGoalId !== goal.id)
   const currentAge = ageAtCreation(profileBirthday, goal.goalCreatedIn)
+
+  const gwProgressPct = useMemo(() => {
+    const { gwTotal } = getLatestGoalTotals()
+    if (goalGoals.length === 0) return 0
+    const [by, bm] = profileBirthday.split('-').map(Number)
+    const created = new Date(goal.goalCreatedIn)
+    const totalNeeded = goalGoals.reduce((sum, gw) => {
+      const disburseYear = by + gw.disburseAge
+      const months = Math.max(0, (disburseYear - created.getFullYear()) * 12 + (bm - (created.getMonth() + 1)))
+      const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
+      const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
+      const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
+      return sum + pv
+    }, 0)
+    return totalNeeded > 0 ? Math.min(100, Math.max(0, (gwTotal / totalNeeded) * 100)) : 0
+  }, [goalGoals, profileBirthday, goal])
 
   const handleImport = (gw: GwGoal) => {
     onCreateGwGoal({
@@ -363,6 +379,7 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
               profileBirthday={profileBirthday}
               dollarView={dollarView}
               onSetDollarView={setDollarView}
+              gwProgressPct={gwProgressPct}
               onEdit={fields => onUpdateGwGoal(gw.id, {
                 label: fields.label.trim(),
                 disburseAge: Number(fields.disburseAge),

@@ -188,8 +188,8 @@ const App: FC = () => {
 
   // Drive auto-sync whenever goals, gwGoals, profile, or themes change
   useEffect(() => {
-    ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } });
-  }, [goals, gwGoals, profile, fiTheme, gwTheme, homeTheme, darkMode]); // eslint-disable-line react-hooks/exhaustive-deps
+    ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport } });
+  }, [goals, gwGoals, profile, fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Callback when Data page accounts/balances change → sync data file
   const handleDataChange = (accounts: Account[], balances: BalanceEntry[]): void => {
@@ -254,9 +254,10 @@ const App: FC = () => {
 
   const handleExport = (): void => {
     const dataSnapshot = getDataSnapshot()
+    const goalViewMode = localStorage.getItem('goal-view-mode') || ''
     const json = JSON.stringify({
       version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile,
-      settings: { fiTheme, gwTheme, homeTheme, darkMode },
+      settings: { fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport, goalViewMode },
       dataAccounts: dataSnapshot.accounts, dataBalances: dataSnapshot.balances,
     }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -290,6 +291,8 @@ const App: FC = () => {
           if (s.gwTheme) setGwTheme(s.gwTheme)
           if (s.homeTheme) setHomeTheme(s.homeTheme)
           if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
+          if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
+          if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
         }
         if (Array.isArray(parsed?.dataAccounts)) {
           localStorage.setItem('data-accounts', JSON.stringify(parsed.dataAccounts))
@@ -329,6 +332,8 @@ const App: FC = () => {
           if (s.gwTheme) setGwTheme(s.gwTheme as string)
           if (s.homeTheme) setHomeTheme(s.homeTheme as string)
           if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
+          if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
+          if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
         }
         let restoredGhConfig = ghConfig
         if (parsed?.gitHubConfig && typeof parsed.gitHubConfig === 'object') {
@@ -462,7 +467,7 @@ const App: FC = () => {
           onGhTestConnection={testConnection}
           onGhRestoreLatest={restoreLatest}
           onGhRestoreFromCommit={restoreFromCommit}
-          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode } }}
+          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport } }}
           onGhApplyRestore={applyRestoredSnapshot}
           onFactoryReset={handleFactoryReset}
           allowCsvImport={allowCsvImport}

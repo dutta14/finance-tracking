@@ -61,6 +61,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
         <NetWorthSummary
           accounts={accounts}
           balances={balances}
+          allMonths={allMonths}
           onNavigate={() => navigate('/data')}
         />
         <MiniCharts
