@@ -5,6 +5,7 @@ import { parseCsvImport } from './csvImport'
 import { exportCsv } from './csvExport'
 import AccountsModal from './AccountsModal'
 import BalanceSpreadsheet from './BalanceSpreadsheet'
+import BalanceCharts from './BalanceCharts'
 import '../../styles/Data.css'
 
 interface DataProps {
@@ -28,6 +29,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
   const [inlineEntry, setInlineEntry] = useState<{ month: string; values: Record<number, string> } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
   const [showInactive, setShowInactive] = useState(false)
+  const [dataView, setDataView] = useState<'charts' | 'spreadsheet'>('charts')
 
   const saveAccounts = (updated: Account[]) => {
     setAccounts(updated)
@@ -187,15 +189,22 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
         ) : (
           <>
             <div className="data-toolbar">
-              <span className="data-entry-count">{balances.length} balance {balances.length === 1 ? 'entry' : 'entries'}</span>
+              <div className="data-view-tabs">
+                <button className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`} onClick={() => setDataView('charts')}>Charts</button>
+                <button className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`} onClick={() => setDataView('spreadsheet')}>Spreadsheet</button>
+              </div>
               <div className="data-toolbar-actions">
-                <label className="data-filter-toggle">
-                  <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
-                  Show inactive
-                </label>
-                <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
-                  + Add Entry
-                </button>
+                {dataView === 'spreadsheet' && (
+                  <label className="data-filter-toggle">
+                    <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
+                    Show inactive
+                  </label>
+                )}
+                {dataView === 'spreadsheet' && (
+                  <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
+                    + Add Entry
+                  </button>
+                )}
               </div>
             </div>
 
@@ -214,6 +223,13 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
                   </button>
                 </div>
               </div>
+            ) : dataView === 'charts' ? (
+              <BalanceCharts
+                accounts={accounts}
+                balances={balances}
+                allMonths={allMonths}
+                balanceMap={balanceMap}
+              />
             ) : (
               <BalanceSpreadsheet
                 spreadsheetAccounts={spreadsheetAccounts}
