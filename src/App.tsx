@@ -366,10 +366,11 @@ const App: FC = () => {
               if (Array.isArray(d.balances)) localStorage.setItem('data-balances', JSON.stringify(d.balances))
             }
             markRestored()
-            setTimeout(() => resolve(), 100)
+            // Reload so all React components pick up the restored localStorage data
+            setTimeout(() => { resolve(); window.location.reload() }, 100)
           }).catch(() => {
             markRestored()
-            setTimeout(() => resolve(), 100)
+            setTimeout(() => { resolve(); window.location.reload() }, 100)
           })
         }, 300)
       } catch (e) {

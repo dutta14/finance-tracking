@@ -441,6 +441,7 @@ export const useGitHubSync = () => {
   const updateDataFile = useCallback((data: object) => {
     const json = JSON.stringify(data)
     if (json === lastSyncedDataJsonRef.current) return
+    setHasPendingChanges(true)
     pendingDataFileRef.current = data
     if (!config.autoSync || !isConfigured) return
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
@@ -460,6 +461,22 @@ export const useGitHubSync = () => {
   useEffect(() => () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
   }, [])
+
+  // Flush pending syncs when user navigates away or hides the tab
+  useEffect(() => {
+    const handleVisChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current)
+          debounceTimerRef.current = null
+        }
+        if (pendingDataRef.current) syncNow(pendingDataRef.current)
+        if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisChange)
+    return () => document.removeEventListener('visibilitychange', handleVisChange)
+  }, [isConfigured, activeToken, config, syncNow, syncDataNow])
 
   return {
     config,
