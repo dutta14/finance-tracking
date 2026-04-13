@@ -133,6 +133,7 @@ export const useGitHubSync = () => {
   const pendingDataRef = useRef<object | null>(null)
   const pendingDataFileRef = useRef<object | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dataDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSyncedJsonRef = useRef<string | null>(null)
   const lastSyncedDataJsonRef = useRef<string | null>(null)
 
@@ -291,8 +292,11 @@ export const useGitHubSync = () => {
         throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
       }
       lastSyncedDataJsonRef.current = canonicalJson
+      pendingDataFileRef.current = null
     } catch (e) {
       console.error('Data file sync error:', e instanceof Error ? e.message : e)
+      setSyncStatus('error')
+      setLastError(`Data sync: ${e instanceof Error ? e.message : String(e)}`)
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured])
 
@@ -425,7 +429,7 @@ export const useGitHubSync = () => {
   const updateData = useCallback((data: object) => {
     const json = JSON.stringify(data)
     if (json === lastSyncedJsonRef.current) {
-      setHasPendingChanges(false)
+      if (!pendingDataFileRef.current) setHasPendingChanges(false)
       return
     }
     setHasPendingChanges(true)
@@ -434,9 +438,8 @@ export const useGitHubSync = () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     debounceTimerRef.current = setTimeout(() => {
       if (pendingDataRef.current) syncNow(pendingDataRef.current)
-      if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
     }, DEBOUNCE_MS)
-  }, [config.autoSync, isConfigured, syncNow, syncDataNow])
+  }, [config.autoSync, isConfigured, syncNow])
 
   const updateDataFile = useCallback((data: object) => {
     const json = JSON.stringify(data)
@@ -444,12 +447,11 @@ export const useGitHubSync = () => {
     setHasPendingChanges(true)
     pendingDataFileRef.current = data
     if (!config.autoSync || !isConfigured) return
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    debounceTimerRef.current = setTimeout(() => {
-      if (pendingDataRef.current) syncNow(pendingDataRef.current)
+    if (dataDebounceTimerRef.current) clearTimeout(dataDebounceTimerRef.current)
+    dataDebounceTimerRef.current = setTimeout(() => {
       if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
     }, DEBOUNCE_MS)
-  }, [config.autoSync, isConfigured, syncNow, syncDataNow])
+  }, [config.autoSync, isConfigured, syncDataNow])
 
   const markRestored = useCallback(() => {
     setLastSyncAt(new Date().toISOString())
@@ -460,6 +462,7 @@ export const useGitHubSync = () => {
 
   useEffect(() => () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    if (dataDebounceTimerRef.current) clearTimeout(dataDebounceTimerRef.current)
   }, [])
 
   // Flush pending syncs when user navigates away or hides the tab
@@ -469,6 +472,10 @@ export const useGitHubSync = () => {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current)
           debounceTimerRef.current = null
+        }
+        if (dataDebounceTimerRef.current) {
+          clearTimeout(dataDebounceTimerRef.current)
+          dataDebounceTimerRef.current = null
         }
         if (pendingDataRef.current) syncNow(pendingDataRef.current)
         if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
