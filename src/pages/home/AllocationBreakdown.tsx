@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
-import { Account, BalanceEntry, ALLOCATION_LABELS, AssetAllocation, formatCurrency } from '../data/types'
+import { Account, BalanceEntry, ALLOCATION_LABELS, AssetAllocation, formatCurrency, getDefaultAllocation } from '../data/types'
 
 interface AllocationBreakdownProps {
   accounts: Account[]
@@ -30,14 +30,39 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
 
     const buildAlloc = (goalType: 'fi' | 'gw') => {
       const grouped = new Map<AssetAllocation, number>()
+
+      // First, add all assets
       for (const a of accounts) {
-        if (a.status !== 'active' || a.goalType !== goalType) continue
+        if (a.status !== 'active' || a.goalType !== goalType || (a.nature || 'asset') !== 'asset') continue
         const bal = balMap.get(a.id)
-        if (!bal || bal <= 0) continue // skip liabilities and zero for pie chart
-        const alloc = a.allocation || 'others'
+        if (!bal || bal === 0) continue
+        const alloc = a.allocation || getDefaultAllocation('asset')
         grouped.set(alloc, (grouped.get(alloc) ?? 0) + bal)
       }
+
+      // Then subtract linked liabilities from their linked asset's allocation category
+      // Unlinked liabilities get their own "Debt" slice
+      for (const a of accounts) {
+        if (a.status !== 'active' || a.goalType !== goalType || (a.nature || 'asset') !== 'liability') continue
+        const bal = balMap.get(a.id)
+        if (!bal || bal === 0) continue
+        const absBal = Math.abs(bal)
+
+        if (a.linkedAccountId != null) {
+          const linked = accounts.find(la => la.id === a.linkedAccountId)
+          if (linked) {
+            const linkedAlloc = linked.allocation || getDefaultAllocation(linked.nature || 'asset')
+            grouped.set(linkedAlloc, (grouped.get(linkedAlloc) ?? 0) - absBal)
+            continue
+          }
+        }
+        // Unlinked liability — show as Debt
+        const alloc = a.allocation || getDefaultAllocation('liability')
+        grouped.set(alloc, (grouped.get(alloc) ?? 0) + absBal)
+      }
+
       return [...grouped.entries()]
+        .filter(([, value]) => value > 0)
         .map(([key, value]) => ({ name: ALLOCATION_LABELS[key], value, color: ALLOC_COLORS[key] }))
         .sort((a, b) => b.value - a.value)
     }

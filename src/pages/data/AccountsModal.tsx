@@ -1,4 +1,4 @@
-import { FC, useState, useRef } from 'react'
+import { FC, useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { Profile } from '../../hooks/useProfile'
 import {
   Account, AccountType, AccountOwner, AccountGoalType, AccountStatus, AccountNature, AssetAllocation,
@@ -40,9 +40,107 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
   const [dragAccountId, setDragAccountId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
 
-  const filteredAccounts = filter === 'all'
-    ? accounts
-    : accounts.filter(a => a.status === filter)
+  type SortCol = 'name' | 'goalType' | 'type' | 'nature' | 'allocation' | 'owner' | 'status'
+  type SortDir = 'asc' | 'desc'
+  const [sortCol, setSortCol] = useState<SortCol | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [columnFilters, setColumnFilters] = useState<Partial<Record<SortCol, Set<string>>>>({})
+  const [openFilterCol, setOpenFilterCol] = useState<SortCol | null>(null)
+  const filterDropdownRef = useRef<HTMLDivElement>(null)
+
+  const toggleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      if (sortDir === 'asc') setSortDir('desc')
+      else { setSortCol(null); setSortDir('asc') }
+    } else {
+      setSortCol(col)
+      setSortDir('asc')
+    }
+  }
+
+  const toggleColumnFilter = (col: SortCol, value: string) => {
+    setColumnFilters(prev => {
+      const next = { ...prev }
+      const set = new Set(prev[col] || [])
+      if (set.has(value)) set.delete(value)
+      else set.add(value)
+      if (set.size === 0) delete next[col]
+      else next[col] = set
+      return next
+    })
+  }
+
+  const clearColumnFilter = (col: SortCol) => {
+    setColumnFilters(prev => { const next = { ...prev }; delete next[col]; return next })
+  }
+
+  // Close filter dropdown on outside click
+  useEffect(() => {
+    if (!openFilterCol) return
+    const handler = (e: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+        setOpenFilterCol(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openFilterCol])
+
+  const getColValue = useCallback((a: Account, col: SortCol): string => {
+    switch (col) {
+      case 'name': return a.name
+      case 'goalType': return a.goalType
+      case 'type': return a.type
+      case 'nature': return a.nature || 'asset'
+      case 'allocation': return a.allocation || getDefaultAllocation(a.nature || 'asset')
+      case 'owner': return a.owner
+      case 'status': return a.status
+    }
+  }, [])
+
+  const getColLabel = useCallback((col: SortCol, val: string): string => {
+    switch (col) {
+      case 'name': return val
+      case 'goalType': return GOAL_TYPE_LABELS[val as AccountGoalType] || val
+      case 'type': return ACCOUNT_TYPE_LABELS[val as AccountType] || val
+      case 'nature': return NATURE_LABELS[val as AccountNature] || val
+      case 'allocation': return ALLOCATION_LABELS[val as AssetAllocation] || val
+      case 'owner': return ownerLabels[val as AccountOwner] || val
+      case 'status': return val.charAt(0).toUpperCase() + val.slice(1)
+    }
+  }, [ownerLabels])
+
+  const displayAccounts = useMemo(() => {
+    let list = filter === 'all' ? accounts : accounts.filter(a => a.status === filter)
+
+    // Apply column filters
+    for (const [col, allowed] of Object.entries(columnFilters) as [SortCol, Set<string>][]) {
+      if (allowed && allowed.size > 0) {
+        list = list.filter(a => allowed.has(getColValue(a, col)))
+      }
+    }
+
+    // Apply sort
+    if (sortCol) {
+      const dir = sortDir === 'asc' ? 1 : -1
+      list = [...list].sort((a, b) => {
+        const va = getColValue(a, sortCol).toLowerCase()
+        const vb = getColValue(b, sortCol).toLowerCase()
+        return va < vb ? -dir : va > vb ? dir : 0
+      })
+    }
+
+    return list
+  }, [accounts, filter, columnFilters, sortCol, sortDir, getColValue])
+
+  // Unique values for filter dropdowns (from ALL accounts, not filtered)
+  const colUniqueValues = useCallback((col: SortCol): string[] => {
+    const baseList = filter === 'all' ? accounts : accounts.filter(a => a.status === filter)
+    const vals = new Set(baseList.map(a => getColValue(a, col)))
+    return [...vals].sort((a, b) => getColLabel(col, a).toLowerCase().localeCompare(getColLabel(col, b).toLowerCase()))
+  }, [accounts, filter, getColValue, getColLabel])
+
+  const filteredAccounts = displayAccounts
 
   const allFilteredSelected = filteredAccounts.length > 0 && filteredAccounts.every(a => selectedIds.has(a.id))
 
@@ -105,7 +203,7 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
     }
   }
 
-  const showMultiSelect = selectedCount >= 2
+  const showMultiSelect = selectedCount >= 1
 
   return (
     <div className="data-modal-backdrop" onClick={onClose}>
@@ -318,6 +416,7 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
             <AccountForm
               profile={profile}
               existingGroups={existingGroups}
+              allAccounts={accounts}
               onSave={(data) => { onAdd(data); setShowAddForm(false) }}
               onCancel={() => setShowAddForm(false)}
             />
@@ -408,13 +507,58 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
                 <thead>
                   <tr>
                     {showMultiSelect && <th className="data-th-checkbox"><input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} /></th>}
-                    <th>Account</th>
-                    <th>Goal</th>
-                    <th>Type</th>
-                    <th>A/L</th>
-                    <th>Allocation</th>
-                    <th>Owner</th>
-                    <th>Status</th>
+                    {([
+                      ['name', 'Account'],
+                      ['goalType', 'Goal'],
+                      ['type', 'Type'],
+                      ['nature', 'A/L'],
+                      ['allocation', 'Allocation'],
+                      ['owner', 'Owner'],
+                      ['status', 'Status'],
+                    ] as [SortCol, string][]).map(([col, label]) => {
+                      const hasFilter = !!(columnFilters[col] && columnFilters[col]!.size > 0)
+                      return (
+                        <th key={col} className="data-th-sortable">
+                          <div className="data-th-controls">
+                            <button className="data-th-sort-btn" onClick={() => toggleSort(col)} title={`Sort by ${label}`}>
+                              {label}
+                              <span className={`data-th-sort-icon${sortCol === col ? ' active' : ''}`}>
+                                {sortCol === col && sortDir === 'desc' ? '↓' : sortCol === col ? '↑' : '↕'}
+                              </span>
+                            </button>
+                            {col !== 'name' && (
+                              <button
+                                className={`data-th-filter-btn${hasFilter ? ' active' : ''}`}
+                                onClick={e => { e.stopPropagation(); setOpenFilterCol(openFilterCol === col ? null : col) }}
+                                title={`Filter ${label}`}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                                  <path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5L1 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                            )}
+                            {openFilterCol === col && col !== 'name' && (
+                              <div className="data-th-filter-dropdown" ref={filterDropdownRef} onClick={e => e.stopPropagation()}>
+                                <div className="data-th-filter-options">
+                                  {colUniqueValues(col).map(val => {
+                                    const checked = columnFilters[col]?.has(val) ?? false
+                                    return (
+                                      <label key={val} className="data-th-filter-option">
+                                        <input type="checkbox" checked={checked} onChange={() => toggleColumnFilter(col, val)} />
+                                        <span>{getColLabel(col, val)}</span>
+                                      </label>
+                                    )
+                                  })}
+                                </div>
+                                {hasFilter && (
+                                  <button className="data-th-filter-clear" onClick={() => clearColumnFilter(col)}>Clear filter</button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </th>
+                      )
+                    })}
                     <th></th>
                   </tr>
                 </thead>
@@ -426,6 +570,7 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
                           <AccountForm
                               profile={profile}
                             existingGroups={existingGroups}
+                            allAccounts={accounts}
                             initial={account}
                             onSave={(updates) => { onUpdate(account.id, updates); setEditingId(null) }}
                             onCancel={() => setEditingId(null)}
@@ -440,6 +585,10 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
                             <span>{account.name}</span>
                             {account.institution && <span className="data-account-institution">{account.institution}</span>}
                             {account.group && <span className="data-account-parent">↳ {account.group}</span>}
+                            {account.linkedAccountId != null && (() => {
+                              const linked = accounts.find(a => a.id === account.linkedAccountId)
+                              return linked ? <span className="data-account-linked">⛓ {linked.name}</span> : null
+                            })()}
                           </div>
                         </td>
                         <td><span className={`data-badge data-badge--goal-${account.goalType}`}>{GOAL_TYPE_LABELS[account.goalType]}</span></td>
@@ -447,11 +596,7 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
                         <td><span className={`data-badge data-badge--nature-${account.nature || 'asset'}`}>{NATURE_LABELS[account.nature || 'asset']}</span></td>
                         <td><span className="data-badge data-badge--allocation">{ALLOCATION_LABELS[account.allocation || getDefaultAllocation(account.nature || 'asset')]}</span></td>
                         <td><span className={`data-badge data-badge--owner-${account.owner}`}>{ownerLabels[account.owner]}</span></td>
-                        <td>
-                          <button className={`data-status-toggle ${account.status}`} onClick={() => onToggleStatus(account.id)} title={`Mark as ${account.status === 'active' ? 'inactive' : 'active'}`}>
-                            {account.status === 'active' ? 'Active' : 'Inactive'}
-                          </button>
-                        </td>
+                        <td><span className={`data-badge data-badge--status-${account.status}`}>{account.status === 'active' ? 'Active' : 'Inactive'}</span></td>
                         <td>
                           <div className="data-row-actions">
                             <button className="data-action-btn" onClick={() => setEditingId(account.id)} title="Edit">

@@ -9,11 +9,12 @@ interface AccountFormProps {
   profile: Profile
   initial?: Account
   existingGroups?: string[]
+  allAccounts?: Account[]
   onSave: (data: Omit<Account, 'id'>) => void
   onCancel: () => void
 }
 
-const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = [], onSave, onCancel }) => {
+const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = [], allAccounts = [], onSave, onCancel }) => {
   const hasPartner = !!profile.partner
   const ownerLabels = getOwnerLabels(profile)
   const [name, setName] = useState(initial?.name || '')
@@ -25,6 +26,7 @@ const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = 
   const [allocation, setAllocation] = useState<AssetAllocation>(initial?.allocation || getDefaultAllocation(initial?.nature || 'asset'))
   const [group, setGroup] = useState(initial?.group || '')
   const [institution, setInstitution] = useState(initial?.institution || '')
+  const [linkedAccountId, setLinkedAccountId] = useState<number | undefined>(initial?.linkedAccountId)
   const [showGroupDropdown, setShowGroupDropdown] = useState(false)
   const groupRef = useRef<HTMLDivElement>(null)
 
@@ -39,7 +41,7 @@ const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    onSave({ name: name.trim(), type, owner, goalType, status, nature, allocation, group: group.trim() || undefined, institution: institution.trim() || undefined })
+    onSave({ name: name.trim(), type, owner, goalType, status, nature, allocation, group: group.trim() || undefined, institution: institution.trim() || undefined, linkedAccountId: nature === 'liability' ? linkedAccountId : undefined })
   }
 
   return (
@@ -128,6 +130,7 @@ const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = 
             const n = e.target.value as AccountNature
             setNature(n)
             setAllocation(getDefaultAllocation(n))
+            if (n !== 'liability') setLinkedAccountId(undefined)
           }}>
             {Object.entries(NATURE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
@@ -138,6 +141,19 @@ const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = 
             {Object.entries(ALLOCATION_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
+        {nature === 'liability' && (() => {
+          const linkable = allAccounts.filter(a => a.nature !== 'liability' && a.id !== initial?.id)
+          if (linkable.length === 0) return null
+          return (
+            <div className="data-form-field">
+              <label>Linked Asset</label>
+              <select value={linkedAccountId ?? ''} onChange={e => setLinkedAccountId(e.target.value ? Number(e.target.value) : undefined)}>
+                <option value="">None</option>
+                {linkable.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+          )
+        })()}
       </div>
       <div className="data-form-actions">
         <button type="submit" className="data-form-save">{initial ? 'Update' : 'Add Account'}</button>

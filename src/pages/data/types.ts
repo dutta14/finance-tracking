@@ -18,6 +18,7 @@ export interface Account {
   allocation: AssetAllocation
   institution?: string
   group?: string
+  linkedAccountId?: number
 }
 
 export interface BalanceEntry {
