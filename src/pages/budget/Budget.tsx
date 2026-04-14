@@ -70,50 +70,62 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
     if (!canGhSync) return
     setGhSyncing(true)
     setGhSyncMsg(null)
-    const [csvResult, configResult] = await Promise.all([
-      syncAllBudgetCSVs(ghConfig!, ghActiveToken!, store.csvs),
-      uploadBudgetConfig(ghConfig!, ghActiveToken!, getBudgetConfigData(store)),
-    ])
-    const msgs: string[] = []
-    if (csvResult.ok) msgs.push(`Synced ${csvResult.synced} CSV(s)`)
-    else msgs.push(`CSV errors: ${csvResult.errors.join('; ')}`)
-    if (configResult.ok) msgs.push('config synced')
-    else msgs.push(`config error: ${configResult.error}`)
-    setGhSyncMsg(msgs.join(', '))
+    try {
+      console.log('[budget-sync] push starting', { csvCount: Object.keys(store.csvs).length, years: store.years })
+      const [csvResult, configResult] = await Promise.all([
+        syncAllBudgetCSVs(ghConfig!, ghActiveToken!, store.csvs),
+        uploadBudgetConfig(ghConfig!, ghActiveToken!, getBudgetConfigData(store)),
+      ])
+      console.log('[budget-sync] push results', { csvResult, configResult })
+      const msgs: string[] = []
+      if (csvResult.ok) msgs.push(`Synced ${csvResult.synced} CSV(s)`)
+      else msgs.push(`CSV errors: ${csvResult.errors.join('; ')}`)
+      if (configResult.ok) msgs.push('config synced')
+      else msgs.push(`config error: ${configResult.error}`)
+      setGhSyncMsg(msgs.join(', '))
+    } catch (e) {
+      console.error('[budget-sync] push failed', e)
+      setGhSyncMsg(`Sync failed: ${e instanceof Error ? e.message : String(e)}`)
+    }
     setGhSyncing(false)
-    setTimeout(() => setGhSyncMsg(null), 4000)
+    setTimeout(() => setGhSyncMsg(null), 6000)
   }, [canGhSync, ghConfig, ghActiveToken, store])
 
   const handlePullFromGitHub = useCallback(async () => {
     if (!canGhSync) return
     setGhSyncing(true)
     setGhSyncMsg(null)
-    const [csvResult, configResult] = await Promise.all([
-      downloadAllBudgetCSVs(ghConfig!, ghActiveToken!),
-      downloadBudgetConfig(ghConfig!, ghActiveToken!),
-    ])
-    const msgs: string[] = []
-    if (csvResult.ok && csvResult.csvs) {
-      let imported = 0
-      Object.entries(csvResult.csvs).forEach(([monthKey, csv]) => {
-        const r = uploadCSV(monthKey, csv)
-        if (r.ok) imported++
-      })
-      msgs.push(`Imported ${imported} CSV(s)`)
-    } else {
-      msgs.push(`CSV pull failed: ${csvResult.error}`)
+    try {
+      const [csvResult, configResult] = await Promise.all([
+        downloadAllBudgetCSVs(ghConfig!, ghActiveToken!),
+        downloadBudgetConfig(ghConfig!, ghActiveToken!),
+      ])
+      const msgs: string[] = []
+      if (csvResult.ok && csvResult.csvs) {
+        let imported = 0
+        Object.entries(csvResult.csvs).forEach(([monthKey, csv]) => {
+          const r = uploadCSV(monthKey, csv)
+          if (r.ok) imported++
+        })
+        msgs.push(`Imported ${imported} CSV(s)`)
+      } else {
+        msgs.push(`CSV pull failed: ${csvResult.error}`)
+      }
+      if (configResult.ok && configResult.data) {
+        applyConfig(configResult.data)
+        msgs.push('config restored')
+      } else if (configResult.ok) {
+        msgs.push('no config on GitHub yet')
+      } else {
+        msgs.push(`config pull failed: ${configResult.error}`)
+      }
+      setGhSyncMsg(msgs.join(', '))
+    } catch (e) {
+      console.error('[budget-sync] pull failed', e)
+      setGhSyncMsg(`Pull failed: ${e instanceof Error ? e.message : String(e)}`)
     }
-    if (configResult.ok && configResult.data) {
-      applyConfig(configResult.data)
-      msgs.push('config restored')
-    } else if (configResult.ok) {
-      msgs.push('no config on GitHub yet')
-    } else {
-      msgs.push(`config pull failed: ${configResult.error}`)
-    }
-    setGhSyncMsg(msgs.join(', '))
     setGhSyncing(false)
-    setTimeout(() => setGhSyncMsg(null), 4000)
+    setTimeout(() => setGhSyncMsg(null), 6000)
   }, [canGhSync, ghConfig, ghActiveToken, uploadCSV, applyConfig])
 
   const currentYear = new Date().getFullYear()

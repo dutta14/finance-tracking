@@ -22,7 +22,8 @@ const fromBase64 = (b64: string): string => {
 function apiHeaders(token: string): Record<string, string> {
   return {
     Authorization: `Bearer ${token}`,
-    Accept: 'application/vnd.github.v3+json',
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
     'Content-Type': 'application/json',
   }
 }
@@ -30,10 +31,8 @@ function apiHeaders(token: string): Record<string, string> {
 async function getFileSha(
   config: GitHubSyncConfig, token: string, path: string
 ): Promise<string | null> {
-  const res = await fetch(
-    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`,
-    { headers: apiHeaders(token) }
-  )
+  const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`
+  const res = await fetch(url, { headers: apiHeaders(token) })
   if (res.status === 404) return null
   if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
   const data = await res.json()
@@ -55,16 +54,18 @@ export async function uploadBudgetCSV(
     const commitMessage = message || `Budget: ${monthKey}`
     const body: Record<string, string> = { message: commitMessage, content }
     if (sha) body.sha = sha
-    const res = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`,
-      { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) }
-    )
+    const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`
+    console.log('[budget-sync] PUT CSV', { url, monthKey, contentLen: csvContent.length })
+    const res = await fetch(url, { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
-      return { ok: false, error: (err as { message?: string }).message || `GitHub API error: ${res.status}` }
+      const msg = (err as { message?: string }).message || `GitHub API error: ${res.status}`
+      console.error('[budget-sync] CSV upload failed', { monthKey, status: res.status, msg })
+      return { ok: false, error: msg }
     }
     return { ok: true }
   } catch (e) {
+    console.error('[budget-sync] CSV upload exception', { monthKey, error: e })
     return { ok: false, error: e instanceof Error ? e.message : String(e) }
   }
 }
@@ -166,16 +167,18 @@ export async function uploadBudgetConfig(
     const content = toBase64(JSON.stringify(data, null, 2))
     const body: Record<string, string> = { message: 'Budget config update', content }
     if (sha) body.sha = sha
-    const res = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${CONFIG_PATH}`,
-      { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) }
-    )
+    const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${CONFIG_PATH}`
+    console.log('[budget-sync] PUT config', { url, years: data.years, groups: data.categoryGroups?.length })
+    const res = await fetch(url, { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
-      return { ok: false, error: (err as { message?: string }).message || `GitHub API error: ${res.status}` }
+      const msg = (err as { message?: string }).message || `GitHub API error: ${res.status}`
+      console.error('[budget-sync] config upload failed', { status: res.status, msg })
+      return { ok: false, error: msg }
     }
     return { ok: true }
   } catch (e) {
+    console.error('[budget-sync] config upload exception', e)
     return { ok: false, error: e instanceof Error ? e.message : String(e) }
   }
 }
