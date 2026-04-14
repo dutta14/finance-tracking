@@ -46,7 +46,10 @@ const loadConfig = (): GitHubSyncConfig => {
   try {
     const raw = localStorage.getItem(CONFIG_KEY)
     if (!raw) return DEFAULT_CONFIG
-    return { ...DEFAULT_CONFIG, ...JSON.parse(raw) }
+    const parsed = { ...DEFAULT_CONFIG, ...JSON.parse(raw) }
+    // Always use canonical file path — older configs may have a custom value
+    parsed.filePath = DEFAULT_CONFIG.filePath
+    return parsed
   } catch {
     return DEFAULT_CONFIG
   }

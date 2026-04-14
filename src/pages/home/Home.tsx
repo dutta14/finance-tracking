@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState, useRef, useCallback, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '../../hooks/useProfile'
 import { FinancialGoal, GwGoal } from '../../types'
@@ -16,8 +16,25 @@ interface HomeProps {
   onGoToGoal: (goalId: number) => void
 }
 
+const STORAGE_KEY = 'home-card-order'
+const DEFAULT_ORDER = [0, 1, 2, 3]
+
+function loadOrder(): number[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed) && parsed.length === 4) return parsed
+    }
+  } catch {}
+  return DEFAULT_ORDER
+}
+
 const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
   const navigate = useNavigate()
+  const [order, setOrder] = useState(loadOrder)
+  const dragIdx = useRef<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
 
   const accounts = useMemo<Account[]>(() => {
     try {
@@ -52,35 +69,85 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
     return `Good evening${name}`
   }, [profile.name])
 
+  const handleDragStart = useCallback((idx: number) => {
+    dragIdx.current = idx
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOver(idx)
+  }, [])
+
+  const handleDrop = useCallback((idx: number) => {
+    const from = dragIdx.current
+    if (from === null || from === idx) { setDragOver(null); return }
+    setOrder(prev => {
+      const next = [...prev]
+      const [removed] = next.splice(from, 1)
+      next.splice(idx, 0, removed)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+    dragIdx.current = null
+    setDragOver(null)
+  }, [])
+
+  const handleDragEnd = useCallback(() => {
+    dragIdx.current = null
+    setDragOver(null)
+  }, [])
+
+  const cards: ReactNode[] = [
+    <NetWorthSummary
+      key="nw"
+      accounts={accounts}
+      balances={balances}
+      allMonths={allMonths}
+      onNavigate={() => navigate('/data')}
+    />,
+    <MiniCharts
+      key="charts"
+      accounts={accounts}
+      balances={balances}
+      balanceMap={balanceMap}
+      allMonths={allMonths}
+      onNavigate={() => navigate('/data')}
+    />,
+    <GoalsPeek
+      key="goals"
+      goals={goals}
+      gwGoals={gwGoals}
+      onNavigate={() => navigate('/goal')}
+      onGoToGoal={onGoToGoal}
+    />,
+    <AllocationBreakdown
+      key="alloc"
+      accounts={accounts}
+      balances={balances}
+    />,
+  ]
+
   return (
     <div className="home-page">
       <div className="home-greeting">
         <h1>{greeting}</h1>
       </div>
       <div className="home-grid">
-        <NetWorthSummary
-          accounts={accounts}
-          balances={balances}
-          allMonths={allMonths}
-          onNavigate={() => navigate('/data')}
-        />
-        <MiniCharts
-          accounts={accounts}
-          balances={balances}
-          balanceMap={balanceMap}
-          allMonths={allMonths}
-          onNavigate={() => navigate('/data')}
-        />
-        <GoalsPeek
-          goals={goals}
-          gwGoals={gwGoals}
-          onNavigate={() => navigate('/goal')}
-          onGoToGoal={onGoToGoal}
-        />
-        <AllocationBreakdown
-          accounts={accounts}
-          balances={balances}
-        />
+        {order.map((cardIdx, pos) => (
+          <div
+            key={cardIdx}
+            className={`home-grid-slot${dragOver === pos ? ' home-grid-slot--over' : ''}`}
+            draggable
+            onDragStart={() => handleDragStart(pos)}
+            onDragOver={e => handleDragOver(e, pos)}
+            onDragLeave={() => setDragOver(null)}
+            onDrop={() => handleDrop(pos)}
+            onDragEnd={handleDragEnd}
+          >
+            {cards[cardIdx]}
+          </div>
+        ))}
       </div>
     </div>
   )

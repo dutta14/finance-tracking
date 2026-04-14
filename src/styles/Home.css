@@ -4,6 +4,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 2rem 3rem;
+  background: #f3f4f6;
 }
 
 /* Greeting */
@@ -25,15 +26,36 @@
   gap: 1.25rem;
 }
 
+/* ── Drag slots ── */
+.home-grid-slot {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 16px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: grab;
+}
+.home-grid-slot > .home-card {
+  flex: 1;
+}
+.home-grid-slot:active { cursor: grabbing; }
+.home-grid-slot--over {
+  outline: 2px dashed #6366f1;
+  outline-offset: 3px;
+  border-radius: 16px;
+}
+
 /* ── Card shell ── */
 .home-card {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
   min-height: 260px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s;
 }
 
 .home-card-header {
@@ -379,11 +401,22 @@
   font-size: 0.72rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  min-width: 2.2rem;
+  width: 2.2rem;
+  flex-shrink: 0;
   text-align: right;
 }
 .goals-peek-pct--fi { color: #6366f1; }
 .goals-peek-pct--gw { color: #f59e0b; }
+.goals-peek-monthly {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  width: 5.2rem;
+  flex-shrink: 0;
+  text-align: right;
+}
 .goals-peek-bars {
   display: flex;
   flex-direction: column;
@@ -584,12 +617,14 @@
 }
 
 /* ── Dark mode ── */
-body.dark .home-page { background: #0f1117; color: #e5e7eb; }
+body.dark .home-page { background: #0b0e14; color: #e5e7eb; }
 body.dark .home-greeting h1 { color: #f3f4f6; }
+body.dark .home-grid-slot--over { outline-color: #818cf8; }
 
 body.dark .home-card {
   background: #1a1e2a;
   border-color: #2d3344;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
 }
 body.dark .home-card-header h3 { color: #d1d5db; }
 body.dark .home-card-link { color: #818cf8; }
@@ -650,6 +685,7 @@ body.dark .goals-peek-bar-fill--gw { background: #fbbf24; }
 body.dark .goals-peek-pct--fi { color: #818cf8; }
 body.dark .goals-peek-pct--gw { color: #fbbf24; }
 body.dark .goals-peek-bar-label { color: #6b7280; }
+body.dark .goals-peek-monthly { color: #9ca3af; }
 body.dark .goals-peek-item-meta { color: #6b7280; }
 body.dark .goals-peek-more { color: #6b7280; }
 

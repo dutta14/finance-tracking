@@ -5,9 +5,11 @@ import GoalDetailedCard from '../../components/GoalDetailedCard'
 import GoalActionsMenu from '../../components/GoalActionsMenu'
 import GoalDiveDeep from './components/GoalDiveDeep'
 import GwSection from './components/GwSection'
+import SavingsPlan from './components/SavingsPlan'
 import './components/GoalDiveDeep.css'
 import '../../styles/GoalDetailPane.css'
 import '../../styles/GoalSoloPage.css'
+import '../../styles/SavingsPlan.css'
 
 interface GoalSoloPageProps {
   goal: FinancialGoal
@@ -119,34 +121,39 @@ const GoalSoloPage: FC<GoalSoloPageProps> = ({ goal, goals, profileBirthday, onB
         )}
       </div>
 
-      <div className="goal-solo-content">
-        <GoalDetailedCard 
-          goal={goal} 
-          profileBirthday={profileBirthday} 
-          onUpdateGoal={onUpdateGoal} 
-          showActions={false} 
-          showTitle={false} 
-          initialEditing={startEditing}
-        />
-        <button
-          className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
-          onClick={() => setDiveDeepOpen(v => !v)}
-        >
-          {diveDeepOpen ? 'Close Deep Analysis ↑' : 'Dive Deep ↓'}
-        </button>
-        {diveDeepOpen && <GoalDiveDeep goal={goal} profileBirthday={profileBirthday} />}
-        {goal.fiGoal > 0 && (
-          <GwSection
-            goal={goal}
-            goals={goals}
-            profileBirthday={profileBirthday}
-            gwGoals={gwGoals}
-            onCreateGwGoal={onCreateGwGoal}
-            onUpdateGwGoal={onUpdateGwGoal}
-            onDeleteGwGoal={onDeleteGwGoal}
-            initialFormOpen={startGwForm}
+      <div className="goal-solo-body">
+        <div className="goal-solo-content">
+          <GoalDetailedCard 
+            goal={goal} 
+            profileBirthday={profileBirthday} 
+            onUpdateGoal={onUpdateGoal} 
+            showActions={false} 
+            showTitle={false} 
+            initialEditing={startEditing}
           />
-        )}
+          <button
+            className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
+            onClick={() => setDiveDeepOpen(v => !v)}
+          >
+            {diveDeepOpen ? 'Close Deep Analysis ↑' : 'Dive Deep ↓'}
+          </button>
+          {diveDeepOpen && <GoalDiveDeep goal={goal} profileBirthday={profileBirthday} />}
+          {goal.fiGoal > 0 && (
+            <GwSection
+              goal={goal}
+              goals={goals}
+              profileBirthday={profileBirthday}
+              gwGoals={gwGoals}
+              onCreateGwGoal={onCreateGwGoal}
+              onUpdateGwGoal={onUpdateGwGoal}
+              onDeleteGwGoal={onDeleteGwGoal}
+              initialFormOpen={startGwForm}
+            />
+          )}
+        </div>
+        <div className="goal-solo-sidebar">
+          <SavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} />
+        </div>
       </div>
     </section>
   )

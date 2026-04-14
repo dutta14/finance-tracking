@@ -40,8 +40,24 @@
   margin: 0;
 }
 
+.goal-solo-body {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
 .goal-solo-content {
+  flex: 1;
   max-width: 560px;
+  min-width: 0;
+}
+
+.goal-solo-sidebar {
+  flex: 1;
+  max-width: 520px;
+  min-width: 0;
+  position: sticky;
+  top: 2rem;
 }
 
 body.dark .goal-solo {
@@ -245,4 +261,14 @@ body.dark .goal-solo-edit-error {
   background: #2d1515;
   border-color: #742a2a;
   color: #fc8181;
+}
+
+@media (max-width: 960px) {
+  .goal-solo-body {
+    flex-direction: column;
+  }
+  .goal-solo-sidebar {
+    max-width: 560px;
+    position: static;
+  }
 }
