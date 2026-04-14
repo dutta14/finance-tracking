@@ -8,6 +8,8 @@ import Goal from './pages/goal/Goal'
 import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
+import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
+import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
 import UndoToast from './components/UndoToast'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
@@ -254,6 +256,12 @@ const App: FC = () => {
     await syncNow(data, message)
     const dataSnapshot = getDataSnapshot()
     await ghSyncDataNow({ version: 1, exportedAt: new Date().toISOString(), accounts: dataSnapshot.accounts, balances: dataSnapshot.balances }, message ? `Data: ${message}` : undefined)
+    // Sync budget data (CSVs + config)
+    if (ghIsConfigured && ghActiveToken) {
+      const budgetStore = loadBudgetStore()
+      await uploadBudgetConfig(ghConfig, ghActiveToken, getBudgetConfigData(budgetStore)).catch(() => {})
+      await syncAllBudgetCSVs(ghConfig, ghActiveToken, budgetStore.csvs).catch(() => {})
+    }
   };
 
   const handleExport = (): void => {
@@ -369,7 +377,28 @@ const App: FC = () => {
               if (Array.isArray(d.accounts)) localStorage.setItem('data-accounts', JSON.stringify(d.accounts))
               if (Array.isArray(d.balances)) localStorage.setItem('data-balances', JSON.stringify(d.balances))
             }
-            markRestored()
+          }).then(() => {
+            // Also restore budget from GitHub
+            return (async () => {
+              if (ghIsConfigured && ghActiveToken) {
+                const [csvResult, configResult] = await Promise.all([
+                  downloadAllBudgetCSVs(ghConfig, ghActiveToken).catch(() => ({ ok: false as const })),
+                  downloadBudgetConfig(ghConfig, ghActiveToken).catch(() => ({ ok: false as const })),
+                ])
+                const budgetStore = loadBudgetStore()
+                if (csvResult.ok && 'csvs' in csvResult && csvResult.csvs) {
+                  Object.entries(csvResult.csvs).forEach(([monthKey, csv]) => {
+                    budgetStore.csvs[monthKey] = { month: monthKey, csv, uploadedAt: new Date().toISOString() }
+                  })
+                }
+                if (configResult.ok && 'data' in configResult && configResult.data) {
+                  budgetStore.years = configResult.data.years || budgetStore.years
+                  budgetStore.categoryGroups = configResult.data.categoryGroups || budgetStore.categoryGroups
+                }
+                saveBudgetStore(budgetStore)
+              }
+            })()
+          }).then(() => {
             // Reload so all React components pick up the restored localStorage data
             setTimeout(() => { resolve(); window.location.reload() }, 100)
           }).catch(() => {
@@ -418,7 +447,7 @@ const App: FC = () => {
         />
         <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
         <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
-        <Route path="/budget" element={<Budget ghConfig={ghConfig} ghTokenUnlocked={tokenUnlocked} ghActiveToken={ghActiveToken} ghIsConfigured={ghIsConfigured} />} />
+        <Route path="/budget" element={<Budget />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )

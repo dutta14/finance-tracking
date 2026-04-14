@@ -49,21 +49,29 @@ export async function uploadBudgetCSV(
 ): Promise<{ ok: boolean; error?: string }> {
   const path = `budget/${monthKey}.csv`
   try {
-    const sha = await getFileSha(config, token, path)
-    const content = toBase64(csvContent)
-    const commitMessage = message || `Budget: ${monthKey}`
-    const body: Record<string, string> = { message: commitMessage, content }
-    if (sha) body.sha = sha
     const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`
     console.log('[budget-sync] PUT CSV', { url, monthKey, contentLen: csvContent.length })
-    const res = await fetch(url, { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) })
-    if (!res.ok) {
+
+    // Retry loop for 409 conflicts (concurrent commits)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const sha = await getFileSha(config, token, path)
+      const content = toBase64(csvContent)
+      const commitMessage = message || `Budget: ${monthKey}`
+      const body: Record<string, string> = { message: commitMessage, content }
+      if (sha) body.sha = sha
+      const res = await fetch(url, { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) })
+      if (res.ok) return { ok: true }
+      if (res.status === 409 && attempt < 2) {
+        console.log(`[budget-sync] 409 conflict on ${monthKey}, retrying (${attempt + 1}/3)`)
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+        continue
+      }
       const err = await res.json().catch(() => ({}))
       const msg = (err as { message?: string }).message || `GitHub API error: ${res.status}`
       console.error('[budget-sync] CSV upload failed', { monthKey, status: res.status, msg })
       return { ok: false, error: msg }
     }
-    return { ok: true }
+    return { ok: false, error: 'Max retries exceeded' }
   } catch (e) {
     console.error('[budget-sync] CSV upload exception', { monthKey, error: e })
     return { ok: false, error: e instanceof Error ? e.message : String(e) }

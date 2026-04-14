@@ -1,4 +1,4 @@
-import { FC, useRef, useState, useCallback } from 'react'
+import { FC, useRef, useState } from 'react'
 import { useBudget } from './hooks/useBudget'
 import { TimePeriod } from './types'
 import BudgetSummary from './components/BudgetSummary'
@@ -6,19 +6,9 @@ import BudgetTable from './components/BudgetTable'
 import BudgetAggregatedView from './components/BudgetAggregatedView'
 import CategoryGroupManager from './components/CategoryGroupManager'
 import { getCSVFormatHelp } from './utils/csvParser'
-import { uploadBudgetCSV, downloadAllBudgetCSVs, syncAllBudgetCSVs, uploadBudgetConfig, downloadBudgetConfig } from './utils/budgetGitHubSync'
-import { getBudgetConfigData } from './utils/budgetStorage'
-import { GitHubSyncConfig } from '../../hooks/useGitHubSync'
 import '../../styles/Budget.css'
 
-export interface BudgetProps {
-  ghConfig?: GitHubSyncConfig
-  ghTokenUnlocked?: boolean
-  ghActiveToken?: string
-  ghIsConfigured?: boolean
-}
-
-const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghIsConfigured }) => {
+const Budget: FC = () => {
   const {
     store, selectedYear, setSelectedYear, yearExists,
     viewMode, setViewMode,
@@ -31,12 +21,9 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
   const [showFormatHelp, setShowFormatHelp] = useState(false)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
-  const [ghSyncing, setGhSyncing] = useState(false)
-  const [ghSyncMsg, setGhSyncMsg] = useState<string | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
   const quickUploadRef = useRef<HTMLInputElement>(null)
   const bulkUploadRef = useRef<HTMLInputElement>(null)
-
-  const canGhSync = ghIsConfigured && ghTokenUnlocked && ghActiveToken && ghConfig
 
   /** Extract YYYY-MM month key from a filename. Supports "2025-05.csv" and "Our Finances - May 2025.csv" */
   const monthKeyFromFilename = (name: string): string | null => {
@@ -58,75 +45,8 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
   }
 
   const handleUploadCSV = (monthKey: string, csv: string) => {
-    const result = uploadCSV(monthKey, csv)
-    if (result.ok && canGhSync) {
-      // Fire-and-forget upload to GitHub
-      uploadBudgetCSV(ghConfig!, ghActiveToken!, monthKey, csv).catch(() => {})
-    }
-    return result
+    return uploadCSV(monthKey, csv)
   }
-
-  const handleSyncToGitHub = useCallback(async () => {
-    if (!canGhSync) return
-    setGhSyncing(true)
-    setGhSyncMsg(null)
-    try {
-      console.log('[budget-sync] push starting', { csvCount: Object.keys(store.csvs).length, years: store.years })
-      const [csvResult, configResult] = await Promise.all([
-        syncAllBudgetCSVs(ghConfig!, ghActiveToken!, store.csvs),
-        uploadBudgetConfig(ghConfig!, ghActiveToken!, getBudgetConfigData(store)),
-      ])
-      console.log('[budget-sync] push results', { csvResult, configResult })
-      const msgs: string[] = []
-      if (csvResult.ok) msgs.push(`Synced ${csvResult.synced} CSV(s)`)
-      else msgs.push(`CSV errors: ${csvResult.errors.join('; ')}`)
-      if (configResult.ok) msgs.push('config synced')
-      else msgs.push(`config error: ${configResult.error}`)
-      setGhSyncMsg(msgs.join(', '))
-    } catch (e) {
-      console.error('[budget-sync] push failed', e)
-      setGhSyncMsg(`Sync failed: ${e instanceof Error ? e.message : String(e)}`)
-    }
-    setGhSyncing(false)
-    setTimeout(() => setGhSyncMsg(null), 6000)
-  }, [canGhSync, ghConfig, ghActiveToken, store])
-
-  const handlePullFromGitHub = useCallback(async () => {
-    if (!canGhSync) return
-    setGhSyncing(true)
-    setGhSyncMsg(null)
-    try {
-      const [csvResult, configResult] = await Promise.all([
-        downloadAllBudgetCSVs(ghConfig!, ghActiveToken!),
-        downloadBudgetConfig(ghConfig!, ghActiveToken!),
-      ])
-      const msgs: string[] = []
-      if (csvResult.ok && csvResult.csvs) {
-        let imported = 0
-        Object.entries(csvResult.csvs).forEach(([monthKey, csv]) => {
-          const r = uploadCSV(monthKey, csv)
-          if (r.ok) imported++
-        })
-        msgs.push(`Imported ${imported} CSV(s)`)
-      } else {
-        msgs.push(`CSV pull failed: ${csvResult.error}`)
-      }
-      if (configResult.ok && configResult.data) {
-        applyConfig(configResult.data)
-        msgs.push('config restored')
-      } else if (configResult.ok) {
-        msgs.push('no config on GitHub yet')
-      } else {
-        msgs.push(`config pull failed: ${configResult.error}`)
-      }
-      setGhSyncMsg(msgs.join(', '))
-    } catch (e) {
-      console.error('[budget-sync] pull failed', e)
-      setGhSyncMsg(`Pull failed: ${e instanceof Error ? e.message : String(e)}`)
-    }
-    setGhSyncing(false)
-    setTimeout(() => setGhSyncMsg(null), 6000)
-  }, [canGhSync, ghConfig, ghActiveToken, uploadCSV, applyConfig])
 
   const currentYear = new Date().getFullYear()
   const prevYear = () => setSelectedYear(y => y - 1)
@@ -138,8 +58,8 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
     // Try to infer month from filename
     const monthKey = monthKeyFromFilename(file.name)
     if (!monthKey) {
-      setGhSyncMsg('Could not determine month from filename. Use format: yyyy-mm.csv or "Our Finances - MMM YYYY.csv"')
-      setTimeout(() => setGhSyncMsg(null), 5000)
+      setToastMsg('Could not determine month from filename. Use format: yyyy-mm.csv or "Our Finances - MMM YYYY.csv"')
+      setTimeout(() => setToastMsg(null), 5000)
       if (quickUploadRef.current) quickUploadRef.current.value = ''
       return
     }
@@ -148,8 +68,8 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
       const text = ev.target?.result as string
       const result = handleUploadCSV(monthKey, text)
       if (!result.ok) {
-        setGhSyncMsg(`Upload failed: ${result.error}`)
-        setTimeout(() => setGhSyncMsg(null), 5000)
+        setToastMsg(`Upload failed: ${result.error}`)
+        setTimeout(() => setToastMsg(null), 5000)
       }
     }
     reader.readAsText(file)
@@ -184,8 +104,8 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
     const msg = failed === 0
       ? `Uploaded ${success} file${success !== 1 ? 's' : ''} successfully`
       : `${success} succeeded, ${failed} failed: ${errors.join(', ')}`
-    setGhSyncMsg(msg)
-    setTimeout(() => setGhSyncMsg(null), 5000)
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(null), 5000)
     if (bulkUploadRef.current) bulkUploadRef.current.value = ''
   }
 
@@ -255,16 +175,7 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
           <button className="budget-action-btn budget-action-btn--subtle" onClick={() => setShowFormatHelp(v => !v)}>
             ?
           </button>
-          {canGhSync && (
-            <>
-              <button className="budget-action-btn" onClick={handleSyncToGitHub} disabled={ghSyncing}>
-                {ghSyncing ? 'Syncing…' : 'Push to GitHub'}
-              </button>
-              <button className="budget-action-btn" onClick={handlePullFromGitHub} disabled={ghSyncing}>
-                Pull from GitHub
-              </button>
-            </>
-          )}
+
           <input
             ref={quickUploadRef}
             type="file"
@@ -291,10 +202,10 @@ const Budget: FC<BudgetProps> = ({ ghConfig, ghTokenUnlocked, ghActiveToken, ghI
         </div>
       )}
 
-      {/* GitHub sync message */}
-      {ghSyncMsg && (
+      {/* Toast message */}
+      {toastMsg && (
         <div className="budget-sync-msg">
-          {ghSyncMsg}
+          {toastMsg}
         </div>
       )}
 
