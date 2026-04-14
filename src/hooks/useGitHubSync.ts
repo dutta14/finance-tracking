@@ -500,6 +500,7 @@ export const useGitHubSync = () => {
     hasStoredToken,
     tokenUnlocked,
     usingLegacyToken,
+    activeToken,
     saveEncryptedToken,
     migrateLegacyToken,
     unlockToken,

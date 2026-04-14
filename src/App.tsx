@@ -7,6 +7,7 @@ import Home from './pages/home/Home'
 import Goal from './pages/goal/Goal'
 import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
+import Budget from './pages/budget/Budget'
 import type { Account, BalanceEntry } from './pages/data/types'
 import UndoToast from './components/UndoToast'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
@@ -63,7 +64,7 @@ const App: FC = () => {
   const {
     config: ghConfig, updateConfig: updateGhConfig, isConfigured: ghIsConfigured,
     syncStatus, lastSyncAt, lastError, hasPendingChanges: hasPendingGhChanges, history: ghHistory,
-    hasStoredToken, tokenUnlocked, usingLegacyToken,
+    hasStoredToken, tokenUnlocked, usingLegacyToken, activeToken: ghActiveToken,
     saveEncryptedToken, migrateLegacyToken, unlockToken, lockToken,
     syncNow, fetchHistory, testConnection, restoreLatest, restoreFromCommit, markRestored, updateData: ghUpdateData,
     updateDataFile: ghUpdateDataFile, syncDataNow: ghSyncDataNow, restoreDataLatest,
@@ -78,12 +79,15 @@ const App: FC = () => {
     ? 'goal'
     : location.pathname === '/data'
     ? 'data'
+    : location.pathname === '/budget'
+    ? 'budget'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
     if (page === 'home') navigate('/')
     else if (page === 'goal') navigate('/goal')
     else if (page === 'data') navigate('/data')
+    else if (page === 'budget') navigate('/budget')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -414,6 +418,7 @@ const App: FC = () => {
         />
         <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
         <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
+        <Route path="/budget" element={<Budget ghConfig={ghConfig} ghTokenUnlocked={tokenUnlocked} ghActiveToken={ghActiveToken} ghIsConfigured={ghIsConfigured} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
