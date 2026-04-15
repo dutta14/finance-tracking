@@ -269,7 +269,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
                           </td>
                         )
                       })}
-                      <td className={`budget-td ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}>
+                      <td className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}>
                         {showPct ? getCategoryPct(cat) : (total !== 0 ? fmt(Math.abs(total)) : '')}
                       </td>
                     </tr>
@@ -564,7 +564,7 @@ const GroupRows: FC<{
             </td>
           )
         })}
-        <td className="budget-td budget-td--group-number">
+        <td className="budget-td budget-td--group-number budget-td--total">
           {showPct ? '' : (groupYearTotal !== 0 ? fmt(Math.abs(groupYearTotal)) : '')}
         </td>
       </tr>
@@ -584,7 +584,7 @@ const GroupRows: FC<{
                 </td>
               )
             })}
-            <td className={`budget-td ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}>
+            <td className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}>
               {showPct ? getCategoryPct(cat) : (total !== 0 ? fmt(Math.abs(total)) : '')}
             </td>
           </tr>

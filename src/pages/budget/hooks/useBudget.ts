@@ -314,6 +314,7 @@ export function useBudget() {
     yearTransactions,
     allCategories,
     categoryGroups,
+    removedCategories,
     categorySums,
     summary,
     monthsWithData,

@@ -6,6 +6,8 @@ import BudgetTable from './components/BudgetTable'
 import BudgetAggregatedView from './components/BudgetAggregatedView'
 import CategoryGroupManager from './components/CategoryGroupManager'
 import CSVPreviewModal from './components/CSVPreviewModal'
+import CashflowBarChart from './components/CashflowBarChart'
+import CashflowSankey from './components/CashflowSankey'
 import { getCSVFormatHelp } from './utils/csvParser'
 import '../../styles/Budget.css'
 
@@ -15,7 +17,7 @@ const Budget: FC = () => {
     viewMode, setViewMode,
     uploadCSV, removeCSV, createYear, updateCategoryGroups, mergeCategories, editCategory,
     categoryHasTransactions, deleteCategory, applyConfig,
-    yearTransactions, categoryGroups, categorySums, summary, monthsWithData,
+    yearTransactions, categoryGroups, removedCategories, categorySums, summary, monthsWithData,
   } = useBudget()
 
   const [showGroupMgr, setShowGroupMgr] = useState(false)
@@ -171,6 +173,12 @@ const Budget: FC = () => {
             >
               Aggregated
             </button>
+            <button
+              className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
+              onClick={() => setViewMode('cashflow')}
+            >
+              Cashflow
+            </button>
           </div>
           <div className="budget-view-toggle">
             <button className={`budget-view-btn${timePeriod === 'month' ? ' active' : ''}`} onClick={() => setTimePeriod('month')}>M</button>
@@ -277,7 +285,7 @@ const Budget: FC = () => {
             />
           )}
 
-          {/* Tables */}
+          {/* Tables / Cashflow */}
           {viewMode === 'detailed' ? (
             <>
               <BudgetTable
@@ -305,7 +313,7 @@ const Budget: FC = () => {
                 timePeriod={timePeriod}
               />
             </>
-          ) : (
+          ) : viewMode === 'aggregated' ? (
             <>
               <BudgetAggregatedView
                 year={selectedYear}
@@ -320,6 +328,23 @@ const Budget: FC = () => {
                 categoryGroups={categoryGroups}
                 categorySums={categorySums}
                 timePeriod={timePeriod}
+              />
+            </>
+          ) : (
+            <>
+              <CashflowBarChart
+                year={selectedYear}
+                yearTransactions={yearTransactions}
+                timePeriod={timePeriod}
+                removedCategories={removedCategories}
+                categorySums={categorySums}
+              />
+              <CashflowSankey
+                year={selectedYear}
+                yearTransactions={yearTransactions}
+                categoryGroups={categoryGroups}
+                removedCategories={removedCategories}
+                categorySums={categorySums}
               />
             </>
           )}

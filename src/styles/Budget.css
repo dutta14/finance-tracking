@@ -346,6 +346,7 @@
 .budget-th--total {
   width: 60px;
   border-left: 2px solid #e5e7eb;
+  background: #f8f9fb;
 }
 .budget-th--switchable {
   cursor: pointer;
@@ -355,6 +356,16 @@
   color: #6366f1;
 }
 .dark .budget-th--total {
+  border-left-color: #2d3348;
+  background: #1a1f2e;
+}
+
+.budget-td--total {
+  background: #f8f9fb;
+  border-left: 2px solid #e5e7eb;
+}
+.dark .budget-td--total {
+  background: #1a1f2e;
   border-left-color: #2d3348;
 }
 
@@ -1627,4 +1638,170 @@ body.dark .csv-preview-btn--confirm {
 }
 body.dark .csv-preview-btn--confirm:hover {
   background: #1d4ed8;
+}
+
+/* ── Cashflow Views ─────────────────────────────────────── */
+:root {
+  --cashflow-grid: #e5e7eb;
+  --cashflow-zero: #9ca3af;
+  --cashflow-income: #22c55e;
+  --cashflow-expense: #ef4444;
+  --cashflow-text: #374151;
+  --cashflow-subtext: #9ca3af;
+  --cashflow-pct: #c4cad3;
+}
+body.dark {
+  --cashflow-grid: #2d3348;
+  --cashflow-zero: #4b5563;
+  --cashflow-income: #4ade80;
+  --cashflow-expense: #f87171;
+  --cashflow-text: #d1d5db;
+  --cashflow-subtext: #6b7280;
+  --cashflow-pct: #4b5563;
+}
+
+.cashflow-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+  color: var(--cashflow-text);
+}
+
+/* Bar Chart */
+.cashflow-bar-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1rem 0.5rem;
+  margin-bottom: 1rem;
+}
+.dark .cashflow-bar-wrap {
+  background: #161b26;
+  border-color: #2d3348;
+}
+.cashflow-bar-wrap .recharts-cartesian-grid-horizontal line {
+  stroke: var(--cashflow-grid);
+}
+.cashflow-bar-wrap .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+}
+.dark .cashflow-bar-wrap .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  color: #e5e7eb !important;
+}
+.cashflow-bar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+  font-size: 0.75rem;
+}
+.cashflow-bar-legend-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+.cashflow-bar-legend-label {
+  color: var(--cashflow-subtext);
+  font-size: 0.68rem;
+}
+.cashflow-bar-legend-net {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cashflow-bar-legend-net.positive {
+  color: #16a34a;
+}
+.cashflow-bar-legend-net.negative {
+  color: #dc2626;
+}
+.dark .cashflow-bar-legend-net.positive {
+  color: #4ade80;
+}
+.dark .cashflow-bar-legend-net.negative {
+  color: #f87171;
+}
+
+/* Sankey */
+.cashflow-sankey-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.5rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.dark .cashflow-sankey-wrap {
+  background: #161b26;
+  border-color: #2d3348;
+}
+.cashflow-sankey-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.cashflow-sankey-pills {
+  display: flex;
+  gap: 0;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 2px;
+}
+.dark .cashflow-sankey-pills {
+  background: #1f2937;
+}
+.cashflow-sankey-pill {
+  padding: 4px 14px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  color: #6b7280;
+  transition: background 0.15s, color 0.15s;
+}
+.cashflow-sankey-pill:hover {
+  color: #374151;
+}
+.dark .cashflow-sankey-pill {
+  color: #9ca3af;
+}
+.dark .cashflow-sankey-pill:hover {
+  color: #d1d5db;
+}
+.cashflow-sankey-pill.active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.dark .cashflow-sankey-pill.active {
+  background: #374151;
+  color: #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.cashflow-sankey-hint {
+  font-size: 0.75rem;
+  color: var(--cashflow-subtext);
+  margin: 0 0 0.5rem;
+}
+.cashflow-sankey-scroll {
+  overflow-x: auto;
+}
+.cashflow-sankey-svg {
+  width: 100%;
+  min-width: 550px;
+  height: auto;
+}
+.cashflow-sankey-label {
+  pointer-events: none;
+}
+.cashflow-empty {
+  text-align: center;
+  color: var(--cashflow-subtext);
+  padding: 2rem;
 }
