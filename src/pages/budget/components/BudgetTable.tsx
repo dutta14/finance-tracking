@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useCallback } from 'react'
+import { FC, useState, useRef, useCallback, useEffect } from 'react'
 import { CategoryGroup, Transaction, TimePeriod } from '../types'
 import { shortMonthName, buildMonthKey, getCSVFormatHelp } from '../utils/csvParser'
 
@@ -35,8 +35,12 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; monthKey: string } | null>(null)
   const [csvError, setCsvError] = useState<string | null>(null)
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null)
-  const [drilldownCategory, setDrilldownCategory] = useState<string>('all')
+  const [drilldownCategories, setDrilldownCategories] = useState<Set<string>>(new Set())
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filterSearch, setFilterSearch] = useState('')
+  const filterRef = useRef<HTMLDivElement>(null)
   const [editingTxn, setEditingTxn] = useState<{ idx: number; value: string } | null>(null)
+  const [confirmNewCat, setConfirmNewCat] = useState<{ idx: number; origIdx: number; name: string; monthKey: string } | null>(null)
   const [showPct, setShowPct] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingMonthRef = useRef<string>('')
@@ -182,13 +186,26 @@ const BudgetTable: FC<BudgetTableProps> = ({
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  // Close filter dropdown on outside click
+  useEffect(() => {
+    if (!filterOpen) return
+    const handler = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false)
+        setFilterSearch('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [filterOpen])
+
   // Drill-down into month transactions
   const handleMonthClick = (monthKey: string) => {
     if (expandedMonth === monthKey) {
       setExpandedMonth(null)
     } else {
       setExpandedMonth(monthKey)
-      setDrilldownCategory('all')
+      setDrilldownCategories(new Set())
     }
   }
 
@@ -300,8 +317,26 @@ const BudgetTable: FC<BudgetTableProps> = ({
       {expandedMonth && (() => {
         const allTxns = getMonthTransactions(expandedMonth)
         const categories = [...new Set(allTxns.map(t => t.category))].sort((a, b) => a.localeCompare(b))
-        const filtered = drilldownCategory === 'all' ? allTxns : allTxns.filter(t => t.category === drilldownCategory)
+        const filtered = drilldownCategories.size === 0 ? allTxns : allTxns.filter(t => drilldownCategories.has(t.category))
         const filterSum = filtered.reduce((s, t) => s + t.amount, 0)
+        const allSelected = drilldownCategories.size === 0
+        const realSelected = categories.filter(c => drilldownCategories.has(c)).length
+        const partialSelected = realSelected > 0 && realSelected < categories.length
+        const toggleCategory = (cat: string) => {
+          setDrilldownCategories(prev => {
+            const next = new Set(prev)
+            next.delete('__none__')
+            if (next.has(cat)) next.delete(cat)
+            else next.add(cat)
+            // If all categories are now selected, go back to "all" state
+            if (next.size === categories.length && categories.every(c => next.has(c))) {
+              return new Set()
+            }
+            // If nothing left, use sentinel
+            if (next.size === 0) return new Set(['__none__'])
+            return next
+          })
+        }
         return (
           <div className="budget-drilldown">
             <div className="budget-drilldown-header">
@@ -310,15 +345,74 @@ const BudgetTable: FC<BudgetTableProps> = ({
             </div>
             {allTxns.length > 0 && (
               <div className="budget-drilldown-filter">
-                <select
-                  className="budget-drilldown-select"
-                  value={drilldownCategory}
-                  onChange={e => setDrilldownCategory(e.target.value)}
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                {drilldownCategory !== 'all' && (
+                <div className="budget-filter-dropdown" ref={filterRef}>
+                  <button
+                    className="budget-filter-trigger"
+                    onClick={() => { setFilterOpen(v => !v); setFilterSearch('') }}
+                  >
+                    {allSelected
+                      ? 'All Categories'
+                      : (() => {
+                          const count = categories.filter(c => drilldownCategories.has(c)).length
+                          return count === 0 ? 'None selected' : `${count} of ${categories.length} categories`
+                        })()}
+                    <span className="budget-filter-chevron">{filterOpen ? '▲' : '▼'}</span>
+                  </button>
+                  {filterOpen && (
+                    <div className="budget-filter-panel">
+                      <input
+                        className="budget-filter-search"
+                        type="text"
+                        placeholder="Search categories…"
+                        value={filterSearch}
+                        onChange={e => setFilterSearch(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="budget-filter-list">
+                        {!filterSearch && (
+                          <label className="budget-filter-item budget-filter-item--all">
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              ref={el => { if (el) el.indeterminate = partialSelected }}
+                              onChange={() => {
+                                if (allSelected) {
+                                  // Deselect all — set to full set so nothing matches except explicit picks
+                                  setDrilldownCategories(new Set(['__none__']))
+                                } else {
+                                  // Select all
+                                  setDrilldownCategories(new Set())
+                                }
+                              }}
+                            />
+                            <span>All Categories</span>
+                          </label>
+                        )}
+                        {categories
+                          .filter(c => c.toLowerCase().includes(filterSearch.toLowerCase()))
+                          .map(c => (
+                            <label key={c} className="budget-filter-item">
+                              <input
+                                type="checkbox"
+                                checked={allSelected || drilldownCategories.has(c)}
+                                onChange={() => {
+                                  if (allSelected) {
+                                    // Switching from all → deselect this one
+                                    const remaining = categories.filter(x => x !== c)
+                                    setDrilldownCategories(remaining.length > 0 ? new Set(remaining) : new Set(['__none__']))
+                                  } else {
+                                    toggleCategory(c)
+                                  }
+                                }}
+                              />
+                              <span>{c}</span>
+                            </label>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {!allSelected && (
                   <span className={`budget-drilldown-sum ${type === 'expense' && filterSum > 0 ? 'budget-amt-refund' : ''}`}>
                     {fmt(Math.abs(filterSum))}
                   </span>
@@ -355,8 +449,16 @@ const BudgetTable: FC<BudgetTableProps> = ({
                               onBlur={() => {
                                 const newCat = editingTxn.value.trim()
                                 if (newCat && newCat !== t.category) {
+                                  const allCats = new Set(
+                                    Object.values(yearTransactions).flatMap(txns => txns.map(tx => tx.category))
+                                  )
+                                  if (!allCats.has(newCat)) {
+                                    setConfirmNewCat({ idx: i, origIdx: t.origIdx, name: newCat, monthKey: expandedMonth! })
+                                    setEditingTxn(null)
+                                    return
+                                  }
                                   onEditCategory(expandedMonth!, t.origIdx, newCat)
-                                  setDrilldownCategory('all')
+                                  setDrilldownCategories(new Set())
                                 }
                                 setEditingTxn(null)
                               }}
@@ -366,6 +468,24 @@ const BudgetTable: FC<BudgetTableProps> = ({
                               }}
                               autoFocus
                             />
+                          ) : confirmNewCat?.idx === i ? (
+                            <div className="budget-confirm-newcat">
+                              <span className="budget-confirm-newcat-text">
+                                Create new category <strong>"{confirmNewCat.name}"</strong>?
+                              </span>
+                              <button
+                                className="budget-confirm-newcat-btn budget-confirm-newcat-btn--yes"
+                                onClick={() => {
+                                  onEditCategory(confirmNewCat.monthKey, confirmNewCat.origIdx, confirmNewCat.name)
+                                  setDrilldownCategories(new Set())
+                                  setConfirmNewCat(null)
+                                }}
+                              >Yes</button>
+                              <button
+                                className="budget-confirm-newcat-btn budget-confirm-newcat-btn--no"
+                                onClick={() => setConfirmNewCat(null)}
+                              >No</button>
+                            </div>
                           ) : t.category}
                         </td>
                         <td className={type === 'expense' && t.amount > 0 ? 'budget-amt-refund' : ''}>

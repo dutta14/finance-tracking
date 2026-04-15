@@ -5,6 +5,7 @@ import BudgetSummary from './components/BudgetSummary'
 import BudgetTable from './components/BudgetTable'
 import BudgetAggregatedView from './components/BudgetAggregatedView'
 import CategoryGroupManager from './components/CategoryGroupManager'
+import CSVPreviewModal from './components/CSVPreviewModal'
 import { getCSVFormatHelp } from './utils/csvParser'
 import '../../styles/Budget.css'
 
@@ -22,6 +23,8 @@ const Budget: FC = () => {
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [csvPreview, setCsvPreview] = useState<{ monthKey: string; csv: string } | null>(null)
+  const [bulkQueue, setBulkQueue] = useState<{ monthKey: string; csv: string }[]>([])
   const quickUploadRef = useRef<HTMLInputElement>(null)
   const bulkUploadRef = useRef<HTMLInputElement>(null)
 
@@ -55,7 +58,6 @@ const Budget: FC = () => {
   const handleQuickUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // Try to infer month from filename
     const monthKey = monthKeyFromFilename(file.name)
     if (!monthKey) {
       setToastMsg('Could not determine month from filename. Use format: yyyy-mm.csv or "Our Finances - MMM YYYY.csv"')
@@ -66,11 +68,7 @@ const Budget: FC = () => {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const text = ev.target?.result as string
-      const result = handleUploadCSV(monthKey, text)
-      if (!result.ok) {
-        setToastMsg(`Upload failed: ${result.error}`)
-        setTimeout(() => setToastMsg(null), 5000)
-      }
+      setCsvPreview({ monthKey, csv: text })
     }
     reader.readAsText(file)
     if (quickUploadRef.current) quickUploadRef.current.value = ''
@@ -79,16 +77,13 @@ const Budget: FC = () => {
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
-    let success = 0
-    let failed = 0
-    const errors: string[] = []
+    const pending: { monthKey: string; csv: string }[] = []
+    const skipped: string[] = []
 
-    // Read files sequentially to avoid state race conditions
     for (const file of Array.from(files)) {
       const monthKey = monthKeyFromFilename(file.name)
       if (!monthKey) {
-        failed++
-        errors.push(`${file.name}: couldn't determine month`)
+        skipped.push(file.name)
         continue
       }
       const text = await new Promise<string>((resolve) => {
@@ -96,17 +91,50 @@ const Budget: FC = () => {
         reader.onload = (ev) => resolve(ev.target?.result as string)
         reader.readAsText(file)
       })
-      const result = handleUploadCSV(monthKey, text)
-      if (result.ok) success++
-      else { failed++; errors.push(`${file.name}: ${result.error}`) }
+      pending.push({ monthKey, csv: text })
     }
 
-    const msg = failed === 0
-      ? `Uploaded ${success} file${success !== 1 ? 's' : ''} successfully`
-      : `${success} succeeded, ${failed} failed: ${errors.join(', ')}`
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(null), 5000)
+    if (skipped.length > 0) {
+      setToastMsg(`Skipped ${skipped.length} file(s): couldn't determine month`)
+      setTimeout(() => setToastMsg(null), 5000)
+    }
+
+    if (pending.length > 0) {
+      // Show preview for the first file; queue the rest
+      setCsvPreview(pending[0])
+      setBulkQueue(pending.slice(1))
+    }
     if (bulkUploadRef.current) bulkUploadRef.current.value = ''
+  }
+
+  const handlePreviewConfirm = (filteredCsv: string) => {
+    if (!csvPreview) return
+    const result = handleUploadCSV(csvPreview.monthKey, filteredCsv)
+    if (!result.ok) {
+      setToastMsg(`Upload failed: ${result.error}`)
+      setTimeout(() => setToastMsg(null), 5000)
+    } else if (bulkQueue.length === 0) {
+      setToastMsg('Uploaded successfully')
+      setTimeout(() => setToastMsg(null), 3000)
+    }
+    // Move to next in bulk queue, or close
+    if (bulkQueue.length > 0) {
+      setCsvPreview(bulkQueue[0])
+      setBulkQueue(bulkQueue.slice(1))
+    } else {
+      setCsvPreview(null)
+    }
+  }
+
+  const handlePreviewCancel = () => {
+    // Skip this file; move to next in bulk queue, or close
+    if (bulkQueue.length > 0) {
+      setCsvPreview(bulkQueue[0])
+      setBulkQueue(bulkQueue.slice(1))
+    } else {
+      setCsvPreview(null)
+      setBulkQueue([])
+    }
   }
 
   return (
@@ -200,6 +228,16 @@ const Budget: FC = () => {
           <pre>{getCSVFormatHelp()}</pre>
           <button className="budget-format-help-close" onClick={() => setShowFormatHelp(false)}>×</button>
         </div>
+      )}
+
+      {/* CSV preview modal */}
+      {csvPreview && (
+        <CSVPreviewModal
+          csv={csvPreview.csv}
+          monthKey={csvPreview.monthKey}
+          onConfirm={handlePreviewConfirm}
+          onCancel={handlePreviewCancel}
+        />
       )}
 
       {/* Toast message */}

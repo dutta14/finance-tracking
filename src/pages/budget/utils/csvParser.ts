@@ -66,7 +66,7 @@ function normalizeDate(raw: string): string | null {
  * The first row must be a header row containing at least: Date, Category, Amount
  */
 export function parseCSV(csvText: string): Transaction[] {
-  const lines = csvText.trim().split(/\r?\n/)
+  const lines = splitCSVRows(csvText.trim())
   if (lines.length < 2) return []
 
   // Parse header
@@ -123,7 +123,7 @@ export function parseCSV(csvText: string): Transaction[] {
  * Replicates the exact skip logic of parseCSV so indices stay in sync.
  */
 export function getValidLineIndices(csvText: string): number[] {
-  const lines = csvText.split(/\r?\n/)
+  const lines = splitCSVRows(csvText)
   if (lines.length < 2) return []
   const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase())
   const dateIdx = headers.findIndex(h => h === 'date')
@@ -179,6 +179,47 @@ export function parseCSVLine(line: string): string[] {
   }
   result.push(current)
   return result
+}
+
+/**
+ * Split a CSV string into logical rows, respecting quoted fields that may
+ * contain newlines. Returns the raw row strings (including quotes).
+ */
+export function splitCSVRows(csvText: string): string[] {
+  const rows: string[] = []
+  let current = ''
+  let inQuotes = false
+
+  for (let i = 0; i < csvText.length; i++) {
+    const ch = csvText[i]
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < csvText.length && csvText[i + 1] === '"') {
+          current += '""'
+          i++
+        } else {
+          inQuotes = false
+          current += ch
+        }
+      } else {
+        current += ch
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true
+        current += ch
+      } else if (ch === '\n') {
+        // Handle \r\n
+        if (current.endsWith('\r')) current = current.slice(0, -1)
+        rows.push(current)
+        current = ''
+      } else {
+        current += ch
+      }
+    }
+  }
+  if (current) rows.push(current)
+  return rows
 }
 
 /** Get month key from a date string: "2025-05" */
