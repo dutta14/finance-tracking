@@ -1,0 +1,233 @@
+/* ── Drive page ─────────────────────────────────────────────── */
+
+.drive-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* header */
+.drive-header {
+  margin-bottom: 0.5rem;
+}
+.drive-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-600), var(--accent-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+/* breadcrumb */
+.drive-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
+.drive-breadcrumb-item {
+  background: none;
+  border: none;
+  color: var(--accent-500);
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+}
+.drive-breadcrumb-item:hover {
+  background: var(--accent-50);
+}
+.drive-breadcrumb-item.active {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.drive-breadcrumb-sep {
+  color: var(--color-text-muted, #999);
+  user-select: none;
+}
+
+/* year tabs */
+.drive-year-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.drive-year-tab {
+  background: var(--color-surface, #f7f7f8);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 6px;
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.15s, border-color 0.15s;
+}
+.drive-year-tab:hover {
+  background: var(--accent-50);
+  border-color: var(--accent-200);
+}
+.drive-year-tab.active {
+  background: var(--accent-100);
+  border-color: var(--accent-300);
+  color: var(--accent-700);
+  font-weight: 600;
+}
+
+/* file / folder list */
+.drive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.drive-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  background: var(--color-surface, #fff);
+}
+.drive-row:hover {
+  background: var(--accent-50);
+}
+
+.drive-row--folder .drive-icon { color: var(--accent-400); }
+.drive-row--file .drive-icon { color: var(--accent-300); }
+.drive-row--back .drive-icon { color: var(--color-text-muted, #999); }
+
+.drive-row-name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.drive-row-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #999);
+  white-space: nowrap;
+}
+
+/* empty state */
+.drive-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-muted, #999);
+  font-size: 0.9rem;
+}
+
+/* ── CSV viewer ──────────────────────────────────────────────── */
+
+.drive-viewer {
+  display: flex;
+  flex-direction: column;
+}
+.drive-viewer-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: var(--accent-500);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  margin-bottom: 0.75rem;
+  width: fit-content;
+}
+.drive-viewer-back:hover {
+  color: var(--accent-700);
+}
+.drive-viewer-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--color-text);
+}
+
+.drive-viewer-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 8px;
+}
+.drive-viewer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.drive-viewer-table th,
+.drive-viewer-table td {
+  padding: 0.45rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  white-space: nowrap;
+}
+.drive-viewer-table th {
+  background: var(--accent-50);
+  color: var(--accent-700);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: sticky;
+  top: 0;
+}
+.drive-viewer-table tbody tr:hover {
+  background: var(--accent-50);
+}
+.drive-viewer-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.drive-viewer-meta {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #999);
+}
+
+/* ── dark mode ───────────────────────────────────────────────── */
+
+body.dark .drive-breadcrumb-item:hover {
+  background: var(--accent-900);
+}
+body.dark .drive-year-tab {
+  background: var(--color-surface, #1e1e1e);
+  border-color: var(--color-border, #333);
+}
+body.dark .drive-year-tab:hover {
+  background: var(--accent-900);
+  border-color: var(--accent-700);
+}
+body.dark .drive-year-tab.active {
+  background: var(--accent-900);
+  border-color: var(--accent-600);
+  color: var(--accent-300);
+}
+body.dark .drive-row {
+  background: var(--color-surface, #1e1e1e);
+}
+body.dark .drive-row:hover {
+  background: var(--accent-950, var(--accent-900));
+}
+body.dark .drive-viewer-table th {
+  background: var(--accent-900);
+  color: var(--accent-200);
+}
+body.dark .drive-viewer-table tbody tr:hover {
+  background: var(--accent-950, var(--accent-900));
+}

@@ -9,6 +9,7 @@ import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
 import Tools from './pages/tools/Tools'
+import Drive from './pages/drive/Drive'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
@@ -84,6 +85,8 @@ const App: FC = () => {
     ? 'budget'
     : location.pathname === '/tools'
     ? 'tools'
+    : location.pathname === '/drive'
+    ? 'drive'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
@@ -92,6 +95,7 @@ const App: FC = () => {
     else if (page === 'data') navigate('/data')
     else if (page === 'budget') navigate('/budget')
     else if (page === 'tools') navigate('/tools')
+    else if (page === 'drive') navigate('/drive')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -439,6 +443,7 @@ const App: FC = () => {
         <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />
+        <Route path="/drive" element={<Drive />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )

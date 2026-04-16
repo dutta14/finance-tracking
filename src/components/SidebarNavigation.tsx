@@ -281,6 +281,14 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
               Tools
             </button>
           </li>
+          <li className="sidebar-item">
+            <button
+              className={`sidebar-link${currentPage === 'drive' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('drive')}
+            >
+              Drive
+            </button>
+          </li>
         </ul>
       )}
       {expanded && (
