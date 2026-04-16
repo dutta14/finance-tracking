@@ -411,7 +411,7 @@
 }
 
 .settings-btn:hover {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 .settings-btn--danger {
@@ -465,7 +465,7 @@
 }
 
 .ghsync-mini-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 .ghsync-mini-btn:disabled {
@@ -1240,7 +1240,7 @@ body.dark .ghsync-mini-btn {
 }
 
 body.dark .ghsync-mini-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 body.dark .ghsync-mini-btn--ghost {

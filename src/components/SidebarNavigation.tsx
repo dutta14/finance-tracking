@@ -167,7 +167,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           </li>
           <li className="sidebar-item">
             <button
-              className={`sidebar-link sidebar-link--accordion${isGoalActive ? ' active' : ''}`}
+              className={`sidebar-link sidebar-link--accordion${currentPage === 'goal' ? ' active' : ''}`}
               onClick={() => {
                 setCurrentPage('goal');
                 setGoalAccordionOpen(o => !o);

@@ -34,10 +34,17 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  color: #111827;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .dark .budget-title {
-  color: #f1f5f9;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Year nav */
@@ -1655,7 +1662,7 @@
   border-color: var(--accent-hover);
 }
 .csv-preview-btn--confirm:hover {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 /* Dark mode */
@@ -1704,7 +1711,7 @@ body.dark .csv-preview-btn--confirm {
   color: #fff;
 }
 body.dark .csv-preview-btn--confirm:hover {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 /* ── Cashflow Views ─────────────────────────────────────── */

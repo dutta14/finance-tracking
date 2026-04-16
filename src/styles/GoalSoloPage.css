@@ -34,10 +34,14 @@
 }
 
 .goal-solo-header h1 {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #111;
+  letter-spacing: -0.3px;
   margin: 0;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .goal-solo-body {
@@ -62,10 +66,6 @@
 
 body.dark .goal-solo {
   background: #23272f;
-}
-
-body.dark .goal-solo-header h1 {
-  color: #e5e7eb;
 }
 
 body.dark .goal-solo-back {

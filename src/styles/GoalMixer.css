@@ -113,9 +113,9 @@
   flex-shrink: 0;
 }
 .mixer-badge--fi {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--accent-light);
+  color: var(--accent-text-dark);
+  border: 1px solid var(--accent-border);
 }
 .mixer-badge--gw {
   background: #dcfce7;
@@ -173,7 +173,7 @@
 }
 
 .mixer-goal-stat strong {
-  color: #1d4ed8;
+  color: var(--accent-text-dark);
   font-weight: 600;
 }
 

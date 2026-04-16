@@ -59,11 +59,13 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            padding: '0.7rem 1.2rem',
+            padding: '0.5rem 0.75rem',
             width: '100%',
             textAlign: 'left',
-            fontSize: '1rem',
+            fontSize: '0.875rem',
             fontWeight: 500,
+            borderRadius: '0.45rem',
+            transition: 'background 0.15s, color 0.15s',
             color: 'inherit',
           }}
         >

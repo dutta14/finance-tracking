@@ -81,7 +81,7 @@
   min-height: 36px;
 }
 
-.ghsync-status-bar--syncing { background: #eff6ff; color: #1d4ed8; }
+.ghsync-status-bar--syncing { background: var(--accent-lighter); color: var(--accent-text-dark); }
 .ghsync-status-bar--success { background: #f0fdf4; color: #166534; }
 .ghsync-status-bar--error   { background: #fef2f2; color: #b91c1c; }
 .ghsync-status-bar--idle    { background: #f9fafb; color: #6b7280; }
@@ -152,8 +152,8 @@
 .ghsync-tab:hover { color: #374151; }
 
 .ghsync-tab.active {
-  color: #1d4ed8;
-  border-bottom-color: #1d4ed8;
+  color: var(--accent-hover);
+  border-bottom-color: var(--accent-hover);
 }
 
 /* ── Body ── */
@@ -364,11 +364,11 @@
 .ghsync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .ghsync-btn--primary {
-  background: #1d4ed8;
+  background: var(--accent-hover);
   color: #fff;
 }
 
-.ghsync-btn--primary:not(:disabled):hover { background: #1e40af; }
+.ghsync-btn--primary:not(:disabled):hover { background: var(--accent-gradient-to); }
 
 .ghsync-btn--outline {
   background: #fff;

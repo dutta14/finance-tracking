@@ -517,7 +517,7 @@ const App: FC = () => {
         style={{ flex: 1, marginLeft: (!isMobile && sidebarOpen) ? 220 : 0, padding: 0, minHeight: '100vh', transition: 'margin-left 0.2s' }}
       >
         {!sidebarOpen && (
-          <div style={{ position: 'fixed', top: '2rem', left: '1rem', zIndex: 300 }}>
+          <div style={{ position: 'fixed', top: '1.25rem', left: '0.75rem', zIndex: 300 }}>
             <SidebarToggle expanded={false} onToggle={() => setSidebarOpen(true)} />
           </div>
         )}

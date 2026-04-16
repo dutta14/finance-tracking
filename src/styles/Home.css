@@ -12,11 +12,14 @@
   margin-bottom: 1.5rem;
 }
 .home-greeting h1 {
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
   margin: 0;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* 2×2 Grid */
@@ -618,7 +621,6 @@
 
 /* ── Dark mode ── */
 body.dark .home-page { background: #0b0e14; color: #e5e7eb; }
-body.dark .home-greeting h1 { color: #f3f4f6; }
 body.dark .home-grid-slot--over { outline-color: var(--accent-hover); }
 
 body.dark .home-card {

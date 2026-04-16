@@ -15,7 +15,11 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .data-header-actions {
@@ -747,7 +751,7 @@
 
 .data-bulk-count {
   font-weight: 600;
-  color: #1d4ed8;
+  color: var(--accent-text-dark);
   margin-right: 0.25rem;
   white-space: nowrap;
 }
@@ -876,8 +880,8 @@
 }
 
 .data-badge--owner-primary {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--accent-light);
+  color: var(--accent-text-dark);
 }
 
 .data-badge--owner-partner {
@@ -891,8 +895,8 @@
 }
 
 .data-badge--goal-fi {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--accent-light);
+  color: var(--accent-text-dark);
 }
 
 .data-badge--goal-gw {
@@ -1108,7 +1112,7 @@
 }
 
 .data-form-save:hover {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 .data-form-cancel {
@@ -1162,7 +1166,7 @@
 }
 
 .data-add-entry-btn:hover {
-  background: #1d4ed8;
+  background: var(--accent-gradient-to);
 }
 
 .data-entry-count {
@@ -1833,9 +1837,6 @@ td.data-spreadsheet-inactive {
 }
 
 /* ── Dark mode ── */
-body.dark .data-header h1 {
-  color: #f3f4f6;
-}
 
 body.dark .data-subtitle {
   color: #9ca3af;
