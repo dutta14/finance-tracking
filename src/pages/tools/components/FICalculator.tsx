@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback } from 'react'
+import { FC, useState, useMemo, useCallback, useRef } from 'react'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import type { Account, BalanceEntry } from '../../data/types'
@@ -124,6 +124,42 @@ function loadSims(): FISim[] {
   try { return JSON.parse(localStorage.getItem(SIMS_KEY) || '[]') } catch { return [] }
 }
 function saveSims(sims: FISim[]) { localStorage.setItem(SIMS_KEY, JSON.stringify(sims)) }
+
+/** Button that fires once on click, then repeats (accelerating) while held */
+const StepBtn: FC<{ onStep: () => void; children: React.ReactNode }> = ({ onStep, children }) => {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const stop = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null }
+  }, [])
+
+  const start = useCallback(() => {
+    onStep()
+    // After 400ms delay, start repeating at 150ms, then accelerate to 50ms after 1.2s
+    timerRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(onStep, 150)
+      timerRef.current = setTimeout(() => {
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        intervalRef.current = setInterval(onStep, 50)
+      }, 1200)
+    }, 400)
+  }, [onStep])
+
+  return (
+    <button
+      className="fi-calc-step-btn"
+      onMouseDown={start}
+      onMouseUp={stop}
+      onMouseLeave={stop}
+      onTouchStart={start}
+      onTouchEnd={stop}
+    >
+      {children}
+    </button>
+  )
+}
 
 const FICalculator: FC = () => {
   const thisYear = new Date().getFullYear()
@@ -373,64 +409,64 @@ const FICalculator: FC = () => {
         )}
       </div>
 
-      {/* Rate sliders */}
-      <div className="fi-calc-slider-group">
-        <div className="fi-calc-slider-item">
-          <div className="fi-calc-slider-header">
-            <span>Inflation</span>
-            <span className="fi-calc-slider-value">{inflationRate}%</span>
+      {/* Rate steppers */}
+      <div className="fi-calc-stepper-group">
+        <div className="fi-calc-stepper-item">
+          <span className="fi-calc-stepper-label">Inflation</span>
+          <div className="fi-calc-stepper">
+            <StepBtn onStep={() => setInflationRate(v => Math.max(0, v - 0.5))}>−</StepBtn>
+            <span className="fi-calc-step-val">{inflationRate}%</span>
+            <StepBtn onStep={() => setInflationRate(v => Math.min(10, v + 0.5))}>+</StepBtn>
           </div>
-          <input type="range" className="fi-calc-range" min="0" max="10" step="0.5"
-            value={inflationRate} onChange={e => setInflationRate(Number(e.target.value))} />
         </div>
-        <div className="fi-calc-slider-item">
-          <div className="fi-calc-slider-header">
-            <span>Growth</span>
-            <span className="fi-calc-slider-value">{growthRate}%</span>
+        <div className="fi-calc-stepper-item">
+          <span className="fi-calc-stepper-label">Growth</span>
+          <div className="fi-calc-stepper">
+            <StepBtn onStep={() => setGrowthRate(v => Math.max(0, v - 0.5))}>−</StepBtn>
+            <span className="fi-calc-step-val">{growthRate}%</span>
+            <StepBtn onStep={() => setGrowthRate(v => Math.min(15, v + 0.5))}>+</StepBtn>
           </div>
-          <input type="range" className="fi-calc-range" min="0" max="15" step="0.5"
-            value={growthRate} onChange={e => setGrowthRate(Number(e.target.value))} />
         </div>
       </div>
 
-      {/* Year sliders */}
-      <div className="fi-calc-slider-group">
-        <div className="fi-calc-slider-item">
-          <div className="fi-calc-slider-header">
-            <span>Retire in</span>
-            <span className="fi-calc-slider-value">{retireYear} <span className="fi-calc-slider-sub">({retireYear - thisYear}yr)</span></span>
+      {/* Year steppers */}
+      <div className="fi-calc-stepper-group">
+        <div className="fi-calc-stepper-item">
+          <span className="fi-calc-stepper-label">Retire in</span>
+          <div className="fi-calc-stepper">
+            <StepBtn onStep={() => setRetireYear(v => Math.max(thisYear + 1, v - 1))}>−</StepBtn>
+            <span className="fi-calc-step-val">{retireYear} <span className="fi-calc-step-sub">({retireYear - thisYear}yr)</span></span>
+            <StepBtn onStep={() => setRetireYear(v => Math.min(lastYear - 1, v + 1))}>+</StepBtn>
           </div>
-          <input type="range" className="fi-calc-range" min={thisYear + 1} max={lastYear - 1} step="1"
-            value={retireYear} onChange={e => setRetireYear(Number(e.target.value))} />
         </div>
-        <div className="fi-calc-slider-item">
-          <div className="fi-calc-slider-header">
-            <span>Plan until</span>
-            <span className="fi-calc-slider-value">{lastYear}</span>
+        <div className="fi-calc-stepper-item">
+          <span className="fi-calc-stepper-label">Plan until</span>
+          <div className="fi-calc-stepper">
+            <StepBtn onStep={() => setLastYear(v => Math.max(retireYear + 1, v - 1))}>−</StepBtn>
+            <span className="fi-calc-step-val">{lastYear}</span>
+            <StepBtn onStep={() => setLastYear(v => Math.min(defaultLastYear + 20, v + 1))}>+</StepBtn>
           </div>
-          <input type="range" className="fi-calc-range" min={retireYear + 1} max={defaultLastYear + 20} step="1"
-            value={lastYear} onChange={e => setLastYear(Number(e.target.value))} />
         </div>
       </div>
 
       {/* 401k access years */}
-      <div className="fi-calc-slider-group">
-        <div className="fi-calc-slider-item">
-          <div className="fi-calc-slider-header">
-            <span>Primary 401(k)</span>
-            <span className="fi-calc-slider-value">{primary401kYear}</span>
+      <div className="fi-calc-stepper-group">
+        <div className="fi-calc-stepper-item">
+          <span className="fi-calc-stepper-label">Primary 401(k)</span>
+          <div className="fi-calc-stepper">
+            <StepBtn onStep={() => setPrimary401kYear(v => Math.max(primary401kEarliestYear, v - 1))}>−</StepBtn>
+            <span className="fi-calc-step-val">{primary401kYear}</span>
+            <StepBtn onStep={() => setPrimary401kYear(v => Math.min(lastYear, v + 1))}>+</StepBtn>
           </div>
-          <input type="range" className="fi-calc-range" min={primary401kEarliestYear} max={lastYear} step="1"
-            value={primary401kYear} onChange={e => setPrimary401kYear(Number(e.target.value))} />
         </div>
         {profile.partnerBirthYear && (
-          <div className="fi-calc-slider-item">
-            <div className="fi-calc-slider-header">
-              <span>Partner 401(k)</span>
-              <span className="fi-calc-slider-value">{partner401kYear}</span>
+          <div className="fi-calc-stepper-item">
+            <span className="fi-calc-stepper-label">Partner 401(k)</span>
+            <div className="fi-calc-stepper">
+              <StepBtn onStep={() => setPartner401kYear(v => Math.max(partner401kEarliestYear, v - 1))}>−</StepBtn>
+              <span className="fi-calc-step-val">{partner401kYear}</span>
+              <StepBtn onStep={() => setPartner401kYear(v => Math.min(lastYear, v + 1))}>+</StepBtn>
             </div>
-            <input type="range" className="fi-calc-range" min={partner401kEarliestYear} max={lastYear} step="1"
-              value={partner401kYear} onChange={e => setPartner401kYear(Number(e.target.value))} />
           </div>
         )}
       </div>
