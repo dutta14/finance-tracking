@@ -27,6 +27,7 @@ const Budget: FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [csvPreview, setCsvPreview] = useState<{ monthKey: string; csv: string } | null>(null)
   const [bulkQueue, setBulkQueue] = useState<{ monthKey: string; csv: string }[]>([])
+  const [pendingNewCats, setPendingNewCats] = useState<string[]>([])
   const quickUploadRef = useRef<HTMLInputElement>(null)
   const bulkUploadRef = useRef<HTMLInputElement>(null)
 
@@ -112,15 +113,25 @@ const Budget: FC = () => {
   const handlePreviewConfirm = (filteredCsv: string) => {
     if (!csvPreview) return
     const result = handleUploadCSV(csvPreview.monthKey, filteredCsv)
+    const newCats = [...pendingNewCats, ...(result.newCategories || [])]
     if (!result.ok) {
       setToastMsg(`Upload failed: ${result.error}`)
       setTimeout(() => setToastMsg(null), 5000)
     } else if (bulkQueue.length === 0) {
-      setToastMsg('Uploaded successfully')
-      setTimeout(() => setToastMsg(null), 3000)
+      // Final upload done — show new categories toast if any
+      const uniqueNew = [...new Set(newCats)]
+      if (uniqueNew.length > 0) {
+        setToastMsg(`New categories added to "Others": ${uniqueNew.join(', ')}`)
+        setTimeout(() => setToastMsg(null), 8000)
+      } else {
+        setToastMsg('Uploaded successfully')
+        setTimeout(() => setToastMsg(null), 3000)
+      }
+      setPendingNewCats([])
     }
     // Move to next in bulk queue, or close
     if (bulkQueue.length > 0) {
+      setPendingNewCats(newCats)
       setCsvPreview(bulkQueue[0])
       setBulkQueue(bulkQueue.slice(1))
     } else {
@@ -136,6 +147,7 @@ const Budget: FC = () => {
     } else {
       setCsvPreview(null)
       setBulkQueue([])
+      setPendingNewCats([])
     }
   }
 
@@ -162,16 +174,16 @@ const Budget: FC = () => {
         <div className="budget-header-right">
           <div className="budget-view-toggle">
             <button
-              className={`budget-view-btn${viewMode === 'detailed' ? ' active' : ''}`}
-              onClick={() => setViewMode('detailed')}
-            >
-              Detailed
-            </button>
-            <button
               className={`budget-view-btn${viewMode === 'aggregated' ? ' active' : ''}`}
               onClick={() => setViewMode('aggregated')}
             >
               Aggregated
+            </button>
+            <button
+              className={`budget-view-btn${viewMode === 'detailed' ? ' active' : ''}`}
+              onClick={() => setViewMode('detailed')}
+            >
+              Detailed
             </button>
             <button
               className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}

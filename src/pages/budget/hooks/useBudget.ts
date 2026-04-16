@@ -17,7 +17,7 @@ export function useBudget() {
     const currentYear = new Date().getFullYear()
     return s.years.includes(currentYear) ? currentYear : (s.years[s.years.length - 1] || currentYear)
   })
-  const [viewMode, setViewMode] = useState<BudgetViewMode>('detailed')
+  const [viewMode, setViewMode] = useState<BudgetViewMode>('aggregated')
 
   const persist = useCallback((next: BudgetStore) => {
     storeRef.current = next
@@ -25,7 +25,7 @@ export function useBudget() {
     saveBudgetStore(next)
   }, [])
 
-  const uploadCSV = useCallback((monthKey: string, csvText: string): { ok: boolean; error?: string; transactions?: Transaction[] } => {
+  const uploadCSV = useCallback((monthKey: string, csvText: string): { ok: boolean; error?: string; transactions?: Transaction[]; newCategories?: string[] } => {
     try {
       const transactions = parseCSV(csvText)
       if (transactions.length === 0) {
@@ -52,7 +52,7 @@ export function useBudget() {
       }
 
       persist(next)
-      return { ok: true, transactions }
+      return { ok: true, transactions, newCategories }
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : 'Failed to parse CSV' }
     }
@@ -149,15 +149,17 @@ export function useBudget() {
       }
     })
 
-    // Update groups: replace source categories with target, deduplicate
+    // Update groups: remove source categories; target stays in its original group only
     const currentGroups = getGlobalCategoryGroups(current)
+    // Find which group already contains the target
+    const targetGroupId = currentGroups.find(g => g.categories.includes(targetName))?.id
     const newGroups = currentGroups.map(g => {
       const hasSources = g.categories.some(c => sourceSet.has(c))
       const hasTarget = g.categories.includes(targetName)
       if (!hasSources && !hasTarget) return g
       let cats = g.categories.filter(c => !sourceSet.has(c))
-      // If this group had a source but doesn't have target, add target
-      if (hasSources && !hasTarget) {
+      // Only add target to this group if no group already owns it
+      if (hasSources && !hasTarget && !targetGroupId) {
         cats = [...cats, targetName]
       }
       return { ...g, categories: [...new Set(cats)] }
