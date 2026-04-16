@@ -70,6 +70,7 @@ const App: FC = () => {
     saveEncryptedToken, migrateLegacyToken, unlockToken, lockToken,
     syncNow, fetchHistory, testConnection, restoreLatest, restoreFromCommit, markRestored, updateData: ghUpdateData,
     updateDataFile: ghUpdateDataFile, syncDataNow: ghSyncDataNow, restoreDataLatest,
+    syncToolsNow: ghSyncToolsNow, restoreToolsLatest,
   } = useGitHubSync();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
@@ -252,6 +253,14 @@ const App: FC = () => {
     await syncNow(data, message)
     const dataSnapshot = getDataSnapshot()
     await ghSyncDataNow({ version: 1, exportedAt: new Date().toISOString(), accounts: dataSnapshot.accounts, balances: dataSnapshot.balances }, message ? `Data: ${message}` : undefined)
+    // Sync tools data (FI simulations + SGT overrides)
+    const toolsPayload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
+      sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
+    }
+    await ghSyncToolsNow(toolsPayload, message ? `Tools: ${message}` : undefined)
     // Sync budget data (CSVs + config)
     if (ghIsConfigured && ghActiveToken) {
       const budgetStore = loadBudgetStore()
@@ -263,10 +272,16 @@ const App: FC = () => {
   const handleExport = (): void => {
     const dataSnapshot = getDataSnapshot()
     const goalViewMode = localStorage.getItem('goal-view-mode') || ''
+    const homeCardOrder = localStorage.getItem('home-card-order') || ''
+    const budgetStore = loadBudgetStore()
+    const budgetConfig = getBudgetConfigData(budgetStore)
     const json = JSON.stringify({
       version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile,
-      settings: { accentTheme, darkMode, allowCsvImport, goalViewMode },
+      settings: { accentTheme, darkMode, allowCsvImport, goalViewMode, homeCardOrder },
       dataAccounts: dataSnapshot.accounts, dataBalances: dataSnapshot.balances,
+      budgetCsvs: budgetStore.csvs, budgetConfig,
+      fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
+      sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
     }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -307,6 +322,23 @@ const App: FC = () => {
         if (Array.isArray(parsed?.dataBalances)) {
           localStorage.setItem('data-balances', JSON.stringify(parsed.dataBalances))
         }
+        if (parsed?.budgetCsvs && typeof parsed.budgetCsvs === 'object') {
+          const store = loadBudgetStore()
+          store.csvs = parsed.budgetCsvs as typeof store.csvs
+          saveBudgetStore(store)
+        }
+        if (parsed?.budgetConfig && typeof parsed.budgetConfig === 'object') {
+          localStorage.setItem('budget-config', JSON.stringify(parsed.budgetConfig))
+        }
+        if (Array.isArray(parsed?.fiSimulations)) {
+          localStorage.setItem('fi-simulations', JSON.stringify(parsed.fiSimulations))
+        }
+        if (parsed?.sgtOverrides && typeof parsed.sgtOverrides === 'object') {
+          localStorage.setItem('sgt-overrides', JSON.stringify(parsed.sgtOverrides))
+        }
+        if (parsed?.settings?.homeCardOrder) {
+          localStorage.setItem('home-card-order', parsed.settings.homeCardOrder as string)
+        }
       } catch {
         alert('Could not import: the file is not a valid finance goals export.')
       }
@@ -340,6 +372,7 @@ const App: FC = () => {
           if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
           if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
           if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
+          if (s.homeCardOrder) localStorage.setItem('home-card-order', s.homeCardOrder as string)
         }
         let restoredGhConfig = ghConfig
         if (parsed?.gitHubConfig && typeof parsed.gitHubConfig === 'object') {
@@ -392,6 +425,15 @@ const App: FC = () => {
                 saveBudgetStore(budgetStore)
               }
             })()
+          }).then(() => {
+            // Also restore tools data from GitHub
+            return restoreToolsLatest().then(toolsResult => {
+              if (toolsResult.ok && toolsResult.data) {
+                const t = toolsResult.data as { fiSimulations?: unknown; sgtOverrides?: unknown }
+                if (Array.isArray(t.fiSimulations)) localStorage.setItem('fi-simulations', JSON.stringify(t.fiSimulations))
+                if (t.sgtOverrides && typeof t.sgtOverrides === 'object') localStorage.setItem('sgt-overrides', JSON.stringify(t.sgtOverrides))
+              }
+            })
           }).then(() => {
             // Reload so all React components pick up the restored localStorage data
             setTimeout(() => { resolve(); window.location.reload() }, 100)
@@ -498,7 +540,7 @@ const App: FC = () => {
           onGhTestConnection={testConnection}
           onGhRestoreLatest={restoreLatest}
           onGhRestoreFromCommit={restoreFromCommit}
-          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport } }}
+          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport, goalViewMode: localStorage.getItem('goal-view-mode') || '', homeCardOrder: localStorage.getItem('home-card-order') || '' } }}
           onGhApplyRestore={applyRestoredSnapshot}
           onFactoryReset={handleFactoryReset}
           allowCsvImport={allowCsvImport}

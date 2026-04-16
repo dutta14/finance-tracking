@@ -218,6 +218,7 @@ export const useGitHubSync = () => {
   }, [config])
 
   const dataFilePath = config.filePath.replace(/\.json$/, '-data.json')
+  const toolsFilePath = config.filePath.replace(/\.json$/, '-tools.json')
 
   const getFileShaForPath = useCallback(async (path: string): Promise<string | null> => {
     if (!activeToken) throw new Error('Token is not unlocked.')
@@ -302,6 +303,51 @@ export const useGitHubSync = () => {
       setLastError(`Data sync: ${e instanceof Error ? e.message : String(e)}`)
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured])
+
+  const syncToolsNow = useCallback(async (data: object, message?: string): Promise<void> => {
+    if (!isConfigured) return
+    try {
+      const prettyJson = JSON.stringify(data, null, 2)
+      const content = toBase64(prettyJson)
+      const sha = await getFileShaForPath(toolsFilePath)
+      const commitMessage =
+        message ||
+        `Tools sync: ${new Date().toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        })}`
+      const body: Record<string, string> = { message: commitMessage, content }
+      if (sha) body.sha = sha
+      const res = await fetch(
+        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`,
+        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+      )
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+      }
+    } catch (e) {
+      console.error('Tools file sync error:', e instanceof Error ? e.message : e)
+    }
+  }, [activeToken, apiHeaders, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured])
+
+  const restoreToolsLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
+    if (!isConfigured) return { ok: false }
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`,
+        { headers: apiHeaders(activeToken) }
+      )
+      if (res.status === 404) return { ok: false }
+      if (!res.ok) return { ok: false }
+      const json = await res.json()
+      if (typeof json.content !== 'string') return { ok: false }
+      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
+      return { ok: true, data: parsed }
+    } catch {
+      return { ok: false }
+    }
+  }, [activeToken, apiHeaders, toolsFilePath, config.owner, config.repo, isConfigured])
 
   const fetchHistory = useCallback(async (): Promise<void> => {
     if (!isConfigured) return
@@ -514,6 +560,8 @@ export const useGitHubSync = () => {
     updateData,
     updateDataFile,
     syncDataNow,
+    syncToolsNow,
     restoreDataLatest,
+    restoreToolsLatest,
   }
 }
