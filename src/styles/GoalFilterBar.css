@@ -42,8 +42,8 @@
 }
 
 .filter-pill--active {
-  background: var(--home-accent, #3b82f6);
-  border-color: var(--home-accent, #3b82f6);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -125,7 +125,7 @@
   width: 14px;
   height: 14px;
   cursor: pointer;
-  accent-color: var(--home-accent, #3b82f6);
+  accent-color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -179,7 +179,7 @@
   border: none;
   cursor: pointer;
   font-size: 0.8rem;
-  color: #dc2626;
+  color: var(--color-negative);
   padding: 0;
   text-decoration: underline;
   transition: color 0.15s;
@@ -203,8 +203,8 @@ body.dark .filter-pill:hover {
 }
 
 body.dark .filter-pill--active {
-  background: var(--home-accent, #3b82f6);
-  border-color: var(--home-accent, #3b82f6);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -237,7 +237,7 @@ body.dark .filter-option:hover {
 }
 
 body.dark .filter-option input[type="checkbox"] {
-  accent-color: var(--home-accent, #3b82f6);
+  accent-color: var(--accent);
 }
 
 body.dark .filter-dropdown-clear {

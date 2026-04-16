@@ -6,14 +6,14 @@
 /* ── Outer card ── */
 .fi-card {
   background: #fff;
-  border: 1px solid var(--fi-border);
+  border: 1px solid var(--accent-border);
   border-radius: 0.75rem;
   padding: 1.25rem 1.4rem 1rem;
   transition: box-shadow 0.18s;
 }
 
 .fi-card:hover {
-  box-shadow: 0 2px 12px var(--fi-hover-shadow);
+  box-shadow: 0 2px 12px var(--accent-shadow);
 }
 
 .fi-card--flat {
@@ -45,7 +45,7 @@
 
 .fi-card-warning-suggest {
   flex-shrink: 0;
-  background: #fbbf24;
+  background: var(--color-warning);
   color: #78350f;
   border: none;
   border-radius: 4px;
@@ -58,7 +58,7 @@
 }
 
 .fi-card-warning-suggest:hover:not(:disabled) {
-  background: #f59e0b;
+  background: var(--color-warning);
 }
 
 .fi-card-warning-suggest:disabled {
@@ -84,7 +84,7 @@
 }
 
 .fi-card-badge {
-  background: var(--fi-badge-bg);
+  background: var(--accent-badge);
   color: #fff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -100,7 +100,7 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -108,10 +108,10 @@
 
 /* ── Section sub-cards ── */
 .fi-card-section {
-  border: 1px solid var(--fi-border);
+  border: 1px solid var(--accent-border);
   border-radius: 0.6rem;
   padding: 0.75rem 0.9rem 0.6rem;
-  background: var(--fi-section-bg);
+  background: var(--accent-lighter);
   margin-bottom: 0.75rem;
 }
 
@@ -128,7 +128,7 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
   margin-bottom: 0.5rem;
 }
 
@@ -152,7 +152,7 @@
 }
 
 .fi-card-row-label {
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
@@ -160,7 +160,7 @@
 
 .fi-card-row-value {
   font-weight: 500;
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -168,10 +168,10 @@
 
 /* ── FI Goal callout ── */
 .fi-card-goal {
-  border: 1px solid var(--fi-goal-border);
+  border: 1px solid var(--accent-border);
   border-radius: 0.6rem;
   padding: 0.75rem 0.9rem;
-  background: var(--fi-goal-bg);
+  background: var(--accent-light);
   margin-bottom: 0.75rem;
 }
 
@@ -187,7 +187,7 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
@@ -196,7 +196,7 @@
 .fi-card-goal-amount {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--fi-goal-amount);
+  color: var(--accent-text-dark);
 }
 
 /* ── Progress bar ── */
@@ -209,14 +209,14 @@
 .fi-card-progress-bar-track {
   flex: 1;
   height: 6px;
-  background: var(--fi-track);
+  background: var(--accent-track);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .fi-card-progress-bar-fill {
   height: 100%;
-  background: var(--fi-accent);
+  background: var(--accent);
   border-radius: 99px;
   transition: width 0.4s ease;
 }
@@ -224,14 +224,14 @@
 .fi-card-progress-pct {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 /* ── Meta footer ── */
 .fi-card-meta {
-  border-top: 1px solid var(--fi-border);
+  border-top: 1px solid var(--accent-border);
   padding-top: 0.6rem;
   margin-top: 0.25rem;
   color: #6b7280;
@@ -243,7 +243,7 @@
    ────────────────────────────────────────────── */
 .expense-toggle {
   display: flex;
-  background: var(--fi-toggle-bg);
+  background: var(--accent-light);
   border-radius: 6px;
   padding: 2px;
   gap: 2px;
@@ -256,7 +256,7 @@
   padding: 0.2rem 0.6rem;
   font-size: 0.75rem;
   cursor: pointer;
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
   font-weight: 400;
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
@@ -264,9 +264,9 @@
 
 .expense-toggle-btn.active {
   background: #fff;
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
   font-weight: 600;
-  box-shadow: 0 1px 3px var(--fi-toggle-shadow);
+  box-shadow: 0 1px 3px var(--accent-shadow-strong);
 }
 
 /* ──────────────────────────────────────────────
@@ -281,14 +281,14 @@
 }
 
 .fi-goal-info-icon {
-  color: var(--fi-icon-subtle);
+  color: var(--accent-icon-subtle);
   cursor: default;
   display: block;
   flex-shrink: 0;
 }
 
 .fi-goal-info:hover .fi-goal-info-icon {
-  color: var(--fi-accent);
+  color: var(--accent);
 }
 
 .fi-goal-tooltip {
@@ -357,13 +357,13 @@ body.dark .fi-goal-tooltip::after {
    ────────────────────────────────────────────── */
 
 body.dark .fi-card {
-  background: var(--fi-card-bg);
-  border-color: var(--fi-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
   color: #e5e7eb;
 }
 
 body.dark .fi-card:hover {
-  box-shadow: 0 2px 12px var(--fi-hover-shadow);
+  box-shadow: 0 2px 12px var(--accent-shadow);
 }
 
 body.dark .fi-card-warning {
@@ -382,79 +382,79 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 }
 
 body.dark .fi-card-badge {
-  background: var(--fi-badge-bg);
+  background: var(--accent-badge);
 }
 
 body.dark .fi-card-title {
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .fi-card-section {
-  background: var(--fi-section-bg);
-  border-color: var(--fi-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 
 body.dark .fi-card-section-title {
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .fi-card-row-label {
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .fi-card-row-value {
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .expense-toggle {
-  background: var(--fi-toggle-bg);
+  background: var(--accent-light);
 }
 
 body.dark .expense-toggle-btn {
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .expense-toggle-btn.active {
-  background: var(--fi-card-bg);
-  color: var(--fi-text-dark);
+  background: var(--accent-lighter);
+  color: var(--accent-text-dark);
 }
 
 body.dark .fi-card-goal {
-  background: var(--fi-goal-bg);
-  border-color: var(--fi-goal-border);
+  background: var(--accent-light);
+  border-color: var(--accent-border);
 }
 
 body.dark .fi-card-goal-label {
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .fi-card-goal-amount {
-  color: var(--fi-goal-amount);
+  color: var(--accent-text-dark);
 }
 
 body.dark .fi-card-progress-bar-track {
-  background: var(--fi-track);
+  background: var(--accent-track);
 }
 
 body.dark .fi-card-progress-bar-fill {
-  background: var(--fi-accent);
+  background: var(--accent);
 }
 
 body.dark .fi-card-progress-pct {
-  color: var(--fi-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .fi-card-meta {
-  border-top-color: var(--fi-border);
+  border-top-color: var(--accent-border);
   color: #6b7280;
 }
 
 body.dark .fi-goal-info-icon {
-  color: var(--fi-icon-subtle);
+  color: var(--accent-icon-subtle);
 }
 
 body.dark .fi-goal-info:hover .fi-goal-info-icon {
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
 }
 
 /* ── Inline edit button ── */
@@ -464,9 +464,9 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
   gap: 0.35rem;
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--fi-text-mid);
-  background: var(--fi-toggle-bg);
-  border: 1px solid var(--fi-border);
+  color: var(--accent-text-mid);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-border);
   border-radius: 6px;
   padding: 4px 10px;
   cursor: pointer;
@@ -474,15 +474,15 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
 }
 
 .fi-card-edit-btn:hover {
-  background: var(--fi-goal-bg);
-  color: var(--fi-text-dark);
-  border-color: var(--fi-accent);
+  background: var(--accent-light);
+  color: var(--accent-text-dark);
+  border-color: var(--accent);
 }
 
 /* ── Inline edit form ── */
 .fi-card-edit-form {
-  background: var(--fi-section-bg);
-  border: 1px solid var(--fi-border);
+  background: var(--accent-lighter);
+  border: 1px solid var(--accent-border);
   border-radius: 8px;
   padding: 1rem 1.1rem 0.9rem;
   margin-bottom: 0.75rem;
@@ -490,7 +490,7 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
 
 .fi-form-error {
   font-size: 0.82rem;
-  color: #dc2626;
+  color: var(--color-negative);
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 6px;
@@ -501,7 +501,7 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
 body.dark .fi-form-error {
   background: #2d1515;
   border-color: #742a2a;
-  color: #f87171;
+  color: var(--color-negative);
 }
 
 .fi-form-grid {
@@ -520,25 +520,25 @@ body.dark .fi-form-error {
 .fi-form-label {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
 }
 
 .fi-form-input {
   font-size: 0.875rem;
-  border: 1.5px solid var(--fi-border);
+  border: 1.5px solid var(--accent-border);
   border-radius: 6px;
   padding: 5px 8px;
   outline: none;
-  background: var(--fi-card-bg);
-  color: var(--fi-text-dark);
+  background: var(--accent-lighter);
+  color: var(--accent-text-dark);
   width: 100%;
   box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .fi-form-input:focus {
-  border-color: var(--fi-accent);
-  box-shadow: 0 0 0 3px var(--fi-hover-shadow);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-shadow);
 }
 
 .fi-form-actions {
@@ -548,7 +548,7 @@ body.dark .fi-form-error {
 
 .fi-form-save {
   flex: 1;
-  background: var(--fi-accent);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -560,23 +560,23 @@ body.dark .fi-form-error {
 }
 
 .fi-form-save:hover {
-  background: var(--fi-text-mid);
+  background: var(--accent-text-mid);
 }
 
 .fi-form-cancel {
   flex: 1;
   background: none;
-  border: 1.5px solid var(--fi-border);
+  border: 1.5px solid var(--accent-border);
   border-radius: 6px;
   padding: 7px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--fi-text-mid);
+  color: var(--accent-text-mid);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .fi-form-cancel:hover {
-  background: var(--fi-toggle-bg);
-  border-color: var(--fi-accent);
+  background: var(--accent-light);
+  border-color: var(--accent);
 }

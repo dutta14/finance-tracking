@@ -94,7 +94,7 @@
 }
 
 .ghsync-dot--green { background: #22c55e; }
-.ghsync-dot--red   { background: #ef4444; }
+.ghsync-dot--red   { background: var(--color-negative); }
 .ghsync-dot--gray  { background: #9ca3af; }
 
 .ghsync-pending-badge {
@@ -112,7 +112,7 @@
   width: 12px;
   height: 12px;
   border: 2px solid #93c5fd;
-  border-top-color: #2563eb;
+  border-top-color: var(--accent-hover);
   border-radius: 50%;
   animation: ghsync-spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -178,10 +178,10 @@
   line-height: 1.5;
 }
 
-.ghsync-notice svg { flex-shrink: 0; margin-top: 0; color: #3b82f6; align-self: center; }
+.ghsync-notice svg { flex-shrink: 0; margin-top: 0; color: var(--accent); align-self: center; }
 
 .ghsync-notice a {
-  color: #2563eb;
+  color: var(--accent-hover);
   text-underline-offset: 2px;
 }
 
@@ -212,7 +212,7 @@
 
 .ghsync-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
@@ -243,7 +243,7 @@
 .ghsync-link-btn {
   background: none;
   border: none;
-  color: #2563eb;
+  color: var(--accent-hover);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -496,7 +496,7 @@ body.dark .ghsync-input {
 }
 
 body.dark .ghsync-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
 }
 

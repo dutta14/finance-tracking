@@ -54,9 +54,7 @@ const App: FC = () => {
     if (stored === '0') return false;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  const [fiTheme, setFiTheme] = useState(() => localStorage.getItem('fiTheme') || 'blue');
-  const [gwTheme, setGwTheme] = useState(() => localStorage.getItem('gwTheme') || 'green');
-  const [homeTheme, setHomeTheme] = useState(() => localStorage.getItem('homeTheme') || 'blue');
+  const [accentTheme, setAccentTheme] = useState(() => localStorage.getItem('accentTheme') || localStorage.getItem('fiTheme') || 'blue');
   const [allowCsvImport, setAllowCsvImport] = useState(() => localStorage.getItem('allowCsvImport') === '1');
   const [selectedNavGoalIds, setSelectedNavGoalIds] = useState<number[]>([]);
   const [selectedHomeGoalIds, setSelectedHomeGoalIds] = useState<number[]>([]);
@@ -178,28 +176,18 @@ const App: FC = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    document.body.dataset.fiTheme = fiTheme;
-    localStorage.setItem('fiTheme', fiTheme);
-  }, [fiTheme]);
-
-  useEffect(() => {
-    document.body.dataset.gwTheme = gwTheme;
-    localStorage.setItem('gwTheme', gwTheme);
-  }, [gwTheme]);
+    document.body.dataset.accentTheme = accentTheme;
+    localStorage.setItem('accentTheme', accentTheme);
+  }, [accentTheme]);
 
   useEffect(() => {
     localStorage.setItem('allowCsvImport', allowCsvImport ? '1' : '0');
   }, [allowCsvImport]);
 
-  useEffect(() => {
-    document.body.dataset.homeTheme = homeTheme;
-    localStorage.setItem('homeTheme', homeTheme);
-  }, [homeTheme]);
-
   // Drive auto-sync whenever goals, gwGoals, profile, or themes change
   useEffect(() => {
-    ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport } });
-  }, [goals, gwGoals, profile, fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport]); // eslint-disable-line react-hooks/exhaustive-deps
+    ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport } });
+  }, [goals, gwGoals, profile, accentTheme, darkMode, allowCsvImport]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Callback when Data page accounts/balances change → sync data file
   const handleDataChange = (accounts: Account[], balances: BalanceEntry[]): void => {
@@ -273,7 +261,7 @@ const App: FC = () => {
     const goalViewMode = localStorage.getItem('goal-view-mode') || ''
     const json = JSON.stringify({
       version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile,
-      settings: { fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport, goalViewMode },
+      settings: { accentTheme, darkMode, allowCsvImport, goalViewMode },
       dataAccounts: dataSnapshot.accounts, dataBalances: dataSnapshot.balances,
     }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -303,9 +291,8 @@ const App: FC = () => {
         }
         if (parsed?.settings && typeof parsed.settings === 'object') {
           const s = parsed.settings as Record<string, string>
-          if (s.fiTheme) setFiTheme(s.fiTheme)
-          if (s.gwTheme) setGwTheme(s.gwTheme)
-          if (s.homeTheme) setHomeTheme(s.homeTheme)
+          if (s.accentTheme) setAccentTheme(s.accentTheme)
+          else if (s.fiTheme) setAccentTheme(s.fiTheme)
           if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
           if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
           if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
@@ -344,9 +331,8 @@ const App: FC = () => {
         }
         if (parsed?.settings && typeof parsed.settings === 'object') {
           const s = parsed.settings as Record<string, unknown>
-          if (s.fiTheme) setFiTheme(s.fiTheme as string)
-          if (s.gwTheme) setGwTheme(s.gwTheme as string)
-          if (s.homeTheme) setHomeTheme(s.homeTheme as string)
+          if (s.accentTheme) setAccentTheme(s.accentTheme as string)
+          else if (s.fiTheme) setAccentTheme(s.fiTheme as string)
           if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
           if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
           if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
@@ -468,12 +454,12 @@ const App: FC = () => {
           setExpanded={setSidebarOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
-          fiTheme={fiTheme}
-          onFiThemeChange={setFiTheme}
-          gwTheme={gwTheme}
-          onGwThemeChange={setGwTheme}
-          homeTheme={homeTheme}
-          onHomeThemeChange={setHomeTheme}
+          fiTheme={accentTheme}
+          onFiThemeChange={setAccentTheme}
+          gwTheme={accentTheme}
+          onGwThemeChange={setAccentTheme}
+          homeTheme={accentTheme}
+          onHomeThemeChange={setAccentTheme}
           goals={visibleGoals}
           selectedNavGoalIds={selectedNavGoalIds}
           isMultiSelectMode={isMultiSelectMode}
@@ -507,7 +493,7 @@ const App: FC = () => {
           onGhTestConnection={testConnection}
           onGhRestoreLatest={restoreLatest}
           onGhRestoreFromCommit={restoreFromCommit}
-          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { fiTheme, gwTheme, homeTheme, darkMode, allowCsvImport } }}
+          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport } }}
           onGhApplyRestore={applyRestoredSnapshot}
           onFactoryReset={handleFactoryReset}
           allowCsvImport={allowCsvImport}

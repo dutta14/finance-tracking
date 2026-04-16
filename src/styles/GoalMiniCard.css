@@ -15,9 +15,9 @@
 }
 
 .goal-mini-card.selected {
-  border-color: var(--home-card-sel-border, #3b82f6);
-  background: var(--home-card-sel-bg, #eff6ff);
-  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.12));
+  border-color: var(--accent-border);
+  background: var(--accent-lighter);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring));
 }
 
 .goal-mini-card h4 {
@@ -47,11 +47,11 @@
 
 .mini-value .amount {
   font-weight: 600;
-  color: var(--home-accent, #3b82f6);
+  color: var(--accent);
 }
 
 .mini-amount--gw {
-  color: var(--home-text-heading, #166534);
+  color: var(--accent-text-dark);
 }
 
 .mini-value--total {
@@ -76,9 +76,9 @@ body.dark .goal-mini-card:hover {
 }
 
 body.dark .goal-mini-card.selected {
-  background: var(--home-card-sel-bg, rgba(59, 130, 246, 0.1));
-  border-color: var(--home-card-sel-border, #3b82f6);
-  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.15));
+  background: var(--accent-lighter));
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring));
 }
 
 body.dark .goal-mini-card h4 {
@@ -90,11 +90,11 @@ body.dark .mini-value .label {
 }
 
 body.dark .mini-value .amount {
-  color: var(--home-accent, #93c5fd);
+  color: var(--accent);
 }
 
 body.dark .mini-amount--gw {
-  color: var(--home-text-heading, #86efac);
+  color: var(--accent-text-dark);
 }
 
 body.dark .mini-value--total {
@@ -112,23 +112,23 @@ body.dark .mini-value--total .amount {
   padding: 0.3rem 0.7rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--gw-accent, #16a34a);
+  color: var(--accent);
   background: none;
-  border: 1px dashed var(--gw-accent, #16a34a);
+  border: 1px dashed var(--accent);
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .mini-card-add-gw:hover {
-  background: var(--gw-accent, #16a34a);
+  background: var(--accent);
   color: #fff;
 }
 body.dark .mini-card-add-gw {
-  color: var(--gw-accent, #4ade80);
-  border-color: var(--gw-accent, #4ade80);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 body.dark .mini-card-add-gw:hover {
-  background: var(--gw-accent, #4ade80);
+  background: var(--accent);
   color: #111;
 }
 
@@ -198,7 +198,7 @@ body.dark .mini-card-add-gw:hover {
 }
 
 .card-context-menu-item--danger {
-  color: #dc2626;
+  color: var(--color-negative);
 }
 
 .card-context-menu-item--danger:hover {
@@ -220,7 +220,7 @@ body.dark .card-context-menu-item:hover {
 }
 
 body.dark .card-context-menu-item--danger {
-  color: #f87171;
+  color: var(--color-negative);
 }
 
 body.dark .card-context-menu-item--danger:hover {
@@ -231,9 +231,9 @@ body.dark .card-context-menu-item--danger:hover {
 .goal-rename-inline {
   padding: 1rem 1.25rem;
   background: white;
-  border: 1.5px solid var(--home-accent, #3b82f6);
+  border: 1.5px solid var(--accent);
   border-radius: 0.75rem;
-  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.12));
+  box-shadow: 0 0 0 3px var(--accent-focus-ring));
 }
 
 .goal-rename-input {
@@ -241,7 +241,7 @@ body.dark .card-context-menu-item--danger:hover {
   font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-bottom: 2px solid var(--home-accent, #3b82f6);
+  border-bottom: 2px solid var(--accent);
   outline: none;
   padding: 0.25rem 0;
   background: transparent;
@@ -257,8 +257,8 @@ body.dark .card-context-menu-item--danger:hover {
 
 body.dark .goal-rename-inline {
   background: #1e2230;
-  border-color: var(--home-accent, #3b82f6);
-  box-shadow: 0 0 0 3px var(--home-card-sel-ring, rgba(59, 130, 246, 0.15));
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring));
 }
 
 body.dark .goal-rename-input {

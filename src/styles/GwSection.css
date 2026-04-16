@@ -2,7 +2,7 @@
 
 .gw-section {
   margin-top: 2.5rem;
-  border-top: 2px solid var(--gw-border);
+  border-top: 2px solid var(--accent-border);
   padding-top: 2rem;
 }
 
@@ -19,7 +19,7 @@
 }
 
 .gw-section-badge {
-  background: var(--gw-badge-bg);
+  background: var(--accent-badge);
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -49,7 +49,7 @@
 .gw-empty-state {
   text-align: center;
   padding: 2rem 1rem;
-  border: 2px dashed var(--gw-border);
+  border: 2px dashed var(--accent-border);
   border-radius: 0.75rem;
 }
 
@@ -57,7 +57,7 @@
   width: 52px;
   height: 52px;
   margin: 0 auto 0.75rem;
-  color: var(--gw-accent);
+  color: var(--accent);
 }
 
 .gw-empty-icon svg {
@@ -73,7 +73,7 @@
 
 /* Add buttons */
 .gw-add-btn {
-  background: var(--gw-badge-bg);
+  background: var(--accent-badge);
   color: #fff;
   border: none;
   border-radius: 0.4rem;
@@ -85,31 +85,31 @@
 }
 
 .gw-add-btn:hover {
-  background: var(--gw-accent-hover);
+  background: var(--accent-hover);
 }
 
 .gw-add-btn--inline {
   background: transparent;
-  color: var(--gw-accent);
-  border: 1px solid var(--gw-accent);
+  color: var(--accent);
+  border: 1px solid var(--accent);
   font-weight: 500;
 }
 
 .gw-add-btn--inline:hover {
-  background: var(--gw-card-bg);
-  color: var(--gw-accent-hover);
+  background: var(--accent-lighter);
+  color: var(--accent-hover);
 }
 
 .gw-add-btn--copy {
   background: transparent;
-  color: var(--gw-accent, #22c55e);
-  border: 1px solid var(--gw-accent, #22c55e);
+  color: var(--accent);
+  border: 1px solid var(--accent);
   font-weight: 500;
 }
 
 .gw-add-btn--copy:hover {
-  background: var(--gw-card-bg, #f0fdf4);
-  color: var(--gw-accent-hover, #16a34a);
+  background: var(--accent-lighter);
+  color: var(--accent-hover);
 }
 
 .gw-empty-actions {
@@ -130,7 +130,7 @@
 
 .gw-import-picker {
   background: #fff;
-  border: 1px solid var(--gw-border);
+  border: 1px solid var(--accent-border);
   border-radius: 0.5rem;
   padding: 0.5rem;
   width: 100%;
@@ -151,7 +151,7 @@
 .gw-import-picker-title {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--gw-text-dark, #166534);
+  color: var(--accent-text-dark);
 }
 
 .gw-import-picker-cancel {
@@ -195,7 +195,7 @@
 }
 
 .gw-import-item:hover {
-  background: var(--gw-card-bg);
+  background: var(--accent-lighter);
 }
 
 .gw-import-item-label {
@@ -232,13 +232,13 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
   white-space: nowrap;
 }
 
 .gw-dollar-toggle {
   display: flex;
-  background: var(--gw-target-bg);
+  background: var(--accent-light);
   border-radius: 6px;
   padding: 2px;
   gap: 2px;
@@ -251,7 +251,7 @@
   padding: 0.22rem 0.65rem;
   font-size: 0.75rem;
   cursor: pointer;
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
   font-weight: 400;
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
@@ -259,9 +259,9 @@
 
 .gw-dollar-toggle-btn.active {
   background: #fff;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
   font-weight: 600;
-  box-shadow: 0 1px 3px var(--gw-toggle-shadow);
+  box-shadow: 0 1px 3px var(--accent-shadow-strong);
 }
 
 /* Undo delete bar */
@@ -286,7 +286,7 @@
 
 .gw-goal-undo-btn {
   flex-shrink: 0;
-  background: #dc2626;
+  background: var(--color-negative);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -313,7 +313,7 @@
 .gw-goal-undo-progress-fill {
   height: 100%;
   width: 100%;
-  background: #dc2626;
+  background: var(--color-negative);
   transform-origin: left;
   animation: gw-undo-shrink 10s linear forwards;
 }
@@ -338,15 +338,15 @@ body.dark .gw-goal-undo-progress {
 
 /* Goal card */
 .gw-goal-card {
-  border: 1px solid var(--gw-goal-border);
+  border: 1px solid var(--accent-border);
   border-radius: 0.7rem;
   padding: 1rem 1.1rem;
-  background: var(--gw-card-bg);
+  background: var(--accent-lighter);
   transition: box-shadow 0.15s;
 }
 
 .gw-goal-card:hover {
-  box-shadow: 0 2px 10px var(--gw-hover-shadow);
+  box-shadow: 0 2px 10px var(--accent-shadow);
 }
 
 .gw-goal-card-header {
@@ -375,20 +375,20 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-edit:hover {
-  color: var(--gw-accent);
-  background: var(--gw-card-bg);
+  color: var(--accent);
+  background: var(--accent-lighter);
 }
 
 .gw-goal-label--editing {
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
   font-style: italic;
 }
 
 .gw-goal-card--editing {
-  border-color: var(--gw-accent);
-  box-shadow: 0 0 0 3px var(--gw-focus-ring);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring);
 }
 
 .gw-card-edit-form {
@@ -398,7 +398,7 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-label {
   font-weight: 600;
   font-size: 0.9rem;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 .gw-goal-delete {
@@ -414,7 +414,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-delete:hover {
-  color: #ef4444;
+  color: var(--color-negative);
   background: #fef2f2;
 }
 
@@ -432,12 +432,12 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-row-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 .gw-goal-row-value {
   font-weight: 500;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 .gw-goal-row-value--highlight {
@@ -446,7 +446,7 @@ body.dark .gw-goal-undo-progress {
 
 /* Target callout (FV at disbursement) */
 .gw-goal-target {
-  background: var(--gw-target-bg);
+  background: var(--accent-light);
   border-radius: 0.45rem;
   padding: 0.65rem 0.85rem;
   display: flex;
@@ -458,7 +458,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-target-label {
   font-size: 0.72rem;
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 700;
@@ -467,13 +467,13 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-target-amount {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
   line-height: 1.2;
 }
 
 /* GW Goal milestone callout (PV at retirement) */
 .gw-goal-milestone {
-  background: var(--gw-target-bg);
+  background: var(--accent-light);
   border-radius: 0.45rem;
   padding: 0.7rem 0.85rem 0.6rem;
   margin-bottom: 0.6rem;
@@ -491,13 +491,13 @@ body.dark .gw-goal-undo-progress {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 .gw-goal-milestone-amount {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
   line-height: 1.2;
 }
 
@@ -510,14 +510,14 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-progress-track {
   flex: 1;
   height: 6px;
-  background: var(--gw-track);
+  background: var(--accent-track);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .gw-goal-progress-fill {
   height: 100%;
-  background: var(--gw-accent-fill);
+  background: var(--accent-hover);
   border-radius: 99px;
   transition: width 0.4s ease;
 }
@@ -525,15 +525,15 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-progress-pct {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 /* Set-aside callout */
 .gw-goal-pv {
-  background: var(--gw-card-bg);
-  border: 1px solid var(--gw-goal-border);
+  background: var(--accent-lighter);
+  border: 1px solid var(--accent-border);
   border-radius: 0.45rem;
   padding: 0.6rem 0.85rem;
   text-align: center;
@@ -541,7 +541,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-pv-label {
   font-size: 0.72rem;
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 0.2rem;
@@ -550,35 +550,35 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-pv-amount {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
   line-height: 1.2;
 }
 
 .gw-goal-pv-note {
   font-size: 0.74rem;
-  color: var(--gw-text-subtle);
+  color: var(--accent-text-mid);
   margin-top: 0.2rem;
 }
 
 /* Add form */
 .gw-form {
-  border: 1px solid var(--gw-goal-border);
+  border: 1px solid var(--accent-border);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  background: var(--gw-card-bg);
+  background: var(--accent-lighter);
   margin-top: 0.5rem;
 }
 
 .gw-form-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
   margin: 0 0 1rem;
 }
 
 .gw-form-error {
   font-size: 0.82rem;
-  color: #dc2626;
+  color: var(--color-negative);
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 0.35rem;
@@ -601,7 +601,7 @@ body.dark .gw-goal-undo-progress {
   display: block;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
   margin-bottom: 0.3rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -610,7 +610,7 @@ body.dark .gw-goal-undo-progress {
 .gw-form-input {
   width: 100%;
   padding: 0.5rem 0.6rem;
-  border: 1px solid var(--gw-input-border);
+  border: 1px solid var(--accent-track);
   border-radius: 0.4rem;
   font-size: 0.875rem;
   background: #fff;
@@ -621,8 +621,8 @@ body.dark .gw-goal-undo-progress {
 
 .gw-form-input:focus {
   outline: none;
-  border-color: var(--gw-accent);
-  box-shadow: 0 0 0 3px var(--gw-focus-ring);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring);
 }
 
 .gw-form-hint {
@@ -638,7 +638,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-form-save {
-  background: var(--gw-badge-bg);
+  background: var(--accent-badge);
   color: #fff;
   border: none;
   border-radius: 0.4rem;
@@ -650,7 +650,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-form-save:hover {
-  background: var(--gw-accent-hover);
+  background: var(--accent-hover);
 }
 
 .gw-form-cancel {
@@ -680,7 +680,7 @@ body.dark .gw-goal-undo-progress {
   background: none;
   border: none;
   padding: 0;
-  color: var(--gw-accent, #16a34a);
+  color: var(--accent);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -689,17 +689,17 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-form-copy-link:hover {
-  color: var(--gw-accent-hover, #15803d);
+  color: var(--accent-hover);
 }
 
 /* ── Dark mode ───────────────────────────────────────────── */
 
 body.dark .gw-section {
-  border-top-color: var(--gw-border);
+  border-top-color: var(--accent-border);
 }
 
 body.dark .gw-section-title {
-  color: var(--gw-title-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-section-subtitle {
@@ -707,11 +707,11 @@ body.dark .gw-section-subtitle {
 }
 
 body.dark .gw-empty-state {
-  border-color: var(--gw-border);
+  border-color: var(--accent-border);
 }
 
 body.dark .gw-empty-icon {
-  color: var(--gw-accent);
+  color: var(--accent);
 }
 
 body.dark .gw-empty-text {
@@ -719,33 +719,33 @@ body.dark .gw-empty-text {
 }
 
 body.dark .gw-add-btn--inline {
-  color: var(--gw-accent);
-  border-color: var(--gw-goal-border);
+  color: var(--accent);
+  border-color: var(--accent-border);
 }
 
 body.dark .gw-add-btn--inline:hover {
-  background: var(--gw-card-bg);
-  color: var(--gw-accent-hover);
+  background: var(--accent-lighter);
+  color: var(--accent-hover);
 }
 
 body.dark .gw-add-btn--copy {
-  color: var(--gw-accent, #4ade80);
-  border-color: var(--gw-goal-border, #166534);
+  color: var(--accent);
+  border-color: var(--accent-border);
 }
 
 body.dark .gw-add-btn--copy:hover {
-  background: var(--gw-card-bg, rgba(20, 83, 45, 0.13));
-  color: var(--gw-accent-hover, #4ade80);
+  background: var(--accent-lighter));
+  color: var(--accent-hover);
 }
 
 body.dark .gw-import-picker {
   background: #1e2535;
-  border-color: var(--gw-border);
+  border-color: var(--accent-border);
   box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
 body.dark .gw-import-picker-title {
-  color: var(--gw-text-dark, #86efac);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-import-picker-cancel {
@@ -762,7 +762,7 @@ body.dark .gw-import-group-label {
 }
 
 body.dark .gw-import-item:hover {
-  background: var(--gw-card-bg);
+  background: var(--accent-lighter);
 }
 
 body.dark .gw-import-item-label {
@@ -774,95 +774,95 @@ body.dark .gw-import-item-meta {
 }
 
 body.dark .gw-dollar-toggle-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-dollar-toggle {
-  background: var(--gw-target-bg);
+  background: var(--accent-light);
 }
 
 body.dark .gw-dollar-toggle-btn {
-  color: var(--gw-accent);
+  color: var(--accent);
 }
 
 body.dark .gw-dollar-toggle-btn.active {
-  background: var(--gw-card-bg);
-  color: var(--gw-text-dark);
-  box-shadow: 0 1px 3px var(--gw-toggle-shadow);
+  background: var(--accent-lighter);
+  color: var(--accent-text-dark);
+  box-shadow: 0 1px 3px var(--accent-shadow-strong);
 }
 
 body.dark .gw-goal-card {
-  background: var(--gw-card-bg);
-  border-color: var(--gw-goal-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 
 body.dark .gw-goal-card:hover {
-  box-shadow: 0 2px 10px var(--gw-hover-shadow);
+  box-shadow: 0 2px 10px var(--accent-shadow);
 }
 
 body.dark .gw-goal-label {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-goal-row-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-goal-row-value {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-goal-target {
-  background: var(--gw-target-bg);
+  background: var(--accent-light);
 }
 
 body.dark .gw-goal-target-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-goal-target-amount {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-goal-milestone {
-  background: var(--gw-target-bg);
+  background: var(--accent-light);
 }
 
 body.dark .gw-goal-milestone-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-goal-milestone-amount {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-goal-progress-track {
-  background: var(--gw-track);
+  background: var(--accent-track);
 }
 
 body.dark .gw-goal-progress-fill {
-  background: var(--gw-accent-fill);
+  background: var(--accent-hover);
 }
 
 body.dark .gw-goal-progress-pct {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-goal-pv {
-  background: var(--gw-card-bg);
-  border-color: var(--gw-goal-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 
 body.dark .gw-goal-pv-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-goal-pv-amount {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-goal-pv-note {
-  color: var(--gw-text-subtle);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-goal-delete:hover {
@@ -870,41 +870,41 @@ body.dark .gw-goal-delete:hover {
 }
 
 body.dark .gw-goal-edit:hover {
-  color: var(--gw-accent);
-  background: var(--gw-card-bg);
+  color: var(--accent);
+  background: var(--accent-lighter);
 }
 
 body.dark .gw-goal-card--editing {
-  border-color: var(--gw-accent);
-  box-shadow: 0 0 0 3px var(--gw-focus-ring);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring);
 }
 
 body.dark .gw-goal-label--editing {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-form {
-  background: var(--gw-card-bg);
-  border-color: var(--gw-goal-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 
 body.dark .gw-form-title {
-  color: var(--gw-text-dark);
+  color: var(--accent-text-dark);
 }
 
 body.dark .gw-form-label {
-  color: var(--gw-text-mid);
+  color: var(--accent-text-mid);
 }
 
 body.dark .gw-form-input {
   background: #1a2332;
-  border-color: var(--gw-input-border);
+  border-color: var(--accent-track);
   color: #e5e7eb;
 }
 
 body.dark .gw-form-input:focus {
-  border-color: var(--gw-accent);
-  box-shadow: 0 0 0 3px var(--gw-focus-ring);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring);
 }
 
 body.dark .gw-form-hint {
@@ -926,9 +926,9 @@ body.dark .gw-form-copy-hint {
 }
 
 body.dark .gw-form-copy-link {
-  color: var(--gw-accent, #4ade80);
+  color: var(--accent);
 }
 
 body.dark .gw-form-copy-link:hover {
-  color: var(--gw-accent-hover, #86efac);
+  color: var(--accent-hover);
 }

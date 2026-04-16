@@ -112,8 +112,8 @@
 }
 
 .pane-gw-goal {
-  background: var(--gw-card-bg, #f0fdf4);
-  border: 1px solid var(--gw-goal-border, #d1fae5);
+  background: var(--accent-lighter);
+  border: 1px solid var(--accent-border);
   border-radius: 0.6rem;
   padding: 0.75rem 0.9rem;
 }
@@ -130,7 +130,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #fff;
-  background: var(--gw-badge-bg, #22c55e);
+  background: var(--accent-badge);
   border: none;
   border-radius: 4px;
   padding: 1px 5px;
@@ -140,7 +140,7 @@
 .pane-gw-goal-label {
   font-size: 0.84rem;
   font-weight: 600;
-  color: var(--gw-text-dark, #14532d);
+  color: var(--accent-text-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -161,13 +161,13 @@
 
 .pane-gw-goal-milestone-label {
   font-size: 0.75rem;
-  color: var(--gw-text-mid, #166534);
+  color: var(--accent-text-mid);
 }
 
 .pane-gw-goal-milestone-amount {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--gw-accent, #15803d);
+  color: var(--accent);
   white-space: nowrap;
 }
 
@@ -180,14 +180,14 @@
 .pane-gw-goal-progress-track {
   flex: 1;
   height: 6px;
-  background: var(--gw-track, #bbf7d0);
+  background: var(--accent-track);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .pane-gw-goal-progress-fill {
   height: 100%;
-  background: var(--gw-accent-fill, #22c55e);
+  background: var(--accent-hover);
   border-radius: 99px;
   transition: width 0.3s ease;
 }
@@ -195,7 +195,7 @@
 .pane-gw-goal-progress-pct {
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--gw-accent, #15803d);
+  color: var(--accent);
   white-space: nowrap;
   min-width: 36px;
   text-align: right;
@@ -260,7 +260,7 @@ body.dark .pane-overflow-menu-item--danger {
   color: #111;
 }
 .pane-edit-name-input:focus {
-  border-color: var(--fi-accent);
+  border-color: var(--accent);
 }
 body.dark .pane-edit-name-input {
   background: #2d3748;
@@ -268,13 +268,13 @@ body.dark .pane-edit-name-input {
   color: #e5e7eb;
 }
 body.dark .pane-edit-name-input:focus {
-  border-color: var(--fi-accent);
+  border-color: var(--accent);
 }
 
 .pane-save-btn {
   font-size: 0.8rem;
   font-weight: 600;
-  background: var(--fi-accent);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -284,7 +284,7 @@ body.dark .pane-edit-name-input:focus {
   transition: background 0.15s;
 }
 .pane-save-btn:hover {
-  background: var(--fi-text-mid);
+  background: var(--accent-text-mid);
 }
 
 /* ── Edit form body ── */
@@ -362,7 +362,7 @@ body.dark .pane-edit-label {
   transition: border-color 0.15s;
 }
 .pane-edit-input:focus {
-  border-color: var(--fi-accent);
+  border-color: var(--accent);
 }
 body.dark .pane-edit-input {
   background: #2d3748;
@@ -370,7 +370,7 @@ body.dark .pane-edit-input {
   color: #e5e7eb;
 }
 body.dark .pane-edit-input:focus {
-  border-color: var(--fi-accent);
+  border-color: var(--accent);
 }
 
 .pane-edit-actions {
@@ -381,7 +381,7 @@ body.dark .pane-edit-input:focus {
 
 .pane-edit-save-btn {
   flex: 1;
-  background: var(--fi-accent);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 7px;
@@ -392,7 +392,7 @@ body.dark .pane-edit-input:focus {
   transition: background 0.15s;
 }
 .pane-edit-save-btn:hover {
-  background: var(--fi-text-mid);
+  background: var(--accent-text-mid);
 }
 
 .pane-edit-cancel-btn {

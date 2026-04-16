@@ -156,14 +156,14 @@ body.dark .goal-solo-step-label {
 }
 
 .goal-solo-action-btn--primary {
-  background: var(--fi-accent);
+  background: var(--accent);
   color: #fff;
-  border-color: var(--fi-accent);
+  border-color: var(--accent);
 }
 
 .goal-solo-action-btn--primary:hover {
-  background: var(--fi-text-mid);
-  border-color: var(--fi-text-mid);
+  background: var(--accent-text-mid);
+  border-color: var(--accent-text-mid);
   color: #fff;
 }
 
@@ -189,14 +189,14 @@ body.dark .goal-solo-action-btn:hover {
 }
 
 body.dark .goal-solo-action-btn--primary {
-  background: var(--fi-accent);
+  background: var(--accent);
   color: #fff;
-  border-color: var(--fi-accent);
+  border-color: var(--accent);
 }
 
 body.dark .goal-solo-action-btn--primary:hover {
-  background: var(--fi-text-mid);
-  border-color: var(--fi-text-mid);
+  background: var(--accent-text-mid);
+  border-color: var(--accent-text-mid);
 }
 
 body.dark .goal-solo-action-btn--danger {
@@ -216,7 +216,7 @@ body.dark .goal-solo-action-btn--danger:hover {
   color: #111;
   background: none;
   border: none;
-  border-bottom: 2px solid var(--fi-accent);
+  border-bottom: 2px solid var(--accent);
   outline: none;
   width: 100%;
   padding: 0 0 2px;
@@ -224,21 +224,21 @@ body.dark .goal-solo-action-btn--danger:hover {
 
 body.dark .goal-solo-rename-input {
   color: #e5e7eb;
-  border-bottom-color: var(--fi-accent);
+  border-bottom-color: var(--accent);
 }
 
 /* ── Edit form ── */
 .goal-solo-edit-form {
-  background: var(--fi-section-bg);
-  border: 1px solid var(--fi-border);
+  background: var(--accent-lighter);
+  border: 1px solid var(--accent-border);
   border-radius: 10px;
   padding: 1.25rem 1.5rem 1rem;
   margin-bottom: 1.5rem;
 }
 
 body.dark .goal-solo-edit-form {
-  background: var(--fi-section-bg);
-  border-color: var(--fi-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 
 .goal-solo-edit-grid {

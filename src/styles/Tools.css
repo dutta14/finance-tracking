@@ -51,7 +51,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 .tools-card--active {
-  border-color: #6366f1;
+  border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
 }
 .dark .tools-card {
@@ -62,7 +62,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 .dark .tools-card--active {
-  border-color: #818cf8;
+  border-color: var(--accent-hover);
   box-shadow: 0 0 0 2px rgba(129,140,248,0.2);
 }
 
@@ -123,8 +123,8 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .tools-open-btn:hover {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 .dark .tools-open-btn {
@@ -133,8 +133,8 @@
   color: #d1d5db;
 }
 .dark .tools-open-btn:hover {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -280,7 +280,7 @@
   transition: border-color 0.2s;
 }
 .fi-calc-hero-input:focus {
-  border-bottom-color: #6366f1;
+  border-bottom-color: var(--accent);
 }
 .dark .fi-calc-hero-input {
   color: #f3f4f6;
@@ -295,7 +295,7 @@
   background: none;
   border: none;
   font-size: 0.66rem;
-  color: #6366f1;
+  color: var(--accent);
   cursor: pointer;
   padding: 2px 0 0;
   opacity: 0.85;
@@ -360,7 +360,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #6366f1;
+  background: var(--accent);
   border: 2px solid #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.18);
   cursor: pointer;
@@ -376,7 +376,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #6366f1;
+  background: var(--accent);
   border: 2px solid #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.18);
   cursor: pointer;
@@ -414,13 +414,13 @@
   flex-shrink: 0;
 }
 .fi-calc-toggle--on .fi-calc-toggle-track {
-  background: #6366f1;
+  background: var(--accent);
 }
 .dark .fi-calc-toggle-track {
   background: #374151;
 }
 .dark .fi-calc-toggle--on .fi-calc-toggle-track {
-  background: #818cf8;
+  background: var(--accent-hover);
 }
 .fi-calc-toggle-thumb {
   position: absolute;
@@ -473,17 +473,17 @@
   white-space: nowrap;
 }
 .fi-sim-chip:hover {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .fi-sim-chip--active {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 .fi-sim-chip--active:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
   color: #fff;
 }
 .dark .fi-sim-chip {
@@ -492,12 +492,12 @@
   color: #d1d5db;
 }
 .dark .fi-sim-chip:hover {
-  border-color: #818cf8;
-  color: #818cf8;
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
 }
 .dark .fi-sim-chip--active {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 .fi-sim-chip-x {
@@ -526,16 +526,16 @@
   transition: all 0.15s;
 }
 .fi-sim-add-btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .dark .fi-sim-add-btn {
   border-color: #374151;
   color: #6b7280;
 }
 .dark .fi-sim-add-btn:hover {
-  border-color: #818cf8;
-  color: #818cf8;
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
 }
 .fi-sim-save-form {
   display: flex;
@@ -553,7 +553,7 @@
   width: 120px;
 }
 .fi-sim-save-input:focus {
-  border-color: #6366f1;
+  border-color: var(--accent);
 }
 .dark .fi-sim-save-input {
   background: #1f2937;
@@ -566,7 +566,7 @@
   font-weight: 600;
   border-radius: 6px;
   border: none;
-  background: #6366f1;
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
 }
@@ -583,7 +583,7 @@
   cursor: pointer;
 }
 .fi-sim-cancel-btn:hover {
-  color: #ef4444;
+  color: var(--color-negative);
 }
 
 /* Divider */
@@ -626,13 +626,13 @@
   text-align: center;
   gap: 0.25rem;
   padding: 0.75rem;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--accent-lighter);
+  border: 1px solid var(--accent-border);
   border-radius: 10px;
 }
 .dark .fi-calc-result-main {
-  background: #14271d;
-  border-color: #166534;
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 .fi-calc-result-label {
   font-size: 0.78rem;
@@ -645,11 +645,11 @@
 .fi-calc-result-value {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #16a34a;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 .dark .fi-calc-result-value {
-  color: #4ade80;
+  color: var(--accent);
 }
 .fi-calc-result--ready {
   font-size: 1.1rem;
@@ -753,10 +753,10 @@
   color: #9ca3af;
 }
 .fi-calc-yby--negative td {
-  color: #dc2626 !important;
+  color: var(--color-negative) !important;
 }
 .dark .fi-calc-yby--negative td {
-  color: #f87171 !important;
+  color: var(--color-negative) !important;
 }
 .fi-calc-yby-note {
   font-size: 0.62rem;

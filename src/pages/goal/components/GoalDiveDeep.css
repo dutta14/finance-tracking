@@ -45,8 +45,8 @@
   margin-top: 1rem;
   padding: 0.6rem 1.2rem;
   background: none;
-  border: 1px solid var(--fi-accent, #3b82f6);
-  color: var(--fi-accent, #3b82f6);
+  border: 1px solid var(--accent);
+  color: var(--accent);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -56,12 +56,12 @@
 }
 
 .btn-dive-deep:hover {
-  background: var(--fi-accent, #3b82f6);
+  background: var(--accent);
   color: #fff;
 }
 
 .btn-dive-deep.active {
-  background: var(--fi-accent, #3b82f6);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -89,13 +89,13 @@ body.dark .dive-deep-placeholder {
 }
 
 body.dark .btn-dive-deep {
-  border-color: var(--fi-accent, #3b82f6);
-  color: var(--fi-accent, #3b82f6);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 body.dark .btn-dive-deep:hover,
 body.dark .btn-dive-deep.active {
-  background: var(--fi-accent, #3b82f6);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -231,7 +231,7 @@ body.dark .projection-chart-wrapper {
 }
 
 .projection-tooltip-row.negative {
-  color: #dc2626;
+  color: var(--color-negative);
   font-weight: 600;
 }
 
@@ -306,7 +306,7 @@ body.dark .projection-tooltip-row.negative {
 }
 
 .projection-row--negative td {
-  color: #dc2626;
+  color: var(--color-negative);
 }
 
 /* Year group collapse */

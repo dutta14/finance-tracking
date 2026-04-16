@@ -60,7 +60,7 @@ const COLOR_PALETTES = [
 
 const SettingsModal: FC<SettingsModalProps> = ({
   darkMode, onToggleDarkMode, profile, onUpdateProfile,
-  hasPendingChanges = false, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {},
+  hasPendingChanges = false, fiTheme = 'blue', onFiThemeChange = () => {},
   ghConfig, ghIsConfigured = false,
   ghSyncStatus = 'idle', ghLastSyncAt = null, ghLastError = null, ghHistory = [],
   ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false,
@@ -74,7 +74,6 @@ const SettingsModal: FC<SettingsModalProps> = ({
   onGhApplyRestore = async () => {}, ghData = {}, onFactoryReset = () => {}, allowCsvImport = false, onToggleAllowCsvImport = () => {}, onExport = () => {}, onImport = () => {}, onClose = () => {},
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
-  const [accentTarget, setAccentTarget] = useState<'home' | 'fi' | 'gw'>('home')
   const [name, setName] = useState(profile.name || '')
   const [birthday, setBirthday] = useState(profile.birthday || '')
   const [avatarPreview, setAvatarPreview] = useState(profile.avatarDataUrl || '')
@@ -866,37 +865,18 @@ const SettingsModal: FC<SettingsModalProps> = ({
                     </button>
                   </div>
 
-                  {/* Accent colors — unified picker */}
+                  {/* Accent color — single picker */}
                   <div className="settings-palette-group">
-                    <p className="settings-palette-label">Accent colors</p>
-                    <p className="settings-palette-hint">Click a label to assign that accent to a color. Active assignments shown below each swatch.</p>
-                    <div className="settings-accent-tabs">
-                      {([['home', 'Home page', homeTheme], ['fi', 'FI goals', fiTheme], ['gw', 'GW goals', gwTheme]] as const).map(([key, label, value]) => (
-                        <button
-                          key={key}
-                          className={`settings-accent-tab${accentTarget === key ? ' active' : ''}`}
-                          style={{ '--tab-color': COLOR_PALETTES.find(p => p.id === value)?.color } as React.CSSProperties}
-                          onClick={() => setAccentTarget(key)}
-                        >
-                          <span className="settings-accent-tab-dot" />
-                          {label}
-                        </button>
-                      ))}
-                    </div>
+                    <p className="settings-palette-label">Accent color</p>
                     <div className="settings-palette-swatches">
                       {COLOR_PALETTES.map(p => {
-                        const activeFor: string[] = []
-                        if (homeTheme === p.id) activeFor.push('H')
-                        if (fiTheme === p.id) activeFor.push('FI')
-                        if (gwTheme === p.id) activeFor.push('GW')
-                        const isSelected = accentTarget === 'home' ? homeTheme === p.id : accentTarget === 'fi' ? fiTheme === p.id : gwTheme === p.id
-                        const handleClick = accentTarget === 'home' ? onHomeThemeChange : accentTarget === 'fi' ? onFiThemeChange : onGwThemeChange
+                        const isSelected = fiTheme === p.id
                         return (
                           <div key={p.id} className="settings-swatch-col">
                             <button
                               className={`settings-palette-swatch${isSelected ? ' active' : ''}`}
                               style={{ '--swatch-color': p.color } as React.CSSProperties}
-                              onClick={() => handleClick(p.id)}
+                              onClick={() => onFiThemeChange(p.id)}
                               title={p.label}
                               aria-label={`${p.label}${isSelected ? ' (selected)' : ''}`}
                               aria-pressed={isSelected}
@@ -907,11 +887,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                 </svg>
                               )}
                             </button>
-                            {activeFor.length > 0 && (
-                              <span className="settings-swatch-tags">
-                                {activeFor.join(' · ')}
-                              </span>
-                            )}
+                            <span className="settings-swatch-tags">{p.label}</span>
                           </div>
                         )
                       })}

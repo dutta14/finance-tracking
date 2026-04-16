@@ -157,7 +157,7 @@
 }
 
 .mixer-goal-item.selected {
-  border-color: #3b82f6;
+  border-color: var(--accent);
   background: #eff6ff;
 }
 
@@ -407,7 +407,7 @@ body.dark .mixer-close-btn:hover { background: #2d3748; color: #e5e7eb; }
 body.dark .mixer-col-title { color: #d1d5db; }
 body.dark .mixer-goal-item { background: #23272f; border-color: #363c48; }
 body.dark .mixer-goal-item:hover { background: #1e2d4a; border-color: #3b5298; }
-body.dark .mixer-goal-item.selected { background: #1e2d4a; border-color: #3b82f6; }
+body.dark .mixer-goal-item.selected { background: #1e2d4a; border-color: var(--accent); }
 body.dark .mixer-goal-name { color: #e5e7eb; }
 body.dark .mixer-goal-stat { color: #9ca3af; }
 body.dark .mixer-goal-stat strong { color: #60a5fa; }

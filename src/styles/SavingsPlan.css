@@ -29,7 +29,7 @@
 .splan-section-label {
   font-size: 0.88rem;
   font-weight: 600;
-  color: #6366f1;
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin: 0;
@@ -60,7 +60,7 @@
   transition: border-color 0.15s;
 }
 .splan-field input:focus {
-  border-color: #6366f1;
+  border-color: var(--accent);
 }
 .splan-row {
   display: flex;
@@ -71,12 +71,12 @@
   padding: 0.3rem 0;
 }
 .splan-row--highlight {
-  background: #eef2ff;
+  background: var(--accent-lighter);
   border-radius: 6px;
   padding: 0.45rem 0.6rem;
   margin-top: 0.4rem;
   font-weight: 600;
-  color: #4338ca;
+  color: var(--accent-text-dark);
 }
 .splan-val {
   font-weight: 600;
@@ -84,7 +84,7 @@
   font-variant-numeric: tabular-nums;
 }
 .splan-row--highlight .splan-val {
-  color: #4338ca;
+  color: var(--accent-text-dark);
 }
 .splan-results {
   display: flex;
@@ -119,15 +119,15 @@
   text-align: right;
 }
 .splan-compare-row--highlight {
-  background: #eef2ff;
+  background: var(--accent-lighter);
   border-radius: 6px;
   padding: 0.45rem 0.6rem;
   margin-top: 0.4rem;
   font-weight: 600;
-  color: #4338ca;
+  color: var(--accent-text-dark);
 }
 .splan-compare-row--highlight .splan-val {
-  color: #4338ca;
+  color: var(--accent-text-dark);
 }
 
 /* ── Delta bar ── */
@@ -146,7 +146,7 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.splan-delta.up { color: #dc2626; }
+.splan-delta.up { color: var(--color-negative); }
 .splan-delta.down { color: #059669; }
 .splan-delta.flat { color: #9ca3af; }
 .splan-delta-note {
@@ -156,7 +156,7 @@
 
 /* ── Dark Mode ── */
 body.dark .splan-title { color: #f3f4f6; }
-body.dark .splan-section-label { color: #818cf8; }
+body.dark .splan-section-label { color: var(--accent-hover); }
 body.dark .splan-block { background: #1e2330; border-color: #2d3344; }
 body.dark .splan-field label { color: #6b7280; }
 body.dark .splan-field input {
@@ -165,25 +165,25 @@ body.dark .splan-field input {
   color: #e5e7eb;
 }
 body.dark .splan-field input:focus {
-  border-color: #818cf8;
+  border-color: var(--accent-hover);
 }
 body.dark .splan-row { color: #9ca3af; }
 body.dark .splan-val { color: #f3f4f6; }
 body.dark .splan-row--highlight {
-  background: #312e81;
-  color: #c7d2fe;
+  background: var(--accent-text-dark);
+  color: var(--accent-lighter);
 }
-body.dark .splan-row--highlight .splan-val { color: #c7d2fe; }
+body.dark .splan-row--highlight .splan-val { color: var(--accent-lighter); }
 body.dark .splan-compare-header { border-color: #2d3344; }
 body.dark .splan-compare-header .splan-col-label { color: #6b7280; }
 body.dark .splan-compare-row { color: #9ca3af; }
 body.dark .splan-compare-row--highlight {
-  background: #312e81;
-  color: #c7d2fe;
+  background: var(--accent-text-dark);
+  color: var(--accent-lighter);
 }
-body.dark .splan-compare-row--highlight .splan-val { color: #c7d2fe; }
+body.dark .splan-compare-row--highlight .splan-val { color: var(--accent-lighter); }
 body.dark .splan-delta-bar { background: #252a38; }
-body.dark .splan-delta.up { color: #f87171; }
-body.dark .splan-delta.down { color: #34d399; }
+body.dark .splan-delta.up { color: var(--color-negative); }
+body.dark .splan-delta.down { color: var(--color-positive); }
 body.dark .splan-delta.flat { color: #6b7280; }
 body.dark .splan-delta-note { color: #6b7280; }

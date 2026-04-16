@@ -44,6 +44,14 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const [showPct, setShowPct] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingMonthRef = useRef<string>('')
+  const [sortCol, setSortCol] = useState<'date' | 'category' | 'amount' | 'description'>('date')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [showRemoved, setShowRemoved] = useState(false)
+
+  // Removed categories set
+  const removedCategories = new Set(
+    categoryGroups.find(g => g.id === 'removed')?.categories || []
+  )
 
   // Filter categories that belong to this table type (income or expense)
   // If a category has ANY negative month, it's an expense (positives are refunds).
@@ -206,6 +214,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
     } else {
       setExpandedMonth(monthKey)
       setDrilldownCategories(new Set())
+      setSortCol('date')
+      setSortDir('desc')
+      setShowRemoved(false)
     }
   }
 
@@ -316,9 +327,37 @@ const BudgetTable: FC<BudgetTableProps> = ({
       {/* Drill-down panel */}
       {expandedMonth && (() => {
         const allTxns = getMonthTransactions(expandedMonth)
+        const removedTxns = showRemoved
+          ? (yearTransactions[expandedMonth] || [])
+              .map((t, i) => ({ ...t, origIdx: i, isRemoved: true as const }))
+              .filter(t => removedCategories.has(t.category))
+          : []
+        const removedCount = (yearTransactions[expandedMonth] || []).filter(t => removedCategories.has(t.category)).length
+        const combined = [
+          ...allTxns.map(t => ({ ...t, isRemoved: false as const })),
+          ...removedTxns,
+        ]
         const categories = [...new Set(allTxns.map(t => t.category))].sort((a, b) => a.localeCompare(b))
-        const filtered = drilldownCategories.size === 0 ? allTxns : allTxns.filter(t => drilldownCategories.has(t.category))
-        const filterSum = filtered.reduce((s, t) => s + t.amount, 0)
+        const filtered = drilldownCategories.size === 0
+          ? combined
+          : combined.filter(t => t.isRemoved || drilldownCategories.has(t.category))
+        const sorted = [...filtered].sort((a, b) => {
+          let cmp = 0
+          switch (sortCol) {
+            case 'date': cmp = a.date.localeCompare(b.date); break
+            case 'category': cmp = a.category.localeCompare(b.category); break
+            case 'amount': cmp = a.amount - b.amount; break
+            case 'description': cmp = (a.description || '').localeCompare(b.description || ''); break
+          }
+          return sortDir === 'asc' ? cmp : -cmp
+        })
+        const toggleSort = (col: typeof sortCol) => {
+          if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+          else { setSortCol(col); setSortDir(col === 'date' ? 'desc' : 'asc') }
+        }
+        const sortIcon = (col: typeof sortCol) =>
+          sortCol === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''
+        const filterSum = filtered.filter(t => !t.isRemoved).reduce((s, t) => s + t.amount, 0)
         const allSelected = drilldownCategories.size === 0
         const realSelected = categories.filter(c => drilldownCategories.has(c)).length
         const partialSelected = realSelected > 0 && realSelected < categories.length
@@ -417,6 +456,14 @@ const BudgetTable: FC<BudgetTableProps> = ({
                     {fmt(Math.abs(filterSum))}
                   </span>
                 )}
+                {removedCount > 0 && (
+                  <button
+                    className={`budget-removed-pill ${showRemoved ? 'budget-removed-pill--on' : ''}`}
+                    onClick={() => setShowRemoved(v => !v)}
+                  >
+                    Removed ({removedCount})
+                  </button>
+                )}
               </div>
             )}
             <div className="budget-drilldown-body">
@@ -426,15 +473,15 @@ const BudgetTable: FC<BudgetTableProps> = ({
                 <table className="budget-drilldown-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Category</th>
-                      <th>Amount</th>
-                      <th>Description</th>
+                      <th className="budget-th-sort" onClick={() => toggleSort('date')}>Date{sortIcon('date')}</th>
+                      <th className="budget-th-sort" onClick={() => toggleSort('category')}>Category{sortIcon('category')}</th>
+                      <th className="budget-th-sort" onClick={() => toggleSort('amount')}>Amount{sortIcon('amount')}</th>
+                      <th className="budget-th-sort" onClick={() => toggleSort('description')}>Description{sortIcon('description')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((t, i) => (
-                      <tr key={i}>
+                    {sorted.map((t, i) => (
+                      <tr key={i} className={t.isRemoved ? 'budget-drilldown-row--removed' : ''}>
                         <td>{t.date}</td>
                         <td
                           className="budget-drilldown-cat-cell"
