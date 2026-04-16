@@ -58,14 +58,21 @@ body.dark .settings-menu-item:hover {
 .sidebar.collapsed {
   width: 56px;
   align-items: center;
-  padding-left: 0.5rem;
+  padding-left: 1rem;
+}
+
+.sidebar-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
 }
 
 .sidebar-logo {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #000;
-  margin-bottom: 2rem;
   white-space: nowrap;
 }
 
@@ -449,7 +456,7 @@ body.dark .sidebar-sublink.active {
 }
 
 .sidebar-toggle {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   --sidebar-toggle-color: #000;
 }
 

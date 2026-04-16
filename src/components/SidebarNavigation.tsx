@@ -151,10 +151,10 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
 
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>
-      <div className="sidebar-toggle">
+      <div className="sidebar-top-row">
         <SidebarToggle expanded={expanded} onToggle={() => setExpanded(false)} />
+        {expanded && <div className="sidebar-logo">Finance Tracker</div>}
       </div>
-      {expanded && <div className="sidebar-logo">Finance Tracker</div>}
       {expanded && (
         <ul className="sidebar-menu">
           <li className="sidebar-item">

@@ -14,28 +14,19 @@ const SidebarToggle: FC<SidebarToggleProps> = ({ expanded, onToggle }) => (
       background: 'none',
       border: 'none',
       cursor: 'pointer',
-      padding: '0.5rem',
-      marginBottom: '1rem',
+      padding: '0.25rem',
       outline: 'none',
       fontSize: '1.2rem',
       color: 'var(--sidebar-toggle-color, #000)',
+      display: 'flex',
+      alignItems: 'center',
     }}
   >
-    {expanded ? (
-      // Hamburger/Pane icon for collapse
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="5" width="14" height="2.2" rx="1.1" fill="currentColor" />
-        <rect x="4" y="9.4" width="10" height="2.2" rx="1.1" fill="currentColor" />
-        <rect x="4" y="13.8" width="6" height="2.2" rx="1.1" fill="currentColor" />
-      </svg>
-    ) : (
-      // Hamburger/Pane icon for expand
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="5" width="6" height="2.2" rx="1.1" fill="currentColor" />
-        <rect x="4" y="9.4" width="10" height="2.2" rx="1.1" fill="currentColor" />
-        <rect x="4" y="13.8" width="14" height="2.2" rx="1.1" fill="currentColor" />
-      </svg>
-    )}
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="5" width="14" height="2.2" rx="1.1" fill="currentColor" />
+      <rect x="4" y="9.4" width="10" height="2.2" rx="1.1" fill="currentColor" />
+      <rect x="4" y="13.8" width="14" height="2.2" rx="1.1" fill="currentColor" />
+    </svg>
   </button>
 );
 
