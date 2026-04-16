@@ -1,0 +1,258 @@
+/* ── Savings/Growth Tracker ── */
+.sgt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Tab bar */
+.sgt-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 3px;
+}
+.dark .sgt-tabs {
+  background: #1f2937;
+}
+.sgt-tab {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sgt-tab:hover {
+  color: #374151;
+}
+.dark .sgt-tab {
+  color: #9ca3af;
+}
+.dark .sgt-tab:hover {
+  color: #d1d5db;
+}
+.sgt-tab--active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.dark .sgt-tab--active {
+  background: #252a38;
+  color: var(--accent);
+}
+
+/* Toggle row */
+.sgt-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+.sgt-toggle-label {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+.sgt-toggle-btn {
+  width: 28px;
+  height: 22px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sgt-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dark .sgt-toggle-btn {
+  background: #1f2937;
+  border-color: #374151;
+  color: #d1d5db;
+}
+.dark .sgt-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Table */
+.sgt-table-wrap {
+  overflow-x: auto;
+  margin: 0 -0.25rem;
+}
+.sgt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.sgt-th {
+  text-align: right;
+  padding: 6px 6px;
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #9ca3af;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+.dark .sgt-th {
+  color: #6b7280;
+  border-bottom-color: #2d3348;
+}
+.sgt-th--year {
+  text-align: left;
+  width: 50px;
+}
+.sgt-th--delta {
+  font-size: 0.6rem;
+  color: #b0b5bf;
+  width: 60px;
+}
+.dark .sgt-th--delta {
+  color: #4b5563;
+}
+.sgt-th--nw {
+  border-left: 1px solid #e5e7eb;
+  padding-left: 8px;
+}
+.dark .sgt-th--nw {
+  border-left-color: #2d3348;
+}
+
+/* Rows */
+.sgt-row {
+  transition: background 0.1s;
+}
+.sgt-row:hover {
+  background: #f9fafb;
+}
+.dark .sgt-row:hover {
+  background: #1a1f2e;
+}
+.sgt-td {
+  padding: 5px 6px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
+}
+.dark .sgt-td {
+  color: #d1d5db;
+  border-bottom-color: #1f2937;
+}
+.sgt-td--year {
+  text-align: left;
+  font-weight: 600;
+  color: #111827;
+}
+.dark .sgt-td--year {
+  color: #f3f4f6;
+}
+.sgt-td--num {
+  text-align: right;
+}
+.sgt-td--delta {
+  text-align: right;
+  font-size: 0.65rem;
+}
+.sgt-td--highlight {
+  font-weight: 600;
+}
+.sgt-td--nw {
+  font-weight: 600;
+  border-left: 1px solid #f3f4f6;
+  padding-left: 8px;
+  color: var(--accent);
+}
+.dark .sgt-td--nw {
+  border-left-color: #1f2937;
+  color: var(--accent);
+}
+
+/* Delta colors */
+.sgt-up {
+  color: var(--color-positive);
+}
+.sgt-down {
+  color: var(--color-negative);
+}
+.dark .sgt-up {
+  color: var(--color-positive);
+}
+.dark .sgt-down {
+  color: var(--color-negative);
+}
+
+/* N/A & editable */
+.sgt-na {
+  color: #d1d5db;
+  font-style: italic;
+}
+.dark .sgt-na {
+  color: #4b5563;
+}
+.sgt-editable {
+  cursor: pointer;
+  border-bottom: 1px dashed #d1d5db;
+  transition: border-color 0.15s;
+}
+.sgt-editable:hover {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+.dark .sgt-editable {
+  border-bottom-color: #4b5563;
+}
+.dark .sgt-editable:hover {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Edit input */
+.sgt-edit-input {
+  width: 72px;
+  padding: 2px 4px;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: #fff;
+  color: #111827;
+  outline: none;
+  text-align: right;
+}
+.dark .sgt-edit-input {
+  background: #1f2937;
+  border-color: var(--accent);
+  color: #f3f4f6;
+}
+
+/* Empty state */
+.sgt-empty {
+  color: #9ca3af;
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 2rem 0.5rem;
+  line-height: 1.5;
+}
+
+/* Hint */
+.sgt-hint {
+  font-size: 0.65rem;
+  color: #b0b5bf;
+  line-height: 1.4;
+  margin: 0;
+}
+.dark .sgt-hint {
+  color: #4b5563;
+}

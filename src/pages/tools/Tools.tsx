@@ -1,5 +1,6 @@
 import { FC, useState, ReactNode } from 'react'
 import FICalculator from './components/FICalculator'
+import SavingsGrowthTracker from './components/SavingsGrowthTracker'
 import '../../styles/Tools.css'
 
 export interface ToolDef {
@@ -20,11 +21,11 @@ const TOOLS: ToolDef[] = [
     pane: <FICalculator />,
   },
   {
-    id: 'tool-2',
-    title: 'Tool 2',
-    description: 'Coming soon.',
+    id: 'savings-growth',
+    title: 'Savings/Growth Tracker',
+    description: 'Track how much of your net worth growth came from savings vs. capital gains each year.',
     icon: <span className="tools-icon">📊</span>,
-    pane: <p className="tools-pane-placeholder">Coming soon.</p>,
+    pane: <SavingsGrowthTracker />,
   },
   {
     id: 'tool-3',

@@ -2,6 +2,7 @@ import { FC, useState, useMemo, useCallback } from 'react'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import type { Account, BalanceEntry } from '../../data/types'
+import '../../../styles/FICalculator.css'
 
 const REMOVED_GROUP_ID = 'removed'
 
