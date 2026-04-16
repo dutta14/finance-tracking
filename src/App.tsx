@@ -8,6 +8,7 @@ import Goal from './pages/goal/Goal'
 import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
+import Tools from './pages/tools/Tools'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
@@ -83,6 +84,8 @@ const App: FC = () => {
     ? 'data'
     : location.pathname === '/budget'
     ? 'budget'
+    : location.pathname === '/tools'
+    ? 'tools'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
@@ -90,6 +93,7 @@ const App: FC = () => {
     else if (page === 'goal') navigate('/goal')
     else if (page === 'data') navigate('/data')
     else if (page === 'budget') navigate('/budget')
+    else if (page === 'tools') navigate('/tools')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -448,6 +452,7 @@ const App: FC = () => {
         <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
         <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="/budget" element={<Budget />} />
+        <Route path="/tools" element={<Tools />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
