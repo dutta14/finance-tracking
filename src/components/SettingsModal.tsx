@@ -718,7 +718,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                   className="ghsync-field-input"
                                   type="text"
                                   value={ghConfig?.owner || ''} 
-                                  onChange={e => { onGhUpdateConfig?.({ owner: e.target.value }); setGhTestResult(null) }}
+                                  onChange={e => { onGhUpdateConfig?.({ owner: e.target.value }); setGhTestResult(null); if (!ghEditingRepo) setGhEditingRepo(true) }}
                                   placeholder="your-github-username"
                                 />
                               </div>
@@ -728,7 +728,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                   className="ghsync-field-input"
                                   type="text"
                                   value={ghConfig?.repo || ''}
-                                  onChange={e => { onGhUpdateConfig?.({ repo: e.target.value }); setGhTestResult(null) }}
+                                  onChange={e => { onGhUpdateConfig?.({ repo: e.target.value }); setGhTestResult(null); if (!ghEditingRepo) setGhEditingRepo(true) }}
                                   placeholder="finance-backups"
                                 />
                               </div>

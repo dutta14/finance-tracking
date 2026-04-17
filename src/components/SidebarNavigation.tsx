@@ -170,17 +170,19 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
               className={`sidebar-link sidebar-link--accordion${currentPage === 'goal' ? ' active' : ''}`}
               onClick={() => {
                 setCurrentPage('goal');
-                setGoalAccordionOpen(o => !o);
+                if (goals.length > 0) setGoalAccordionOpen(o => !o);
               }}
             >
               Goals
-              <span className="sidebar-chevron" style={{ transform: goalAccordionOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </span>
+              {goals.length > 0 && (
+                <span className="sidebar-chevron" style={{ transform: goalAccordionOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+              )}
             </button>
-            {goalAccordionOpen && (
+            {goalAccordionOpen && goals.length > 0 && (
               <>
                 {isMultiSelectMode && selectedNavGoalIds.length > 0 && (
                   <div className="sidebar-multiselect-bar">
