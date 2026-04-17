@@ -25,7 +25,7 @@ const RatioTabs: FC<RatioTabsProps> = ({
 }) => (
   <>
     <div className="alloc-page-section-header">
-      <h2>Custom Ratios</h2>
+      <h2>My Allocations</h2>
       <div className="alloc-ratio-create-wrap" ref={createMenuRef}>
         <button className="alloc-ratio-create-btn" onClick={onToggleCreateMenu}>+ New Ratio</button>
         {createMenuOpen && (
@@ -71,7 +71,7 @@ const RatioTabs: FC<RatioTabsProps> = ({
     })()}
 
     {customRatios.length === 0 && (
-      <div className="alloc-page-empty">No custom ratios yet. Click "+ New Ratio" to get started.</div>
+      <div className="alloc-page-empty">No allocations yet. Click “+ New Ratio” to get started.</div>
     )}
   </>
 )
