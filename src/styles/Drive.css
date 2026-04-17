@@ -13,7 +13,7 @@
 .drive-title {
   font-size: 1.6rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-600), var(--accent-400));
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -31,7 +31,7 @@
 .drive-breadcrumb-item {
   background: none;
   border: none;
-  color: var(--accent-500);
+  color: var(--accent);
   cursor: pointer;
   padding: 0.15rem 0.3rem;
   border-radius: 4px;
@@ -39,14 +39,14 @@
   font-size: 0.85rem;
 }
 .drive-breadcrumb-item:hover {
-  background: var(--accent-50);
+  background: var(--accent-lighter);
 }
 .drive-breadcrumb-item.active {
   color: var(--color-text);
   font-weight: 600;
 }
 .drive-breadcrumb-sep {
-  color: var(--color-text-muted, #999);
+  color: var(--color-text-muted);
   user-select: none;
 }
 
@@ -58,8 +58,8 @@
   flex-wrap: wrap;
 }
 .drive-year-tab {
-  background: var(--color-surface, #f7f7f8);
-  border: 1px solid var(--color-border, #e0e0e0);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.35rem 0.9rem;
   font: inherit;
@@ -70,13 +70,13 @@
   transition: background 0.15s, border-color 0.15s;
 }
 .drive-year-tab:hover {
-  background: var(--accent-50);
-  border-color: var(--accent-200);
+  background: var(--accent-lighter);
+  border-color: var(--accent-border);
 }
 .drive-year-tab.active {
-  background: var(--accent-100);
-  border-color: var(--accent-300);
-  color: var(--accent-700);
+  background: var(--accent-light);
+  border-color: var(--accent-icon-subtle);
+  color: var(--accent-text-dark);
   font-weight: 600;
 }
 
@@ -85,7 +85,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid var(--color-border, #e0e0e0);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -97,15 +97,15 @@
   padding: 0.65rem 0.9rem;
   cursor: pointer;
   transition: background 0.12s;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface);
 }
 .drive-row:hover {
-  background: var(--accent-50);
+  background: var(--accent-lighter);
 }
 
-.drive-row--folder .drive-icon { color: var(--accent-400); }
-.drive-row--file .drive-icon { color: var(--accent-300); }
-.drive-row--back .drive-icon { color: var(--color-text-muted, #999); }
+.drive-row--folder .drive-icon { color: var(--accent-badge); }
+.drive-row--file .drive-icon { color: var(--accent-icon-subtle); }
+.drive-row--back .drive-icon { color: var(--color-text-muted); }
 
 .drive-row-name {
   flex: 1;
@@ -118,7 +118,7 @@
 }
 .drive-row-meta {
   font-size: 0.78rem;
-  color: var(--color-text-muted, #999);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -126,7 +126,7 @@
 .drive-empty {
   text-align: center;
   padding: 3rem 1rem;
-  color: var(--color-text-muted, #999);
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -142,7 +142,7 @@
   gap: 0.35rem;
   background: none;
   border: none;
-  color: var(--accent-500);
+  color: var(--accent);
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
@@ -151,7 +151,7 @@
   width: fit-content;
 }
 .drive-viewer-back:hover {
-  color: var(--accent-700);
+  color: var(--accent-text-dark);
 }
 .drive-viewer-title {
   font-size: 1.25rem;
@@ -162,7 +162,7 @@
 
 .drive-viewer-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border, #e0e0e0);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
 }
 .drive-viewer-table {
@@ -174,12 +174,12 @@
 .drive-viewer-table td {
   padding: 0.45rem 0.7rem;
   text-align: left;
-  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
 }
 .drive-viewer-table th {
-  background: var(--accent-50);
-  color: var(--accent-700);
+  background: var(--accent-lighter);
+  color: var(--accent-text-dark);
   font-weight: 600;
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -188,7 +188,7 @@
   top: 0;
 }
 .drive-viewer-table tbody tr:hover {
-  background: var(--accent-50);
+  background: var(--accent-lighter);
 }
 .drive-viewer-table tbody tr:last-child td {
   border-bottom: none;
@@ -197,39 +197,39 @@
 .drive-viewer-meta {
   margin-top: 0.6rem;
   font-size: 0.78rem;
-  color: var(--color-text-muted, #999);
+  color: var(--color-text-muted);
 }
 
 /* ── dark mode ───────────────────────────────────────────────── */
 
 body.dark .drive-breadcrumb-item:hover {
-  background: var(--accent-900);
+  background: var(--accent-shadow);
 }
 body.dark .drive-year-tab {
-  background: var(--color-surface, #1e1e1e);
-  border-color: var(--color-border, #333);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 body.dark .drive-year-tab:hover {
-  background: var(--accent-900);
-  border-color: var(--accent-700);
+  background: var(--accent-shadow);
+  border-color: var(--accent-text-mid);
 }
 body.dark .drive-year-tab.active {
-  background: var(--accent-900);
-  border-color: var(--accent-600);
-  color: var(--accent-300);
+  background: var(--accent-shadow);
+  border-color: var(--accent-hover);
+  color: var(--accent-icon-subtle);
 }
 body.dark .drive-row {
-  background: var(--color-surface, #1e1e1e);
+  background: var(--color-surface);
 }
 body.dark .drive-row:hover {
-  background: var(--accent-950, var(--accent-900));
+  background: var(--accent-shadow);
 }
 body.dark .drive-viewer-table th {
-  background: var(--accent-900);
-  color: var(--accent-200);
+  background: var(--accent-shadow);
+  color: var(--accent-track);
 }
 body.dark .drive-viewer-table tbody tr:hover {
-  background: var(--accent-950, var(--accent-900));
+  background: var(--accent-shadow);
 }
 
 /* ── Add year ────────────────────────────────────────────────── */

@@ -33,6 +33,13 @@
   --color-warning: #f59e0b;
   --color-warning-light: #fef3c7;
 
+  /* Base UI colors */
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f7f8;
+  --color-border: #e5e7eb;
+
 }
 
 /* ── DEFAULT DARK (blue) ── */
@@ -59,6 +66,13 @@ body.dark {
   --color-negative-light: #450a0a;
   --color-warning: #fbbf24;
   --color-warning-light: #451a03;
+
+  /* Base UI colors */
+  --color-text: #e5e7eb;
+  --color-text-muted: #9ca3af;
+  --color-surface: #1e1e1e;
+  --color-surface-alt: #252830;
+  --color-border: #2d3139;
 }
 
 /* ════════════════════════════════════════════════════════
