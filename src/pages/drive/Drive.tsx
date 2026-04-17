@@ -108,23 +108,7 @@ const CSVViewer: FC<{ csv: string; label: string; onBack: () => void }> = ({ csv
   )
 }
 
-/* ── month key from filename ──────────────────────────────────── */
-
-const MONTHS_MAP: Record<string, string> = {
-  jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
-  jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
-}
-
-function monthKeyFromFilename(name: string): string | null {
-  const isoMatch = name.match(/(\d{4})-(\d{2})/)
-  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}`
-  const namedMatch = name.match(/Our\s+Finances\s*-\s*(\w+)\s+(\d{4})/i)
-  if (namedMatch) {
-    const mon = MONTHS_MAP[namedMatch[1].slice(0, 3).toLowerCase()]
-    if (mon) return `${namedMatch[2]}-${mon}`
-  }
-  return null
-}
+import { monthKeyFromFilename } from '../budget/hooks/useCSVUpload'
 
 /* ── main component ──────────────────────────────────────────── */
 
