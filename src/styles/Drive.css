@@ -163,7 +163,9 @@
 .drive-viewer-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 .drive-viewer-table {
   width: 100%;
@@ -176,6 +178,7 @@
   text-align: left;
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
+  color: var(--color-text);
 }
 .drive-viewer-table th {
   background: var(--accent-lighter);

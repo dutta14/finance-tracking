@@ -701,7 +701,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <span style={{ fontSize: '0.9rem' }}>
                                 <span style={{ color: '#6b7280', marginRight: '0.25rem' }}>Repo:</span>
-                                <strong>{ghConfig.owner}/{ghConfig.repo}</strong>
+                                <strong style={{ color: 'var(--color-text)' }}>{ghConfig.owner}/{ghConfig.repo}</strong>
                               </span>
                               <button
                                 className="ghsync-mini-btn ghsync-mini-btn--ghost"

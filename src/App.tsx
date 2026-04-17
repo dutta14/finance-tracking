@@ -72,6 +72,7 @@ const App: FC = () => {
     syncNow, fetchHistory, testConnection, restoreLatest, restoreFromCommit, markRestored, updateData: ghUpdateData,
     updateDataFile: ghUpdateDataFile, syncDataNow: ghSyncDataNow, restoreDataLatest,
     syncToolsNow: ghSyncToolsNow, restoreToolsLatest,
+    syncAllocationNow: ghSyncAllocationNow, restoreAllocationLatest,
   } = useGitHubSync();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
@@ -265,6 +266,13 @@ const App: FC = () => {
       sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
     }
     await ghSyncToolsNow(toolsPayload, message ? `Tools: ${message}` : undefined)
+    // Sync allocation data
+    const allocationPayload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
+    }
+    await ghSyncAllocationNow(allocationPayload, message ? `Allocation: ${message}` : undefined)
     // Sync budget data (CSVs + config)
     if (ghIsConfigured && ghActiveToken) {
       const budgetStore = loadBudgetStore()
@@ -286,6 +294,7 @@ const App: FC = () => {
       budgetCsvs: budgetStore.csvs, budgetConfig,
       fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
       sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
+      allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
     }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -339,6 +348,9 @@ const App: FC = () => {
         }
         if (parsed?.sgtOverrides && typeof parsed.sgtOverrides === 'object') {
           localStorage.setItem('sgt-overrides', JSON.stringify(parsed.sgtOverrides))
+        }
+        if (Array.isArray(parsed?.allocationCustomRatios)) {
+          localStorage.setItem('allocation-custom-ratios', JSON.stringify(parsed.allocationCustomRatios))
         }
         if (parsed?.settings?.homeCardOrder) {
           localStorage.setItem('home-card-order', parsed.settings.homeCardOrder as string)
@@ -436,6 +448,14 @@ const App: FC = () => {
                 const t = toolsResult.data as { fiSimulations?: unknown; sgtOverrides?: unknown }
                 if (Array.isArray(t.fiSimulations)) localStorage.setItem('fi-simulations', JSON.stringify(t.fiSimulations))
                 if (t.sgtOverrides && typeof t.sgtOverrides === 'object') localStorage.setItem('sgt-overrides', JSON.stringify(t.sgtOverrides))
+              }
+            })
+          }).then(() => {
+            // Also restore allocation data from GitHub
+            return restoreAllocationLatest().then(allocResult => {
+              if (allocResult.ok && allocResult.data) {
+                const a = allocResult.data as { allocationCustomRatios?: unknown }
+                if (Array.isArray(a.allocationCustomRatios)) localStorage.setItem('allocation-custom-ratios', JSON.stringify(a.allocationCustomRatios))
               }
             })
           }).then(() => {
