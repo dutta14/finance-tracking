@@ -1,5 +1,6 @@
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
 import { formatMonthKey } from '../budget/utils/csvParser'
+import { buildTaxTree } from '../taxes/buildTaxTree'
 import type { DriveFolder, DriveFile } from './types'
 
 export function buildDriveTree(): DriveFolder {
@@ -32,10 +33,16 @@ export function buildDriveTree(): DriveFolder {
     files: [],
   }
 
+  const taxFolder = buildTaxTree()
+  const topFolders: DriveFolder[] = [budgetFolder]
+  if (taxFolder.folders.length > 0 || taxFolder.files.length > 0) {
+    topFolders.push(taxFolder)
+  }
+
   return {
     name: 'Drive',
     slug: '',
-    folders: [budgetFolder],
+    folders: topFolders,
     files: [],
   }
 }

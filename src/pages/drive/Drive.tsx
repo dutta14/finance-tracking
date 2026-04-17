@@ -7,7 +7,7 @@ import { buildDriveTree } from './buildBudgetTree'
 import CSVViewer from './CSVViewer'
 import { useDriveUpload } from './useDriveUpload'
 import { resolvePathSegments } from './types'
-import type { DriveFolder } from './types'
+import type { DriveFolder, DriveFile } from './types'
 
 function segmentsFromUrl(pathname: string): string[] {
   const raw = pathname.replace(/^\/drive\/?/, '').replace(/\/$/, '')
@@ -28,6 +28,8 @@ const Drive: FC = () => {
   const refreshTree = useCallback(() => setTreeVersion(v => v + 1), [])
 
   const [segments, setSegmentsState] = useState<string[]>(() => segmentsFromUrl(location.pathname))
+  const [ownerFilter, setOwnerFilter] = useState<string | null>(null)
+  const [sortField, setSortField] = useState<'name' | 'owner' | 'date'>('name')
 
   const goTo = useCallback((segs: string[]) => {
     setSegmentsState(segs)
@@ -70,6 +72,35 @@ const Drive: FC = () => {
     : root // notfound fallback → root
 
   const isRoot = segments.length === 0
+
+  // Check if any files have owner metadata (show filter/sort controls)
+  const hasMetaFiles = folder.files.some(f => f.meta?.owner)
+
+  // Collect unique owners for filter options
+  const ownerOptions = useMemo(() => {
+    const owners = new Set<string>()
+    for (const f of folder.files) {
+      if (f.meta?.owner) owners.add(f.meta.owner)
+    }
+    return [...owners].sort()
+  }, [folder.files])
+
+  // Filter and sort files
+  const displayFiles = useMemo(() => {
+    let files: DriveFile[] = folder.files
+    if (ownerFilter) {
+      files = files.filter(f => f.meta?.owner === ownerFilter)
+    }
+    const sorted = [...files]
+    if (sortField === 'owner') {
+      sorted.sort((a, b) => (a.meta?.owner || '').localeCompare(b.meta?.owner || ''))
+    } else if (sortField === 'date') {
+      sorted.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
+    } else {
+      sorted.sort((a, b) => a.name.localeCompare(b.name))
+    }
+    return sorted
+  }, [folder.files, ownerFilter, sortField])
 
   // For budget year folders, find sibling year tabs
   const parentFolder = resolved.kind === 'folder' && resolved.parents.length > 0
@@ -126,6 +157,32 @@ const Drive: FC = () => {
         </div>
       )}
 
+      {/* Filter / Sort bar (shown when files have metadata) */}
+      {hasMetaFiles && folder.files.length > 0 && (
+        <div className="drive-filter-bar">
+          <div className="drive-filter-group">
+            <span className="drive-filter-label">Owner:</span>
+            <button
+              className={`drive-filter-btn${ownerFilter === null ? ' active' : ''}`}
+              onClick={() => setOwnerFilter(null)}
+            >All</button>
+            {ownerOptions.map(o => (
+              <button
+                key={o}
+                className={`drive-filter-btn${ownerFilter === o ? ' active' : ''}`}
+                onClick={() => setOwnerFilter(ownerFilter === o ? null : o)}
+              >{o}</button>
+            ))}
+          </div>
+          <div className="drive-filter-group">
+            <span className="drive-filter-label">Sort:</span>
+            <button className={`drive-filter-btn${sortField === 'name' ? ' active' : ''}`} onClick={() => setSortField('name')}>Name</button>
+            <button className={`drive-filter-btn${sortField === 'owner' ? ' active' : ''}`} onClick={() => setSortField('owner')}>Owner</button>
+            <button className={`drive-filter-btn${sortField === 'date' ? ' active' : ''}`} onClick={() => setSortField('date')}>Date</button>
+          </div>
+        </div>
+      )}
+
       {/* Folder listing */}
       <div className="drive-list">
         {!isRoot && (
@@ -147,7 +204,7 @@ const Drive: FC = () => {
             </span>
           </div>
         ))}
-        {folder.files.map(file => (
+        {displayFiles.map(file => (
           <div
             key={file.slug}
             className="drive-row drive-row--file"
@@ -155,6 +212,9 @@ const Drive: FC = () => {
           >
             <FileIcon ext={file.ext || getFileExt(file.name)} />
             <span className="drive-row-name">{file.name}</span>
+            {file.meta?.owner && <span className="drive-row-tag">{file.meta.owner}</span>}
+            {file.meta?.category && <span className="drive-row-tag drive-row-tag--cat">{file.meta.category}</span>}
+            {file.meta?.accounts && <span className="drive-row-tag drive-row-tag--acct">{file.meta.accounts}</span>}
             <span className="drive-row-meta">{new Date(file.uploadedAt).toLocaleDateString()}</span>
           </div>
         ))}

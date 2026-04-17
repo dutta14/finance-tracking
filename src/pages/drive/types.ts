@@ -4,6 +4,11 @@ export interface DriveFile {
   ext: string         // "csv", "json", etc.
   content: string
   uploadedAt: string
+  meta?: {
+    owner?: string       // e.g. "Primary", "Partner", "Joint"
+    accounts?: string    // e.g. "Fidelity 401k, Vanguard IRA"
+    category?: string    // e.g. "Paystub", "Tax Return"
+  }
 }
 
 export interface DriveFolder {

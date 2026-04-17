@@ -11,6 +11,7 @@ import Budget from './pages/budget/Budget'
 import Tools from './pages/tools/Tools'
 import Drive from './pages/drive/Drive'
 import Allocation from './pages/allocation/Allocation'
+import Taxes from './pages/taxes/Taxes'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
@@ -73,6 +74,7 @@ const App: FC = () => {
     updateDataFile: ghUpdateDataFile, syncDataNow: ghSyncDataNow, restoreDataLatest,
     syncToolsNow: ghSyncToolsNow, restoreToolsLatest,
     syncAllocationNow: ghSyncAllocationNow, restoreAllocationLatest,
+    syncTaxesNow: ghSyncTaxesNow, restoreTaxesLatest,
   } = useGitHubSync();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const handleOpenProfile = (): void => setProfileModalOpen(true);
@@ -92,6 +94,8 @@ const App: FC = () => {
     ? 'drive'
     : location.pathname === '/allocation'
     ? 'allocation'
+    : location.pathname === '/taxes'
+    ? 'taxes'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
@@ -102,6 +106,7 @@ const App: FC = () => {
     else if (page === 'tools') navigate('/tools')
     else if (page === 'drive') navigate('/drive')
     else if (page === 'allocation') navigate('/allocation')
+    else if (page === 'taxes') navigate('/taxes')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -273,6 +278,14 @@ const App: FC = () => {
       allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
     }
     await ghSyncAllocationNow(allocationPayload, message ? `Allocation: ${message}` : undefined)
+    // Sync taxes data
+    const taxesPayload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      taxStore: JSON.parse(localStorage.getItem('tax-store') || '{}'),
+      taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
+    }
+    await ghSyncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
     // Sync budget data (CSVs + config)
     if (ghIsConfigured && ghActiveToken) {
       const budgetStore = loadBudgetStore()
@@ -295,6 +308,8 @@ const App: FC = () => {
       fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
       sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
       allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
+      taxStore: JSON.parse(localStorage.getItem('tax-store') || '{}'),
+      taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
     }, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -351,6 +366,12 @@ const App: FC = () => {
         }
         if (Array.isArray(parsed?.allocationCustomRatios)) {
           localStorage.setItem('allocation-custom-ratios', JSON.stringify(parsed.allocationCustomRatios))
+        }
+        if (parsed?.taxStore && typeof parsed.taxStore === 'object') {
+          localStorage.setItem('tax-store', JSON.stringify(parsed.taxStore))
+        }
+        if (Array.isArray(parsed?.taxTemplates)) {
+          localStorage.setItem('tax-templates', JSON.stringify(parsed.taxTemplates))
         }
         if (parsed?.settings?.homeCardOrder) {
           localStorage.setItem('home-card-order', parsed.settings.homeCardOrder as string)
@@ -459,6 +480,15 @@ const App: FC = () => {
               }
             })
           }).then(() => {
+            // Also restore taxes data from GitHub
+            return restoreTaxesLatest().then(taxResult => {
+              if (taxResult.ok && taxResult.data) {
+                const t = taxResult.data as { taxStore?: unknown; taxTemplates?: unknown }
+                if (t.taxStore && typeof t.taxStore === 'object') localStorage.setItem('tax-store', JSON.stringify(t.taxStore))
+                if (Array.isArray(t.taxTemplates)) localStorage.setItem('tax-templates', JSON.stringify(t.taxTemplates))
+              }
+            })
+          }).then(() => {
             // Reload so all React components pick up the restored localStorage data
             setTimeout(() => { resolve(); window.location.reload() }, 100)
           }).catch(() => {
@@ -511,6 +541,7 @@ const App: FC = () => {
         <Route path="/tools" element={<Tools />} />
         <Route path="/drive/*" element={<Drive />} />
         <Route path="/allocation" element={<Allocation />} />
+        <Route path="/taxes" element={<Taxes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )

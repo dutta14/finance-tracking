@@ -285,6 +285,14 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           </li>
           <li className="sidebar-item">
             <button
+              className={`sidebar-link${currentPage === 'taxes' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('taxes')}
+            >
+              Taxes
+            </button>
+          </li>
+          <li className="sidebar-item">
+            <button
               className={`sidebar-link${currentPage === 'tools' ? ' active' : ''}`}
               onClick={() => setCurrentPage('tools')}
             >
