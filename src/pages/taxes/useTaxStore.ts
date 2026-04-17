@@ -28,6 +28,7 @@ export function useTaxStore() {
   const persist = useCallback((next: TaxStore) => {
     setStore(next)
     save(next)
+    window.dispatchEvent(new Event('tax-store-changed'))
   }, [])
 
   const getYear = useCallback((year: number): TaxYear => {

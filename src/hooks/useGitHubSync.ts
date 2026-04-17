@@ -398,28 +398,35 @@ export const useGitHubSync = () => {
 
   const syncTaxesNow = useCallback(async (data: object, message?: string): Promise<void> => {
     if (!isConfigured) return
-    try {
-      const prettyJson = JSON.stringify(data, null, 2)
-      const content = toBase64(prettyJson)
-      const sha = await getFileShaForPath(taxesFilePath)
-      const commitMessage =
-        message ||
-        `Taxes sync: ${new Date().toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        })}`
-      const body: Record<string, string> = { message: commitMessage, content }
-      if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`,
-        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
-      )
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const prettyJson = JSON.stringify(data, null, 2)
+        const content = toBase64(prettyJson)
+        const sha = await getFileShaForPath(taxesFilePath)
+        const commitMessage =
+          message ||
+          `Taxes sync: ${new Date().toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}`
+        const body: Record<string, string> = { message: commitMessage, content }
+        if (sha) body.sha = sha
+        const res = await fetch(
+          `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`,
+          { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+        )
+        if (res.status === 409 && attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+        }
+        return
+      } catch (e) {
+        if (attempt === 2) console.error('Taxes file sync error:', e instanceof Error ? e.message : e)
       }
-    } catch (e) {
-      console.error('Taxes file sync error:', e instanceof Error ? e.message : e)
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, taxesFilePath, getFileShaForPath, isConfigured])
 

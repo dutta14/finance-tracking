@@ -14,6 +14,7 @@ import Allocation from './pages/allocation/Allocation'
 import Taxes from './pages/taxes/Taxes'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
+import { syncAllTaxFiles } from './pages/taxes/taxGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
 import UndoToast from './components/UndoToast'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
@@ -204,6 +205,33 @@ const App: FC = () => {
     ghUpdateData({ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport } });
   }, [goals, gwGoals, profile, accentTheme, darkMode, allowCsvImport]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-sync taxes when tax-store changes
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const handler = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(async () => {
+        const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
+        const taxesPayload = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          taxStore,
+          taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
+        }
+        await ghSyncTaxesNow(taxesPayload)
+        // Also sync individual tax document files
+        if (ghIsConfigured && ghActiveToken) {
+          await syncAllTaxFiles(ghConfig, ghActiveToken, taxStore).catch(e => console.error('Tax file auto-sync error:', e))
+        }
+      }, 60_000)
+    }
+    window.addEventListener('tax-store-changed', handler)
+    return () => {
+      window.removeEventListener('tax-store-changed', handler)
+      if (timer) clearTimeout(timer)
+    }
+  }, [ghSyncTaxesNow, ghIsConfigured, ghActiveToken, ghConfig])
+
   // Callback when Data page accounts/balances change → sync data file
   const handleDataChange = (accounts: Account[], balances: BalanceEntry[]): void => {
     ghUpdateDataFile({ version: 1, exportedAt: new Date().toISOString(), accounts, balances });
@@ -278,6 +306,8 @@ const App: FC = () => {
       allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
     }
     await ghSyncAllocationNow(allocationPayload, message ? `Allocation: ${message}` : undefined)
+    // Small delay to avoid GitHub API 409 conflicts from rapid sequential commits
+    await new Promise(r => setTimeout(r, 500))
     // Sync taxes data
     const taxesPayload = {
       version: 1,
@@ -286,6 +316,11 @@ const App: FC = () => {
       taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
     }
     await ghSyncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
+    // Sync tax document files (PDFs etc.) as individual files
+    if (ghIsConfigured && ghActiveToken) {
+      const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
+      await syncAllTaxFiles(ghConfig, ghActiveToken, taxStore).catch(e => console.error('Tax file sync error:', e))
+    }
     // Sync budget data (CSVs + config)
     if (ghIsConfigured && ghActiveToken) {
       const budgetStore = loadBudgetStore()
