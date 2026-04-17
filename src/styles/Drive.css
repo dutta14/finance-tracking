@@ -231,3 +231,154 @@ body.dark .drive-viewer-table th {
 body.dark .drive-viewer-table tbody tr:hover {
   background: var(--accent-950, var(--accent-900));
 }
+
+/* ── Add year ────────────────────────────────────────────────── */
+
+.drive-year-add {
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.3rem 0.75rem;
+  color: #6b7280;
+  border-style: dashed;
+}
+.drive-year-add:hover {
+  color: var(--accent-text-dark, #374151);
+  border-color: var(--accent-border, #d1d5db);
+}
+
+.drive-add-year-form {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.drive-add-year-input {
+  font: inherit;
+  font-size: 0.82rem;
+  width: 70px;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  text-align: center;
+  color: #111;
+  background: #fff;
+}
+.drive-add-year-input:focus {
+  outline: none;
+  border-color: var(--accent-border, #6366f1);
+}
+.drive-add-year-go {
+  background: var(--accent, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.6rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.drive-add-year-go:hover { opacity: 0.85; }
+.drive-add-year-cancel {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+.drive-add-year-cancel:hover { color: #ef4444; }
+
+/* ── Dropzone ────────────────────────────────────────────────── */
+
+.drive-dropzone {
+  margin-top: 1rem;
+  padding: 2rem 1.5rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drive-dropzone:hover {
+  border-color: var(--accent-border, #6366f1);
+  background: rgba(99, 102, 241, 0.03);
+}
+.drive-dropzone.active {
+  border-color: var(--accent, #6366f1);
+  background: rgba(99, 102, 241, 0.06);
+}
+.drive-dropzone-icon {
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+.drive-dropzone.active .drive-dropzone-icon {
+  color: var(--accent, #6366f1);
+}
+.drive-dropzone-text {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+.drive-dropzone-hint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+
+.drive-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #1f2937;
+  color: #f3f4f6;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  max-width: 90vw;
+}
+.drive-toast-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+.drive-toast-close:hover { color: #fff; }
+
+/* ── Dark mode additions ─────────────────────────────────────── */
+
+body.dark .drive-add-year-input {
+  background: #1e2227;
+  border-color: #3b4049;
+  color: #e5e7eb;
+}
+body.dark .drive-year-add { color: #6b7280; border-color: #3b4049; }
+body.dark .drive-year-add:hover { color: #d1d5db; border-color: #4b5563; }
+
+body.dark .drive-dropzone {
+  border-color: #3b4049;
+}
+body.dark .drive-dropzone:hover {
+  border-color: #4b5563;
+  background: rgba(255,255,255,0.02);
+}
+body.dark .drive-dropzone.active {
+  border-color: var(--accent, #6366f1);
+  background: rgba(99,102,241,0.08);
+}
+body.dark .drive-dropzone-text { color: #d1d5db; }
+
+body.dark .drive-toast {
+  background: #374151;
+}
