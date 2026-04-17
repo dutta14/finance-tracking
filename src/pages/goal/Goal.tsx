@@ -89,38 +89,36 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
 
   return (
     <section className="goal">
-      <div className="goal-header">
-        <h1>Goals</h1>
-        <p>Model different financial scenarios</p>
-      </div>
-      <div className="goal-new-btn-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', margin: '0 24px 1.2rem 0' }}>
-        {goals.length > 0 && gwGoals.length > 0 && (
-          <button
-            className="btn-create btn-small"
-            style={{ width: '130px', fontSize: '0.92rem', padding: '0.35rem 0', borderRadius: 4, fontWeight: 500, boxShadow: 'none', cursor: 'pointer', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
-            onClick={() => setMixerOpen(true)}
-            title="Mix & Match goals"
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M2 4h5l2 8h5M2 12h5l2-8h5"/>
-              <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none"/>
-              <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none"/>
-              <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none"/>
-              <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none"/>
-            </svg>
-            Mix &amp; Match
-          </button>
-        )}
-        <NewGoalButton
-          onClick={() => {
-            resetForm()
-            stopEditing()
-            setShowForm(true)
-          }}
-        />
-      </div>
+      <div className={`goal-content${selectedGoalIds.length === 1 ? ' goal-content--pane-open' : ''}`}>
+        <div className="goal-header">
+          <h1>Goals</h1>
+          <div className="goal-header-actions">
+            {goals.length > 0 && gwGoals.length > 0 && (
+              <button
+                className="goal-action-btn"
+                onClick={() => setMixerOpen(true)}
+                title="Mix & Match goals"
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M2 4h5l2 8h5M2 12h5l2-8h5"/>
+                  <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none"/>
+                  <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none"/>
+                  <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none"/>
+                  <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+                Mix &amp; Match
+              </button>
+            )}
+            <NewGoalButton
+              onClick={() => {
+                resetForm()
+                stopEditing()
+                setShowForm(true)
+              }}
+            />
+          </div>
+        </div>
 
-      <div className="goal-content">
         <div className="goal-container">
           <GoalsSection
             goals={goals}

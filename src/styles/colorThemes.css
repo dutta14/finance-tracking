@@ -29,7 +29,8 @@
   --color-positive: #10b981;
   --color-positive-light: #d1fae5;
   --color-negative: #ef4444;
-  --color-negative-light: #fee2e2;
+  --color-negative-light: #fef2f2;
+  --color-negative-border: #fecaca;
   --color-warning: #f59e0b;
   --color-warning-light: #fef3c7;
 
@@ -63,7 +64,8 @@ body.dark {
   --color-positive: #34d399;
   --color-positive-light: #064e3b;
   --color-negative: #f87171;
-  --color-negative-light: #450a0a;
+  --color-negative-light: #2d1b1b;
+  --color-negative-border: #7f1d1d;
   --color-warning: #fbbf24;
   --color-warning-light: #451a03;
 

@@ -54,7 +54,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   const isFiltered = filteredGoals.length !== goals.length
 
   return (
-    <div className={`goal-results-section${selectedGoals.length === 1 ? ' goal-results-section--pane-open' : ''}`}>
+    <div className="goal-results-section">
       <div className="goal-results-header">
         <h2>Saved Goals ({isFiltered ? `${filteredGoals.length} of ${goals.length}` : goals.length})</h2>
         <div className="view-mode-toggle">
