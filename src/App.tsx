@@ -88,7 +88,7 @@ const App: FC = () => {
     ? 'budget'
     : location.pathname === '/tools'
     ? 'tools'
-    : location.pathname === '/drive'
+    : location.pathname.startsWith('/drive')
     ? 'drive'
     : location.pathname === '/allocation'
     ? 'allocation'
@@ -509,7 +509,7 @@ const App: FC = () => {
         <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />
-        <Route path="/drive" element={<Drive />} />
+        <Route path="/drive/*" element={<Drive />} />
         <Route path="/allocation" element={<Allocation />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

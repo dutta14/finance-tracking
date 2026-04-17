@@ -1,25 +1,41 @@
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
 import { formatMonthKey } from '../budget/utils/csvParser'
-import type { FileEntry, YearFolder } from './types'
+import type { DriveFolder, DriveFile } from './types'
 
-export function buildBudgetTree(): YearFolder[] {
+export function buildDriveTree(): DriveFolder {
   const store = loadBudgetStore()
-  const byYear = new Map<number, FileEntry[]>()
+  const byYear = new Map<number, DriveFile[]>()
+
   for (const [key, m] of Object.entries(store.csvs)) {
     const yr = parseInt(key.split('-')[0], 10)
     if (!byYear.has(yr)) byYear.set(yr, [])
     byYear.get(yr)!.push({
-      monthKey: key,
-      label: formatMonthKey(key),
-      csv: m.csv,
+      name: formatMonthKey(key),
+      slug: key,
+      ext: 'csv',
+      content: m.csv,
       uploadedAt: m.uploadedAt,
     })
   }
-  const folders: YearFolder[] = []
+
+  const yearFolders: DriveFolder[] = []
   for (const [year, files] of byYear) {
-    files.sort((a, b) => a.monthKey.localeCompare(b.monthKey))
-    folders.push({ year, files })
+    files.sort((a, b) => a.slug.localeCompare(b.slug))
+    yearFolders.push({ name: String(year), slug: String(year), folders: [], files })
   }
-  folders.sort((a, b) => b.year - a.year)
-  return folders
+  yearFolders.sort((a, b) => b.slug.localeCompare(a.slug))
+
+  const budgetFolder: DriveFolder = {
+    name: 'Budget',
+    slug: 'budget',
+    folders: yearFolders,
+    files: [],
+  }
+
+  return {
+    name: 'Drive',
+    slug: '',
+    folders: [budgetFolder],
+    files: [],
+  }
 }
