@@ -5,6 +5,7 @@ import { Account, BalanceEntry, ALLOCATION_LABELS, AssetAllocation, formatCurren
 interface AllocationBreakdownProps {
   accounts: Account[]
   balances: BalanceEntry[]
+  onNavigate?: () => void
 }
 
 const ALLOC_COLORS: Record<AssetAllocation, string> = {
@@ -17,12 +18,12 @@ const ALLOC_COLORS: Record<AssetAllocation, string> = {
   debt: '#ef4444',
 }
 
-const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances }) => {
+const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances, onNavigate }) => {
   const [legendMode, setLegendMode] = useState<'pct' | 'val'>('pct')
-  const [chartMode, setChartMode] = useState<'pie' | 'bar'>('bar')
+  const [chartMode, setChartMode] = useState<'pie' | 'bar'>('pie')
 
-  const { fiData, gwData } = useMemo(() => {
-    if (balances.length === 0) return { fiData: [], gwData: [] }
+  const { fiData, gwData, totalData } = useMemo(() => {
+    if (balances.length === 0) return { fiData: [], gwData: [], totalData: [] }
 
     const months = [...new Set(balances.map(b => b.month))].sort()
     const latest = months[months.length - 1]
@@ -30,12 +31,13 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
     const balMap = new Map<number, number>()
     for (const b of latestBalances) balMap.set(b.accountId, b.balance)
 
-    const buildAlloc = (goalType: 'fi' | 'gw') => {
+    const buildAlloc = (goalFilter?: 'fi' | 'gw') => {
       const grouped = new Map<AssetAllocation, number>()
 
       // First, add all assets
       for (const a of accounts) {
-        if (a.status !== 'active' || a.goalType !== goalType || (a.nature || 'asset') !== 'asset') continue
+        if (a.status !== 'active' || (a.nature || 'asset') !== 'asset') continue
+        if (goalFilter && a.goalType !== goalFilter) continue
         const bal = balMap.get(a.id)
         if (!bal || bal === 0) continue
         const alloc = a.allocation || getDefaultAllocation('asset')
@@ -45,7 +47,8 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
       // Then subtract linked liabilities from their linked asset's allocation category
       // Unlinked liabilities get their own "Debt" slice
       for (const a of accounts) {
-        if (a.status !== 'active' || a.goalType !== goalType || (a.nature || 'asset') !== 'liability') continue
+        if (a.status !== 'active' || (a.nature || 'asset') !== 'liability') continue
+        if (goalFilter && a.goalType !== goalFilter) continue
         const bal = balMap.get(a.id)
         if (!bal || bal === 0) continue
         const absBal = Math.abs(bal)
@@ -69,7 +72,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
         .sort((a, b) => b.value - a.value)
     }
 
-    return { fiData: buildAlloc('fi'), gwData: buildAlloc('gw') }
+    return { fiData: buildAlloc('fi'), gwData: buildAlloc('gw'), totalData: buildAlloc() }
   }, [accounts, balances])
 
   const isDark = document.body.classList.contains('dark')
@@ -167,7 +170,9 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
     <div className="home-card home-card--alloc">
       <div className="home-card-header">
         <h3>Asset Allocation</h3>
-        <div className="alloc-toggles">
+        <div className="alloc-header-right">
+          {onNavigate && <button className="home-card-link" onClick={onNavigate}>View Allocation →</button>}
+          <div className="alloc-toggles">
           <div className="alloc-toggle">
             <button className={`alloc-toggle-btn${chartMode === 'bar' ? ' active' : ''}`} onClick={() => setChartMode('bar')} title="Stacked bar">
               <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6"/><rect x="1" y="8" width="8" height="3" rx="1" fill="currentColor"/></svg>
@@ -180,12 +185,14 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances 
             <button className={`alloc-toggle-btn${legendMode === 'pct' ? ' active' : ''}`} onClick={() => setLegendMode('pct')}>%</button>
             <button className={`alloc-toggle-btn${legendMode === 'val' ? ' active' : ''}`} onClick={() => setLegendMode('val')}>$</button>
           </div>
+          </div>
         </div>
       </div>
       {balances.length === 0 ? (
         <div className="home-card-empty">No balance data yet</div>
       ) : (
         <div className={`alloc-grid${chartMode === 'bar' ? ' alloc-grid--vertical' : ''}`}>
+          {renderSection(totalData, 'Total')}
           {renderSection(fiData, 'FI')}
           {renderSection(gwData, 'GW')}
         </div>

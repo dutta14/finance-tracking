@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-export type PageType = 'home' | 'goal' | 'goal-solo' | 'data' | 'budget' | 'tools' | 'drive'
+export type PageType = 'home' | 'goal' | 'goal-solo' | 'data' | 'budget' | 'tools' | 'drive' | 'allocation'
 
 export interface FinancialGoal {
   id: number

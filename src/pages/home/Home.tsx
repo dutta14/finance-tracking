@@ -125,6 +125,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
       key="alloc"
       accounts={accounts}
       balances={balances}
+      onNavigate={() => navigate('/allocation')}
     />,
   ]
 

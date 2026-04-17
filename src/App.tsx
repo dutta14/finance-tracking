@@ -10,6 +10,7 @@ import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
 import Tools from './pages/tools/Tools'
 import Drive from './pages/drive/Drive'
+import Allocation from './pages/allocation/Allocation'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
@@ -88,6 +89,8 @@ const App: FC = () => {
     ? 'tools'
     : location.pathname === '/drive'
     ? 'drive'
+    : location.pathname === '/allocation'
+    ? 'allocation'
     : 'home'
 
   const setCurrentPage = (page: PageType): void => {
@@ -97,6 +100,7 @@ const App: FC = () => {
     else if (page === 'budget') navigate('/budget')
     else if (page === 'tools') navigate('/tools')
     else if (page === 'drive') navigate('/drive')
+    else if (page === 'allocation') navigate('/allocation')
   }
 
   const [pendingDelete, setPendingDelete] = useState<{
@@ -486,6 +490,7 @@ const App: FC = () => {
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />
         <Route path="/drive" element={<Drive />} />
+        <Route path="/allocation" element={<Allocation />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
