@@ -1,0 +1,379 @@
+/* ── PDF to CSV ─────────────────────────────────────────────── */
+
+.pdf2csv {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Drop zone */
+.pdf2csv-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 2px dashed var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  cursor: pointer;
+  color: var(--color-text-muted, #9ca3af);
+  transition: border-color 0.15s, background 0.15s;
+}
+.pdf2csv-dropzone:hover {
+  border-color: var(--accent);
+  background: var(--accent-lighter, #eef2ff);
+}
+.pdf2csv-dropzone svg { opacity: 0.4; }
+.pdf2csv-dropzone-text {
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.pdf2csv-error {
+  padding: 0.5rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+/* Toolbar */
+.pdf2csv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.pdf2csv-filename {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #1f2937);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+.pdf2csv-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #6b7280);
+}
+.pdf2csv-pages button {
+  background: none;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-text, #374151);
+}
+.pdf2csv-pages button:disabled { opacity: 0.3; cursor: default; }
+.pdf2csv-change-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--color-text-muted, #6b7280);
+  transition: border-color 0.15s, color 0.15s;
+}
+.pdf2csv-change-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Zoom controls */
+.pdf2csv-zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #6b7280);
+}
+.pdf2csv-zoom button {
+  background: none;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #374151);
+}
+.pdf2csv-zoom button:disabled { opacity: 0.3; cursor: default; }
+
+.pdf2csv-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #9ca3af);
+  margin: 0;
+}
+
+/* Canvas area */
+.pdf2csv-canvas-wrap {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  max-height: 500px;
+  background: #f9fafb;
+}
+.pdf2csv-canvas {
+  display: block;
+}
+.pdf2csv-overlay {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+}
+.pdf2csv-sel {
+  position: absolute;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1.5px solid var(--accent, #6366f1);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.pdf2csv-sel--final {
+  background: rgba(99, 102, 241, 0.08);
+  border-style: dashed;
+}
+
+/* Results */
+.pdf2csv-results {
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.pdf2csv-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+.pdf2csv-results-header h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text, #374151);
+}
+.pdf2csv-results-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.pdf2csv-btn {
+  background: none;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text, #374151);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.pdf2csv-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pdf2csv-btn--primary {
+  background: var(--accent, #6366f1);
+  color: #fff;
+  border-color: var(--accent, #6366f1);
+}
+.pdf2csv-btn--primary:hover {
+  background: var(--accent-hover, #4f46e5);
+  border-color: var(--accent-hover, #4f46e5);
+  color: #fff;
+}
+.pdf2csv-btn--muted {
+  color: var(--color-text-muted, #9ca3af);
+  font-size: 0.75rem;
+}
+.pdf2csv-btn--muted:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* Table */
+.pdf2csv-table-wrap {
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.pdf2csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.pdf2csv-table th,
+.pdf2csv-table td {
+  padding: 0.4rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  border-right: 1px solid var(--color-border, #e5e7eb);
+  white-space: normal;
+  word-break: break-word;
+  max-width: 18rem;
+  color: var(--color-text, #374151);
+}
+.pdf2csv-table th:last-child,
+.pdf2csv-table td:last-child {
+  border-right: none;
+}
+.pdf2csv-table th {
+  background: var(--accent-lighter, #eef2ff);
+  color: var(--accent-text-dark, #312e81);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: sticky;
+  top: 0;
+}
+.pdf2csv-table tr:hover td {
+  background: var(--accent-lighter, #eef2ff);
+}
+.pdf2csv-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Editable cells */
+.pdf2csv-table th[contenteditable],
+.pdf2csv-table td[contenteditable] {
+  cursor: text;
+  outline: none;
+}
+.pdf2csv-table th[contenteditable]:focus,
+.pdf2csv-table td[contenteditable]:focus {
+  background: rgba(99, 102, 241, 0.06);
+  box-shadow: inset 0 0 0 1.5px var(--accent, #6366f1);
+  border-radius: 2px;
+}
+
+/* Row / column delete buttons */
+.pdf2csv-row-action {
+  width: 1px;
+  padding: 0 2px !important;
+  text-align: center !important;
+  background: none !important;
+  white-space: nowrap;
+  border-right: none !important;
+}
+.pdf2csv-table th:nth-child(2),
+.pdf2csv-table td:nth-child(2) {
+  white-space: nowrap;
+}
+.pdf2csv-col-action {
+  width: 1.5rem;
+  min-width: 1.5rem;
+  max-width: 1.5rem;
+  padding: 0 !important;
+  text-align: center !important;
+  background: none !important;
+}
+.pdf2csv-del-row,
+.pdf2csv-del-col,
+.pdf2csv-merge-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--color-text-muted, #9ca3af);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  padding: 0;
+  transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+.pdf2csv-table tr:hover .pdf2csv-del-row,
+.pdf2csv-table tr:hover .pdf2csv-merge-row,
+.pdf2csv-table thead .pdf2csv-del-col {
+  opacity: 0.5;
+}
+.pdf2csv-del-row:hover,
+.pdf2csv-del-col:hover {
+  opacity: 1 !important;
+  background: #fef2f2;
+  color: #dc2626;
+}
+.pdf2csv-merge-row:hover {
+  opacity: 1 !important;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* ── Dark mode ── */
+body.dark .pdf2csv-dropzone {
+  border-color: #2d3344;
+  color: #6b7280;
+}
+body.dark .pdf2csv-dropzone:hover {
+  border-color: var(--accent-hover);
+  background: rgba(99, 102, 241, 0.06);
+}
+body.dark .pdf2csv-error {
+  background: #1c1012;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+body.dark .pdf2csv-canvas-wrap {
+  background: #1a1e2a;
+  border-color: #2d3344;
+}
+body.dark .pdf2csv-results {
+  background: #141820;
+  border-color: #2d3344;
+}
+body.dark .pdf2csv-results-header {
+  border-bottom-color: #2d3344;
+}
+body.dark .pdf2csv-table th {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent-track, #a5b4fc);
+}
+body.dark .pdf2csv-table td {
+  color: #d1d5db;
+}
+body.dark .pdf2csv-table th,
+body.dark .pdf2csv-table td {
+  border-bottom-color: #2d3344;
+  border-right-color: #2d3344;
+}
+body.dark .pdf2csv-table tr:hover td {
+  background: rgba(99, 102, 241, 0.06);
+}
+body.dark .pdf2csv-del-row:hover,
+body.dark .pdf2csv-del-col:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #f87171;
+}
+body.dark .pdf2csv-merge-row:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: #60a5fa;
+}
+body.dark .pdf2csv-pages button {
+  border-color: #2d3344;
+  color: #d1d5db;
+}
+body.dark .pdf2csv-change-btn {
+  border-color: #2d3344;
+  color: #6b7280;
+}
+body.dark .pdf2csv-btn {
+  border-color: #2d3344;
+  color: #d1d5db;
+}

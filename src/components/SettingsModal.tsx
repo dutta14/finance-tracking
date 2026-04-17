@@ -44,7 +44,7 @@ interface SettingsModalProps {
   onClose?: () => void
 }
 
-type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced'
+type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced' | 'labs'
 
 const COLOR_PALETTES = [
   { id: 'blue',   label: 'Blue',   color: '#3b82f6' },
@@ -82,6 +82,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
   const [partnerBirthday, setPartnerBirthday] = useState(profile.partner?.birthday || '')
   const [partnerAvatarPreview, setPartnerAvatarPreview] = useState(profile.partner?.avatarDataUrl || '')
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
+  const [labPdfToCsv, setLabPdfToCsv] = useState(() => localStorage.getItem('lab-pdf-to-csv') === '1')
   const [profileSaved, setProfileSaved] = useState(false)
   const [profileEditing, setProfileEditing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -326,6 +327,15 @@ const SettingsModal: FC<SettingsModalProps> = ({
                 <path d="M8 1a1 1 0 0 1 1 1v1.5h2a1 1 0 0 1 1 1v1h1.5a1 1 0 0 1 0 2H13v3h1.5a1 1 0 0 1 0 2H13v1a1 1 0 0 1-1 1h-2v1.5a1 1 0 0 1-2 0V14H6v1.5a1 1 0 0 1-2 0V14H2a1 1 0 0 1-1-1v-2H.5a1 1 0 0 1 0-2H1V7H.5a1 1 0 0 1 0-2H1V4a1 1 0 0 1 1-1h2V1.5a1 1 0 0 1 2 0V3h2V1.5a1 1 0 0 1 1-1z"/>
               </svg>
               Advanced
+            </button>
+            <button
+              className={`settings-modal-nav-item${activeSection === 'labs' ? ' active' : ''}`}
+              onClick={() => setActiveSection('labs')}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M6 1h4v1H9v4.2l3.7 5.5c.4.6 0 1.3-.7 1.3H4c-.7 0-1.1-.7-.7-1.3L7 6.2V2H6V1zm2 5.5L5.2 11h5.6L8 6.5z"/>
+              </svg>
+              Labs
             </button>
           </nav>
 
@@ -976,6 +986,35 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'labs' && (
+              <div className="settings-section">
+                <h3>Labs</h3>
+                <div className="settings-section-content">
+                  <p className="settings-description">Try experimental features. These may be incomplete or change without notice.</p>
+
+                  <div className="settings-toggle-row">
+                    <div>
+                      <span className="settings-toggle-label">PDF → CSV</span>
+                      <span className="settings-toggle-hint">Extract transaction tables from bank or brokerage PDFs into CSV format</span>
+                    </div>
+                    <button
+                      className={`settings-toggle-switch${labPdfToCsv ? ' on' : ''}`}
+                      onClick={() => {
+                        const next = !labPdfToCsv
+                        setLabPdfToCsv(next)
+                        localStorage.setItem('lab-pdf-to-csv', next ? '1' : '0')
+                        window.dispatchEvent(new Event('labs-changed'))
+                      }}
+                      role="switch"
+                      aria-checked={labPdfToCsv}
+                    >
+                      <span className="settings-toggle-knob" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
