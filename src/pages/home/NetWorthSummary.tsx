@@ -144,7 +144,11 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           <h3>Net Worth</h3>
           <button className="home-card-link" onClick={onNavigate}>View Data →</button>
         </div>
-        <div className="home-card-empty">No balance data yet</div>
+        <div className="home-card-cta">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+          <p>Add accounts and record your first balance to see your net worth here.</p>
+          <button className="home-card-cta-btn" onClick={onNavigate}>Add your data →</button>
+        </div>
       </div>
     )
   }

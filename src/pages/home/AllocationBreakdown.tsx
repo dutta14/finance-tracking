@@ -189,7 +189,11 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
         </div>
       </div>
       {balances.length === 0 ? (
-        <div className="home-card-empty">No balance data yet</div>
+        <div className="home-card-cta">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-9-9" /><path d="M12 3v9h9" /></svg>
+          <p>See how your assets are distributed once you add accounts and balances.</p>
+          <button className="home-card-cta-btn" onClick={onNavigate}>Set up allocation →</button>
+        </div>
       ) : (
         <div className={`alloc-grid${chartMode === 'bar' ? ' alloc-grid--vertical' : ''}`}>
           {renderSection(totalData, 'Total')}

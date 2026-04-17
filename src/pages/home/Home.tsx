@@ -7,6 +7,7 @@ import NetWorthSummary from './NetWorthSummary'
 import MiniCharts from './MiniCharts'
 import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
+import WelcomeGuide from './WelcomeGuide'
 import '../../styles/Home.css'
 
 interface HomeProps {
@@ -97,6 +98,12 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
     dragIdx.current = null
     setDragOver(null)
   }, [])
+
+  const isCompletelyEmpty = balances.length === 0 && goals.length === 0
+
+  if (isCompletelyEmpty) {
+    return <WelcomeGuide greeting={greeting} />
+  }
 
   const cards: ReactNode[] = [
     <NetWorthSummary

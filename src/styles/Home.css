@@ -699,3 +699,171 @@ body.dark .alloc-toggle { background: #1f2937; }
 body.dark .alloc-toggle-btn { color: #6b7280; }
 body.dark .alloc-toggle-btn.active { background: #374151; color: #e5e7eb; box-shadow: none; }
 body.dark .alloc-empty { color: #6b7280; }
+
+/* ── Card CTA empty state ── */
+.home-card-cta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  color: var(--color-text-muted, #9ca3af);
+}
+.home-card-cta svg {
+  opacity: 0.35;
+  color: var(--accent);
+}
+.home-card-cta p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 260px;
+  color: var(--color-text-muted, #9ca3af);
+}
+.home-card-cta-btn {
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.home-card-cta-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+body.dark .home-card-cta p { color: #6b7280; }
+body.dark .home-card-cta-btn:hover { color: #fff; }
+
+/* ── Welcome Guide ── */
+.welcome-hero {
+  margin-bottom: 1.5rem;
+}
+.welcome-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0 0 0.35rem;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.welcome-subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--color-text-muted, #6b7280);
+  line-height: 1.5;
+}
+
+.welcome-start-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+  opacity: 0.8;
+}
+.welcome-start-hint svg {
+  flex-shrink: 0;
+}
+
+.welcome-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.welcome-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.welcome-step:first-child {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 8px rgba(99, 102, 241, 0.08);
+}
+.welcome-step:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.welcome-step-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-lighter, #eef2ff);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.welcome-step-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.55;
+}
+
+.welcome-step-body {
+  flex: 1;
+  min-width: 0;
+}
+.welcome-step-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin: 0 0 0.15rem;
+  color: var(--color-text, #1f2937);
+}
+.welcome-step-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #6b7280);
+  line-height: 1.45;
+}
+
+.welcome-step-cta {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.welcome-step-cta:hover { color: var(--accent-hover); }
+
+/* Welcome dark */
+body.dark .welcome-subtitle { color: #6b7280; }
+body.dark .welcome-step { background: #141820; border-color: #2d3344; }
+body.dark .welcome-step:first-child { border-color: var(--accent-hover); box-shadow: 0 0 0 1px var(--accent-hover), 0 2px 8px rgba(99, 102, 241, 0.12); }
+body.dark .welcome-step:hover { border-color: var(--accent-hover); }
+body.dark .welcome-step-number { background: rgba(99, 102, 241, 0.15); }
+body.dark .welcome-step-title { color: #e5e7eb; }
+body.dark .welcome-step-desc { color: #6b7280; }
+
+/* Responsive: stack on narrow */
+@media (max-width: 600px) {
+  .welcome-step { flex-wrap: wrap; gap: 0.6rem; }
+  .welcome-step-cta { margin-left: auto; }
+}

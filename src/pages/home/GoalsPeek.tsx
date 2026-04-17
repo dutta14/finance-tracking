@@ -55,7 +55,11 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate, onGoToGoal 
           <h3>Goals</h3>
           <button className="home-card-link" onClick={onNavigate}>View Goals →</button>
         </div>
-        <div className="home-card-empty">No goals yet</div>
+        <div className="home-card-cta">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /></svg>
+          <p>Set an FI target or general wealth goal to start tracking your progress.</p>
+          <button className="home-card-cta-btn" onClick={onNavigate}>Create a goal →</button>
+        </div>
       </div>
     )
   }
