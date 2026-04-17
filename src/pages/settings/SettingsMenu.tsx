@@ -1,6 +1,6 @@
 import { FC, useState } from 'react'
-import { Profile } from '../hooks/useProfile'
-import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync'
+import { Profile } from '../../hooks/useProfile'
+import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
 import SettingsModal from './SettingsModal'
 
 interface SettingsMenuProps {

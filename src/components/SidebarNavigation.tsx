@@ -3,7 +3,7 @@ import { FinancialGoal, NavigationProps } from '../types';
 import { Profile } from '../hooks/useProfile';
 import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync';
 import SidebarToggle from './SidebarToggle';
-import SettingsMenu from './SettingsMenu';
+import { SettingsMenu } from '../pages/settings';
 import '../styles/SidebarNavigation.css';
 
 interface SidebarNavigationProps extends NavigationProps {

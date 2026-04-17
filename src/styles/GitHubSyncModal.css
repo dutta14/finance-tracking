@@ -131,7 +131,6 @@
 /* ── Tabs ── */
 .ghsync-tabs {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
   flex-shrink: 0;
 }
 
@@ -473,7 +472,7 @@ body.dark .ghsync-status-bar--syncing { background: #1e2a47; color: #93c5fd; }
 body.dark .ghsync-status-bar--success { background: #14291f; color: #6ee7a0; }
 body.dark .ghsync-status-bar--error   { background: #2d1b1b; color: #fca5a5; }
 
-body.dark .ghsync-tabs { border-bottom-color: #363c48; }
+
 body.dark .ghsync-tab { color: #6b7280; }
 body.dark .ghsync-tab:hover { color: #d1d5db; }
 body.dark .ghsync-tab.active { color: #93c5fd; border-bottom-color: #93c5fd; }

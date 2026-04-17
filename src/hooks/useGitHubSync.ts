@@ -264,7 +264,7 @@ export const useGitHubSync = () => {
         const err = await res.json().catch(() => ({}))
         throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
       }
-      lastSyncedJsonRef.current = canonicalJson
+      lastSyncedJsonRef.current = (() => { const { exportedAt: _, ...rest } = data as Record<string, unknown>; return JSON.stringify(rest) })()
       setSyncStatus('success')
       setLastSyncAt(new Date().toISOString())
       setHasPendingChanges(false)
@@ -297,7 +297,7 @@ export const useGitHubSync = () => {
         const err = await res.json().catch(() => ({}))
         throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
       }
-      lastSyncedDataJsonRef.current = canonicalJson
+      lastSyncedDataJsonRef.current = (() => { const { exportedAt: _, ...rest } = data as Record<string, unknown>; return JSON.stringify(rest) })()
       pendingDataFileRef.current = null
     } catch (e) {
       console.error('Data file sync error:', e instanceof Error ? e.message : e)
@@ -568,7 +568,8 @@ export const useGitHubSync = () => {
   }, [activeToken, apiHeaders, dataFilePath, config.owner, config.repo, isConfigured])
 
   const updateData = useCallback((data: object) => {
-    const json = JSON.stringify(data)
+    const { exportedAt: _, ...rest } = data as Record<string, unknown>
+    const json = JSON.stringify(rest)
     if (json === lastSyncedJsonRef.current) {
       if (!pendingDataFileRef.current) setHasPendingChanges(false)
       return
@@ -583,7 +584,8 @@ export const useGitHubSync = () => {
   }, [config.autoSync, isConfigured, syncNow])
 
   const updateDataFile = useCallback((data: object) => {
-    const json = JSON.stringify(data)
+    const { exportedAt: _, ...rest } = data as Record<string, unknown>
+    const json = JSON.stringify(rest)
     if (json === lastSyncedDataJsonRef.current) return
     setHasPendingChanges(true)
     pendingDataFileRef.current = data
