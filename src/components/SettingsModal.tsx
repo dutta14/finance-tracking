@@ -622,7 +622,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                           </>
                         )}
                         {ghTokenUnlocked && (
-                          <p className="ghsync-result-success">✓ Token unlocked for this session {!ghUsingLegacyToken && <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }} onClick={onGhLockToken}>Lock</button>}</p>
+                          <p className="ghsync-result-success">✓ Token unlocked for this session {!ghUsingLegacyToken && <button style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }} onClick={onGhLockToken}>Lock</button>}</p>
                         )}
                       </div>
 
@@ -652,9 +652,9 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                     placeholder="github_pat_..."
                                     autoComplete="off"
                                   />
-                                  <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setGhShowToken(v => !v)}>{ghShowToken ? 'Hide' : 'Show'}</button>
+                                  <button style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setGhShowToken(v => !v)}>{ghShowToken ? 'Hide' : 'Show'}</button>
                                 </div>
-                                <p className="ghsync-pat-hint">Create a fine-grained PAT at <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>github.com/settings/tokens</a> with Contents write access</p>
+                                <p className="ghsync-pat-hint">Create a fine-grained PAT at <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>github.com/settings/tokens</a> with Contents write access</p>
                               </div>
 
                               <div>
