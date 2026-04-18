@@ -17,6 +17,7 @@ import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadB
 import { syncAllTaxFiles } from './pages/taxes/taxGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
 import UndoToast from './components/UndoToast'
+import { isDemoActive, exitDemoMode } from './pages/settings/demoMode'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
@@ -653,6 +654,12 @@ const App: FC = () => {
         {!sidebarOpen && (
           <div style={{ position: 'fixed', top: '1.25rem', left: '0.75rem', zIndex: 300 }}>
             <SidebarToggle expanded={false} onToggle={() => setSidebarOpen(true)} />
+          </div>
+        )}
+        {isDemoActive() && (
+          <div className="demo-banner">
+            <span>Demo Mode — showing sample data</span>
+            <button onClick={exitDemoMode}>Exit Demo</button>
           </div>
         )}
         {renderPage()}
