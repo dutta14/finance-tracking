@@ -36,6 +36,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const [csvError, setCsvError] = useState<string | null>(null)
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null)
   const [drilldownCategories, setDrilldownCategories] = useState<Set<string>>(new Set())
+  const drilldownRef = useRef<HTMLDivElement>(null)
   const [filterOpen, setFilterOpen] = useState(false)
   const [filterSearch, setFilterSearch] = useState('')
   const filterRef = useRef<HTMLDivElement>(null)
@@ -217,6 +218,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
       setSortCol('date')
       setSortDir('desc')
       setShowRemoved(false)
+      requestAnimationFrame(() => {
+        drilldownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      })
     }
   }
 
@@ -377,7 +381,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
           })
         }
         return (
-          <div className="budget-drilldown">
+          <div className="budget-drilldown" ref={drilldownRef}>
             <div className="budget-drilldown-header">
               <h4>{shortMonthName(parseInt(expandedMonth.split('-')[1], 10) - 1)} {year} — {type === 'income' ? 'Income' : 'Expense'} Transactions</h4>
               <button className="budget-drilldown-close" onClick={() => setExpandedMonth(null)}>×</button>

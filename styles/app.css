@@ -24,6 +24,21 @@ body.dark .main-content {
   background: #0b0e14;
 }
 
+/* Indent page headers to clear the sidebar toggle when sidebar is closed */
+.sidebar-closed .home-greeting,
+.sidebar-closed .welcome-hero,
+.sidebar-closed .budget-header,
+.sidebar-closed .goal-header,
+.sidebar-closed .goal-solo-header,
+.sidebar-closed .data-header,
+.sidebar-closed .alloc-page-header,
+.sidebar-closed .tools-top-row,
+.sidebar-closed .drive-header,
+.sidebar-closed .tax-header {
+  padding-left: 2rem;
+  transition: padding-left 0.2s;
+}
+
 /* Global Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;

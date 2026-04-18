@@ -646,7 +646,7 @@ const App: FC = () => {
         />
       )}
       <main
-        className="main-content"
+        className={`main-content${!sidebarOpen ? ' sidebar-closed' : ''}`}
         style={{ flex: 1, marginLeft: (!isMobile && sidebarOpen) ? 220 : 0, padding: 0, minHeight: '100vh', transition: 'margin-left 0.2s' }}
       >
         {!sidebarOpen && (
