@@ -17,7 +17,7 @@ import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadB
 import { syncAllTaxFiles } from './pages/taxes/taxGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
 import UndoToast from './components/UndoToast'
-import { isDemoActive, exitDemoMode } from './pages/settings/demoMode'
+import { isDemoActive, enterDemoMode, exitDemoMode } from './pages/settings/demoMode'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
@@ -180,6 +180,17 @@ const App: FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === 'd') {
+        e.preventDefault()
+        isDemoActive() ? exitDemoMode() : enterDemoMode()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, []);
 
   useEffect(() => {
