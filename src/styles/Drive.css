@@ -290,6 +290,21 @@ body.dark .drive-filter-btn.active {
   color: var(--color-text-muted);
 }
 
+/* PDF viewer */
+.drive-pdf-wrap {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  min-height: 0;
+}
+.drive-pdf-frame {
+  width: 100%;
+  height: calc(100vh - 10rem);
+  border: none;
+  display: block;
+}
+
 /* ── dark mode ───────────────────────────────────────────────── */
 
 body.dark .drive-breadcrumb-item:hover {

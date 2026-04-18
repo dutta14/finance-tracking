@@ -50,22 +50,6 @@ const Drive: FC = () => {
     handleFileInputChange, openFilePicker,
   } = useDriveUpload(refreshTree)
 
-  // ── File view ───────────────────────────────────────────────
-  if (resolved.kind === 'file') {
-    const { file } = resolved
-    const parentSegs = segments.slice(0, -1)
-    return (
-      <div className="drive-page">
-        <CSVViewer
-          content={file.content}
-          label={file.name}
-          ext={file.ext}
-          onBack={() => goTo(parentSegs)}
-        />
-      </div>
-    )
-  }
-
   // ── Folder / root view ──────────────────────────────────────
   const folder: DriveFolder = resolved.kind === 'folder' ? resolved.folder
     : resolved.kind === 'root' ? resolved.folder
@@ -108,6 +92,39 @@ const Drive: FC = () => {
     : null
   const siblingYearFolders = parentFolder?.folders
   const currentSlug = resolved.kind === 'folder' ? resolved.folder.slug : null
+
+  // ── File view ───────────────────────────────────────────────
+  if (resolved.kind === 'file') {
+    const { file } = resolved
+    const parentSegs = segments.slice(0, -1)
+    const isPdf = file.ext.toLowerCase() === 'pdf'
+    return (
+      <div className="drive-page">
+        {isPdf ? (
+          <div className="drive-viewer">
+            <button className="drive-viewer-back" onClick={() => goTo(parentSegs)}>
+              <BackIcon /> Back
+            </button>
+            <h2 className="drive-viewer-title">{file.name}</h2>
+            <div className="drive-pdf-wrap">
+              <iframe
+                src={file.content}
+                title={file.name}
+                className="drive-pdf-frame"
+              />
+            </div>
+          </div>
+        ) : (
+          <CSVViewer
+            content={file.content}
+            label={file.name}
+            ext={file.ext}
+            onBack={() => goTo(parentSegs)}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="drive-page">
