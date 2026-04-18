@@ -33,7 +33,7 @@ const Drive: FC = () => {
 
   const goTo = useCallback((segs: string[]) => {
     setSegmentsState(segs)
-    navigate(urlFromSegments(segs), { replace: true })
+    navigate(urlFromSegments(segs))
   }, [navigate])
 
   // Sync state on browser back/forward
