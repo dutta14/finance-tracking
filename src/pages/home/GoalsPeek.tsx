@@ -140,7 +140,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate, onGoToGoal 
                 )}
               </div>
               <div className="goals-peek-item-meta">
-                <span>FI: {formatCurrency(goal.fiGoal)}</span>
+                <span>FI: {goal.fiGoal != null ? formatCurrency(goal.fiGoal) : '—'}</span>
                 {goalGws.length > 0 && <span>{goalGws.length} GW goal{goalGws.length > 1 ? 's' : ''}</span>}
                 <span>Retire: {goal.retirement}</span>
               </div>

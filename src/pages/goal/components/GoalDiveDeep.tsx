@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine
 } from 'recharts'
 import { FinancialGoal } from '../../../types'
-import './GoalDiveDeep.css'
+import '../../../styles/GoalDiveDeep.css'
 
 interface GoalDiveDeepProps {
   goal: FinancialGoal

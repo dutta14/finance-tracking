@@ -20,6 +20,8 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  width: fit-content;
 }
 
 /* 2×2 Grid */
@@ -754,6 +756,8 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  width: fit-content;
 }
 .welcome-subtitle {
   margin: 0;

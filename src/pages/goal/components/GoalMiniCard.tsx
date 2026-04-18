@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { FinancialGoal, GwGoal } from '../types'
-import '../styles/GoalMiniCard.css'
+import { FinancialGoal, GwGoal } from '../../../types'
+import '../../../styles/GoalMiniCard.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 

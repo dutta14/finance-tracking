@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
-import './GoalCompareView.css'
+import '../../../styles/GoalCompareView.css'
 
 interface GoalCompareViewProps {
   goals: FinancialGoal[]

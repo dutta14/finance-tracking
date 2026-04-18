@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
-import GoalMiniCard from '../../../components/GoalMiniCard'
+import GoalMiniCard from './GoalMiniCard'
 
 interface ContextMenuState { x: number; y: number; goalId: number }
 

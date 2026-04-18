@@ -1,8 +1,8 @@
 import { FC, useState, useRef, useEffect, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
-import GoalDetailedCard from '../../../components/GoalDetailedCard'
-import GoalActionsMenu from '../../../components/GoalActionsMenu'
+import GoalDetailedCard from './GoalDetailedCard'
+import GoalActionsMenu from './GoalActionsMenu'
 import '../../../styles/GoalDetailPane.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()

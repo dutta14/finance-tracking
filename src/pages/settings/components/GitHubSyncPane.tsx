@@ -35,8 +35,8 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   const [ghUnlockDismissed, setGhUnlockDismissed] = useState(false)
 
   useEffect(() => {
-    if (ghHistory.length === 0) onGhFetchHistory?.()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (ghIsConfigured && ghTokenUnlocked && ghHistory.length === 0) onGhFetchHistory?.()
+  }, [ghIsConfigured, ghTokenUnlocked]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (ghSyncSuccess) {
@@ -101,7 +101,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
 
         <div className="ghsync-tabs">
           <button onClick={() => setGhTab('config')} className={`ghsync-tab-btn${ghTab === 'config' ? ' active' : ''}`}>Configuration</button>
-          <button onClick={() => setGhTab('history')} className={`ghsync-tab-btn${ghTab === 'history' ? ' active' : ''}`}>History</button>
+          <button onClick={() => { setGhTab('history'); if (ghHistory.length === 0) onGhFetchHistory?.() }} className={`ghsync-tab-btn${ghTab === 'history' ? ' active' : ''}`}>History</button>
         </div>
 
         {ghTab === 'config' && (
@@ -253,11 +253,8 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                 {ghHistory.map(c => (
                   <div key={c.sha} className="ghsync-commit-item">
                     <a href={c.url} target="_blank" rel="noopener noreferrer" className="ghsync-commit-link">
-                      <div className="ghsync-commit-meta">
-                        <span className="ghsync-commit-sha">{c.sha}</span>
-                        <span className="ghsync-commit-date">{formatDate(c.date)}</span>
-                      </div>
-                      <div className="ghsync-commit-message">{c.message}</div>
+                      <span className="ghsync-commit-date">{formatRelative(c.date)}</span>
+                      <span className="ghsync-commit-message">{c.message}</span>
                     </a>
                     <button className="ghsync-mini-btn ghsync-commit-restore-btn" onClick={() => handleGhRestoreCommit(c.sha)} disabled={ghRestoring || ghRestoringCommitSha === c.sha} style={{ minWidth: '70px' }}>
                       {ghRestoringCommitSha === c.sha ? 'Restoring…' : 'Restore'}

@@ -39,12 +39,16 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  width: fit-content;
 }
 .dark .budget-title {
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  width: fit-content;
 }
 
 /* Year nav */

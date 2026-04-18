@@ -1,4 +1,5 @@
 import { FC, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { SettingsModalProps, SettingsSection } from './types'
 import ProfilePane from './components/ProfilePane'
 import GitHubSyncPane from './components/GitHubSyncPane'
@@ -11,12 +12,12 @@ const SettingsModal: FC<SettingsModalProps> = (props) => {
   const {
     darkMode, onToggleDarkMode, profile, onUpdateProfile,
     hasPendingChanges = false, fiTheme = 'blue', onFiThemeChange = () => {},
-    onClose = () => {},
+    onClose = () => {}, initialSection = 'profile',
   } = props
 
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
+  const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
 
-  return (
+  return createPortal(
     <div className="settings-modal-backdrop" onClick={onClose}>
       <div className="settings-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="settings-modal-header">
@@ -102,7 +103,8 @@ const SettingsModal: FC<SettingsModalProps> = (props) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

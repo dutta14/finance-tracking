@@ -55,6 +55,8 @@ interface SidebarNavigationProps extends NavigationProps {
   onFactoryReset?: () => void;
   allowCsvImport?: boolean;
   onToggleAllowCsvImport?: () => void;
+  settingsOpenToSection?: string;
+  onSettingsExternalClose?: () => void;
 }
 
 interface OverflowMenu { goalId: number; x: number; y: number }
@@ -73,6 +75,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   onFactoryReset = () => {},
   allowCsvImport = false,
   onToggleAllowCsvImport = () => {},
+  settingsOpenToSection,
+  onSettingsExternalClose,
 }) => {
   const [goalAccordionOpen, setGoalAccordionOpen] = useState(true);
   const [overflowMenu, setOverflowMenu] = useState<OverflowMenu | null>(null);
@@ -349,6 +353,9 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             onToggleAllowCsvImport={onToggleAllowCsvImport}
             onExport={onExport}
             onImport={onImport}
+            externalOpen={!!settingsOpenToSection}
+            externalSection={settingsOpenToSection as any}
+            onExternalClose={onSettingsExternalClose}
           />
         </div>
       )}

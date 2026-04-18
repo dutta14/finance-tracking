@@ -1,5 +1,5 @@
 import { FC, useRef, useEffect, useState } from 'react'
-import '../styles/GoalActionsMenu.css'
+import '../../../styles/GoalActionsMenu.css'
 
 interface GoalActionsMenuProps {
   onEdit?: () => void

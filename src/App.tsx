@@ -20,7 +20,6 @@ import UndoToast from './components/UndoToast'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
-import ProfileModal from './components/ProfileModal'
 import { useGitHubSync } from './hooks/useGitHubSync'
 import './styles/colorThemes.css'
 
@@ -77,8 +76,8 @@ const App: FC = () => {
     syncAllocationNow: ghSyncAllocationNow, restoreAllocationLatest,
     syncTaxesNow: ghSyncTaxesNow, restoreTaxesLatest,
   } = useGitHubSync();
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const handleOpenProfile = (): void => setProfileModalOpen(true);
+  const [settingsOpenSection, setSettingsOpenSection] = useState<string | undefined>();
+  const handleOpenProfile = (): void => setSettingsOpenSection('profile');
 
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname.startsWith('/goal/')
@@ -636,6 +635,8 @@ const App: FC = () => {
           onFactoryReset={handleFactoryReset}
           allowCsvImport={allowCsvImport}
           onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}
+          settingsOpenToSection={settingsOpenSection}
+          onSettingsExternalClose={() => setSettingsOpenSection(undefined)}
         />
       )}
       {/* Backdrop for mobile overlay */}
@@ -656,13 +657,6 @@ const App: FC = () => {
         )}
         {renderPage()}
       </main>
-      {profileModalOpen && (
-        <ProfileModal
-          profile={profile}
-          onSave={updateProfile}
-          onClose={() => setProfileModalOpen(false)}
-        />
-      )}
       {pendingDelete && (
         <UndoToast
           message={pendingDelete.message}

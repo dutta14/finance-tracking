@@ -68,8 +68,8 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
       <div className="settings-section-content">
         {!profileEditing ? (
           <>
-            <div className="settings-profile-columns">
-              <div className="settings-profile-card settings-profile-card--view">
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div className="settings-profile-card settings-profile-card--view" style={{ flex: 1 }}>
                 <div className="settings-profile-view-avatar">
                   {avatarPreview
                     ? <img src={avatarPreview} alt="Profile" className="settings-avatar-img" />
@@ -81,7 +81,7 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
                 </div>
               </div>
               {hasPartner && (
-                <div className="settings-profile-card settings-profile-card--view">
+                <div className="settings-profile-card settings-profile-card--view" style={{ flex: 1 }}>
                   <div className="settings-profile-view-avatar">
                     {partnerAvatarPreview
                       ? <img src={partnerAvatarPreview} alt="Partner" className="settings-avatar-img" />

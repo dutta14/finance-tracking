@@ -1,10 +1,10 @@
 import { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { FinancialGoal } from '../types'
 import GoalCardActions from './GoalCardActions'
-import { calculateGoalMetrics } from '../pages/goal/utils/goalCalculations'
-import { parseDate as utilParseDate, getMonthsBetween } from '../pages/goal/utils/dateHelpers'
-import { getLatestGoalTotals } from '../pages/data/types'
-import '../styles/GoalDetailedCard.css'
+import { calculateGoalMetrics } from '../utils/goalCalculations'
+import { parseDate as utilParseDate, getMonthsBetween } from '../utils/dateHelpers'
+import { getLatestGoalTotals } from '../../data/types'
+import '../../../styles/GoalDetailedCard.css'
 
 interface EditFields {
   goalCreatedIn: string

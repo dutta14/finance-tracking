@@ -1,7 +1,8 @@
-import { FC, useState } from 'react'
+import { FC, useState, useEffect } from 'react'
 import { Profile } from '../../hooks/useProfile'
 import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
 import SettingsModal from './SettingsModal'
+import type { SettingsSection } from './types'
 
 interface SettingsMenuProps {
   darkMode: boolean
@@ -41,12 +42,28 @@ interface SettingsMenuProps {
   onToggleAllowCsvImport?: () => void
   onExport?: () => void
   onImport?: (file: File) => void
+  externalOpen?: boolean
+  externalSection?: SettingsSection
+  onExternalClose?: () => void
 }
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {}, ...rest }) => {
+const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {}, externalOpen, externalSection, onExternalClose, ...rest }) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [initialSection, setInitialSection] = useState<SettingsSection>('profile')
+
+  useEffect(() => {
+    if (externalOpen) {
+      setInitialSection(externalSection || 'profile')
+      setSettingsModalOpen(true)
+    }
+  }, [externalOpen, externalSection])
+
+  const handleClose = () => {
+    setSettingsModalOpen(false)
+    onExternalClose?.()
+  }
 
   return (
     <>
@@ -54,7 +71,7 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
         <button
           className="settings-menu-trigger"
           aria-label="Settings"
-          onClick={() => setSettingsModalOpen(true)}
+          onClick={() => { setInitialSection('profile'); setSettingsModalOpen(true) }}
           style={{
             background: 'none',
             border: 'none',
@@ -111,7 +128,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
           onToggleAllowCsvImport={rest.onToggleAllowCsvImport}
           onExport={rest.onExport}
           onImport={rest.onImport}
-          onClose={() => setSettingsModalOpen(false)}
+          initialSection={initialSection}
+          onClose={handleClose}
         />
       )}
     </>

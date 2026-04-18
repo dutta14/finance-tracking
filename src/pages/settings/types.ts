@@ -9,6 +9,7 @@ export interface SettingsModalProps {
   profile: Profile
   onUpdateProfile: (updates: Partial<Profile>) => void
   hasPendingChanges: boolean
+  initialSection?: SettingsSection
   fiTheme?: string
   onFiThemeChange?: (theme: string) => void
   gwTheme?: string

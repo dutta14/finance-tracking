@@ -1,7 +1,7 @@
 import { FC } from 'react'
-import { FinancialGoal } from '../types'
+import { FinancialGoal } from '../../../types'
 import { EditIcon, CopyIcon, DeleteIcon } from './Icons'
-import '../styles/GoalCardActions.css'
+import '../../../styles/GoalCardActions.css'
 
 interface GoalCardActionsProps {
   goal: FinancialGoal

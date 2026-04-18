@@ -6,7 +6,7 @@ import GoalCompareView from './GoalCompareView'
 import GoalFilterBar, { GoalFilters, DEFAULT_FILTERS, applyFilters } from './GoalFilterBar'
 import '../../../styles/Goal.css'
 import '../../../styles/GoalFilterBar.css'
-import './GoalCompareView.css'
+import '../../../styles/GoalCompareView.css'
 
 interface GoalsSectionProps {
   goals: FinancialGoal[]
