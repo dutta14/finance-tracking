@@ -13,7 +13,7 @@
 
 .gw-section-title-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.65rem;
   margin-bottom: 0.5rem;
 }
@@ -26,8 +26,10 @@
   letter-spacing: 0.05em;
   border-radius: 0.3rem;
   padding: 0.15rem 0.45rem;
-  line-height: 1.4;
+  line-height: 1;
   flex-shrink: 0;
+  position: relative;
+  top: -0.05rem;
 }
 
 .gw-section-title {

@@ -1,5 +1,6 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { getLatestGoalTotals } from '../../data/types'
 import '../../../styles/GoalMiniCard.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
@@ -23,27 +24,48 @@ function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: st
   }, 0)
 }
 
+function calcRetirementYear(birthday: string, retirementAge: number): number {
+  const [by] = birthday.split('-').map(Number)
+  return by + retirementAge
+}
+
 interface GoalMiniCardProps {
   goal: FinancialGoal
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
-  onAddGwGoal?: (goalId: number) => void
   viewMode?: 'grid' | 'list'
   gwGoals: GwGoal[]
   profileBirthday: string
 }
 
-const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, onAddGwGoal, viewMode = 'grid', gwGoals, profileBirthday }) => {
+const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMode = 'grid', gwGoals, profileBirthday }) => {
   const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday)
   const hasGw = gwTotal > 0
   const totalGoals = goal.fiGoal + gwTotal
+  const birthday = goal.birthday || profileBirthday
+  const retirementYear = calcRetirementYear(birthday, goal.retirementAge)
+
+  const fiProgress = useMemo(() => {
+    if (goal.fiGoal <= 0) return 0
+    const { fiTotal } = getLatestGoalTotals()
+    return Math.min(100, Math.max(0, (fiTotal / goal.fiGoal) * 100))
+  }, [goal.fiGoal])
 
   return (
     <div
       className={`goal-mini-card${isSelected ? ' selected' : ''}${viewMode === 'list' ? ' list' : ''}`}
       onClick={onClick}
     >
-      <h4>{goal.goalName}</h4>
+      <div className="mini-card-top">
+        <h4>{goal.goalName}</h4>
+        <span className="mini-retire-year">{retirementYear}</span>
+      </div>
+      <div className="mini-progress">
+        <div className="mini-progress-track">
+          <div className="mini-progress-fill" style={{ width: `${fiProgress}%` }} />
+        </div>
+        <span className="mini-progress-pct">{fiProgress.toFixed(0)}%</span>
+      </div>
       <div className="mini-value">
         <span className="label">FI Goal</span>
         <span className="amount">{dollars(goal.fiGoal)}</span>
@@ -60,13 +82,8 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, onAddG
           <span className="amount">{dollars(totalGoals)}</span>
         </div>
       )}
-      {!hasGw && onAddGwGoal && (
-        <button
-          className="mini-card-add-gw"
-          onClick={(e) => { e.stopPropagation(); onAddGwGoal(goal.id) }}
-        >
-          + Add GW Goal
-        </button>
+      {!hasGw && (
+        <span className="mini-no-gw">FI only</span>
       )}
     </div>
   )

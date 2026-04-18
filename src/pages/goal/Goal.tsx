@@ -18,15 +18,14 @@ interface GoalProps {
   reorderGoals: (orderedIds: number[]) => void
   selectedGoalIds: number[]
   onSetSelectedGoalIds: (ids: number[]) => void
-  onGoToGoal: (goalId: number) => void
-  onGoToGoalEdit: (goalId: number) => void
-  onGoToGoalAddGw: (goalId: number) => void
   onCopyGwGoals: (sourcePlanId: number, newPlanId: number) => void
   gwGoals: GwGoal[]
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
+  onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
+  onDeleteGwGoal: (id: number) => void
 }
 
-const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onGoToGoal, onGoToGoalEdit, onGoToGoalAddGw, onCopyGwGoals, gwGoals, onCreateGwGoal }) => {
+const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onCopyGwGoals, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
   const { formData, setFormData, error, setError, handleInputChange, populateFromGoal, resetForm } = useFormData()
   const { editingGoalId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -89,7 +88,7 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
 
   return (
     <section className="goal">
-      <div className={`goal-content${selectedGoalIds.length === 1 ? ' goal-content--pane-open' : ''}`}>
+      <div className="goal-content">
         <div className="goal-header">
           <h1>Goals</h1>
           <div className="goal-header-actions">
@@ -131,11 +130,11 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
             onDeleteGoal={deleteGoal}
             onDeleteMultiple={handleDeleteMultiple}
             onClearSelection={() => onSetSelectedGoalIds([])}
-            onGoToGoal={onGoToGoal}
-            onGoToGoalEdit={onGoToGoalEdit}
-            onGoToGoalAddGw={onGoToGoalAddGw}
             onReorderGoals={reorderGoals}
             onRenameGoal={handleRenameGoal}
+            onCreateGwGoal={onCreateGwGoal}
+            onUpdateGwGoal={onUpdateGwGoal}
+            onDeleteGwGoal={onDeleteGwGoal}
           />
         </div>
       </div>
@@ -162,7 +161,7 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
           onCreateGoal={createGoal}
           onCreateGwGoal={onCreateGwGoal}
           onClose={() => setMixerOpen(false)}
-          onGoToGoal={onGoToGoal}
+          onGoToGoal={(goalId) => onSetSelectedGoalIds([goalId])}
         />
       )}
     </section>

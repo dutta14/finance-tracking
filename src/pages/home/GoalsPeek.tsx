@@ -6,7 +6,6 @@ interface GoalsPeekProps {
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
   onNavigate: () => void
-  onGoToGoal: (goalId: number) => void
 }
 
 const GROWTH_RATE = 8
@@ -38,7 +37,7 @@ const getTotalForMonth = (accounts: Account[], balances: BalanceEntry[], month: 
   return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
 }
 
-const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate, onGoToGoal }) => {
+const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
   const { fiTotal, gwTotal, accounts, balances, latestMonth, profileBirthday } = useMemo(() => {
     const { accounts, balances, months } = getBalanceData()
     const latest = months[months.length - 1] || ''
@@ -114,7 +113,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate, onGoToGoal 
             <button
               key={goal.id}
               className="goals-peek-item"
-              onClick={() => onGoToGoal(goal.id)}
+              onClick={onNavigate}
             >
               <div className="goals-peek-item-top">
                 <span className="goals-peek-name">{goal.goalName}</span>

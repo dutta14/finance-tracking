@@ -110,7 +110,7 @@ function indexGoals(): SearchItem[] {
         hint: `FI Goal · ${g.progress ?? 0}% progress`,
         icon: 'target',
         keywords: [g.goalName.toLowerCase()],
-        route: `/goal/${g.id}`,
+        route: '/goal',
       })
     }
 
@@ -124,7 +124,7 @@ function indexGoals(): SearchItem[] {
         hint: parentGoal ? `GW under ${parentGoal.goalName}` : 'Glide-path withdrawal',
         icon: 'flag',
         keywords: [gw.label.toLowerCase()],
-        route: `/goal/${gw.fiGoalId}`,
+        route: '/goal',
       })
     }
   } catch { /* ignore corrupt data */ }

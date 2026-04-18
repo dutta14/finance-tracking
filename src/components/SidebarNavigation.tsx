@@ -153,7 +153,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
 
   const handleDragEnd = () => { setDraggedId(null); setDragOverId(null); };
 
-  const isGoalActive = currentPage === 'goal' || currentPage === 'goal-solo';
+  const isGoalActive = currentPage === 'goal';
 
   return (
     <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>

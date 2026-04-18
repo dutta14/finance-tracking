@@ -10,9 +10,6 @@ interface GoalsMiniGridProps {
   onSelectGoal: (goalId: number, multi: boolean) => void
   viewMode?: 'grid' | 'list'
   onReorderGoals?: (orderedIds: number[]) => void
-  onGoToGoal: (goalId: number) => void
-  onGoToGoalEdit: (goalId: number) => void
-  onGoToGoalAddGw: (goalId: number) => void
   onRenameGoal: (goalId: number, name: string) => void
   onCopyGoal: (goal: FinancialGoal) => void
   onDeleteGoal: (goalId: number) => void
@@ -22,7 +19,7 @@ interface GoalsMiniGridProps {
 
 const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   goals, selectedGoalIds, onSelectGoal, viewMode = 'grid', onReorderGoals,
-  onGoToGoal, onGoToGoalEdit, onGoToGoalAddGw, onRenameGoal, onCopyGoal, onDeleteGoal, gwGoals, profileBirthday,
+  onRenameGoal, onCopyGoal, onDeleteGoal, gwGoals, profileBirthday,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -142,7 +139,6 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                   goal={goal}
                   isSelected={selectedGoalIds.includes(goal.id)}
                   onClick={(e) => onSelectGoal(goal.id, e.metaKey || e.ctrlKey)}
-                  onAddGwGoal={onGoToGoalAddGw}
                   viewMode={viewMode}
                   gwGoals={gwGoals}
                   profileBirthday={profileBirthday}
@@ -161,9 +157,8 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
             className="card-context-menu"
             style={{ top: contextMenu.y, left: contextMenu.x }}
           >
-            <button className="card-context-menu-item" onClick={() => { closeContextMenu(); onGoToGoalEdit(goal.id) }}>Edit</button>
+            <button className="card-context-menu-item" onClick={() => { closeContextMenu(); onSelectGoal(goal.id, false) }}>Open</button>
             <button className="card-context-menu-item" onClick={() => startRename(goal.id, goal.goalName)}>Rename</button>
-            <button className="card-context-menu-item" onClick={() => { closeContextMenu(); onGoToGoal(goal.id) }}>Go to Goal</button>
             <button className="card-context-menu-item" onClick={() => { closeContextMenu(); onCopyGoal(goal) }}>Duplicate</button>
             <button className="card-context-menu-item card-context-menu-item--danger" onClick={() => { closeContextMenu(); onDeleteGoal(goal.id) }}>Delete</button>
           </div>

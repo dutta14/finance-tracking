@@ -1,11 +1,10 @@
 import { FC, useState, useEffect, useCallback } from 'react'
-import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { PageType, FinancialGoal, GwGoal } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
 import Home from './pages/home/Home'
 import Goal from './pages/goal/Goal'
-import GoalSoloPage from './pages/goal/GoalSoloPage'
 import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
 import Tools from './pages/tools/Tools'
@@ -24,29 +23,6 @@ import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
 import { useGitHubSync } from './hooks/useGitHubSync'
 import './styles/colorThemes.css'
-
-interface GoalSoloRouteProps { goals: FinancialGoal[]; profileBirthday: string; updateGoal: (id: number, p: FinancialGoal) => void; onDelete: (id: number) => void; gwGoals: GwGoal[]; createGwGoal: (p: Omit<GwGoal, 'id' | 'createdAt'>) => void; updateGwGoal: (id: number, u: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void; deleteGwGoal: (id: number) => void }
-const GoalSoloRoute: FC<GoalSoloRouteProps> = ({ goals, profileBirthday, updateGoal, onDelete, gwGoals, createGwGoal, updateGwGoal, deleteGwGoal }) => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const goal = goals.find(p => p.id === Number(id))
-  if (!goal) return <Navigate to="/goal" replace />
-  return (
-    <GoalSoloPage
-      goal={goal}
-      goals={goals}
-      profileBirthday={profileBirthday}
-      onBack={() => navigate('/goal')}
-      onNavigate={(goalId) => navigate(`/goal/${goalId}`)}
-      onUpdateGoal={updateGoal}
-      onDeleteGoal={onDelete}
-      gwGoals={gwGoals}
-      onCreateGwGoal={createGwGoal}
-      onUpdateGwGoal={updateGwGoal}
-      onDeleteGwGoal={deleteGwGoal}
-    />
-  )
-}
 
 const App: FC = () => {
   const navigate = useNavigate()
@@ -83,9 +59,7 @@ const App: FC = () => {
   const handleOpenProfile = (): void => setSettingsOpenSection('profile');
 
   // Derive currentPage from URL for sidebar nav compat
-  const currentPage: PageType = location.pathname.startsWith('/goal/')
-    ? 'goal-solo'
-    : location.pathname === '/goal'
+  const currentPage: PageType = location.pathname === '/goal'
     ? 'goal'
     : location.pathname === '/data'
     ? 'data'
@@ -151,21 +125,6 @@ const App: FC = () => {
 
   const handleDeleteGoal = (goalId: number): void => {
     handleDeleteWithUndo([goalId]);
-  };
-
-  const handleGoToGoal = (goalId: number): void => {
-    setSelectedNavGoalIds([goalId]);
-    navigate(`/goal/${goalId}`);
-  };
-
-  const handleGoToGoalEdit = (goalId: number): void => {
-    setSelectedNavGoalIds([goalId]);
-    navigate(`/goal/${goalId}?edit=1`);
-  };
-
-  const handleGoToGoalAddGw = (goalId: number): void => {
-    setSelectedNavGoalIds([goalId]);
-    navigate(`/goal/${goalId}?gw=1`);
   };
 
   const handleCopyGwGoals = (sourcePlanId: number, newPlanId: number): void => {
@@ -297,7 +256,8 @@ const App: FC = () => {
       );
     } else {
       setSelectedNavGoalIds([goalId]);
-      navigate(`/goal/${goalId}`);
+      setSelectedHomeGoalIds([goalId]);
+      navigate('/goal');
       if (isMobile) setSidebarOpen(false);
     }
   };
@@ -579,7 +539,7 @@ const App: FC = () => {
   const renderPage = (): React.ReactNode => {
     return (
       <Routes>
-        <Route path="/" element={<Home profile={profile} goals={visibleGoals} gwGoals={gwGoals} onGoToGoal={handleGoToGoal} />} />
+        <Route path="/" element={<Home profile={profile} goals={visibleGoals} gwGoals={gwGoals} />} />
         <Route
           path="/goal"
           element={
@@ -594,22 +554,21 @@ const App: FC = () => {
               reorderGoals={reorderGoals}
               selectedGoalIds={selectedHomeGoalIds}
               onSetSelectedGoalIds={setSelectedHomeGoalIds}
-              onGoToGoal={handleGoToGoal}
-              onGoToGoalEdit={handleGoToGoalEdit}
-              onGoToGoalAddGw={handleGoToGoalAddGw}
               onCopyGwGoals={handleCopyGwGoals}
               gwGoals={gwGoals}
               onCreateGwGoal={createGwGoal}
+              onUpdateGwGoal={updateGwGoal}
+              onDeleteGwGoal={deleteGwGoal}
             />
           }
         />
-        <Route path="/goal/:id" element={<GoalSoloRoute goals={visibleGoals} profileBirthday={profile.birthday} updateGoal={updateGoal} onDelete={handleDeleteGoal} gwGoals={gwGoals} createGwGoal={createGwGoal} updateGwGoal={updateGwGoal} deleteGwGoal={deleteGwGoal} />} />
         <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />
         <Route path="/drive/*" element={<Drive />} />
         <Route path="/allocation" element={<Allocation />} />
         <Route path="/taxes" element={<Taxes />} />
+        <Route path="/goal/:id" element={<Navigate to="/goal" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )

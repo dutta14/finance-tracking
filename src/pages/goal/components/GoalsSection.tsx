@@ -1,7 +1,7 @@
 import { FC, useState } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import GoalsMiniGrid from './GoalsMiniGrid'
-import GoalDetailPane from './GoalDetailPane'
+import GoalDrawer from './GoalDrawer'
 import GoalCompareView from './GoalCompareView'
 import GoalFilterBar, { GoalFilters, DEFAULT_FILTERS, applyFilters } from './GoalFilterBar'
 import '../../../styles/Goal.css'
@@ -19,11 +19,11 @@ interface GoalsSectionProps {
   onDeleteGoal: (goalId: number) => void
   onDeleteMultiple: (ids: number[]) => void
   onClearSelection: () => void
-  onGoToGoal: (goalId: number) => void
-  onGoToGoalEdit: (goalId: number) => void
-  onGoToGoalAddGw: (goalId: number) => void
   onReorderGoals: (orderedIds: number[]) => void
   onRenameGoal: (goalId: number, name: string) => void
+  onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
+  onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
+  onDeleteGwGoal: (id: number) => void
 }
 
 const GoalsSection: FC<GoalsSectionProps> = ({
@@ -37,11 +37,11 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   onDeleteGoal,
   onDeleteMultiple,
   onClearSelection,
-  onGoToGoal,
-  onGoToGoalEdit,
-  onGoToGoalAddGw,
   onReorderGoals,
   onRenameGoal,
+  onCreateGwGoal,
+  onUpdateGwGoal,
+  onDeleteGwGoal,
 }) => {
   const selectedGoals = goals.filter(p => selectedGoalIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -53,39 +53,45 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   const filteredGoals = applyFilters(goals, filters)
   const isFiltered = filteredGoals.length !== goals.length
 
+  const countLabel = isFiltered
+    ? `${filteredGoals.length} of ${goals.length}`
+    : `${goals.length} goal${goals.length !== 1 ? 's' : ''}`
+
   return (
     <div className="goal-results-section">
-      <div className="goal-results-header">
-        <h2>Saved Goals ({isFiltered ? `${filteredGoals.length} of ${goals.length}` : goals.length})</h2>
-        <div className="view-mode-toggle">
-          <button
-            className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
-            onClick={() => { setViewMode('grid'); localStorage.setItem('goal-view-mode', 'grid') }}
-            aria-label="Grid view"
-            title="Grid view"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <rect x="1" y="1" width="6" height="6" rx="1"/>
-              <rect x="9" y="1" width="6" height="6" rx="1"/>
-              <rect x="1" y="9" width="6" height="6" rx="1"/>
-              <rect x="9" y="9" width="6" height="6" rx="1"/>
-            </svg>
-          </button>
-          <button
-            className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
-            onClick={() => { setViewMode('list'); localStorage.setItem('goal-view-mode', 'list') }}
-            aria-label="List view"
-            title="List view"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <rect x="1" y="2" width="14" height="2.5" rx="1"/>
-              <rect x="1" y="6.75" width="14" height="2.5" rx="1"/>
-              <rect x="1" y="11.5" width="14" height="2.5" rx="1"/>
-            </svg>
-          </button>
+      <div className="goal-toolbar">
+        <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
+        <div className="goal-toolbar-right">
+          <span className="goal-count-label">{countLabel}</span>
+          <div className="view-mode-toggle">
+            <button
+              className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
+              onClick={() => { setViewMode('grid'); localStorage.setItem('goal-view-mode', 'grid') }}
+              aria-label="Grid view"
+              title="Grid view"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="1" y="1" width="6" height="6" rx="1"/>
+                <rect x="9" y="1" width="6" height="6" rx="1"/>
+                <rect x="1" y="9" width="6" height="6" rx="1"/>
+                <rect x="9" y="9" width="6" height="6" rx="1"/>
+              </svg>
+            </button>
+            <button
+              className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
+              onClick={() => { setViewMode('list'); localStorage.setItem('goal-view-mode', 'list') }}
+              aria-label="List view"
+              title="List view"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="1" y="2" width="14" height="2.5" rx="1"/>
+                <rect x="1" y="6.75" width="14" height="2.5" rx="1"/>
+                <rect x="1" y="11.5" width="14" height="2.5" rx="1"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-      <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
       {selectedGoalIds.length > 1 && (
         <div className="goal-selection-bar">
           <span className="goal-selection-count">{selectedGoalIds.length} goals selected</span>
@@ -116,9 +122,6 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               onSelectGoal={onSelectGoal}
               viewMode={viewMode}
               onReorderGoals={isFiltered ? undefined : onReorderGoals}
-              onGoToGoal={onGoToGoal}
-              onGoToGoalEdit={onGoToGoalEdit}
-              onGoToGoalAddGw={onGoToGoalAddGw}
               onRenameGoal={onRenameGoal}
               onCopyGoal={onCopyGoal}
               onDeleteGoal={onDeleteGoal}
@@ -132,17 +135,20 @@ const GoalsSection: FC<GoalsSectionProps> = ({
         </>
       )}
       {selectedGoals.length === 1 && (
-        <GoalDetailPane
+        <GoalDrawer
           goal={selectedGoals[0]}
+          goals={goals}
           profileBirthday={profileBirthday}
           gwGoals={gwGoals}
           onClose={onClearSelection}
-          onGoToGoal={onGoToGoal}
-          onGoToGoalEdit={onGoToGoalEdit}
+          onNavigate={(goalId) => onSelectGoal(goalId, false)}
           onUpdateGoal={onUpdateGoal}
           onCopyGoal={onCopyGoal}
           onDeleteGoal={onDeleteGoal}
           onRenameGoal={onRenameGoal}
+          onCreateGwGoal={onCreateGwGoal}
+          onUpdateGwGoal={onUpdateGwGoal}
+          onDeleteGwGoal={onDeleteGwGoal}
         />
       )}
     </div>

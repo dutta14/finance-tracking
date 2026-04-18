@@ -20,12 +20,63 @@
   box-shadow: 0 0 0 3px var(--accent-focus-ring));
 }
 
+/* Top row: name + retirement year */
+.mini-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
 .goal-mini-card h4 {
-  margin: 0 0 1rem 0;
+  margin: 0;
   font-size: 1rem;
   font-weight: 600;
   color: #111;
   word-break: break-word;
+  min-width: 0;
+}
+
+.mini-retire-year {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9ca3af;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Progress bar */
+.mini-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mini-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--accent-track, #e8eaed);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.mini-progress-fill {
+  height: 100%;
+  background: var(--accent, #3b82f6);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.mini-progress-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  white-space: nowrap;
+  min-width: 28px;
+  text-align: right;
 }
 
 .mini-value {
@@ -85,6 +136,10 @@ body.dark .goal-mini-card h4 {
   color: #f3f4f6;
 }
 
+body.dark .mini-retire-year {
+  color: #6b7280;
+}
+
 body.dark .mini-value .label {
   color: #9ca3af;
 }
@@ -140,9 +195,20 @@ body.dark .mini-card-add-gw:hover {
   padding: 0.75rem 1.25rem;
 }
 
-.goal-mini-card.list h4 {
-  margin: 0;
+.goal-mini-card.list .mini-card-top {
+  margin-bottom: 0;
   min-width: 160px;
+  flex-shrink: 0;
+}
+
+.goal-mini-card.list .mini-card-top h4 {
+  margin: 0;
+}
+
+.goal-mini-card.list .mini-progress {
+  margin-bottom: 0;
+  min-width: 100px;
+  max-width: 140px;
   flex-shrink: 0;
 }
 

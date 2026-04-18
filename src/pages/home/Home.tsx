@@ -14,7 +14,6 @@ interface HomeProps {
   profile: Profile
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
-  onGoToGoal: (goalId: number) => void
 }
 
 const STORAGE_KEY = 'home-card-order'
@@ -31,7 +30,7 @@ function loadOrder(): number[] {
   return DEFAULT_ORDER
 }
 
-const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
+const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
   const navigate = useNavigate()
   const [order, setOrder] = useState(loadOrder)
   const dragIdx = useRef<number | null>(null)
@@ -126,7 +125,6 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals, onGoToGoal }) => {
       goals={goals}
       gwGoals={gwGoals}
       onNavigate={() => navigate('/goal')}
-      onGoToGoal={onGoToGoal}
     />,
     <AllocationBreakdown
       key="alloc"

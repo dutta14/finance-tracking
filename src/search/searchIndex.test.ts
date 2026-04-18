@@ -48,13 +48,13 @@ describe('buildIndex', () => {
       id: 'goal-1',
       label: 'Retire Early',
       hint: 'FI Goal · 42% progress',
-      route: '/goal/1',
+      route: '/goal',
     })
     expect(goals[1]).toMatchObject({
       id: 'goal-2',
       label: 'Coast FI',
       hint: 'FI Goal · 80% progress',
-      route: '/goal/2',
+      route: '/goal',
     })
   })
 
@@ -84,12 +84,12 @@ describe('buildIndex', () => {
 
     const linked = gwItems.find(i => i.id === 'gw-100')!
     expect(linked.hint).toBe('GW under Main Plan')
-    expect(linked.route).toBe('/goal/10')
+    expect(linked.route).toBe('/goal')
     expect(linked.icon).toBe('flag')
 
     const orphan = gwItems.find(i => i.id === 'gw-101')!
     expect(orphan.hint).toBe('Glide-path withdrawal')
-    expect(orphan.route).toBe('/goal/999')
+    expect(orphan.route).toBe('/goal')
   })
 
   it('includes accounts', () => {
