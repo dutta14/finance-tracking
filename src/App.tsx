@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState, useEffect, useCallback } from 'react'
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom'
 import { PageType, FinancialGoal, GwGoal } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
@@ -17,6 +17,7 @@ import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadB
 import { syncAllTaxFiles } from './pages/taxes/taxGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
 import UndoToast from './components/UndoToast'
+import SearchModal from './components/SearchModal'
 import { isDemoActive, enterDemoMode, exitDemoMode } from './pages/settings/demoMode'
 import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
@@ -78,6 +79,7 @@ const App: FC = () => {
     syncTaxesNow: ghSyncTaxesNow, restoreTaxesLatest,
   } = useGitHubSync();
   const [settingsOpenSection, setSettingsOpenSection] = useState<string | undefined>();
+  const [searchOpen, setSearchOpen] = useState(false);
   const handleOpenProfile = (): void => setSettingsOpenSection('profile');
 
   // Derive currentPage from URL for sidebar nav compat
@@ -188,10 +190,30 @@ const App: FC = () => {
         e.preventDefault()
         isDemoActive() ? exitDemoMode() : enterDemoMode()
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault()
+        setSearchOpen(prev => !prev)
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, []);
+
+  const handleSearchAction = useCallback((actionId: string) => {
+    switch (actionId) {
+      case 'toggle-dark-mode': setDarkMode(d => !d); break
+      case 'open-settings': setSettingsOpenSection('advanced'); break
+      case 'open-profile': setSettingsOpenSection('profile'); break
+      case 'open-settings-profile': setSettingsOpenSection('profile'); break
+      case 'open-settings-github': setSettingsOpenSection('github'); break
+      case 'open-settings-appearance': setSettingsOpenSection('appearance'); break
+      case 'open-settings-advanced': setSettingsOpenSection('advanced'); break
+      case 'open-settings-labs': setSettingsOpenSection('labs'); break
+      case 'new-goal': navigate('/goal'); break
+      case 'toggle-demo': isDemoActive() ? exitDemoMode() : enterDemoMode(); break
+      case 'export-data': handleExport(); break
+    }
+  }, [navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (darkMode) {
@@ -649,6 +671,7 @@ const App: FC = () => {
           onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}
           settingsOpenToSection={settingsOpenSection}
           onSettingsExternalClose={() => setSettingsOpenSection(undefined)}
+          onSearchOpen={() => setSearchOpen(true)}
         />
       )}
       {/* Backdrop for mobile overlay */}
@@ -687,6 +710,12 @@ const App: FC = () => {
           duration={10000}
         />
       )}
+      <SearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onNavigate={(path) => { navigate(path); }}
+        onAction={handleSearchAction}
+      />
     </div>
   );
 }

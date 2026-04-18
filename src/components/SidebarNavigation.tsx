@@ -57,6 +57,7 @@ interface SidebarNavigationProps extends NavigationProps {
   onToggleAllowCsvImport?: () => void;
   settingsOpenToSection?: string;
   onSettingsExternalClose?: () => void;
+  onSearchOpen?: () => void;
 }
 
 interface OverflowMenu { goalId: number; x: number; y: number }
@@ -77,6 +78,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   onToggleAllowCsvImport = () => {},
   settingsOpenToSection,
   onSettingsExternalClose,
+  onSearchOpen,
 }) => {
   const [goalAccordionOpen, setGoalAccordionOpen] = useState(true);
   const [overflowMenu, setOverflowMenu] = useState<OverflowMenu | null>(null);
@@ -160,6 +162,15 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
         {expanded && <div className="sidebar-logo">Finance Tracker</div>}
       </div>
       {expanded && (
+        <>
+        <button className="sidebar-search-btn" onClick={onSearchOpen}>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          Search
+          <kbd className="sidebar-search-kbd">⌘F</kbd>
+        </button>
         <ul className="sidebar-menu">
           <li className="sidebar-item">
             <button
@@ -312,6 +323,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             </button>
           </li>
         </ul>
+        </>
       )}
       {expanded && (
         <div className="sidebar-settings-section">
