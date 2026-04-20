@@ -37,9 +37,14 @@
   /* Base UI colors */
   --color-text: #111827;
   --color-text-muted: #6b7280;
+  --color-text-heading: #374151;
+  --color-text-secondary: #4b5563;
   --color-surface: #ffffff;
   --color-surface-alt: #f7f7f8;
+  --color-surface-hover: #f3f4f6;
+  --color-bg: #f9fafb;
   --color-border: #e5e7eb;
+  --color-border-light: #d1d5db;
 
 }
 
@@ -72,9 +77,14 @@ body.dark {
   /* Base UI colors */
   --color-text: #e5e7eb;
   --color-text-muted: #9ca3af;
+  --color-text-heading: #d1d5db;
+  --color-text-secondary: #9ca3af;
   --color-surface: #1e1e1e;
   --color-surface-alt: #252830;
+  --color-surface-hover: #2d3348;
+  --color-bg: #141820;
   --color-border: #2d3139;
+  --color-border-light: #374151;
 }
 
 /* ════════════════════════════════════════════════════════
