@@ -7,7 +7,7 @@
 }
 
 .dive-deep-title {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   margin: 0 0 1.5rem 0;
   color: #000;
@@ -26,7 +26,7 @@
 }
 
 .dive-deep-section h4 {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -36,7 +36,7 @@
 
 .dive-deep-placeholder {
   color: #888;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   margin: 0;
   font-style: italic;
 }
@@ -47,7 +47,7 @@
   background: none;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -121,7 +121,7 @@ body.dark .btn-dive-deep.active {
 
 .projection-interval-btn {
   padding: 0.35rem 0.85rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   background: none;
   border: none;
@@ -165,7 +165,7 @@ body.dark .projection-interval-btn.active {
 
 .projection-view-toggle {
   padding: 0.35rem 0.9rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   background: none;
   border: 1px solid #d1d5db;
@@ -211,7 +211,7 @@ body.dark .projection-chart-wrapper {
   border: 1px solid #e5e5e5;
   border-radius: 6px;
   padding: 0.6rem 0.85rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
   min-width: 180px;
 }
@@ -264,7 +264,7 @@ body.dark .projection-tooltip-row.negative {
 .projection-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 
 .projection-table thead {
@@ -326,7 +326,7 @@ body.dark .projection-tooltip-row.negative {
   cursor: pointer;
   text-align: left;
   color: #1f2937;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   transition: background 0.15s;
 }
 

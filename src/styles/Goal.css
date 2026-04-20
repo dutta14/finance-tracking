@@ -26,7 +26,7 @@ section.goal {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.35rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   color: var(--color-text);
   font-weight: 500;
@@ -41,7 +41,7 @@ section.goal {
 }
 
 .goal-header h1 {
-  font-size: 1.5rem;
+  font-size: var(--fs-lg);
   margin: 0;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -83,7 +83,7 @@ section.goal {
 }
 
 .goal-form-section h2 {
-  font-size: 1.3rem;
+  font-size: var(--fs-lg);
   margin: 0 0 1.5rem 0;
   font-weight: 600;
   color: var(--color-text);
@@ -103,7 +103,7 @@ section.goal {
 }
 
 .form-group label {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text);
 }
@@ -113,7 +113,7 @@ section.goal {
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: 0;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-family: inherit;
   background: var(--color-surface);
   color: var(--color-text);
@@ -137,7 +137,7 @@ section.goal {
   color: white;
   border: none;
   border-radius: 0.5rem;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease, filter 0.2s ease;
@@ -170,7 +170,7 @@ section.goal {
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -188,13 +188,13 @@ section.goal {
 }
 
 .form-section h3 {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   margin: 0 0 1rem 0;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 
 .btn-use-recommended {
@@ -202,7 +202,7 @@ section.goal {
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0.2rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -244,7 +244,7 @@ section.goal {
 }
 
 .display-field label {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text);
   margin-bottom: 0.5rem;
@@ -254,7 +254,7 @@ section.goal {
   padding: 0.75rem;
   background-color: var(--color-surface-alt);
   border: 1px solid var(--color-border);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-family: inherit;
   color: var(--color-text);
   border-radius: 0;
@@ -268,7 +268,7 @@ section.goal {
   background-color: var(--color-negative-light);
   border: 1px solid var(--color-negative-border);
   color: var(--color-negative);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   margin-bottom: 1rem;
   border-radius: 0;
   display: flex;
@@ -280,7 +280,7 @@ section.goal {
   background: none;
   border: 1px solid var(--color-negative);
   color: var(--color-negative);
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   cursor: pointer;
@@ -305,7 +305,7 @@ section.goal {
 .empty-state p {
   color: var(--color-text-muted);
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
 }
 
 .goals-grid {
@@ -408,7 +408,7 @@ section.goal {
 }
 
 .goal-count-label {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-muted);
   line-height: 1;
@@ -428,7 +428,7 @@ section.goal {
 }
 
 .goal-selection-count {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--accent-text-dark);
 }
@@ -443,7 +443,7 @@ section.goal {
   border: 1px solid var(--color-border);
   border-radius: 0.35rem;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   padding: 0.35rem 0.75rem;
   color: var(--color-text);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -521,7 +521,7 @@ section.goal {
 }
 
 .goal-card h3 {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   margin: 0;
   font-weight: 600;
   color: var(--color-text);
@@ -550,7 +550,7 @@ section.goal {
 
 .goal-description {
   color: var(--color-text-muted);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   line-height: 1.5;
   margin: 0.5rem 0;
   white-space: pre-wrap;
@@ -570,7 +570,7 @@ section.goal {
 }
 
 .goal-card-calculations h4 {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
   margin: 0 0 0.75rem 0;
@@ -580,7 +580,7 @@ section.goal {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   line-height: 1.8;
   color: var(--color-text-muted);
 }
@@ -600,7 +600,7 @@ section.goal {
   padding-top: 1rem;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 
 /* Responsive Design */
@@ -621,7 +621,7 @@ section.goal {
   }
 
   .goal-header h1 {
-    font-size: 1.3rem;
+    font-size: var(--fs-lg);
   }
 
   .goal-content {
@@ -637,7 +637,7 @@ section.goal {
   }
 
   .goal-form-section h2 {
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
   }
 
   .goal-card {
@@ -645,7 +645,7 @@ section.goal {
   }
 
   .goal-card h3 {
-    font-size: 1rem;
+    font-size: var(--fs-lg);
   }
 }
 
@@ -663,7 +663,7 @@ section.goal {
 }
 
 .wizard-header h2 {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   margin: 0 0 1rem;
 }
@@ -683,7 +683,7 @@ section.goal {
   border-radius: 50%;
   border: 2px solid var(--color-border);
   background: none;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text-muted);
   cursor: default;
@@ -706,7 +706,7 @@ section.goal {
 }
 
 .wizard-step-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-muted);
@@ -746,14 +746,14 @@ section.goal {
 }
 
 .wizard-field-label {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 0.25rem;
 }
 
 .wizard-field-sublabel {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -761,14 +761,14 @@ section.goal {
 .wizard-hint {
   font-weight: 400;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 
 .wizard-input {
   padding: 0.6rem 0.75rem;
   border: 1.5px solid var(--color-border);
   border-radius: 0.4rem;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   color: var(--color-text);
   background: var(--color-surface);
   outline: none;
@@ -782,7 +782,7 @@ section.goal {
 }
 
 .wizard-input--large {
-  font-size: 1.3rem;
+  font-size: var(--fs-lg);
   padding: 0.75rem 0.85rem;
   font-weight: 600;
 }
@@ -800,7 +800,7 @@ section.goal {
   border: none;
   border-radius: 0.4rem;
   padding: 0.55rem 1.25rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -852,19 +852,19 @@ section.goal {
 }
 
 .wizard-review-label {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
 }
 
 .wizard-review-value {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   color: var(--color-text);
   font-weight: 500;
 }
 
 .wizard-review-row--highlight .wizard-review-value {
   color: var(--accent);
-  font-size: 1rem;
+  font-size: var(--fs-lg);
 }
 
 .wizard-review-divider {
@@ -897,13 +897,13 @@ section.goal {
 }
 
 .wizard-param-icon {
-  font-size: 1.4rem;
+  font-size: var(--fs-lg);
   line-height: 1;
   cursor: pointer;
 }
 
 .wizard-param-name {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -918,7 +918,7 @@ section.goal {
 }
 
 .wizard-param-info {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
   cursor: help;
   line-height: 1;
@@ -935,7 +935,7 @@ section.goal {
 .wizard-param-input {
   width: 3.5rem;
   text-align: center;
-  font-size: 1.35rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--color-text);
   background: transparent;
@@ -961,7 +961,7 @@ section.goal {
 }
 
 .wizard-param-unit {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text-muted);
 }

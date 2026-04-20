@@ -26,7 +26,7 @@
 }
 .pdf2csv-dropzone svg { opacity: 0.4; }
 .pdf2csv-dropzone-text {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   margin: 0;
 }
 
@@ -36,7 +36,7 @@
   border: 1px solid #fecaca;
   border-radius: 8px;
   color: #b91c1c;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
 }
 
 /* Toolbar */
@@ -47,7 +47,7 @@
   flex-wrap: wrap;
 }
 .pdf2csv-filename {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text, #1f2937);
   overflow: hidden;
@@ -59,7 +59,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted, #6b7280);
 }
 .pdf2csv-pages button {
@@ -68,7 +68,7 @@
   border-radius: 4px;
   cursor: pointer;
   padding: 0.15rem 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text, #374151);
 }
 .pdf2csv-pages button:disabled { opacity: 0.3; cursor: default; }
@@ -78,7 +78,7 @@
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 6px;
   padding: 0.3rem 0.7rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   color: var(--color-text-muted, #6b7280);
   transition: border-color 0.15s, color 0.15s;
@@ -93,7 +93,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted, #6b7280);
 }
 .pdf2csv-zoom button {
@@ -102,14 +102,14 @@
   border-radius: 4px;
   cursor: pointer;
   padding: 0.15rem 0.45rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text, #374151);
 }
 .pdf2csv-zoom button:disabled { opacity: 0.3; cursor: default; }
 
 .pdf2csv-hint {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted, #9ca3af);
   margin: 0;
 }
@@ -160,7 +160,7 @@
   border-bottom: 1px solid var(--color-border, #e5e7eb);
 }
 .pdf2csv-results-header h3 {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   margin: 0;
   color: var(--color-text, #374151);
@@ -174,7 +174,7 @@
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 6px;
   padding: 0.3rem 0.7rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   color: var(--color-text, #374151);
@@ -196,7 +196,7 @@
 }
 .pdf2csv-btn--muted {
   color: var(--color-text-muted, #9ca3af);
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
 }
 .pdf2csv-btn--muted:hover {
   border-color: #dc2626;
@@ -212,7 +212,7 @@
 .pdf2csv-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
 }
 .pdf2csv-table th,
 .pdf2csv-table td {
@@ -233,7 +233,7 @@
   background: var(--accent-lighter, #eef2ff);
   color: var(--accent-text-dark, #312e81);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   position: sticky;
@@ -292,7 +292,7 @@
   border-radius: 3px;
   background: none;
   color: var(--color-text-muted, #9ca3af);
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   line-height: 1;
   cursor: pointer;
   opacity: 0;

@@ -46,6 +46,12 @@
   --color-border: #e5e7eb;
   --color-border-light: #d1d5db;
 
+  /* Typography scale */
+  --fs-xs: 0.6rem;
+  --fs-sm: 0.7rem;
+  --fs-md: 0.9rem;
+  --fs-lg: 1rem;
+
 }
 
 /* ── DEFAULT DARK (blue) ── */

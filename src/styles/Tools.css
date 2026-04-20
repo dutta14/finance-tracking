@@ -18,7 +18,7 @@
   min-width: 0;
 }
 .tools-heading {
-  font-size: 1.6rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
@@ -30,7 +30,7 @@
   margin: 0 0 0.2rem;
 }
 .tools-subtitle {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: #9ca3af;
   margin: 0;
   font-weight: 400;
@@ -173,7 +173,7 @@ body.dark .tools-icon {
   min-width: 0;
 }
 .tools-card-title {
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: #111827;
   margin: 0 0 2px;
@@ -189,7 +189,7 @@ body.dark .tools-card--active .tools-card-title {
   color: var(--accent-text-dark);
 }
 .tools-card-desc {
-  font-size: 0.76rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
   margin: 0;
   line-height: 1.4;
@@ -225,7 +225,7 @@ body.dark .tools-card-desc {
 
 /* Arrow indicator */
 .tools-card-arrow {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: #d1d5db;
   flex-shrink: 0;
   transition: color 0.15s, transform 0.15s;
@@ -277,7 +277,7 @@ body.dark .tools-pane-header {
   background: var(--accent-lighter);
 }
 .tools-pane-title {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--accent-text-dark);
   margin: 0;
@@ -295,7 +295,7 @@ body.dark .tools-pane-title {
   border-radius: 6px;
   background: transparent;
   color: #9ca3af;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -315,7 +315,7 @@ body.dark .tools-pane-close:hover {
 }
 .tools-pane-placeholder {
   color: #9ca3af;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   text-align: center;
   padding: 2rem 0;
 }

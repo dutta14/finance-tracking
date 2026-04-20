@@ -64,7 +64,7 @@
   background: none;
   border: none;
   outline: none;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 400;
   color: var(--color-text);
   caret-color: var(--accent);
@@ -87,7 +87,7 @@
   background: var(--color-surface-alt);
   border: 1px solid var(--color-border);
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text-muted);
   line-height: 1;
@@ -115,7 +115,7 @@
 }
 
 .search-group-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -180,7 +180,7 @@
 }
 
 .search-result-label {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text);
   white-space: nowrap;
@@ -189,7 +189,7 @@
 }
 
 .search-result-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -205,7 +205,7 @@
 
 /* Category badge */
 .search-result-badge {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -227,7 +227,7 @@
   border: none;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--accent);
   text-align: left;
@@ -250,18 +250,18 @@
 }
 
 .search-empty-icon {
-  font-size: 1.8rem;
+  font-size: var(--fs-lg);
   opacity: 0.45;
 }
 
 .search-empty-title {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
 }
 
 .search-empty-hint {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
 }
 
@@ -276,18 +276,18 @@
 }
 
 .search-no-results-icon {
-  font-size: 1.5rem;
+  font-size: var(--fs-lg);
   opacity: 0.4;
 }
 
 .search-no-results-title {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
 }
 
 .search-no-results-hint {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
 }
 
@@ -304,7 +304,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 

@@ -34,14 +34,14 @@
 }
 
 .mixer-title {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: #111;
   margin: 0 0 0.2rem;
 }
 
 .mixer-subtitle {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: #6b7280;
   margin: 0;
 }
@@ -85,7 +85,7 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -95,7 +95,7 @@
 }
 
 .mixer-col-hint {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
@@ -105,7 +105,7 @@
 
 /* ── Badges ── */
 .mixer-badge {
-  font-size: 0.62rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 1px 5px;
@@ -123,7 +123,7 @@
   border: 1px solid #bbf7d0;
 }
 .mixer-badge--sm {
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   padding: 0 4px;
 }
 
@@ -162,13 +162,13 @@
 }
 
 .mixer-goal-name {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: #111;
 }
 
 .mixer-goal-stat {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
 }
 
@@ -193,7 +193,7 @@
 }
 
 .mixer-gw-group-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -230,7 +230,7 @@
 }
 
 .mixer-gw-label {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #111;
   flex: 1;
@@ -240,14 +240,14 @@
 }
 
 .mixer-gw-meta {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .mixer-gw-pv {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: #15803d;
   white-space: nowrap;
@@ -263,7 +263,7 @@
 }
 
 .mixer-preview-heading {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -282,7 +282,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
 }
 
 .mixer-preview-label {
@@ -311,12 +311,12 @@
 }
 
 .mixer-preview-amount--total {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   color: #111;
 }
 
 .mixer-empty {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: #9ca3af;
   margin: 0;
 }
@@ -336,7 +336,7 @@
   border: 1px solid #d1d5db;
   border-radius: 0.45rem;
   padding: 0.5rem 1.1rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   color: #374151;
   cursor: pointer;
   transition: background 0.15s;
@@ -349,7 +349,7 @@
   border: none;
   border-radius: 0.45rem;
   padding: 0.5rem 1.3rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -368,7 +368,7 @@
   border-radius: 4px;
   width: 130px;
   padding: 0.35rem 0;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #374151;
   cursor: pointer;

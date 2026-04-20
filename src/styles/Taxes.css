@@ -12,7 +12,7 @@
   margin-bottom: 1.5rem;
 }
 .tax-heading {
-  font-size: 1.5rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
   -webkit-background-clip: text;
@@ -34,7 +34,7 @@
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 6px;
   padding: 0.25rem 0.6rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   color: var(--color-text, #374151);
   transition: background 0.12s;
@@ -47,7 +47,7 @@
   cursor: default;
 }
 .tax-year-label {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   min-width: 3rem;
   text-align: center;
@@ -61,7 +61,7 @@
   color: var(--color-text-muted, #6b7280);
 }
 .tax-empty-state h2 {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text, #374151);
   margin-bottom: 0.4rem;
@@ -99,14 +99,14 @@
   color: var(--accent, #6366f1);
 }
 .tax-section-title {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text, #1f2937);
   margin: 0;
   flex: 1;
 }
 .tax-section-count {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted, #9ca3af);
   background: var(--color-surface, #f3f4f6);
   padding: 0.15rem 0.5rem;
@@ -144,7 +144,7 @@
 .tax-item-tick {
   color: #22c55e;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 .tax-item-empty {
   width: 0.9rem;
@@ -157,7 +157,7 @@
   min-width: 0;
 }
 .tax-item-label {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text, #374151);
   display: flex;
@@ -166,7 +166,7 @@
   flex-wrap: wrap;
 }
 .tax-item-acct {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted, #9ca3af);
   font-weight: 400;
 }
@@ -184,7 +184,7 @@
   color: var(--accent-text-dark, #312e81);
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
 }
 .tax-file-name {
@@ -198,7 +198,7 @@
   border: none;
   cursor: pointer;
   color: var(--accent-text-dark, #312e81);
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   padding: 0 0.15rem;
   opacity: 0.6;
   transition: opacity 0.12s;
@@ -214,7 +214,7 @@
 .tax-btn {
   border: none;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   padding: 0.35rem 0.75rem;
   cursor: pointer;
@@ -234,7 +234,7 @@
 .tax-btn--outline:hover { background: var(--accent-lighter, #eef2ff); }
 .tax-btn--sm {
   padding: 0.2rem 0.55rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   background: var(--color-surface, #f3f4f6);
   color: var(--color-text, #374151);
 }
@@ -257,7 +257,7 @@
   border: none;
   cursor: pointer;
   color: var(--color-text-muted, #9ca3af);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   padding: 0 0.2rem;
   opacity: 0;
   transition: opacity 0.12s;
@@ -268,7 +268,7 @@
 .tax-rename-btn:hover { opacity: 1; color: var(--accent, #6366f1); }
 .tax-item-label-text { cursor: default; }
 .tax-rename-input {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   padding: 0.1rem 0.35rem;
   border: 1px solid var(--accent, #6366f1);
@@ -288,7 +288,7 @@
   margin-bottom: 0.25rem;
 }
 .tax-btn--template {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   padding: 0.22rem 0.65rem;
 }
 
@@ -307,7 +307,7 @@
   margin-bottom: 0.75rem;
 }
 .tax-tpl-mode-opt {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted, #6b7280);
   cursor: pointer;
   display: flex;
@@ -334,8 +334,8 @@
   border: 1px solid var(--color-border, #e5e7eb);
 }
 .tax-tpl-info { display: flex; flex-direction: column; gap: 0.1rem; }
-.tax-tpl-name { font-size: 0.85rem; font-weight: 500; color: var(--color-text, #374151); }
-.tax-tpl-count { font-size: 0.72rem; color: var(--color-text-muted, #9ca3af); }
+.tax-tpl-name { font-size: var(--fs-md); font-weight: 500; color: var(--color-text, #374151); }
+.tax-tpl-count { font-size: var(--fs-sm); color: var(--color-text-muted, #9ca3af); }
 .tax-tpl-actions { display: flex; gap: 0.3rem; align-items: center; }
 
 /* Owner avatars */
@@ -346,7 +346,7 @@
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: #fff;
   overflow: hidden;
@@ -374,7 +374,7 @@
 .tax-owner-group .tax-owner-partner { left: 0.8rem; z-index: 1; }
 
 .tax-empty {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted, #9ca3af);
   margin: 0.5rem 0;
 }
@@ -403,7 +403,7 @@
   border: none;
   background: none;
   padding: 0.55rem 0.85rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text, #374151);
   cursor: pointer;
   transition: background 0.12s;
@@ -437,12 +437,12 @@
 }
 .tax-modal h3 {
   margin: 0 0 0.5rem;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text, #1f2937);
 }
 .tax-modal-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted, #6b7280);
   margin-bottom: 0.75rem;
 }
@@ -457,7 +457,7 @@
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--color-text, #374151);
   background: var(--color-surface, #fff);
   outline: none;
@@ -483,15 +483,15 @@
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.12s;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
 }
 .tax-suggest-row:hover { background: var(--accent-lighter, #eef2ff); }
 .tax-suggest-row.selected { background: var(--accent-lighter, #eef2ff); }
 .tax-suggest-row input { flex-shrink: 0; }
 .tax-suggest-name { font-weight: 500; color: var(--color-text, #374151); }
-.tax-suggest-inst { font-size: 0.72rem; color: var(--color-text-muted, #9ca3af); margin-left: auto; }
+.tax-suggest-inst { font-size: var(--fs-sm); color: var(--color-text-muted, #9ca3af); margin-left: auto; }
 .tax-suggest-badge {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted, #9ca3af);
   background: var(--color-surface, #f3f4f6);
   padding: 0.05rem 0.35rem;

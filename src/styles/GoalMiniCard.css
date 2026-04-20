@@ -31,7 +31,7 @@
 
 .goal-mini-card h4 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: #111;
   word-break: break-word;
@@ -39,7 +39,7 @@
 }
 
 .mini-retire-year {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: #9ca3af;
   white-space: nowrap;
@@ -71,7 +71,7 @@
 }
 
 .mini-progress-pct {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--accent, #3b82f6);
   white-space: nowrap;
@@ -83,7 +83,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   margin-bottom: 0.75rem;
 }
 
@@ -165,7 +165,7 @@ body.dark .mini-value--total .amount {
   display: inline-block;
   margin-top: 0.5rem;
   padding: 0.3rem 0.7rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--accent);
   background: none;
@@ -253,7 +253,7 @@ body.dark .mini-card-add-gw:hover {
   border: none;
   padding: 0.5rem 1rem;
   text-align: left;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   color: #111;
   cursor: pointer;
   transition: background 0.12s;
@@ -304,7 +304,7 @@ body.dark .card-context-menu-item--danger:hover {
 
 .goal-rename-input {
   width: 100%;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   border: none;
   border-bottom: 2px solid var(--accent);
@@ -317,7 +317,7 @@ body.dark .card-context-menu-item--danger:hover {
 
 .goal-rename-hint {
   margin: 0.4rem 0 0;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
 }
 

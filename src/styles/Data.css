@@ -13,7 +13,7 @@
 
 .data-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: -0.3px;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
@@ -36,7 +36,7 @@
   border: 1px solid var(--color-border-light);
   border-radius: 8px;
   background: var(--color-surface);
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-heading);
   cursor: pointer;
@@ -50,7 +50,7 @@
 
 .data-subtitle {
   margin: 0.25rem 0 0;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
 }
 
@@ -82,7 +82,7 @@
   border: none;
   border-radius: 6px;
   background: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -113,7 +113,7 @@
   border: none;
   border-radius: 6px;
   background: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -156,7 +156,7 @@
 
 .data-filter-btn--sm {
   padding: 0.3rem 0.6rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
 }
 
 .data-charts-custom-range {
@@ -178,7 +178,7 @@
 
 .data-chart-empty {
   color: var(--color-text-muted);
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
 }
 
 .data-chart-legend {
@@ -191,7 +191,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -218,7 +218,7 @@
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
   background: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -256,7 +256,7 @@
   border: none;
   border-radius: 6px;
   background: none;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--accent);
   cursor: pointer;
@@ -289,7 +289,7 @@
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-family: inherit;
   color: var(--color-text-heading);
   background: var(--color-surface);
@@ -297,7 +297,7 @@
 }
 
 .data-range-sep {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
 }
 
@@ -306,7 +306,7 @@
   border: 1.5px dashed var(--color-border-light);
   border-radius: 8px;
   background: none;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -337,14 +337,14 @@
 
 .data-empty-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text-muted);
 }
 
 .data-empty-subtitle {
   margin: 0.25rem 0 1rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
 }
 
@@ -358,7 +358,7 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
 }
 
 .data-table thead {
@@ -369,7 +369,7 @@
   padding: 0.6rem 0.75rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -435,7 +435,7 @@
   cursor: pointer;
   font: inherit;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -447,7 +447,7 @@
 }
 .data-th-sort-btn:hover { color: var(--color-text-heading); }
 .data-th-sort-icon {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-border-light);
   transition: color 0.12s;
 }
@@ -494,7 +494,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 400;
   color: var(--color-text-heading);
   padding: 4px 6px;
@@ -516,7 +516,7 @@
   border: none;
   background: none;
   padding: 6px;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--accent);
   cursor: pointer;
   text-align: center;
@@ -561,7 +561,7 @@
   border: 1px solid var(--color-border);
   border-radius: 6px;
   background: var(--color-surface);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-heading);
   cursor: pointer;
@@ -594,7 +594,7 @@
 }
 
 .data-group-card-name {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
 }
@@ -630,7 +630,7 @@
   border: 1px solid var(--accent);
   border-radius: 4px;
   padding: 0.2rem 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
   background: var(--color-surface);
@@ -648,7 +648,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-secondary);
 }
 
@@ -664,7 +664,7 @@
 .data-group-member-dot--joint { background: linear-gradient(135deg, var(--accent) 50%, var(--color-warning) 50%); }
 
 .data-group-member-inactive {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
   font-style: italic;
 }
@@ -712,7 +712,7 @@
 }
 
 .data-group-empty-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
@@ -721,7 +721,7 @@
   border: 1px dashed var(--color-border-light);
   border-radius: 8px;
   background: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -747,7 +747,7 @@
   background: #eff6ff;
   border: 1px solid var(--accent-track);
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   flex-wrap: wrap;
 }
 
@@ -762,7 +762,7 @@
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   background: var(--color-surface);
   color: var(--color-text-heading);
   cursor: pointer;
@@ -780,7 +780,7 @@
   border-radius: 6px;
   background: var(--color-surface);
   color: var(--color-text-muted);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
@@ -799,7 +799,7 @@
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--accent);
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-text);
   background: var(--color-surface);
   width: 120px;
@@ -849,20 +849,20 @@
 }
 
 .data-account-institution {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
 .data-account-parent {
   display: block;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--accent);
   font-weight: 400;
 }
 
 .data-account-linked {
   display: block;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   font-weight: 400;
 }
@@ -872,7 +872,7 @@
   display: inline-block;
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
 }
 
@@ -926,7 +926,7 @@
   padding: 0.2rem 0.55rem;
   border-radius: 10px;
   border: none;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -1000,7 +1000,7 @@
 }
 
 .data-form-field label {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -1010,7 +1010,7 @@
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   color: var(--color-text);
   background: var(--color-surface);
   transition: border-color 0.15s;
@@ -1074,7 +1074,7 @@
 
 .data-group-option {
   padding: 0.4rem 0.6rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--color-text-heading);
   cursor: pointer;
   transition: background 0.1s;
@@ -1107,7 +1107,7 @@
   color: var(--color-surface);
   border: none;
   border-radius: 6px;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -1123,7 +1123,7 @@
   color: var(--color-text-muted);
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -1144,7 +1144,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
   cursor: pointer;
   user-select: none;
@@ -1161,7 +1161,7 @@
   color: var(--color-surface);
   border: none;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -1172,7 +1172,7 @@
 }
 
 .data-entry-count {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted);
   font-weight: 500;
 }
@@ -1201,13 +1201,13 @@
 
 .data-month-title {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text-heading);
 }
 
 .data-month-total {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
 }
@@ -1240,13 +1240,13 @@
 }
 
 .data-entry-account {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-heading);
 }
 
 .data-entry-institution {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
@@ -1257,7 +1257,7 @@
 }
 
 .data-entry-balance {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
@@ -1270,7 +1270,7 @@
   border: 1px solid var(--color-border-light);
   border-radius: 8px;
   background: var(--color-surface);
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-heading);
   cursor: pointer;
@@ -1288,7 +1288,7 @@
   border: 1px solid #fca5a5;
   border-radius: 8px;
   background: var(--color-surface);
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-negative);
   cursor: pointer;
@@ -1331,7 +1331,7 @@
 .data-spreadsheet {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1376,7 +1376,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--color-surface);
   overflow: hidden;
@@ -1440,7 +1440,7 @@
   padding: 0.5rem 0.65rem;
   text-align: right;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-secondary);
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
@@ -1459,7 +1459,7 @@
 .data-spreadsheet-institution {
   display: block;
   font-weight: 400;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
@@ -1536,7 +1536,7 @@ td.data-spreadsheet-inactive {
   background: var(--color-bg);
   padding: 0.45rem 0.65rem;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-heading);
   border-right: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-surface-hover);
@@ -1599,7 +1599,7 @@ td.data-spreadsheet-inactive {
 
 .data-confirm-message {
   margin: 0 0 1.25rem;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   color: var(--color-text-heading);
   line-height: 1.5;
 }
@@ -1615,7 +1615,7 @@ td.data-spreadsheet-inactive {
   padding: 0.45rem 1rem;
   border-radius: 8px;
   border: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
 }
@@ -1677,7 +1677,7 @@ td.data-spreadsheet-inactive {
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--color-border-light);
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   background: var(--color-surface);
   color: var(--color-text);
 }
@@ -1693,7 +1693,7 @@ td.data-spreadsheet-inactive {
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--color-border-light);
   border-radius: 4px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   text-align: right;
   background: var(--color-surface);
   color: var(--color-text);
@@ -1798,7 +1798,7 @@ td.data-spreadsheet-inactive {
 
 .data-modal-header h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text);
 }

@@ -57,7 +57,7 @@ body.dark .goal-actions-menu-dropdown {
   text-align: left;
   padding: 0.5rem 0.75rem;
   border-radius: 0.35rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   color: #111;
   width: 100%;
   display: block;

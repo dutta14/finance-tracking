@@ -21,7 +21,7 @@
 .gw-section-badge {
   background: var(--accent-badge);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
   border-radius: 0.3rem;
@@ -33,14 +33,14 @@
 }
 
 .gw-section-title {
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: #111;
   margin: 0;
 }
 
 .gw-section-subtitle {
-  font-size: 0.855rem;
+  font-size: var(--fs-md);
   color: #6b7280;
   margin: 0;
   line-height: 1.55;
@@ -68,7 +68,7 @@
 }
 
 .gw-empty-text {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   color: #9ca3af;
   margin: 0 0 1rem;
 }
@@ -80,7 +80,7 @@
   border: none;
   border-radius: 0.4rem;
   padding: 0.55rem 1.25rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -151,7 +151,7 @@
 }
 
 .gw-import-picker-title {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--accent-text-dark);
 }
@@ -159,7 +159,7 @@
 .gw-import-picker-cancel {
   background: none;
   border: none;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: #9ca3af;
   cursor: pointer;
@@ -174,7 +174,7 @@
 }
 
 .gw-import-group-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -201,13 +201,13 @@
 }
 
 .gw-import-item-label {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #111827;
 }
 
 .gw-import-item-meta {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   white-space: nowrap;
   margin-left: 0.75rem;
@@ -230,7 +230,7 @@
 }
 
 .gw-dollar-toggle-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -251,7 +251,7 @@
   border: none;
   border-radius: 4px;
   padding: 0.22rem 0.65rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   color: var(--accent-text-mid);
   font-weight: 400;
@@ -276,7 +276,7 @@
   border: 1px solid #fecaca;
   border-radius: 0.4rem;
   padding: 0.55rem 0.75rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   overflow: hidden;
 }
 
@@ -293,7 +293,7 @@
   border: none;
   border-radius: 4px;
   padding: 0.2rem 0.65rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -382,7 +382,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-label--editing {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--accent-text-mid);
   font-style: italic;
@@ -399,7 +399,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-label {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--accent-text-dark);
 }
 
@@ -430,7 +430,7 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
 }
 
 .gw-goal-row-label {
@@ -459,7 +459,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-target-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--accent-text-mid);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -467,7 +467,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-target-amount {
-  font-size: 1.35rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--accent-text-dark);
   line-height: 1.2;
@@ -489,7 +489,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-milestone-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -497,7 +497,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-milestone-amount {
-  font-size: 1.35rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--accent-text-dark);
   line-height: 1.2;
@@ -525,7 +525,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-progress-pct {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--accent-text-dark);
   white-space: nowrap;
@@ -542,7 +542,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-pv-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--accent-text-mid);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -550,14 +550,14 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-pv-amount {
-  font-size: 1.35rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--accent-text-dark);
   line-height: 1.2;
 }
 
 .gw-goal-pv-note {
-  font-size: 0.74rem;
+  font-size: var(--fs-sm);
   color: var(--accent-text-mid);
   margin-top: 0.2rem;
 }
@@ -572,14 +572,14 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-form-title {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--accent-text-dark);
   margin: 0 0 1rem;
 }
 
 .gw-form-error {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-negative);
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -601,7 +601,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-form-label {
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--accent-text-mid);
   margin-bottom: 0.3rem;
@@ -614,7 +614,7 @@ body.dark .gw-goal-undo-progress {
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--accent-track);
   border-radius: 0.4rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   background: #fff;
   color: #111;
   box-sizing: border-box;
@@ -629,7 +629,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-form-hint {
   display: block;
-  font-size: 0.73rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   margin-top: 0.25rem;
 }
@@ -645,7 +645,7 @@ body.dark .gw-goal-undo-progress {
   border: none;
   border-radius: 0.4rem;
   padding: 0.5rem 1.1rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -661,7 +661,7 @@ body.dark .gw-goal-undo-progress {
   border: 1px solid #d1d5db;
   border-radius: 0.4rem;
   padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -673,7 +673,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-form-copy-hint {
   margin: 0.75rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: #6b7280;
   text-align: center;
 }
@@ -683,7 +683,7 @@ body.dark .gw-goal-undo-progress {
   border: none;
   padding: 0;
   color: var(--accent);
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;

@@ -3,14 +3,14 @@
   padding: 0;
 }
 .splan-title {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: #111827;
   margin: 0 0 1.2rem;
 }
 .splan-empty {
   color: #9ca3af;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 .splan-block {
   background: #f9fafb;
@@ -27,7 +27,7 @@
   margin-bottom: 1rem;
 }
 .splan-section-label {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--accent);
   text-transform: uppercase;
@@ -43,7 +43,7 @@
   max-width: 90px;
 }
 .splan-field label {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: #9ca3af;
   text-transform: uppercase;
@@ -53,7 +53,7 @@
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 0.3rem 0.4rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #374151;
   background: #fff;
   outline: none;
@@ -66,7 +66,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: #6b7280;
   padding: 0.3rem 0;
 }
@@ -98,7 +98,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: #6b7280;
   padding: 0.35rem 0;
 }
@@ -108,7 +108,7 @@
   margin-bottom: 0.3rem;
 }
 .splan-col-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: #9ca3af;
   text-transform: uppercase;
@@ -141,7 +141,7 @@
   background: #f3f4f6;
 }
 .splan-delta {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -150,7 +150,7 @@
 .splan-delta.down { color: #059669; }
 .splan-delta.flat { color: #9ca3af; }
 .splan-delta-note {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
 }
 

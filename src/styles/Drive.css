@@ -11,7 +11,7 @@
   margin-bottom: 0.5rem;
 }
 .drive-title {
-  font-size: 1.6rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
   -webkit-background-clip: text;
@@ -28,7 +28,7 @@
   align-items: center;
   gap: 0.25rem;
   margin-bottom: 1.25rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 .drive-breadcrumb-item {
   background: none;
@@ -38,7 +38,7 @@
   padding: 0.15rem 0.3rem;
   border-radius: 4px;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 .drive-breadcrumb-item:hover {
   background: var(--accent-lighter);
@@ -65,7 +65,7 @@
   border-radius: 6px;
   padding: 0.35rem 0.9rem;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   color: var(--color-text);
@@ -111,7 +111,7 @@
 
 .drive-row-name {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text);
   overflow: hidden;
@@ -119,12 +119,12 @@
   white-space: nowrap;
 }
 .drive-row-meta {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 .drive-row-tag {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--accent-text-dark, #312e81);
   background: var(--accent-lighter, #eef2ff);
@@ -169,7 +169,7 @@ body.dark .drive-row-tag--cat {
   gap: 0.3rem;
 }
 .drive-filter-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text-muted, #6b7280);
   text-transform: uppercase;
@@ -181,7 +181,7 @@ body.dark .drive-row-tag--cat {
   border-radius: 999px;
   background: none;
   padding: 0.2rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-muted, #6b7280);
   cursor: pointer;
@@ -216,7 +216,7 @@ body.dark .drive-filter-btn.active {
   text-align: center;
   padding: 3rem 1rem;
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 /* ── CSV viewer ──────────────────────────────────────────────── */
@@ -234,7 +234,7 @@ body.dark .drive-filter-btn.active {
   color: var(--accent);
   cursor: pointer;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   padding: 0.3rem 0;
   margin-bottom: 0.75rem;
   width: fit-content;
@@ -243,7 +243,7 @@ body.dark .drive-filter-btn.active {
   color: var(--accent-text-dark);
 }
 .drive-viewer-title {
-  font-size: 1.25rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   margin: 0 0 1rem;
   color: var(--color-text);
@@ -259,7 +259,7 @@ body.dark .drive-filter-btn.active {
 .drive-viewer-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
 }
 .drive-viewer-table th,
 .drive-viewer-table td {
@@ -273,7 +273,7 @@ body.dark .drive-filter-btn.active {
   background: var(--accent-lighter);
   color: var(--accent-text-dark);
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   position: sticky;
@@ -288,7 +288,7 @@ body.dark .drive-filter-btn.active {
 
 .drive-viewer-meta {
   margin-top: 0.6rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
@@ -343,7 +343,7 @@ body.dark .drive-viewer-table tbody tr:hover {
 
 .drive-year-add {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   padding: 0.3rem 0.75rem;
   color: #6b7280;
   border-style: dashed;
@@ -360,7 +360,7 @@ body.dark .drive-viewer-table tbody tr:hover {
 }
 .drive-add-year-input {
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   width: 70px;
   padding: 0.3rem 0.4rem;
   border: 1px solid #d1d5db;
@@ -380,7 +380,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   border-radius: 5px;
   padding: 0.3rem 0.6rem;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -388,7 +388,7 @@ body.dark .drive-viewer-table tbody tr:hover {
 .drive-add-year-cancel {
   background: none;
   border: none;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   color: #9ca3af;
   cursor: pointer;
   padding: 0 0.25rem;
@@ -423,13 +423,13 @@ body.dark .drive-viewer-table tbody tr:hover {
   color: var(--accent, #6366f1);
 }
 .drive-dropzone-text {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #374151;
   margin-bottom: 0.25rem;
 }
 .drive-dropzone-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
 }
 
@@ -448,7 +448,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   color: #f3f4f6;
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   max-width: 90vw;
 }
@@ -457,7 +457,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   border: none;
   color: #9ca3af;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   padding: 0 0.2rem;
   line-height: 1;
 }

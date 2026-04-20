@@ -35,7 +35,7 @@
 
 .settings-modal-title {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: #111;
   letter-spacing: 0.04em;
@@ -88,7 +88,7 @@
   border-radius: 0.45rem;
   text-align: left;
   cursor: pointer;
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #6b7280;
   transition: background 0.15s, color 0.15s;
@@ -142,7 +142,7 @@
 
 .settings-section h3 {
   margin: 0 0 0.6rem 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -219,7 +219,7 @@
 }
 
 .settings-avatar-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   margin: 0;
 }
@@ -248,7 +248,7 @@
 
 .settings-profile-card-title {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text);
   text-transform: uppercase;
@@ -297,18 +297,18 @@
 }
 
 .settings-profile-view-name {
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
 }
 
 .settings-profile-view-birthday {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
 .settings-profile-view-role {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   font-weight: 500;
 }
@@ -328,7 +328,7 @@
 }
 
 .settings-save-flash {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-positive);
   animation: settings-save-fade 2s ease-out forwards;
@@ -349,7 +349,7 @@
 .settings-partner-remove {
   background: none;
   border: none;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: var(--color-negative);
   cursor: pointer;
   padding: 0.2rem 0.5rem;
@@ -366,7 +366,7 @@
   border: 1.5px dashed var(--color-border, #d1d5db);
   border-radius: 8px;
   background: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
@@ -401,7 +401,7 @@
 }
 
 .settings-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: #4b5563;
 }
@@ -410,7 +410,7 @@
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--color-border, #d1d5db);
   border-radius: 6px;
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   background: #ffffff;
   color: #1f2937;
   transition: border 0.15s;
@@ -423,7 +423,7 @@
 }
 
 .settings-description {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   line-height: 1.5;
   margin: 0;
@@ -436,7 +436,7 @@
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -470,7 +470,7 @@
   border-radius: 6px;
   border: 1px solid var(--color-border, #d1d5db);
   background: none;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: #4b5563;
   cursor: pointer;
@@ -490,7 +490,7 @@
   color: #ffffff;
   border: none;
   border-radius: 5px;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.12s;
@@ -529,7 +529,7 @@
 
 /* PAT hint */
 .ghsync-pat-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   margin-top: 0.3rem;
   margin-bottom: 0;
@@ -561,12 +561,12 @@
   margin: 0;
   font-weight: 600;
   color: var(--color-negative);
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
 }
 
 .settings-reset-message {
   margin: 0.3rem 0 0 0;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: #991b1b;
   line-height: 1.5;
 }
@@ -585,7 +585,7 @@
 }
 
 .settings-toggle-label {
-  font-size: 0.84rem;
+  font-size: var(--fs-md);
   color: #1f2937;
   font-weight: 500;
 }
@@ -665,13 +665,13 @@
 
 .settings-toggle-hint {
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
   margin-top: 0.15rem;
 }
 
 .settings-hint {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: #9ca3af;
   margin: 0;
 }
@@ -714,7 +714,7 @@
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--accent);
 }
 
@@ -772,7 +772,7 @@
 }
 
 .settings-theme-name {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: #1f2937;
 }
@@ -990,7 +990,7 @@ body.dark .settings-theme-name {
 /* GitHub Sync Status Bar */
 .ghsync-status-bar {
   margin-bottom: 1rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: #4b5563;
 }
 
@@ -1021,7 +1021,7 @@ body.dark .settings-theme-name {
   cursor: pointer;
   padding: 0.5rem 0;
   font-weight: 400;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: #6b7280;
   border-bottom: 2px solid transparent;
   transition: all 0.15s;
@@ -1042,7 +1042,7 @@ body.dark .settings-theme-name {
 
 .ghsync-field-label {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: #374151;
   display: block;
   margin-bottom: 0.15rem;
@@ -1052,7 +1052,7 @@ body.dark .settings-theme-name {
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--color-border, #d1d5db);
   border-radius: 5px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   background: #ffffff;
   color: #1f2937;
   transition: border 0.15s;
@@ -1065,7 +1065,7 @@ body.dark .settings-theme-name {
 }
 
 .ghsync-field-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   margin: 0;
 }
@@ -1074,7 +1074,7 @@ body.dark .settings-theme-name {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: #374151;
   cursor: pointer;
 }
@@ -1087,7 +1087,7 @@ body.dark .settings-theme-name {
 }
 
 .ghsync-locked-hint {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   color: #92400e;
   background: #fef3c7;
   border: 1px solid #fde68a;
@@ -1098,13 +1098,13 @@ body.dark .settings-theme-name {
 
 /* Status messages */
 .ghsync-result-success {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: #059669;
   margin: 0;
 }
 
 .ghsync-result-error {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--color-negative);
   margin: 0;
 }
@@ -1117,7 +1117,7 @@ body.dark .settings-theme-name {
 }
 
 .ghsync-warning-item {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: #92400e;
   margin: 0.25rem 0;
 }
@@ -1155,14 +1155,14 @@ body.dark .settings-theme-name {
 }
 
 .ghsync-commit-date {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .ghsync-commit-message {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1291,14 +1291,14 @@ body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
 }
 
 .settings-palette-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: #374151;
   margin: 0 0 0.25rem 0;
 }
 
 .settings-palette-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #9ca3af;
   margin: 0 0 0.75rem 0;
 }
@@ -1318,7 +1318,7 @@ body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
   border: 1.5px solid #e5e7eb;
   border-radius: 999px;
   background: transparent;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
@@ -1359,7 +1359,7 @@ body.dark .settings-modal-detail::-webkit-scrollbar-thumb:hover {
 }
 
 .settings-swatch-tags {
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: #9ca3af;
   letter-spacing: 0.02em;

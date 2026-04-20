@@ -31,7 +31,7 @@ body.dark .budget-page {
   gap: 0.5rem;
 }
 .budget-title {
-  font-size: 1.5rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.3px;
@@ -89,7 +89,7 @@ body.dark .budget-year-btn:hover {
 }
 .budget-year-label {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   min-width: 3rem;
   text-align: center;
   color: var(--color-text);
@@ -112,7 +112,7 @@ body.dark .budget-view-toggle {
   background: var(--color-surface);
   border: none;
   padding: 0.35rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   color: var(--color-text-muted);
   transition: all 0.15s;
@@ -134,7 +134,7 @@ body.dark .budget-view-btn {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.35rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   color: var(--color-text-heading);
   transition: all 0.15s;
@@ -169,7 +169,7 @@ body.dark .budget-action-btn {
   padding-left: 0.35rem;
   padding-right: 0.35rem;
   min-width: 0;
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
 }
 body.dark .budget-split-drop {
   border-left-color: rgba(255,255,255,0.1);
@@ -205,7 +205,7 @@ body.dark .budget-upload-menu {
   border: none;
   text-align: left;
   cursor: pointer;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-heading);
   white-space: nowrap;
 }
@@ -237,12 +237,12 @@ body.dark .budget-summary-card {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .budget-summary-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   font-weight: 500;
 }
 .budget-summary-value {
-  font-size: 1.4rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
 }
 .budget-summary-card--income .budget-summary-value {
@@ -260,7 +260,7 @@ body.dark .budget-summary-card {
   margin-bottom: 2rem;
 }
 .budget-table-title {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   margin: 0 0 0.75rem 0;
   color: var(--color-text-heading);
@@ -279,7 +279,7 @@ body.dark .budget-table-wrapper {
   table-layout: fixed;
   border-collapse: collapse;
   background: var(--color-surface);
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
 }
 body.dark .budget-table {
   background: var(--color-bg);
@@ -290,7 +290,7 @@ body.dark .budget-table {
   padding: 0.5rem 0.25rem;
   text-align: right;
   font-weight: 600;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
@@ -308,7 +308,7 @@ body.dark .budget-th {
   left: 0;
   z-index: 2;
   background: var(--color-bg);
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
 }
 .budget-th--month {
   cursor: pointer;
@@ -362,7 +362,7 @@ body.dark .budget-td--total {
   padding: 0.4rem 0.25rem;
   border-bottom: 1px solid var(--color-surface-hover);
   white-space: nowrap;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
 }
 body.dark .budget-td {
   border-bottom-color: var(--color-bg);
@@ -378,7 +378,7 @@ body.dark .budget-td {
   color: var(--color-text-heading);
   width: 110px;
   max-width: 110px;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -395,7 +395,7 @@ body.dark .budget-td--group-name {
 .budget-drag-handle {
   color: var(--color-border-light);
   margin-right: 0.4rem;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   cursor: grab;
 }
 body.dark .budget-drag-handle {
@@ -404,7 +404,7 @@ body.dark .budget-drag-handle {
 .budget-td--number {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-heading);
   padding-left: 0.1rem;
   padding-right: 0.2rem;
@@ -415,7 +415,7 @@ body.dark .budget-drag-handle {
 .budget-td--pct {
   text-align: right;
   color: var(--color-text-muted);
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   padding-left: 0.1rem;
   padding-right: 0.2rem;
@@ -433,14 +433,14 @@ body.dark .budget-tr--group-header .budget-td {
 }
 .budget-td--group-name {
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-heading);
   background: var(--color-bg);
 }
 .budget-td--group-number {
   text-align: right;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 .budget-tr--drag-over {
@@ -503,7 +503,7 @@ body.dark .budget-ctx-menu {
   background: none;
   border: none;
   padding: 0.5rem 1rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-heading);
   cursor: pointer;
 }
@@ -523,7 +523,7 @@ body.dark .budget-ctx-divider {
 }
 .budget-ctx-hint {
   padding: 0.5rem 1rem;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   white-space: pre-wrap;
   line-height: 1.5;
@@ -536,7 +536,7 @@ body.dark .budget-ctx-divider {
   color: var(--color-negative);
   padding: 0.5rem 1rem;
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
@@ -550,7 +550,7 @@ body.dark .budget-csv-error {
   border: none;
   color: inherit;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
 }
 
 /* ── Empty year ── */
@@ -560,7 +560,7 @@ body.dark .budget-csv-error {
   color: var(--color-text-muted);
 }
 .budget-empty-year p {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   margin-bottom: 1rem;
 }
 .budget-create-year-btn {
@@ -569,7 +569,7 @@ body.dark .budget-csv-error {
   border: none;
   border-radius: 8px;
   padding: 0.6rem 1.5rem;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -603,14 +603,14 @@ body.dark .budget-drilldown-header {
 }
 .budget-drilldown-header h4 {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text-heading);
 }
 .budget-drilldown-close {
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   cursor: pointer;
   color: var(--color-text-muted);
 }
@@ -621,12 +621,12 @@ body.dark .budget-drilldown-header {
 }
 .budget-drilldown-empty {
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 .budget-drilldown-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
 }
 .budget-drilldown-table th {
   text-align: left;
@@ -666,7 +666,7 @@ body.dark .budget-drilldown-table td {
 .budget-removed-pill {
   margin-left: auto;
   padding: 2px 10px;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   border-radius: 100px;
   border: 1px solid var(--color-border-light);
@@ -704,7 +704,7 @@ body.dark .budget-removed-pill--on {
 }
 .budget-drilldown-row--removed td:nth-child(2)::after {
   content: ' ✕';
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-style: normal;
   color: var(--color-warning);
   margin-left: 4px;
@@ -726,7 +726,7 @@ body.dark .budget-drilldown-cat-cell:hover {
   padding: 0.15rem 0.3rem;
   border: 1px solid var(--accent);
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   background: var(--color-surface);
   color: var(--color-text-heading);
   outline: none;
@@ -741,7 +741,7 @@ body.dark .budget-drilldown-cat-input {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
 }
 .budget-confirm-newcat-text {
   color: #92400e;
@@ -752,7 +752,7 @@ body.dark .budget-confirm-newcat-text {
 .budget-confirm-newcat-btn {
   padding: 0.1rem 0.45rem;
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
@@ -808,7 +808,7 @@ body.dark .budget-drilldown-filter {
   padding: 0.3rem 0.6rem;
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   background: var(--color-surface);
   color: var(--color-text-heading);
   cursor: pointer;
@@ -826,7 +826,7 @@ body.dark .budget-filter-trigger:hover {
   border-color: #4b5563;
 }
 .budget-filter-chevron {
-  font-size: 0.55rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
 }
 .budget-filter-panel {
@@ -857,7 +857,7 @@ body.dark .budget-filter-panel {
   padding: 0.4rem 0.6rem;
   border: none;
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   outline: none;
   background: transparent;
   color: inherit;
@@ -877,7 +877,7 @@ body.dark .budget-filter-search {
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.6rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   transition: background 0.1s;
 }
@@ -932,7 +932,7 @@ body.dark .budget-filter-item input[type="checkbox"]:indeterminate::after {
   background: var(--accent-hover);
 }
 .budget-drilldown-sum {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -952,7 +952,7 @@ body.dark .budget-format-help {
 }
 .budget-format-help pre {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   white-space: pre-wrap;
   color: #713f12;
   line-height: 1.6;
@@ -967,7 +967,7 @@ body.dark .budget-format-help pre {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   color: #92400e;
 }
 body.dark .budget-format-help-close {
@@ -992,12 +992,12 @@ body.dark .budget-group-manager {
 }
 .budget-group-manager-title {
   margin: 0 0 0.25rem 0;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text-heading);
 }
 .budget-group-manager-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   margin: 0;
 }
@@ -1062,7 +1062,7 @@ body.dark .budget-group-block--removed.budget-group-block--drop-target {
   flex-shrink: 0;
 }
 .budget-group-name {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-text-heading);
   display: flex;
   align-items: center;
@@ -1071,7 +1071,7 @@ body.dark .budget-group-block--removed.budget-group-block--drop-target {
   cursor: default;
 }
 .budget-group-count {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   background: var(--color-border);
   color: var(--color-text-muted);
   padding: 0.1rem 0.4rem;
@@ -1085,7 +1085,7 @@ body.dark .budget-group-count {
   border: none;
   cursor: pointer;
   color: var(--color-text-muted);
-  font-size: 0.55rem;
+  font-size: var(--fs-xs);
   padding: 0 0.15rem;
   flex-shrink: 0;
   line-height: 1;
@@ -1098,7 +1098,7 @@ body.dark .budget-group-count {
   border: none;
   cursor: pointer;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   padding: 0 0.2rem;
   flex-shrink: 0;
 }
@@ -1110,7 +1110,7 @@ body.dark .budget-group-count {
   border: none;
   cursor: pointer;
   color: var(--color-text-muted);
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   padding: 0 0.3rem;
   flex-shrink: 0;
 }
@@ -1127,7 +1127,7 @@ body.dark .budget-group-count {
   min-height: 28px;
 }
 .budget-group-cats-empty {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   padding: 0.25rem 0;
   font-style: italic;
@@ -1143,7 +1143,7 @@ body.dark .budget-group-count {
   user-select: none;
   background: var(--accent-lighter);
   border: 1px solid #c7d2fe;
-  font-size: 0.74rem;
+  font-size: var(--fs-sm);
   line-height: 1.3;
 }
 body.dark .budget-group-cat {
@@ -1167,7 +1167,7 @@ body.dark .budget-group-cat:hover {
 }
 .budget-group-cat-handle {
   color: #a5b4fc;
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   flex-shrink: 0;
   cursor: grab;
 }
@@ -1183,7 +1183,7 @@ body.dark .budget-group-cat-handle {
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   padding: 0 0.15rem;
   margin-left: 0.15rem;
   line-height: 1;
@@ -1230,7 +1230,7 @@ body.dark .budget-group-block--removed .budget-group-cat-name {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.35rem 0.5rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   flex: 1;
   background: var(--color-surface);
   color: var(--color-text-heading);
@@ -1249,7 +1249,7 @@ body.dark .budget-group-input {
   border: none;
   border-radius: 6px;
   padding: 0.35rem 0.75rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   cursor: pointer;
 }
 .budget-group-add-btn:disabled {
@@ -1283,7 +1283,7 @@ body.dark .budget-merge-panel {
 }
 .budget-merge-hint {
   margin: 0 0 0.5rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 .budget-merge-controls {
@@ -1296,7 +1296,7 @@ body.dark .budget-merge-panel {
   padding: 0.3rem 0.5rem;
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   background: var(--color-surface);
   color: var(--color-text-heading);
 }
@@ -1305,7 +1305,7 @@ body.dark .budget-merge-select {
   border-color: var(--color-surface-hover);
 }
 .budget-merge-or {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
@@ -1331,7 +1331,7 @@ body.dark .budget-drop-zones {
   to { opacity: 1; transform: translateY(0); }
 }
 .budget-drop-zones-label {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   font-weight: 500;
   margin-right: 0.25rem;
@@ -1340,7 +1340,7 @@ body.dark .budget-drop-zones {
   padding: 0.35rem 0.75rem;
   border: 1px solid var(--color-border-light);
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   cursor: default;
   background: var(--color-surface);
   color: var(--color-text-heading);
@@ -1382,7 +1382,7 @@ body.dark .budget-drop-zone--removed.budget-drop-zone--over {
   opacity: 0.5;
 }
 .budget-drop-zone-badge {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   background: var(--color-border);
   color: var(--color-text-muted);
   padding: 0.1rem 0.3rem;
@@ -1412,7 +1412,7 @@ body.dark .budget-drop-zone-badge {
   color: #065f46;
   padding: 0.5rem 1rem;
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   margin-bottom: 1rem;
   border: 1px solid #a7f3d0;
 }
@@ -1422,7 +1422,7 @@ body.dark .budget-sync-msg {
   border-color: #2d4a3a;
 }
 .budget-sync-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 
@@ -1467,15 +1467,15 @@ body.dark .budget-sync-msg {
 }
 .csv-preview-header h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
 }
 .csv-preview-meta {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 .csv-preview-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   margin: 0 0 0.75rem;
 }
@@ -1488,7 +1488,7 @@ body.dark .budget-sync-msg {
 .csv-preview-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   white-space: nowrap;
 }
 .csv-preview-table th,
@@ -1527,13 +1527,13 @@ body.dark .budget-sync-msg {
   margin-right: 0.35rem;
 }
 .csv-col-x {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-negative);
   font-weight: 700;
 }
 .csv-preview-more {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   margin: 0.5rem 0 0;
 }
@@ -1546,7 +1546,7 @@ body.dark .budget-sync-msg {
 .csv-preview-btn {
   padding: 0.45rem 1rem;
   border-radius: 0.4rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   border: 1px solid var(--color-border-light);
@@ -1625,7 +1625,7 @@ body.dark {
 }
 
 .cashflow-section-title {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   margin: 1.5rem 0 0.5rem;
   color: var(--cashflow-text);
@@ -1661,7 +1661,7 @@ body.dark .cashflow-bar-wrap .recharts-tooltip-wrapper .recharts-default-tooltip
   gap: 0.75rem;
   flex-wrap: wrap;
   padding: 0.5rem 0;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
 }
 .cashflow-bar-legend-item {
   display: flex;
@@ -1671,7 +1671,7 @@ body.dark .cashflow-bar-wrap .recharts-tooltip-wrapper .recharts-default-tooltip
 }
 .cashflow-bar-legend-label {
   color: var(--cashflow-subtext);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
 }
 .cashflow-bar-legend-net {
   font-weight: 600;
@@ -1717,7 +1717,7 @@ body.dark .cashflow-sankey-pills {
 }
 .cashflow-sankey-pill {
   padding: 4px 14px;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   border: none;
   border-radius: 6px;
@@ -1740,7 +1740,7 @@ body.dark .cashflow-sankey-pill.active {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .cashflow-sankey-hint {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--cashflow-subtext);
   margin: 0 0 0.5rem;
 }

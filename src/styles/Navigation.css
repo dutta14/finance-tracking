@@ -22,7 +22,7 @@ body.dark .navbar {
 }
 
 .nav-logo {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: #000;
   letter-spacing: -0.5px;
@@ -47,7 +47,7 @@ body.dark .nav-logo {
   background: none;
   border: none;
   color: #565758;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   padding: 0.5rem 0.75rem;
   border-radius: 0;
@@ -59,7 +59,7 @@ body.dark .nav-logo {
   background: none;
   border: none;
   color: #565758;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   padding: 0.5rem 0.75rem;
   border-radius: 0;
@@ -88,7 +88,7 @@ body.dark .nav-link.active {
   }
 
   .nav-link {
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     padding: 0.4rem 0.6rem;
   }
 }

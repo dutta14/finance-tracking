@@ -38,7 +38,7 @@
   border: 1px solid #fcd34d;
   border-radius: 4px;
   padding: 0.55rem 0.85rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   margin-bottom: 1rem;
 }
@@ -50,7 +50,7 @@
   border: none;
   border-radius: 4px;
   padding: 0.2rem 0.6rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -86,7 +86,7 @@
 .fi-card-badge {
   background: var(--accent-badge);
   color: #fff;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -98,7 +98,7 @@
 
 .fi-card-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--accent-text-dark);
   white-space: nowrap;
@@ -124,7 +124,7 @@
 }
 
 .fi-card-section-title {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -147,7 +147,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.83rem;
+  font-size: var(--fs-md);
   line-height: 1.8;
 }
 
@@ -183,7 +183,7 @@
 }
 
 .fi-card-goal-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -194,7 +194,7 @@
 }
 
 .fi-card-goal-amount {
-  font-size: 1.3rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--accent-text-dark);
 }
@@ -222,7 +222,7 @@
 }
 
 .fi-card-progress-pct {
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--accent-text-dark);
   white-space: nowrap;
@@ -235,7 +235,7 @@
   padding-top: 0.6rem;
   margin-top: 0.25rem;
   color: #6b7280;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
 }
 
 /* ──────────────────────────────────────────────
@@ -254,7 +254,7 @@
   border: none;
   border-radius: 4px;
   padding: 0.2rem 0.6rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   color: var(--accent-text-mid);
   font-weight: 400;
@@ -299,7 +299,7 @@
   transform: translateY(-50%);
   background: #1e2228;
   color: #e5e7eb;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   line-height: 1.5;
   padding: 0.5rem 0.7rem;
   border-radius: 6px;
@@ -462,7 +462,7 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--accent-text-mid);
   background: var(--accent-light);
@@ -489,7 +489,7 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
 }
 
 .fi-form-error {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   color: var(--color-negative);
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -518,13 +518,13 @@ body.dark .fi-form-error {
 }
 
 .fi-form-label {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--accent-text-mid);
 }
 
 .fi-form-input {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   border: 1.5px solid var(--accent-border);
   border-radius: 6px;
   padding: 5px 8px;
@@ -553,7 +553,7 @@ body.dark .fi-form-error {
   border: none;
   border-radius: 6px;
   padding: 7px;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -569,7 +569,7 @@ body.dark .fi-form-error {
   border: 1.5px solid var(--accent-border);
   border-radius: 6px;
   padding: 7px;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--accent-text-mid);
   cursor: pointer;

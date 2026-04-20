@@ -12,7 +12,7 @@
   margin-bottom: 1.5rem;
 }
 .home-greeting h1 {
-  font-size: 1.5rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: -0.3px;
   margin: 0;
@@ -70,7 +70,7 @@
   margin-bottom: 0.85rem;
 }
 .home-card-header h3 {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text-heading);
   margin: 0;
@@ -81,7 +81,7 @@
   background: none;
   border: none;
   color: var(--accent);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   padding: 0;
@@ -95,7 +95,7 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 
 /* ── Q1: Net Worth ── */
@@ -123,7 +123,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   line-height: 1;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -141,7 +141,7 @@
 
 /* Change indicator */
 .nw-change {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   margin-left: 0.4rem;
   letter-spacing: -0.01em;
@@ -170,7 +170,7 @@
 .nw-jump-year { margin-bottom: 8px; }
 .nw-jump-year:last-child { margin-bottom: 0; }
 .nw-jump-year-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--color-text-muted);
   margin-bottom: 4px;
@@ -186,7 +186,7 @@
   background: var(--color-surface-hover);
   padding: 3px 8px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -200,13 +200,13 @@
 }
 
 .nw-amount {
-  font-size: 1.75rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.5px;
 }
 .nw-date {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   font-weight: 400;
 }
@@ -251,13 +251,13 @@
   color: var(--color-text-muted);
 }
 .nw-tree-label {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   color: var(--color-text-heading);
   flex: 1;
 }
 .nw-tree-value {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
@@ -274,12 +274,12 @@
 .nw-tree-node--leaf .nw-tree-label {
   color: var(--color-text-muted);
   font-weight: 400;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
 }
 .nw-tree-node--leaf .nw-tree-value {
   color: var(--color-text-heading);
   font-weight: 500;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
 }
 
 /* ── Q2: Mini Charts ── */
@@ -294,7 +294,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   padding: 0.3rem 0.65rem;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -317,7 +317,7 @@
   border: 1px solid var(--color-border);
   border-right: none;
   padding: 0.2rem 0.5rem;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -344,7 +344,7 @@
   gap: 0.25rem;
 }
 .home-mini-range-select {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   padding: 0.15rem 0.3rem;
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -354,7 +354,7 @@
 }
 .home-mini-range-select:focus { border-color: var(--accent); }
 .home-mini-range-sep {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
 }
 
@@ -394,7 +394,7 @@
   justify-content: space-between;
 }
 .goals-peek-name {
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--color-text);
   white-space: nowrap;
@@ -403,7 +403,7 @@
   max-width: 70%;
 }
 .goals-peek-pct {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   width: 2.2rem;
@@ -413,7 +413,7 @@
 .goals-peek-pct--fi { color: var(--accent); }
 .goals-peek-pct--gw { color: var(--color-warning); }
 .goals-peek-monthly {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
@@ -433,7 +433,7 @@
   gap: 6px;
 }
 .goals-peek-bar-label {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--color-text-muted);
   min-width: 1.4rem;
@@ -457,12 +457,12 @@
 .goals-peek-item-meta {
   display: flex;
   gap: 0.75rem;
-  font-size: 0.7rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
 .goals-peek-more {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
   margin-top: 0.4rem;
 }
@@ -482,7 +482,7 @@
   min-width: 0;
 }
 .alloc-section-title {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text-muted);
   margin: 0 0 0.4rem;
@@ -505,7 +505,7 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
 }
 .alloc-legend {
   display: flex;
@@ -517,7 +517,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
 }
 .alloc-legend-dot {
   width: 7px;
@@ -549,7 +549,7 @@
   border: none;
   background: transparent;
   padding: 2px 10px;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   border-radius: 4px;
   cursor: pointer;
@@ -594,7 +594,7 @@
   transform: translateX(-50%);
   background: #1f2937;
   color: #f3f4f6;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   padding: 4px 8px;
   border-radius: 5px;
@@ -616,8 +616,8 @@
 }
 
 @media (max-width: 480px) {
-  .home-greeting h1 { font-size: 1.3rem; }
-  .nw-amount { font-size: 1.4rem; }
+  .home-greeting h1 { font-size: var(--fs-lg); }
+  .nw-amount { font-size: var(--fs-lg); }
   .alloc-grid { flex-direction: column; }
 }
 
@@ -703,7 +703,7 @@ body.dark .alloc-empty { color: #6b7280; }
 }
 .home-card-cta p {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   line-height: 1.45;
   max-width: 260px;
   color: var(--color-text-muted, #9ca3af);
@@ -712,7 +712,7 @@ body.dark .alloc-empty { color: #6b7280; }
   background: none;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   padding: 0.35rem 0.9rem;
   border-radius: 6px;
@@ -731,7 +731,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   margin-bottom: 1.5rem;
 }
 .welcome-title {
-  font-size: 1.6rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: -0.3px;
   margin: 0 0 0.35rem;
@@ -744,7 +744,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
 }
 .welcome-subtitle {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   color: var(--color-text-muted, #6b7280);
   line-height: 1.5;
 }
@@ -753,7 +753,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--accent);
   margin-bottom: 0.75rem;
@@ -795,7 +795,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   border-radius: 50%;
   background: var(--accent-lighter, #eef2ff);
   color: var(--accent);
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -814,14 +814,14 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   min-width: 0;
 }
 .welcome-step-title {
-  font-size: 0.88rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   margin: 0 0 0.15rem;
   color: var(--color-text, #1f2937);
 }
 .welcome-step-desc {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted, #6b7280);
   line-height: 1.45;
 }
@@ -830,7 +830,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   background: none;
   border: none;
   color: var(--accent);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;

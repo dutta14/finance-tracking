@@ -11,7 +11,7 @@
   padding: 0.4rem 0 1rem;
 }
 .fi-calc-hero-label {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -25,7 +25,7 @@
   margin-top: 2px;
 }
 .fi-calc-hero-dollar {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: #6b7280;
 }
@@ -33,7 +33,7 @@ body.dark .fi-calc-hero-dollar {
   color: #9ca3af;
 }
 .fi-calc-hero-input {
-  font-size: 1.6rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #111827;
@@ -61,7 +61,7 @@ body.dark .fi-calc-hero-input {
 .fi-calc-link-btn {
   background: none;
   border: none;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   color: var(--accent);
   cursor: pointer;
   padding: 2px 0 0;
@@ -82,7 +82,7 @@ body.dark .fi-calc-hero-input {
   gap: 4px;
 }
 .fi-calc-stepper-label {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   color: #6b7280;
 }
@@ -110,7 +110,7 @@ body.dark .fi-calc-stepper {
   border: none;
   background: transparent;
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
@@ -134,7 +134,7 @@ body.dark .fi-calc-step-btn:hover {
 .fi-calc-step-val {
   flex: 1;
   text-align: center;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #111827;
@@ -146,7 +146,7 @@ body.dark .fi-calc-step-val {
 }
 .fi-calc-step-sub {
   font-weight: 400;
-  font-size: 0.62rem;
+  font-size: var(--fs-xs);
   color: #9ca3af;
 }
 
@@ -160,7 +160,7 @@ body.dark .fi-calc-step-val {
   gap: 0.5rem;
   background: none;
   border: none;
-  font-size: 0.73rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   cursor: pointer;
   padding: 0;
@@ -227,7 +227,7 @@ body.dark .fi-sim-bar {
   align-items: center;
   gap: 4px;
   padding: 3px 10px;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
   border-radius: 100px;
   border: 1px solid #d1d5db;
@@ -266,7 +266,7 @@ body.dark .fi-sim-chip--active {
   color: #fff;
 }
 .fi-sim-chip-x {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   line-height: 1;
   opacity: 0;
   transition: opacity 0.12s;
@@ -280,7 +280,7 @@ body.dark .fi-sim-chip--active {
 }
 .fi-sim-add-btn {
   padding: 3px 10px;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: 100px;
   border: 1px dashed #d1d5db;
@@ -309,7 +309,7 @@ body.dark .fi-sim-add-btn:hover {
 }
 .fi-sim-save-input {
   padding: 3px 8px;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background: #fff;
@@ -327,7 +327,7 @@ body.dark .fi-sim-save-input {
 }
 .fi-sim-save-btn {
   padding: 3px 10px;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   border-radius: 6px;
   border: none;
@@ -341,7 +341,7 @@ body.dark .fi-sim-save-input {
 }
 .fi-sim-cancel-btn {
   padding: 2px 6px;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   border: none;
   background: none;
   color: #9ca3af;
@@ -371,7 +371,7 @@ body.dark .fi-calc-divider {
 .fi-calc-holding-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
 }
 body.dark .fi-calc-holding-row {
@@ -400,7 +400,7 @@ body.dark .fi-calc-result-main {
   border-color: var(--accent-border);
 }
 .fi-calc-result-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: #374151;
   font-weight: 500;
 }
@@ -408,7 +408,7 @@ body.dark .fi-calc-result-label {
   color: #d1d5db;
 }
 .fi-calc-result-value {
-  font-size: 1.3rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -417,7 +417,7 @@ body.dark .fi-calc-result-value {
   color: var(--accent);
 }
 .fi-calc-result--ready {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
 }
 
 /* Breakdown */
@@ -429,7 +429,7 @@ body.dark .fi-calc-result-value {
 .fi-calc-bk-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.73rem;
+  font-size: var(--fs-sm);
   color: #6b7280;
   padding: 2px 0;
 }
@@ -458,7 +458,7 @@ body.dark .fi-calc-bk-row--gap {
   background: none;
   border: none;
   color: #6b7280;
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   padding: 6px 0 2px;
   text-align: left;
@@ -481,7 +481,7 @@ body.dark .fi-calc-expand-btn:hover {
 .fi-calc-yby-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
 }
 .fi-calc-yby-table th {
@@ -524,7 +524,7 @@ body.dark .fi-calc-yby--negative td {
   color: var(--color-negative) !important;
 }
 .fi-calc-yby-note {
-  font-size: 0.62rem;
+  font-size: var(--fs-xs);
   color: #8b5cf6 !important;
   text-align: left !important;
   white-space: nowrap;
