@@ -52,6 +52,9 @@
   --fs-md: 0.9rem;
   --fs-lg: 1rem;
 
+  /* Layout */
+  --max-width: 1200px;
+
 }
 
 /* ── DEFAULT DARK (blue) ── */
