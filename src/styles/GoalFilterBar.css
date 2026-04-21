@@ -186,7 +186,7 @@
 }
 
 .goal-filter-clear-all:hover {
-  color: var(--color-negative-hover);
+  color: var(--color-negative);
 }
 
 /* Dark mode */

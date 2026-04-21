@@ -322,5 +322,3 @@ body.dark .pdf2csv-error {
   border-color: var(--color-negative-border);
   color: var(--color-negative-muted);
 }
-body.dark .pdf2csv-table th,
-body.dark .pdf2csv-del-row:hover,

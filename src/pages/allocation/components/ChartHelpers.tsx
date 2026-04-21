@@ -12,9 +12,8 @@ interface DonutChartProps {
 }
 
 export const DonutChart: FC<DonutChartProps> = ({ data, innerR = 50, outerR = 90, height = 220 }) => {
-  const isDark = document.body.classList.contains('dark')
-  const tooltipBg = isDark ? '#1f2937' : '#fff'
-  const tooltipBorder = isDark ? '#374151' : '#e5e7eb'
+  const tooltipBg = 'var(--color-surface)'
+  const tooltipBorder = 'var(--color-border)'
 
   if (data.length === 0) return <div className="alloc-page-empty">No data for this scope</div>
   return (

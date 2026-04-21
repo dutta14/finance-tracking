@@ -922,12 +922,12 @@
 /* ── Dark mode ───────────────────────────────────────────────── */
 
 body.dark .alloc-ratio-confirm-bar {
-  background: rgba(239,68,68,0.1);
-  border-color: rgba(239,68,68,0.25);
+  background: var(--color-negative-light);
+  border-color: var(--color-negative-border);
   color: var(--color-negative-muted);
 }
 body.dark .alloc-ratio-confirm-no {
-  border-color: rgba(239,68,68,0.25);
+  border-color: var(--color-negative-border);
   color: var(--color-negative-muted);
 }
 

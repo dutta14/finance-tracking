@@ -155,7 +155,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({ goal, profileBirthday }) => {
                       dataKey="month"
                       tick={{ fontSize: 11 }}
                       interval="preserveStartEnd"
-                      stroke="var(--projection-axis, #9ca3af)"
+                      stroke="var(--projection-axis)"
                     />
                     <YAxis
                       tickFormatter={v => {
@@ -164,15 +164,15 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({ goal, profileBirthday }) => {
                         return `$${v}`
                       }}
                       tick={{ fontSize: 11 }}
-                      stroke="var(--projection-axis, #9ca3af)"
+                      stroke="var(--projection-axis)"
                       width={72}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="4 2" strokeWidth={1} />
+                    <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
                     <Line
                       type="monotone"
                       dataKey="remaining"
-                      stroke="#2563eb"
+                      stroke="var(--accent-hover)"
                       strokeWidth={2}
                       dot={false}
                       activeDot={{ r: 5 }}

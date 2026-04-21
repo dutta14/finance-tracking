@@ -1849,8 +1849,6 @@ body.dark .data-filter-clear-btn {
   color: var(--accent-text-mid);
 }
 
-body.dark .data-charts-type-picker,
-
 /* Sort/filter dark */
 body.dark .data-th-filter-option input { accent-color: var(--accent-hover); }
 body.dark .data-th-filter-clear:hover { color: var(--accent-text-mid); background: var(--color-bg); }
@@ -1860,38 +1858,14 @@ body.dark .data-bulk-group-ok {
 }
 
 body.dark .data-badge--owner-joint {
-  background: var(--accent-text-dark);
+  background: var(--accent-light);
   color: var(--accent-text-mid);
 }
-
-body.dark .data-form-field input,
-
-body.dark .data-form-field input:focus,
 
 body.dark .data-group-option.selected {
-  background: var(--accent-text-dark);
+  background: var(--accent-light);
   color: var(--accent-text-mid);
 }
-
-body.dark .data-modal,
-
-body.dark .data-import-csv-btn,
-
-body.dark .data-import-csv-btn:hover,
-
-body.dark .data-split-btn,
-
-body.dark .data-split-btn:hover,
-
-body.dark th.data-spreadsheet-inactive .data-spreadsheet-account-name,
-
-body.dark .data-spreadsheet tbody tr:hover .data-spreadsheet-cell,
-
-/* Dark mode: inline entry row */
-
-body.dark .data-spreadsheet-inline-row .data-spreadsheet-row-header,
-
-body.dark .data-spreadsheet-inline-row:hover .data-spreadsheet-cell,
 
 body.dark .data-inline-cancel {
   background: var(--color-negative-light);

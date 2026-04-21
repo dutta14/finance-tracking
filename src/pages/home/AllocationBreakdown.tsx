@@ -75,9 +75,8 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     return { fiData: buildAlloc('fi'), gwData: buildAlloc('gw'), totalData: buildAlloc() }
   }, [accounts, balances])
 
-  const isDark = document.body.classList.contains('dark')
-  const tooltipBg = isDark ? '#1f2937' : '#fff'
-  const tooltipBorder = isDark ? '#374151' : '#e5e7eb'
+  const tooltipBg = 'var(--color-surface)'
+  const tooltipBorder = 'var(--color-border)'
 
   const renderLegend = (data: { name: string; value: number; color: string }[], total: number) => (
     <div className="alloc-legend">

@@ -321,8 +321,6 @@ body.dark .budget-title {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-body.dark .budget-td--category,
-body.dark .budget-td--category-name,
 .budget-td--category-name {
   padding-left: 1.5rem;
   color: var(--color-text-secondary);
@@ -586,7 +584,7 @@ body.dark .budget-csv-error {
   color: var(--color-warning-text);
 }
 body.dark .budget-removed-pill--on {
-  background: #451a0333;
+  background: var(--color-warning-light);
   color: var(--color-warning);
 }
 

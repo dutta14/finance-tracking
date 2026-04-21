@@ -629,14 +629,6 @@ body.dark .home-card-link:hover { color: var(--accent-text-mid); }
 body.dark .nw-jump-month-btn.active { background: var(--accent); color: var(--color-text-on-accent); }
 body.dark .nw-change.up { color: var(--color-positive); }
 
-/* Mini chart tabs dark */
-
-/* Mini date filter dark */
-
-/* Goals dark */
-
-/* Alloc dark */
-
 /* ── Card CTA empty state ── */
 .home-card-cta {
   flex: 1;
@@ -790,8 +782,6 @@ body.dark .home-card-cta-btn:hover { color: var(--color-text-on-accent); }
   transition: color 0.15s;
 }
 .welcome-step-cta:hover { color: var(--accent-hover); }
-
-/* Welcome dark */
 
 /* Responsive: stack on narrow */
 @media (max-width: 640px) {

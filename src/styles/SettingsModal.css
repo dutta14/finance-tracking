@@ -211,7 +211,7 @@
   justify-content: center;
   opacity: 0;
   transition: opacity 0.15s;
-  color: white;
+  color: var(--color-text-on-accent);
 }
 
 .settings-avatar-btn:hover .settings-avatar-overlay {
@@ -977,8 +977,8 @@ body.dark .settings-reset-title {
 /* Dark mode theming for GitHub Sync */
 
 body.dark .ghsync-warning-box {
-  background: var(--color-warning);
-  border-color: #92400e;
+  background: var(--color-warning-light);
+  border-color: var(--color-warning);
 }
 
 /* Dark mode for GitHub mini buttons */
@@ -1008,10 +1008,6 @@ body.dark .ghsync-mini-btn {
 .settings-modal-detail::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
 }
-
-body.dark .settings-modal-nav::-webkit-scrollbar-thumb,
-
-body.dark .settings-modal-nav::-webkit-scrollbar-thumb:hover,
 
 /* ── Color palette picker (Appearance section) ── */
 .settings-palette-group {

@@ -500,7 +500,7 @@
 }
 
 /* ── Dark mode ── */
-body.dark .tax-file-chip { background: rgba(99,102,241,0.15); color: var(--accent-text-mid); }
+body.dark .tax-file-chip { background: var(--accent-light); color: var(--accent-text-mid); }
 body.dark .tax-file-remove { color: var(--accent-text-mid); }
 body.dark .tax-rename-btn:hover { color: var(--accent-text-mid); }
 body.dark .tax-tpl-mode-opt.active { color: var(--accent-text-mid); }

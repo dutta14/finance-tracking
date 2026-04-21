@@ -110,12 +110,11 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
   }, [chartData, chartType])
 
   const currencyFormatter = (v: number) => formatCurrency(v)
-  const isDark = document.body.classList.contains('dark')
-  const gridColor = isDark ? '#1f2533' : '#f3f4f6'
-  const textColor = isDark ? '#6b7280' : '#9ca3af'
-  const tooltipBg = isDark ? '#1f2937' : '#fff'
-  const tooltipBorder = isDark ? '#374151' : '#e5e7eb'
-  const tooltipText = isDark ? '#e5e7eb' : '#1f2937'
+  const gridColor = 'var(--color-surface-hover)'
+  const textColor = 'var(--color-text-muted)'
+  const tooltipBg = 'var(--color-surface)'
+  const tooltipBorder = 'var(--color-border)'
+  const tooltipText = 'var(--color-text)'
 
   const axisTickStyle = { fontSize: 10, fill: textColor, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }
   const tooltipStyle = { backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '8px 12px' }
@@ -235,7 +234,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
               <YAxis domain={yDomain} tickFormatter={currencyFormatter} tick={axisTickStyle} axisLine={false} tickLine={false} width={80} />
               <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Math.abs(Number(v)))} />
               <Legend content={renderLegend as any} />
-              <ReferenceLine y={0} stroke={isDark ? '#374151' : '#d1d5db'} strokeWidth={1} />
+              <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[3, 3, 0, 0]} />
               <Bar dataKey="liabilities" name="Liabilities" fill="#ef4444" radius={[0, 0, 3, 3]} />
             </BarChart>

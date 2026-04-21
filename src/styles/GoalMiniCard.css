@@ -1,6 +1,6 @@
 .goal-mini-card {
   padding: 1.25rem;
-  background: white;
+  background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
@@ -222,7 +222,7 @@
 /* Inline rename */
 .goal-rename-inline {
   padding: 1rem 1.25rem;
-  background: white;
+  background: var(--color-surface);
   border: 1.5px solid var(--accent);
   border-radius: var(--radius);
   box-shadow: 0 0 0 3px var(--accent-focus-ring));

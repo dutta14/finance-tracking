@@ -8,10 +8,6 @@
   animation: drawer-backdrop-in 0.2s ease;
 }
 
-body.dark .goal-drawer-backdrop {
-  background: rgba(0, 0, 0, 0.5);
-}
-
 @keyframes drawer-backdrop-in {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -31,10 +27,6 @@ body.dark .goal-drawer-backdrop {
   display: flex;
   flex-direction: column;
   animation: drawer-slide-in 0.25s ease;
-}
-
-body.dark .goal-drawer {
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes drawer-slide-in {

@@ -312,24 +312,6 @@
    DARK MODE
    ════════════════════════════════════════════ */
 
-body.dark .search-overlay {
-  background: rgba(0, 0, 0, 0.45);
-}
-
-body.dark .search-modal {
-  box-shadow:
-    0 16px 48px -8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-
-body.dark .search-result:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-body.dark .search-result-match {
-  color: var(--accent-hover);
-}
-
 /* ════════════════════════════════════════════
    RESPONSIVE
    ════════════════════════════════════════════ */

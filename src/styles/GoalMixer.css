@@ -388,10 +388,6 @@
 
 /* ── Dark mode ── */
 
-body.dark .mixer-header,
-body.dark .mixer-col + .mixer-col,
-body.dark .mixer-body,
-
 body.dark .mixer-gw-item.checked { background: var(--color-positive-light); border-color: var(--color-positive); }
 body.dark .mixer-gw-pv { color: var(--color-positive); }
 

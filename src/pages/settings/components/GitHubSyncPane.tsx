@@ -157,7 +157,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button className="ghsync-mini-btn" onClick={handleGhSaveToken} disabled={ghSavingToken || !ghTokenInput || !ghPassphrase}>{ghSavingToken ? 'Saving…' : 'Save Token'}</button>
                       {ghHasStoredToken && (
-                        <button className="ghsync-mini-btn" style={{ background: 'transparent', color: '#6b7280' }} onClick={() => { setGhShowTokenForm(false); setGhTokenInput(''); setGhPassphrase('') }}>Cancel</button>
+                        <button className="ghsync-mini-btn" style={{ background: 'transparent', color: 'var(--color-text-muted)' }} onClick={() => { setGhShowTokenForm(false); setGhTokenInput(''); setGhPassphrase('') }}>Cancel</button>
                       )}
                       {ghUsingLegacyToken && (
                         <button className="ghsync-mini-btn" onClick={handleGhMigrateLegacy} disabled={ghSavingToken || !ghPassphrase}>Encrypt Legacy</button>
@@ -171,7 +171,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                 {ghConfig?.owner && ghConfig?.repo && !ghEditingRepo ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span style={{ fontSize: '0.8rem' }}>
-                      <span style={{ color: '#6b7280', marginRight: '0.25rem' }}>Repo:</span>
+                      <span style={{ color: 'var(--color-text-muted)', marginRight: '0.25rem' }}>Repo:</span>
                       <strong style={{ color: 'var(--color-text)' }}>{ghConfig.owner}/{ghConfig.repo}</strong>
                     </span>
                     <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={() => setGhEditingRepo(true)}>Edit</button>
@@ -189,7 +189,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                       <input className="ghsync-field-input" type="text" value={ghConfig?.repo || ''} onChange={e => { onGhUpdateConfig?.({ repo: e.target.value }); setGhTestResult(null); if (!ghEditingRepo) setGhEditingRepo(true) }} placeholder="finance-backups" />
                     </div>
                     {ghConfig?.owner && ghConfig?.repo && (
-                      <button className="ghsync-mini-btn" style={{ background: 'transparent', color: '#6b7280', gridColumn: 'span 2', justifySelf: 'start' }} onClick={() => setGhEditingRepo(false)}>Cancel</button>
+                      <button className="ghsync-mini-btn" style={{ background: 'transparent', color: 'var(--color-text-muted)', gridColumn: 'span 2', justifySelf: 'start' }} onClick={() => setGhEditingRepo(false)}>Cancel</button>
                     )}
                   </div>
                 )}
@@ -203,16 +203,16 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                   <div className="ghsync-status-bar" style={{ margin: 0, flex: 1, fontSize: '0.8rem' }}>
                     {ghSyncStatus === 'syncing' && <><span className="ghsync-spinner" />Syncing…</>}
                     {ghSyncStatus === 'success' && ghLastSyncAt && <>
-                      <span style={{ color: '#10b981', marginRight: '0.5rem' }}>●</span>
+                      <span style={{ color: 'var(--color-positive)', marginRight: '0.5rem' }}>●</span>
                       Last synced {formatRelative(ghLastSyncAt)} · {formatDate(ghLastSyncAt)}
-                      {hasPendingChanges && <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600 }}>unsaved changes</span>}
+                      {hasPendingChanges && <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', color: 'var(--color-warning)', fontWeight: 600 }}>unsaved changes</span>}
                     </>}
                     {ghSyncStatus === 'error' && <>
-                      <span style={{ color: '#ef4444', marginRight: '0.5rem' }}>●</span>
+                      <span style={{ color: 'var(--color-negative)', marginRight: '0.5rem' }}>●</span>
                       Sync failed: {ghLastError}
                     </>}
                     {ghSyncStatus === 'idle' && <>
-                      <span style={{ color: '#9ca3af', marginRight: '0.5rem' }}>●</span>
+                      <span style={{ color: 'var(--color-text-muted)', marginRight: '0.5rem' }}>●</span>
                       {ghConfig?.owner && ghConfig?.repo ? (hasPendingChanges ? 'Unsaved changes — sync when ready' : (ghHasStoredToken ? (ghTokenUnlocked ? 'Ready to sync' : 'Token locked') : 'Token not set up')) : 'Missing configuration'}
                     </>}
                   </div>
@@ -245,7 +245,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
               <p className={ghRestoreResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'} style={{ marginBottom: '1rem' }}>{ghRestoreResult.ok ? '✓' : '✗'} {ghRestoreResult.message}</p>
             )}
             {!ghIsConfigured ? (
-              <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Connect and unlock token to view history.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Connect and unlock token to view history.</p>
             ) : ghHistory.length === 0 ? (
               <p className="ghsync-field-hint">No commits yet for this file.</p>
             ) : (

@@ -344,7 +344,7 @@
    ────────────────────────────────────────────── */
 
 body.dark .fi-card-warning-suggest:hover:not(:disabled) {
-  background: #92400e;
+  background: var(--color-warning-light);
 }
 
 /* ── Inline edit button ── */
