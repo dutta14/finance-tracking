@@ -85,7 +85,7 @@
   padding: 1rem 1.25rem;
 }
 .tax-section--return {
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent);
   border-width: 1.5px;
 }
 .tax-section-header {
@@ -96,7 +96,7 @@
 }
 .tax-section-icon {
   flex-shrink: 0;
-  color: var(--accent, #6366f1);
+  color: var(--accent);
 }
 .tax-section-title {
   font-size: var(--fs-xl);
@@ -221,7 +221,7 @@
   transition: background 0.12s, color 0.12s;
 }
 .tax-btn--primary {
-  background: var(--accent, #6366f1);
+  background: var(--accent);
   color: #fff;
 }
 .tax-btn--primary:hover { background: var(--accent-hover, #4f46e5); }
@@ -265,13 +265,13 @@
 }
 .tax-item:hover .tax-rename-btn,
 .tax-rename-btn:focus { opacity: 0.7; }
-.tax-rename-btn:hover { opacity: 1; color: var(--accent, #6366f1); }
+.tax-rename-btn:hover { opacity: 1; color: var(--accent); }
 .tax-item-label-text { cursor: default; }
 .tax-rename-input {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   padding: 0.1rem 0.35rem;
-  border: 1px solid var(--accent, #6366f1);
+  border: 1px solid var(--accent);
   border-radius: var(--radius);
   outline: none;
   background: var(--color-surface, #fff);
@@ -314,7 +314,7 @@
   align-items: center;
   gap: 0.3rem;
 }
-.tax-tpl-mode-opt.active { color: var(--accent, #6366f1); font-weight: var(--fw-medium); }
+.tax-tpl-mode-opt.active { color: var(--accent); font-weight: var(--fw-medium); }
 .tax-tpl-mode-opt input { margin: 0; }
 
 /* Template list (import modal) */
@@ -357,7 +357,7 @@
   height: 100%;
   object-fit: cover;
 }
-.tax-owner-primary { background: var(--accent, #6366f1); }
+.tax-owner-primary { background: var(--accent); }
 .tax-owner-partner { background: #f59e0b; }
 .tax-owner-group {
   display: inline-flex;
@@ -463,7 +463,7 @@
   outline: none;
 }
 .tax-input:focus {
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-lighter, #eef2ff);
 }
 
@@ -504,7 +504,7 @@ body.dark .tax-year-label { color: #e5e7eb; }
 body.dark .tax-year-btn { border-color: #2d3344; color: #d1d5db; }
 body.dark .tax-year-btn:hover:not(:disabled) { background: rgba(99,102,241,0.1); }
 body.dark .tax-section { background: var(--color-card-bg, #1a1d2e); border-color: #2d3344; }
-body.dark .tax-section--return { border-color: var(--accent, #6366f1); }
+body.dark .tax-section--return { border-color: var(--accent); }
 body.dark .tax-item { border-bottom-color: #232636; }
 body.dark .tax-item-label { color: #e5e7eb; }
 body.dark .tax-section-title { color: #e5e7eb; }
@@ -525,12 +525,12 @@ body.dark .tax-return-menu button:hover { background: rgba(99,102,241,0.1); }
 body.dark .tax-modal { background: #1a1d2e; }
 body.dark .tax-modal h3 { color: #e5e7eb; }
 body.dark .tax-input { background: #232636; border-color: #2d3344; color: #e5e7eb; }
-body.dark .tax-input:focus { border-color: var(--accent, #6366f1); }
+body.dark .tax-input:focus { border-color: var(--accent); }
 body.dark .tax-suggest-row:hover { background: rgba(99,102,241,0.1); }
 body.dark .tax-suggest-name { color: #e5e7eb; }
 body.dark .tax-suggest-badge { background: #232636; color: #6b7280; }
 body.dark .tax-owner-group .tax-owner-avatar { border-color: var(--color-card-bg, #1a1d2e); }
-body.dark .tax-rename-input { background: #232636; border-color: var(--accent, #6366f1); color: #e5e7eb; }
+body.dark .tax-rename-input { background: #232636; border-color: var(--accent); color: #e5e7eb; }
 body.dark .tax-rename-btn { color: #6b7280; }
 body.dark .tax-rename-btn:hover { color: #a5b4fc; }
 body.dark .tax-tpl-row { border-color: #2d3344; }

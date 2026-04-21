@@ -189,13 +189,13 @@ body.dark .drive-row-tag--cat {
 }
 .drive-filter-btn:hover {
   background: var(--accent-lighter, #eef2ff);
-  color: var(--accent, #6366f1);
-  border-color: var(--accent, #6366f1);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 .drive-filter-btn.active {
-  background: var(--accent, #6366f1);
+  background: var(--accent);
   color: #fff;
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent);
 }
 body.dark .drive-filter-btn {
   border-color: #2d3344;
@@ -204,10 +204,10 @@ body.dark .drive-filter-btn {
 body.dark .drive-filter-btn:hover {
   background: rgba(99, 102, 241, 0.15);
   color: #a5b4fc;
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent);
 }
 body.dark .drive-filter-btn.active {
-  background: var(--accent, #6366f1);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -371,10 +371,10 @@ body.dark .drive-viewer-table tbody tr:hover {
 }
 .drive-add-year-input:focus {
   outline: none;
-  border-color: var(--accent-border, #6366f1);
+  border-color: var(--accent-border);
 }
 .drive-add-year-go {
-  background: var(--accent, #6366f1);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: var(--radius);
@@ -408,11 +408,11 @@ body.dark .drive-viewer-table tbody tr:hover {
   transition: border-color 0.15s, background 0.15s;
 }
 .drive-dropzone:hover {
-  border-color: var(--accent-border, #6366f1);
+  border-color: var(--accent-border);
   background: rgba(99, 102, 241, 0.03);
 }
 .drive-dropzone.active {
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent);
   background: rgba(99, 102, 241, 0.06);
 }
 .drive-dropzone-icon {
@@ -420,7 +420,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   margin-bottom: 0.5rem;
 }
 .drive-dropzone.active .drive-dropzone-icon {
-  color: var(--accent, #6366f1);
+  color: var(--accent);
 }
 .drive-dropzone-text {
   font-size: var(--fs-md);
@@ -481,7 +481,7 @@ body.dark .drive-dropzone:hover {
   background: rgba(255,255,255,0.02);
 }
 body.dark .drive-dropzone.active {
-  border-color: var(--accent, #6366f1);
+  border-color: var(--accent);
   background: rgba(99,102,241,0.08);
 }
 body.dark .drive-dropzone-text { color: #d1d5db; }
