@@ -406,21 +406,55 @@ body.dark .sidebar-link.active {
   background: rgba(0,0,0,0.05) !important;
 }
 
-.sidebar-settings-section {
+/* ── Sidebar footer (Drive + Settings) ── */
+.sidebar-footer {
   margin-top: auto;
   width: 100%;
   border-top: 1px solid var(--color-border);
-  padding-top: 0.5rem;
+  padding: 0.5rem 0 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.sidebar-footer-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  font-size: var(--fs-sm);
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-footer-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+.sidebar-footer-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.sidebar-footer-btn--active {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+.sidebar-footer-label {
+  line-height: 1;
+}
+.sidebar-footer-btn svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.sidebar-footer-btn:hover svg,
+.sidebar-footer-btn--active svg {
+  opacity: 1;
 }
 
-.settings-menu-trigger {
-  color: var(--color-text-muted) !important;
-  font-size: var(--fs-md);
-}
-.settings-menu-trigger:hover {
-  background: rgba(0,0,0,0.03) !important;
-  color: var(--color-text) !important;
-}
 
 .sidebar-toggle svg {
   color: var(--sidebar-toggle-color);

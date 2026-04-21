@@ -306,20 +306,22 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
               Taxes
             </button>
           </li>
-          <li className="sidebar-item">
-            <button
-              className={`sidebar-link${currentPage === 'drive' ? ' active' : ''}`}
-              onClick={() => setCurrentPage('drive')}
-              aria-current={currentPage === 'drive' ? 'page' : undefined}
-            >
-              Drive
-            </button>
-          </li>
         </ul>
         </>
       )}
       {expanded && (
-        <div className="sidebar-settings-section">
+        <div className="sidebar-footer" role="group" aria-label="Utilities">
+          <button
+            className={`sidebar-footer-btn${currentPage === 'drive' ? ' sidebar-footer-btn--active' : ''}`}
+            onClick={() => setCurrentPage('drive')}
+            aria-label="Drive"
+            aria-current={currentPage === 'drive' ? 'page' : undefined}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+              <path d="M4.5 4H8l1.5 2h6A1.5 1.5 0 0 1 17 7.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5V5.5A1.5 1.5 0 0 1 4.5 4z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="sidebar-footer-label">Drive</span>
+          </button>
           <SettingsMenu
             darkMode={darkMode}
             onToggleDarkMode={() => setDarkMode(!darkMode)}

@@ -67,28 +67,18 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
 
   return (
     <>
-      <div className="settings-menu-container" style={{ position: 'relative', width: '100%' }}>
-        <button
-          className="settings-menu-trigger"
-          aria-label="Settings"
-          onClick={() => { setInitialSection('profile'); setSettingsModalOpen(true) }}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.5rem 0.75rem',
-            width: '100%',
-            textAlign: 'left',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            borderRadius: '0.45rem',
-            transition: 'background 0.15s, color 0.15s',
-            color: 'inherit',
-          }}
-        >
-          Settings
-        </button>
-      </div>
+      <button
+        className="sidebar-footer-btn"
+        aria-label="Settings"
+        aria-haspopup="dialog"
+        onClick={() => { setInitialSection('profile'); setSettingsModalOpen(true) }}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+          <path d="M8.3 4.5L8.2 2.2h3.6l-.1 2.3 2.3 1.3 1.9-1.3 1.8 3.2-2 1-.0 2.6 2 1-1.8 3.2-1.9-1.3-2.3 1.3.1 2.3H8.2l.1-2.3-2.3-1.3-1.8 1.3-1.8-3.2 2-1-.0-2.6-2-1 1.8-3.2 1.8 1.3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+        <span className="sidebar-footer-label">Settings</span>
+      </button>
       {settingsModalOpen && (
         <SettingsModal
           darkMode={darkMode}
