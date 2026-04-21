@@ -819,7 +819,7 @@
 }
 .alloc-rebal-money-input {
   width: 110px !important;
-  border-radius: 0 5px 5px 0 !important;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
   text-align: left !important;
 }
 

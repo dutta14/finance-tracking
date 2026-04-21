@@ -343,7 +343,7 @@ body.dark .search-result-match {
   .search-modal {
     width: 100%;
     max-width: 100%;
-    border-radius: 0 0 14px 14px;
+    border-radius: 0 0 var(--radius) var(--radius);
     max-height: 85vh;
   }
 

@@ -324,7 +324,7 @@
   transition: color 0.15s, background 0.15s;
 }
 .home-mini-date-btn:first-child { border-radius: var(--radius) 0 0 4px; }
-.home-mini-date-btn:last-child { border-radius: 0 4px 4px 0; border-right: 1px solid var(--color-border); }
+.home-mini-date-btn:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-right: 1px solid var(--color-border); }
 .home-mini-date-btn:hover { color: var(--color-text-muted); background: var(--color-bg); }
 .home-mini-date-btn.active {
   color: var(--accent);
@@ -575,7 +575,7 @@
   gap: 1.5px;
 }
 .alloc-bar-seg:first-child { border-radius: var(--radius) 0 0 6px; }
-.alloc-bar-seg:last-child { border-radius: 0 6px 6px 0; }
+.alloc-bar-seg:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 .alloc-bar-seg:only-child { border-radius: var(--radius); }
 .alloc-bar-seg {
   transition: width 0.3s ease;
