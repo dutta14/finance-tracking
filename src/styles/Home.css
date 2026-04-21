@@ -608,14 +608,14 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .home-page { padding: 1.5rem 1rem 2rem; }
   .home-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .home-greeting h1 { font-size: var(--fs-lg); }
   .nw-amount { font-size: var(--fs-lg); }
   .alloc-grid { flex-direction: column; }
@@ -849,7 +849,7 @@ body.dark .welcome-step-number { background: rgba(99, 102, 241, 0.15); }
 body.dark .welcome-step-desc { color: #6b7280; }
 
 /* Responsive: stack on narrow */
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .welcome-step { flex-wrap: wrap; gap: 0.6rem; }
   .welcome-step-cta { margin-left: auto; }
 }

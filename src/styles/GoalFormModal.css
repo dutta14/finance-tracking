@@ -52,7 +52,7 @@ body.dark .goal-form-modal-backdrop {
   background: rgba(0, 0, 0, 0.65);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .goal-form-modal-backdrop {
     padding: 0;
     align-items: flex-end;

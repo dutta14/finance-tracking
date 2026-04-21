@@ -378,7 +378,7 @@ section.goal {
   transition: padding-right 0.2s;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .goal-content--pane-open {
     padding-right: 0;
   }
@@ -604,7 +604,7 @@ section.goal {
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .goal-layout {
     grid-template-columns: 1fr;
   }
@@ -614,7 +614,7 @@ section.goal {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .goal-header {
     padding: 0;
     gap: 0.75rem;
