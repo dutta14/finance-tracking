@@ -110,7 +110,7 @@ body.dark .goal-drawer {
   cursor: pointer;
   color: var(--color-text-muted);
   padding: 0.35rem;
-  border-radius: 0.3rem;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,7 +142,7 @@ body.dark .goal-drawer {
   cursor: pointer;
   color: var(--color-text-muted);
   padding: 0.35rem 0.4rem;
-  border-radius: 0.3rem;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;

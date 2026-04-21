@@ -50,7 +50,7 @@ body.dark .tools-subtitle {
   display: flex;
   gap: 2px;
   background: #f3f4f6;
-  border-radius: 7px;
+  border-radius: var(--radius);
   padding: 2px;
 }
 body.dark .tools-view-toggle {
@@ -63,7 +63,7 @@ body.dark .tools-view-toggle {
   width: 30px;
   height: 26px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius);
   background: transparent;
   color: #9ca3af;
   cursor: pointer;
@@ -104,7 +104,7 @@ body.dark .tools-view-btn--active {
 .tools-card {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
@@ -146,7 +146,7 @@ body.dark .tools-card--active {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--accent-lighter);
   border: 1px solid var(--accent-border);
   flex-shrink: 0;
@@ -213,7 +213,7 @@ body.dark .tools-card-desc {
 .tools-card--grid .tools-icon {
   width: 44px;
   height: 44px;
-  border-radius: 11px;
+  border-radius: var(--radius);
 }
 .tools-card--grid .tools-icon-svg {
   width: 22px;
@@ -247,7 +247,7 @@ body.dark .tools-card-arrow {
   min-width: 440px;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 14px;
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
@@ -292,7 +292,7 @@ body.dark .tools-pane-title {
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: transparent;
   color: #9ca3af;
   font-size: var(--fs-md);
@@ -354,7 +354,7 @@ body.dark .tools-pane-close:hover {
 }
 .tools-fullscreen-modal {
   background: var(--color-surface, #fff);
-  border-radius: 14px;
+  border-radius: var(--radius);
   width: 100%;
   max-width: var(--max-width);
   height: calc(100vh - 3rem);

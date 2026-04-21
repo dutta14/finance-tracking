@@ -36,7 +36,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-radius: 16px;
+  border-radius: var(--radius);
   transition: transform 0.15s, box-shadow 0.15s;
   cursor: grab;
 }
@@ -47,14 +47,14 @@
 .home-grid-slot--over {
   outline: 2px dashed var(--accent);
   outline-offset: 3px;
-  border-radius: 16px;
+  border-radius: var(--radius);
 }
 
 /* ── Card shell ── */
 .home-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -117,7 +117,7 @@
 .nw-month-arrow {
   background: none;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   width: 28px;
   height: 28px;
   display: flex;
@@ -159,7 +159,7 @@
   margin-top: 6px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
   padding: 10px 12px;
   z-index: 20;
@@ -185,7 +185,7 @@
   border: none;
   background: var(--color-surface-hover);
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -223,7 +223,7 @@
   gap: 0.4rem;
   width: 100%;
   padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   transition: background 0.12s;
 }
 .nw-tree-node--parent {
@@ -323,7 +323,7 @@
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
-.home-mini-date-btn:first-child { border-radius: 4px 0 0 4px; }
+.home-mini-date-btn:first-child { border-radius: var(--radius) 0 0 4px; }
 .home-mini-date-btn:last-child { border-radius: 0 4px 4px 0; border-right: 1px solid var(--color-border); }
 .home-mini-date-btn:hover { color: var(--color-text-muted); background: var(--color-bg); }
 .home-mini-date-btn.active {
@@ -347,7 +347,7 @@
   font-size: var(--fs-xs);
   padding: 0.15rem 0.3rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text-heading);
   outline: none;
@@ -376,7 +376,7 @@
   gap: 0.3rem;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: #fafafa;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -444,12 +444,12 @@
   flex: 1;
   height: 4px;
   background: var(--color-border);
-  border-radius: 2px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .goals-peek-bar-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: var(--radius);
   transition: width 0.3s ease;
 }
 .goals-peek-bar-fill--fi { background: var(--accent); }
@@ -542,7 +542,7 @@
   display: flex;
   gap: 2px;
   background: var(--color-surface-hover);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 2px;
 }
 .alloc-toggle-btn {
@@ -551,7 +551,7 @@
   padding: 2px 10px;
   font-size: var(--fs-sm);
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
   color: var(--color-text-muted);
   transition: all 0.15s ease;
@@ -571,12 +571,12 @@
 .alloc-stacked-bar {
   display: flex;
   height: 18px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   gap: 1.5px;
 }
-.alloc-bar-seg:first-child { border-radius: 6px 0 0 6px; }
+.alloc-bar-seg:first-child { border-radius: var(--radius) 0 0 6px; }
 .alloc-bar-seg:last-child { border-radius: 0 6px 6px 0; }
-.alloc-bar-seg:only-child { border-radius: 6px; }
+.alloc-bar-seg:only-child { border-radius: var(--radius); }
 .alloc-bar-seg {
   transition: width 0.3s ease;
   min-width: 2px;
@@ -597,7 +597,7 @@
   font-size: var(--fs-xs);
   font-weight: 500;
   padding: 4px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   white-space: nowrap;
   pointer-events: none;
   z-index: 10;
@@ -715,7 +715,7 @@ body.dark .alloc-empty { color: #6b7280; }
   font-size: var(--fs-sm);
   font-weight: 600;
   padding: 0.35rem 0.9rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -775,7 +775,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   gap: 1rem;
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 1rem 1.25rem;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;

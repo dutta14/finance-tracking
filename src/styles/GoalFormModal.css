@@ -17,7 +17,7 @@
 
 .goal-form-modal {
   background: #fff;
-  border-radius: 0.6rem;
+  border-radius: var(--radius);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
   width: 100%;
   max-width: 560px;
@@ -34,7 +34,7 @@
 /* Override form section styles inside modal */
 .goal-form-modal .goal-form-section {
   border: none;
-  border-radius: 0.6rem;
+  border-radius: var(--radius);
   padding: 0;
   position: static;
 }
@@ -61,6 +61,6 @@ body.dark .goal-form-modal-backdrop {
   .goal-form-modal {
     max-width: 100%;
     max-height: 92vh;
-    border-radius: 1rem 1rem 0 0;
+    border-radius: var(--radius) 1rem 0 0;
   }
 }

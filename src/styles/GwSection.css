@@ -24,7 +24,7 @@
   font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
-  border-radius: 0.3rem;
+  border-radius: var(--radius);
   padding: 0.15rem 0.45rem;
   line-height: 1;
   flex-shrink: 0;
@@ -52,7 +52,7 @@
   text-align: center;
   padding: 2rem 1rem;
   border: 2px dashed var(--accent-border);
-  border-radius: 0.75rem;
+  border-radius: var(--radius);
 }
 
 .gw-empty-icon {
@@ -78,7 +78,7 @@
   background: var(--accent-badge);
   color: #fff;
   border: none;
-  border-radius: 0.4rem;
+  border-radius: var(--radius);
   padding: 0.55rem 1.25rem;
   font-size: var(--fs-md);
   font-weight: 600;
@@ -133,7 +133,7 @@
 .gw-import-picker {
   background: #fff;
   border: 1px solid var(--accent-border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
   padding: 0.5rem;
   width: 100%;
   display: flex;
@@ -164,7 +164,7 @@
   color: #9ca3af;
   cursor: pointer;
   padding: 0.15rem 0.35rem;
-  border-radius: 0.25rem;
+  border-radius: var(--radius);
   transition: color 0.15s, background 0.15s;
 }
 
@@ -189,7 +189,7 @@
   width: 100%;
   background: none;
   border: none;
-  border-radius: 0.35rem;
+  border-radius: var(--radius);
   padding: 0.45rem 0.6rem;
   cursor: pointer;
   text-align: left;
@@ -241,7 +241,7 @@
 .gw-dollar-toggle {
   display: flex;
   background: var(--accent-light);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 2px;
   gap: 2px;
 }
@@ -249,7 +249,7 @@
 .gw-dollar-toggle-btn {
   background: none;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius);
   padding: 0.22rem 0.65rem;
   font-size: var(--fs-sm);
   cursor: pointer;
@@ -274,7 +274,7 @@
   gap: 0.6rem;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 0.4rem;
+  border-radius: var(--radius);
   padding: 0.55rem 0.75rem;
   font-size: var(--fs-md);
   overflow: hidden;
@@ -291,7 +291,7 @@
   background: var(--color-negative);
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius);
   padding: 0.2rem 0.65rem;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -341,7 +341,7 @@ body.dark .gw-goal-undo-progress {
 /* Goal card */
 .gw-goal-card {
   border: 1px solid var(--accent-border);
-  border-radius: 0.7rem;
+  border-radius: var(--radius);
   padding: 1rem 1.1rem;
   background: var(--accent-lighter);
   transition: box-shadow 0.15s;
@@ -370,7 +370,7 @@ body.dark .gw-goal-undo-progress {
   cursor: pointer;
   color: #9ca3af;
   padding: 0.2rem;
-  border-radius: 0.3rem;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   transition: color 0.15s, background 0.15s;
@@ -409,7 +409,7 @@ body.dark .gw-goal-undo-progress {
   cursor: pointer;
   color: #9ca3af;
   padding: 0.2rem;
-  border-radius: 0.3rem;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   transition: color 0.15s, background 0.15s;
@@ -449,7 +449,7 @@ body.dark .gw-goal-undo-progress {
 /* Target callout (FV at disbursement) */
 .gw-goal-target {
   background: var(--accent-light);
-  border-radius: 0.45rem;
+  border-radius: var(--radius);
   padding: 0.65rem 0.85rem;
   display: flex;
   align-items: center;
@@ -476,7 +476,7 @@ body.dark .gw-goal-undo-progress {
 /* GW Goal milestone callout (PV at retirement) */
 .gw-goal-milestone {
   background: var(--accent-light);
-  border-radius: 0.45rem;
+  border-radius: var(--radius);
   padding: 0.7rem 0.85rem 0.6rem;
   margin-bottom: 0.6rem;
 }
@@ -536,7 +536,7 @@ body.dark .gw-goal-undo-progress {
 .gw-goal-pv {
   background: var(--accent-lighter);
   border: 1px solid var(--accent-border);
-  border-radius: 0.45rem;
+  border-radius: var(--radius);
   padding: 0.6rem 0.85rem;
   text-align: center;
 }
@@ -565,7 +565,7 @@ body.dark .gw-goal-undo-progress {
 /* Add form */
 .gw-form {
   border: 1px solid var(--accent-border);
-  border-radius: 0.75rem;
+  border-radius: var(--radius);
   padding: 1.25rem;
   background: var(--accent-lighter);
   margin-top: 0.5rem;
@@ -583,7 +583,7 @@ body.dark .gw-goal-undo-progress {
   color: var(--color-negative);
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 0.35rem;
+  border-radius: var(--radius);
   padding: 0.45rem 0.7rem;
   margin: 0 0 0.9rem;
 }
@@ -613,7 +613,7 @@ body.dark .gw-goal-undo-progress {
   width: 100%;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--accent-track);
-  border-radius: 0.4rem;
+  border-radius: var(--radius);
   font-size: var(--fs-md);
   background: #fff;
   color: #111;
@@ -643,7 +643,7 @@ body.dark .gw-goal-undo-progress {
   background: var(--accent-badge);
   color: #fff;
   border: none;
-  border-radius: 0.4rem;
+  border-radius: var(--radius);
   padding: 0.5rem 1.1rem;
   font-size: var(--fs-md);
   font-weight: 600;
@@ -659,7 +659,7 @@ body.dark .gw-goal-undo-progress {
   background: transparent;
   color: #6b7280;
   border: 1px solid #d1d5db;
-  border-radius: 0.4rem;
+  border-radius: var(--radius);
   padding: 0.5rem 1rem;
   font-size: var(--fs-md);
   cursor: pointer;

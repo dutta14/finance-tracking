@@ -93,7 +93,7 @@ body.dark .fi-calc-stepper-label {
   display: flex;
   align-items: center;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
   background: #f9fafb;
 }
@@ -173,7 +173,7 @@ body.dark .fi-calc-toggle {
   display: inline-block;
   width: 32px;
   height: 18px;
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: #d1d5db;
   transition: background 0.2s;
   flex-shrink: 0;
@@ -311,7 +311,7 @@ body.dark .fi-sim-add-btn:hover {
   padding: 3px 8px;
   font-size: var(--fs-xs);
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: #fff;
   color: #111827;
   outline: none;
@@ -329,7 +329,7 @@ body.dark .fi-sim-save-input {
   padding: 3px 10px;
   font-size: var(--fs-xs);
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: none;
   background: var(--accent);
   color: #fff;
@@ -393,7 +393,7 @@ body.dark .fi-calc-holding-row {
   padding: 0.75rem;
   background: var(--accent-lighter);
   border: 1px solid var(--accent-border);
-  border-radius: 10px;
+  border-radius: var(--radius);
 }
 body.dark .fi-calc-result-main {
   background: var(--accent-lighter);

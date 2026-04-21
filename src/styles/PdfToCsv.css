@@ -14,7 +14,7 @@
   justify-content: center;
   gap: 0.75rem;
   border: 2px dashed var(--color-border, #e5e7eb);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 3rem 2rem;
   cursor: pointer;
   color: var(--color-text-muted, #9ca3af);
@@ -34,7 +34,7 @@
   padding: 0.5rem 0.75rem;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: var(--radius);
   color: #b91c1c;
   font-size: var(--fs-md);
 }
@@ -65,7 +65,7 @@
 .pdf2csv-pages button {
   background: none;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
   padding: 0.15rem 0.4rem;
   font-size: var(--fs-md);
@@ -76,7 +76,7 @@
   margin-left: auto;
   background: none;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.3rem 0.7rem;
   font-size: var(--fs-sm);
   cursor: pointer;
@@ -99,7 +99,7 @@
 .pdf2csv-zoom button {
   background: none;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
   padding: 0.15rem 0.45rem;
   font-size: var(--fs-md);
@@ -120,7 +120,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius);
   max-height: 500px;
   background: #f9fafb;
 }
@@ -136,7 +136,7 @@
   position: absolute;
   background: rgba(99, 102, 241, 0.12);
   border: 1.5px solid var(--accent, #6366f1);
-  border-radius: 2px;
+  border-radius: var(--radius);
   pointer-events: none;
 }
 .pdf2csv-sel--final {
@@ -147,7 +147,7 @@
 /* Results */
 .pdf2csv-results {
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 10px;
+  border-radius: var(--radius);
   overflow: hidden;
   background: var(--color-surface, #fff);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -172,7 +172,7 @@
 .pdf2csv-btn {
   background: none;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.3rem 0.7rem;
   font-size: var(--fs-sm);
   font-weight: 500;
@@ -256,7 +256,7 @@
 .pdf2csv-table td[contenteditable]:focus {
   background: rgba(99, 102, 241, 0.06);
   box-shadow: inset 0 0 0 1.5px var(--accent, #6366f1);
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
 
 /* Row / column delete buttons */
@@ -289,7 +289,7 @@
   width: 0.9rem;
   height: 0.9rem;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--radius);
   background: none;
   color: var(--color-text-muted, #9ca3af);
   font-size: var(--fs-sm);

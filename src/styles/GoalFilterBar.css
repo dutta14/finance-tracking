@@ -96,7 +96,7 @@
 .filter-dropdown-panel {
   background: #fff;
   border: 1px solid #e5e5e5;
-  border-radius: 0.6rem;
+  border-radius: var(--radius);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   min-width: 180px;
   padding: 0.5rem 0.5rem 0.4rem;
@@ -112,7 +112,7 @@
   font-size: var(--fs-md);
   color: #222;
   padding: 0.4rem 0.5rem;
-  border-radius: 0.35rem;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.12s;
 }
@@ -142,7 +142,7 @@
   margin-top: 0.35rem;
   background: none;
   border: 1px solid #e5e5e5;
-  border-radius: 0.35rem;
+  border-radius: var(--radius);
   cursor: pointer;
   font-size: var(--fs-md);
   color: #555;

@@ -36,7 +36,7 @@
   color: var(--accent);
   cursor: pointer;
   padding: 0.15rem 0.3rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font: inherit;
   font-size: var(--fs-md);
 }
@@ -62,7 +62,7 @@
 .drive-year-tab {
   background: var(--color-surface-alt);
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.35rem 0.9rem;
   font: inherit;
   font-size: var(--fs-md);
@@ -88,7 +88,7 @@
   flex-direction: column;
   gap: 2px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -252,7 +252,7 @@ body.dark .drive-filter-btn.active {
 .drive-viewer-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--color-surface);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 2px 12px rgba(0, 0, 0, 0.04);
 }
@@ -296,7 +296,7 @@ body.dark .drive-filter-btn.active {
 .drive-pdf-wrap {
   flex: 1;
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
   overflow: hidden;
   min-height: 0;
 }
@@ -364,7 +364,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   width: 70px;
   padding: 0.3rem 0.4rem;
   border: 1px solid #d1d5db;
-  border-radius: 5px;
+  border-radius: var(--radius);
   text-align: center;
   color: #111;
   background: #fff;
@@ -377,7 +377,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   background: var(--accent, #6366f1);
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius);
   padding: 0.3rem 0.6rem;
   font: inherit;
   font-size: var(--fs-sm);
@@ -402,7 +402,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   margin-top: 1rem;
   padding: 2rem 1.5rem;
   border: 2px dashed #d1d5db;
-  border-radius: 10px;
+  border-radius: var(--radius);
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -447,7 +447,7 @@ body.dark .drive-viewer-table tbody tr:hover {
   background: #1f2937;
   color: #f3f4f6;
   padding: 0.6rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: var(--fs-md);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   max-width: 90vw;

@@ -24,7 +24,7 @@
 .alloc-page-section {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -56,7 +56,7 @@
   display: flex;
   gap: 0.25rem;
   background: #f3f4f6;
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 2px;
 }
 .alloc-page-tab {
@@ -66,7 +66,7 @@
   font-size: var(--fs-sm);
   font-weight: 500;
   padding: 0.3rem 0.65rem;
-  border-radius: 5px;
+  border-radius: var(--radius);
   cursor: pointer;
   color: #6b7280;
   transition: background 0.12s, color 0.12s;
@@ -82,7 +82,7 @@
   display: flex;
   gap: 0;
   border: 1px solid #e5e7eb;
-  border-radius: 5px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .alloc-page-toggle-btn {
@@ -135,7 +135,7 @@
 .alloc-page-legend-dot {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius);
   flex-shrink: 0;
 }
 .alloc-page-legend-label {
@@ -163,7 +163,7 @@
 .alloc-ratio-create-btn {
   background: none;
   border: 1px solid var(--accent-border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.3rem 0.75rem;
   font: inherit;
   font-size: var(--fs-sm);
@@ -183,7 +183,7 @@
   z-index: 40;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   min-width: 200px;
   padding: 4px 0;
@@ -220,7 +220,7 @@
   gap: 0.35rem;
   padding: 0.35rem 0.5rem 0.35rem 0.7rem;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: #f9fafb;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
@@ -265,7 +265,7 @@
   margin-bottom: 1rem;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: var(--fs-md);
   color: #991b1b;
 }
@@ -274,7 +274,7 @@
   background: #ef4444;
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius);
   padding: 0.25rem 0.6rem;
   font: inherit;
   font-size: var(--fs-sm);
@@ -287,7 +287,7 @@
 .alloc-ratio-confirm-no {
   background: none;
   border: 1px solid #fecaca;
-  border-radius: 5px;
+  border-radius: var(--radius);
   padding: 0.25rem 0.6rem;
   font: inherit;
   font-size: var(--fs-sm);
@@ -307,7 +307,7 @@
   border: 1px solid transparent;
   background: none;
   padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: #111;
   min-width: 0;
   flex: 1;
@@ -329,7 +329,7 @@
 .alloc-ratio-preset {
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
-  border-radius: 20px;
+  border-radius: var(--radius);
   padding: 0.35rem 0.85rem;
   font: inherit;
   font-size: var(--fs-sm);
@@ -375,7 +375,7 @@
 .alloc-ratio-bar {
   display: flex;
   height: 28px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .alloc-ratio-seg {
@@ -406,7 +406,7 @@
 .alloc-ratio-label-dot {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--radius);
   flex-shrink: 0;
 }
 
@@ -414,7 +414,7 @@
 
 .alloc-ratio-builder {
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 1rem 1.25rem;
   background: #fafafa;
 }
@@ -441,7 +441,7 @@
   padding: 0.75rem;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 .alloc-ratio-group-header {
   display: flex;
@@ -452,7 +452,7 @@
 .alloc-ratio-group-dot {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius);
   flex-shrink: 0;
 }
 .alloc-ratio-group-name {
@@ -462,7 +462,7 @@
   border: 1px solid transparent;
   background: none;
   padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: #111;
   flex: 1;
   min-width: 0;
@@ -495,7 +495,7 @@
   font-size: var(--fs-sm);
   font-weight: 500;
   padding: 0.25rem 0.55rem;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid #d1d5db;
   background: #fff;
   cursor: pointer;
@@ -519,7 +519,7 @@
   margin-top: 0.75rem;
   background: none;
   border: 1px dashed #d1d5db;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.5rem;
   width: 100%;
   font: inherit;
@@ -562,14 +562,14 @@
   font-weight: 500;
   color: #6b7280;
   background: #f3f4f6;
-  border-radius: 4px;
+  border-radius: var(--radius);
   padding: 0.15rem 0.45rem;
 }
 
 .alloc-goal-set-btn {
   background: none;
   border: 1px dashed #d1d5db;
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.4rem 0.85rem;
   font: inherit;
   font-size: var(--fs-md);
@@ -608,7 +608,7 @@
   font-weight: 500;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   transition: background 0.12s, color 0.12s;
 }
 .alloc-goal-edit-btn { color: var(--accent-text-dark); }
@@ -623,7 +623,7 @@
   padding: 0.75rem;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 .alloc-goal-editor-header {
   display: flex;
@@ -654,7 +654,7 @@
   width: 60px;
   padding: 0.25rem 0.4rem;
   border: 1px solid #d1d5db;
-  border-radius: 5px;
+  border-radius: var(--radius);
   text-align: center;
   color: #111;
   background: #fff;
@@ -733,7 +733,7 @@
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.35rem 0.85rem;
   font: inherit;
   font-size: var(--fs-md);
@@ -749,7 +749,7 @@
 .alloc-goal-cancel-btn {
   background: none;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.35rem 0.85rem;
   font: inherit;
   font-size: var(--fs-md);
@@ -787,7 +787,7 @@
   padding: 0.75rem;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 .alloc-rebal-header {
   display: flex;
@@ -813,7 +813,7 @@
   padding: 0.25rem 0 0.25rem 0.4rem;
   border: 1px solid #d1d5db;
   border-right: none;
-  border-radius: 5px 0 0 5px;
+  border-radius: var(--radius) 0 0 5px;
   background: #fff;
   line-height: 1.4;
 }
@@ -827,7 +827,7 @@
 .alloc-rebal-table {
   margin-bottom: 0.75rem;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .alloc-rebal-row {
@@ -868,7 +868,7 @@
 /* Action plan */
 .alloc-rebal-actions {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .alloc-rebal-actions-title {

@@ -10,7 +10,7 @@
   display: flex;
   gap: 4px;
   background: #f3f4f6;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 3px;
 }
 body.dark .sgt-tabs {
@@ -22,7 +22,7 @@ body.dark .sgt-tabs {
   font-size: var(--fs-sm);
   font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: transparent;
   color: #6b7280;
   cursor: pointer;
@@ -64,7 +64,7 @@ body.dark .sgt-tab--active {
   font-size: var(--fs-sm);
   font-weight: 700;
   border: 1px solid #d1d5db;
-  border-radius: 5px;
+  border-radius: var(--radius);
   background: #f9fafb;
   color: #374151;
   cursor: pointer;
@@ -225,7 +225,7 @@ body.dark .sgt-editable:hover {
   font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   border: 1px solid var(--accent);
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: #fff;
   color: #111827;
   outline: none;

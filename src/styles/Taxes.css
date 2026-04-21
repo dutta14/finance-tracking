@@ -32,7 +32,7 @@
 .tax-year-btn {
   background: none;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 0.25rem 0.6rem;
   font-size: var(--fs-md);
   cursor: pointer;
@@ -81,7 +81,7 @@
 .tax-section {
   background: var(--color-card-bg, #fff);
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 1rem 1.25rem;
 }
 .tax-section--return {
@@ -150,7 +150,7 @@
   width: 0.9rem;
   height: 0.9rem;
   border: 1.5px solid var(--color-border, #d1d5db);
-  border-radius: 3px;
+  border-radius: var(--radius);
 }
 .tax-item-body {
   flex: 1;
@@ -213,7 +213,7 @@
 /* Buttons */
 .tax-btn {
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: var(--fs-md);
   font-weight: 500;
   padding: 0.35rem 0.75rem;
@@ -272,7 +272,7 @@
   font-weight: 500;
   padding: 0.1rem 0.35rem;
   border: 1px solid var(--accent, #6366f1);
-  border-radius: 4px;
+  border-radius: var(--radius);
   outline: none;
   background: var(--color-surface, #fff);
   color: var(--color-text, #374151);
@@ -330,7 +330,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 1px solid var(--color-border, #e5e7eb);
 }
 .tax-tpl-info { display: flex; flex-direction: column; gap: 0.1rem; }
@@ -390,7 +390,7 @@
   top: calc(100% + 4px);
   background: var(--color-card-bg, #fff);
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   min-width: 14rem;
   z-index: 10;
@@ -424,7 +424,7 @@
 }
 .tax-modal {
   background: var(--color-card-bg, #fff);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 1.5rem;
   width: 90%;
   max-width: 460px;
@@ -456,7 +456,7 @@
   width: 100%;
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: var(--fs-md);
   color: var(--color-text, #374151);
   background: var(--color-surface, #fff);
@@ -480,7 +480,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.12s;
   font-size: var(--fs-md);
