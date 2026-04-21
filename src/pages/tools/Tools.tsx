@@ -1,5 +1,4 @@
 import { FC, useState, ReactNode, useEffect, useCallback } from 'react'
-import FICalculator from './components/FICalculator'
 import PdfToCsv from './components/PdfToCsv'
 import '../../styles/Tools.css'
 
@@ -14,13 +13,7 @@ export interface ToolDef {
 }
 
 /* Theme-tinted SVG icons */
-const IconFI = () => (
-  <svg className="tools-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
-  </svg>
-)
-
-const IconChart = () => (
+const IconPdf = () => (
   <svg className="tools-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
     <polyline points="14 2 14 8 20 8" />
@@ -30,17 +23,10 @@ const IconChart = () => (
 
 const TOOLS: ToolDef[] = [
   {
-    id: 'fi-calculator',
-    title: 'FI Calculator',
-    description: 'Estimate your FI readiness based on expenses, growth, inflation & holdings.',
-    icon: <span className="tools-icon"><IconFI /></span>,
-    pane: <FICalculator />,
-  },
-  {
     id: 'pdf-to-csv',
     title: 'PDF → CSV',
     description: 'Extract transaction tables from bank or brokerage PDFs into CSV format.',
-    icon: <span className="tools-icon"><IconChart /></span>,
+    icon: <span className="tools-icon"><IconPdf /></span>,
     fullscreen: true,
     pane: <PdfToCsv />,
   },

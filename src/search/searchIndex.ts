@@ -83,7 +83,7 @@ const STATIC_COMMANDS: SearchItem[] = [
 ]
 
 const STATIC_TOOLS: SearchItem[] = [
-  { id: 'tool-fi-calc', category: 'tool', label: 'FI Calculator', hint: 'Estimate FI readiness', icon: 'calculator', keywords: ['fi calculator', 'financial independence', 'fire', 'retirement'], route: '/tools' },
+  { id: 'tool-fi-calc', category: 'tool', label: 'FI Calculator', hint: 'Estimate FI readiness', icon: 'calculator', keywords: ['fi calculator', 'financial independence', 'fire', 'retirement'], route: '/goal/calculator' },
   { id: 'tool-savings-growth', category: 'tool', label: 'Growth Tracker', hint: 'Break down savings vs. capital gains', icon: 'trending', keywords: ['savings', 'growth', 'tracker', 'capital gains'], route: '/net-worth/growth' },
   { id: 'tool-pdf-csv', category: 'tool', label: 'PDF → CSV', hint: 'Extract tables from PDFs', icon: 'file', keywords: ['pdf', 'csv', 'extract', 'convert'], route: '/tools' },
 ]

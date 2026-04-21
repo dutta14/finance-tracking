@@ -58,7 +58,7 @@ const App: FC = () => {
   const handleOpenProfile = (): void => setSettingsOpenSection('profile');
 
   // Derive currentPage from URL for sidebar nav compat
-  const currentPage: PageType = location.pathname === '/goal'
+  const currentPage: PageType = location.pathname === '/goal' || location.pathname.startsWith('/goal/')
     ? 'goal'
     : location.pathname.startsWith('/net-worth')
     ? 'net-worth'
@@ -537,7 +537,7 @@ const App: FC = () => {
       <Routes>
         <Route path="/" element={<Home profile={profile} goals={visibleGoals} gwGoals={gwGoals} />} />
         <Route
-          path="/goal"
+          path="/goal/*"
           element={
             <Goal
               goals={visibleGoals}
@@ -565,7 +565,6 @@ const App: FC = () => {
         <Route path="/drive/*" element={<Drive />} />
         <Route path="/allocation" element={<Navigate to="/net-worth/allocation" replace />} />
         <Route path="/taxes" element={<Taxes />} />
-        <Route path="/goal/:id" element={<Navigate to="/goal" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )

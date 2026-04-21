@@ -1,4 +1,5 @@
-import { FC, useState } from 'react'
+import { FC, useState, lazy, Suspense } from 'react'
+import { NavLink, useLocation, Routes, Route } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
 import GoalFormModal from './components/GoalFormModal'
 import GoalsSection from './components/GoalsSection'
@@ -6,6 +7,8 @@ import GoalMixer from './components/GoalMixer'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
 import NewGoalButton from './components/NewGoalButton'
+
+const FICalculator = lazy(() => import('../tools/components/FICalculator'))
 
 interface GoalProps {
   goals: FinancialGoal[]
@@ -26,6 +29,8 @@ interface GoalProps {
 }
 
 const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onCopyGwGoals, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
+  const location = useLocation()
+  const activeTab = location.pathname.replace('/goal', '').replace(/^\//, '') || 'plans'
   const { formData, setFormData, error, setError, handleInputChange, populateFromGoal, resetForm } = useFormData()
   const { editingGoalId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -91,79 +96,97 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
       <div className="goal-content">
         <div className="goal-header">
           <h1>Goals</h1>
-          <div className="goal-header-actions">
-            {goals.length > 0 && gwGoals.length > 0 && (
-              <button
-                className="goal-action-btn"
-                onClick={() => setMixerOpen(true)}
-                title="Mix & Match goals"
-              >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M2 4h5l2 8h5M2 12h5l2-8h5"/>
-                  <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none"/>
-                  <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none"/>
-                  <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none"/>
-                  <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none"/>
-                </svg>
-                Mix &amp; Match
-              </button>
-            )}
-            <NewGoalButton
-              onClick={() => {
-                resetForm()
-                stopEditing()
-                setShowForm(true)
-              }}
-            />
-          </div>
+          {activeTab === 'plans' && (
+            <div className="goal-header-actions">
+              {goals.length > 0 && gwGoals.length > 0 && (
+                <button
+                  className="goal-action-btn"
+                  onClick={() => setMixerOpen(true)}
+                  title="Mix & Match goals"
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                    <path d="M2 4h5l2 8h5M2 12h5l2-8h5"/>
+                    <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none"/>
+                  </svg>
+                  Mix &amp; Match
+                </button>
+              )}
+              <NewGoalButton
+                onClick={() => {
+                  resetForm()
+                  stopEditing()
+                  setShowForm(true)
+                }}
+              />
+            </div>
+          )}
         </div>
 
-        <div className="goal-container">
-          <GoalsSection
-            goals={goals}
-            profileBirthday={profileBirthday}
-            gwGoals={gwGoals}
-            selectedGoalIds={selectedGoalIds}
-            onSelectGoal={handleSelectGoal}
-            onUpdateGoal={updateGoal}
-            onCopyGoal={handleCopyGoal}
-            onDeleteGoal={deleteGoal}
-            onDeleteMultiple={handleDeleteMultiple}
-            onClearSelection={() => onSetSelectedGoalIds([])}
-            onReorderGoals={reorderGoals}
-            onRenameGoal={handleRenameGoal}
-            onCreateGwGoal={onCreateGwGoal}
-            onUpdateGwGoal={onUpdateGwGoal}
-            onDeleteGwGoal={onDeleteGwGoal}
-          />
-        </div>
+        <nav className="goal-tab-bar" aria-label="Goals sections">
+          <NavLink to="/goal" end className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}>Plans</NavLink>
+          <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>Calculator</NavLink>
+        </nav>
+
+        <Routes>
+          <Route index element={
+            <>
+              <div className="goal-container">
+                <GoalsSection
+                  goals={goals}
+                  profileBirthday={profileBirthday}
+                  gwGoals={gwGoals}
+                  selectedGoalIds={selectedGoalIds}
+                  onSelectGoal={handleSelectGoal}
+                  onUpdateGoal={updateGoal}
+                  onCopyGoal={handleCopyGoal}
+                  onDeleteGoal={deleteGoal}
+                  onDeleteMultiple={handleDeleteMultiple}
+                  onClearSelection={() => onSetSelectedGoalIds([])}
+                  onReorderGoals={reorderGoals}
+                  onRenameGoal={handleRenameGoal}
+                  onCreateGwGoal={onCreateGwGoal}
+                  onUpdateGwGoal={onUpdateGwGoal}
+                  onDeleteGwGoal={onDeleteGwGoal}
+                />
+              </div>
+
+              {showForm && (
+                <GoalFormModal
+                  formData={formData}
+                  error={error}
+                  editingGoalId={editingGoalId}
+                  profileBirthday={profileBirthday}
+                  onOpenProfile={onOpenProfile}
+                  onInputChange={handleInputChange}
+                  onSetFormFields={(fields) => setFormData(prev => ({ ...prev, ...fields }))}
+                  onSubmit={handleCreateGoal}
+                  onCancel={handleCancelEdit}
+                  setError={setError}
+                />
+              )}
+              {mixerOpen && (
+                <GoalMixer
+                  goals={goals}
+                  gwGoals={gwGoals}
+                  profileBirthday={profileBirthday}
+                  onCreateGoal={createGoal}
+                  onCreateGwGoal={onCreateGwGoal}
+                  onClose={() => setMixerOpen(false)}
+                  onGoToGoal={(goalId) => onSetSelectedGoalIds([goalId])}
+                />
+              )}
+            </>
+          } />
+          <Route path="calculator" element={
+            <Suspense fallback={<div className="goal-tab-loading" role="status">Loading…</div>}>
+              <FICalculator />
+            </Suspense>
+          } />
+        </Routes>
       </div>
-
-      {showForm && (
-        <GoalFormModal
-          formData={formData}
-          error={error}
-          editingGoalId={editingGoalId}
-          profileBirthday={profileBirthday}
-          onOpenProfile={onOpenProfile}
-          onInputChange={handleInputChange}
-          onSetFormFields={(fields) => setFormData(prev => ({ ...prev, ...fields }))}
-          onSubmit={handleCreateGoal}
-          onCancel={handleCancelEdit}
-          setError={setError}
-        />
-      )}
-      {mixerOpen && (
-        <GoalMixer
-          goals={goals}
-          gwGoals={gwGoals}
-          profileBirthday={profileBirthday}
-          onCreateGoal={createGoal}
-          onCreateGwGoal={onCreateGwGoal}
-          onClose={() => setMixerOpen(false)}
-          onGoToGoal={(goalId) => onSetSelectedGoalIds([goalId])}
-        />
-      )}
     </section>
   )
 }
