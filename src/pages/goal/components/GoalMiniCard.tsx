@@ -34,11 +34,12 @@ interface GoalMiniCardProps {
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
   viewMode?: 'grid' | 'list'
+  compareMode?: boolean
   gwGoals: GwGoal[]
   profileBirthday: string
 }
 
-const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMode = 'grid', gwGoals, profileBirthday }) => {
+const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMode = 'grid', compareMode = false, gwGoals, profileBirthday }) => {
   const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday)
   const hasGw = gwTotal > 0
   const totalGoals = goal.fiGoal + gwTotal
@@ -51,10 +52,26 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMo
     return Math.min(100, Math.max(0, (fiTotal / goal.fiGoal) * 100))
   }, [goal.fiGoal])
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick(e as unknown as React.MouseEvent)
+    }
+  }
+
   return (
     <div
       className={`goal-mini-card${isSelected ? ' selected' : ''}${viewMode === 'list' ? ' list' : ''}`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-pressed={compareMode ? isSelected : undefined}
+      aria-label={
+        compareMode
+          ? `${goal.goalName}, ${fiProgress.toFixed(0)}% progress${isSelected ? ', selected for comparison' : ''}`
+          : `${goal.goalName}, ${fiProgress.toFixed(0)}% progress`
+      }
     >
       <div className="mini-card-top">
         <h4>{goal.goalName}</h4>

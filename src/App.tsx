@@ -36,7 +36,6 @@ const App: FC = () => {
   });
   const [accentTheme, setAccentTheme] = useState(() => localStorage.getItem('accentTheme') || localStorage.getItem('fiTheme') || 'blue');
   const [allowCsvImport, setAllowCsvImport] = useState(() => localStorage.getItem('allowCsvImport') === '1');
-  const [selectedHomeGoalIds, setSelectedHomeGoalIds] = useState<number[]>([]);
   const { goals, createGoal, updateGoal, deleteGoal, importGoals, reorderGoals } = useFinancialGoals();
   const { gwGoals, createGwGoal, updateGwGoal, deleteGwGoal, importGwGoals } = useGwGoals();
   const { profile, updateProfile } = useProfile();
@@ -102,9 +101,6 @@ const App: FC = () => {
       ids.forEach(id => deleteGoal(id));
       setPendingDelete(null);
     }, 10_000);
-    setSelectedNavGoalIds(prev => prev.filter(id => !ids.includes(id)));
-    setSelectedHomeGoalIds(prev => prev.filter(id => !ids.includes(id)));
-    setIsMultiSelectMode(false);
     setPendingDelete({ ids, savedGoals: affectedGoals, message, timerId });
   };
 
@@ -305,8 +301,6 @@ const App: FC = () => {
         const incoming = Array.isArray(parsed) ? parsed : (parsed?.goals || parsed?.plans)
         if (!Array.isArray(incoming)) throw new Error('Invalid format')
         importGoals(incoming)
-        setSelectedNavGoalIds([])
-        setSelectedHomeGoalIds([])
         if (parsed?.profile && typeof parsed.profile === 'object') {
           updateProfile(parsed.profile)
         }
@@ -403,9 +397,6 @@ const App: FC = () => {
           }
           updateGhConfig(restoredGhConfig)
         }
-        setSelectedNavGoalIds([])
-        setSelectedHomeGoalIds([])
-        setIsMultiSelectMode(false)
         setTimeout(() => {
           localStorage.setItem('financialGoals', JSON.stringify(incomingGoals))
           localStorage.setItem('gw-goals', JSON.stringify(restoreGwGoals))
@@ -501,8 +492,6 @@ const App: FC = () => {
               deleteGoal={handleDeleteGoal}
               onDeleteMultipleGoals={handleDeleteWithUndo}
               reorderGoals={reorderGoals}
-              selectedGoalIds={selectedHomeGoalIds}
-              onSetSelectedGoalIds={setSelectedHomeGoalIds}
               onCopyGwGoals={handleCopyGwGoals}
               gwGoals={gwGoals}
               onCreateGwGoal={createGwGoal}

@@ -9,6 +9,7 @@ interface GoalsMiniGridProps {
   selectedGoalIds: number[]
   onSelectGoal: (goalId: number, multi: boolean) => void
   viewMode?: 'grid' | 'list'
+  compareMode?: boolean
   onReorderGoals?: (orderedIds: number[]) => void
   onRenameGoal: (goalId: number, name: string) => void
   onCopyGoal: (goal: FinancialGoal) => void
@@ -18,7 +19,7 @@ interface GoalsMiniGridProps {
 }
 
 const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
-  goals, selectedGoalIds, onSelectGoal, viewMode = 'grid', onReorderGoals,
+  goals, selectedGoalIds, onSelectGoal, viewMode = 'grid', compareMode = false, onReorderGoals,
   onRenameGoal, onCopyGoal, onDeleteGoal, gwGoals, profileBirthday,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
@@ -103,7 +104,11 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
 
   return (
     <>
-      <div className={viewMode === 'list' ? 'goals-mini-list' : 'goals-mini-grid'}>
+      <div
+        className={viewMode === 'list' ? 'goals-mini-list' : 'goals-mini-grid'}
+        role={compareMode ? 'group' : undefined}
+        aria-label={compareMode ? 'Select goals for comparison' : undefined}
+      >
         {goals.map(goal => {
           let itemClass = 'goal-drag-item'
           if (draggedId === goal.id) itemClass += ' goal-drag-item--dragging'
@@ -140,6 +145,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                   isSelected={selectedGoalIds.includes(goal.id)}
                   onClick={(e) => onSelectGoal(goal.id, e.metaKey || e.ctrlKey)}
                   viewMode={viewMode}
+                  compareMode={compareMode}
                   gwGoals={gwGoals}
                   profileBirthday={profileBirthday}
                 />

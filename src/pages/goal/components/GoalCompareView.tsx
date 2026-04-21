@@ -3,6 +3,9 @@ import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
 import '../../../styles/GoalCompareView.css'
 
+const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
+const modKey = isMac ? '⌘' : 'Ctrl'
+
 interface GoalCompareViewProps {
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
@@ -85,24 +88,24 @@ const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirt
 
   return (
     <div className="compare-view">
-      <div className="compare-hint">Comparing {goals.length} goals — Cmd+Click a card to add or remove it</div>
+      <p className="compare-hint">Comparing {goals.length} goals — {modKey}+Click a card to add or remove it</p>
       <div className="compare-table-wrapper">
-        <table className="compare-table">
+        <table className="compare-table" aria-label={`Comparison of ${goals.length} goals`}>
           <thead>
             <tr>
-              <th className="compare-label-col"></th>
+              <th className="compare-label-col" scope="col"><span className="sr-only">Metric</span></th>
               {goals.map(goal => (
-                <th key={goal.id} className="compare-goal-col">{goal.goalName}</th>
+                <th key={goal.id} className="compare-goal-col" scope="col">{goal.goalName}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             <tr className="compare-section-header">
-              <td colSpan={colCount}>Financial Independence</td>
+              <th colSpan={colCount} scope="colgroup">Financial Independence</th>
             </tr>
             {fiRows.map(row => (
               <tr key={row.label}>
-                <td className="compare-row-label">{row.label}</td>
+                <th className="compare-row-label" scope="row">{row.label}</th>
                 {goals.map(goal => (
                   <td key={goal.id} className="compare-row-value">{row.render(goal)}</td>
                 ))}
@@ -111,23 +114,23 @@ const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirt
             {hasAnyGw && (
               <>
                 <tr className="compare-section-header compare-section-header--gw">
-                  <td colSpan={colCount}>Generational Wealth</td>
+                  <th colSpan={colCount} scope="colgroup">Generational Wealth</th>
                 </tr>
                 <tr>
-                  <td className="compare-row-label"># of Goals</td>
+                  <th className="compare-row-label" scope="row"># of Goals</th>
                   {goals.map((goal, i) => (
                     <td key={goal.id} className="compare-row-value">{gwByGoal[i].length > 0 ? gwByGoal[i].length : '—'}</td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="compare-row-label">Total PV at Retirement</td>
+                  <th className="compare-row-label" scope="row">Total PV at Retirement</th>
                   {goals.map((_, i) => (
                     <td key={goals[i].id} className="compare-row-value">{gwTotals[i] > 0 ? dollars(gwTotals[i]) : '—'}</td>
                   ))}
                 </tr>
                 {allLabels.map(label => (
                   <tr key={label}>
-                    <td className="compare-row-label compare-row-label--indent">{label}</td>
+                    <th className="compare-row-label compare-row-label--indent" scope="row">{label}</th>
                     {goals.map((goal, i) => (
                       <td key={goal.id} className="compare-row-value">
                         {gwPvMaps[i][label] != null ? dollars(gwPvMaps[i][label]) : '—'}

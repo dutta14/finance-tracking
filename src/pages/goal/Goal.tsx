@@ -20,8 +20,6 @@ interface GoalProps {
   deleteGoal: (goalId: number) => void
   onDeleteMultipleGoals: (ids: number[]) => void
   reorderGoals: (orderedIds: number[]) => void
-  selectedGoalIds: number[]
-  onSetSelectedGoalIds: (ids: number[]) => void
   onCopyGwGoals: (sourcePlanId: number, newPlanId: number) => void
   gwGoals: GwGoal[]
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
@@ -29,7 +27,7 @@ interface GoalProps {
   onDeleteGwGoal: (id: number) => void
 }
 
-const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, selectedGoalIds, onSetSelectedGoalIds, onCopyGwGoals, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
+const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, onCopyGwGoals, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const subPath = location.pathname.replace('/goal', '').replace(/^\//, '') || 'plans'
@@ -41,24 +39,6 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
   const [copySourceGoalId, setCopySourceGoalId] = useState<number | null>(null)
   const [mixerOpen, setMixerOpen] = useState(false)
 
-  const handleSelectGoal = (goalId: number, multi: boolean): void => {
-    if (multi) {
-      // Cmd+Click: toggle multi-select for compare
-      onSetSelectedGoalIds(
-        selectedGoalIds.includes(goalId)
-          ? selectedGoalIds.filter(id => id !== goalId)
-          : [...selectedGoalIds, goalId]
-      )
-    } else {
-      // Single click: navigate to detail page
-      navigate(`/goal/${goalId}`)
-    }
-  }
-
-  const handleDeleteMultiple = (ids: number[]): void => {
-    onDeleteMultipleGoals(ids)
-    onSetSelectedGoalIds([])
-  }
 
   const handleCreateGoal = (goal: FinancialGoal): void => {
     if (editingGoalId) {
@@ -76,7 +56,6 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
   }
 
   const handleCopyGoal = (goal: FinancialGoal): void => {
-    onSetSelectedGoalIds([])
     setCopySourceGoalId(goal.id)
     populateFromGoal(goal, '- Duplicate')
     stopEditing()
@@ -146,13 +125,10 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
                   goals={goals}
                   profileBirthday={profileBirthday}
                   gwGoals={gwGoals}
-                  selectedGoalIds={selectedGoalIds}
-                  onSelectGoal={handleSelectGoal}
                   onUpdateGoal={updateGoal}
                   onCopyGoal={handleCopyGoal}
                   onDeleteGoal={deleteGoal}
-                  onDeleteMultiple={handleDeleteMultiple}
-                  onClearSelection={() => onSetSelectedGoalIds([])}
+                  onDeleteMultiple={onDeleteMultipleGoals}
                   onReorderGoals={reorderGoals}
                   onRenameGoal={handleRenameGoal}
                   onCreateGwGoal={onCreateGwGoal}
@@ -183,7 +159,7 @@ const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal
                   onCreateGoal={createGoal}
                   onCreateGwGoal={onCreateGwGoal}
                   onClose={() => setMixerOpen(false)}
-                  onGoToGoal={(goalId) => onSetSelectedGoalIds([goalId])}
+                  onGoToGoal={(goalId) => navigate(`/goal/${goalId}`)}
                 />
               )}
             </>

@@ -52,6 +52,7 @@
   color: var(--color-text-secondary);
   border-right: 1px solid var(--color-border);
   white-space: nowrap;
+  text-align: left;
 }
 
 .compare-row-value {
@@ -65,19 +66,20 @@
 }
 
 /* Section headers */
-.compare-section-header td {
+.compare-section-header th {
   padding: 0.5rem 1.2rem;
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
   text-transform: uppercase;
+  text-align: left;
   background: var(--accent-lighter);
   color: var(--accent-text-mid);
   border-top: 2px solid var(--accent-border);
   border-bottom: 1px solid var(--accent-border);
 }
 
-.compare-section-header--gw td {
+.compare-section-header--gw th {
   background: var(--color-positive-light);
   color: var(--color-positive);
   border-top-color: var(--color-positive-border);

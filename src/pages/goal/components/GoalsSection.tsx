@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import GoalsMiniGrid from './GoalsMiniGrid'
@@ -8,17 +8,17 @@ import '../../../styles/Goal.css'
 import '../../../styles/GoalFilterBar.css'
 import '../../../styles/GoalCompareView.css'
 
+const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
+const modKey = isMac ? '⌘' : 'Ctrl'
+
 interface GoalsSectionProps {
   goals: FinancialGoal[]
   profileBirthday: string
   gwGoals: GwGoal[]
-  selectedGoalIds: number[]
-  onSelectGoal: (goalId: number, multi: boolean) => void
   onUpdateGoal: (goalId: number, goal: FinancialGoal) => void
   onCopyGoal: (goal: FinancialGoal) => void
   onDeleteGoal: (goalId: number) => void
   onDeleteMultiple: (ids: number[]) => void
-  onClearSelection: () => void
   onReorderGoals: (orderedIds: number[]) => void
   onRenameGoal: (goalId: number, name: string) => void
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
@@ -30,13 +30,10 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
-  selectedGoalIds,
-  onSelectGoal,
   onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
   onDeleteMultiple,
-  onClearSelection,
   onReorderGoals,
   onRenameGoal,
   onCreateGwGoal,
@@ -44,6 +41,9 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   onDeleteGwGoal,
 }) => {
   const navigate = useNavigate()
+  const [selectedGoalIds, setSelectedGoalIds] = useState<number[]>([])
+  const [compareMode, setCompareMode] = useState(false)
+  const compareBtnRef = useRef<HTMLButtonElement>(null)
   const selectedGoals = goals.filter(p => selectedGoalIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     const stored = localStorage.getItem('goal-view-mode')
@@ -58,12 +58,64 @@ const GoalsSection: FC<GoalsSectionProps> = ({
     ? `${filteredGoals.length} of ${goals.length}`
     : `${goals.length} goal${goals.length !== 1 ? 's' : ''}`
 
+  const handleSelectGoal = (goalId: number, multi: boolean): void => {
+    if (multi || compareMode) {
+      // Cmd+Click or Compare mode: toggle selection
+      setSelectedGoalIds(prev =>
+        prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]
+      )
+      if (!compareMode) setCompareMode(true)
+    } else {
+      navigate(`/goal/${goalId}`)
+    }
+  }
+
+  const exitCompareMode = (): void => {
+    setCompareMode(false)
+    setSelectedGoalIds([])
+    requestAnimationFrame(() => compareBtnRef.current?.focus())
+  }
+
+  // Escape key exits compare mode
+  useEffect(() => {
+    if (!compareMode) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setCompareMode(false)
+        setSelectedGoalIds([])
+        requestAnimationFrame(() => compareBtnRef.current?.focus())
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [compareMode])
+
+  const handleDeleteSelected = (): void => {
+    onDeleteMultiple(selectedGoalIds)
+    exitCompareMode()
+  }
+
   return (
     <div className="goal-results-section">
       <div className="goal-toolbar">
         <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
         <div className="goal-toolbar-right">
           <span className="goal-count-label">{countLabel}</span>
+          {goals.length >= 2 && (
+            <button
+              ref={compareBtnRef}
+              className={`goal-compare-btn${compareMode ? ' active' : ''}`}
+              onClick={() => compareMode ? exitCompareMode() : setCompareMode(true)}
+              aria-pressed={compareMode}
+              title={compareMode ? 'Exit compare mode' : 'Compare goals'}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="1" y="2" width="5.5" height="12" rx="1" />
+                <rect x="9.5" y="2" width="5.5" height="12" rx="1" />
+              </svg>
+              {compareMode ? 'Exit Compare' : 'Compare'}
+            </button>
+          )}
           <div className="view-mode-toggle">
             <button
               className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
@@ -93,22 +145,34 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           </div>
         </div>
       </div>
-      {selectedGoalIds.length > 1 && (
-        <div className="goal-selection-bar">
-          <span className="goal-selection-count">{selectedGoalIds.length} goals selected</span>
+      {/* Persistent live region for screen reader announcements */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {compareMode && selectedGoalIds.length === 0 &&
+          `Compare mode active. Click goals to select them for comparison, or use ${modKey}+Click anytime. Press Escape to exit.`}
+        {compareMode && selectedGoalIds.length > 0 &&
+          `${selectedGoalIds.length} goal${selectedGoalIds.length !== 1 ? 's' : ''} selected for comparison.`}
+      </div>
+      {compareMode && selectedGoalIds.length > 0 && (
+        <div className="goal-selection-bar" aria-label="Selection actions">
+          <span className="goal-selection-count">{selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected</span>
           <div className="goal-selection-actions">
-            <button className="goal-selection-btn goal-selection-btn--danger" onClick={() => onDeleteMultiple(selectedGoalIds)}>
+            <button className="goal-selection-btn goal-selection-btn--danger" onClick={handleDeleteSelected}>
               Delete selected
             </button>
-            <button className="goal-selection-btn" onClick={onClearSelection}>
-              Clear selection
+            <button className="goal-selection-btn" onClick={exitCompareMode}>
+              Done
             </button>
           </div>
         </div>
       )}
+      {compareMode && selectedGoalIds.length === 0 && (
+        <div className="goal-compare-hint" aria-hidden="true">
+          Click goals to select them for comparison, or use {modKey}+Click anytime
+        </div>
+      )}
       {goals.length === 0 ? (
         <div className="empty-state">
-          <p>No goals created yet. Fill in the form and click "Create Goal" to get started.</p>
+          <p>No goals created yet. Click "New Goal" to get started.</p>
         </div>
       ) : filteredGoals.length === 0 ? (
         <div className="empty-state">
@@ -120,9 +184,10 @@ const GoalsSection: FC<GoalsSectionProps> = ({
             <GoalsMiniGrid
               goals={filteredGoals}
               selectedGoalIds={selectedGoalIds}
-              onSelectGoal={onSelectGoal}
+              onSelectGoal={handleSelectGoal}
               viewMode={viewMode}
-              onReorderGoals={isFiltered ? undefined : onReorderGoals}
+              compareMode={compareMode}
+              onReorderGoals={isFiltered || compareMode ? undefined : onReorderGoals}
               onRenameGoal={onRenameGoal}
               onCopyGoal={onCopyGoal}
               onDeleteGoal={onDeleteGoal}
