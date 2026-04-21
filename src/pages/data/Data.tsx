@@ -10,6 +10,7 @@ import BalanceCharts from './BalanceCharts'
 import '../../styles/Data.css'
 
 const Allocation = lazy(() => import('../allocation/Allocation'))
+const SavingsGrowthTracker = lazy(() => import('../tools/components/SavingsGrowthTracker'))
 
 interface DataProps {
   profile: Profile
@@ -150,6 +151,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
       <nav className="nw-tab-bar" aria-label="Net Worth sections">
         <NavLink to="/net-worth" end className={({ isActive }) => `nw-tab${isActive || activeTab === 'accounts' ? ' active' : ''}`}>Accounts</NavLink>
         <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>Allocation</NavLink>
+        <NavLink to="/net-worth/growth" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>Growth</NavLink>
       </nav>
 
       <Routes>
@@ -282,6 +284,11 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
         <Route path="allocation" element={
           <Suspense fallback={<div className="nw-tab-loading" role="status">Loading…</div>}>
             <Allocation />
+          </Suspense>
+        } />
+        <Route path="growth" element={
+          <Suspense fallback={<div className="nw-tab-loading" role="status">Loading…</div>}>
+            <SavingsGrowthTracker />
           </Suspense>
         } />
       </Routes>

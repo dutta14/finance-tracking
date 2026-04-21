@@ -58,6 +58,20 @@ describe('Net Worth tab bar', () => {
     const link = screen.getByRole('link', { name: 'Allocation' })
     expect(link).toHaveAttribute('href', '/net-worth/allocation')
   })
+
+  it('renders a "Growth" tab inside the nav', () => {
+    renderData()
+    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
+    const links = nav.querySelectorAll('a')
+    const growthLink = Array.from(links).find(a => a.textContent === 'Growth')
+    expect(growthLink).toBeInTheDocument()
+  })
+
+  it('the "Growth" tab links to /net-worth/growth', () => {
+    renderData()
+    const link = screen.getByRole('link', { name: 'Growth' })
+    expect(link).toHaveAttribute('href', '/net-worth/growth')
+  })
 })
 
 /* ─── Active state ─── */
@@ -98,6 +112,24 @@ describe('Net Worth tab active state', () => {
     const link = screen.getByRole('link', { name: 'Allocation' })
     expect(link.className).not.toContain('active')
   })
+
+  it('marks "Growth" as active when on /net-worth/growth', () => {
+    renderData('/net-worth/growth')
+    const link = screen.getByRole('link', { name: 'Growth' })
+    expect(link.className).toContain('active')
+  })
+
+  it('sets aria-current="page" on the Growth tab when active', () => {
+    renderData('/net-worth/growth')
+    const link = screen.getByRole('link', { name: 'Growth' })
+    expect(link).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('does not mark "Growth" as active when on /net-worth', () => {
+    renderData('/net-worth')
+    const link = screen.getByRole('link', { name: 'Growth' })
+    expect(link.className).not.toContain('active')
+  })
 })
 
 /* ─── Tab bar structure ─── */
@@ -118,6 +150,12 @@ describe('Net Worth tab bar structure', () => {
   it('Allocation tab link has the nw-tab class', () => {
     renderData()
     const link = screen.getByRole('link', { name: 'Allocation' })
+    expect(link.className).toContain('nw-tab')
+  })
+
+  it('Growth tab link has the nw-tab class', () => {
+    renderData()
+    const link = screen.getByRole('link', { name: 'Growth' })
     expect(link.className).toContain('nw-tab')
   })
 })

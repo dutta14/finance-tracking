@@ -1,6 +1,5 @@
 import { FC, useState, ReactNode, useEffect, useCallback } from 'react'
 import FICalculator from './components/FICalculator'
-import SavingsGrowthTracker from './components/SavingsGrowthTracker'
 import PdfToCsv from './components/PdfToCsv'
 import '../../styles/Tools.css'
 
@@ -23,12 +22,6 @@ const IconFI = () => (
 
 const IconChart = () => (
   <svg className="tools-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 20V10" /><path d="M12 20V4" /><path d="M6 20v-6" />
-  </svg>
-)
-
-const IconPdf = () => (
-  <svg className="tools-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
     <polyline points="14 2 14 8 20 8" />
     <line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" />
@@ -44,17 +37,10 @@ const TOOLS: ToolDef[] = [
     pane: <FICalculator />,
   },
   {
-    id: 'savings-growth',
-    title: 'Savings/Growth Tracker',
-    description: 'Break down net worth growth into savings vs. capital gains each year.',
-    icon: <span className="tools-icon"><IconChart /></span>,
-    pane: <SavingsGrowthTracker />,
-  },
-  {
     id: 'pdf-to-csv',
     title: 'PDF → CSV',
     description: 'Extract transaction tables from bank or brokerage PDFs into CSV format.',
-    icon: <span className="tools-icon"><IconPdf /></span>,
+    icon: <span className="tools-icon"><IconChart /></span>,
     fullscreen: true,
     pane: <PdfToCsv />,
   },

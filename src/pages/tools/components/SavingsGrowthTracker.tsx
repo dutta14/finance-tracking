@@ -264,12 +264,12 @@ const SavingsGrowthTracker: FC = () => {
     }
     if (value === null) {
       if (editable) {
-        return <span className="sgt-na sgt-editable" onClick={() => startEdit(row.year, field, null)}>—</span>
+        return <span className="sgt-na sgt-editable" role="button" tabIndex={0} onClick={() => startEdit(row.year, field, null)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEdit(row.year, field, null) } }}>—</span>
       }
       return <span className="sgt-na">N/A</span>
     }
     if (editable) {
-      return <span className="sgt-editable" onClick={() => startEdit(row.year, field, value)}>{fmt(value)}</span>
+      return <span className="sgt-editable" role="button" tabIndex={0} onClick={() => startEdit(row.year, field, value)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEdit(row.year, field, value) } }}>{fmt(value)}</span>
     }
     return fmt(value)
   }
@@ -302,25 +302,25 @@ const SavingsGrowthTracker: FC = () => {
   if (rows.length === 0) {
     return (
       <div className="sgt">
-        <p className="sgt-empty">No data available. Add account balances in the Data tab and/or upload budget CSVs to get started.</p>
+        <p className="sgt-empty">No data available. Add account balances in the Accounts tab and/or upload budget CSVs to get started.</p>
       </div>
     )
   }
 
   return (
     <div className="sgt">
-      {/* Tab selector */}
-      <div className="sgt-tabs">
-        <button className={`sgt-tab${tab === 'savings' ? ' sgt-tab--active' : ''}`} onClick={() => setTab('savings')}>Savings</button>
-        <button className={`sgt-tab${tab === 'income' ? ' sgt-tab--active' : ''}`} onClick={() => setTab('income')}>Income</button>
-      </div>
-
-      {/* Toggle: % vs $ */}
-      <div className="sgt-toggle-row">
-        <span className="sgt-toggle-label">YoY change</span>
-        <button className="sgt-toggle-btn" onClick={() => setShowPct(!showPct)}>
-          {showPct ? '%' : '$'}
-        </button>
+      {/* Toolbar: segmented control + toggle */}
+      <div className="sgt-toolbar">
+        <div className="sgt-mode-switch" role="group" aria-label="View mode">
+          <button className={`sgt-mode-btn${tab === 'savings' ? ' active' : ''}`} aria-pressed={tab === 'savings'} onClick={() => setTab('savings')}>Savings</button>
+          <button className={`sgt-mode-btn${tab === 'income' ? ' active' : ''}`} aria-pressed={tab === 'income'} onClick={() => setTab('income')}>Income</button>
+        </div>
+        <div className="sgt-toggle-row">
+          <span className="sgt-toggle-label">YoY change</span>
+          <button className="sgt-toggle-btn" onClick={() => setShowPct(!showPct)} aria-label={showPct ? 'Show YoY change in dollars' : 'Show YoY change as percentage'}>
+            {showPct ? '%' : '$'}
+          </button>
+        </div>
       </div>
 
       <div className="sgt-table-wrap">
@@ -328,23 +328,23 @@ const SavingsGrowthTracker: FC = () => {
           <thead>
             {tab === 'savings' ? (
               <tr>
-                <th className="sgt-th sgt-th--year">Year</th>
-                <th className="sgt-th sgt-th--num">Net Income</th>
-                <th className="sgt-th sgt-th--num">Expense</th>
-                <th className="sgt-th sgt-th--num sgt-th--delta">Exp Δ</th>
-                <th className="sgt-th sgt-th--num">Savings</th>
-                <th className="sgt-th sgt-th--num sgt-th--delta">Sav Δ</th>
-                <th className="sgt-th sgt-th--num">Growth</th>
-                <th className="sgt-th sgt-th--num sgt-th--delta">Gro Δ</th>
-                <th className="sgt-th sgt-th--num sgt-th--nw">Net Worth</th>
+                <th scope="col" className="sgt-th sgt-th--year">Year</th>
+                <th scope="col" className="sgt-th sgt-th--num">Net Income</th>
+                <th scope="col" className="sgt-th sgt-th--num">Expense</th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">Exp Δ</th>
+                <th scope="col" className="sgt-th sgt-th--num">Savings</th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">Sav Δ</th>
+                <th scope="col" className="sgt-th sgt-th--num">Growth</th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">Gro Δ</th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--nw">Net Worth</th>
               </tr>
             ) : (
               <tr>
-                <th className="sgt-th sgt-th--year">Year</th>
-                <th className="sgt-th sgt-th--num">Gross Income</th>
-                <th className="sgt-th sgt-th--num">Taxes</th>
-                <th className="sgt-th sgt-th--num">Tax Rate</th>
-                <th className="sgt-th sgt-th--num">Net Income</th>
+                <th scope="col" className="sgt-th sgt-th--year">Year</th>
+                <th scope="col" className="sgt-th sgt-th--num">Gross Income</th>
+                <th scope="col" className="sgt-th sgt-th--num">Taxes</th>
+                <th scope="col" className="sgt-th sgt-th--num">Tax Rate</th>
+                <th scope="col" className="sgt-th sgt-th--num">Net Income</th>
               </tr>
             )}
           </thead>
