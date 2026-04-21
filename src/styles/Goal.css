@@ -289,7 +289,7 @@ section.goal {
 }
 .random-name-btn:hover {
   background: var(--color-negative);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 /* Results Section */
@@ -696,7 +696,7 @@ section.goal {
 .wizard-dot.done {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   cursor: pointer;
 }
 .wizard-dot.active {
@@ -817,7 +817,7 @@ section.goal {
 
 .wizard-btn--next {
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   margin-left: auto;
 }
 .wizard-btn--next:hover {
@@ -826,7 +826,7 @@ section.goal {
 
 .wizard-btn--create {
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   margin-left: auto;
 }
 .wizard-btn--create:hover {

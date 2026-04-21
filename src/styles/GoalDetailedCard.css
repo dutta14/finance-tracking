@@ -5,7 +5,7 @@
 
 /* ── Outer card ── */
 .fi-card {
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--accent-border);
   border-radius: var(--radius);
   padding: 1.25rem 1.4rem 1rem;
@@ -33,9 +33,9 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background: var(--color-warning-light);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning);
   border-radius: var(--radius);
   padding: 0.55rem 0.85rem;
   font-size: var(--fs-md);
@@ -46,7 +46,7 @@
 .fi-card-warning-suggest {
   flex-shrink: 0;
   background: var(--color-warning);
-  color: #78350f;
+  color: var(--color-warning);
   border: none;
   border-radius: var(--radius);
   padding: 0.2rem 0.6rem;
@@ -85,7 +85,7 @@
 
 .fi-card-badge {
   background: var(--accent-badge);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
@@ -234,7 +234,7 @@
   border-top: 1px solid var(--accent-border);
   padding-top: 0.6rem;
   margin-top: 0.25rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: var(--fs-md);
 }
 
@@ -263,7 +263,7 @@
 }
 
 .expense-toggle-btn.active {
-  background: #fff;
+  background: var(--color-surface);
   color: var(--accent-text-dark);
   font-weight: var(--fw-semibold);
   box-shadow: 0 1px 3px var(--accent-shadow-strong);
@@ -297,8 +297,8 @@
   top: 50%;
   left: calc(100% + 8px);
   transform: translateY(-50%);
-  background: #1e2228;
-  color: #e5e7eb;
+  background: var(--color-tooltip-bg);
+  color: var(--color-border);
   font-size: var(--fs-sm);
   line-height: 1.5;
   padding: 0.5rem 0.7rem;
@@ -317,7 +317,7 @@
   right: 100%;
   transform: translateY(-50%);
   border: 5px solid transparent;
-  border-right-color: #1e2228;
+  border-right-color: var(--color-tooltip-bg);
 }
 
 .fi-goal-info:hover .fi-goal-tooltip {
@@ -336,125 +336,15 @@
   right: auto;
   left: 100%;
   border-right-color: transparent;
-  border-left-color: #1e2228;
-}
-
-body.dark .fi-goal-tooltip--left::after {
-  border-left-color: #111827;
-}
-
-body.dark .fi-goal-tooltip {
-  background: #111827;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-body.dark .fi-goal-tooltip::after {
-  border-right-color: #111827;
+  border-left-color: var(--color-tooltip-bg);
 }
 
 /* ──────────────────────────────────────────────
    Dark mode — fi-card (uses themed CSS variables)
    ────────────────────────────────────────────── */
 
-body.dark .fi-card {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-  color: #e5e7eb;
-}
-
-body.dark .fi-card:hover {
-  box-shadow: 0 2px 12px var(--accent-shadow);
-}
-
-body.dark .fi-card-warning {
-  background: #3b2e0d;
-  color: #fcd34d;
-  border-color: #78490a;
-}
-
-body.dark .fi-card-warning-suggest {
-  background: #78490a;
-  color: #fde68a;
-}
-
 body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   background: #92400e;
-}
-
-body.dark .fi-card-badge {
-  background: var(--accent-badge);
-}
-
-body.dark .fi-card-title {
-  color: var(--accent-text-dark);
-}
-
-body.dark .fi-card-section {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-
-body.dark .fi-card-section-title {
-  color: var(--accent-text-mid);
-}
-
-body.dark .fi-card-row-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .fi-card-row-value {
-  color: var(--accent-text-dark);
-}
-
-body.dark .expense-toggle {
-  background: var(--accent-light);
-}
-
-body.dark .expense-toggle-btn {
-  color: var(--accent-text-mid);
-}
-
-body.dark .expense-toggle-btn.active {
-  background: var(--accent-lighter);
-  color: var(--accent-text-dark);
-}
-
-body.dark .fi-card-goal {
-  background: var(--accent-light);
-  border-color: var(--accent-border);
-}
-
-body.dark .fi-card-goal-label {
-  color: var(--accent-text-dark);
-}
-
-body.dark .fi-card-goal-amount {
-  color: var(--accent-text-dark);
-}
-
-body.dark .fi-card-progress-bar-track {
-  background: var(--accent-track);
-}
-
-body.dark .fi-card-progress-bar-fill {
-  background: var(--accent);
-}
-
-body.dark .fi-card-progress-pct {
-  color: var(--accent-text-dark);
-}
-
-body.dark .fi-card-meta {
-  border-top-color: var(--accent-border);
-  color: #6b7280;
-}
-
-body.dark .fi-goal-info-icon {
-  color: var(--accent-icon-subtle);
-}
-
-body.dark .fi-goal-info:hover .fi-goal-info-icon {
-  color: var(--accent-text-mid);
 }
 
 /* ── Inline edit button ── */
@@ -491,17 +381,11 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
 .fi-form-error {
   font-size: var(--fs-md);
   color: var(--color-negative);
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--color-negative-light);
+  border: 1px solid var(--color-negative-border);
   border-radius: var(--radius);
   padding: 5px 10px;
   margin-bottom: 0.75rem;
-}
-
-body.dark .fi-form-error {
-  background: #2d1515;
-  border-color: #742a2a;
-  color: var(--color-negative);
 }
 
 .fi-form-grid {
@@ -549,7 +433,7 @@ body.dark .fi-form-error {
 .fi-form-save {
   flex: 1;
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radius);
   padding: 7px;

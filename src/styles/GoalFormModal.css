@@ -16,7 +16,7 @@
 }
 
 .goal-form-modal {
-  background: #fff;
+  background: var(--color-surface);
   border-radius: var(--radius);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
   width: 100%;
@@ -41,15 +41,6 @@
 
 .goal-form-modal .goal-form-section.goal-wizard {
   padding: 0;
-}
-
-body.dark .goal-form-modal {
-  background: #1e2227;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
-}
-
-body.dark .goal-form-modal-backdrop {
-  background: rgba(0, 0, 0, 0.65);
 }
 
 @media (max-width: 640px) {

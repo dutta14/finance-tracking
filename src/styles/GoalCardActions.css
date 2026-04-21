@@ -9,7 +9,7 @@
 .btn-delete {
   background: none;
   border: none;
-  color: #999;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0.25rem;
   width: 2rem;
@@ -24,13 +24,5 @@
 .btn-edit:hover,
 .btn-copy:hover,
 .btn-delete:hover {
-  color: #000;
-}
-
-body.dark .goal-card-actions button {
-  color: #6b7280;
-}
-
-body.dark .goal-card-actions button:hover {
-  color: #e5e7eb;
+  color: var(--color-text);
 }

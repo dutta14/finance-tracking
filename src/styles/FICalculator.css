@@ -15,7 +15,7 @@
   font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 .fi-calc-hero-value {
   display: flex;
@@ -27,16 +27,13 @@
 .fi-calc-hero-dollar {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: #6b7280;
-}
-body.dark .fi-calc-hero-dollar {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 .fi-calc-hero-input {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
-  color: #111827;
+  color: var(--color-text);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -48,9 +45,6 @@ body.dark .fi-calc-hero-dollar {
 }
 .fi-calc-hero-input:focus {
   border-bottom-color: var(--accent);
-}
-body.dark .fi-calc-hero-input {
-  color: #f3f4f6;
 }
 .fi-calc-hero-input::-webkit-inner-spin-button,
 .fi-calc-hero-input::-webkit-outer-spin-button {
@@ -84,22 +78,15 @@ body.dark .fi-calc-hero-input {
 .fi-calc-stepper-label {
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
-  color: #6b7280;
-}
-body.dark .fi-calc-stepper-label {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 .fi-calc-stepper {
   display: flex;
   align-items: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   overflow: hidden;
-  background: #f9fafb;
-}
-body.dark .fi-calc-stepper {
-  border-color: #2d3348;
-  background: #1a1f2e;
+  background: var(--color-bg);
 }
 .fi-calc-step-btn {
   width: 30px;
@@ -109,7 +96,7 @@ body.dark .fi-calc-stepper {
   justify-content: center;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;
@@ -124,30 +111,20 @@ body.dark .fi-calc-stepper {
 .fi-calc-step-btn:active {
   background: var(--accent-light);
 }
-body.dark .fi-calc-step-btn {
-  color: #9ca3af;
-}
-body.dark .fi-calc-step-btn:hover {
-  background: var(--accent-lighter);
-  color: var(--accent);
-}
 .fi-calc-step-val {
   flex: 1;
   text-align: center;
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
-  color: #111827;
+  color: var(--color-text);
   padding: 0 2px;
   white-space: nowrap;
-}
-body.dark .fi-calc-step-val {
-  color: #f3f4f6;
 }
 .fi-calc-step-sub {
   font-weight: var(--fw-normal);
   font-size: var(--fs-xs);
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 /* Toggle switch */
@@ -161,12 +138,9 @@ body.dark .fi-calc-step-val {
   background: none;
   border: none;
   font-size: var(--fs-sm);
-  color: #6b7280;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0;
-}
-body.dark .fi-calc-toggle {
-  color: #9ca3af;
 }
 .fi-calc-toggle-track {
   position: relative;
@@ -174,18 +148,12 @@ body.dark .fi-calc-toggle {
   width: 32px;
   height: 18px;
   border-radius: var(--radius);
-  background: #d1d5db;
+  background: var(--color-border-light);
   transition: background 0.2s;
   flex-shrink: 0;
 }
 .fi-calc-toggle--on .fi-calc-toggle-track {
   background: var(--accent);
-}
-body.dark .fi-calc-toggle-track {
-  background: #374151;
-}
-body.dark .fi-calc-toggle--on .fi-calc-toggle-track {
-  background: var(--accent-hover);
 }
 .fi-calc-toggle-thumb {
   position: absolute;
@@ -194,7 +162,7 @@ body.dark .fi-calc-toggle--on .fi-calc-toggle-track {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 1px 2px rgba(0,0,0,0.15);
   transition: transform 0.2s;
 }
@@ -209,11 +177,8 @@ body.dark .fi-calc-toggle--on .fi-calc-toggle-track {
   gap: 6px;
   padding-bottom: 0.6rem;
   margin-bottom: 0.2rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
-}
-body.dark .fi-sim-bar {
-  border-bottom-color: #2d3348;
 }
 .fi-sim-chips {
   display: flex;
@@ -230,9 +195,9 @@ body.dark .fi-sim-bar {
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   border-radius: 100px;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  color: #374151;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg);
+  color: var(--color-text-heading);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -244,26 +209,17 @@ body.dark .fi-sim-bar {
 .fi-sim-chip--active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 .fi-sim-chip--active:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
-  color: #fff;
-}
-body.dark .fi-sim-chip {
-  background: #1f2937;
-  border-color: #374151;
-  color: #d1d5db;
-}
-body.dark .fi-sim-chip:hover {
-  border-color: var(--accent-hover);
-  color: var(--accent-hover);
+  color: var(--color-text-on-accent);
 }
 body.dark .fi-sim-chip--active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 .fi-sim-chip-x {
   font-size: var(--fs-sm);
@@ -283,9 +239,9 @@ body.dark .fi-sim-chip--active {
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
   border-radius: 100px;
-  border: 1px dashed #d1d5db;
+  border: 1px dashed var(--color-border-light);
   background: none;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
@@ -293,14 +249,6 @@ body.dark .fi-sim-chip--active {
 .fi-sim-add-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-}
-body.dark .fi-sim-add-btn {
-  border-color: #374151;
-  color: #6b7280;
-}
-body.dark .fi-sim-add-btn:hover {
-  border-color: var(--accent-hover);
-  color: var(--accent-hover);
 }
 .fi-sim-save-form {
   display: flex;
@@ -310,20 +258,15 @@ body.dark .fi-sim-add-btn:hover {
 .fi-sim-save-input {
   padding: 3px 8px;
   font-size: var(--fs-xs);
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  background: #fff;
-  color: #111827;
+  background: var(--color-surface);
+  color: var(--color-text);
   outline: none;
   width: 120px;
 }
 .fi-sim-save-input:focus {
   border-color: var(--accent);
-}
-body.dark .fi-sim-save-input {
-  background: #1f2937;
-  border-color: #374151;
-  color: #f3f4f6;
 }
 .fi-sim-save-btn {
   padding: 3px 10px;
@@ -332,7 +275,7 @@ body.dark .fi-sim-save-input {
   border-radius: var(--radius);
   border: none;
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   cursor: pointer;
 }
 .fi-sim-save-btn:disabled {
@@ -344,7 +287,7 @@ body.dark .fi-sim-save-input {
   font-size: var(--fs-sm);
   border: none;
   background: none;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 .fi-sim-cancel-btn:hover {
@@ -354,11 +297,8 @@ body.dark .fi-sim-save-input {
 /* Divider */
 .fi-calc-divider {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--color-border);
   margin: 0.6rem 0;
-}
-body.dark .fi-calc-divider {
-  background: #2d3348;
 }
 
 /* Holdings */
@@ -372,10 +312,7 @@ body.dark .fi-calc-divider {
   display: flex;
   justify-content: space-between;
   font-size: var(--fs-sm);
-  color: #6b7280;
-}
-body.dark .fi-calc-holding-row {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 /* Results */
@@ -395,26 +332,16 @@ body.dark .fi-calc-holding-row {
   border: 1px solid var(--accent-border);
   border-radius: var(--radius);
 }
-body.dark .fi-calc-result-main {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
 .fi-calc-result-label {
   font-size: var(--fs-sm);
-  color: #374151;
+  color: var(--color-text-heading);
   font-weight: var(--fw-medium);
-}
-body.dark .fi-calc-result-label {
-  color: #d1d5db;
 }
 .fi-calc-result-value {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   color: var(--accent);
   font-variant-numeric: tabular-nums;
-}
-body.dark .fi-calc-result-value {
-  color: var(--accent);
 }
 .fi-calc-result--ready {
   font-size: var(--fs-md);
@@ -430,34 +357,25 @@ body.dark .fi-calc-result-value {
   display: flex;
   justify-content: space-between;
   font-size: var(--fs-sm);
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 2px 0;
-}
-body.dark .fi-calc-bk-row {
-  color: #9ca3af;
 }
 .fi-calc-bk-row span:last-child {
   font-variant-numeric: tabular-nums;
   font-weight: var(--fw-medium);
-  color: #374151;
-}
-body.dark .fi-calc-bk-row span:last-child {
-  color: #d1d5db;
+  color: var(--color-text-heading);
 }
 .fi-calc-bk-row--gap {
   padding-top: 4px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
   font-weight: var(--fw-semibold);
-}
-body.dark .fi-calc-bk-row--gap {
-  border-top-color: #2d3348;
 }
 
 /* Year-by-year expand */
 .fi-calc-expand-btn {
   background: none;
   border: none;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: var(--fs-sm);
   cursor: pointer;
   padding: 6px 0 2px;
@@ -465,13 +383,7 @@ body.dark .fi-calc-bk-row--gap {
   width: 100%;
 }
 .fi-calc-expand-btn:hover {
-  color: #374151;
-}
-body.dark .fi-calc-expand-btn {
-  color: #9ca3af;
-}
-body.dark .fi-calc-expand-btn:hover {
-  color: #d1d5db;
+  color: var(--color-text-heading);
 }
 .fi-calc-yby {
   max-height: 260px;
@@ -487,48 +399,31 @@ body.dark .fi-calc-expand-btn:hover {
 .fi-calc-yby-table th {
   position: sticky;
   top: 0;
-  background: #f9fafb;
+  background: var(--color-bg);
   text-align: right;
   padding: 2px 6px;
   font-weight: var(--fw-semibold);
-  color: #6b7280;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 .fi-calc-yby-table th:first-child {
   text-align: left;
 }
-body.dark .fi-calc-yby-table th {
-  background: #1a1d2e;
-  color: #9ca3af;
-  border-bottom-color: #2d3348;
-}
 .fi-calc-yby-table td {
   text-align: right;
   padding: 2px 6px;
-  color: #374151;
+  color: var(--color-text-heading);
 }
 .fi-calc-yby-table td:first-child {
   text-align: left;
-  color: #6b7280;
-}
-body.dark .fi-calc-yby-table td {
-  color: #d1d5db;
-}
-body.dark .fi-calc-yby-table td:first-child {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 .fi-calc-yby--negative td {
   color: var(--color-negative) !important;
 }
-body.dark .fi-calc-yby--negative td {
-  color: var(--color-negative) !important;
-}
 .fi-calc-yby-note {
   font-size: var(--fs-xs);
-  color: #8b5cf6 !important;
+  color: var(--accent) !important;
   text-align: left !important;
   white-space: nowrap;
-}
-body.dark .fi-calc-yby-note {
-  color: #a78bfa !important;
 }

@@ -5,8 +5,8 @@
   transform: translateX(-50%) translateY(16px);
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  background: #1e1e2e;
-  color: #fff;
+  background: var(--color-tooltip-bg);
+  color: var(--color-text-on-accent);
   border-radius: var(--radius);
   padding: 12px 14px 15px 16px;
   display: flex;
@@ -37,7 +37,7 @@
   background: none;
   border: 1.5px solid rgba(255, 255, 255, 0.55);
   border-radius: var(--radius);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   padding: 4px 12px;
@@ -65,7 +65,7 @@
 }
 
 .undo-toast-close:hover {
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .undo-toast-progress {

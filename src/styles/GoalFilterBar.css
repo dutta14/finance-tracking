@@ -23,28 +23,28 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
   cursor: pointer;
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: #555;
+  color: var(--color-text-secondary);
   padding: 0.35rem 0.75rem;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .filter-pill:hover {
-  background: #e5e7eb;
-  border-color: #d1d5db;
-  color: #111;
+  background: var(--color-border);
+  border-color: var(--color-border-light);
+  color: var(--color-text);
 }
 
 .filter-pill--active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .filter-pill--active:hover {
@@ -52,9 +52,9 @@
 }
 
 .filter-pill--open {
-  background: #e5e7eb;
-  border-color: #d1d5db;
-  color: #111;
+  background: var(--color-border);
+  border-color: var(--color-border-light);
+  color: var(--color-text);
 }
 
 .filter-pill--active.filter-pill--open {
@@ -65,8 +65,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  color: #111;
+  background: var(--color-surface);
+  color: var(--color-text);
   border-radius: 999px;
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
@@ -77,7 +77,7 @@
 
 .filter-pill--active .filter-pill-badge {
   background: rgba(255,255,255,0.25);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .filter-pill-chevron {
@@ -94,8 +94,8 @@
 }
 
 .filter-dropdown-panel {
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   min-width: 180px;
@@ -110,7 +110,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: var(--fs-md);
-  color: #222;
+  color: var(--color-text);
   padding: 0.4rem 0.5rem;
   border-radius: var(--radius);
   cursor: pointer;
@@ -118,7 +118,7 @@
 }
 
 .filter-option:hover {
-  background: #f2f2f2;
+  background: var(--color-surface-hover);
 }
 
 .filter-option input[type="checkbox"] {
@@ -141,23 +141,23 @@
 .filter-dropdown-clear {
   margin-top: 0.35rem;
   background: none;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
   font-size: var(--fs-md);
-  color: #555;
+  color: var(--color-text-secondary);
   padding: 0.35rem 0;
   width: 100%;
   transition: background 0.15s;
 }
 
 .filter-dropdown-clear:hover {
-  background: #f2f2f2;
+  background: var(--color-surface-hover);
 }
 
 .filter-empty {
   font-size: var(--fs-md);
-  color: #999;
+  color: var(--color-text-muted);
   padding: 0.25rem 0.5rem;
   margin: 0;
 }
@@ -171,7 +171,7 @@
 
 .goal-filter-active-count {
   font-size: var(--fs-md);
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .goal-filter-clear-all {
@@ -186,69 +186,25 @@
 }
 
 .goal-filter-clear-all:hover {
-  color: #b91c1c;
+  color: var(--color-negative-hover);
 }
 
 /* Dark mode */
-body.dark .filter-pill {
-  background: #23272f;
-  border-color: #363c48;
-  color: #9ca3af;
-}
-
-body.dark .filter-pill:hover {
-  background: #2d3748;
-  border-color: #6b7280;
-  color: #e5e7eb;
-}
 
 body.dark .filter-pill--active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 body.dark .filter-pill--active:hover {
   filter: brightness(1.15);
 }
 
-body.dark .filter-pill--open {
-  background: #2d3748;
-  border-color: #6b7280;
-  color: #e5e7eb;
-}
-
 body.dark .filter-pill--active .filter-pill-badge {
-  color: #fff;
-}
-
-body.dark .filter-dropdown-panel {
-  background: #1e2230;
-  border-color: #2d3344;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-body.dark .filter-option {
-  color: #e5e7eb;
-}
-
-body.dark .filter-option:hover {
-  background: #2d3748;
+  color: var(--color-text-on-accent);
 }
 
 body.dark .filter-option input[type="checkbox"] {
   accent-color: var(--accent);
-}
-
-body.dark .filter-dropdown-clear {
-  border-color: #363c48;
-  color: #9ca3af;
-}
-
-body.dark .filter-dropdown-clear:hover {
-  background: #2d3748;
-}
-
-body.dark .goal-filter-active-count {
-  color: #6b7280;
 }

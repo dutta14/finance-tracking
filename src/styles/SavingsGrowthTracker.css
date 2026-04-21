@@ -9,12 +9,9 @@
 .sgt-tabs {
   display: flex;
   gap: 4px;
-  background: #f3f4f6;
+  background: var(--color-surface-hover);
   border-radius: var(--radius);
   padding: 3px;
-}
-body.dark .sgt-tabs {
-  background: #1f2937;
 }
 .sgt-tab {
   flex: 1;
@@ -24,27 +21,17 @@ body.dark .sgt-tabs {
   border: none;
   border-radius: var(--radius);
   background: transparent;
-  color: #6b7280;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .sgt-tab:hover {
-  color: #374151;
-}
-body.dark .sgt-tab {
-  color: #9ca3af;
-}
-body.dark .sgt-tab:hover {
-  color: #d1d5db;
+  color: var(--color-text-heading);
 }
 .sgt-tab--active {
-  background: #fff;
+  background: var(--color-surface);
   color: var(--accent);
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-body.dark .sgt-tab--active {
-  background: #252a38;
-  color: var(--accent);
 }
 
 /* Toggle row */
@@ -56,30 +43,21 @@ body.dark .sgt-tab--active {
 }
 .sgt-toggle-label {
   font-size: var(--fs-sm);
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 .sgt-toggle-btn {
   width: 28px;
   height: 22px;
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  background: #f9fafb;
-  color: #374151;
+  background: var(--color-bg);
+  color: var(--color-text-heading);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 .sgt-toggle-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-body.dark .sgt-toggle-btn {
-  background: #1f2937;
-  border-color: #374151;
-  color: #d1d5db;
-}
-body.dark .sgt-toggle-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -102,13 +80,9 @@ body.dark .sgt-toggle-btn:hover {
   font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: #9ca3af;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
-}
-body.dark .sgt-th {
-  color: #6b7280;
-  border-bottom-color: #2d3348;
 }
 .sgt-th--year {
   text-align: left;
@@ -116,18 +90,12 @@ body.dark .sgt-th {
 }
 .sgt-th--delta {
   font-size: var(--fs-xs);
-  color: #b0b5bf;
+  color: var(--color-text-muted);
   width: 60px;
 }
-body.dark .sgt-th--delta {
-  color: #4b5563;
-}
 .sgt-th--nw {
-  border-left: 1px solid #e5e7eb;
+  border-left: 1px solid var(--color-border);
   padding-left: 8px;
-}
-body.dark .sgt-th--nw {
-  border-left-color: #2d3348;
 }
 
 /* Rows */
@@ -135,28 +103,18 @@ body.dark .sgt-th--nw {
   transition: background 0.1s;
 }
 .sgt-row:hover {
-  background: #f9fafb;
-}
-body.dark .sgt-row:hover {
-  background: #1a1f2e;
+  background: var(--color-bg);
 }
 .sgt-td {
   padding: 5px 6px;
-  color: #374151;
-  border-bottom: 1px solid #f3f4f6;
+  color: var(--color-text-heading);
+  border-bottom: 1px solid var(--color-surface-hover);
   white-space: nowrap;
-}
-body.dark .sgt-td {
-  color: #d1d5db;
-  border-bottom-color: #1f2937;
 }
 .sgt-td--year {
   text-align: left;
   font-weight: var(--fw-semibold);
-  color: #111827;
-}
-body.dark .sgt-td--year {
-  color: #f3f4f6;
+  color: var(--color-text);
 }
 .sgt-td--num {
   text-align: right;
@@ -170,12 +128,8 @@ body.dark .sgt-td--year {
 }
 .sgt-td--nw {
   font-weight: var(--fw-semibold);
-  border-left: 1px solid #f3f4f6;
+  border-left: 1px solid var(--color-surface-hover);
   padding-left: 8px;
-  color: var(--accent);
-}
-body.dark .sgt-td--nw {
-  border-left-color: #1f2937;
   color: var(--accent);
 }
 
@@ -186,34 +140,18 @@ body.dark .sgt-td--nw {
 .sgt-down {
   color: var(--color-negative);
 }
-body.dark .sgt-up {
-  color: var(--color-positive);
-}
-body.dark .sgt-down {
-  color: var(--color-negative);
-}
 
 /* N/A & editable */
 .sgt-na {
-  color: #d1d5db;
+  color: var(--color-border-light);
   font-style: italic;
-}
-body.dark .sgt-na {
-  color: #4b5563;
 }
 .sgt-editable {
   cursor: pointer;
-  border-bottom: 1px dashed #d1d5db;
+  border-bottom: 1px dashed var(--color-border-light);
   transition: border-color 0.15s;
 }
 .sgt-editable:hover {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
-}
-body.dark .sgt-editable {
-  border-bottom-color: #4b5563;
-}
-body.dark .sgt-editable:hover {
   border-bottom-color: var(--accent);
   color: var(--accent);
 }
@@ -226,20 +164,15 @@ body.dark .sgt-editable:hover {
   font-variant-numeric: tabular-nums;
   border: 1px solid var(--accent);
   border-radius: var(--radius);
-  background: #fff;
-  color: #111827;
+  background: var(--color-surface);
+  color: var(--color-text);
   outline: none;
   text-align: right;
-}
-body.dark .sgt-edit-input {
-  background: #1f2937;
-  border-color: var(--accent);
-  color: #f3f4f6;
 }
 
 /* Empty state */
 .sgt-empty {
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-size: var(--fs-md);
   text-align: center;
   padding: 2rem 0.5rem;
@@ -249,10 +182,7 @@ body.dark .sgt-edit-input {
 /* Hint */
 .sgt-hint {
   font-size: var(--fs-xs);
-  color: #b0b5bf;
+  color: var(--color-text-muted);
   line-height: 1.4;
   margin: 0;
-}
-body.dark .sgt-hint {
-  color: #4b5563;
 }

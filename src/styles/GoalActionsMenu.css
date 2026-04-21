@@ -7,7 +7,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 0.35rem 0.4rem;
   border-radius: var(--radius);
   display: flex;
@@ -17,37 +17,22 @@
 }
 
 .goal-actions-menu-trigger:hover {
-  background: #f2f2f2;
-  color: #111;
-}
-
-body.dark .goal-actions-menu-trigger {
-  color: #9ca3af;
-}
-
-body.dark .goal-actions-menu-trigger:hover {
-  background: #2d3748;
-  color: #e5e7eb;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .goal-actions-menu-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   min-width: 130px;
   padding: 0.3rem;
   z-index: 500;
   white-space: nowrap;
-}
-
-body.dark .goal-actions-menu-dropdown {
-  background: #23272f;
-  border-color: #363c48;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .goal-actions-menu-item {
@@ -58,28 +43,16 @@ body.dark .goal-actions-menu-dropdown {
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  color: #111;
+  color: var(--color-text);
   width: 100%;
   display: block;
   transition: background 0.15s;
 }
 
 .goal-actions-menu-item:hover {
-  background: #f2f2f2;
-}
-
-body.dark .goal-actions-menu-item {
-  color: #e5e7eb;
-}
-
-body.dark .goal-actions-menu-item:hover {
-  background: #2d3748;
+  background: var(--color-surface-hover);
 }
 
 .goal-actions-menu-item--danger {
-  color: #e53e3e;
-}
-
-body.dark .goal-actions-menu-item--danger {
-  color: #fc8181;
+  color: var(--color-negative);
 }

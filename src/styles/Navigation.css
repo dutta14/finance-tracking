@@ -1,15 +1,10 @@
 .navbar {
   background: white;
   padding: 1rem 0;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 100;
-}
-
-body.dark .navbar {
-  background: #181c20;
-  border-bottom: 1px solid #23272f;
 }
 
 .nav-container {
@@ -24,11 +19,11 @@ body.dark .navbar {
 .nav-logo {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: #000;
+  color: var(--color-text);
   letter-spacing: -0.5px;
 }
 body.dark .nav-logo {
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .nav-menu {
@@ -46,7 +41,7 @@ body.dark .nav-logo {
 .nav-link {
   background: none;
   border: none;
-  color: #565758;
+  color: var(--color-text-secondary);
   font-size: var(--fs-md);
   cursor: pointer;
   padding: 0.5rem 0.75rem;
@@ -58,7 +53,7 @@ body.dark .nav-logo {
 .nav-link {
   background: none;
   border: none;
-  color: #565758;
+  color: var(--color-text-secondary);
   font-size: var(--fs-md);
   cursor: pointer;
   padding: 0.5rem 0.75rem;
@@ -67,20 +62,17 @@ body.dark .nav-logo {
   font-weight: var(--fw-medium);
 }
 .nav-link:hover {
-  color: #000;
+  color: var(--color-text);
 }
 .nav-link.active {
-  color: #000;
-  border-bottom: 2px solid #000;
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-text);
   padding-bottom: calc(0.5rem - 2px);
-}
-body.dark .nav-link {
-  color: #bfc4cc;
 }
 body.dark .nav-link:hover,
 body.dark .nav-link.active {
-  color: #fff;
-  border-bottom: 2px solid #fff;
+  color: var(--color-text-on-accent);
+  border-bottom: 2px solid var(--color-text-on-accent);
 }
 
   .nav-menu {

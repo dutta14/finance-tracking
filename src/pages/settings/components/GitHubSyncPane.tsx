@@ -121,9 +121,9 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
               {ghTokenUnlocked && (
                 <>
                   {!ghUnlockDismissed && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '0.4rem', padding: '0.35rem 0.65rem', fontSize: '0.85rem', color: '#22c55e' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '0.4rem', padding: '0.35rem 0.65rem', fontSize: '0.85rem', color: 'var(--color-positive)' }}>
                       <span>Token unlocked for this session</span>
-                      <button onClick={() => setGhUnlockDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22c55e', opacity: 0.7, padding: '0 0.15rem', fontSize: '1rem', lineHeight: 1 }} aria-label="Dismiss">&times;</button>
+                      <button onClick={() => setGhUnlockDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-positive)', opacity: 0.7, padding: '0 0.15rem', fontSize: '1rem', lineHeight: 1 }} aria-label="Dismiss">&times;</button>
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -176,7 +176,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                     </span>
                     <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={() => setGhEditingRepo(true)}>Edit</button>
                     <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={handleGhTest} disabled={ghTesting || !ghTokenUnlocked}>{ghTesting ? 'Testing…' : 'Test'}</button>
-                    {ghTestResult?.ok && <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.55rem', borderRadius: '999px', background: 'rgba(34,197,94,0.15)', color: '#22c55e', fontWeight: 600 }}>Connected</span>}
+                    {ghTestResult?.ok && <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.55rem', borderRadius: '999px', background: 'rgba(34,197,94,0.15)', color: 'var(--color-positive)', fontWeight: 600 }}>Connected</span>}
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

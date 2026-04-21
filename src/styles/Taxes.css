@@ -31,16 +31,16 @@
 }
 .tax-year-btn {
   background: none;
-  border: 1px solid var(--color-border, #e5e7eb);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.25rem 0.6rem;
   font-size: var(--fs-md);
   cursor: pointer;
-  color: var(--color-text, #374151);
+  color: var(--color-text);
   transition: background 0.12s;
 }
 .tax-year-btn:hover:not(:disabled) {
-  background: var(--accent-lighter, #eef2ff);
+  background: var(--accent-lighter);
 }
 .tax-year-btn:disabled {
   opacity: 0.35;
@@ -51,19 +51,19 @@
   font-weight: var(--fw-semibold);
   min-width: 3rem;
   text-align: center;
-  color: var(--color-text, #1f2937);
+  color: var(--color-text);
 }
 
 /* Empty state */
 .tax-empty-state {
   text-align: center;
   padding: 4rem 1rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
 }
 .tax-empty-state h2 {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: var(--color-text, #374151);
+  color: var(--color-text);
   margin-bottom: 0.4rem;
 }
 .tax-empty-state p {
@@ -79,8 +79,8 @@
 
 /* Section */
 .tax-section {
-  background: var(--color-card-bg, #fff);
-  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
 }
@@ -101,14 +101,14 @@
 .tax-section-title {
   font-size: var(--fs-xl);
   font-weight: var(--fw-semibold);
-  color: var(--color-text, #1f2937);
+  color: var(--color-text);
   margin: 0;
   flex: 1;
 }
 .tax-section-count {
   font-size: var(--fs-sm);
-  color: var(--color-text-muted, #9ca3af);
-  background: var(--color-surface, #f3f4f6);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
 }
@@ -124,7 +124,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-border-light, #f3f4f6);
+  border-bottom: 1px solid var(--color-border-light);
 }
 .tax-item:last-of-type {
   border-bottom: none;
@@ -142,14 +142,14 @@
   margin-top: 0.1rem;
 }
 .tax-item-tick {
-  color: #22c55e;
+  color: var(--color-positive);
   font-weight: var(--fw-bold);
   font-size: var(--fs-md);
 }
 .tax-item-empty {
   width: 0.9rem;
   height: 0.9rem;
-  border: 1.5px solid var(--color-border, #d1d5db);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
 }
 .tax-item-body {
@@ -159,7 +159,7 @@
 .tax-item-label {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: var(--color-text, #374151);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -167,7 +167,7 @@
 }
 .tax-item-acct {
   font-size: var(--fs-sm);
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
   font-weight: var(--fw-normal);
 }
 .tax-item-files {
@@ -180,8 +180,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: var(--accent-lighter, #eef2ff);
-  color: var(--accent-text-dark, #312e81);
+  background: var(--accent-lighter);
+  color: var(--accent-text-dark);
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   font-size: var(--fs-sm);
@@ -197,7 +197,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--accent-text-dark, #312e81);
+  color: var(--accent-text-dark);
   font-size: var(--fs-md);
   padding: 0 0.15rem;
   opacity: 0.6;
@@ -222,41 +222,41 @@
 }
 .tax-btn--primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
-.tax-btn--primary:hover { background: var(--accent-hover, #4f46e5); }
+.tax-btn--primary:hover { background: var(--accent-hover); }
 .tax-btn--primary:disabled { opacity: 0.5; cursor: default; }
 .tax-btn--outline {
   background: none;
-  border: 1px solid var(--color-border, #e5e7eb);
-  color: var(--color-text, #374151);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
-.tax-btn--outline:hover { background: var(--accent-lighter, #eef2ff); }
+.tax-btn--outline:hover { background: var(--accent-lighter); }
 .tax-btn--sm {
   padding: 0.2rem 0.55rem;
   font-size: var(--fs-sm);
-  background: var(--color-surface, #f3f4f6);
-  color: var(--color-text, #374151);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
-.tax-btn--sm:hover { background: var(--accent-lighter, #eef2ff); }
+.tax-btn--sm:hover { background: var(--accent-lighter); }
 .tax-btn--muted {
   background: none;
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
 }
-.tax-btn--muted:hover { color: #dc2626; background: #fef2f2; }
+.tax-btn--muted:hover { color: var(--color-negative); background: var(--color-negative-light); }
 .tax-btn--danger {
-  background: #dc2626;
-  color: #fff;
+  background: var(--color-negative);
+  color: var(--color-text-on-accent);
   border: none;
 }
-.tax-btn--danger:hover { background: #b91c1c; }
+.tax-btn--danger:hover { background: var(--color-negative-hover); }
 
 /* Rename inline */
 .tax-rename-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
   font-size: var(--fs-sm);
   padding: 0 0.2rem;
   opacity: 0;
@@ -274,8 +274,8 @@
   border: 1px solid var(--accent);
   border-radius: var(--radius);
   outline: none;
-  background: var(--color-surface, #fff);
-  color: var(--color-text, #374151);
+  background: var(--color-surface);
+  color: var(--color-text);
   width: 100%;
   max-width: 20rem;
 }
@@ -308,7 +308,7 @@
 }
 .tax-tpl-mode-opt {
   font-size: var(--fs-md);
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -331,11 +331,11 @@
   justify-content: space-between;
   padding: 0.5rem 0.6rem;
   border-radius: var(--radius);
-  border: 1px solid var(--color-border, #e5e7eb);
+  border: 1px solid var(--color-border);
 }
 .tax-tpl-info { display: flex; flex-direction: column; gap: 0.1rem; }
-.tax-tpl-name { font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--color-text, #374151); }
-.tax-tpl-count { font-size: var(--fs-sm); color: var(--color-text-muted, #9ca3af); }
+.tax-tpl-name { font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--color-text); }
+.tax-tpl-count { font-size: var(--fs-sm); color: var(--color-text-muted); }
 .tax-tpl-actions { display: flex; gap: 0.3rem; align-items: center; }
 
 /* Owner avatars */
@@ -348,7 +348,7 @@
   border-radius: 50%;
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
-  color: #fff;
+  color: var(--color-text-on-accent);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -358,7 +358,7 @@
   object-fit: cover;
 }
 .tax-owner-primary { background: var(--accent); }
-.tax-owner-partner { background: #f59e0b; }
+.tax-owner-partner { background: var(--color-warning); }
 .tax-owner-group {
   display: inline-flex;
   position: relative;
@@ -368,14 +368,14 @@
 }
 .tax-owner-group .tax-owner-avatar {
   position: absolute;
-  border: 1.5px solid var(--color-card-bg, #fff);
+  border: 1.5px solid var(--color-card-bg);
 }
 .tax-owner-group .tax-owner-primary { left: 0; z-index: 2; }
 .tax-owner-group .tax-owner-partner { left: 0.8rem; z-index: 1; }
 
 .tax-empty {
   font-size: var(--fs-md);
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
   margin: 0.5rem 0;
 }
 
@@ -388,8 +388,8 @@
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  background: var(--color-card-bg, #fff);
-  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   min-width: 14rem;
@@ -404,12 +404,12 @@
   background: none;
   padding: 0.55rem 0.85rem;
   font-size: var(--fs-md);
-  color: var(--color-text, #374151);
+  color: var(--color-text);
   cursor: pointer;
   transition: background 0.12s;
 }
 .tax-return-menu button:hover {
-  background: var(--accent-lighter, #eef2ff);
+  background: var(--accent-lighter);
 }
 
 /* Modals */
@@ -423,7 +423,7 @@
   z-index: 100;
 }
 .tax-modal {
-  background: var(--color-card-bg, #fff);
+  background: var(--color-card-bg);
   border-radius: var(--radius);
   padding: 1.5rem;
   width: 90%;
@@ -439,11 +439,11 @@
   margin: 0 0 0.5rem;
   font-size: var(--fs-lg);
   font-weight: var(--fw-semibold);
-  color: var(--color-text, #1f2937);
+  color: var(--color-text);
 }
 .tax-modal-hint {
   font-size: var(--fs-sm);
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   margin-bottom: 0.75rem;
 }
 .tax-modal-actions {
@@ -455,16 +455,16 @@
 .tax-input {
   width: 100%;
   padding: 0.45rem 0.65rem;
-  border: 1px solid var(--color-border, #e5e7eb);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  color: var(--color-text, #374151);
-  background: var(--color-surface, #fff);
+  color: var(--color-text);
+  background: var(--color-surface);
   outline: none;
 }
 .tax-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-lighter, #eef2ff);
+  box-shadow: 0 0 0 2px var(--accent-lighter);
 }
 
 /* Suggest list */
@@ -485,55 +485,22 @@
   transition: background 0.12s;
   font-size: var(--fs-md);
 }
-.tax-suggest-row:hover { background: var(--accent-lighter, #eef2ff); }
-.tax-suggest-row.selected { background: var(--accent-lighter, #eef2ff); }
+.tax-suggest-row:hover { background: var(--accent-lighter); }
+.tax-suggest-row.selected { background: var(--accent-lighter); }
 .tax-suggest-row input { flex-shrink: 0; }
-.tax-suggest-name { font-weight: var(--fw-medium); color: var(--color-text, #374151); }
-.tax-suggest-inst { font-size: var(--fs-sm); color: var(--color-text-muted, #9ca3af); margin-left: auto; }
+.tax-suggest-name { font-weight: var(--fw-medium); color: var(--color-text); }
+.tax-suggest-inst { font-size: var(--fs-sm); color: var(--color-text-muted); margin-left: auto; }
 .tax-suggest-badge {
   font-size: var(--fs-xs);
-  color: var(--color-text-muted, #9ca3af);
-  background: var(--color-surface, #f3f4f6);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
   padding: 0.05rem 0.35rem;
   border-radius: 999px;
   font-weight: var(--fw-medium);
 }
 
 /* ── Dark mode ── */
-body.dark .tax-year-label { color: #e5e7eb; }
-body.dark .tax-year-btn { border-color: #2d3344; color: #d1d5db; }
-body.dark .tax-year-btn:hover:not(:disabled) { background: rgba(99,102,241,0.1); }
-body.dark .tax-section { background: var(--color-card-bg, #1a1d2e); border-color: #2d3344; }
-body.dark .tax-section--return { border-color: var(--accent); }
-body.dark .tax-item { border-bottom-color: #232636; }
-body.dark .tax-item-label { color: #e5e7eb; }
-body.dark .tax-section-title { color: #e5e7eb; }
-body.dark .tax-section-count { background: #232636; color: #9ca3af; }
-body.dark .tax-file-chip { background: rgba(99,102,241,0.15); color: #a5b4fc; }
-body.dark .tax-file-remove { color: #a5b4fc; }
-body.dark .tax-empty-state h2 { color: #e5e7eb; }
-body.dark .tax-empty-state { color: #6b7280; }
-body.dark .tax-btn--sm { background: #232636; color: #d1d5db; }
-body.dark .tax-btn--sm:hover { background: rgba(99,102,241,0.15); }
-body.dark .tax-btn--outline { border-color: #2d3344; color: #d1d5db; }
-body.dark .tax-btn--outline:hover { background: rgba(99,102,241,0.1); }
-body.dark .tax-btn--muted:hover { color: #f87171; background: rgba(220,38,38,0.12); }
-body.dark .tax-item-empty { border-color: #4b5563; }
-body.dark .tax-return-menu { background: #1a1d2e; border-color: #2d3344; }
-body.dark .tax-return-menu button { color: #d1d5db; }
-body.dark .tax-return-menu button:hover { background: rgba(99,102,241,0.1); }
-body.dark .tax-modal { background: #1a1d2e; }
-body.dark .tax-modal h3 { color: #e5e7eb; }
-body.dark .tax-input { background: #232636; border-color: #2d3344; color: #e5e7eb; }
-body.dark .tax-input:focus { border-color: var(--accent); }
-body.dark .tax-suggest-row:hover { background: rgba(99,102,241,0.1); }
-body.dark .tax-suggest-name { color: #e5e7eb; }
-body.dark .tax-suggest-badge { background: #232636; color: #6b7280; }
-body.dark .tax-owner-group .tax-owner-avatar { border-color: var(--color-card-bg, #1a1d2e); }
-body.dark .tax-rename-input { background: #232636; border-color: var(--accent); color: #e5e7eb; }
-body.dark .tax-rename-btn { color: #6b7280; }
-body.dark .tax-rename-btn:hover { color: #a5b4fc; }
-body.dark .tax-tpl-row { border-color: #2d3344; }
-body.dark .tax-tpl-name { color: #e5e7eb; }
-body.dark .tax-tpl-mode-opt { color: #9ca3af; }
-body.dark .tax-tpl-mode-opt.active { color: #a5b4fc; }
+body.dark .tax-file-chip { background: rgba(99,102,241,0.15); color: var(--accent-text-mid); }
+body.dark .tax-file-remove { color: var(--accent-text-mid); }
+body.dark .tax-rename-btn:hover { color: var(--accent-text-mid); }
+body.dark .tax-tpl-mode-opt.active { color: var(--accent-text-mid); }

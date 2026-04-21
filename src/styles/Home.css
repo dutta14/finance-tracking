@@ -146,7 +146,7 @@
   margin-left: 0.4rem;
   letter-spacing: -0.01em;
 }
-.nw-change.up { color: #22c55e; }
+.nw-change.up { color: var(--color-positive); }
 .nw-change.down { color: var(--color-negative); }
 .nw-change.flat { color: var(--color-text-muted); }
 
@@ -192,10 +192,10 @@
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
 }
-.nw-jump-month-btn:hover { background: #e0e7ff; color: #4338ca; }
+.nw-jump-month-btn:hover { background: var(--accent-light); color: var(--accent); }
 .nw-jump-month-btn.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-weight: var(--fw-semibold);
 }
 
@@ -329,9 +329,9 @@
 .home-mini-date-btn.active {
   color: var(--accent);
   background: var(--accent-lighter);
-  border-color: #c7d2fe;
+  border-color: var(--accent-border);
 }
-.home-mini-date-btn.active + .home-mini-date-btn { border-left-color: #c7d2fe; }
+.home-mini-date-btn.active + .home-mini-date-btn { border-left-color: var(--accent-border); }
 
 .home-mini-custom-range {
   display: flex;
@@ -377,7 +377,7 @@
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: #fafafa;
+  background: var(--color-surface-hover);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   text-align: left;
@@ -592,8 +592,8 @@
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: #1f2937;
-  color: #f3f4f6;
+  background: var(--color-text);
+  color: var(--color-surface-hover);
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   padding: 4px 8px;
@@ -622,68 +622,20 @@
 }
 
 /* ── Dark mode ── */
-body.dark .home-page { background: #0b0e14; color: var(--color-text); }
-body.dark .home-grid-slot--over { outline-color: var(--accent-hover); }
 
-body.dark .home-card {
-  background: var(--color-bg);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-}
-body.dark .home-card-link { color: var(--accent-hover); }
-body.dark .home-card-link:hover { color: #a5b4fc; }
-body.dark .home-card-empty { color: #6b7280; }
+body.dark .home-card-link:hover { color: var(--accent-text-mid); }
 
 /* NW dark */
-body.dark .nw-amount { color: #f3f4f6; }
-body.dark .nw-date { color: #6b7280; }
-body.dark .nw-month-arrow { border-color: var(--color-border-light); }
-body.dark .nw-month-arrow:hover:not(:disabled) { background: var(--color-surface-alt); }
-body.dark .nw-jump-picker { background: #1f2937; border-color: var(--color-border-light); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-body.dark .nw-jump-year-label { color: #6b7280; }
-body.dark .nw-jump-month-btn { background: var(--color-border-light); color: var(--color-text-heading); }
-body.dark .nw-jump-month-btn:hover { background: #4338ca; color: #e0e7ff; }
-body.dark .nw-jump-month-btn.active { background: var(--accent); color: #fff; }
-body.dark .nw-change.up { color: #4ade80; }
-body.dark .nw-change.down { color: var(--color-negative); }
-body.dark .nw-change.flat { color: #6b7280; }
-body.dark .nw-tree-node--parent:hover { background: var(--color-surface-alt); }
-body.dark .nw-tree-chevron { color: #6b7280; }
-body.dark .nw-tree-value { color: #f3f4f6; }
+body.dark .nw-jump-month-btn.active { background: var(--accent); color: var(--color-text-on-accent); }
+body.dark .nw-change.up { color: var(--color-positive); }
 
 /* Mini chart tabs dark */
-body.dark .home-mini-tab { color: #6b7280; }
-body.dark .home-mini-tab.active { color: var(--accent-hover); border-bottom-color: var(--accent-hover); }
 
 /* Mini date filter dark */
-body.dark .home-mini-date-btn { color: #6b7280; }
-body.dark .home-mini-date-btn:hover { background: var(--color-bg); }
-body.dark .home-mini-date-btn.active { color: var(--accent-hover); background: #1e1b4b; border-color: #4338ca; }
-body.dark .home-mini-date-btn.active + .home-mini-date-btn { border-left-color: #4338ca; }
-body.dark .home-mini-range-select { background: var(--color-bg); }
-body.dark .home-mini-range-select:focus { border-color: var(--accent-hover); }
-body.dark .home-mini-range-sep { color: #6b7280; }
 
 /* Goals dark */
-body.dark .goals-peek-item {
-  background: var(--color-bg);
-}
-body.dark .goals-peek-item:hover {
-  border-color: #3d4455;
-  background: var(--color-bg);
-}
-body.dark .goals-peek-name { color: #f3f4f6; }
-body.dark .goals-peek-pct { color: var(--accent-hover); }
-body.dark .goals-peek-bar-fill--fi { background: var(--accent-hover); }
-body.dark .goals-peek-pct--fi { color: var(--accent-hover); }
-body.dark .goals-peek-bar-label { color: #6b7280; }
-body.dark .goals-peek-item-meta { color: #6b7280; }
-body.dark .goals-peek-more { color: #6b7280; }
 
 /* Alloc dark */
-body.dark .alloc-toggle { background: #1f2937; }
-body.dark .alloc-toggle-btn { color: #6b7280; }
-body.dark .alloc-toggle-btn.active { background: var(--color-border-light); color: var(--color-text); box-shadow: none; }
-body.dark .alloc-empty { color: #6b7280; }
 
 /* ── Card CTA empty state ── */
 .home-card-cta {
@@ -695,7 +647,7 @@ body.dark .alloc-empty { color: #6b7280; }
   gap: 0.6rem;
   text-align: center;
   padding: 1rem 1.5rem;
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
 }
 .home-card-cta svg {
   opacity: 0.35;
@@ -706,7 +658,7 @@ body.dark .alloc-empty { color: #6b7280; }
   font-size: var(--fs-md);
   line-height: 1.45;
   max-width: 260px;
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
 }
 .home-card-cta-btn {
   background: none;
@@ -721,10 +673,9 @@ body.dark .alloc-empty { color: #6b7280; }
 }
 .home-card-cta-btn:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
-body.dark .home-card-cta p { color: #6b7280; }
-body.dark .home-card-cta-btn:hover { color: #fff; }
+body.dark .home-card-cta-btn:hover { color: var(--color-text-on-accent); }
 
 /* ── Welcome Guide ── */
 .welcome-hero {
@@ -745,7 +696,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
 .welcome-subtitle {
   margin: 0;
   font-size: var(--fs-md);
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   line-height: 1.5;
 }
 
@@ -773,8 +724,8 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
   cursor: pointer;
@@ -793,7 +744,7 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--accent-lighter, #eef2ff);
+  background: var(--accent-lighter);
   color: var(--accent);
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
@@ -817,12 +768,12 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   margin: 0 0 0.15rem;
-  color: var(--color-text, #1f2937);
+  color: var(--color-text);
 }
 .welcome-step-desc {
   margin: 0;
   font-size: var(--fs-sm);
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   line-height: 1.45;
 }
 
@@ -841,12 +792,6 @@ body.dark .home-card-cta-btn:hover { color: #fff; }
 .welcome-step-cta:hover { color: var(--accent-hover); }
 
 /* Welcome dark */
-body.dark .welcome-subtitle { color: #6b7280; }
-body.dark .welcome-step { background: var(--color-bg); }
-body.dark .welcome-step:first-child { border-color: var(--accent-hover); box-shadow: 0 0 0 1px var(--accent-hover), 0 2px 8px rgba(99, 102, 241, 0.12); }
-body.dark .welcome-step:hover { border-color: var(--accent-hover); }
-body.dark .welcome-step-number { background: rgba(99, 102, 241, 0.15); }
-body.dark .welcome-step-desc { color: #6b7280; }
 
 /* Responsive: stack on narrow */
 @media (max-width: 640px) {

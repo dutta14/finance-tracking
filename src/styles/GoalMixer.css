@@ -12,7 +12,7 @@
 
 /* ── Modal ── */
 .mixer-modal {
-  background: #fff;
+  background: var(--color-surface);
   border-radius: var(--radius);
   box-shadow: 0 8px 48px rgba(0, 0, 0, 0.22);
   width: 100%;
@@ -29,20 +29,20 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.25rem 1.4rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
 .mixer-title {
   font-size: var(--fs-xl);
   font-weight: var(--fw-semibold);
-  color: #111;
+  color: var(--color-text);
   margin: 0 0 0.2rem;
 }
 
 .mixer-subtitle {
   font-size: var(--fs-md);
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -50,7 +50,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 0.3rem;
   border-radius: var(--radius);
   display: flex;
@@ -58,7 +58,7 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.mixer-close-btn:hover { color: #111; background: #f3f4f6; }
+.mixer-close-btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
 
 /* ── Body (two columns) ── */
 .mixer-body {
@@ -67,7 +67,7 @@
   gap: 0;
   flex: 1;
   overflow: hidden;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .mixer-col {
@@ -78,7 +78,7 @@
 }
 
 .mixer-col + .mixer-col {
-  border-left: 1px solid #e5e7eb;
+  border-left: 1px solid var(--color-border);
 }
 
 .mixer-col-title {
@@ -89,7 +89,7 @@
   font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #374151;
+  color: var(--color-text-heading);
   margin-bottom: 0.75rem;
   flex-shrink: 0;
 }
@@ -99,7 +99,7 @@
   font-weight: var(--fw-normal);
   text-transform: none;
   letter-spacing: 0;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   margin-left: 0.25rem;
 }
 
@@ -118,9 +118,9 @@
   border: 1px solid var(--accent-border);
 }
 .mixer-badge--gw {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--color-positive-light);
+  color: var(--color-positive);
+  border: 1px solid var(--color-positive-border);
 }
 .mixer-badge--sm {
   font-size: var(--fs-xs);
@@ -142,9 +142,9 @@
   align-items: flex-start;
   gap: 0.2rem;
   padding: 0.65rem 0.85rem;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
@@ -152,24 +152,24 @@
 }
 
 .mixer-goal-item:hover {
-  border-color: #93c5fd;
-  background: #eff6ff;
+  border-color: var(--accent-icon-subtle);
+  background: var(--accent-lighter);
 }
 
 .mixer-goal-item.selected {
   border-color: var(--accent);
-  background: #eff6ff;
+  background: var(--accent-lighter);
 }
 
 .mixer-goal-name {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: #111;
+  color: var(--color-text);
 }
 
 .mixer-goal-stat {
   font-size: var(--fs-sm);
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .mixer-goal-stat strong {
@@ -197,7 +197,7 @@
   font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   padding-bottom: 0.2rem;
 }
 
@@ -206,24 +206,24 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.7rem;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 
 .mixer-gw-item:hover {
-  border-color: #86efac;
-  background: #f0fdf4;
+  border-color: var(--color-positive);
+  background: var(--color-positive-light);
 }
 
 .mixer-gw-item.checked {
-  border-color: #22c55e;
-  background: #f0fdf4;
+  border-color: var(--color-positive);
+  background: var(--color-positive-light);
 }
 
 .mixer-gw-checkbox {
-  accent-color: #22c55e;
+  accent-color: var(--color-positive);
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -232,7 +232,7 @@
 .mixer-gw-label {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: #111;
+  color: var(--color-text);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -241,7 +241,7 @@
 
 .mixer-gw-meta {
   font-size: var(--fs-sm);
-  color: #9ca3af;
+  color: var(--color-text-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -249,7 +249,7 @@
 .mixer-gw-pv {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: #15803d;
+  color: var(--color-positive);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -257,8 +257,8 @@
 /* ── Preview strip ── */
 .mixer-preview {
   padding: 0.9rem 1.4rem;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
@@ -267,7 +267,7 @@
   font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin-bottom: 0.6rem;
 }
 
@@ -289,7 +289,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  color: #374151;
+  color: var(--color-text-heading);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -297,27 +297,27 @@
 
 .mixer-preview-amount {
   font-weight: var(--fw-semibold);
-  color: #111;
+  color: var(--color-text);
   white-space: nowrap;
 }
 
-.mixer-preview-amount--gw { color: #15803d; }
+.mixer-preview-amount--gw { color: var(--color-positive); }
 
 .mixer-preview-row--total {
   margin-top: 0.3rem;
   padding-top: 0.45rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
   font-weight: var(--fw-bold);
 }
 
 .mixer-preview-amount--total {
   font-size: var(--fs-md);
-  color: #111;
+  color: var(--color-text);
 }
 
 .mixer-empty {
   font-size: var(--fs-md);
-  color: #9ca3af;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -333,19 +333,19 @@
 
 .mixer-btn-cancel {
   background: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   padding: 0.5rem 1.1rem;
   font-size: var(--fs-md);
-  color: #374151;
+  color: var(--color-text-heading);
   cursor: pointer;
   transition: background 0.15s;
 }
-.mixer-btn-cancel:hover { background: #f3f4f6; }
+.mixer-btn-cancel:hover { background: var(--color-surface-hover); }
 
 .mixer-btn-create {
-  background: #111;
-  color: #fff;
+  background: var(--color-text);
+  color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1.3rem;
@@ -354,7 +354,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.mixer-btn-create:hover:not(:disabled) { background: #374151; }
+.mixer-btn-create:hover:not(:disabled) { background: var(--color-text-heading); }
 .mixer-btn-create:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ── Mix & Match trigger button (in Goals page) ── */
@@ -364,22 +364,22 @@
   justify-content: center;
   gap: 0.35rem;
   background: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   width: 130px;
   padding: 0.35rem 0;
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: #374151;
+  color: var(--color-text-heading);
   cursor: pointer;
   box-sizing: border-box;
   box-shadow: none;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .btn-mix-match:hover:not(:disabled) {
-  border-color: #6b7280;
-  background: #f9fafb;
-  color: #111;
+  border-color: var(--color-text-muted);
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 .btn-mix-match:disabled {
   opacity: 0.4;
@@ -387,62 +387,12 @@
 }
 
 /* ── Dark mode ── */
-body.dark .mixer-modal {
-  background: #1e2535;
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.55);
-}
 
 body.dark .mixer-header,
 body.dark .mixer-col + .mixer-col,
 body.dark .mixer-body,
-body.dark .mixer-preview {
-  border-color: #363c48;
-}
 
-body.dark .mixer-title { color: #e5e7eb; }
-body.dark .mixer-subtitle { color: #9ca3af; }
-body.dark .mixer-close-btn { color: #9ca3af; }
-body.dark .mixer-close-btn:hover { background: #2d3748; color: #e5e7eb; }
+body.dark .mixer-gw-item.checked { background: var(--color-positive-light); border-color: var(--color-positive); }
+body.dark .mixer-gw-pv { color: var(--color-positive); }
 
-body.dark .mixer-col-title { color: #d1d5db; }
-body.dark .mixer-goal-item { background: #23272f; border-color: #363c48; }
-body.dark .mixer-goal-item:hover { background: #1e2d4a; border-color: #3b5298; }
-body.dark .mixer-goal-item.selected { background: #1e2d4a; border-color: var(--accent); }
-body.dark .mixer-goal-name { color: #e5e7eb; }
-body.dark .mixer-goal-stat { color: #9ca3af; }
-body.dark .mixer-goal-stat strong { color: #60a5fa; }
-
-body.dark .mixer-gw-item { background: #23272f; border-color: #363c48; }
-body.dark .mixer-gw-item:hover { background: #052e16; border-color: #166534; }
-body.dark .mixer-gw-item.checked { background: #052e16; border-color: #22c55e; }
-body.dark .mixer-gw-label { color: #e5e7eb; }
-body.dark .mixer-gw-meta { color: #6b7280; }
-body.dark .mixer-gw-pv { color: #4ade80; }
-body.dark .mixer-gw-group-label { color: #6b7280; }
-
-body.dark .mixer-preview { background: #181c23; }
-body.dark .mixer-preview-heading { color: #9ca3af; }
-body.dark .mixer-preview-label { color: #d1d5db; }
-body.dark .mixer-preview-amount { color: #e5e7eb; }
-body.dark .mixer-preview-amount--gw { color: #4ade80; }
-body.dark .mixer-preview-row--total { border-color: #363c48; }
-body.dark .mixer-preview-amount--total { color: #f3f4f6; }
-
-body.dark .mixer-btn-cancel {
-  border-color: #4b5563;
-  color: #d1d5db;
-  background: transparent;
-}
-body.dark .mixer-btn-cancel:hover { background: #2d3748; }
-body.dark .mixer-btn-create { background: #e5e7eb; color: #111; }
-body.dark .mixer-btn-create:hover:not(:disabled) { background: #f3f4f6; }
-
-body.dark .btn-mix-match {
-  border-color: #4b5563;
-  color: #d1d5db;
-}
-body.dark .btn-mix-match:hover:not(:disabled) {
-  border-color: #9ca3af;
-  background: #2d3748;
-  color: #e5e7eb;
-}
+body.dark .mixer-preview-amount--gw { color: var(--color-positive); }

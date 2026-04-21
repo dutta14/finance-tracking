@@ -20,7 +20,7 @@
 
 .gw-section-badge {
   background: var(--accent-badge);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
@@ -35,13 +35,13 @@
 .gw-section-title {
   font-size: var(--fs-xl);
   font-weight: var(--fw-semibold);
-  color: #111;
+  color: var(--color-text);
   margin: 0;
 }
 
 .gw-section-subtitle {
   font-size: var(--fs-md);
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.55;
   max-width: 480px;
@@ -69,14 +69,14 @@
 
 .gw-empty-text {
   font-size: var(--fs-md);
-  color: #9ca3af;
+  color: var(--color-text-muted);
   margin: 0 0 1rem;
 }
 
 /* Add buttons */
 .gw-add-btn {
   background: var(--accent-badge);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radius);
   padding: 0.55rem 1.25rem;
@@ -131,7 +131,7 @@
 }
 
 .gw-import-picker {
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--accent-border);
   border-radius: var(--radius);
   padding: 0.5rem;
@@ -161,7 +161,7 @@
   border: none;
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: #9ca3af;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0.15rem 0.35rem;
   border-radius: var(--radius);
@@ -169,8 +169,8 @@
 }
 
 .gw-import-picker-cancel:hover {
-  color: #374151;
-  background: #f3f4f6;
+  color: var(--color-text-heading);
+  background: var(--color-surface-hover);
 }
 
 .gw-import-group-label {
@@ -178,7 +178,7 @@
   font-weight: var(--fw-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 0.1rem 0.4rem 0.3rem;
 }
 
@@ -203,12 +203,12 @@
 .gw-import-item-label {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: #111827;
+  color: var(--color-text);
 }
 
 .gw-import-item-meta {
   font-size: var(--fs-sm);
-  color: #6b7280;
+  color: var(--color-text-muted);
   white-space: nowrap;
   margin-left: 0.75rem;
 }
@@ -260,7 +260,7 @@
 }
 
 .gw-dollar-toggle-btn.active {
-  background: #fff;
+  background: var(--color-surface);
   color: var(--accent-text-dark);
   font-weight: var(--fw-semibold);
   box-shadow: 0 1px 3px var(--accent-shadow-strong);
@@ -272,8 +272,8 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--color-negative-light);
+  border: 1px solid var(--color-negative-border);
   border-radius: var(--radius);
   padding: 0.55rem 0.75rem;
   font-size: var(--fs-md);
@@ -282,14 +282,14 @@
 
 .gw-goal-undo-msg {
   flex: 1;
-  color: #7f1d1d;
+  color: var(--color-negative-border);
   font-weight: var(--fw-medium);
 }
 
 .gw-goal-undo-btn {
   flex-shrink: 0;
   background: var(--color-negative);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radius);
   padding: 0.2rem 0.65rem;
@@ -300,7 +300,7 @@
 }
 
 .gw-goal-undo-btn:hover {
-  background: #b91c1c;
+  background: var(--color-negative-hover);
 }
 
 .gw-goal-undo-progress {
@@ -309,7 +309,7 @@
   left: 0;
   width: 100%;
   height: 3px;
-  background: #fecaca;
+  background: var(--color-negative-border);
 }
 
 .gw-goal-undo-progress-fill {
@@ -325,17 +325,8 @@
   to   { transform: scaleX(0); }
 }
 
-body.dark .gw-goal-undo-bar {
-  background: #3f0f0f;
-  border-color: #7f1d1d;
-}
-
 body.dark .gw-goal-undo-msg {
-  color: #fca5a5;
-}
-
-body.dark .gw-goal-undo-progress {
-  background: #7f1d1d;
+  color: var(--color-negative-muted);
 }
 
 /* Goal card */
@@ -368,7 +359,7 @@ body.dark .gw-goal-undo-progress {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   padding: 0.2rem;
   border-radius: var(--radius);
   display: flex;
@@ -407,7 +398,7 @@ body.dark .gw-goal-undo-progress {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   padding: 0.2rem;
   border-radius: var(--radius);
   display: flex;
@@ -417,7 +408,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-delete:hover {
   color: var(--color-negative);
-  background: #fef2f2;
+  background: var(--color-negative-light);
 }
 
 .gw-goal-rows {
@@ -581,8 +572,8 @@ body.dark .gw-goal-undo-progress {
 .gw-form-error {
   font-size: var(--fs-md);
   color: var(--color-negative);
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--color-negative-light);
+  border: 1px solid var(--color-negative-border);
   border-radius: var(--radius);
   padding: 0.45rem 0.7rem;
   margin: 0 0 0.9rem;
@@ -615,8 +606,8 @@ body.dark .gw-goal-undo-progress {
   border: 1px solid var(--accent-track);
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  background: #fff;
-  color: #111;
+  background: var(--color-surface);
+  color: var(--color-text);
   box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -630,7 +621,7 @@ body.dark .gw-goal-undo-progress {
 .gw-form-hint {
   display: block;
   font-size: var(--fs-sm);
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
 }
 
@@ -641,7 +632,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-form-save {
   background: var(--accent-badge);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1.1rem;
@@ -657,8 +648,8 @@ body.dark .gw-goal-undo-progress {
 
 .gw-form-cancel {
   background: transparent;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   padding: 0.5rem 1rem;
   font-size: var(--fs-md);
@@ -667,14 +658,14 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-form-cancel:hover {
-  background: #f9fafb;
-  color: #374151;
+  background: var(--color-bg);
+  color: var(--color-text-heading);
 }
 
 .gw-form-copy-hint {
   margin: 0.75rem 0 0;
   font-size: var(--fs-md);
-  color: #6b7280;
+  color: var(--color-text-muted);
   text-align: center;
 }
 
@@ -695,242 +686,3 @@ body.dark .gw-goal-undo-progress {
 }
 
 /* ── Dark mode ───────────────────────────────────────────── */
-
-body.dark .gw-section {
-  border-top-color: var(--accent-border);
-}
-
-body.dark .gw-section-title {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-section-subtitle {
-  color: #6b7280;
-}
-
-body.dark .gw-empty-state {
-  border-color: var(--accent-border);
-}
-
-body.dark .gw-empty-icon {
-  color: var(--accent);
-}
-
-body.dark .gw-empty-text {
-  color: #6b7280;
-}
-
-body.dark .gw-add-btn--inline {
-  color: var(--accent);
-  border-color: var(--accent-border);
-}
-
-body.dark .gw-add-btn--inline:hover {
-  background: var(--accent-lighter);
-  color: var(--accent-hover);
-}
-
-body.dark .gw-add-btn--copy {
-  color: var(--accent);
-  border-color: var(--accent-border);
-}
-
-body.dark .gw-add-btn--copy:hover {
-  background: var(--accent-lighter));
-  color: var(--accent-hover);
-}
-
-body.dark .gw-import-picker {
-  background: #1e2535;
-  border-color: var(--accent-border);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-}
-
-body.dark .gw-import-picker-title {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-import-picker-cancel {
-  color: #6b7280;
-}
-
-body.dark .gw-import-picker-cancel:hover {
-  color: #e5e7eb;
-  background: #2d3748;
-}
-
-body.dark .gw-import-group-label {
-  color: #4b5563;
-}
-
-body.dark .gw-import-item:hover {
-  background: var(--accent-lighter);
-}
-
-body.dark .gw-import-item-label {
-  color: #e5e7eb;
-}
-
-body.dark .gw-import-item-meta {
-  color: #6b7280;
-}
-
-body.dark .gw-dollar-toggle-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-dollar-toggle {
-  background: var(--accent-light);
-}
-
-body.dark .gw-dollar-toggle-btn {
-  color: var(--accent);
-}
-
-body.dark .gw-dollar-toggle-btn.active {
-  background: var(--accent-lighter);
-  color: var(--accent-text-dark);
-  box-shadow: 0 1px 3px var(--accent-shadow-strong);
-}
-
-body.dark .gw-goal-card {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-
-body.dark .gw-goal-card:hover {
-  box-shadow: 0 2px 10px var(--accent-shadow);
-}
-
-body.dark .gw-goal-label {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-goal-row-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-goal-row-value {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-goal-target {
-  background: var(--accent-light);
-}
-
-body.dark .gw-goal-target-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-goal-target-amount {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-goal-milestone {
-  background: var(--accent-light);
-}
-
-body.dark .gw-goal-milestone-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-goal-milestone-amount {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-goal-progress-track {
-  background: var(--accent-track);
-}
-
-body.dark .gw-goal-progress-fill {
-  background: var(--accent-hover);
-}
-
-body.dark .gw-goal-progress-pct {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-goal-pv {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-
-body.dark .gw-goal-pv-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-goal-pv-amount {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-goal-pv-note {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-goal-delete:hover {
-  background: #3f0f0f;
-}
-
-body.dark .gw-goal-edit:hover {
-  color: var(--accent);
-  background: var(--accent-lighter);
-}
-
-body.dark .gw-goal-card--editing {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
-}
-
-body.dark .gw-goal-label--editing {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-form {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-
-body.dark .gw-form-title {
-  color: var(--accent-text-dark);
-}
-
-body.dark .gw-form-label {
-  color: var(--accent-text-mid);
-}
-
-body.dark .gw-form-input {
-  background: #1a2332;
-  border-color: var(--accent-track);
-  color: #e5e7eb;
-}
-
-body.dark .gw-form-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
-}
-
-body.dark .gw-form-hint {
-  color: #4b5563;
-}
-
-body.dark .gw-form-cancel {
-  border-color: #374151;
-  color: #9ca3af;
-}
-
-body.dark .gw-form-cancel:hover {
-  background: #1f2937;
-  color: #d1d5db;
-}
-
-body.dark .gw-form-copy-hint {
-  color: #6b7280;
-}
-
-body.dark .gw-form-copy-link {
-  color: var(--accent);
-}
-
-body.dark .gw-form-copy-link:hover {
-  color: var(--accent-hover);
-}

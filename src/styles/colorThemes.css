@@ -46,6 +46,14 @@
   --color-border: #e5e7eb;
   --color-border-light: #d1d5db;
 
+  /* Utility / contrast tokens */
+  --color-text-on-accent: #ffffff;
+  --color-negative-muted: #fca5a5;
+  --color-negative-hover: #b91c1c;
+  --color-warning-text: #92400e;
+  --color-positive-border: #bbf7d0;
+  --color-tooltip-bg: #1e2228;
+
   /* Typography scale (1.125x ratio — data-dense) */
   --fs-xs:  0.75rem;
   --fs-sm:  0.875rem;
@@ -104,6 +112,14 @@ body.dark {
   --color-bg: #141820;
   --color-border: #2d3139;
   --color-border-light: #374151;
+
+  /* Utility / contrast tokens */
+  --color-text-on-accent: #ffffff;
+  --color-negative-muted: #fca5a5;
+  --color-negative-hover: #b91c1c;
+  --color-warning-text: #fbbf24;
+  --color-positive-border: #064e3b;
+  --color-tooltip-bg: #1e2228;
 }
 
 /* ════════════════════════════════════════════════════════
