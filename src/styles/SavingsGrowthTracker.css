@@ -20,7 +20,7 @@ body.dark .sgt-tabs {
   flex: 1;
   padding: 5px 0;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   border: none;
   border-radius: var(--radius);
   background: transparent;
@@ -62,7 +62,7 @@ body.dark .sgt-tab--active {
   width: 28px;
   height: 22px;
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   border: 1px solid #d1d5db;
   border-radius: var(--radius);
   background: #f9fafb;
@@ -98,7 +98,7 @@ body.dark .sgt-toggle-btn:hover {
 .sgt-th {
   text-align: right;
   padding: 6px 6px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -152,7 +152,7 @@ body.dark .sgt-td {
 }
 .sgt-td--year {
   text-align: left;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #111827;
 }
 body.dark .sgt-td--year {
@@ -166,10 +166,10 @@ body.dark .sgt-td--year {
   font-size: var(--fs-xs);
 }
 .sgt-td--highlight {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 .sgt-td--nw {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   border-left: 1px solid #f3f4f6;
   padding-left: 8px;
   color: var(--accent);

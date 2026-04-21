@@ -39,7 +39,7 @@
   border-radius: var(--radius);
   padding: 0.55rem 0.85rem;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-bottom: 1rem;
 }
 
@@ -51,7 +51,7 @@
   border-radius: var(--radius);
   padding: 0.2rem 0.6rem;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.15s;
   white-space: nowrap;
@@ -87,7 +87,7 @@
   background: var(--accent-badge);
   color: #fff;
   font-size: var(--fs-xs);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
   text-transform: uppercase;
   border-radius: var(--radius);
@@ -99,7 +99,7 @@
 .fi-card-title {
   margin: 0;
   font-size: var(--fs-lg);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   white-space: nowrap;
   overflow: hidden;
@@ -125,7 +125,7 @@
 
 .fi-card-section-title {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--accent-text-mid);
@@ -159,7 +159,7 @@
 }
 
 .fi-card-row-value {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-dark);
   display: inline-flex;
   align-items: center;
@@ -184,7 +184,7 @@
 
 .fi-card-goal-label {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--accent-text-dark);
@@ -194,8 +194,8 @@
 }
 
 .fi-card-goal-amount {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--accent-text-dark);
 }
 
@@ -223,7 +223,7 @@
 
 .fi-card-progress-pct {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   white-space: nowrap;
   flex-shrink: 0;
@@ -257,7 +257,7 @@
   font-size: var(--fs-sm);
   cursor: pointer;
   color: var(--accent-text-mid);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
@@ -265,7 +265,7 @@
 .expense-toggle-btn.active {
   background: #fff;
   color: var(--accent-text-dark);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   box-shadow: 0 1px 3px var(--accent-shadow-strong);
 }
 
@@ -307,7 +307,7 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.18);
   z-index: 100;
   pointer-events: none;
-  font-weight: 400;
+  font-weight: var(--fw-normal);
 }
 
 .fi-goal-tooltip::after {
@@ -463,7 +463,7 @@ body.dark .fi-goal-info:hover .fi-goal-info-icon {
   align-items: center;
   gap: 0.35rem;
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-mid);
   background: var(--accent-light);
   border: 1px solid var(--accent-border);
@@ -519,7 +519,7 @@ body.dark .fi-form-error {
 
 .fi-form-label {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-mid);
 }
 
@@ -554,7 +554,7 @@ body.dark .fi-form-error {
   border-radius: var(--radius);
   padding: 7px;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -570,7 +570,7 @@ body.dark .fi-form-error {
   border-radius: var(--radius);
   padding: 7px;
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-mid);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;

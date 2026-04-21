@@ -78,7 +78,7 @@ body.dark .settings-menu-item:hover {
 
 .sidebar-logo {
   font-size: var(--fs-md);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: #111;
   white-space: nowrap;
   letter-spacing: 0.04em;
@@ -109,7 +109,7 @@ body.dark .settings-menu-item:hover {
 .sidebar-search-kbd {
   margin-left: auto;
   font-size: var(--fs-xs);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
   opacity: 0.6;
 }
@@ -148,7 +148,7 @@ body.dark .sidebar-search-btn:hover {
   width: 100%;
   text-align: left;
   transition: background 0.15s, color 0.15s;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   position: relative;
 }
 
@@ -211,7 +211,7 @@ body.dark .sidebar-search-btn:hover {
 
 .sidebar-multiselect-count {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-dark);
   white-space: nowrap;
 }
@@ -500,7 +500,7 @@ body.dark .sidebar-rename-input {
 .sidebar-sublink.active {
   color: var(--accent-text-dark);
   background: var(--accent-lighter);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   position: relative;
 }
 

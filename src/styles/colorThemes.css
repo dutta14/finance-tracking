@@ -46,11 +46,19 @@
   --color-border: #e5e7eb;
   --color-border-light: #d1d5db;
 
-  /* Typography scale */
-  --fs-xs: 0.6rem;
-  --fs-sm: 0.7rem;
-  --fs-md: 0.9rem;
-  --fs-lg: 1rem;
+  /* Typography scale (1.125x ratio — data-dense) */
+  --fs-xs:  0.75rem;
+  --fs-sm:  0.875rem;
+  --fs-md:  1rem;
+  --fs-lg:  1.125rem;
+  --fs-xl:  1.25rem;
+  --fs-2xl: 1.5rem;
+
+  /* Font weights */
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
 
   /* Layout */
   --max-width: 1200px;

@@ -65,14 +65,14 @@
   border: none;
   outline: none;
   font-size: var(--fs-md);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   color: var(--color-text);
   caret-color: var(--accent);
 }
 
 .search-modal-input::placeholder {
   color: var(--color-text-muted);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
 }
 
 /* Kbd pill */
@@ -88,7 +88,7 @@
   border: 1px solid var(--color-border);
   font-family: inherit;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
   line-height: 1;
   flex-shrink: 0;
@@ -116,7 +116,7 @@
 
 .search-group-label {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
@@ -181,7 +181,7 @@
 
 .search-result-label {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
@@ -200,13 +200,13 @@
 .search-result-match {
   background: none;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 /* Category badge */
 .search-result-badge {
   font-size: var(--fs-xs);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--accent-badge);
@@ -228,7 +228,7 @@
   cursor: pointer;
   font-family: inherit;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent);
   text-align: left;
   transition: color 0.15s;
@@ -250,13 +250,13 @@
 }
 
 .search-empty-icon {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   opacity: 0.45;
 }
 
 .search-empty-title {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
 }
 
@@ -276,13 +276,13 @@
 }
 
 .search-no-results-icon {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   opacity: 0.4;
 }
 
 .search-no-results-title {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
 }
 

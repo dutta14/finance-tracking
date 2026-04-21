@@ -22,7 +22,7 @@
   background: var(--accent-badge);
   color: #fff;
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
   border-radius: var(--radius);
   padding: 0.15rem 0.45rem;
@@ -33,8 +33,8 @@
 }
 
 .gw-section-title {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
   color: #111;
   margin: 0;
 }
@@ -81,7 +81,7 @@
   border-radius: var(--radius);
   padding: 0.55rem 1.25rem;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -94,7 +94,7 @@
   background: transparent;
   color: var(--accent);
   border: 1px solid var(--accent);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .gw-add-btn--inline:hover {
@@ -106,7 +106,7 @@
   background: transparent;
   color: var(--accent);
   border: 1px solid var(--accent);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .gw-add-btn--copy:hover {
@@ -152,7 +152,7 @@
 
 .gw-import-picker-title {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
 }
 
@@ -160,7 +160,7 @@
   background: none;
   border: none;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #9ca3af;
   cursor: pointer;
   padding: 0.15rem 0.35rem;
@@ -175,7 +175,7 @@
 
 .gw-import-group-label {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #6b7280;
@@ -202,7 +202,7 @@
 
 .gw-import-item-label {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #111827;
 }
 
@@ -231,7 +231,7 @@
 
 .gw-dollar-toggle-label {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--accent-text-mid);
@@ -254,7 +254,7 @@
   font-size: var(--fs-sm);
   cursor: pointer;
   color: var(--accent-text-mid);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
@@ -262,7 +262,7 @@
 .gw-dollar-toggle-btn.active {
   background: #fff;
   color: var(--accent-text-dark);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   box-shadow: 0 1px 3px var(--accent-shadow-strong);
 }
 
@@ -283,7 +283,7 @@
 .gw-goal-undo-msg {
   flex: 1;
   color: #7f1d1d;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .gw-goal-undo-btn {
@@ -294,7 +294,7 @@
   border-radius: var(--radius);
   padding: 0.2rem 0.65rem;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -383,7 +383,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-label--editing {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-mid);
   font-style: italic;
 }
@@ -398,7 +398,7 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-label {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   font-size: var(--fs-md);
   color: var(--accent-text-dark);
 }
@@ -438,12 +438,12 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-row-value {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-dark);
 }
 
 .gw-goal-row-value--highlight {
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 /* Target callout (FV at disbursement) */
@@ -463,12 +463,12 @@ body.dark .gw-goal-undo-progress {
   color: var(--accent-text-mid);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .gw-goal-target-amount {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--accent-text-dark);
   line-height: 1.2;
 }
@@ -490,15 +490,15 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-milestone-label {
   font-size: var(--fs-sm);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--accent-text-dark);
 }
 
 .gw-goal-milestone-amount {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--accent-text-dark);
   line-height: 1.2;
 }
@@ -526,7 +526,7 @@ body.dark .gw-goal-undo-progress {
 
 .gw-goal-progress-pct {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   white-space: nowrap;
   flex-shrink: 0;
@@ -550,8 +550,8 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-goal-pv-amount {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--accent-text-dark);
   line-height: 1.2;
 }
@@ -572,8 +572,8 @@ body.dark .gw-goal-undo-progress {
 }
 
 .gw-form-title {
-  font-size: var(--fs-md);
-  font-weight: 600;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   margin: 0 0 1rem;
 }
@@ -602,7 +602,7 @@ body.dark .gw-goal-undo-progress {
 .gw-form-label {
   display: block;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-mid);
   margin-bottom: 0.3rem;
   text-transform: uppercase;
@@ -646,7 +646,7 @@ body.dark .gw-goal-undo-progress {
   border-radius: var(--radius);
   padding: 0.5rem 1.1rem;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -684,7 +684,7 @@ body.dark .gw-goal-undo-progress {
   padding: 0;
   color: var(--accent);
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;

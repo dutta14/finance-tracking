@@ -7,8 +7,8 @@
 }
 
 .alloc-page-title {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
   letter-spacing: -0.3px;
   margin: 0 0 1.5rem;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
@@ -38,8 +38,8 @@
   flex-wrap: wrap;
 }
 .alloc-page-section-header h2 {
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
   margin: 0;
   color: #111;
 }
@@ -64,7 +64,7 @@
   border: none;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   padding: 0.3rem 0.65rem;
   border-radius: var(--radius);
   cursor: pointer;
@@ -90,7 +90,7 @@
   border: none;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   padding: 0.25rem 0.55rem;
   cursor: pointer;
   color: #9ca3af;
@@ -117,7 +117,7 @@
 }
 .alloc-page-total-label {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #374151;
   margin-bottom: 0.75rem;
 }
@@ -143,7 +143,7 @@
   color: #374151;
 }
 .alloc-page-legend-val {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #111;
   font-variant-numeric: tabular-nums;
 }
@@ -167,7 +167,7 @@
   padding: 0.3rem 0.75rem;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
@@ -232,7 +232,7 @@
 }
 .alloc-ratio-tab-name {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #374151;
   max-width: 140px;
   overflow: hidden;
@@ -241,13 +241,13 @@
 }
 .alloc-ratio-tab.active .alloc-ratio-tab-name {
   color: var(--accent-text-dark);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 .alloc-ratio-tab-delete {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   line-height: 1;
   color: #9ca3af;
   padding: 0 0.15rem;
@@ -269,7 +269,7 @@
   font-size: var(--fs-md);
   color: #991b1b;
 }
-.alloc-ratio-confirm-bar strong { font-weight: 600; }
+.alloc-ratio-confirm-bar strong { font-weight: var(--fw-semibold); }
 .alloc-ratio-confirm-yes {
   background: #ef4444;
   color: #fff;
@@ -278,7 +278,7 @@
   padding: 0.25rem 0.6rem;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   margin-left: auto;
   transition: opacity 0.12s;
@@ -291,7 +291,7 @@
   padding: 0.25rem 0.6rem;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #991b1b;
   cursor: pointer;
   transition: background 0.12s;
@@ -303,7 +303,7 @@
 .alloc-ratio-name-input {
   font: inherit;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   border: 1px solid transparent;
   background: none;
   padding: 0.2rem 0.4rem;
@@ -333,7 +333,7 @@
   padding: 0.35rem 0.85rem;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   color: #374151;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
@@ -346,7 +346,7 @@
   background: var(--accent-light);
   border-color: var(--accent-border);
   color: var(--accent-text-dark);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 /* ── Ratio result ────────────────────────────────────────────── */
@@ -387,7 +387,7 @@
 }
 .alloc-ratio-seg-label {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
@@ -426,7 +426,7 @@
 }
 .alloc-ratio-builder-label {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -458,7 +458,7 @@
 .alloc-ratio-group-name {
   font: inherit;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   border: 1px solid transparent;
   background: none;
   padding: 0.2rem 0.4rem;
@@ -477,7 +477,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   color: #9ca3af;
   padding: 0 0.3rem;
   line-height: 1;
@@ -493,7 +493,7 @@
 .alloc-ratio-pill {
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   padding: 0.25rem 0.55rem;
   border-radius: var(--radius);
   border: 1px solid #d1d5db;
@@ -524,7 +524,7 @@
   width: 100%;
   font: inherit;
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #6b7280;
   cursor: pointer;
   transition: border-color 0.12s, color 0.12s;
@@ -549,7 +549,7 @@
 }
 .alloc-goal-scope-label strong {
   color: #374151;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .alloc-goal-other-scopes {
@@ -559,7 +559,7 @@
 }
 .alloc-goal-other-badge {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #6b7280;
   background: #f3f4f6;
   border-radius: var(--radius);
@@ -573,7 +573,7 @@
   padding: 0.4rem 0.85rem;
   font: inherit;
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #6b7280;
   cursor: pointer;
   transition: border-color 0.12s, color 0.12s;
@@ -591,7 +591,7 @@
   font-size: var(--fs-md);
 }
 .alloc-goal-summary-label {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #374151;
 }
 .alloc-goal-summary-text {
@@ -605,7 +605,7 @@
   border: none;
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   padding: 0.2rem 0.4rem;
   border-radius: var(--radius);
@@ -644,7 +644,7 @@
 }
 .alloc-goal-field-label {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #6b7280;
   white-space: nowrap;
 }
@@ -675,7 +675,7 @@
 }
 .alloc-goal-pct-header {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #9ca3af;
@@ -719,7 +719,7 @@
 }
 .alloc-goal-pct-sum {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 .alloc-goal-pct-sum.valid { color: #10b981; }
 .alloc-goal-pct-sum.invalid { color: #ef4444; }
@@ -737,7 +737,7 @@
   padding: 0.35rem 0.85rem;
   font: inherit;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: opacity 0.12s;
 }
@@ -753,7 +753,7 @@
   padding: 0.35rem 0.85rem;
   font: inherit;
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: #6b7280;
   cursor: pointer;
   transition: background 0.12s;
@@ -764,7 +764,7 @@
 
 .alloc-ratio-bar-label {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #9ca3af;
@@ -773,7 +773,7 @@
 
 .alloc-ratio-diff {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-left: 0.25rem;
 }
 .alloc-ratio-diff.on-track { color: #10b981; }
@@ -808,7 +808,7 @@
 }
 .alloc-rebal-dollar {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #6b7280;
   padding: 0.25rem 0 0.25rem 0.4rem;
   border: 1px solid #d1d5db;
@@ -840,7 +840,7 @@
 .alloc-rebal-row-header {
   background: #f3f4f6;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #9ca3af;
@@ -848,7 +848,7 @@
 }
 .alloc-rebal-row-total {
   border-top: 1px solid #e5e7eb;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   background: #f9fafb;
 }
 .alloc-rebal-cell {
@@ -859,7 +859,7 @@
   align-items: center;
   gap: 0.35rem;
   color: #374151;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 .alloc-rebal-delta.positive { color: #10b981; }
 .alloc-rebal-delta.negative { color: #ef4444; }
@@ -873,7 +873,7 @@
 }
 .alloc-rebal-actions-title {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #6b7280;
@@ -889,7 +889,7 @@
 }
 .alloc-rebal-action-heading {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: #374151;
   margin-bottom: 0.35rem;
 }
@@ -901,7 +901,7 @@
   color: #374151;
   padding: 0.2rem 0;
 }
-.alloc-rebal-action-item strong { font-weight: 600; }
+.alloc-rebal-action-item strong { font-weight: var(--fw-semibold); }
 .alloc-rebal-action-icon {
   font-size: var(--fs-md);
   width: 1.2rem;
@@ -916,7 +916,7 @@
   padding: 0.75rem;
   font-size: var(--fs-md);
   color: #10b981;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 /* ── Dark mode ───────────────────────────────────────────────── */

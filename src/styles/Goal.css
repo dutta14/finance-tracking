@@ -29,7 +29,7 @@ section.goal {
   font-size: var(--fs-md);
   cursor: pointer;
   color: var(--color-text);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   transition: all 0.15s;
   display: inline-flex;
   align-items: center;
@@ -41,9 +41,9 @@ section.goal {
 }
 
 .goal-header h1 {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-2xl);
   margin: 0;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: -0.3px;
   width: fit-content;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
@@ -83,9 +83,9 @@ section.goal {
 }
 
 .goal-form-section h2 {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-xl);
   margin: 0 0 1.5rem 0;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
 }
 
@@ -104,7 +104,7 @@ section.goal {
 
 .form-group label {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text);
 }
 
@@ -138,7 +138,7 @@ section.goal {
   border: none;
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition: background-color 0.2s ease, filter 0.2s ease;
   margin-top: 1.5rem;
@@ -171,7 +171,7 @@ section.goal {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -190,7 +190,7 @@ section.goal {
 .form-section h3 {
   font-size: var(--fs-lg);
   margin: 0 0 1rem 0;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -203,7 +203,7 @@ section.goal {
   border-radius: var(--radius);
   padding: 0.2rem 0.55rem;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -226,7 +226,7 @@ section.goal {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   cursor: pointer;
   margin-bottom: 0;
 }
@@ -245,7 +245,7 @@ section.goal {
 
 .display-field label {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text);
   margin-bottom: 0.5rem;
 }
@@ -409,7 +409,7 @@ section.goal {
 
 .goal-count-label {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   line-height: 1;
   white-space: nowrap;
@@ -429,7 +429,7 @@ section.goal {
 
 .goal-selection-count {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--accent-text-dark);
 }
 
@@ -523,7 +523,7 @@ section.goal {
 .goal-card h3 {
   font-size: var(--fs-lg);
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   flex: 1;
   word-break: break-word;
@@ -571,7 +571,7 @@ section.goal {
 
 .goal-card-calculations h4 {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   margin: 0 0 0.75rem 0;
 }
@@ -586,7 +586,7 @@ section.goal {
 }
 
 .detail-row .label {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text);
 }
 
@@ -621,7 +621,7 @@ section.goal {
   }
 
   .goal-header h1 {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-2xl);
   }
 
   .goal-content {
@@ -637,7 +637,7 @@ section.goal {
   }
 
   .goal-form-section h2 {
-    font-size: var(--fs-lg);
+    font-size: var(--fs-xl);
   }
 
   .goal-card {
@@ -663,8 +663,8 @@ section.goal {
 }
 
 .wizard-header h2 {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
   margin: 0 0 1rem;
 }
 
@@ -684,7 +684,7 @@ section.goal {
   border: 2px solid var(--color-border);
   background: none;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
   cursor: default;
   display: flex;
@@ -710,7 +710,7 @@ section.goal {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-muted);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 /* Step content */
@@ -747,19 +747,19 @@ section.goal {
 
 .wizard-field-label {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   margin-bottom: 0.25rem;
 }
 
 .wizard-field-sublabel {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text-muted);
 }
 
 .wizard-hint {
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   color: var(--color-text-muted);
   font-size: var(--fs-md);
 }
@@ -782,9 +782,9 @@ section.goal {
 }
 
 .wizard-input--large {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   padding: 0.75rem 0.85rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 /* Bottom nav */
@@ -801,7 +801,7 @@ section.goal {
   border-radius: var(--radius);
   padding: 0.55rem 1.25rem;
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -848,7 +848,7 @@ section.goal {
 }
 
 .wizard-review-row--highlight {
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .wizard-review-label {
@@ -859,12 +859,12 @@ section.goal {
 .wizard-review-value {
   font-size: var(--fs-md);
   color: var(--color-text);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .wizard-review-row--highlight .wizard-review-value {
   color: var(--accent);
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
 }
 
 .wizard-review-divider {
@@ -897,14 +897,14 @@ section.goal {
 }
 
 .wizard-param-icon {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   line-height: 1;
   cursor: pointer;
 }
 
 .wizard-param-name {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
@@ -935,8 +935,8 @@ section.goal {
 .wizard-param-input {
   width: 3.5rem;
   text-align: center;
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--color-text);
   background: transparent;
   border: none;
@@ -948,7 +948,7 @@ section.goal {
 }
 .wizard-param-input::placeholder {
   color: var(--color-border);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   opacity: 1;
 }
 .wizard-param-input::-webkit-outer-spin-button,
@@ -961,7 +961,7 @@ section.goal {
 }
 
 .wizard-param-unit {
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
 }

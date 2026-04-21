@@ -66,8 +66,8 @@ body.dark .goal-drawer {
 
 .goal-drawer-title {
   margin: 0;
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
   line-height: 1.25;
   color: var(--color-text);
   white-space: nowrap;
@@ -76,8 +76,8 @@ body.dark .goal-drawer {
 }
 
 .goal-drawer-rename-input {
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
   line-height: 1;
   color: var(--color-text);
   background: none;
@@ -129,7 +129,7 @@ body.dark .goal-drawer {
 
 .goal-drawer-step-label {
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   min-width: 40px;
   text-align: center;

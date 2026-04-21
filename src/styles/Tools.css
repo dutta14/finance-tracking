@@ -18,8 +18,8 @@
   min-width: 0;
 }
 .tools-heading {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
   -webkit-background-clip: text;
@@ -33,7 +33,7 @@
   font-size: var(--fs-md);
   color: #9ca3af;
   margin: 0;
-  font-weight: 400;
+  font-weight: var(--fw-normal);
 }
 body.dark .tools-subtitle {
   color: #6b7280;
@@ -173,8 +173,8 @@ body.dark .tools-icon {
   min-width: 0;
 }
 .tools-card-title {
-  font-size: var(--fs-md);
-  font-weight: 600;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
   color: #111827;
   margin: 0 0 2px;
   transition: color 0.15s;
@@ -278,7 +278,7 @@ body.dark .tools-pane-header {
 }
 .tools-pane-title {
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   margin: 0;
 }

@@ -12,8 +12,8 @@
   margin-bottom: 1.5rem;
 }
 .tax-heading {
-  font-size: var(--fs-lg);
-  font-weight: 700;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
   background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -47,8 +47,8 @@
   cursor: default;
 }
 .tax-year-label {
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
   min-width: 3rem;
   text-align: center;
   color: var(--color-text, #1f2937);
@@ -61,8 +61,8 @@
   color: var(--color-text-muted, #6b7280);
 }
 .tax-empty-state h2 {
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
   color: var(--color-text, #374151);
   margin-bottom: 0.4rem;
 }
@@ -99,8 +99,8 @@
   color: var(--accent, #6366f1);
 }
 .tax-section-title {
-  font-size: var(--fs-md);
-  font-weight: 600;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
   color: var(--color-text, #1f2937);
   margin: 0;
   flex: 1;
@@ -143,7 +143,7 @@
 }
 .tax-item-tick {
   color: #22c55e;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   font-size: var(--fs-md);
 }
 .tax-item-empty {
@@ -158,7 +158,7 @@
 }
 .tax-item-label {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--color-text, #374151);
   display: flex;
   align-items: center;
@@ -168,7 +168,7 @@
 .tax-item-acct {
   font-size: var(--fs-sm);
   color: var(--color-text-muted, #9ca3af);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
 }
 .tax-item-files {
   display: flex;
@@ -185,7 +185,7 @@
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 .tax-file-name {
   max-width: 12rem;
@@ -215,7 +215,7 @@
   border: none;
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   padding: 0.35rem 0.75rem;
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
@@ -269,7 +269,7 @@
 .tax-item-label-text { cursor: default; }
 .tax-rename-input {
   font-size: var(--fs-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   padding: 0.1rem 0.35rem;
   border: 1px solid var(--accent, #6366f1);
   border-radius: var(--radius);
@@ -314,7 +314,7 @@
   align-items: center;
   gap: 0.3rem;
 }
-.tax-tpl-mode-opt.active { color: var(--accent, #6366f1); font-weight: 500; }
+.tax-tpl-mode-opt.active { color: var(--accent, #6366f1); font-weight: var(--fw-medium); }
 .tax-tpl-mode-opt input { margin: 0; }
 
 /* Template list (import modal) */
@@ -334,7 +334,7 @@
   border: 1px solid var(--color-border, #e5e7eb);
 }
 .tax-tpl-info { display: flex; flex-direction: column; gap: 0.1rem; }
-.tax-tpl-name { font-size: var(--fs-md); font-weight: 500; color: var(--color-text, #374151); }
+.tax-tpl-name { font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--color-text, #374151); }
 .tax-tpl-count { font-size: var(--fs-sm); color: var(--color-text-muted, #9ca3af); }
 .tax-tpl-actions { display: flex; gap: 0.3rem; align-items: center; }
 
@@ -347,7 +347,7 @@
   height: 1.4rem;
   border-radius: 50%;
   font-size: var(--fs-xs);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: #fff;
   overflow: hidden;
   flex-shrink: 0;
@@ -438,7 +438,7 @@
 .tax-modal h3 {
   margin: 0 0 0.5rem;
   font-size: var(--fs-lg);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--color-text, #1f2937);
 }
 .tax-modal-hint {
@@ -488,7 +488,7 @@
 .tax-suggest-row:hover { background: var(--accent-lighter, #eef2ff); }
 .tax-suggest-row.selected { background: var(--accent-lighter, #eef2ff); }
 .tax-suggest-row input { flex-shrink: 0; }
-.tax-suggest-name { font-weight: 500; color: var(--color-text, #374151); }
+.tax-suggest-name { font-weight: var(--fw-medium); color: var(--color-text, #374151); }
 .tax-suggest-inst { font-size: var(--fs-sm); color: var(--color-text-muted, #9ca3af); margin-left: auto; }
 .tax-suggest-badge {
   font-size: var(--fs-xs);
@@ -496,7 +496,7 @@
   background: var(--color-surface, #f3f4f6);
   padding: 0.05rem 0.35rem;
   border-radius: 999px;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 /* ── Dark mode ── */
