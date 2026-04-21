@@ -132,11 +132,11 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
 
   return (
     <div className="data-page">
-      <input ref={csvInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCsvImport} />
+      <input ref={csvInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCsvImport} aria-label="Import CSV file" />
 
       <div className="data-header">
         <div>
-          <h1>Data</h1>
+          <h1>Net Worth</h1>
           <p className="data-subtitle">Track balances across your accounts over time</p>
         </div>
         <div className="data-header-actions">
@@ -167,7 +167,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
         {!hasAccounts ? (
           <div className="data-empty">
             <div className="data-empty-icon">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
                 <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" strokeWidth="2"/>
                 <path d="M6 18h36" stroke="currentColor" strokeWidth="2"/>
                 <path d="M18 18v20" stroke="currentColor" strokeWidth="2"/>
@@ -189,9 +189,9 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
         ) : (
           <>
             <div className="data-toolbar">
-              <div className="data-view-tabs">
-                <button className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`} onClick={() => setDataView('charts')}>Charts</button>
-                <button className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`} onClick={() => setDataView('spreadsheet')}>Spreadsheet</button>
+              <div className="data-view-tabs" role="tablist" aria-label="Data view">
+                <button className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`} role="tab" aria-selected={dataView === 'charts'} onClick={() => setDataView('charts')}>Charts</button>
+                <button className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`} role="tab" aria-selected={dataView === 'spreadsheet'} onClick={() => setDataView('spreadsheet')}>Spreadsheet</button>
               </div>
               <div className="data-toolbar-actions">
                 {dataView === 'spreadsheet' && (
@@ -211,7 +211,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
             {balances.length === 0 && !inlineEntry ? (
               <div className="data-empty">
                 <div className="data-empty-icon">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
                     <path d="M12 36V20m8 16V16m8 20V24m8 12V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </div>

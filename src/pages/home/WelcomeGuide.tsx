@@ -12,9 +12,9 @@ interface Step {
 
 const steps: Step[] = [
   {
-    title: 'Data',
+    title: 'Net Worth',
     desc: 'Add your accounts and record monthly balances. This is the foundation everything else builds on.',
-    route: '/data',
+    route: '/net-worth',
     cta: 'Add accounts',
     icon: DataIcon,
   },
@@ -72,28 +72,27 @@ const WelcomeGuide: FC<Props> = ({ greeting }) => {
       </div>
 
       <div className="welcome-start-hint">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 5v14M5 12l7-7 7 7" />
         </svg>
         <span>Start here — add your accounts and first balance snapshot</span>
       </div>
 
-      <div className="welcome-steps">
-        {steps.map((step, i) => {
+      <ol className="welcome-steps">
+        {steps.map((step) => {
           const Icon = step.icon
           return (
-            <div key={step.title} className="welcome-step" onClick={() => navigate(step.route)}>
-              <div className="welcome-step-number">{i + 1}</div>
+            <li key={step.title} className="welcome-step">
               <div className="welcome-step-icon"><Icon /></div>
               <div className="welcome-step-body">
-                <h3 className="welcome-step-title">{step.title}</h3>
+                <h2 className="welcome-step-title">{step.title}</h2>
                 <p className="welcome-step-desc">{step.desc}</p>
               </div>
-              <button className="welcome-step-cta">{step.cta} →</button>
-            </div>
+              <button className="welcome-step-cta" onClick={() => navigate(step.route)}>{step.cta} →</button>
+            </li>
           )
         })}
-      </div>
+      </ol>
     </div>
   )
 }

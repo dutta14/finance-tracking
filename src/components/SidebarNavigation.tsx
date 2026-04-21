@@ -156,7 +156,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   const isGoalActive = currentPage === 'goal';
 
   return (
-    <nav className={`sidebar${expanded ? '' : ' collapsed'}`}>
+    <nav className={`sidebar${expanded ? '' : ' collapsed'}`} aria-label="Main navigation">
       <div className="sidebar-top-row">
         <SidebarToggle expanded={expanded} onToggle={() => setExpanded(false)} />
         {expanded && <div className="sidebar-logo">Finance Tracker</div>}
@@ -176,6 +176,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <button
               className={`sidebar-link${currentPage === 'home' ? ' active' : ''}`}
               onClick={() => setCurrentPage('home')}
+              aria-current={currentPage === 'home' ? 'page' : undefined}
             >
               Home
             </button>
@@ -187,10 +188,12 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                 setCurrentPage('goal');
                 if (goals.length > 0) setGoalAccordionOpen(o => !o);
               }}
+              aria-current={currentPage === 'goal' ? 'page' : undefined}
+              aria-expanded={goals.length > 0 ? goalAccordionOpen : undefined}
             >
               Goals
               {goals.length > 0 && (
-                <span className="sidebar-chevron" style={{ transform: goalAccordionOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                <span className="sidebar-chevron" aria-hidden="true" style={{ transform: goalAccordionOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -232,6 +235,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                           <input
                             ref={renameInputRef}
                             className="sidebar-rename-input"
+                            aria-label={`Rename goal ${renameValue}`}
                             value={renameValue}
                             onChange={e => setRenameValue(e.target.value)}
                             onBlur={() => commitRename(goal.id)}
@@ -245,6 +249,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
                             {isMultiSelectMode && (
                               <span className="sidebar-checkbox" style={{ paddingLeft: '0.5rem' }}>
                                 <input type="checkbox" checked={isSelected} readOnly style={{ cursor: 'pointer' }}
+                                  aria-label={`Select ${goal.goalName}`}
                                   onClick={e => { e.stopPropagation(); onSelectNavGoal(goal.id, true); }} />
                               </span>
                             )}
@@ -276,16 +281,18 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           </li>
           <li className="sidebar-item">
             <button
-              className={`sidebar-link${currentPage === 'data' ? ' active' : ''}`}
-              onClick={() => setCurrentPage('data')}
+              className={`sidebar-link${currentPage === 'net-worth' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('net-worth')}
+              aria-current={currentPage === 'net-worth' ? 'page' : undefined}
             >
-              Data
+              Net Worth
             </button>
           </li>
           <li className="sidebar-item">
             <button
               className={`sidebar-link${currentPage === 'allocation' ? ' active' : ''}`}
               onClick={() => setCurrentPage('allocation')}
+              aria-current={currentPage === 'allocation' ? 'page' : undefined}
             >
               Allocation
             </button>
@@ -294,6 +301,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <button
               className={`sidebar-link${currentPage === 'budget' ? ' active' : ''}`}
               onClick={() => setCurrentPage('budget')}
+              aria-current={currentPage === 'budget' ? 'page' : undefined}
             >
               Budget
             </button>
@@ -302,6 +310,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <button
               className={`sidebar-link${currentPage === 'taxes' ? ' active' : ''}`}
               onClick={() => setCurrentPage('taxes')}
+              aria-current={currentPage === 'taxes' ? 'page' : undefined}
             >
               Taxes
             </button>
@@ -310,6 +319,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <button
               className={`sidebar-link${currentPage === 'tools' ? ' active' : ''}`}
               onClick={() => setCurrentPage('tools')}
+              aria-current={currentPage === 'tools' ? 'page' : undefined}
             >
               Tools
             </button>
@@ -318,6 +328,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <button
               className={`sidebar-link${currentPage === 'drive' ? ' active' : ''}`}
               onClick={() => setCurrentPage('drive')}
+              aria-current={currentPage === 'drive' ? 'page' : undefined}
             >
               Drive
             </button>
@@ -380,11 +391,14 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <div
               ref={overflowMenuRef}
               className="sidebar-overflow-menu"
+              role="menu"
+              aria-label={`Actions for ${goal.goalName}`}
               style={{ top: overflowMenu.y, left: overflowMenu.x }}
+              onKeyDown={e => { if (e.key === 'Escape') setOverflowMenu(null); }}
             >
-              <button className="sidebar-overflow-menu-item" onClick={() => { setOverflowMenu(null); onSelectNavGoal(goal.id, false); }}>Open</button>
-              <button className="sidebar-overflow-menu-item" onClick={() => startRename(goal.id, goal.goalName)}>Rename</button>
-              <button className="sidebar-overflow-menu-item sidebar-overflow-menu-item--danger" onClick={() => { setOverflowMenu(null); onDeleteGoal(goal.id); }}>Delete</button>
+              <button className="sidebar-overflow-menu-item" role="menuitem" onClick={() => { setOverflowMenu(null); onSelectNavGoal(goal.id, false); }}>Open</button>
+              <button className="sidebar-overflow-menu-item" role="menuitem" onClick={() => startRename(goal.id, goal.goalName)}>Rename</button>
+              <button className="sidebar-overflow-menu-item sidebar-overflow-menu-item--danger" role="menuitem" onClick={() => { setOverflowMenu(null); onDeleteGoal(goal.id); }}>Delete</button>
             </div>
           </>
         );
