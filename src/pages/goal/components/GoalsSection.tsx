@@ -1,7 +1,7 @@
 import { FC, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import GoalsMiniGrid from './GoalsMiniGrid'
-import GoalDrawer from './GoalDrawer'
 import GoalCompareView from './GoalCompareView'
 import GoalFilterBar, { GoalFilters, DEFAULT_FILTERS, applyFilters } from './GoalFilterBar'
 import '../../../styles/Goal.css'
@@ -43,6 +43,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   onUpdateGwGoal,
   onDeleteGwGoal,
 }) => {
+  const navigate = useNavigate()
   const selectedGoals = goals.filter(p => selectedGoalIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     const stored = localStorage.getItem('goal-view-mode')
@@ -70,7 +71,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               aria-label="Grid view"
               title="Grid view"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                 <rect x="1" y="1" width="6" height="6" rx="1"/>
                 <rect x="9" y="1" width="6" height="6" rx="1"/>
                 <rect x="1" y="9" width="6" height="6" rx="1"/>
@@ -83,7 +84,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               aria-label="List view"
               title="List view"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                 <rect x="1" y="2" width="14" height="2.5" rx="1"/>
                 <rect x="1" y="6.75" width="14" height="2.5" rx="1"/>
                 <rect x="1" y="11.5" width="14" height="2.5" rx="1"/>
@@ -133,23 +134,6 @@ const GoalsSection: FC<GoalsSectionProps> = ({
             <GoalCompareView goals={selectedGoals} gwGoals={gwGoals} profileBirthday={profileBirthday} />
           )}
         </>
-      )}
-      {selectedGoals.length === 1 && (
-        <GoalDrawer
-          goal={selectedGoals[0]}
-          goals={goals}
-          profileBirthday={profileBirthday}
-          gwGoals={gwGoals}
-          onClose={onClearSelection}
-          onNavigate={(goalId) => onSelectGoal(goalId, false)}
-          onUpdateGoal={onUpdateGoal}
-          onCopyGoal={onCopyGoal}
-          onDeleteGoal={onDeleteGoal}
-          onRenameGoal={onRenameGoal}
-          onCreateGwGoal={onCreateGwGoal}
-          onUpdateGwGoal={onUpdateGwGoal}
-          onDeleteGwGoal={onDeleteGwGoal}
-        />
       )}
     </div>
   )
