@@ -28,7 +28,7 @@ const steps: Step[] = [
   {
     title: 'Allocation',
     desc: 'See how your assets are distributed across categories and compare against your ideal ratios.',
-    route: '/allocation',
+    route: '/net-worth/allocation',
     cta: 'View allocation',
     icon: AllocationIcon,
   },

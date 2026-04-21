@@ -290,15 +290,6 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           </li>
           <li className="sidebar-item">
             <button
-              className={`sidebar-link${currentPage === 'allocation' ? ' active' : ''}`}
-              onClick={() => setCurrentPage('allocation')}
-              aria-current={currentPage === 'allocation' ? 'page' : undefined}
-            >
-              Allocation
-            </button>
-          </li>
-          <li className="sidebar-item">
-            <button
               className={`sidebar-link${currentPage === 'budget' ? ' active' : ''}`}
               onClick={() => setCurrentPage('budget')}
               aria-current={currentPage === 'budget' ? 'page' : undefined}

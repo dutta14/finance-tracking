@@ -29,9 +29,7 @@ const Allocation: FC = () => {
 
   return (
     <div className="alloc-page">
-      <div className="alloc-page-header">
-        <h1 className="alloc-page-title">Allocation</h1>
-      </div>
+
 
       <BreakdownSection getSlices={getSlices} />
 

@@ -130,7 +130,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
       key="alloc"
       accounts={accounts}
       balances={balances}
-      onNavigate={() => navigate('/allocation')}
+      onNavigate={() => navigate('/net-worth/allocation')}
     />,
   ]
 

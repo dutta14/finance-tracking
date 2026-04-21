@@ -1,9 +1,7 @@
 /* ── Allocation page ──────────────────────────────────────────── */
 
 .alloc-page {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 0 0 2rem;
 }
 
 .alloc-page-title {

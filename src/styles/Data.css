@@ -56,7 +56,12 @@
 .nw-tab.active {
   color: var(--color-text);
   border-bottom-color: var(--accent);
-  font-weight: var(--fw-semibold);
+}
+
+.nw-tab-loading {
+  padding: 2rem;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
 }
 
 /* ───────────────────────────────────────────────────────── */

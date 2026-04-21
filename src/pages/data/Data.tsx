@@ -1,5 +1,5 @@
-import { FC, useState, useRef } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { FC, useState, useRef, lazy, Suspense } from 'react'
+import { NavLink, useLocation, Routes, Route } from 'react-router-dom'
 import { Profile } from '../../hooks/useProfile'
 import { Account, BalanceEntry } from './types'
 import { parseCsvImport } from './csvImport'
@@ -8,6 +8,8 @@ import AccountsModal from './AccountsModal'
 import BalanceSpreadsheet from './BalanceSpreadsheet'
 import BalanceCharts from './BalanceCharts'
 import '../../styles/Data.css'
+
+const Allocation = lazy(() => import('../allocation/Allocation'))
 
 interface DataProps {
   profile: Profile
@@ -147,32 +149,36 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
 
       <nav className="nw-tab-bar" aria-label="Net Worth sections">
         <NavLink to="/net-worth" end className={({ isActive }) => `nw-tab${isActive || activeTab === 'accounts' ? ' active' : ''}`}>Accounts</NavLink>
+        <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>Allocation</NavLink>
       </nav>
 
-      <div className="data-header-actions">
-        {allowCsvImport && (
-          <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
-            Import from CSV
-          </button>
-        )}
-        {allowCsvImport && hasAccounts && balances.length > 0 && (
-          <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
-            Export CSV
-          </button>
-        )}
-        {allowCsvImport && (hasAccounts || balances.length > 0) && (
-          <button className="data-reset-btn" onClick={() => { if (confirm('Clear all accounts and balance entries? This cannot be undone.')) { saveAccounts([]); saveBalances([]) } }}>
-            Reset Data
-          </button>
-        )}
-        {hasAccounts && (
-          <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
-            View Accounts ({accounts.length})
-          </button>
-        )}
-      </div>
+      <Routes>
+        <Route index element={
+          <>
+            <div className="data-header-actions">
+              {allowCsvImport && (
+                <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
+                  Import from CSV
+                </button>
+              )}
+              {allowCsvImport && hasAccounts && balances.length > 0 && (
+                <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
+                  Export CSV
+                </button>
+              )}
+              {allowCsvImport && (hasAccounts || balances.length > 0) && (
+                <button className="data-reset-btn" onClick={() => { if (confirm('Clear all accounts and balance entries? This cannot be undone.')) { saveAccounts([]); saveBalances([]) } }}>
+                  Reset Data
+                </button>
+              )}
+              {hasAccounts && (
+                <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
+                  View Accounts ({accounts.length})
+                </button>
+              )}
+            </div>
 
-      <div className="data-content">
+            <div className="data-content">
         {!hasAccounts ? (
           <div className="data-empty">
             <div className="data-empty-icon">
@@ -271,6 +277,14 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
           onClose={() => setShowAccountsModal(false)}
         />
       )}
+          </>
+        } />
+        <Route path="allocation" element={
+          <Suspense fallback={<div className="nw-tab-loading" role="status">Loading…</div>}>
+            <Allocation />
+          </Suspense>
+        } />
+      </Routes>
     </div>
   )
 }

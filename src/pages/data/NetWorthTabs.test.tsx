@@ -44,6 +44,20 @@ describe('Net Worth tab bar', () => {
     const link = screen.getByRole('link', { name: 'Accounts' })
     expect(link).toHaveAttribute('href', '/net-worth')
   })
+
+  it('renders an "Allocation" tab inside the nav', () => {
+    renderData()
+    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
+    const links = nav.querySelectorAll('a')
+    const allocationLink = Array.from(links).find(a => a.textContent === 'Allocation')
+    expect(allocationLink).toBeInTheDocument()
+  })
+
+  it('the "Allocation" tab links to /net-worth/allocation', () => {
+    renderData()
+    const link = screen.getByRole('link', { name: 'Allocation' })
+    expect(link).toHaveAttribute('href', '/net-worth/allocation')
+  })
 })
 
 /* ─── Active state ─── */
@@ -66,6 +80,24 @@ describe('Net Worth tab active state', () => {
     const link = screen.getByRole('link', { name: 'Accounts' })
     expect(link.className).not.toContain('active')
   })
+
+  it('marks "Allocation" as active when on /net-worth/allocation', () => {
+    renderData('/net-worth/allocation')
+    const link = screen.getByRole('link', { name: 'Allocation' })
+    expect(link.className).toContain('active')
+  })
+
+  it('sets aria-current="page" on the Allocation tab when active', () => {
+    renderData('/net-worth/allocation')
+    const link = screen.getByRole('link', { name: 'Allocation' })
+    expect(link).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('does not mark "Allocation" as active when on /net-worth', () => {
+    renderData('/net-worth')
+    const link = screen.getByRole('link', { name: 'Allocation' })
+    expect(link.className).not.toContain('active')
+  })
 })
 
 /* ─── Tab bar structure ─── */
@@ -80,6 +112,12 @@ describe('Net Worth tab bar structure', () => {
   it('tab link has the nw-tab class', () => {
     renderData()
     const link = screen.getByRole('link', { name: 'Accounts' })
+    expect(link.className).toContain('nw-tab')
+  })
+
+  it('Allocation tab link has the nw-tab class', () => {
+    renderData()
+    const link = screen.getByRole('link', { name: 'Allocation' })
     expect(link.className).toContain('nw-tab')
   })
 })

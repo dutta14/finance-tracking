@@ -9,7 +9,6 @@ import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
 import Tools from './pages/tools/Tools'
 import Drive from './pages/drive/Drive'
-import Allocation from './pages/allocation/Allocation'
 import Taxes from './pages/taxes/Taxes'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
@@ -69,8 +68,6 @@ const App: FC = () => {
     ? 'tools'
     : location.pathname.startsWith('/drive')
     ? 'drive'
-    : location.pathname === '/allocation'
-    ? 'allocation'
     : location.pathname === '/taxes'
     ? 'taxes'
     : 'home'
@@ -82,7 +79,6 @@ const App: FC = () => {
     else if (page === 'budget') navigate('/budget')
     else if (page === 'tools') navigate('/tools')
     else if (page === 'drive') navigate('/drive')
-    else if (page === 'allocation') navigate('/allocation')
     else if (page === 'taxes') navigate('/taxes')
   }
 
@@ -567,7 +563,7 @@ const App: FC = () => {
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />
         <Route path="/drive/*" element={<Drive />} />
-        <Route path="/allocation" element={<Allocation />} />
+        <Route path="/allocation" element={<Navigate to="/net-worth/allocation" replace />} />
         <Route path="/taxes" element={<Taxes />} />
         <Route path="/goal/:id" element={<Navigate to="/goal" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
