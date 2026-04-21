@@ -23,7 +23,7 @@ describe('buildIndex', () => {
 
     // Verify known static pages
     expect(pages.map(p => p.label)).toEqual(
-      expect.arrayContaining(['Home', 'Goals', 'Data', 'Budget', 'Allocation', 'Taxes', 'Tools', 'Drive'])
+      expect.arrayContaining(['Home', 'Goals', 'Net Worth', 'Budget', 'Allocation', 'Taxes', 'Tools', 'Drive'])
     )
 
     // No dynamic items when localStorage is empty
@@ -106,7 +106,7 @@ describe('buildIndex', () => {
       id: 'account-1',
       label: 'Vanguard 401k',
       hint: 'Vanguard · Retirement · retirement',
-      route: '/data',
+      route: '/net-worth',
     })
     // Empty strings are filtered from the hint
     expect(accounts[1].hint).toBe('')

@@ -61,8 +61,8 @@ const App: FC = () => {
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname === '/goal'
     ? 'goal'
-    : location.pathname === '/data'
-    ? 'data'
+    : location.pathname === '/net-worth'
+    ? 'net-worth'
     : location.pathname === '/budget'
     ? 'budget'
     : location.pathname === '/tools'
@@ -78,7 +78,7 @@ const App: FC = () => {
   const setCurrentPage = (page: PageType): void => {
     if (page === 'home') navigate('/')
     else if (page === 'goal') navigate('/goal')
-    else if (page === 'data') navigate('/data')
+    else if (page === 'net-worth') navigate('/net-worth')
     else if (page === 'budget') navigate('/budget')
     else if (page === 'tools') navigate('/tools')
     else if (page === 'drive') navigate('/drive')
@@ -224,7 +224,7 @@ const App: FC = () => {
     }
   }, [ghSyncTaxesNow, ghIsConfigured, ghActiveToken, ghConfig])
 
-  // Callback when Data page accounts/balances change → sync data file
+  // Callback when Net Worth page accounts/balances change → sync data file
   const handleDataChange = (accounts: Account[], balances: BalanceEntry[]): void => {
     ghUpdateDataFile({ version: 1, exportedAt: new Date().toISOString(), accounts, balances });
   };
@@ -562,7 +562,8 @@ const App: FC = () => {
             />
           }
         />
-        <Route path="/data" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
+        <Route path="/net-worth" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
+        <Route path="/data" element={<Navigate to="/net-worth" replace />} />
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />
         <Route path="/drive/*" element={<Drive />} />

@@ -65,7 +65,7 @@ export const getCategoryLabel = (cat: SearchCategory): string => CATEGORY_LABELS
 const STATIC_PAGES: SearchItem[] = [
   { id: 'page-home', category: 'page', label: 'Home', hint: 'Dashboard overview', icon: 'home', keywords: ['home', 'dashboard', 'overview'], route: '/' },
   { id: 'page-goals', category: 'page', label: 'Goals', hint: 'FI goal plans', icon: 'target', keywords: ['goals', 'fi', 'financial independence', 'fire'], route: '/goal' },
-  { id: 'page-data', category: 'page', label: 'Data', hint: 'Accounts & balances', icon: 'chart', keywords: ['data', 'accounts', 'balances', 'net worth'], route: '/data' },
+  { id: 'page-net-worth', category: 'page', label: 'Net Worth', hint: 'Accounts & balances', icon: 'chart', keywords: ['data', 'accounts', 'balances', 'net worth'], route: '/net-worth' },
   { id: 'page-budget', category: 'page', label: 'Budget', hint: 'Monthly spending', icon: 'dollar', keywords: ['budget', 'spending', 'expenses', 'income'], route: '/budget' },
   { id: 'page-allocation', category: 'page', label: 'Allocation', hint: 'Asset allocation & rebalance', icon: 'scale', keywords: ['allocation', 'rebalance', 'asset', 'portfolio'], route: '/allocation' },
   { id: 'page-taxes', category: 'page', label: 'Taxes', hint: 'Tax document checklist', icon: 'clipboard', keywords: ['taxes', 'tax', 'checklist', 'w2', '1099'], route: '/taxes' },
@@ -143,7 +143,7 @@ function indexAccounts(): SearchItem[] {
         hint: [a.institution, a.group, a.type].filter(Boolean).join(' · '),
         icon: 'bank',
         keywords: [a.name, a.institution || '', a.group || '', a.type || ''].map(s => s.toLowerCase()),
-        route: '/data',
+        route: '/net-worth',
       })
     }
   } catch { /* ignore */ }

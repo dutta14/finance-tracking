@@ -110,7 +110,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
       accounts={accounts}
       balances={balances}
       allMonths={allMonths}
-      onNavigate={() => navigate('/data')}
+      onNavigate={() => navigate('/net-worth')}
     />,
     <MiniCharts
       key="charts"
@@ -118,7 +118,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
       balances={balances}
       balanceMap={balanceMap}
       allMonths={allMonths}
-      onNavigate={() => navigate('/data')}
+      onNavigate={() => navigate('/net-worth')}
     />,
     <GoalsPeek
       key="goals"
