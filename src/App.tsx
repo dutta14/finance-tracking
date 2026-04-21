@@ -36,9 +36,7 @@ const App: FC = () => {
   });
   const [accentTheme, setAccentTheme] = useState(() => localStorage.getItem('accentTheme') || localStorage.getItem('fiTheme') || 'blue');
   const [allowCsvImport, setAllowCsvImport] = useState(() => localStorage.getItem('allowCsvImport') === '1');
-  const [selectedNavGoalIds, setSelectedNavGoalIds] = useState<number[]>([]);
   const [selectedHomeGoalIds, setSelectedHomeGoalIds] = useState<number[]>([]);
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const { goals, createGoal, updateGoal, deleteGoal, importGoals, reorderGoals } = useFinancialGoals();
   const { gwGoals, createGwGoal, updateGwGoal, deleteGwGoal, importGwGoals } = useGwGoals();
   const { profile, updateProfile } = useProfile();
@@ -230,48 +228,6 @@ const App: FC = () => {
     } catch { return { accounts: [], balances: [] } }
   };
 
-  // Sync nav pane selection with solo page URL (handles prev/next navigation)
-  useEffect(() => {
-    const match = location.pathname.match(/^\/goal\/(\d+)$/);
-    if (match) {
-      const id = Number(match[1]);
-      setSelectedNavGoalIds([id]);
-    } else {
-      setSelectedNavGoalIds([]);
-    }
-  }, [location.pathname]);
-
-  const handleSelectNavGoal = (goalId: number, multi: boolean): void => {
-    if (multi || isMultiSelectMode) {
-      if (!isMultiSelectMode) setIsMultiSelectMode(true);
-      setSelectedNavGoalIds(prev =>
-        prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]
-      );
-    } else {
-      setSelectedNavGoalIds([goalId]);
-      setSelectedHomeGoalIds([goalId]);
-      navigate('/goal');
-      if (isMobile) setSidebarOpen(false);
-    }
-  };
-
-  const handleExitMultiSelect = (): void => {
-    setIsMultiSelectMode(false);
-    setSelectedNavGoalIds([]);
-  };
-
-  const renameGoal = (goalId: number, newName: string): void => {
-    const goal = goals.find(p => p.id === goalId);
-    if (goal) updateGoal(goalId, { ...goal, goalName: newName });
-  };
-
-  const handleSidebarDeleteGoal = (goalId: number): void => {
-    handleDeleteWithUndo([goalId]);
-  };
-
-  const handleSidebarDeleteMultiple = (ids: number[]): void => {
-    handleDeleteWithUndo(ids);
-  };
 
   const handleSyncNow = async (data: object, message?: string): Promise<void> => {
     await syncNow(data, message)
@@ -583,15 +539,6 @@ const App: FC = () => {
           onGwThemeChange={setAccentTheme}
           homeTheme={accentTheme}
           onHomeThemeChange={setAccentTheme}
-          goals={visibleGoals}
-          selectedNavGoalIds={selectedNavGoalIds}
-          isMultiSelectMode={isMultiSelectMode}
-          onSelectNavGoal={handleSelectNavGoal}
-          onExitMultiSelect={handleExitMultiSelect}
-          onRenameGoal={renameGoal}
-          onDeleteGoal={handleSidebarDeleteGoal}
-          onDeleteMultiple={handleSidebarDeleteMultiple}
-          onReorderGoals={reorderGoals}
           onExport={handleExport}
           onImport={handleImport}
           profile={profile}

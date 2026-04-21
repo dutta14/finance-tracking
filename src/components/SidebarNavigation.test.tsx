@@ -13,15 +13,6 @@ const defaultProps = {
   setExpanded: noop,
   darkMode: false,
   setDarkMode: noop,
-  goals: [],
-  selectedNavGoalIds: [] as number[],
-  isMultiSelectMode: false,
-  onSelectNavGoal: noop as any,
-  onExitMultiSelect: noop,
-  onRenameGoal: noop as any,
-  onDeleteGoal: noop as any,
-  onDeleteMultiple: noop as any,
-  onReorderGoals: noop as any,
   onExport: noop,
   onImport: noop as any,
   profile: { name: '', avatarUrl: '', birthday: '' },
@@ -118,5 +109,89 @@ describe('SidebarNavigation', () => {
     expect(buttons).toHaveLength(2)
     expect(buttons[0]).toHaveAttribute('aria-label', 'Drive')
     expect(buttons[1]).toHaveAttribute('aria-label', 'Settings')
+  })
+
+  describe('Goals is a plain sidebar link (no accordion)', () => {
+    it('renders Goals as a plain button with sidebar-link class', () => {
+      renderSidebar()
+
+      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      expect(goalsBtn).toHaveClass('sidebar-link')
+      expect(goalsBtn.tagName).toBe('BUTTON')
+    })
+
+    it('does not render a chevron or aria-expanded on the Goals button', () => {
+      renderSidebar()
+
+      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      expect(goalsBtn).not.toHaveAttribute('aria-expanded')
+      expect(goalsBtn.querySelector('.sidebar-chevron')).toBeNull()
+    })
+
+    it('calls setCurrentPage("goal") when Goals is clicked', async () => {
+      const setCurrentPage = vi.fn()
+      const user = userEvent.setup()
+      renderSidebar({ setCurrentPage })
+
+      await user.click(screen.getByRole('button', { name: 'Goals' }))
+
+      expect(setCurrentPage).toHaveBeenCalledTimes(1)
+      expect(setCurrentPage).toHaveBeenCalledWith('goal')
+    })
+
+    it('applies active styling and aria-current when currentPage is "goal"', () => {
+      renderSidebar({ currentPage: 'goal' })
+
+      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      expect(goalsBtn).toHaveClass('sidebar-link', 'active')
+      expect(goalsBtn).toHaveAttribute('aria-current', 'page')
+    })
+
+    it('does not apply active styling when currentPage is not "goal"', () => {
+      renderSidebar({ currentPage: 'home' })
+
+      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      expect(goalsBtn).not.toHaveClass('active')
+      expect(goalsBtn).not.toHaveAttribute('aria-current')
+    })
+  })
+
+  describe('no accordion submenu or multi-select UI', () => {
+    it('does not render any submenu list', () => {
+      renderSidebar()
+
+      expect(screen.queryByRole('list', { name: /goals/i })).not.toBeInTheDocument()
+      expect(document.querySelector('.sidebar-submenu')).toBeNull()
+    })
+
+    it('does not render overflow menu buttons', () => {
+      renderSidebar()
+
+      expect(document.querySelector('.sidebar-overflow-btn')).toBeNull()
+      expect(document.querySelector('.sidebar-overflow-menu')).toBeNull()
+      expect(document.querySelector('.sidebar-menu-overlay')).toBeNull()
+    })
+
+    it('does not render multi-select bar or checkboxes', () => {
+      renderSidebar()
+
+      expect(document.querySelector('.sidebar-multiselect-bar')).toBeNull()
+      expect(document.querySelector('.sidebar-checkbox')).toBeNull()
+    })
+
+    it('does not render sub-item elements or rename inputs', () => {
+      renderSidebar()
+
+      expect(document.querySelector('.sidebar-subitem')).toBeNull()
+      expect(document.querySelector('.sidebar-sublink')).toBeNull()
+      expect(document.querySelector('.sidebar-rename-input')).toBeNull()
+    })
+
+    it('does not render any draggable elements', () => {
+      renderSidebar()
+
+      const draggables = document.querySelectorAll('[draggable="true"]')
+      expect(draggables).toHaveLength(0)
+    })
   })
 })
