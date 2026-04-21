@@ -61,7 +61,7 @@ const App: FC = () => {
   // Derive currentPage from URL for sidebar nav compat
   const currentPage: PageType = location.pathname === '/goal'
     ? 'goal'
-    : location.pathname === '/net-worth'
+    : location.pathname.startsWith('/net-worth')
     ? 'net-worth'
     : location.pathname === '/budget'
     ? 'budget'
@@ -562,7 +562,7 @@ const App: FC = () => {
             />
           }
         />
-        <Route path="/net-worth" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
+        <Route path="/net-worth/*" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="/data" element={<Navigate to="/net-worth" replace />} />
         <Route path="/budget" element={<Budget />} />
         <Route path="/tools" element={<Tools />} />

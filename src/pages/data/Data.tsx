@@ -1,4 +1,5 @@
 import { FC, useState, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { Profile } from '../../hooks/useProfile'
 import { Account, BalanceEntry } from './types'
 import { parseCsvImport } from './csvImport'
@@ -130,6 +131,9 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
   const balanceMap = new Map<string, number>()
   for (const b of balances) balanceMap.set(`${b.accountId}:${b.month}`, b.balance)
 
+  const location = useLocation()
+  const activeTab = location.pathname.replace('/net-worth', '').replace(/^\//, '') || 'accounts'
+
   return (
     <div className="data-page">
       <input ref={csvInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCsvImport} aria-label="Import CSV file" />
@@ -139,28 +143,33 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
           <h1>Net Worth</h1>
           <p className="data-subtitle">Track balances across your accounts over time</p>
         </div>
-        <div className="data-header-actions">
-          {allowCsvImport && (
-            <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
-              Import from CSV
-            </button>
-          )}
-          {allowCsvImport && hasAccounts && balances.length > 0 && (
-            <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
-              Export CSV
-            </button>
-          )}
-          {allowCsvImport && (hasAccounts || balances.length > 0) && (
-            <button className="data-reset-btn" onClick={() => { if (confirm('Clear all accounts and balance entries? This cannot be undone.')) { saveAccounts([]); saveBalances([]) } }}>
-              Reset Data
-            </button>
-          )}
-          {hasAccounts && (
-            <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
-              View Accounts ({accounts.length})
-            </button>
-          )}
-        </div>
+      </div>
+
+      <nav className="nw-tab-bar" aria-label="Net Worth sections">
+        <NavLink to="/net-worth" end className={({ isActive }) => `nw-tab${isActive || activeTab === 'accounts' ? ' active' : ''}`}>Accounts</NavLink>
+      </nav>
+
+      <div className="data-header-actions">
+        {allowCsvImport && (
+          <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
+            Import from CSV
+          </button>
+        )}
+        {allowCsvImport && hasAccounts && balances.length > 0 && (
+          <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
+            Export CSV
+          </button>
+        )}
+        {allowCsvImport && (hasAccounts || balances.length > 0) && (
+          <button className="data-reset-btn" onClick={() => { if (confirm('Clear all accounts and balance entries? This cannot be undone.')) { saveAccounts([]); saveBalances([]) } }}>
+            Reset Data
+          </button>
+        )}
+        {hasAccounts && (
+          <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
+            View Accounts ({accounts.length})
+          </button>
+        )}
       </div>
 
       <div className="data-content">
