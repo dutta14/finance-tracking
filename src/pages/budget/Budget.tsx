@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, lazy, Suspense, useEffect, useRef, useCallback } from 'react'
 import { useBudget } from './hooks/useBudget'
 import { useCSVUpload } from './hooks/useCSVUpload'
 import { TimePeriod } from './types'
@@ -11,6 +11,8 @@ import CSVPreviewModal from './components/CSVPreviewModal'
 import CashflowBarChart from './components/CashflowBarChart'
 import CashflowSankey from './components/CashflowSankey'
 import '../../styles/Budget.css'
+
+const PdfToCsv = lazy(() => import('../tools/components/PdfToCsv'))
 
 const Budget: FC = () => {
   const {
@@ -32,6 +34,43 @@ const Budget: FC = () => {
   const [showFormatHelp, setShowFormatHelp] = useState(false)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
+  const [showPdfToCsv, setShowPdfToCsv] = useState(false)
+  const pdfToCsvEnabled = localStorage.getItem('lab-pdf-to-csv') === '1'
+
+  const pdfModalRef = useRef<HTMLDivElement>(null)
+  const pdfTriggerRef = useRef<HTMLElement | null>(null)
+
+  const closePdfModal = useCallback(() => setShowPdfToCsv(false), [])
+  const openPdfModal = useCallback(() => {
+    pdfTriggerRef.current = document.activeElement as HTMLElement
+    setShowPdfToCsv(true)
+  }, [])
+
+  useEffect(() => {
+    if (!showPdfToCsv) return
+    const closeBtn = pdfModalRef.current?.querySelector<HTMLElement>('.budget-pdf-modal-close')
+    closeBtn?.focus()
+    return () => { pdfTriggerRef.current?.focus() }
+  }, [showPdfToCsv])
+
+  const handlePdfModalKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') { closePdfModal(); return }
+    if (e.key === 'Tab') {
+      const modal = pdfModalRef.current
+      if (!modal) return
+      const focusable = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus()
+      }
+    }
+  }, [closePdfModal])
 
   const currentYear = new Date().getFullYear()
 
@@ -56,6 +95,7 @@ const Budget: FC = () => {
         onToggleUploadMenu={() => setShowUploadMenu(v => !v)}
         onQuickUpload={handleQuickUpload}
         onBulkUpload={handleBulkUpload}
+        onOpenPdfToCsv={pdfToCsvEnabled ? openPdfModal : undefined}
       />
 
       {csvPreview && (
@@ -137,6 +177,30 @@ const Budget: FC = () => {
             </>
           )}
         </>
+      )}
+
+      {showPdfToCsv && (
+        <div className="budget-pdf-overlay" onClick={closePdfModal}>
+          <div
+            className="budget-pdf-modal"
+            ref={pdfModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="budget-pdf-title"
+            onClick={e => e.stopPropagation()}
+            onKeyDown={handlePdfModalKeyDown}
+          >
+            <div className="budget-pdf-modal-header">
+              <h2 id="budget-pdf-title" className="budget-pdf-modal-title">PDF → CSV</h2>
+              <button className="budget-pdf-modal-close" onClick={closePdfModal} aria-label="Close">✕</button>
+            </div>
+            <div className="budget-pdf-modal-body">
+              <Suspense fallback={<div className="budget-pdf-loading" role="status">Loading…</div>}>
+                <PdfToCsv />
+              </Suspense>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

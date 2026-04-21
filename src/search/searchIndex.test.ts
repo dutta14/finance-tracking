@@ -409,3 +409,21 @@ describe('getCategoryLabel', () => {
     expect(getCategoryLabel(cat)).toBe(expected)
   })
 })
+
+/* ─── PDF → CSV search item ─── */
+
+describe('PDF → CSV search index entry', () => {
+  it('routes tool-pdf-csv to /budget', () => {
+    const items = buildIndex()
+    const pdfTool = items.find(i => i.id === 'tool-pdf-csv')
+    expect(pdfTool).toBeDefined()
+    expect(pdfTool!.route).toBe('/budget')
+  })
+
+  it('has correct label and category for PDF → CSV', () => {
+    const items = buildIndex()
+    const pdfTool = items.find(i => i.id === 'tool-pdf-csv')!
+    expect(pdfTool.label).toBe('PDF → CSV')
+    expect(pdfTool.category).toBe('tool')
+  })
+})

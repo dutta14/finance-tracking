@@ -21,6 +21,7 @@ interface BudgetHeaderProps {
   onToggleUploadMenu: () => void
   onQuickUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
   onBulkUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onOpenPdfToCsv?: () => void
 }
 
 const BudgetHeader: FC<BudgetHeaderProps> = ({
@@ -29,7 +30,7 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
   quickUploadRef, bulkUploadRef,
   onPrevYear, onNextYear, onSetViewMode, onSetTimePeriod,
   onToggleGroupMgr, onToggleFormatHelp, onToggleUploadMenu,
-  onQuickUpload, onBulkUpload,
+  onQuickUpload, onBulkUpload, onOpenPdfToCsv,
 }) => (
   <>
     <div className="budget-header">
@@ -67,7 +68,7 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
           <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
             Upload CSV
           </button>
-          <button className="budget-action-btn budget-split-drop" onClick={onToggleUploadMenu}>
+          <button className="budget-action-btn budget-split-drop" onClick={onToggleUploadMenu} aria-haspopup="true" aria-expanded={showUploadMenu} aria-label="Upload options">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
               <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -75,10 +76,15 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
           {showUploadMenu && (
             <>
               <div className="budget-upload-backdrop" onClick={onToggleUploadMenu} />
-              <div className="budget-upload-menu">
-                <button className="budget-upload-menu-item" onClick={() => { onToggleUploadMenu(); bulkUploadRef.current?.click() }}>
+              <div className="budget-upload-menu" role="menu">
+                <button className="budget-upload-menu-item" role="menuitem" onClick={() => { onToggleUploadMenu(); bulkUploadRef.current?.click() }}>
                   Bulk Upload
                 </button>
+                {onOpenPdfToCsv && (
+                  <button className="budget-upload-menu-item" role="menuitem" onClick={() => { onToggleUploadMenu(); onOpenPdfToCsv() }}>
+                    PDF → CSV
+                  </button>
+                )}
               </div>
             </>
           )}
