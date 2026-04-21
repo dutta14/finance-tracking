@@ -308,15 +308,6 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
           </li>
           <li className="sidebar-item">
             <button
-              className={`sidebar-link${currentPage === 'tools' ? ' active' : ''}`}
-              onClick={() => setCurrentPage('tools')}
-              aria-current={currentPage === 'tools' ? 'page' : undefined}
-            >
-              Tools
-            </button>
-          </li>
-          <li className="sidebar-item">
-            <button
               className={`sidebar-link${currentPage === 'drive' ? ' active' : ''}`}
               onClick={() => setCurrentPage('drive')}
               aria-current={currentPage === 'drive' ? 'page' : undefined}

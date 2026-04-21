@@ -21,9 +21,9 @@ describe('buildIndex', () => {
     expect(tools.length).toBeGreaterThan(0)
     expect(settings.length).toBeGreaterThan(0)
 
-    // Verify known static pages
-    expect(pages.map(p => p.label)).toEqual(
-      expect.arrayContaining(['Home', 'Goals', 'Net Worth', 'Budget', 'Allocation', 'Taxes', 'Tools', 'Drive'])
+    // Verify known static pages — exhaustive list (no Tools page)
+    expect(pages.map(p => p.label).sort()).toEqual(
+      ['Allocation', 'Budget', 'Drive', 'Goals', 'Home', 'Net Worth', 'Taxes']
     )
 
     // No dynamic items when localStorage is empty
@@ -221,6 +221,16 @@ describe('buildIndex', () => {
     expect(items.filter(i => i.category === 'budget')).toHaveLength(0)
     expect(items.filter(i => i.category === 'tax')).toHaveLength(0)
     expect(items.filter(i => i.category === 'allocation')).toHaveLength(0)
+  })
+
+  it('does not include a page-tools entry (Tools page removed)', () => {
+    const items = buildIndex()
+    expect(items.find(i => i.id === 'page-tools')).toBeUndefined()
+
+    // 'tool' category still exists for FI Calc, Growth Tracker, PDF→CSV
+    const tools = items.filter(i => i.category === 'tool')
+    expect(tools.length).toBeGreaterThan(0)
+    expect(tools.map(t => t.id)).not.toContain('page-tools')
   })
 })
 

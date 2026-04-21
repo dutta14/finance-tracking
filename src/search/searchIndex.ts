@@ -69,7 +69,6 @@ const STATIC_PAGES: SearchItem[] = [
   { id: 'page-budget', category: 'page', label: 'Budget', hint: 'Monthly spending', icon: 'dollar', keywords: ['budget', 'spending', 'expenses', 'income'], route: '/budget' },
   { id: 'page-allocation', category: 'page', label: 'Allocation', hint: 'Asset allocation & rebalance', icon: 'scale', keywords: ['allocation', 'rebalance', 'asset', 'portfolio'], route: '/net-worth/allocation' },
   { id: 'page-taxes', category: 'page', label: 'Taxes', hint: 'Tax document checklist', icon: 'clipboard', keywords: ['taxes', 'tax', 'checklist', 'w2', '1099'], route: '/taxes' },
-  { id: 'page-tools', category: 'page', label: 'Tools', hint: 'Calculators & utilities', icon: 'wrench', keywords: ['tools', 'calculator', 'utilities'], route: '/tools' },
   { id: 'page-drive', category: 'page', label: 'Drive', hint: 'Uploaded files', icon: 'folder', keywords: ['drive', 'files', 'uploads', 'documents'], route: '/drive' },
 ]
 

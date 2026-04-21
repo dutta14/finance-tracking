@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DataIcon, GoalsIcon, AllocationIcon, BudgetIcon, ToolsIcon, DriveIcon } from './welcomeIcons'
+import { DataIcon, GoalsIcon, AllocationIcon, BudgetIcon, DriveIcon } from './welcomeIcons'
 
 interface Step {
   title: string
@@ -38,13 +38,6 @@ const steps: Step[] = [
     route: '/budget',
     cta: 'Start budgeting',
     icon: BudgetIcon,
-  },
-  {
-    title: 'Tools',
-    desc: 'Run FI simulations, safe-growth calculators, and other planning utilities against your data.',
-    route: '/tools',
-    cta: 'Explore tools',
-    icon: ToolsIcon,
   },
   {
     title: 'Drive',

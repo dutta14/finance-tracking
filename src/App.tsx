@@ -7,7 +7,7 @@ import Home from './pages/home/Home'
 import Goal from './pages/goal/Goal'
 import Data from './pages/data/Data'
 import Budget from './pages/budget/Budget'
-import Tools from './pages/tools/Tools'
+
 import Drive from './pages/drive/Drive'
 import Taxes from './pages/taxes/Taxes'
 import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/budget/utils/budgetStorage'
@@ -64,8 +64,6 @@ const App: FC = () => {
     ? 'net-worth'
     : location.pathname === '/budget'
     ? 'budget'
-    : location.pathname === '/tools'
-    ? 'tools'
     : location.pathname.startsWith('/drive')
     ? 'drive'
     : location.pathname === '/taxes'
@@ -77,7 +75,6 @@ const App: FC = () => {
     else if (page === 'goal') navigate('/goal')
     else if (page === 'net-worth') navigate('/net-worth')
     else if (page === 'budget') navigate('/budget')
-    else if (page === 'tools') navigate('/tools')
     else if (page === 'drive') navigate('/drive')
     else if (page === 'taxes') navigate('/taxes')
   }
@@ -561,7 +558,7 @@ const App: FC = () => {
         <Route path="/net-worth/*" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
         <Route path="/data" element={<Navigate to="/net-worth" replace />} />
         <Route path="/budget" element={<Budget />} />
-        <Route path="/tools" element={<Tools />} />
+        <Route path="/tools" element={<Navigate to="/budget" replace />} />
         <Route path="/drive/*" element={<Drive />} />
         <Route path="/allocation" element={<Navigate to="/net-worth/allocation" replace />} />
         <Route path="/taxes" element={<Taxes />} />
