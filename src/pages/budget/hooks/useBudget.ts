@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigData } from '../types'
 import {
   loadBudgetStore, saveBudgetStore, saveCSVForMonth, deleteCSVForMonth,
@@ -12,11 +12,7 @@ const REMOVED_GROUP_ID = 'removed'
 export function useBudget() {
   const [store, setStore] = useState<BudgetStore>(loadBudgetStore)
   const storeRef = useRef(store)
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
-    const s = loadBudgetStore()
-    const currentYear = new Date().getFullYear()
-    return s.years.includes(currentYear) ? currentYear : (s.years[s.years.length - 1] || currentYear)
-  })
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
   const [viewMode, setViewMode] = useState<BudgetViewMode>('aggregated')
 
   const persist = useCallback((next: BudgetStore) => {
@@ -24,6 +20,12 @@ export function useBudget() {
     setStore(next)
     saveBudgetStore(next)
   }, [])
+
+  useEffect(() => {
+    if (!store.years.includes(selectedYear)) {
+      persist(createYear(storeRef.current, selectedYear))
+    }
+  }, [selectedYear, store.years, persist])
 
   const uploadCSV = useCallback((monthKey: string, csvText: string): { ok: boolean; error?: string; transactions?: Transaction[]; newCategories?: string[] } => {
     try {
@@ -295,13 +297,10 @@ export function useBudget() {
     })
   }, [persist])
 
-  const yearExists = store.years.includes(selectedYear)
-
   return {
     store,
     selectedYear,
     setSelectedYear,
-    yearExists,
     viewMode,
     setViewMode,
     uploadCSV,

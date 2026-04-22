@@ -16,7 +16,7 @@ const PdfToCsv = lazy(() => import('../tools/components/PdfToCsv'))
 
 const Budget: FC = () => {
   const {
-    selectedYear, setSelectedYear, yearExists,
+    selectedYear, setSelectedYear,
     viewMode, setViewMode,
     uploadCSV, removeCSV, createYear, updateCategoryGroups, mergeCategories, editCategory,
     categoryHasTransactions, deleteCategory,
@@ -87,7 +87,7 @@ const Budget: FC = () => {
         quickUploadRef={quickUploadRef}
         bulkUploadRef={bulkUploadRef}
         onPrevYear={() => setSelectedYear(y => y - 1)}
-        onNextYear={() => setSelectedYear(y => Math.min(y + 1, currentYear))}
+        onNextYear={() => setSelectedYear(y => y + 1)}
         onSetViewMode={setViewMode}
         onSetTimePeriod={setTimePeriod}
         onToggleGroupMgr={() => setShowGroupMgr(v => !v)}
@@ -109,12 +109,25 @@ const Budget: FC = () => {
 
       {toastMsg && <div className="budget-sync-msg">{toastMsg}</div>}
 
-      {!yearExists ? (
+      {Object.keys(yearTransactions).length === 0 && monthsWithData.size === 0 ? (
         <div className="budget-empty-year">
-          <p>Budget not created for {selectedYear}.</p>
-          <button className="budget-create-year-btn" onClick={() => createYear(selectedYear)} disabled={selectedYear > currentYear}>
-            Create {selectedYear} Budget
-          </button>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="budget-empty-year-icon">
+            <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M3 9h18M9 4v16" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          <h2 className="budget-empty-year-title">No data for {selectedYear}</h2>
+          <p className="budget-empty-year-desc">
+            {selectedYear > currentYear
+              ? "This year hasn't started yet. Data will appear as you add it."
+              : 'Import a bank CSV or add transactions manually to start tracking this year.'}
+          </p>
+          <div className="budget-empty-year-actions">
+            {selectedYear <= currentYear && (
+              <button className="budget-action-btn budget-action-btn--accent" onClick={() => quickUploadRef.current?.click()}>
+                Import CSV
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <>

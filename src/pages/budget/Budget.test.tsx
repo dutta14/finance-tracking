@@ -10,7 +10,6 @@ import Budget from './Budget'
 const mockUseBudget = {
   selectedYear: 2025,
   setSelectedYear: vi.fn(),
-  yearExists: true,
   viewMode: 'aggregated' as const,
   setViewMode: vi.fn(),
   uploadCSV: vi.fn(),
@@ -26,7 +25,7 @@ const mockUseBudget = {
   removedCategories: [],
   categorySums: {},
   summary: { totalIncome: 0, totalExpense: 0, saveRate: 0 },
-  monthsWithData: [],
+  monthsWithData: new Set<string>(),
 }
 
 vi.mock('./hooks/useBudget', () => ({

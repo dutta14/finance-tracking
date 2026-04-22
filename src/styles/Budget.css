@@ -478,23 +478,63 @@ body.dark .budget-csv-error {
   padding: 4rem 2rem;
   color: var(--color-text-muted);
 }
-.budget-empty-year p {
-  font-size: var(--fs-md);
-  margin-bottom: 1rem;
+.budget-empty-year-icon {
+  color: var(--accent);
+  opacity: 0.35;
+  margin-bottom: 16px;
 }
-.budget-create-year-btn {
+.budget-empty-year-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  margin: 0 0 6px;
+}
+.budget-empty-year-desc {
+  font-size: var(--fs-md);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0 0 20px;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.budget-empty-year-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.budget-action-btn--accent {
   background: var(--accent);
   color: var(--color-text-on-accent);
-  border: none;
+  border: 1px solid var(--accent);
   border-radius: var(--radius);
-  padding: 0.6rem 1.5rem;
+  padding: 0.5rem 1.2rem;
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s;
 }
-.budget-create-year-btn:hover {
+.budget-action-btn--accent:hover {
   background: var(--accent-hover);
+}
+.budget-action-btn--accent:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .budget-empty-year {
+    padding: 3rem 1rem;
+  }
+  .budget-empty-year-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .budget-empty-year-actions {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 /* ── Drilldown ── */

@@ -43,7 +43,7 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
             </svg>
           </button>
           <span className="budget-year-label">{selectedYear}</span>
-          <button className="budget-year-btn" onClick={onNextYear} disabled={selectedYear >= currentYear} title="Next year">
+          <button className="budget-year-btn" onClick={onNextYear} title="Next year">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
