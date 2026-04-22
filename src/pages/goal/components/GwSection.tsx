@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useRef, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
+import TermAbbr from '../../../components/TermAbbr'
 import '../../../styles/GwSection.css'
 
 interface GwSectionProps {
@@ -313,7 +314,7 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
     <section className="gw-section">
       <div className="gw-section-header">
         <div className="gw-section-title-row">
-          <span className="gw-section-badge">GW</span>
+          <span className="gw-section-badge"><TermAbbr term="GW" /></span>
           <h2 className="gw-section-title">Generational Wealth</h2>
         </div>
         <p className="gw-section-subtitle">

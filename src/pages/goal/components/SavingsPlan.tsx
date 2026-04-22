@@ -2,6 +2,7 @@ import { FC, useMemo, useState } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../../data/types'
+import TermAbbr from '../../../components/TermAbbr'
 
 interface SavingsPlanProps {
   goal: FinancialGoal
@@ -92,7 +93,7 @@ const PlanBlock: FC<PlanBlockProps> = ({ label, target, initialResult, currentRe
   return (
     <div className="splan-block">
       <div className="splan-block-header">
-        <h4 className="splan-section-label">{label}</h4>
+        <h4 className="splan-section-label">{label === 'FI' || label === 'GW' ? <TermAbbr term={label as 'FI' | 'GW'} /> : label}</h4>
         <div className="splan-field splan-field--narrow">
           <label>Growth %</label>
           <input

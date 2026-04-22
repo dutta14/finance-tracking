@@ -99,8 +99,8 @@ const AccountForm: FC<AccountFormProps> = ({ profile, initial, existingGroups = 
             setGoalType(g)
             setType(getDefaultType(g))
           }}>
-            <option value="fi">FI</option>
-            <option value="gw">GW</option>
+            <option value="fi">FI (Financial Independence)</option>
+            <option value="gw">GW (Generational Wealth)</option>
           </select>
         </div>
         <div className="data-form-field">

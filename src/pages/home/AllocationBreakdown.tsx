@@ -1,6 +1,7 @@
 import { FC, useMemo, useState } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { Account, BalanceEntry, ALLOCATION_LABELS, AssetAllocation, formatCurrency, getDefaultAllocation } from '../data/types'
+import TermAbbr from '../../components/TermAbbr'
 
 interface AllocationBreakdownProps {
   accounts: Account[]
@@ -98,7 +99,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     if (data.length === 0) {
       return (
         <div className="alloc-section">
-          <h4 className="alloc-section-title">{label}</h4>
+          <h4 className="alloc-section-title">{label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}</h4>
           <div className="alloc-empty">No data</div>
         </div>
       )
@@ -109,7 +110,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     if (chartMode === 'bar') {
       return (
         <div className="alloc-section">
-          <h4 className="alloc-section-title">{label}</h4>
+          <h4 className="alloc-section-title">{label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}</h4>
           <div className="alloc-bar-wrap">
             <div className="alloc-stacked-bar">
               {data.map((entry, i) => {
@@ -133,7 +134,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
 
     return (
       <div className="alloc-section">
-        <h4 className="alloc-section-title">{label}</h4>
+        <h4 className="alloc-section-title">{label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}</h4>
         <div className="alloc-chart-row">
           <div className="alloc-pie-wrap">
             <ResponsiveContainer width="100%" height={140}>

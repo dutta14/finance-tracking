@@ -4,6 +4,7 @@ import GoalCardActions from './GoalCardActions'
 import { calculateGoalMetrics } from '../utils/goalCalculations'
 import { parseDate as utilParseDate, getMonthsBetween } from '../utils/dateHelpers'
 import { getLatestGoalTotals } from '../../data/types'
+import TermAbbr from '../../../components/TermAbbr'
 import '../../../styles/GoalDetailedCard.css'
 
 interface EditFields {
@@ -244,7 +245,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
       {(showTitle || (showActions && onEdit && onCopy && onDelete)) && (
       <div className="fi-card-header">
         <div className="fi-card-title-row">
-          <span className="fi-card-badge">FI</span>
+          <span className="fi-card-badge"><TermAbbr term="FI" /></span>
           {showTitle && <h3 className="fi-card-title">{goal.goalName}</h3>}
         </div>
         {showActions && onEdit && onCopy && onDelete && (

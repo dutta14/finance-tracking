@@ -2,6 +2,7 @@ import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../types'
 import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../data/types'
+import TermAbbr from '../../components/TermAbbr'
 
 interface GoalsPeekProps {
   goals: FinancialGoal[]
@@ -111,7 +112,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
               </div>
               <div className="goals-peek-bars">
                 <div className="goals-peek-bar-row">
-                  <span className="goals-peek-bar-label">FI</span>
+                  <span className="goals-peek-bar-label"><TermAbbr term="FI" /></span>
                   <div className="goals-peek-bar-track">
                     <div className="goals-peek-bar-fill goals-peek-bar-fill--fi" style={{ width: `${fiPct}%` }} />
                   </div>
@@ -120,7 +121,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
                 </div>
                 {goalGws.length > 0 && (
                   <div className="goals-peek-bar-row">
-                    <span className="goals-peek-bar-label">GW</span>
+                    <span className="goals-peek-bar-label"><TermAbbr term="GW" /></span>
                     <div className="goals-peek-bar-track">
                       <div className="goals-peek-bar-fill goals-peek-bar-fill--gw" style={{ width: `${gwPct}%` }} />
                     </div>
