@@ -632,7 +632,7 @@
   height: 24px;
   background: var(--color-border-light);
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   padding: 2px;
   transition: background 0.15s;
@@ -652,7 +652,7 @@
   width: 20px;
   height: 20px;
   background: var(--color-surface);
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   position: absolute;
   left: 2px;
   top: 2px;
