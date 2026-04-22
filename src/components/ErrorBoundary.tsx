@@ -44,8 +44,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   handleClearAndReload = (): void => {
     localStorage.clear()
-    indexedDB.deleteDatabase('finance-tracking-files')
-    window.location.reload()
+    const req = indexedDB.deleteDatabase('finance-tracking-files')
+    req.onsuccess = () => window.location.reload()
+    req.onerror = () => window.location.reload()
+    req.onblocked = () => window.location.reload()
   }
 
   renderPageFallback(): React.ReactNode {
