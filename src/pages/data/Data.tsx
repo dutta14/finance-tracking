@@ -38,6 +38,13 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
     onDataChange?.(accounts, updated)
   }
 
+  // Use when updating both in the same handler to avoid stale closure
+  const saveBoth = (newAccounts: Account[], newBalances: BalanceEntry[]) => {
+    ctxSetAccounts(newAccounts)
+    ctxSetBalances(newBalances)
+    onDataChange?.(newAccounts, newBalances)
+  }
+
   /* Account CRUD */
   const handleAddAccount = (account: Omit<Account, 'id'>) => {
     const id = accounts.length > 0 ? Math.max(...accounts.map(a => a.id)) + 1 : 1
@@ -53,8 +60,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
   }
 
   const handleDeleteAccount = (id: number) => {
-    saveAccounts(accounts.filter(a => a.id !== id))
-    saveBalances(balances.filter(b => b.accountId !== id))
+    saveBoth(accounts.filter(a => a.id !== id), balances.filter(b => b.accountId !== id))
   }
 
   const handleToggleStatus = (id: number) => {
@@ -111,8 +117,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
       const text = evt.target?.result as string
       if (!text) return
       const result = parseCsvImport(text, accounts, balances)
-      saveAccounts(result.accounts)
-      saveBalances(result.balances)
+      saveBoth(result.accounts, result.balances)
     }
     reader.readAsText(file)
     e.target.value = ''
@@ -160,7 +165,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
                 </button>
               )}
               {allowCsvImport && (hasAccounts || balances.length > 0) && (
-                <button className="data-reset-btn" onClick={() => { if (confirm('Clear all accounts and balance entries? This cannot be undone.')) { saveAccounts([]); saveBalances([]) } }}>
+                <button className="data-reset-btn" onClick={() => { if (confirm('Clear all accounts and balance entries? This cannot be undone.')) { saveBoth([], []) } }}>
                   Reset Data
                 </button>
               )}
