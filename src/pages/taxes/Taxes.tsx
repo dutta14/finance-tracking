@@ -3,6 +3,7 @@ import { useProfile } from '../../hooks/useProfile'
 import { useTaxStore } from './useTaxStore'
 import type { TaxChecklistItem, TaxDocFile, TaxDocOwner, ChecklistCategory, TaxTemplate } from './types'
 import type { Account } from '../data/types'
+import { getStorageEstimate } from '../../utils/taxFileDB'
 import '../../styles/Taxes.css'
 
 function loadAccounts(): Account[] {
@@ -23,6 +24,7 @@ function fileToBase64(file: File): Promise<string> {
 function nextFileId(): string { return `f${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }
 
 const CURRENT_YEAR = new Date().getFullYear()
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
 /* ── owner badge ──────────────────────────────────────────── */
 const OwnerBadge: FC<{ owner: TaxDocOwner; primaryName: string; partnerName: string; primaryAvatar?: string; partnerAvatar?: string }> = ({ owner, primaryName, partnerName, primaryAvatar, partnerAvatar }) => {
@@ -484,6 +486,23 @@ const Taxes: FC = () => {
   const [importTemplateModal, setImportTemplateModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  // Upload error + storage indicator
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [storageMB, setStorageMB] = useState<number | null>(null)
+
+  // Auto-clear upload error after 5 seconds
+  useEffect(() => {
+    if (!uploadError) return
+    const t = setTimeout(() => setUploadError(null), 5000)
+    return () => clearTimeout(t)
+  }, [uploadError])
+
+  // Refresh storage estimate on mount
+  const refreshStorage = useCallback(() => {
+    getStorageEstimate().then(est => setStorageMB(est.usedMB)).catch(() => {})
+  }, [])
+  useEffect(() => { refreshStorage() }, [refreshStorage])
+
   // Items by owner
   const primaryItems = yearData.items.filter(i => i.owner === 'primary' && i.category !== 'tax-return')
   const partnerItems = yearData.items.filter(i => i.owner === 'partner' && i.category !== 'tax-return')
@@ -510,8 +529,18 @@ const Taxes: FC = () => {
   }
 
   const handleUpload = useCallback(async (itemId: string, files: FileList) => {
+    if (tax.migrating) {
+      setUploadError('Please wait — migrating existing files to new storage…')
+      return
+    }
     const item = yearData.items.find(i => i.id === itemId)
     for (const file of Array.from(files)) {
+      // File size guard
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadError(`${file.name} exceeds the 10 MB limit and was not uploaded.`)
+        continue
+      }
+
       const content = await fileToBase64(file)
       const ext = file.name.split('.').pop() || ''
 
@@ -524,9 +553,14 @@ const Taxes: FC = () => {
       }
 
       const docFile: TaxDocFile = { id: nextFileId(), name: displayName, content, ext, uploadedAt: new Date().toISOString() }
-      tax.addFileToItem(selectedYear, itemId, docFile)
+      try {
+        await tax.addFileToItemAsync(selectedYear, itemId, docFile)
+      } catch {
+        setUploadError(`Failed to save ${file.name}. Storage may be unavailable in private browsing.`)
+      }
     }
-  }, [selectedYear, tax, yearData, primaryName, partnerName, accounts])
+    refreshStorage()
+  }, [selectedYear, tax, yearData, primaryName, partnerName, accounts, refreshStorage])
 
   const handleRemoveFile = useCallback((itemId: string, fileId: string) => {
     tax.removeFileFromItem(selectedYear, itemId, fileId)
@@ -574,12 +608,15 @@ const Taxes: FC = () => {
     <div className="tax-page">
       <div className="tax-header">
         <h1 className="tax-heading">Taxes</h1>
+        {storageMB !== null && <span className="tax-storage-indicator">{storageMB} MB used</span>}
         <div className="tax-year-nav">
           <button className="tax-year-btn" onClick={() => setSelectedYear(y => y - 1)}>←</button>
           <span className="tax-year-label">{selectedYear}</span>
           <button className="tax-year-btn" onClick={() => setSelectedYear(y => y + 1)} disabled={selectedYear >= CURRENT_YEAR}>→</button>
         </div>
       </div>
+
+      {uploadError && <div className="tax-upload-error">{uploadError}</div>}
 
       {!exists ? (
         <div className="tax-empty-state">

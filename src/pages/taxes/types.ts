@@ -5,7 +5,8 @@ export type ChecklistCategory = 'paystub' | 'account' | 'tax-return' | 'custom'
 export interface TaxDocFile {
   id: string
   name: string
-  content: string // base64
+  /** base64 data URL — undefined when content has been migrated to IndexedDB */
+  content: string | undefined
   ext: string
   uploadedAt: string
 }

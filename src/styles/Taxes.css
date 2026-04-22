@@ -504,3 +504,18 @@ body.dark .tax-file-chip { background: var(--accent-light); color: var(--accent-
 body.dark .tax-file-remove { color: var(--accent-text-mid); }
 body.dark .tax-rename-btn:hover { color: var(--accent-text-mid); }
 body.dark .tax-tpl-mode-opt.active { color: var(--accent-text-mid); }
+
+/* Upload error */
+.tax-upload-error {
+  color: var(--color-negative);
+  font-size: var(--fs-sm);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+/* Storage usage indicator */
+.tax-storage-indicator {
+  font-size: 0.75rem;
+  color: var(--color-muted, var(--color-text-muted));
+  margin-left: auto;
+}

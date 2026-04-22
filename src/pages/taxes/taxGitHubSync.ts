@@ -1,5 +1,6 @@
 import { GitHubSyncConfig } from '../../hooks/useGitHubSync'
 import type { TaxStore, TaxDocFile } from './types'
+import { getFileContent } from '../../utils/taxFileDB'
 
 function apiHeaders(token: string): Record<string, string> {
   return {
@@ -90,9 +91,14 @@ export async function syncAllTaxFiles(
     for (const item of yearData.items || []) {
       const oLabel = ownerLabel(item.owner)
       for (const file of item.files) {
-        if (!file.content) continue
+        // Load content from IndexedDB if not inline (post-migration)
+        let content = file.content
+        if (!content) {
+          content = await getFileContent(file.id) ?? undefined
+        }
+        if (!content) continue
         const path = filePath(year, oLabel, item.label, file)
-        const raw = stripDataUrl(file.content)
+        const raw = stripDataUrl(content)
         const result = await uploadTaxFile(config, token, path, raw, `Tax doc: ${file.name}`)
         if (result.ok) synced++
         else errors.push(`${file.name}: ${result.error}`)

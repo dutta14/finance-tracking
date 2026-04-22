@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { TaxStore, TaxYear, TaxChecklistItem, TaxDocFile, TaxDocOwner, ChecklistCategory, TaxTemplate, TaxTemplateItem } from './types'
 import { EMPTY_STORE, getEmptyYear, loadTemplates, saveTemplates } from './types'
+import { saveFileContent, deleteFileContent, deleteMultipleFiles } from '../../utils/taxFileDB'
 
 const STORAGE_KEY = 'tax-store'
 
@@ -22,8 +23,73 @@ function nextId(): string {
   return String(++uid)
 }
 
+/** One-time migration: move base64 content from localStorage to IndexedDB */
+async function migrateContentToIndexedDB(store: TaxStore): Promise<TaxStore> {
+  let migrated = false
+  const next: TaxStore = JSON.parse(JSON.stringify(store))
+  for (const [, yearData] of Object.entries(next.years)) {
+    for (const item of yearData.items) {
+      for (const file of item.files) {
+        if (file.content) {
+          await saveFileContent(file.id, file.content)
+          file.content = undefined
+          migrated = true
+        }
+      }
+    }
+  }
+  if (migrated) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  }
+  return next
+}
+
+/** Collect all file IDs for a given year */
+function collectFileIds(yearData: TaxYear): string[] {
+  const ids: string[] = []
+  for (const item of yearData.items) {
+    for (const file of item.files) ids.push(file.id)
+  }
+  return ids
+}
+
 export function useTaxStore() {
   const [store, setStore] = useState<TaxStore>(load)
+  const [migrating, setMigrating] = useState(false)
+
+  // Run one-time migration on mount
+  useEffect(() => {
+    let cancelled = false
+    const initial = load()
+    const hasContent = Object.values(initial.years).some(yr =>
+      yr.items.some(item => item.files.some(f => !!f.content))
+    )
+    if (!hasContent) return
+    setMigrating(true)
+    migrateContentToIndexedDB(initial).then(() => {
+      if (!cancelled) {
+        // Use functional update: re-read from localStorage to pick up any
+        // concurrent writes (e.g. user uploaded a file during migration),
+        // then strip content fields that were migrated to IndexedDB.
+        setStore(() => {
+          const current = load()
+          for (const yearData of Object.values(current.years)) {
+            for (const item of yearData.items) {
+              for (const file of item.files) {
+                if (file.content) file.content = undefined
+              }
+            }
+          }
+          save(current)
+          return current
+        })
+        setMigrating(false)
+      }
+    }).catch(() => {
+      if (!cancelled) setMigrating(false)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   const persist = useCallback((next: TaxStore) => {
     setStore(next)
@@ -85,13 +151,36 @@ export function useTaxStore() {
   const addFileToItem = useCallback((year: number, itemId: string, file: TaxDocFile) => {
     const yr = store.years[year]
     if (!yr) return
+    // Strip content from the metadata stored in localStorage
+    const metadataFile: TaxDocFile = { ...file, content: undefined }
     const next = {
       ...store,
       years: {
         ...store.years,
         [year]: {
           ...yr,
-          items: yr.items.map(i => i.id === itemId ? { ...i, files: [...i.files, file] } : i),
+          items: yr.items.map(i => i.id === itemId ? { ...i, files: [...i.files, metadataFile] } : i),
+        },
+      },
+    }
+    persist(next)
+  }, [store, persist])
+
+  /** Async version: saves content to IndexedDB, then persists metadata to localStorage */
+  const addFileToItemAsync = useCallback(async (year: number, itemId: string, file: TaxDocFile) => {
+    const yr = store.years[year]
+    if (!yr) return
+    if (file.content) {
+      await saveFileContent(file.id, file.content)
+    }
+    const metadataFile: TaxDocFile = { ...file, content: undefined }
+    const next = {
+      ...store,
+      years: {
+        ...store.years,
+        [year]: {
+          ...yr,
+          items: yr.items.map(i => i.id === itemId ? { ...i, files: [...i.files, metadataFile] } : i),
         },
       },
     }
@@ -112,6 +201,8 @@ export function useTaxStore() {
       },
     }
     persist(next)
+    // Clean up IndexedDB (fire-and-forget)
+    deleteFileContent(fileId).catch(() => {})
   }, [store, persist])
 
   const allYears = Object.keys(store.years).map(Number).sort((a, b) => b - a)
@@ -158,6 +249,11 @@ export function useTaxStore() {
   }, [store, persist])
 
   const deleteYear = useCallback((year: number) => {
+    const yearData = store.years[year]
+    if (yearData) {
+      const fileIds = collectFileIds(yearData)
+      deleteMultipleFiles(fileIds).catch(() => {})
+    }
     const { [year]: _, ...rest } = store.years
     persist({ ...store, years: rest })
   }, [store, persist])
@@ -173,6 +269,7 @@ export function useTaxStore() {
     removeItem,
     updateItem,
     addFileToItem,
+    addFileToItemAsync,
     removeFileFromItem,
     templates,
     saveAsTemplate,
@@ -180,5 +277,6 @@ export function useTaxStore() {
     deleteTemplate,
     createYearFromTemplate,
     deleteYear,
+    migrating,
   }
 }
