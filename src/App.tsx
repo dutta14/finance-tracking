@@ -14,6 +14,7 @@ import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/b
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import { syncAllTaxFiles } from './pages/taxes/taxGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
+import ErrorBoundary from './components/ErrorBoundary'
 import UndoToast from './components/UndoToast'
 import SearchModal from './components/SearchModal'
 import { isDemoActive, enterDemoMode, exitDemoMode } from './pages/settings/demoMode'
@@ -21,6 +22,7 @@ import { useFinancialGoals } from './pages/goal/hooks/useFinancialGoals'
 import { useGwGoals } from './pages/goal/hooks/useGwGoals'
 import { useProfile } from './hooks/useProfile'
 import { useGitHubSync } from './hooks/useGitHubSync'
+import './styles/ErrorBoundary.css'
 import './styles/colorThemes.css'
 
 const App: FC = () => {
@@ -479,40 +481,63 @@ const App: FC = () => {
   const renderPage = (): React.ReactNode => {
     return (
       <Routes>
-        <Route path="/" element={<Home profile={profile} goals={visibleGoals} gwGoals={gwGoals} />} />
+        <Route path="/" element={
+          <ErrorBoundary variant="card" resetKey={location.pathname}>
+            <Home profile={profile} goals={visibleGoals} gwGoals={gwGoals} />
+          </ErrorBoundary>
+        } />
         <Route
           path="/goal/*"
           element={
-            <Goal
-              goals={visibleGoals}
-              profileBirthday={profile.birthday}
-              onOpenProfile={handleOpenProfile}
-              createGoal={createGoal}
-              updateGoal={updateGoal}
-              deleteGoal={handleDeleteGoal}
-              onDeleteMultipleGoals={handleDeleteWithUndo}
-              reorderGoals={reorderGoals}
-              onCopyGwGoals={handleCopyGwGoals}
-              gwGoals={gwGoals}
-              onCreateGwGoal={createGwGoal}
-              onUpdateGwGoal={updateGwGoal}
-              onDeleteGwGoal={deleteGwGoal}
-            />
+            <ErrorBoundary variant="card" resetKey={location.pathname}>
+              <Goal
+                goals={visibleGoals}
+                profileBirthday={profile.birthday}
+                onOpenProfile={handleOpenProfile}
+                createGoal={createGoal}
+                updateGoal={updateGoal}
+                deleteGoal={handleDeleteGoal}
+                onDeleteMultipleGoals={handleDeleteWithUndo}
+                reorderGoals={reorderGoals}
+                onCopyGwGoals={handleCopyGwGoals}
+                gwGoals={gwGoals}
+                onCreateGwGoal={createGwGoal}
+                onUpdateGwGoal={updateGwGoal}
+                onDeleteGwGoal={deleteGwGoal}
+              />
+            </ErrorBoundary>
           }
         />
-        <Route path="/net-worth/*" element={<Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />} />
+        <Route path="/net-worth/*" element={
+          <ErrorBoundary variant="card" resetKey={location.pathname}>
+            <Data profile={profile} allowCsvImport={allowCsvImport} onDataChange={handleDataChange} />
+          </ErrorBoundary>
+        } />
         <Route path="/data" element={<Navigate to="/net-worth" replace />} />
-        <Route path="/budget" element={<Budget />} />
+        <Route path="/budget" element={
+          <ErrorBoundary variant="card" resetKey={location.pathname}>
+            <Budget />
+          </ErrorBoundary>
+        } />
         <Route path="/tools" element={<Navigate to="/budget" replace />} />
-        <Route path="/drive/*" element={<Drive />} />
+        <Route path="/drive/*" element={
+          <ErrorBoundary variant="card" resetKey={location.pathname}>
+            <Drive />
+          </ErrorBoundary>
+        } />
         <Route path="/allocation" element={<Navigate to="/net-worth/allocation" replace />} />
-        <Route path="/taxes" element={<Taxes />} />
+        <Route path="/taxes" element={
+          <ErrorBoundary variant="card" resetKey={location.pathname}>
+            <Taxes />
+          </ErrorBoundary>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   };
 
   return (
+    <ErrorBoundary variant="page">
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {sidebarOpen && (
         <SidebarNavigation
@@ -605,6 +630,7 @@ const App: FC = () => {
         onAction={handleSearchAction}
       />
     </div>
+    </ErrorBoundary>
   );
 }
 
