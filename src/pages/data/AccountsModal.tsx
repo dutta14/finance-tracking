@@ -4,6 +4,7 @@ import {
   Account, AccountType, AccountOwner, AccountGoalType, AccountStatus, AccountNature, AssetAllocation,
   ACCOUNT_TYPE_LABELS, GOAL_TYPE_LABELS, NATURE_LABELS, ALLOCATION_LABELS, getDefaultType, getDefaultAllocation, getOwnerLabels,
 } from './types'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import AccountForm from './AccountForm'
 
 interface AccountsModalProps {
@@ -205,9 +206,20 @@ const AccountsModal: FC<AccountsModalProps> = ({ accounts, profile, onAdd, onUpd
 
   const showMultiSelect = selectedCount >= 1
 
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, true)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
   return (
     <div className="data-modal-backdrop" onClick={onClose}>
-      <div className="data-modal" onClick={e => e.stopPropagation()}>
+      <div ref={modalRef} className="data-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="data-modal-header">
           {page === 'accounts' ? (
             <>

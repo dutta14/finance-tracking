@@ -1,7 +1,8 @@
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useRef } from 'react'
 import { FinancialGoal } from '../../../types'
 import { FormData } from '../hooks/useFormData'
 import GoalForm from './GoalForm'
+import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import '../../../styles/GoalFormModal.css'
 
 interface GoalFormModalProps {
@@ -18,6 +19,9 @@ interface GoalFormModalProps {
 }
 
 const GoalFormModal: FC<GoalFormModalProps> = (props) => {
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, true)
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') props.onCancel()
@@ -34,6 +38,7 @@ const GoalFormModal: FC<GoalFormModalProps> = (props) => {
   return (
     <div className="goal-form-modal-backdrop" onClick={props.onCancel}>
       <div
+        ref={modalRef}
         className="goal-form-modal"
         onClick={e => e.stopPropagation()}
         role="dialog"

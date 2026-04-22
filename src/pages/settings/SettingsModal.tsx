@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { SettingsModalProps, SettingsSection } from './types'
 import ProfilePane from './components/ProfilePane'
@@ -6,6 +6,7 @@ import GitHubSyncPane from './components/GitHubSyncPane'
 import AppearancePane from './components/AppearancePane'
 import AdvancedPane from './components/AdvancedPane'
 import LabsPane from './components/LabsPane'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import '../../styles/SettingsModal.css'
 
 const SettingsModal: FC<SettingsModalProps> = (props) => {
@@ -16,10 +17,20 @@ const SettingsModal: FC<SettingsModalProps> = (props) => {
   } = props
 
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, true)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
 
   return createPortal(
     <div className="settings-modal-backdrop" onClick={onClose}>
-      <div className="settings-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div ref={modalRef} className="settings-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="settings-modal-header">
           <h2 className="settings-modal-title">Settings</h2>
           <button className="settings-modal-close" onClick={onClose} aria-label="Close">

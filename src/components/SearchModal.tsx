@@ -2,6 +2,7 @@ import { FC, useState, useEffect, useRef, useCallback, useMemo, memo } from 'rea
 import { createPortal } from 'react-dom'
 import { buildIndex, search, findMatchRange, getCategoryLabel } from '../search/searchIndex'
 import type { SearchItem, SearchCategory } from '../search/searchIndex'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import '../styles/SearchModal.css'
 
 export interface SearchModalProps {
@@ -17,6 +18,8 @@ const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction
   const [expandedGroups, setExpandedGroups] = useState<Set<SearchCategory>>(new Set())
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, open)
 
   // Build index on each open
   const index = useMemo(() => (open ? buildIndex() : []), [open])
@@ -83,9 +86,6 @@ const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction
     } else if (e.key === 'Escape') {
       e.preventDefault()
       onClose()
-    } else if (e.key === 'Tab') {
-      // Trap focus inside modal
-      e.preventDefault()
     }
   }, [flatItems, activeIdx, handleSelect, onClose])
 
@@ -100,7 +100,7 @@ const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction
 
   return createPortal(
     <div className="search-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="search-modal" role="dialog" aria-label="Search" aria-modal="true" onKeyDown={handleKeyDown}>
+      <div ref={modalRef} className="search-modal" role="dialog" aria-label="Search" aria-modal="true" onKeyDown={handleKeyDown}>
         {/* Input row */}
         <div className="search-modal-input-row">
           <svg className="search-modal-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">

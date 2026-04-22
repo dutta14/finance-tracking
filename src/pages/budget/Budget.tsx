@@ -10,6 +10,7 @@ import CategoryGroupManager from './components/CategoryGroupManager'
 import CSVPreviewModal from './components/CSVPreviewModal'
 import CashflowBarChart from './components/CashflowBarChart'
 import CashflowSankey from './components/CashflowSankey'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import '../../styles/Budget.css'
 
 const PdfToCsv = lazy(() => import('../tools/components/PdfToCsv'))
@@ -46,31 +47,19 @@ const Budget: FC = () => {
     setShowPdfToCsv(true)
   }, [])
 
+  useFocusTrap(pdfModalRef, showPdfToCsv)
+
   useEffect(() => {
     if (!showPdfToCsv) return
-    const closeBtn = pdfModalRef.current?.querySelector<HTMLElement>('.budget-pdf-modal-close')
-    closeBtn?.focus()
-    return () => { pdfTriggerRef.current?.focus() }
-  }, [showPdfToCsv])
-
-  const handlePdfModalKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { closePdfModal(); return }
-    if (e.key === 'Tab') {
-      const modal = pdfModalRef.current
-      if (!modal) return
-      const focusable = modal.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
-      if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus()
-      }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePdfModal()
     }
-  }, [closePdfModal])
+    document.addEventListener('keydown', handler)
+    return () => {
+      document.removeEventListener('keydown', handler)
+      pdfTriggerRef.current?.focus()
+    }
+  }, [showPdfToCsv, closePdfModal])
 
   const currentYear = new Date().getFullYear()
 
@@ -201,7 +190,6 @@ const Budget: FC = () => {
             aria-modal="true"
             aria-labelledby="budget-pdf-title"
             onClick={e => e.stopPropagation()}
-            onKeyDown={handlePdfModalKeyDown}
           >
             <div className="budget-pdf-modal-header">
               <h2 id="budget-pdf-title" className="budget-pdf-modal-title">PDF → CSV</h2>

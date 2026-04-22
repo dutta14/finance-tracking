@@ -1,5 +1,6 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useRef, useEffect } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import '../../../styles/GoalMixer.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
@@ -33,6 +34,16 @@ const GoalMixer: FC<GoalMixerProps> = ({
 }) => {
   const [selectedGoalId, setSelectedPlanId] = useState<number | null>(goals[0]?.id ?? null)
   const [selectedGwIds, setSelectedGwIds] = useState<Set<number>>(new Set())
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, true)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
 
   const selectedGoal = goals.find(p => p.id === selectedGoalId) ?? null
 
@@ -92,7 +103,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
 
   return (
     <div className="mixer-backdrop" onClick={onClose}>
-      <div className="mixer-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div ref={modalRef} className="mixer-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
 
         <div className="mixer-header">
           <div>
