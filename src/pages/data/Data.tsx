@@ -1,6 +1,7 @@
 import { FC, useState, useRef, lazy, Suspense } from 'react'
 import { NavLink, useLocation, Routes, Route } from 'react-router-dom'
 import { Profile } from '../../hooks/useProfile'
+import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry } from './types'
 import { parseCsvImport } from './csvImport'
 import { exportCsv } from './csvExport'
@@ -19,15 +20,7 @@ interface DataProps {
 }
 
 const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) => {
-  const [accounts, setAccounts] = useState<Account[]>(() => {
-    const stored = localStorage.getItem('data-accounts')
-    return stored ? JSON.parse(stored) : []
-  })
-
-  const [balances, setBalances] = useState<BalanceEntry[]>(() => {
-    const stored = localStorage.getItem('data-balances')
-    return stored ? JSON.parse(stored) : []
-  })
+  const { accounts, balances, setAccounts: ctxSetAccounts, setBalances: ctxSetBalances } = useData()
 
   const [showAccountsModal, setShowAccountsModal] = useState(false)
   const [inlineEntry, setInlineEntry] = useState<{ month: string; values: Record<number, string> } | null>(null)
@@ -36,14 +29,12 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
   const [dataView, setDataView] = useState<'charts' | 'spreadsheet'>('charts')
 
   const saveAccounts = (updated: Account[]) => {
-    setAccounts(updated)
-    localStorage.setItem('data-accounts', JSON.stringify(updated))
+    ctxSetAccounts(updated)
     onDataChange?.(updated, balances)
   }
 
   const saveBalances = (updated: BalanceEntry[]) => {
-    setBalances(updated)
-    localStorage.setItem('data-balances', JSON.stringify(updated))
+    ctxSetBalances(updated)
     onDataChange?.(accounts, updated)
   }
 

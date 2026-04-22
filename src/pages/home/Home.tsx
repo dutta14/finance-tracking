@@ -1,8 +1,8 @@
 import { FC, useMemo, useState, useRef, useCallback, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Profile } from '../../hooks/useProfile'
+import { useData } from '../../contexts/DataContext'
 import { FinancialGoal, GwGoal } from '../../types'
-import { Account, BalanceEntry } from '../data/types'
 import NetWorthSummary from './NetWorthSummary'
 import MiniCharts from './MiniCharts'
 import GoalsPeek from './GoalsPeek'
@@ -36,19 +36,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
   const dragIdx = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
 
-  const accounts = useMemo<Account[]>(() => {
-    try {
-      const stored = localStorage.getItem('data-accounts')
-      return stored ? JSON.parse(stored) : []
-    } catch { return [] }
-  }, [])
-
-  const balances = useMemo<BalanceEntry[]>(() => {
-    try {
-      const stored = localStorage.getItem('data-balances')
-      return stored ? JSON.parse(stored) : []
-    } catch { return [] }
-  }, [])
+  const { accounts, balances } = useData()
 
   const allMonths = useMemo(() =>
     [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a)),

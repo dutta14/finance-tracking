@@ -14,6 +14,7 @@ import { loadBudgetStore, getBudgetConfigData, saveBudgetStore } from './pages/b
 import { syncAllBudgetCSVs, uploadBudgetConfig, downloadAllBudgetCSVs, downloadBudgetConfig } from './pages/budget/utils/budgetGitHubSync'
 import { syncAllTaxFiles } from './pages/taxes/taxGitHubSync'
 import type { Account, BalanceEntry } from './pages/data/types'
+import { DataProvider } from './contexts/DataContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import UndoToast from './components/UndoToast'
 import SearchModal from './components/SearchModal'
@@ -538,6 +539,7 @@ const App: FC = () => {
 
   return (
     <ErrorBoundary variant="page">
+    <DataProvider>
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {sidebarOpen && (
         <SidebarNavigation
@@ -630,6 +632,7 @@ const App: FC = () => {
         onAction={handleSearchAction}
       />
     </div>
+    </DataProvider>
     </ErrorBoundary>
   );
 }

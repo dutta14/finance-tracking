@@ -1,6 +1,7 @@
 import { FC, useState, useMemo } from 'react'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
+import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
 import '../../../styles/SavingsGrowthTracker.css'
 
@@ -15,16 +16,6 @@ const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
 
 const delta = (cur: number, prev: number) =>
   prev === 0 ? null : ((cur - prev) / Math.abs(prev)) * 100
-
-function loadAccountData(): { accounts: Account[]; balances: BalanceEntry[] } {
-  try {
-    const accounts: Account[] = JSON.parse(localStorage.getItem('data-accounts') || '[]')
-    const balances: BalanceEntry[] = JSON.parse(localStorage.getItem('data-balances') || '[]')
-    return { accounts, balances }
-  } catch {
-    return { accounts: [], balances: [] }
-  }
-}
 
 /** Net worth at end of each December (or latest available month in each year).
  *  Matches the Data tab's "Total" column: all accounts, raw balance sum. */
@@ -172,7 +163,7 @@ const SavingsGrowthTracker: FC = () => {
   const [editCell, setEditCell] = useState<{ year: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState('')
 
-  const { accounts, balances } = useMemo(() => loadAccountData(), [])
+  const { accounts, balances } = useData()
   const nwByYear = useMemo(() => getYearEndNetWorths(accounts, balances), [accounts, balances])
   const budgetData = useMemo(() => getBudgetYearlyData(), [])
 

@@ -1,16 +1,11 @@
 import { FC, useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { useProfile } from '../../hooks/useProfile'
+import { useData } from '../../contexts/DataContext'
 import { useTaxStore } from './useTaxStore'
 import type { TaxChecklistItem, TaxDocFile, TaxDocOwner, ChecklistCategory, TaxTemplate } from './types'
 import type { Account } from '../data/types'
 import { getStorageEstimate } from '../../utils/taxFileDB'
 import '../../styles/Taxes.css'
-
-function loadAccounts(): Account[] {
-  try {
-    return JSON.parse(localStorage.getItem('data-accounts') || '[]')
-  } catch { return [] }
-}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -451,7 +446,7 @@ const TaxReturnSection: FC<{
 const Taxes: FC = () => {
   const { profile } = useProfile()
   const tax = useTaxStore()
-  const accounts = useMemo(() => loadAccounts(), [])
+  const { accounts } = useData()
   const hasPartner = !!profile.partner
 
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR)

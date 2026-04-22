@@ -3,16 +3,12 @@ import {
   Account, BalanceEntry, AssetAllocation, ALLOCATION_LABELS,
   getDefaultAllocation,
 } from '../../data/types'
+import { useData } from '../../../contexts/DataContext'
 import { Scope } from '../types'
 import { ALLOC_COLORS, GROUP_COLORS } from '../constants'
 
 export function useAllocationData() {
-  const accounts: Account[] = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('data-accounts') || '[]') } catch { return [] }
-  }, [])
-  const balances: BalanceEntry[] = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('data-balances') || '[]') } catch { return [] }
-  }, [])
+  const { accounts, balances } = useData()
 
   const allocMap = useMemo(() => {
     if (balances.length === 0) return new Map<string, Map<AssetAllocation, number>>()

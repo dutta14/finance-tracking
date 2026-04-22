@@ -1,5 +1,6 @@
 import { FC, useMemo, useState } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { useData } from '../../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../../data/types'
 
 interface SavingsPlanProps {
@@ -15,17 +16,6 @@ interface PlanResult {
   monthsRemaining: number
   growthRate: number
   monthlySaving: number
-}
-
-const getBalanceData = (): { accounts: Account[]; balances: BalanceEntry[]; months: string[] } => {
-  try {
-    const accounts: Account[] = JSON.parse(localStorage.getItem('data-accounts') || '[]')
-    const balances: BalanceEntry[] = JSON.parse(localStorage.getItem('data-balances') || '[]')
-    const months = [...new Set(balances.map(b => b.month))].sort()
-    return { accounts, balances, months }
-  } catch {
-    return { accounts: [], balances: [], months: [] }
-  }
 }
 
 const getTotalForMonth = (accounts: Account[], balances: BalanceEntry[], month: string, goalType: 'fi' | 'gw'): number => {
@@ -173,7 +163,7 @@ const PlanBlock: FC<PlanBlockProps> = ({ label, target, initialResult, currentRe
 }
 
 const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) => {
-  const { accounts, balances, months } = useMemo(getBalanceData, [])
+  const { accounts, balances, allMonths: months } = useData()
 
   const retirementMonth = useMemo(
     () => getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge),

@@ -1,6 +1,7 @@
 import { FC, useState, useMemo, useCallback, useRef } from 'react'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
+import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
 import '../../../styles/FICalculator.css'
 
@@ -46,17 +47,6 @@ function getLastYearExpense(): number {
     return totalExpense
   } catch {
     return 0
-  }
-}
-
-/** Load accounts/balances from localStorage for breakdowns */
-function loadAccountData(): { accounts: Account[]; balances: BalanceEntry[] } {
-  try {
-    const accounts: Account[] = JSON.parse(localStorage.getItem('data-accounts') || '[]')
-    const balances: BalanceEntry[] = JSON.parse(localStorage.getItem('data-balances') || '[]')
-    return { accounts, balances }
-  } catch {
-    return { accounts: [], balances: [] }
   }
 }
 
@@ -165,7 +155,7 @@ const FICalculator: FC = () => {
   const thisYear = new Date().getFullYear()
   const lastYearExpense = useMemo(() => getLastYearExpense(), [])
   const profile = useMemo(() => loadProfile(), [])
-  const { accounts, balances } = useMemo(() => loadAccountData(), [])
+  const { accounts, balances } = useData()
 
   // Derived defaults
   const defaultLastYear = useMemo(() => {

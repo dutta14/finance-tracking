@@ -1,5 +1,6 @@
 import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../types'
+import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../data/types'
 
 interface GoalsPeekProps {
@@ -20,17 +21,6 @@ const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: 
   return needed * r / (factor - 1)
 }
 
-const getBalanceData = () => {
-  try {
-    const accounts: Account[] = JSON.parse(localStorage.getItem('data-accounts') || '[]')
-    const balances: BalanceEntry[] = JSON.parse(localStorage.getItem('data-balances') || '[]')
-    const months = [...new Set(balances.map(b => b.month))].sort()
-    return { accounts, balances, months }
-  } catch {
-    return { accounts: [] as Account[], balances: [] as BalanceEntry[], months: [] as string[] }
-  }
-}
-
 const getTotalForMonth = (accounts: Account[], balances: BalanceEntry[], month: string, goalType: 'fi' | 'gw'): number => {
   const balMap = new Map<number, number>()
   for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
@@ -38,14 +28,15 @@ const getTotalForMonth = (accounts: Account[], balances: BalanceEntry[], month: 
 }
 
 const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
-  const { fiTotal, gwTotal, accounts, balances, latestMonth, profileBirthday } = useMemo(() => {
-    const { accounts, balances, months } = getBalanceData()
-    const latest = months[months.length - 1] || ''
+  const { accounts, balances, allMonths } = useData()
+
+  const { fiTotal, gwTotal, latestMonth, profileBirthday } = useMemo(() => {
+    const latest = allMonths[allMonths.length - 1] || ''
     const fiT = latest ? getTotalForMonth(accounts, balances, latest, 'fi') : 0
     const gwT = latest ? getTotalForMonth(accounts, balances, latest, 'gw') : 0
     const pb = JSON.parse(localStorage.getItem('user-profile') || '{}').birthday || '1990-01'
-    return { fiTotal: fiT, gwTotal: gwT, accounts, balances, latestMonth: latest, profileBirthday: pb }
-  }, [])
+    return { fiTotal: fiT, gwTotal: gwT, latestMonth: latest, profileBirthday: pb }
+  }, [accounts, balances, allMonths])
 
   if (goals.length === 0) {
     return (
