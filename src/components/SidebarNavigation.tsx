@@ -82,7 +82,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
           Search
-          <kbd className="sidebar-search-kbd">⌘F</kbd>
+          <kbd className="sidebar-search-kbd">{navigator.platform?.includes('Mac') ? '⌘K' : 'Ctrl+K'}</kbd>
         </button>
         <ul className="sidebar-menu">
           <li className="sidebar-item">

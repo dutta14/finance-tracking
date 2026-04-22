@@ -139,7 +139,7 @@ const App: FC = () => {
         e.preventDefault()
         isDemoActive() ? exitDemoMode() : enterDemoMode()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setSearchOpen(prev => !prev)
       }
