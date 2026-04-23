@@ -95,6 +95,8 @@ const SettingsModal: FC<SettingsModalProps> = (props) => {
                 onGhRestoreFromCommit={props.onGhRestoreFromCommit}
                 onGhApplyRestore={props.onGhApplyRestore}
                 ghData={props.ghData}
+                ghSyncProgress={props.ghSyncProgress}
+                ghDirtyFlags={props.ghDirtyFlags}
               />
             )}
             {activeSection === 'appearance' && (

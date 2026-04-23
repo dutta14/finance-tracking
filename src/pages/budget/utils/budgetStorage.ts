@@ -114,13 +114,13 @@ export function loadBudgetStore(): BudgetStore {
 }
 
 export function saveBudgetStore(store: BudgetStore): void {
-  // Save CSVs only to the main store key (no config data)
   const csvOnly = {
     csvs: store.csvs,
     configs: {},
     years: [],
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(csvOnly))
+  window.dispatchEvent(new Event('budget-changed'))
 
   // Save config separately
   saveBudgetConfig({
@@ -142,6 +142,7 @@ export function loadBudgetConfig(): BudgetConfigData {
 
 export function saveBudgetConfig(config: BudgetConfigData): void {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config))
+  window.dispatchEvent(new Event('budget-changed'))
 }
 
 /** Build a BudgetConfigData from the current store */

@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react'
 import { Profile } from '../../hooks/useProfile'
-import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
+import { GitHubSyncConfig, SyncStatus, SyncDomain, SyncProgress, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
 import SettingsModal from './SettingsModal'
 import type { SettingsSection } from './types'
 
@@ -37,6 +37,8 @@ interface SettingsMenuProps {
   onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
   ghData?: object
   onGhApplyRestore?: (data: unknown) => Promise<void>
+  ghSyncProgress?: SyncProgress | null
+  ghDirtyFlags?: Record<SyncDomain, boolean>
   onFactoryReset?: () => void
   allowCsvImport?: boolean
   onToggleAllowCsvImport?: () => void
@@ -113,6 +115,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
           onGhRestoreFromCommit={rest.onGhRestoreFromCommit}
           ghData={rest.ghData}
           onGhApplyRestore={rest.onGhApplyRestore}
+          ghSyncProgress={rest.ghSyncProgress}
+          ghDirtyFlags={rest.ghDirtyFlags}
           onFactoryReset={rest.onFactoryReset}
           allowCsvImport={rest.allowCsvImport}
           onToggleAllowCsvImport={rest.onToggleAllowCsvImport}

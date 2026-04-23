@@ -52,6 +52,9 @@ const App: FC = () => {
     syncToolsNow: ghSyncToolsNow, restoreToolsLatest,
     syncAllocationNow: ghSyncAllocationNow, restoreAllocationLatest,
     syncTaxesNow: ghSyncTaxesNow, restoreTaxesLatest,
+    dirtyFlags: ghDirtyFlags, syncProgress: ghSyncProgress, setSyncProgress: ghSetSyncProgress,
+    setSyncStatus: ghSetSyncStatus, setLastSyncAt: ghSetLastSyncAt, setLastError: ghSetLastError,
+    markDirty: ghMarkDirty, clearDirty: ghClearDirty,
   } = useGitHubSync();
   const [settingsOpenSection, setSettingsOpenSection] = useState<string | undefined>();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -191,6 +194,7 @@ const App: FC = () => {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
     const handler = () => {
+      ghMarkDirty('taxes')
       if (timer) clearTimeout(timer)
       timer = setTimeout(async () => {
         const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
@@ -212,7 +216,22 @@ const App: FC = () => {
       window.removeEventListener('tax-store-changed', handler)
       if (timer) clearTimeout(timer)
     }
-  }, [ghSyncTaxesNow, ghIsConfigured, ghActiveToken, ghConfig])
+  }, [ghSyncTaxesNow, ghIsConfigured, ghActiveToken, ghConfig, ghMarkDirty])
+
+  // Mark dirty when tools/allocation/budget change via their utilities
+  useEffect(() => {
+    const onTools = () => ghMarkDirty('tools')
+    const onAllocation = () => ghMarkDirty('allocation')
+    const onBudget = () => ghMarkDirty('budget')
+    window.addEventListener('tools-changed', onTools)
+    window.addEventListener('allocation-changed', onAllocation)
+    window.addEventListener('budget-changed', onBudget)
+    return () => {
+      window.removeEventListener('tools-changed', onTools)
+      window.removeEventListener('allocation-changed', onAllocation)
+      window.removeEventListener('budget-changed', onBudget)
+    }
+  }, [ghMarkDirty])
 
   // Callback when Net Worth page accounts/balances change → sync data file
   const handleDataChange = (accounts: Account[], balances: BalanceEntry[]): void => {
@@ -228,46 +247,116 @@ const App: FC = () => {
   };
 
 
-  const handleSyncNow = async (data: object, message?: string): Promise<void> => {
-    await syncNow(data, message)
-    const dataSnapshot = getDataSnapshot()
-    await ghSyncDataNow({ version: 1, exportedAt: new Date().toISOString(), accounts: dataSnapshot.accounts, balances: dataSnapshot.balances }, message ? `Data: ${message}` : undefined)
-    // Sync tools data (FI simulations + SGT overrides)
-    const toolsPayload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
-      sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
+  const DOMAIN_LABELS: Record<string, string> = {
+    goals: 'Goals', data: 'Balances', tools: 'Tools',
+    allocation: 'Allocation', taxes: 'Taxes', budget: 'Budget',
+  }
+
+  const handleSyncNow = async (_data: object, message?: string, forceFull?: boolean): Promise<void> => {
+    // Prevent concurrent syncs
+    if (syncStatus === 'syncing') return
+
+    const domains: Array<'goals' | 'data' | 'tools' | 'allocation' | 'taxes' | 'budget'> =
+      ['goals', 'data', 'tools', 'allocation', 'taxes', 'budget']
+    // Snapshot dirty flags so mid-sync mutations don't get incorrectly cleared
+    const dirtySnapshot = { ...ghDirtyFlags }
+    const toSync = forceFull ? domains : domains.filter(d => dirtySnapshot[d])
+
+    // Nothing dirty → show "Already up to date"
+    if (toSync.length === 0) {
+      ghSetSyncStatus('success')
+      ghSetLastSyncAt(new Date().toISOString())
+      ghSetLastError(null)
+      ghSetSyncProgress({ total: 0, completed: 0, current: '', errors: [], domains: [] })
+      setTimeout(() => ghSetSyncProgress(null), 2000)
+      return
     }
-    await ghSyncToolsNow(toolsPayload, message ? `Tools: ${message}` : undefined)
-    // Sync allocation data
-    const allocationPayload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
+
+    // Lock sync status for entire operation
+    ghSetSyncStatus('syncing')
+    ghSetLastError(null)
+
+    ghSetSyncProgress({ total: toSync.length, completed: 0, current: DOMAIN_LABELS[toSync[0]], errors: [], domains: toSync })
+    const errors: string[] = []
+
+    for (let i = 0; i < toSync.length; i++) {
+      const domain = toSync[i]
+      ghSetSyncProgress(prev => prev ? { ...prev, completed: i, current: DOMAIN_LABELS[domain] } : prev)
+
+      // 500ms delay between API calls to avoid 409 conflicts
+      if (i > 0) await new Promise(r => setTimeout(r, 500))
+
+      try {
+        switch (domain) {
+          case 'goals': {
+            const goalsData = { version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport, goalViewMode: localStorage.getItem('goal-view-mode') || '', homeCardOrder: localStorage.getItem('home-card-order') || '' } }
+            await syncNow(goalsData, message)
+            ghClearDirty('goals')
+            break
+          }
+          case 'data': {
+            const dataSnapshot = getDataSnapshot()
+            await ghSyncDataNow({ version: 1, exportedAt: new Date().toISOString(), accounts: dataSnapshot.accounts, balances: dataSnapshot.balances }, message ? `Data: ${message}` : undefined)
+            ghClearDirty('data')
+            break
+          }
+          case 'tools': {
+            const toolsPayload = {
+              version: 1, exportedAt: new Date().toISOString(),
+              fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
+              sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
+            }
+            await ghSyncToolsNow(toolsPayload, message ? `Tools: ${message}` : undefined)
+            ghClearDirty('tools')
+            break
+          }
+          case 'allocation': {
+            const allocationPayload = {
+              version: 1, exportedAt: new Date().toISOString(),
+              allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
+            }
+            await ghSyncAllocationNow(allocationPayload, message ? `Allocation: ${message}` : undefined)
+            ghClearDirty('allocation')
+            break
+          }
+          case 'taxes': {
+            const taxesPayload = {
+              version: 1, exportedAt: new Date().toISOString(),
+              taxStore: JSON.parse(localStorage.getItem('tax-store') || '{}'),
+              taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
+            }
+            await ghSyncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
+            if (ghIsConfigured && ghActiveToken) {
+              const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
+              await syncAllTaxFiles(ghConfig, ghActiveToken, taxStore).catch(e => console.error('Tax file sync error:', e))
+            }
+            ghClearDirty('taxes')
+            break
+          }
+          case 'budget': {
+            if (ghIsConfigured && ghActiveToken) {
+              const budgetStore = loadBudgetStore()
+              await uploadBudgetConfig(ghConfig, ghActiveToken, getBudgetConfigData(budgetStore))
+              await syncAllBudgetCSVs(ghConfig, ghActiveToken, budgetStore.csvs)
+            }
+            ghClearDirty('budget')
+            break
+          }
+        }
+      } catch (e) {
+        const errMsg = `${DOMAIN_LABELS[domain]}: ${e instanceof Error ? e.message : String(e)}`
+        errors.push(errMsg)
+        console.error(`Sync error for ${domain}:`, e)
+      }
     }
-    await ghSyncAllocationNow(allocationPayload, message ? `Allocation: ${message}` : undefined)
-    // Small delay to avoid GitHub API 409 conflicts from rapid sequential commits
-    await new Promise(r => setTimeout(r, 500))
-    // Sync taxes data
-    const taxesPayload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      taxStore: JSON.parse(localStorage.getItem('tax-store') || '{}'),
-      taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
-    }
-    await ghSyncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
-    // Sync tax document files (PDFs etc.) as individual files
-    if (ghIsConfigured && ghActiveToken) {
-      const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
-      await syncAllTaxFiles(ghConfig, ghActiveToken, taxStore).catch(e => console.error('Tax file sync error:', e))
-    }
-    // Sync budget data (CSVs + config)
-    if (ghIsConfigured && ghActiveToken) {
-      const budgetStore = loadBudgetStore()
-      await uploadBudgetConfig(ghConfig, ghActiveToken, getBudgetConfigData(budgetStore)).catch(() => {})
-      await syncAllBudgetCSVs(ghConfig, ghActiveToken, budgetStore.csvs).catch(() => {})
-    }
+
+    // Set final status after ALL domains complete
+    ghSetSyncProgress({ total: toSync.length, completed: toSync.length, current: '', errors, domains: toSync })
+    ghSetSyncStatus(errors.length > 0 ? 'error' : 'success')
+    if (errors.length > 0) ghSetLastError(errors.join('; '))
+    else ghSetLastSyncAt(new Date().toISOString())
+    // Clear progress after 4 seconds
+    setTimeout(() => ghSetSyncProgress(null), 4000)
   };
 
   const handleExport = (): void => {
@@ -587,6 +676,8 @@ const App: FC = () => {
           onGhRestoreFromCommit={restoreFromCommit}
           ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport, goalViewMode: localStorage.getItem('goal-view-mode') || '', homeCardOrder: localStorage.getItem('home-card-order') || '' }, dataAccounts: getDataSnapshot().accounts, dataBalances: getDataSnapshot().balances }}
           onGhApplyRestore={applyRestoredSnapshot}
+          ghSyncProgress={ghSyncProgress}
+          ghDirtyFlags={ghDirtyFlags}
           onFactoryReset={handleFactoryReset}
           allowCsvImport={allowCsvImport}
           onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}

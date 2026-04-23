@@ -729,8 +729,17 @@
 }
 
 .settings-theme-light {
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  background: #ffffff;
+  border-color: #e2e5ea;
+}
+
+.settings-theme-light .settings-theme-toolbar {
+  background: #f4f5f7;
+  border-bottom-color: #e2e5ea;
+}
+
+.settings-theme-light .settings-theme-bar {
+  background: #d8dbe0;
 }
 
 .settings-theme-dark {
@@ -985,6 +994,92 @@ body.dark .ghsync-warning-box {
 body.dark .ghsync-mini-btn {
   background: var(--accent-hover);
   color: var(--color-text-on-accent);
+}
+
+/* ── Sync progress list ── */
+.ghsync-progress {
+  margin: 0 0 1rem 0;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--color-surface-raised, var(--color-surface));
+  border: 1px solid var(--color-border-light, var(--color-border));
+}
+
+.ghsync-progress-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+}
+
+.ghsync-progress-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--fs-sm, 0.875rem);
+  line-height: 1.5;
+}
+
+.ghsync-progress-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  font-weight: var(--fw-semibold, 600);
+}
+
+.ghsync-progress-item--done {
+  color: var(--color-positive);
+}
+
+.ghsync-progress-item--done .ghsync-progress-icon {
+  color: var(--color-positive);
+}
+
+.ghsync-progress-item--active {
+  color: var(--color-text);
+  font-weight: var(--fw-semibold, 600);
+}
+
+.ghsync-progress-item--active .ghsync-progress-icon {
+  animation: ghsync-spin 1s linear infinite;
+  border: 2px solid var(--accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.ghsync-progress-item--pending {
+  color: var(--color-text-muted);
+}
+
+.ghsync-progress-item--error {
+  color: var(--color-negative);
+}
+
+.ghsync-progress-item--error .ghsync-progress-icon {
+  color: var(--color-negative);
+}
+
+@keyframes ghsync-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dirty dot indicator on sync button */
+.ghsync-dirty-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  flex-shrink: 0;
+}
+
+.ghsync-sync-btn {
+  position: relative;
 }
 
 /* Scrollbar styling */

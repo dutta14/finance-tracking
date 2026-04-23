@@ -7,8 +7,10 @@ export const loadCustomRatios = (): CustomRatio[] => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
 }
 
-export const saveCustomRatios = (ratios: CustomRatio[]) =>
+export const saveCustomRatios = (ratios: CustomRatio[]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ratios))
+  window.dispatchEvent(new Event('allocation-changed'))
+}
 
 export const makeDefaultRatio = (): CustomRatio => ({
   id: makeId(),

@@ -32,6 +32,16 @@ export interface RestoreResult {
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
 
+export type SyncDomain = 'goals' | 'data' | 'tools' | 'allocation' | 'taxes' | 'budget'
+
+export interface SyncProgress {
+  total: number
+  completed: number
+  current: string
+  errors: string[]
+  domains: SyncDomain[]
+}
+
 const CONFIG_KEY = 'github-sync-config'
 const DEFAULT_CONFIG: GitHubSyncConfig = {
   owner: '',
@@ -131,7 +141,33 @@ export const useGitHubSync = () => {
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null)
   const [lastError, setLastError] = useState<string | null>(null)
   const [history, setHistory] = useState<CommitEntry[]>([])
-  const [hasPendingChanges, setHasPendingChanges] = useState(false)
+  const [dirtyFlags, setDirtyFlags] = useState<Record<SyncDomain, boolean>>({
+    goals: false, data: false, tools: false, allocation: false, taxes: false, budget: false,
+  })
+  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null)
+
+  // Gate dirty tracking — suppress during initial mount so init/migration/restore
+  // code doesn't spuriously mark domains dirty
+  const dirtyReadyRef = useRef(false)
+  useEffect(() => {
+    const timer = setTimeout(() => { dirtyReadyRef.current = true }, 3000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const hasPendingChanges = Object.values(dirtyFlags).some(Boolean)
+
+  const markDirty = useCallback((domain: SyncDomain) => {
+    if (!dirtyReadyRef.current) return
+    setDirtyFlags(prev => ({ ...prev, [domain]: true }))
+  }, [])
+
+  const clearDirty = useCallback((domain: SyncDomain) => {
+    setDirtyFlags(prev => ({ ...prev, [domain]: false }))
+  }, [])
+
+  const clearAllDirty = useCallback(() => {
+    setDirtyFlags({ goals: false, data: false, tools: false, allocation: false, taxes: false, budget: false })
+  }, [])
 
   const pendingDataRef = useRef<object | null>(null)
   const pendingDataFileRef = useRef<object | null>(null)
@@ -243,93 +279,123 @@ export const useGitHubSync = () => {
     if (!isConfigured) return
     setSyncStatus('syncing')
     setLastError(null)
-    try {
-      const canonicalJson = JSON.stringify(data)
-      const prettyJson = JSON.stringify(data, null, 2)
-      const content = toBase64(prettyJson)
-      const sha = await getFileSha()
-      const commitMessage =
-        message ||
-        `Auto-save: ${new Date().toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        })}`
-      const body: Record<string, string> = { message: commitMessage, content }
-      if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`,
-        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
-      )
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+    let lastErr: Error | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const prettyJson = JSON.stringify(data, null, 2)
+        const content = toBase64(prettyJson)
+        const sha = await getFileSha()
+        const commitMessage =
+          message ||
+          `Auto-save: ${new Date().toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}`
+        const body: Record<string, string> = { message: commitMessage, content }
+        if (sha) body.sha = sha
+        const res = await fetch(
+          `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`,
+          { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+        )
+        if ((res.status === 409 || res.status === 422) && attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+        }
+        lastSyncedJsonRef.current = (() => { const { exportedAt: _, ...rest } = data as Record<string, unknown>; return JSON.stringify(rest) })()
+        setSyncStatus('success')
+        setLastSyncAt(new Date().toISOString())
+        clearDirty('goals')
+        return
+      } catch (e) {
+        lastErr = e instanceof Error ? e : new Error(String(e))
+        if (attempt === 2) {
+          setSyncStatus('error')
+          setLastError(lastErr.message)
+          throw lastErr
+        }
       }
-      lastSyncedJsonRef.current = (() => { const { exportedAt: _, ...rest } = data as Record<string, unknown>; return JSON.stringify(rest) })()
-      setSyncStatus('success')
-      setLastSyncAt(new Date().toISOString())
-      setHasPendingChanges(false)
-    } catch (e) {
-      setSyncStatus('error')
-      setLastError(e instanceof Error ? e.message : String(e))
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, config.filePath, getFileSha, isConfigured])
 
   const syncDataNow = useCallback(async (data: object, message?: string): Promise<void> => {
     if (!isConfigured) return
-    try {
-      const canonicalJson = JSON.stringify(data)
-      const prettyJson = JSON.stringify(data, null, 2)
-      const content = toBase64(prettyJson)
-      const sha = await getFileShaForPath(dataFilePath)
-      const commitMessage =
-        message ||
-        `Data sync: ${new Date().toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        })}`
-      const body: Record<string, string> = { message: commitMessage, content }
-      if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${dataFilePath}`,
-        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
-      )
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const prettyJson = JSON.stringify(data, null, 2)
+        const content = toBase64(prettyJson)
+        const sha = await getFileShaForPath(dataFilePath)
+        const commitMessage =
+          message ||
+          `Data sync: ${new Date().toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}`
+        const body: Record<string, string> = { message: commitMessage, content }
+        if (sha) body.sha = sha
+        const res = await fetch(
+          `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${dataFilePath}`,
+          { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+        )
+        if ((res.status === 409 || res.status === 422) && attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+        }
+        lastSyncedDataJsonRef.current = (() => { const { exportedAt: _, ...rest } = data as Record<string, unknown>; return JSON.stringify(rest) })()
+        pendingDataFileRef.current = null
+        clearDirty('data')
+        return
+      } catch (e) {
+        if (attempt === 2) {
+          console.error('Data file sync error:', e instanceof Error ? e.message : e)
+          throw e instanceof Error ? e : new Error(String(e))
+        }
       }
-      lastSyncedDataJsonRef.current = (() => { const { exportedAt: _, ...rest } = data as Record<string, unknown>; return JSON.stringify(rest) })()
-      pendingDataFileRef.current = null
-    } catch (e) {
-      console.error('Data file sync error:', e instanceof Error ? e.message : e)
-      setSyncStatus('error')
-      setLastError(`Data sync: ${e instanceof Error ? e.message : String(e)}`)
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured])
 
   const syncToolsNow = useCallback(async (data: object, message?: string): Promise<void> => {
     if (!isConfigured) return
-    try {
-      const prettyJson = JSON.stringify(data, null, 2)
-      const content = toBase64(prettyJson)
-      const sha = await getFileShaForPath(toolsFilePath)
-      const commitMessage =
-        message ||
-        `Tools sync: ${new Date().toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        })}`
-      const body: Record<string, string> = { message: commitMessage, content }
-      if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`,
-        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
-      )
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const prettyJson = JSON.stringify(data, null, 2)
+        const content = toBase64(prettyJson)
+        const sha = await getFileShaForPath(toolsFilePath)
+        const commitMessage =
+          message ||
+          `Tools sync: ${new Date().toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}`
+        const body: Record<string, string> = { message: commitMessage, content }
+        if (sha) body.sha = sha
+        const res = await fetch(
+          `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`,
+          { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+        )
+        if ((res.status === 409 || res.status === 422) && attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+        }
+        clearDirty('tools')
+        return
+      } catch (e) {
+        if (attempt === 2) {
+          console.error('Tools file sync error:', e instanceof Error ? e.message : e)
+          throw e instanceof Error ? e : new Error(String(e))
+        }
       }
-    } catch (e) {
-      console.error('Tools file sync error:', e instanceof Error ? e.message : e)
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured])
 
@@ -353,28 +419,39 @@ export const useGitHubSync = () => {
 
   const syncAllocationNow = useCallback(async (data: object, message?: string): Promise<void> => {
     if (!isConfigured) return
-    try {
-      const prettyJson = JSON.stringify(data, null, 2)
-      const content = toBase64(prettyJson)
-      const sha = await getFileShaForPath(allocationFilePath)
-      const commitMessage =
-        message ||
-        `Allocation sync: ${new Date().toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        })}`
-      const body: Record<string, string> = { message: commitMessage, content }
-      if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${allocationFilePath}`,
-        { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
-      )
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const prettyJson = JSON.stringify(data, null, 2)
+        const content = toBase64(prettyJson)
+        const sha = await getFileShaForPath(allocationFilePath)
+        const commitMessage =
+          message ||
+          `Allocation sync: ${new Date().toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}`
+        const body: Record<string, string> = { message: commitMessage, content }
+        if (sha) body.sha = sha
+        const res = await fetch(
+          `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${allocationFilePath}`,
+          { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
+        )
+        if ((res.status === 409 || res.status === 422) && attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
+        }
+        clearDirty('allocation')
+        return
+      } catch (e) {
+        if (attempt === 2) {
+          console.error('Allocation file sync error:', e instanceof Error ? e.message : e)
+          throw e instanceof Error ? e : new Error(String(e))
+        }
       }
-    } catch (e) {
-      console.error('Allocation file sync error:', e instanceof Error ? e.message : e)
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, allocationFilePath, getFileShaForPath, isConfigured])
 
@@ -415,7 +492,7 @@ export const useGitHubSync = () => {
           `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`,
           { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) }
         )
-        if (res.status === 409 && attempt < 2) {
+        if ((res.status === 409 || res.status === 422) && attempt < 2) {
           await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
           continue
         }
@@ -423,9 +500,13 @@ export const useGitHubSync = () => {
           const err = await res.json().catch(() => ({}))
           throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
         }
+        clearDirty('taxes')
         return
       } catch (e) {
-        if (attempt === 2) console.error('Taxes file sync error:', e instanceof Error ? e.message : e)
+        if (attempt === 2) {
+          console.error('Taxes file sync error:', e instanceof Error ? e.message : e)
+          throw e instanceof Error ? e : new Error(String(e))
+        }
       }
     }
   }, [activeToken, apiHeaders, config.owner, config.repo, taxesFilePath, getFileShaForPath, isConfigured])
@@ -578,45 +659,45 @@ export const useGitHubSync = () => {
     const { exportedAt: _, ...rest } = data as Record<string, unknown>
     const json = JSON.stringify(rest)
     if (json === lastSyncedJsonRef.current) {
-      if (!pendingDataFileRef.current) setHasPendingChanges(false)
       return
     }
-    setHasPendingChanges(true)
-    pendingDataRef.current = data
+    markDirty('goals')
     if (!config.autoSync || !isConfigured) return
+    pendingDataRef.current = data
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     debounceTimerRef.current = setTimeout(() => {
-      if (pendingDataRef.current) syncNow(pendingDataRef.current)
+      if (pendingDataRef.current) syncNow(pendingDataRef.current).catch(() => {})
     }, DEBOUNCE_MS)
-  }, [config.autoSync, isConfigured, syncNow])
+  }, [config.autoSync, isConfigured, syncNow, markDirty])
 
   const updateDataFile = useCallback((data: object) => {
     const { exportedAt: _, ...rest } = data as Record<string, unknown>
     const json = JSON.stringify(rest)
     if (json === lastSyncedDataJsonRef.current) return
-    setHasPendingChanges(true)
-    pendingDataFileRef.current = data
+    markDirty('data')
     if (!config.autoSync || !isConfigured) return
+    pendingDataFileRef.current = data
     if (dataDebounceTimerRef.current) clearTimeout(dataDebounceTimerRef.current)
     dataDebounceTimerRef.current = setTimeout(() => {
-      if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
+      if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current).catch(() => {})
     }, DEBOUNCE_MS)
-  }, [config.autoSync, isConfigured, syncDataNow])
+  }, [config.autoSync, isConfigured, syncDataNow, markDirty])
 
   const markRestored = useCallback(() => {
     setLastSyncAt(new Date().toISOString())
     setSyncStatus('success')
-    setHasPendingChanges(false)
+    clearAllDirty()
     setLastError(null)
-  }, [])
+  }, [clearAllDirty])
 
   useEffect(() => () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     if (dataDebounceTimerRef.current) clearTimeout(dataDebounceTimerRef.current)
   }, [])
 
-  // Flush pending syncs when user navigates away or hides the tab
+  // Flush pending syncs when user hides the tab (only if autoSync is on)
   useEffect(() => {
+    if (!config.autoSync || !isConfigured) return
     const handleVisChange = () => {
       if (document.visibilityState === 'hidden') {
         if (debounceTimerRef.current) {
@@ -627,13 +708,13 @@ export const useGitHubSync = () => {
           clearTimeout(dataDebounceTimerRef.current)
           dataDebounceTimerRef.current = null
         }
-        if (pendingDataRef.current) syncNow(pendingDataRef.current)
-        if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current)
+        if (pendingDataRef.current) syncNow(pendingDataRef.current).catch(() => {})
+        if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current).catch(() => {})
       }
     }
     document.addEventListener('visibilitychange', handleVisChange)
     return () => document.removeEventListener('visibilitychange', handleVisChange)
-  }, [isConfigured, activeToken, config, syncNow, syncDataNow])
+  }, [isConfigured, activeToken, config, config.autoSync, syncNow, syncDataNow])
 
   return {
     config,
@@ -643,6 +724,15 @@ export const useGitHubSync = () => {
     lastSyncAt,
     lastError,
     hasPendingChanges,
+    dirtyFlags,
+    syncProgress,
+    setSyncProgress,
+    setSyncStatus,
+    setLastSyncAt,
+    setLastError,
+    markDirty,
+    clearDirty,
+    clearAllDirty,
     history,
     hasStoredToken,
     tokenUnlocked,

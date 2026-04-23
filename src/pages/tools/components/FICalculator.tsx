@@ -113,7 +113,7 @@ const SIMS_KEY = 'fi-simulations'
 function loadSims(): FISim[] {
   try { return JSON.parse(localStorage.getItem(SIMS_KEY) || '[]') } catch { return [] }
 }
-function saveSims(sims: FISim[]) { localStorage.setItem(SIMS_KEY, JSON.stringify(sims)) }
+function saveSims(sims: FISim[]) { localStorage.setItem(SIMS_KEY, JSON.stringify(sims)); window.dispatchEvent(new Event('tools-changed')) }
 
 /** Button that fires once on click, then repeats (accelerating) while held */
 const StepBtn: FC<{ onStep: () => void; children: React.ReactNode }> = ({ onStep, children }) => {

@@ -1,5 +1,5 @@
 import { Profile } from '../../hooks/useProfile'
-import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
+import { GitHubSyncConfig, SyncStatus, SyncDomain, SyncProgress, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
 
 export type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced' | 'labs'
 
@@ -37,6 +37,8 @@ export interface SettingsModalProps {
   onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
   onGhApplyRestore?: (data: unknown) => Promise<void>
   ghData?: object
+  ghSyncProgress?: SyncProgress | null
+  ghDirtyFlags?: Record<SyncDomain, boolean>
   onFactoryReset?: () => void
   allowCsvImport?: boolean
   onToggleAllowCsvImport?: () => void
@@ -73,6 +75,8 @@ export interface GitHubSyncPaneProps {
   onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
   onGhApplyRestore?: (data: unknown) => Promise<void>
   ghData?: object
+  ghSyncProgress?: SyncProgress | null
+  ghDirtyFlags?: Record<SyncDomain, boolean>
 }
 
 export interface AppearancePaneProps {

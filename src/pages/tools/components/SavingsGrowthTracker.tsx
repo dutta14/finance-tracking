@@ -133,6 +133,7 @@ function loadOverrides(): Record<number, YearOverrides> {
 
 function saveOverrides(o: Record<number, YearOverrides>) {
   localStorage.setItem(OVERRIDES_KEY, JSON.stringify(o))
+  window.dispatchEvent(new Event('tools-changed'))
 }
 
 /* ── Row data type ── */

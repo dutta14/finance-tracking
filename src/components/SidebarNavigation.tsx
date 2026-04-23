@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { NavigationProps } from '../types';
 import { Profile } from '../hooks/useProfile';
-import { GitHubSyncConfig, SyncStatus, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync';
+import { GitHubSyncConfig, SyncStatus, SyncDomain, SyncProgress, CommitEntry, ConnectionTestResult, RestoreResult } from '../hooks/useGitHubSync';
 import SidebarToggle from './SidebarToggle';
 import { SettingsMenu } from '../pages/settings';
 import '../styles/SidebarNavigation.css';
@@ -43,6 +43,8 @@ interface SidebarNavigationProps extends NavigationProps {
   onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>;
   ghDataToSync?: object;
   onGhApplyRestore?: (data: unknown) => Promise<void>;
+  ghSyncProgress?: SyncProgress | null;
+  ghDirtyFlags?: Record<SyncDomain, boolean>;
   onFactoryReset?: () => void;
   allowCsvImport?: boolean;
   onToggleAllowCsvImport?: () => void;
@@ -61,6 +63,7 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
   onGhUpdateConfig, onGhSaveEncryptedToken, onGhMigrateLegacyToken, onGhUnlockToken, onGhLockToken,
   onGhSyncNow, onGhFetchHistory, onGhTestConnection, onGhRestoreLatest, onGhRestoreFromCommit,
   ghDataToSync, onGhApplyRestore,
+  ghSyncProgress, ghDirtyFlags,
   onFactoryReset = () => {},
   allowCsvImport = false,
   onToggleAllowCsvImport = () => {},
@@ -179,6 +182,8 @@ const SidebarNavigation: FC<SidebarNavigationProps> = ({
             onGhRestoreFromCommit={onGhRestoreFromCommit}
             ghData={ghDataToSync}
             onGhApplyRestore={onGhApplyRestore}
+            ghSyncProgress={ghSyncProgress}
+            ghDirtyFlags={ghDirtyFlags}
             onFactoryReset={onFactoryReset}
             allowCsvImport={allowCsvImport}
             onToggleAllowCsvImport={onToggleAllowCsvImport}

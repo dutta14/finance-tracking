@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react'
 import type { GitHubSyncPaneProps } from '../types'
-import type { ConnectionTestResult } from '../../../hooks/useGitHubSync'
+import type { ConnectionTestResult, SyncDomain } from '../../../hooks/useGitHubSync'
 import { formatDate, formatRelative } from '../utils'
 
 const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
@@ -16,6 +16,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   onGhRestoreLatest = async () => ({ ok: false, message: '' }),
   onGhRestoreFromCommit = async () => ({ ok: false, message: '' }),
   onGhApplyRestore = async () => {}, ghData = {},
+  ghSyncProgress = null,
 }) => {
   const [ghTab, setGhTab] = useState<'config' | 'history'>('config')
   const [ghShowToken, setGhShowToken] = useState(false)
@@ -74,7 +75,8 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   const handleGhSyncNow = async () => {
     const msg = `Synced user data on ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`
     await onGhSyncNow?.(ghData, msg)
-    setGhSyncSuccess(true)
+    // Only show success banner if sync actually ran (not "already up to date")
+    if (!ghSyncProgress || (ghSyncProgress.total > 0)) setGhSyncSuccess(true)
   }
 
   const handleGhRestoreLatest = async () => {
@@ -93,12 +95,15 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
     setGhRestoringCommitSha(null)
   }
 
+  const DOMAIN_LABELS: Record<SyncDomain, string> = {
+    goals: 'Goals', data: 'Balances', tools: 'Tools',
+    allocation: 'Allocation', taxes: 'Taxes', budget: 'Budget',
+  }
+  const ALL_DOMAINS: SyncDomain[] = ['goals', 'data', 'tools', 'allocation', 'taxes', 'budget']
+
   return (
     <div className="settings-section">
-      <div className="settings-section-content" style={{ overflow: 'auto', maxHeight: '60vh' }}>        {ghSyncSuccess && (
-          <p className="ghsync-result-success" style={{ margin: '0 0 1rem 0', fontSize: '0.9rem' }}>✓ Sync successful</p>
-        )}
-
+      <div className="settings-section-content" style={{ overflow: 'auto', maxHeight: '60vh' }}>
         <div className="ghsync-tabs">
           <button onClick={() => setGhTab('config')} className={`ghsync-tab-btn${ghTab === 'config' ? ' active' : ''}`}>Configuration</button>
           <button onClick={() => { setGhTab('history'); if (ghHistory.length === 0) onGhFetchHistory?.() }} className={`ghsync-tab-btn${ghTab === 'history' ? ' active' : ''}`}>History</button>
@@ -216,16 +221,54 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                       {ghConfig?.owner && ghConfig?.repo ? (hasPendingChanges ? 'Unsaved changes — sync when ready' : (ghHasStoredToken ? (ghTokenUnlocked ? 'Ready to sync' : 'Token locked') : 'Token not set up')) : 'Missing configuration'}
                     </>}
                   </div>
+                  {hasPendingChanges && ghSyncStatus !== 'syncing' && <span className="ghsync-dirty-dot" />}
                   <button
-                    className="ghsync-mini-btn"
+                    className="ghsync-mini-btn ghsync-sync-btn"
                     onClick={handleGhSyncNow}
                     disabled={!ghIsConfigured || ghSyncStatus === 'syncing'}
-                    style={{ minWidth: '70px', flexShrink: 0, marginLeft: '0.75rem' }}
+                    style={{ minWidth: '70px', flexShrink: 0, marginLeft: '0.75rem', position: 'relative' }}
                     title="Sync current goal data to GitHub"
                   >
                     {ghSyncStatus === 'syncing' ? 'Syncing…' : 'Sync'}
                   </button>
                 </div>
+
+                {ghSyncProgress && ghSyncProgress.total === 0 && (
+                  <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>✓ Already up to date</p>
+                )}
+                {ghSyncProgress && ghSyncProgress.total > 0 && (
+                  <div className="ghsync-progress" role="status" aria-label="Sync progress" style={{ marginTop: '0.5rem' }}>
+                    <ul className="ghsync-progress-list" aria-live="polite">
+                      {(ghSyncProgress.domains || ALL_DOMAINS).map((domain, idx) => {
+                        const isError = ghSyncProgress.errors.some(e => e.startsWith(DOMAIN_LABELS[domain]))
+                        const isDone = !isError && ghSyncProgress.current !== DOMAIN_LABELS[domain] && idx < ghSyncProgress.completed
+                        const isActive = ghSyncProgress.current === DOMAIN_LABELS[domain]
+                        const stateClass = isError ? 'error' : isDone ? 'done' : isActive ? 'active' : 'pending'
+                        return (
+                          <li key={domain} className={`ghsync-progress-item ghsync-progress-item--${stateClass}`}>
+                            <span className="ghsync-progress-icon" aria-hidden="true">
+                              {isError ? '✕' : isDone ? '✓' : isActive ? '' : '·'}
+                            </span>
+                            <span>{DOMAIN_LABELS[domain]}</span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    {ghSyncProgress.completed === ghSyncProgress.total && ghSyncProgress.errors.length === 0 && (
+                      <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>✓ All synced</p>
+                    )}
+                    {ghSyncProgress.errors.length > 0 && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        {ghSyncProgress.errors.map((err, i) => (
+                          <p key={i} className="ghsync-result-error" style={{ fontSize: '0.8rem', margin: '0.15rem 0' }}>✕ {err}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!ghSyncProgress && ghSyncSuccess && (
+                  <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>✓ Sync successful</p>
+                )}
 
                 {ghTestResult && !ghTestResult.ok && (
                   <p className="ghsync-result-error">✗ {ghTestResult.message}</p>
