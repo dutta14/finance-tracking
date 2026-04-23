@@ -350,6 +350,8 @@ const App: FC = () => {
         if (parsed?.settings?.homeCardOrder) {
           localStorage.setItem('home-card-order', parsed.settings.homeCardOrder as string)
         }
+        window.dispatchEvent(new Event('data-changed'))
+        setTimeout(() => window.location.reload(), 200)
       } catch {
         alert('Could not import: the file is not a valid finance goals export.')
       }
@@ -360,7 +362,7 @@ const App: FC = () => {
   const applyRestoredSnapshot = async (data: unknown): Promise<void> => {
     return new Promise((resolve) => {
       try {
-        const parsed = data as { version?: number; goals?: unknown; plans?: unknown; profile?: unknown; gwGoals?: unknown; gwPlans?: unknown; settings?: unknown; gitHubConfig?: unknown }
+        const parsed = data as { version?: number; goals?: unknown; plans?: unknown; profile?: unknown; gwGoals?: unknown; gwPlans?: unknown; settings?: unknown; gitHubConfig?: unknown; dataAccounts?: unknown; dataBalances?: unknown }
         const incomingGoals = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.goals) ? parsed.goals : Array.isArray(parsed?.plans) ? parsed.plans : [])
         if (!Array.isArray(incomingGoals) || incomingGoals.length === 0) {
           throw new Error('No valid goals data in backup')
@@ -405,12 +407,16 @@ const App: FC = () => {
           localStorage.setItem('gw-goals', JSON.stringify(restoreGwGoals))
           localStorage.setItem('user-profile', JSON.stringify(restoreProfile || profile))
           localStorage.setItem('github-sync-config', JSON.stringify(restoredGhConfig))
-          // Also restore data file from GitHub
+          // Also restore data file from GitHub (fall back to inline data from main backup)
           restoreDataLatest().then(dataResult => {
             if (dataResult.ok && dataResult.data) {
               const d = dataResult.data as { accounts?: unknown; balances?: unknown }
               if (Array.isArray(d.accounts)) localStorage.setItem('data-accounts', JSON.stringify(d.accounts))
               if (Array.isArray(d.balances)) localStorage.setItem('data-balances', JSON.stringify(d.balances))
+            } else {
+              // Fall back to inline accounts/balances from the main backup
+              if (Array.isArray(parsed?.dataAccounts)) localStorage.setItem('data-accounts', JSON.stringify(parsed.dataAccounts))
+              if (Array.isArray(parsed?.dataBalances)) localStorage.setItem('data-balances', JSON.stringify(parsed.dataBalances))
             }
           }).then(() => {
             // Also restore budget from GitHub
@@ -579,7 +585,7 @@ const App: FC = () => {
           onGhTestConnection={testConnection}
           onGhRestoreLatest={restoreLatest}
           onGhRestoreFromCommit={restoreFromCommit}
-          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport, goalViewMode: localStorage.getItem('goal-view-mode') || '', homeCardOrder: localStorage.getItem('home-card-order') || '' } }}
+          ghDataToSync={{ version: 2, exportedAt: new Date().toISOString(), goals, gwGoals, profile, settings: { accentTheme, darkMode, allowCsvImport, goalViewMode: localStorage.getItem('goal-view-mode') || '', homeCardOrder: localStorage.getItem('home-card-order') || '' }, dataAccounts: getDataSnapshot().accounts, dataBalances: getDataSnapshot().balances }}
           onGhApplyRestore={applyRestoredSnapshot}
           onFactoryReset={handleFactoryReset}
           allowCsvImport={allowCsvImport}
