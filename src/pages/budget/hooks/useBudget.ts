@@ -60,6 +60,19 @@ export function useBudget() {
     }
   }, [persist])
 
+  const addTransaction = useCallback((monthKey: string, csvLine: string) => {
+    const current = storeRef.current
+    const existing = current.csvs[monthKey]
+    let updatedCsv: string
+    if (existing) {
+      const base = existing.csv.endsWith('\n') ? existing.csv : existing.csv + '\n'
+      updatedCsv = base + csvLine
+    } else {
+      updatedCsv = 'Date,Category,Amount,Description\n' + csvLine
+    }
+    return uploadCSV(monthKey, updatedCsv)
+  }, [uploadCSV])
+
   const removeCSV = useCallback((monthKey: string) => {
     persist(deleteCSVForMonth(storeRef.current, monthKey))
   }, [persist])
@@ -286,6 +299,8 @@ export function useBudget() {
     return keys
   }, [store.csvs, selectedYear])
 
+  const years = store.years
+
   /** Apply config pulled from GitHub (merges years and replaces groups) */
   const applyConfig = useCallback((config: BudgetConfigData) => {
     const current = storeRef.current
@@ -299,12 +314,14 @@ export function useBudget() {
 
   return {
     store,
+    years,
     selectedYear,
     setSelectedYear,
     viewMode,
     setViewMode,
     uploadCSV,
     removeCSV,
+    addTransaction,
     createYear: handleCreateYear,
     updateCategoryGroups: handleUpdateCategoryGroups,
     mergeCategories,

@@ -3,6 +3,7 @@ import { useBudget } from './hooks/useBudget'
 import { useCSVUpload } from './hooks/useCSVUpload'
 import { TimePeriod } from './types'
 import BudgetHeader from './components/BudgetHeader'
+import ManualTransactionEntry from './components/ManualTransactionEntry'
 import BudgetSummary from './components/BudgetSummary'
 import BudgetTable from './components/BudgetTable'
 import BudgetAggregatedView from './components/BudgetAggregatedView'
@@ -17,10 +18,12 @@ const PdfToCsv = lazy(() => import('../tools/components/PdfToCsv'))
 
 const Budget: FC = () => {
   const {
+    years,
     selectedYear, setSelectedYear,
     viewMode, setViewMode,
     uploadCSV, removeCSV, createYear, updateCategoryGroups, mergeCategories, editCategory,
     categoryHasTransactions, deleteCategory,
+    addTransaction,
     yearTransactions, categoryGroups, removedCategories, categorySums, summary, monthsWithData,
   } = useBudget()
 
@@ -85,6 +88,12 @@ const Budget: FC = () => {
         onQuickUpload={handleQuickUpload}
         onBulkUpload={handleBulkUpload}
         onOpenPdfToCsv={pdfToCsvEnabled ? openPdfModal : undefined}
+      />
+
+      <ManualTransactionEntry
+        categoryGroups={categoryGroups}
+        years={years}
+        onAdd={addTransaction}
       />
 
       {csvPreview && (
