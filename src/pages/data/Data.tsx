@@ -23,7 +23,7 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
   const { accounts, balances, setAccounts: ctxSetAccounts, setBalances: ctxSetBalances } = useData()
 
   const [showAccountsModal, setShowAccountsModal] = useState(false)
-  const [inlineEntry, setInlineEntry] = useState<{ month: string; values: Record<number, string> } | null>(null)
+  const [inlineEntry, setInlineEntry] = useState<{ month: string; values: Record<number, string>; _focused?: number } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
   const [showInactive, setShowInactive] = useState(false)
   const [dataView, setDataView] = useState<'charts' | 'spreadsheet'>('charts')
@@ -81,6 +81,19 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
     const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
     const values: Record<number, string> = {}
     for (const a of activeAccounts) values[a.id] = ''
+    setInlineEntry({ month: ym, values })
+  }
+
+  const handleCopyForwardEntry = () => {
+    const now = new Date()
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    const lastMonth = allMonths[0]
+    if (!lastMonth) return
+    const values: Record<number, string> = {}
+    for (const a of activeAccounts) {
+      const prev = balanceMap.get(`${a.id}:${lastMonth}`)
+      values[a.id] = prev !== undefined ? String(prev) : ''
+    }
     setInlineEntry({ month: ym, values })
   }
 
@@ -216,6 +229,21 @@ const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) 
                 {dataView === 'spreadsheet' && (
                   <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
                     + Add Entry
+                  </button>
+                )}
+                {dataView === 'spreadsheet' && allMonths.length > 0 && (
+                  <button
+                    className="data-copy-forward-btn"
+                    onClick={handleCopyForwardEntry}
+                    disabled={!!inlineEntry}
+                    title={`Pre-fill with balances from ${allMonths[0]}`}
+                    aria-label="Copy balances from last month"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                    <span className="data-copy-forward-label">Copy Last Month</span>
                   </button>
                 )}
               </div>

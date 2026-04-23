@@ -15,7 +15,7 @@ interface BalanceSpreadsheetProps {
   allMonths: string[]
   balanceMap: Map<string, number>
   profile: Profile
-  inlineEntry: { month: string; values: Record<number, string> } | null
+  inlineEntry: { month: string; values: Record<number, string>; _focused?: number } | null
   onInlineEntryChange: (entry: { month: string; values: Record<number, string> }) => void
   onSaveInlineEntry: () => void
   onCancelInlineEntry: () => void
@@ -397,18 +397,27 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
                 )
               }
               const a = col.account
+              const rawVal = inlineEntry.values[a.id] || ''
+              const numericVal = rawVal ? Number(rawVal) : NaN
+              const displayVal = !isNaN(numericVal) ? formatCurrency(numericVal) : rawVal
               return (
                 <td key={a.id} className={`data-spreadsheet-cell data-spreadsheet-inline-cell${col.kind === 'child' ? ' data-spreadsheet-child-cell' : ''}`}>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="numeric"
                     className="data-inline-balance-input"
                     placeholder="—"
-                    value={inlineEntry.values[a.id] || ''}
-                    onChange={e => onInlineEntryChange({
-                      ...inlineEntry,
-                      values: { ...inlineEntry.values, [a.id]: e.target.value }
-                    })}
+                    value={inlineEntry._focused === a.id ? rawVal : displayVal}
+                    onFocus={() => onInlineEntryChange({ ...inlineEntry, _focused: a.id })}
+                    onBlur={() => onInlineEntryChange({ ...inlineEntry, _focused: undefined })}
+                    onChange={e => {
+                      const v = e.target.value.replace(/[^0-9.\-]/g, '')
+                      onInlineEntryChange({
+                        ...inlineEntry,
+                        values: { ...inlineEntry.values, [a.id]: v },
+                        _focused: a.id,
+                      })
+                    }}
                   />
                 </td>
               )
