@@ -435,6 +435,41 @@ section.goal {
   margin-bottom: 2rem;
 }
 
+/* Touch drag states for goal items */
+.goal-drag-item--touch-dragging {
+  opacity: 0.6;
+  transform: scale(0.97);
+  transition: transform 0.2s, opacity 0.2s;
+}
+.goal-drag-item--long-press {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Goal reorder touch controls */
+.goal-reorder-touch-controls {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  flex-direction: row;
+  gap: 2px;
+  z-index: 5;
+}
+@media (max-width: 900px) {
+  .goal-reorder-touch-controls { display: flex; }
+  .goal-drag-item { cursor: default; }
+}
+@media (max-width: 640px) {
+  .goal-reorder-touch-controls .reorder-move-btn { width: 32px; height: 32px; min-height: 44px; min-width: 44px; }
+}
+
+/* Dark mode */
+body.dark .goal-drag-item--long-press {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
 /* Toolbar: filters + count + view toggle */
 .goal-toolbar {
   display: flex;

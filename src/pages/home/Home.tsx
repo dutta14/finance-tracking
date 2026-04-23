@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Profile } from '../../hooks/useProfile'
 import { useData } from '../../contexts/DataContext'
 import { FinancialGoal, GwGoal } from '../../types'
+import { useTouchDrag } from '../../hooks/useTouchDrag'
 import NetWorthSummary from './NetWorthSummary'
 import MiniCharts from './MiniCharts'
 import GoalsPeek from './GoalsPeek'
@@ -31,11 +32,15 @@ function loadOrder(): number[] {
   return DEFAULT_ORDER
 }
 
+const CARD_NAMES = ['Net Worth', 'Charts', 'Goals', 'Allocation']
+
 const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
   const navigate = useNavigate()
   const [order, setOrder] = useState(loadOrder)
   const dragIdx = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
+  const [announcement, setAnnouncement] = useState('')
+  const gridRef = useRef<HTMLDivElement>(null)
 
   const { accounts, balances } = useData()
 
@@ -66,6 +71,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
     return `Good evening${name}`
   }, [profile.name])
 
+  /* ── Desktop HTML5 drag ── */
   const handleDragStart = useCallback((idx: number) => {
     dragIdx.current = idx
   }, [])
@@ -84,6 +90,7 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
       const [removed] = next.splice(from, 1)
       next.splice(idx, 0, removed)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      setAnnouncement(`${CARD_NAMES[removed]} moved to position ${idx + 1}`)
       return next
     })
     dragIdx.current = null
@@ -93,6 +100,59 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
   const handleDragEnd = useCallback(() => {
     dragIdx.current = null
     setDragOver(null)
+  }, [])
+
+  /* ── Touch drag via hook ── */
+  const touchFromIdx = useRef<number | null>(null)
+
+  const getSlotFromPoint = useCallback((x: number, y: number): number | null => {
+    const el = document.elementFromPoint(x, y)
+    if (!el) return null
+    const slot = (el as HTMLElement).closest?.('.home-grid-slot') as HTMLElement | null
+    if (!slot || !gridRef.current) return null
+    const slots = Array.from(gridRef.current.querySelectorAll('.home-grid-slot'))
+    const idx = slots.indexOf(slot)
+    return idx >= 0 ? idx : null
+  }, [])
+
+  const touchDrag = useTouchDrag({
+    longPressMs: 300,
+    onDragStart: (idx) => { touchFromIdx.current = idx },
+    onDragMove: (_cx, _cy) => { /* visual updates handled via getSlotFromPoint */ },
+    onDragEnd: () => {
+      const from = touchFromIdx.current
+      if (from !== null && dragOver !== null && from !== dragOver) {
+        setOrder(prev => {
+          const next = [...prev]
+          const [removed] = next.splice(from, 1)
+          next.splice(dragOver, 0, removed)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+          setAnnouncement(`${CARD_NAMES[removed]} moved to position ${dragOver + 1}`)
+          return next
+        })
+      }
+      touchFromIdx.current = null
+      setDragOver(null)
+    },
+    getSlotFromPoint: (x, y) => {
+      const idx = getSlotFromPoint(x, y)
+      if (idx !== null) setDragOver(idx)
+      return idx
+    },
+  })
+
+  /* ── Mobile move buttons ── */
+  const moveCard = useCallback((pos: number, direction: -1 | 1) => {
+    const target = pos + direction
+    if (target < 0 || target > 3) return
+    setOrder(prev => {
+      const next = [...prev]
+      const [removed] = next.splice(pos, 1)
+      next.splice(target, 0, removed)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      setAnnouncement(`${CARD_NAMES[removed]} moved to position ${target + 1}`)
+      return next
+    })
   }, [])
 
   const cards: ReactNode[] = [
@@ -144,22 +204,47 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
           onDismiss={() => { localStorage.setItem('onboarding-dismissed', '1'); setSetupDismissed(true) }}
         />
       )}
-      <div className="home-grid">
-        {order.map((cardIdx, pos) => (
-          <div
-            key={cardIdx}
-            className={`home-grid-slot${dragOver === pos ? ' home-grid-slot--over' : ''}`}
-            draggable
-            onDragStart={() => handleDragStart(pos)}
-            onDragOver={e => handleDragOver(e, pos)}
-            onDragLeave={() => setDragOver(null)}
-            onDrop={() => handleDrop(pos)}
-            onDragEnd={handleDragEnd}
-          >
-            {cards[cardIdx]}
-          </div>
-        ))}
+      <div className="home-grid" ref={gridRef}>
+        {order.map((cardIdx, pos) => {
+          const touchHandlers = touchDrag.getTouchHandlers(pos)
+          let slotClass = 'home-grid-slot'
+          if (dragOver === pos) slotClass += ' home-grid-slot--over'
+          if (touchDrag.isDragging && touchDrag.dragIdx === pos) slotClass += ' home-grid-slot--touch-dragging'
+          if (touchDrag.isLongPressing && touchDrag.dragIdx === pos) slotClass += ' home-grid-slot--long-press'
+          return (
+            <div
+              key={cardIdx}
+              className={slotClass}
+              draggable
+              onDragStart={() => handleDragStart(pos)}
+              onDragOver={e => handleDragOver(e, pos)}
+              onDragLeave={() => setDragOver(null)}
+              onDrop={() => handleDrop(pos)}
+              onDragEnd={handleDragEnd}
+              onTouchStart={touchHandlers.onTouchStart}
+              onTouchMove={touchHandlers.onTouchMove}
+              onTouchEnd={touchHandlers.onTouchEnd}
+            >
+              <div className="reorder-touch-controls">
+                <button
+                  className="reorder-move-btn"
+                  disabled={pos === 0}
+                  onClick={() => moveCard(pos, -1)}
+                  aria-label={`Move ${CARD_NAMES[cardIdx]} up`}
+                >↑</button>
+                <button
+                  className="reorder-move-btn"
+                  disabled={pos === order.length - 1}
+                  onClick={() => moveCard(pos, 1)}
+                  aria-label={`Move ${CARD_NAMES[cardIdx]} down`}
+                >↓</button>
+              </div>
+              {cards[cardIdx]}
+            </div>
+          )
+        })}
       </div>
+      <div aria-live="polite" className="sr-only">{announcement}</div>
     </div>
   )
 }

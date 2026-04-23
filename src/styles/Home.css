@@ -1,4 +1,18 @@
 /* ── Home Dashboard ── */
+
+/* Visually hidden (sr-only) for aria-live */
+.home-page .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .home-page {
   width: 100%;
   max-width: var(--max-width);
@@ -39,6 +53,7 @@
   border-radius: var(--radius);
   transition: transform 0.15s, box-shadow 0.15s;
   cursor: grab;
+  position: relative;
 }
 .home-grid-slot > .home-card {
   flex: 1;
@@ -607,21 +622,72 @@
   display: block;
 }
 
+/* ── Touch drag states ── */
+.home-grid-slot--touch-dragging {
+  opacity: 0.6;
+  transform: scale(0.97);
+  transition: transform 0.2s, opacity 0.2s;
+}
+.home-grid-slot--long-press {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Mobile move buttons */
+.reorder-touch-controls {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 5;
+}
+.reorder-move-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+.reorder-move-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-heading);
+}
+.reorder-move-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .home-page { padding: 1.5rem 1rem 2rem; }
   .home-grid {
     grid-template-columns: 1fr;
   }
+  .reorder-touch-controls { display: flex; }
+  .home-grid-slot { cursor: default; }
 }
 
 @media (max-width: 640px) {
   .home-greeting h1 { font-size: var(--fs-2xl); }
   .nw-amount { font-size: var(--fs-md); }
   .alloc-grid { flex-direction: column; }
+  .reorder-move-btn { width: 32px; height: 32px; min-height: 44px; min-width: 44px; }
 }
 
 /* ── Dark mode ── */
+
+body.dark .home-grid-slot--long-press {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
 
 body.dark .home-card-link:hover { color: var(--accent-text-mid); }
 
