@@ -7,7 +7,8 @@ import NetWorthSummary from './NetWorthSummary'
 import MiniCharts from './MiniCharts'
 import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
-import WelcomeGuide from './WelcomeGuide'
+import SetupProgress from './SetupProgress'
+import { loadBudgetStore } from '../budget/utils/budgetStorage'
 import '../../styles/Home.css'
 
 interface HomeProps {
@@ -37,6 +38,14 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
   const [dragOver, setDragOver] = useState<number | null>(null)
 
   const { accounts, balances } = useData()
+
+  const hasBudgetData = useMemo(() => {
+    const store = loadBudgetStore()
+    return Object.keys(store.csvs).length > 0
+  }, [])
+
+  const allComplete = accounts.length > 0 && balances.length > 0 && goals.length > 0 && hasBudgetData
+  const [setupDismissed, setSetupDismissed] = useState(() => localStorage.getItem('onboarding-dismissed') === '1')
 
   const allMonths = useMemo(() =>
     [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a)),
@@ -86,12 +95,6 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
     setDragOver(null)
   }, [])
 
-  const isCompletelyEmpty = balances.length === 0 && goals.length === 0
-
-  if (isCompletelyEmpty) {
-    return <WelcomeGuide greeting={greeting} />
-  }
-
   const cards: ReactNode[] = [
     <NetWorthSummary
       key="nw"
@@ -126,7 +129,21 @@ const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
     <div className="home-page">
       <div className="home-greeting">
         <h1>{greeting}</h1>
+        {setupDismissed && !allComplete && (
+          <button className="setup-guide-link" onClick={() => { localStorage.removeItem('onboarding-dismissed'); setSetupDismissed(false) }}>
+            Setup guide
+          </button>
+        )}
       </div>
+      {!setupDismissed && (
+        <SetupProgress
+          accounts={accounts}
+          balances={balances}
+          goals={goals}
+          hasBudgetData={hasBudgetData}
+          onDismiss={() => { localStorage.setItem('onboarding-dismissed', '1'); setSetupDismissed(true) }}
+        />
+      )}
       <div className="home-grid">
         {order.map((cardIdx, pos) => (
           <div
