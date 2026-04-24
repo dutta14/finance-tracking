@@ -475,6 +475,23 @@
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
+.goals-peek-projected {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-semibold);
+}
+.goals-peek-projected-date {
+  color: var(--accent-text-mid);
+}
+.goals-peek-projected--reached {
+  color: var(--color-positive);
+}
+.goals-peek-projected--link {
+  color: var(--accent);
+}
+.goals-peek-projected--warn {
+  color: var(--color-warning);
+}
 .goals-peek-more {
   text-align: center;
   font-size: var(--fs-sm);
@@ -853,4 +870,20 @@ body.dark .home-card-cta-btn:hover { color: var(--color-text-on-accent); }
 @media (max-width: 640px) {
   .welcome-step { flex-wrap: wrap; gap: 0.6rem; }
   .welcome-step-cta { margin-left: auto; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .goals-peek-bar-fill,
+  .home-card,
+  .home-grid-slot,
+  .home-card-link,
+  .home-card-cta-btn,
+  .nw-month-arrow,
+  .home-mini-tab,
+  .home-mini-date-btn,
+  .alloc-bar-seg,
+  .alloc-toggle-btn {
+    transition: none;
+  }
 }

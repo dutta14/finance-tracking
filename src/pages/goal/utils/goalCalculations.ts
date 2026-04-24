@@ -1,3 +1,6 @@
+/** Default pre-FI accumulation growth rate (%). Used for savings projections. */
+export const DEFAULT_PRE_FI_GROWTH_RATE = 8
+
 // Helper function to calculate Future Value
 export const calculateFV = (monthlyRate: number, months: number, presentValue: number): number => {
   return presentValue * Math.pow(1 + monthlyRate, months)
@@ -49,4 +52,37 @@ export const calculateGoalMetrics = (
     annualExpenseAtRetirement,
     fiGoal
   }
+}
+
+/**
+ * Project when net worth + monthly contributions at a growth rate will reach fiGoal.
+ * Returns null if not calculable.
+ */
+export function projectFIDate(
+  currentNetWorth: number,
+  fiGoal: number,
+  annualSavings: number,
+  growthRate: number // annual percentage, e.g. 7
+): { date: Date; months: number } | null {
+  if (fiGoal <= 0) return null
+  if (currentNetWorth >= fiGoal) return { date: new Date(), months: 0 }
+  if (annualSavings <= 0 && currentNetWorth < fiGoal) return null
+
+  const monthlyRate = (growthRate / 100) / 12
+  const monthlySavings = annualSavings / 12
+  let balance = currentNetWorth
+  const now = new Date()
+
+  for (let m = 1; m <= 1200; m++) { // cap at 100 years
+    if (monthlyRate > 0) {
+      balance = balance * (1 + monthlyRate) + monthlySavings
+    } else {
+      balance += monthlySavings // linear if 0% growth
+    }
+    if (balance >= fiGoal) {
+      const projected = new Date(now.getFullYear(), now.getMonth() + m, 1)
+      return { date: projected, months: m }
+    }
+  }
+  return null // unreachable in 100 years
 }

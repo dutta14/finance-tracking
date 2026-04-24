@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback, useEffect } from 'react'
+import { FC, useState, useMemo, useCallback, useEffect, useId } from 'react'
 import { FinancialGoal } from '../types'
 import GoalCardActions from './GoalCardActions'
 import { calculateGoalMetrics, projectFIDate, DEFAULT_PRE_FI_GROWTH_RATE } from '../utils/goalCalculations'
@@ -127,16 +127,19 @@ function suggestSWR(goal: FinancialGoal, profileBirthday: string): number | null
   return null
 }
 
-const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ tooltip, align = 'right' }) => (
-  <span className="fi-goal-info">
-    <svg className="fi-goal-info-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-      <rect x="7.25" y="7" width="1.5" height="5" rx="0.75" fill="currentColor"/>
-      <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="currentColor"/>
-    </svg>
-    <span className={`fi-goal-tooltip${align === 'left' ? ' fi-goal-tooltip--left' : ''}`}>{tooltip}</span>
-  </span>
-)
+const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ tooltip, align = 'right' }) => {
+  const tooltipId = useId()
+  return (
+    <span className="fi-goal-info" tabIndex={0} aria-describedby={tooltipId}>
+      <svg className="fi-goal-info-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="7.25" y="7" width="1.5" height="5" rx="0.75" fill="currentColor"/>
+        <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="currentColor"/>
+      </svg>
+      <span id={tooltipId} role="tooltip" className={`fi-goal-tooltip${align === 'left' ? ' fi-goal-tooltip--left' : ''}`}>{tooltip}</span>
+    </span>
+  )
+}
 
 const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, onEdit, onCopy, onDelete, onUpdateGoal, showActions = true, condensed = false, showTitle = true, initialEditing = false }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
@@ -377,7 +380,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
         <>
           {/* ── Parameters ── */}
           {!condensed && <div className="fi-card-section">
-        <div className="fi-card-section-title">Parameters</div>
+        <h4 className="fi-card-section-title">Parameters</h4>
         <div className="fi-card-rows">
           <div className="fi-card-row">
             <span className="fi-card-row-label">Goal Created</span>
@@ -411,7 +414,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
       {/* ── Expense Analysis ── */}
       {!condensed && <div className="fi-card-section">
         <div className="fi-card-section-header">
-          <div className="fi-card-section-title">Expenses</div>
+          <h4 className="fi-card-section-title">Expenses</h4>
           <div className="expense-toggle">
             <button
               className={`expense-toggle-btn${expenseView === 'creation' ? ' active' : ''}`}
@@ -461,7 +464,14 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
           <span className="fi-card-goal-amount">{dollars(goal.fiGoal)}</span>
         </div>
         <div className="fi-card-progress-row">
-          <div className="fi-card-progress-bar-track">
+          <div
+            className="fi-card-progress-bar-track"
+            role="progressbar"
+            aria-valuenow={Math.round(fiProgress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`FI goal progress: ${fiProgress.toFixed(1)}%`}
+          >
             <div
               className="fi-card-progress-bar-fill"
               style={{ width: `${progressClamped}%` }}
@@ -475,7 +485,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
       {!condensed && (
         <div className="fi-card-section fi-card-projection">
           <div className="fi-card-section-header">
-            <span className="fi-card-section-title">Projected Timeline</span>
+            <h4 className="fi-card-section-title">Projected Timeline</h4>
             <InfoIcon tooltip="Based on your current savings rate and growth assumptions" align="left" />
           </div>
 
@@ -491,8 +501,8 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
           {projection.state === 'reached' && (
             <div className="fi-card-rows">
               <div className="fi-card-row">
-                <span className="fi-card-row-value fi-card-row-value--ahead" style={{ fontWeight: 'var(--fw-bold)' }}>
-                  🎉 Goal reached!
+                <span className="fi-card-row-value fi-card-row-value--ahead" style={{ fontWeight: 'var(--fw-semibold)' }}>
+                  <span role="img" aria-label="celebration">🎉</span> Goal reached!
                 </span>
               </div>
             </div>

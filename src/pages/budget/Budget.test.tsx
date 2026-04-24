@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { useRef } from 'react'
 import Budget from './Budget'
 
 /* ─── Mocks ─── */
@@ -146,7 +145,7 @@ describe('Budget PDF → CSV fullscreen modal', () => {
     await openUploadMenu(user)
     await user.click(screen.getByText('PDF → CSV'))
 
-    expect(screen.getByText('PdfToCsv Tool')).toBeInTheDocument()
+    expect(await screen.findByText('PdfToCsv Tool')).toBeInTheDocument()
   })
 
   it('displays the modal title "PDF → CSV"', async () => {

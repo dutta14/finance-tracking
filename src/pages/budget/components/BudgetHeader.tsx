@@ -4,7 +4,6 @@ import { getCSVFormatHelp } from '../utils/csvParser'
 
 interface BudgetHeaderProps {
   selectedYear: number
-  currentYear: number
   viewMode: BudgetViewMode
   timePeriod: TimePeriod
   showGroupMgr: boolean
@@ -25,7 +24,7 @@ interface BudgetHeaderProps {
 }
 
 const BudgetHeader: FC<BudgetHeaderProps> = ({
-  selectedYear, currentYear, viewMode, timePeriod,
+  selectedYear, viewMode, timePeriod,
   showGroupMgr, showFormatHelp, showUploadMenu,
   quickUploadRef, bulkUploadRef,
   onPrevYear, onNextYear, onSetViewMode, onSetTimePeriod,

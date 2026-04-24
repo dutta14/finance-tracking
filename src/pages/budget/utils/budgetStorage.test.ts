@@ -10,8 +10,10 @@ import {
   saveCSVForMonth,
   deleteCSVForMonth,
   createYear,
+  getBudgetSaveRate,
+  saveBudgetSummary,
 } from './budgetStorage'
-import type { BudgetStore, CategoryGroup, BudgetConfigData } from '../types'
+import type { BudgetStore, CategoryGroup } from '../types'
 
 const DEFAULT_GROUPS: CategoryGroup[] = [
   { id: 'others', name: 'Others', categories: [] },
@@ -266,5 +268,58 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
     // Groceries is in the food group, so it should be removed from Others
     expect(others.categories).not.toContain('Groceries')
     expect(others.categories).toContain('Misc')
+  })
+})
+
+describe('getBudgetSaveRate', () => {
+  it('returns null when no budget-summary is stored', () => {
+    expect(getBudgetSaveRate()).toBeNull()
+  })
+
+  it('returns parsed summary when valid JSON is stored', () => {
+    const summary = { annualSavings: 60000, saveRate: 40, monthsOfData: 12 }
+    localStorage.setItem('budget-summary', JSON.stringify(summary))
+    const result = getBudgetSaveRate()
+    expect(result).toEqual(summary)
+  })
+
+  it('returns null when budget-summary contains corrupt JSON', () => {
+    localStorage.setItem('budget-summary', '{broken json!!!')
+    expect(getBudgetSaveRate()).toBeNull()
+  })
+
+  it('returns summary with zero savings rate', () => {
+    const summary = { annualSavings: 0, saveRate: 0, monthsOfData: 6 }
+    localStorage.setItem('budget-summary', JSON.stringify(summary))
+    expect(getBudgetSaveRate()).toEqual(summary)
+  })
+
+  it('returns summary with negative savings', () => {
+    const summary = { annualSavings: -5000, saveRate: -10, monthsOfData: 3 }
+    localStorage.setItem('budget-summary', JSON.stringify(summary))
+    expect(getBudgetSaveRate()).toEqual(summary)
+  })
+})
+
+describe('saveBudgetSummary', () => {
+  it('persists summary to localStorage under budget-summary key', () => {
+    const summary = { annualSavings: 48000, saveRate: 35, monthsOfData: 8 }
+    saveBudgetSummary(summary)
+    const stored = JSON.parse(localStorage.getItem('budget-summary')!)
+    expect(stored).toEqual(summary)
+  })
+
+  it('overwrites previously saved summary', () => {
+    saveBudgetSummary({ annualSavings: 10000, saveRate: 10, monthsOfData: 1 })
+    saveBudgetSummary({ annualSavings: 20000, saveRate: 20, monthsOfData: 2 })
+    const stored = JSON.parse(localStorage.getItem('budget-summary')!)
+    expect(stored.annualSavings).toBe(20000)
+    expect(stored.monthsOfData).toBe(2)
+  })
+
+  it('round-trips correctly with getBudgetSaveRate', () => {
+    const summary = { annualSavings: 72000, saveRate: 50, monthsOfData: 24 }
+    saveBudgetSummary(summary)
+    expect(getBudgetSaveRate()).toEqual(summary)
   })
 })

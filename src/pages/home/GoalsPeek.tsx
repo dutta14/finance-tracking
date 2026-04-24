@@ -2,6 +2,8 @@ import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../types'
 import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../data/types'
+import { projectFIDate, DEFAULT_PRE_FI_GROWTH_RATE } from '../goal/utils/goalCalculations'
+import { getBudgetSaveRate } from '../budget/utils/budgetStorage'
 import TermAbbr from '../../components/TermAbbr'
 
 interface GoalsPeekProps {
@@ -10,7 +12,7 @@ interface GoalsPeekProps {
   onNavigate: () => void
 }
 
-const GROWTH_RATE = 8
+const GROWTH_RATE = DEFAULT_PRE_FI_GROWTH_RATE
 
 const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: number): number => {
   if (nMonths <= 0) return 0
@@ -39,6 +41,9 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
     return { fiTotal: fiT, gwTotal: gwT, latestMonth: latest, profileBirthday: pb }
   }, [accounts, balances, allMonths])
 
+  // Lightweight budget read — called each render (cheap localStorage parse)
+  const budgetSaveRate = getBudgetSaveRate()
+
   if (goals.length === 0) {
     return (
       <div className="home-card home-card--goals">
@@ -47,7 +52,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
           <button className="home-card-link" onClick={onNavigate}>View Goals →</button>
         </div>
         <div className="home-card-cta">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /></svg>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /></svg>
           <p>Set an FI target or general wealth goal to start tracking your progress.</p>
           <button className="home-card-cta-btn" onClick={onNavigate}>Create a goal →</button>
         </div>
@@ -101,6 +106,35 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
             }
           }
 
+          // Project FI date from budget savings data
+          let fiProjectedLabel: string | null = null
+          let fiProjectedType: 'date' | 'reached' | 'no-budget' | 'not-reachable' | null = null
+
+          if (goal.fiGoal > 0) {
+            if (fiTotal >= goal.fiGoal) {
+              fiProjectedLabel = '🎉 Goal reached!'
+              fiProjectedType = 'reached'
+            } else if (!budgetSaveRate) {
+              fiProjectedLabel = 'Add budget data →'
+              fiProjectedType = 'no-budget'
+            } else if (budgetSaveRate.annualSavings <= 0) {
+              fiProjectedLabel = 'Not reachable at current rate'
+              fiProjectedType = 'not-reachable'
+            } else {
+              const proj = projectFIDate(fiTotal, goal.fiGoal, budgetSaveRate.annualSavings, GROWTH_RATE)
+              if (proj && proj.months === 0) {
+                fiProjectedLabel = '🎉 Goal reached!'
+                fiProjectedType = 'reached'
+              } else if (proj) {
+                fiProjectedLabel = proj.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                fiProjectedType = 'date'
+              } else {
+                fiProjectedLabel = 'Not reachable at current rate'
+                fiProjectedType = 'not-reachable'
+              }
+            }
+          }
+
           return (
             <button
               key={goal.id}
@@ -113,7 +147,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
               <div className="goals-peek-bars">
                 <div className="goals-peek-bar-row">
                   <span className="goals-peek-bar-label"><TermAbbr term="FI" /></span>
-                  <div className="goals-peek-bar-track">
+                  <div className="goals-peek-bar-track" role="progressbar" aria-valuenow={Math.round(fiPct)} aria-valuemin={0} aria-valuemax={100} aria-label={`FI progress: ${fiPct.toFixed(0)}%`}>
                     <div className="goals-peek-bar-fill goals-peek-bar-fill--fi" style={{ width: `${fiPct}%` }} />
                   </div>
                   <span className="goals-peek-pct goals-peek-pct--fi">{fiPct.toFixed(0)}%</span>
@@ -122,7 +156,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
                 {goalGws.length > 0 && (
                   <div className="goals-peek-bar-row">
                     <span className="goals-peek-bar-label"><TermAbbr term="GW" /></span>
-                    <div className="goals-peek-bar-track">
+                    <div className="goals-peek-bar-track" role="progressbar" aria-valuenow={Math.round(gwPct)} aria-valuemin={0} aria-valuemax={100} aria-label={`General wealth progress: ${gwPct.toFixed(0)}%`}>
                       <div className="goals-peek-bar-fill goals-peek-bar-fill--gw" style={{ width: `${gwPct}%` }} />
                     </div>
                     <span className="goals-peek-pct goals-peek-pct--gw">{gwPct.toFixed(0)}%</span>
@@ -134,6 +168,19 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
                 <span>FI: {goal.fiGoal != null ? formatCurrency(goal.fiGoal) : '—'}</span>
                 {goalGws.length > 0 && <span>{goalGws.length} GW goal{goalGws.length > 1 ? 's' : ''}</span>}
                 <span>Retire: {goal.retirement}</span>
+                {fiProjectedLabel && (
+                  <span className={`goals-peek-projected${
+                    fiProjectedType === 'reached' ? ' goals-peek-projected--reached' :
+                    fiProjectedType === 'no-budget' ? ' goals-peek-projected--link' :
+                    fiProjectedType === 'not-reachable' ? ' goals-peek-projected--warn' : ''
+                  }`}>
+                    {fiProjectedType === 'date'
+                      ? <>FI by <span className="goals-peek-projected-date">{fiProjectedLabel}</span></>
+                      : fiProjectedType === 'reached'
+                        ? <><span role="img" aria-label="celebration">🎉</span> Goal reached!</>
+                        : fiProjectedLabel}
+                  </span>
+                )}
               </div>
             </button>
           )

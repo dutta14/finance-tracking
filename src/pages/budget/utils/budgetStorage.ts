@@ -1,4 +1,23 @@
-import { BudgetStore, BudgetConfig, MonthCSV, CategoryGroup, BudgetConfigData } from '../types'
+import { BudgetStore, CategoryGroup, BudgetConfigData } from '../types'
+
+/**
+ * Lightweight budget savings-rate reader for use outside the useBudget hook.
+ * Reads the persisted summary written by useBudget — no CSV re-parsing.
+ */
+export function getBudgetSaveRate(): { annualSavings: number; saveRate: number; monthsOfData: number } | null {
+  try {
+    const raw = localStorage.getItem('budget-summary')
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+/** Persist budget summary so other pages can read it without useBudget */
+export function saveBudgetSummary(summary: { annualSavings: number; saveRate: number; monthsOfData: number }): void {
+  localStorage.setItem('budget-summary', JSON.stringify(summary))
+}
 
 const STORAGE_KEY = 'budget-store'
 const CONFIG_KEY = 'budget-config'

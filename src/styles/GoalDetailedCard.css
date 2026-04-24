@@ -129,11 +129,11 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--accent-text-mid);
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem;
 }
 
 .fi-card-section-header .fi-card-section-title {
-  margin-bottom: 0;
+  margin: 0;
 }
 
 /* ── Label / value rows ── */
@@ -324,6 +324,16 @@
   display: block;
 }
 
+.fi-goal-info:focus-within .fi-goal-tooltip {
+  display: block;
+}
+
+.fi-goal-info:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
 .fi-goal-tooltip--left {
   left: auto;
   right: calc(100% + 8px);
@@ -463,4 +473,83 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 .fi-form-cancel:hover {
   background: var(--accent-light);
   border-color: var(--accent);
+}
+
+/* ──────────────────────────────────────────────
+   Savings → Goal Timeline Projection
+   ────────────────────────────────────────────── */
+
+/* Value modifiers */
+.fi-card-row-value--projected {
+  font-weight: var(--fw-semibold);
+  color: var(--accent-text-dark);
+}
+
+.fi-card-row-value--ahead {
+  color: var(--color-positive);
+}
+
+.fi-card-row-value--behind {
+  color: var(--color-warning);
+}
+
+/* Trajectory sparkline container */
+.fi-card-trajectory {
+  margin-top: var(--space-xs, 0.5rem);
+  overflow: hidden;
+  position: relative; /* anchor for sr-only figcaption */
+}
+
+.fi-card-trajectory svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Status-driven colors via data attribute */
+.fi-card-trajectory[data-status="ahead"],
+.fi-card-trajectory[data-status="on-track"] {
+  --trajectory-stroke: var(--color-positive);
+  --trajectory-fill: var(--color-positive);
+}
+
+.fi-card-trajectory[data-status="behind"] {
+  --trajectory-stroke: var(--color-warning);
+  --trajectory-fill: var(--color-warning);
+}
+
+/* "Add budget data" link */
+.fi-card-projection-link {
+  font-size: var(--fs-md);
+  color: var(--accent);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+
+.fi-card-projection-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .fi-card-projection .fi-card-row-label {
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fi-card,
+  .fi-card-progress-bar-fill,
+  .fi-card-warning-suggest,
+  .expense-toggle-btn,
+  .fi-card-edit-btn,
+  .fi-form-input,
+  .fi-form-save,
+  .fi-form-cancel {
+    transition: none;
+  }
 }

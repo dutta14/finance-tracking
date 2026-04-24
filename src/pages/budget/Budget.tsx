@@ -21,7 +21,7 @@ const Budget: FC = () => {
     years,
     selectedYear, setSelectedYear,
     viewMode, setViewMode,
-    uploadCSV, removeCSV, createYear, updateCategoryGroups, mergeCategories, editCategory,
+    uploadCSV, removeCSV, updateCategoryGroups, mergeCategories, editCategory,
     categoryHasTransactions, deleteCategory,
     addTransaction,
     yearTransactions, categoryGroups, removedCategories, categorySums, summary, monthsWithData,
@@ -70,7 +70,6 @@ const Budget: FC = () => {
     <div className="budget-page">
       <BudgetHeader
         selectedYear={selectedYear}
-        currentYear={currentYear}
         viewMode={viewMode}
         timePeriod={timePeriod}
         showGroupMgr={showGroupMgr}

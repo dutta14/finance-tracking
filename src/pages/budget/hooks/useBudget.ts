@@ -3,6 +3,7 @@ import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigDa
 import {
   loadBudgetStore, saveBudgetStore, saveCSVForMonth, deleteCSVForMonth,
   createYear, getGlobalCategoryGroups, updateGlobalCategoryGroups,
+  saveBudgetSummary,
 } from '../utils/budgetStorage'
 import { parseCSV, buildMonthKey, parseCSVLine, getValidLineIndices } from '../utils/csvParser'
 
@@ -298,6 +299,14 @@ export function useBudget() {
     }
     return keys
   }, [store.csvs, selectedYear])
+
+  // Persist summary so other pages (Goals) can read savings data without this hook
+  useEffect(() => {
+    const annualSavings = monthsWithData.size > 0
+      ? (summary.totalIncome - summary.totalExpense) * (12 / monthsWithData.size)
+      : 0
+    saveBudgetSummary({ annualSavings, saveRate: summary.saveRate, monthsOfData: monthsWithData.size })
+  }, [summary, monthsWithData])
 
   const years = store.years
 
