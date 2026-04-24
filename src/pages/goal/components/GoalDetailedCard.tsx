@@ -1,10 +1,13 @@
 import { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { FinancialGoal } from '../types'
 import GoalCardActions from './GoalCardActions'
-import { calculateGoalMetrics } from '../utils/goalCalculations'
+import { calculateGoalMetrics, projectFIDate, DEFAULT_PRE_FI_GROWTH_RATE } from '../utils/goalCalculations'
 import { parseDate as utilParseDate, getMonthsBetween } from '../utils/dateHelpers'
-import { getLatestGoalTotals } from '../../data/types'
+import { useData } from '../../../contexts/DataContext'
+import { getBudgetSaveRate } from '../../budget/utils/budgetStorage'
 import TermAbbr from '../../../components/TermAbbr'
+import TrajectorySparkline from './TrajectorySparkline'
+import type { TrajectoryStatus } from './TrajectorySparkline'
 import '../../../styles/GoalDetailedCard.css'
 
 interface EditFields {
@@ -24,7 +27,6 @@ interface GoalDetailedCardProps {
   onCopy?: (goal: FinancialGoal) => void
   onDelete?: (goalId: number) => void
   onUpdateGoal?: (goalId: number, goal: FinancialGoal) => void
-  onEditClick?: () => void
   showActions?: boolean
   condensed?: boolean
   showTitle?: boolean
@@ -136,13 +138,15 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
   </span>
 )
 
-const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, onEdit, onCopy, onDelete, onUpdateGoal, onEditClick, showActions = true, condensed = false, showTitle = true, initialEditing = false }) => {
+const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, onEdit, onCopy, onDelete, onUpdateGoal, showActions = true, condensed = false, showTitle = true, initialEditing = false }) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
   const [amountView, setAmountView] = useState<'annual' | 'monthly'>('annual')
   const [suggesting, setSuggesting] = useState(false)
   const [editing, setEditing] = useState(initialEditing)
   const [editFields, setEditFields] = useState<EditFields>(toEditFields(goal))
   const [editError, setEditError] = useState('')
+
+  const { accounts, balances, allMonths } = useData()
 
   useEffect(() => {
     setEditFields(toEditFields(goal))
@@ -215,12 +219,72 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
   const retirementYear = retirementDate.getFullYear()
   const inflationYears = Math.round(retirementYear - Number(creationYear))
 
+  const fiTotal = useMemo(() => {
+    const latest = allMonths[allMonths.length - 1]
+    if (!latest) return 0
+    const balMap = new Map<number, number>()
+    for (const b of balances) if (b.month === latest) balMap.set(b.accountId, b.balance)
+    return accounts
+      .filter(a => a.status === 'active' && a.goalType === 'fi')
+      .reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
+  }, [accounts, balances, allMonths])
+
+  const budgetData = getBudgetSaveRate()
+  const budgetAnnualSavings = budgetData?.annualSavings ?? 0
+  const budgetSaveRateValue = budgetData?.saveRate ?? 0
+  const hasBudgetData = budgetData !== null
+
   const fiProgress = useMemo(() => {
     if (goal.fiGoal <= 0) return 0
-    const { fiTotal } = getLatestGoalTotals()
     return Math.min(100, Math.max(0, (fiTotal / goal.fiGoal) * 100))
-  }, [goal.fiGoal])
+  }, [goal.fiGoal, fiTotal])
   const progressClamped = fiProgress
+
+  // ── Savings → goal timeline projection ──
+  const projection = useMemo(() => {
+    if (goal.fiGoal <= 0) return { state: 'no-goal' as const }
+    if (fiTotal >= goal.fiGoal) return { state: 'reached' as const }
+    if (!hasBudgetData) return { state: 'no-budget' as const }
+    if (budgetAnnualSavings <= 0) return { state: 'not-reachable' as const }
+
+    const result = projectFIDate(fiTotal, goal.fiGoal, budgetAnnualSavings, DEFAULT_PRE_FI_GROWTH_RATE)
+    if (!result) return { state: 'not-reachable' as const }
+
+    // Compare projected FI date with target retirement date
+    const [by, bm, bd] = profileBirthday.split('-').map(Number)
+    const targetRetirement = new Date(by + goal.retirementAge, bm - 1, bd)
+    const diffMs = targetRetirement.getTime() - result.date.getTime()
+    const diffMonthsRaw = Math.round(diffMs / (30.44 * 24 * 60 * 60 * 1000))
+    const absDiffMonths = Math.abs(diffMonthsRaw)
+    const ahead = diffMonthsRaw >= 0
+
+    let diffText: string
+    if (absDiffMonths === 0) {
+      diffText = 'On track'
+    } else if (absDiffMonths < 12) {
+      diffText = `${absDiffMonths} month${absDiffMonths !== 1 ? 's' : ''} ${ahead ? 'early' : 'behind'}`
+    } else {
+      const years = Math.round(absDiffMonths / 12)
+      diffText = `${years} year${years !== 1 ? 's' : ''} ${ahead ? 'early' : 'behind'}`
+    }
+
+    const shortDate = `${result.date.toLocaleDateString('en-US', { month: 'short' })} '${String(result.date.getFullYear()).slice(2)}`
+    const monthlySavings = budgetAnnualSavings / 12
+    return {
+      state: 'projected' as const,
+      date: result.date,
+      months: result.months,
+      dateLabel: result.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      shortDateLabel: shortDate,
+      monthlySavings,
+      currentNetWorth: fiTotal,
+      fiGoal: goal.fiGoal,
+      saveRate: budgetSaveRateValue,
+      ahead,
+      absDiffMonths,
+      diffText,
+    }
+  }, [goal.fiGoal, goal.retirementAge, profileBirthday, fiTotal, hasBudgetData, budgetAnnualSavings, budgetSaveRateValue])
 
   return (
     <div className={`fi-card${condensed ? ' fi-card--flat' : ''}`}>
@@ -406,6 +470,94 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
           <span className="fi-card-progress-pct">{fiProgress.toFixed(1)}%</span>
         </div>
       </div>
+
+      {/* ── Savings → Goal Timeline Projection ── */}
+      {!condensed && (
+        <div className="fi-card-section fi-card-projection">
+          <div className="fi-card-section-header">
+            <span className="fi-card-section-title">Projected Timeline</span>
+            <InfoIcon tooltip="Based on your current savings rate and growth assumptions" align="left" />
+          </div>
+
+          {projection.state === 'no-goal' && (
+            <div className="fi-card-rows">
+              <div className="fi-card-row">
+                <span className="fi-card-row-label">Projected completion</span>
+                <span className="fi-card-row-value">—</span>
+              </div>
+            </div>
+          )}
+
+          {projection.state === 'reached' && (
+            <div className="fi-card-rows">
+              <div className="fi-card-row">
+                <span className="fi-card-row-value fi-card-row-value--ahead" style={{ fontWeight: 'var(--fw-bold)' }}>
+                  🎉 Goal reached!
+                </span>
+              </div>
+            </div>
+          )}
+
+          {projection.state === 'no-budget' && (
+            <div className="fi-card-rows">
+              <div className="fi-card-row">
+                <a href="#/budget" className="fi-card-projection-link">Add budget data to see projections</a>
+              </div>
+            </div>
+          )}
+
+          {projection.state === 'not-reachable' && (
+            <div className="fi-card-rows">
+              <div className="fi-card-row">
+                <span className="fi-card-row-value fi-card-row-value--behind">Not reachable at current rate</span>
+              </div>
+            </div>
+          )}
+
+          {projection.state === 'projected' && (() => {
+            const trajectoryStatus: TrajectoryStatus =
+              projection.absDiffMonths <= 6 ? 'on-track' : projection.ahead ? 'ahead' : 'behind'
+
+            const projectedDateFull = projection.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+            const diffYears = Math.round(projection.absDiffMonths / 12)
+            const diffDesc = projection.absDiffMonths <= 6
+              ? `on track with your ${retirementDateLabel} target retirement`
+              : `${diffYears} year${diffYears !== 1 ? 's' : ''} ${projection.ahead ? 'ahead of' : 'behind'} your ${retirementDateLabel} target retirement`
+            const caption = `Projected to reach your FI goal of ${dollars(projection.fiGoal)} by ${projectedDateFull}, ${diffDesc}.`
+
+            return (
+              <>
+                <div className="fi-card-rows">
+                  <div className="fi-card-row">
+                    <span className="fi-card-row-label">Monthly savings</span>
+                    <span className="fi-card-row-value">{dollars(projection.monthlySavings)}</span>
+                  </div>
+                  <div className="fi-card-row">
+                    <span className="fi-card-row-label">Projected completion</span>
+                    <span className="fi-card-row-value fi-card-row-value--projected">{projection.dateLabel}</span>
+                  </div>
+                  <div className="fi-card-row">
+                    <span className="fi-card-row-label">vs. target retirement</span>
+                    <span className={`fi-card-row-value fi-card-row-value--${projection.ahead ? 'ahead' : 'behind'}`}>
+                      {projection.diffText}
+                    </span>
+                  </div>
+                </div>
+                <TrajectorySparkline
+                  currentNetWorth={projection.currentNetWorth}
+                  fiGoal={projection.fiGoal}
+                  annualSavings={projection.monthlySavings * 12}
+                  growthRate={DEFAULT_PRE_FI_GROWTH_RATE}
+                  months={projection.months}
+                  dateLabel={projection.shortDateLabel}
+                  trajectoryStatus={trajectoryStatus}
+                  caption={caption}
+                />
+              </>
+            )
+          })()}
+        </div>
+      )}
 
       {!condensed && <div className="fi-card-meta">
         <small>Created {goal.createdAt}</small>
