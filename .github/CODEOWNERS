@@ -1,0 +1,16 @@
+# Privacy-sensitive paths — require Dana (privacy) review
+src/hooks/useGitHubSync.ts @dutta14
+src/pages/budget/utils/budgetStorage.ts @dutta14
+src/pages/budget/hooks/useBudget.ts @dutta14
+
+# Security-sensitive paths — require Reese (security) review  
+src/hooks/useGitHubSync.ts @dutta14
+index.html @dutta14
+
+# Data model changes — require both privacy + security review
+src/types.ts @dutta14
+src/context/ @dutta14
+
+# All localStorage interactions
+src/pages/*/utils/*Storage* @dutta14
+src/pages/*/utils/*storage* @dutta14

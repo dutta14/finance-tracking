@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--
+    Content Security Policy — deployed to GitHub Pages (no HTTP header control).
+    Vite dev mode injects inline scripts for HMR/React Fast Refresh, so you'll
+    see CSP violations in the console during development. That's expected and
+    harmless — this policy is tuned for the production build.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; font-src 'self'">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Finance Tracking</title>
   <link rel="stylesheet" href="/styles/normalize.css">

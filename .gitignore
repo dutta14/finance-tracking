@@ -33,3 +33,7 @@ lerna-debug.log*
 # OS
 Thumbs.db
 memories/
+
+# Playwright
+e2e-results/
+playwright-report/
