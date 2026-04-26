@@ -1,8 +1,7 @@
 import { FC, useMemo, useState, useRef, useCallback, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Profile } from '../../hooks/useProfile'
+import { useGoals } from '../../contexts/GoalsContext'
 import { useData } from '../../contexts/DataContext'
-import { FinancialGoal, GwGoal } from '../../types'
 import { useTouchDrag } from '../../hooks/useTouchDrag'
 import NetWorthSummary from './NetWorthSummary'
 import MiniCharts from './MiniCharts'
@@ -11,12 +10,6 @@ import AllocationBreakdown from './AllocationBreakdown'
 import SetupProgress from './SetupProgress'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
 import '../../styles/Home.css'
-
-interface HomeProps {
-  profile: Profile
-  goals: FinancialGoal[]
-  gwGoals: GwGoal[]
-}
 
 const STORAGE_KEY = 'home-card-order'
 const DEFAULT_ORDER = [0, 1, 2, 3]
@@ -34,8 +27,9 @@ function loadOrder(): number[] {
 
 const CARD_NAMES = ['Net Worth', 'Charts', 'Goals', 'Allocation']
 
-const Home: FC<HomeProps> = ({ profile, goals, gwGoals }) => {
+const Home: FC = () => {
   const navigate = useNavigate()
+  const { visibleGoals: goals, gwGoals, profile } = useGoals()
   const [order, setOrder] = useState(loadOrder)
   const dragIdx = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)

@@ -445,29 +445,31 @@ describe('Goal page hides header/tab-bar on detail view', () => {
   // isDetailView conditional rendering
   // We import Goal lazily here so the GoalDetail child-component mocks apply
   it('does not render the tab bar or header on /goal/:id', async () => {
+    vi.doMock('../../contexts/GoalsContext', () => ({
+      useGoals: () => ({
+        visibleGoals: threeGoals,
+        gwGoals: [],
+        profile: { birthday: '1990-01-01' },
+        createGoal: noop,
+        updateGoal: noop,
+        handleDeleteGoal: noop,
+        handleDeleteWithUndo: noop,
+        reorderGoals: noop,
+        handleCopyGwGoals: noop,
+        createGwGoal: noop,
+        updateGwGoal: noop,
+        deleteGwGoal: noop,
+      }),
+    }))
+    vi.doMock('../../contexts/LayoutContext', () => ({
+      useLayout: () => ({ handleOpenProfile: noop }),
+    }))
     const Goal = (await import('./Goal')).default
-    const goalProps = {
-      goals: threeGoals,
-      profileBirthday: '1990-01-01',
-      onOpenProfile: noop,
-      createGoal: noop as any,
-      updateGoal: noop as any,
-      deleteGoal: noop as any,
-      onDeleteMultipleGoals: noop as any,
-      reorderGoals: noop as any,
-      selectedGoalIds: [] as number[],
-      onSetSelectedGoalIds: noop as any,
-      onCopyGwGoals: noop as any,
-      gwGoals: [],
-      onCreateGwGoal: noop as any,
-      onUpdateGwGoal: noop as any,
-      onDeleteGwGoal: noop as any,
-    }
 
     render(
       <MemoryRouter initialEntries={['/goal/1']}>
         <Routes>
-          <Route path="/goal/*" element={<Goal {...goalProps} />} />
+          <Route path="/goal/*" element={<Goal />} />
         </Routes>
       </MemoryRouter>,
     )
@@ -481,29 +483,31 @@ describe('Goal page hides header/tab-bar on detail view', () => {
   })
 
   it('renders the tab bar and header on /goal (non-detail view)', async () => {
+    vi.doMock('../../contexts/GoalsContext', () => ({
+      useGoals: () => ({
+        visibleGoals: threeGoals,
+        gwGoals: [],
+        profile: { birthday: '1990-01-01' },
+        createGoal: noop,
+        updateGoal: noop,
+        handleDeleteGoal: noop,
+        handleDeleteWithUndo: noop,
+        reorderGoals: noop,
+        handleCopyGwGoals: noop,
+        createGwGoal: noop,
+        updateGwGoal: noop,
+        deleteGwGoal: noop,
+      }),
+    }))
+    vi.doMock('../../contexts/LayoutContext', () => ({
+      useLayout: () => ({ handleOpenProfile: noop }),
+    }))
     const Goal = (await import('./Goal')).default
-    const goalProps = {
-      goals: threeGoals,
-      profileBirthday: '1990-01-01',
-      onOpenProfile: noop,
-      createGoal: noop as any,
-      updateGoal: noop as any,
-      deleteGoal: noop as any,
-      onDeleteMultipleGoals: noop as any,
-      reorderGoals: noop as any,
-      selectedGoalIds: [] as number[],
-      onSetSelectedGoalIds: noop as any,
-      onCopyGwGoals: noop as any,
-      gwGoals: [],
-      onCreateGwGoal: noop as any,
-      onUpdateGwGoal: noop as any,
-      onDeleteGwGoal: noop as any,
-    }
 
     render(
       <MemoryRouter initialEntries={['/goal']}>
         <Routes>
-          <Route path="/goal/*" element={<Goal {...goalProps} />} />
+          <Route path="/goal/*" element={<Goal />} />
         </Routes>
       </MemoryRouter>,
     )

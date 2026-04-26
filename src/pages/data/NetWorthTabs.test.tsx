@@ -1,19 +1,39 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Data from './Data'
 
-const defaultProfile = {
-  name: '',
-  currency: 'USD' as const,
-  locale: 'en-US',
-  dateFormat: 'MMM YYYY',
-}
+vi.mock('../../contexts/GoalsContext', () => ({
+  useGoals: () => ({
+    profile: { name: '', currency: 'USD', locale: 'en-US', dateFormat: 'MMM YYYY' },
+  }),
+}))
+
+vi.mock('../../contexts/SettingsContext', () => ({
+  useSettings: () => ({
+    allowCsvImport: false,
+  }),
+}))
+
+vi.mock('../../contexts/GitHubSyncContext', () => ({
+  useGitHubSyncContext: () => ({
+    handleDataChange: () => {},
+  }),
+}))
+
+vi.mock('../../contexts/DataContext', () => ({
+  useData: () => ({
+    accounts: [],
+    balances: [],
+    setAccounts: () => {},
+    setBalances: () => {},
+  }),
+}))
 
 function renderData(initialRoute = '/net-worth') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Data profile={defaultProfile} />
+      <Data />
     </MemoryRouter>,
   )
 }

@@ -1,6 +1,8 @@
 import { FC, useState, lazy, Suspense } from 'react'
 import { NavLink, useLocation, useNavigate, Routes, Route } from 'react-router-dom'
-import { FinancialGoal, GwGoal } from '../../types'
+import { FinancialGoal } from '../../types'
+import { useGoals } from '../../contexts/GoalsContext'
+import { useLayout } from '../../contexts/LayoutContext'
 import GoalFormModal from './components/GoalFormModal'
 import GoalsSection from './components/GoalsSection'
 import GoalMixer from './components/GoalMixer'
@@ -11,23 +13,23 @@ import NewGoalButton from './components/NewGoalButton'
 
 const FICalculator = lazy(() => import('../tools/components/FICalculator'))
 
-interface GoalProps {
-  goals: FinancialGoal[]
-  profileBirthday: string
-  onOpenProfile: () => void
-  createGoal: (goal: FinancialGoal) => void
-  updateGoal: (goalId: number, goal: FinancialGoal) => void
-  deleteGoal: (goalId: number) => void
-  onDeleteMultipleGoals: (ids: number[]) => void
-  reorderGoals: (orderedIds: number[]) => void
-  onCopyGwGoals: (sourcePlanId: number, newPlanId: number) => void
-  gwGoals: GwGoal[]
-  onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
-  onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
-  onDeleteGwGoal: (id: number) => void
-}
-
-const Goal: FC<GoalProps> = ({ goals, profileBirthday, onOpenProfile, createGoal, updateGoal, deleteGoal, onDeleteMultipleGoals, reorderGoals, onCopyGwGoals, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal }) => {
+const Goal: FC = () => {
+  const {
+    visibleGoals: goals,
+    gwGoals,
+    profile,
+    createGoal,
+    updateGoal,
+    handleDeleteGoal: deleteGoal,
+    handleDeleteWithUndo: onDeleteMultipleGoals,
+    reorderGoals,
+    handleCopyGwGoals: onCopyGwGoals,
+    createGwGoal: onCreateGwGoal,
+    updateGwGoal: onUpdateGwGoal,
+    deleteGwGoal: onDeleteGwGoal,
+  } = useGoals()
+  const { handleOpenProfile: onOpenProfile } = useLayout()
+  const profileBirthday = profile.birthday
   const location = useLocation()
   const navigate = useNavigate()
   const subPath = location.pathname.replace('/goal', '').replace(/^\//, '') || 'plans'

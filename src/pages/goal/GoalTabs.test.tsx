@@ -3,30 +3,33 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Goal from './Goal'
 
-const noop = () => {}
+vi.mock('../../contexts/GoalsContext', () => ({
+  useGoals: () => ({
+    visibleGoals: [],
+    gwGoals: [],
+    profile: { birthday: '' },
+    createGoal: () => {},
+    updateGoal: () => {},
+    handleDeleteGoal: () => {},
+    handleDeleteWithUndo: () => {},
+    reorderGoals: () => {},
+    handleCopyGwGoals: () => {},
+    createGwGoal: () => {},
+    updateGwGoal: () => {},
+    deleteGwGoal: () => {},
+  }),
+}))
 
-const defaultProps = {
-  goals: [],
-  profileBirthday: '',
-  onOpenProfile: noop,
-  createGoal: noop as any,
-  updateGoal: noop as any,
-  deleteGoal: noop as any,
-  onDeleteMultipleGoals: noop as any,
-  reorderGoals: noop as any,
-  selectedGoalIds: [] as number[],
-  onSetSelectedGoalIds: noop as any,
-  onCopyGwGoals: noop as any,
-  gwGoals: [],
-  onCreateGwGoal: noop as any,
-  onUpdateGwGoal: noop as any,
-  onDeleteGwGoal: noop as any,
-}
+vi.mock('../../contexts/LayoutContext', () => ({
+  useLayout: () => ({
+    handleOpenProfile: () => {},
+  }),
+}))
 
 function renderGoal(initialRoute = '/goal') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Goal {...defaultProps} />
+      <Goal />
     </MemoryRouter>,
   )
 }

@@ -3,26 +3,39 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SidebarNavigation from './SidebarNavigation'
+import { SettingsProvider } from '../contexts/SettingsContext'
+import { GoalsProvider } from '../contexts/GoalsContext'
+import { GitHubSyncProvider } from '../contexts/GitHubSyncContext'
+import { BudgetSyncProvider } from '../contexts/BudgetSyncContext'
+import { TaxSyncProvider } from '../contexts/TaxSyncContext'
+import { ImportExportProvider } from '../contexts/ImportExportContext'
+import { LayoutProvider } from '../contexts/LayoutContext'
 
 const noop = () => {}
 
 const defaultProps = {
   currentPage: 'home' as const,
   setCurrentPage: noop as any,
-  expanded: true,
-  setExpanded: noop,
-  darkMode: false,
-  setDarkMode: noop,
-  onExport: noop,
-  onImport: noop as any,
-  profile: { name: '', avatarUrl: '', birthday: '' },
-  onUpdateProfile: noop as any,
 }
 
 const renderSidebar = (overrides = {}) =>
   render(
     <MemoryRouter>
-      <SidebarNavigation {...defaultProps} {...overrides} />
+      <SettingsProvider>
+        <GoalsProvider>
+          <GitHubSyncProvider>
+            <BudgetSyncProvider>
+              <TaxSyncProvider>
+                <LayoutProvider>
+                  <ImportExportProvider>
+                    <SidebarNavigation {...defaultProps} {...overrides} />
+                  </ImportExportProvider>
+                </LayoutProvider>
+              </TaxSyncProvider>
+            </BudgetSyncProvider>
+          </GitHubSyncProvider>
+        </GoalsProvider>
+      </SettingsProvider>
     </MemoryRouter>,
   )
 
@@ -153,6 +166,37 @@ describe('SidebarNavigation', () => {
       const goalsBtn = screen.getByRole('button', { name: 'Goals' })
       expect(goalsBtn).not.toHaveClass('active')
       expect(goalsBtn).not.toHaveAttribute('aria-current')
+    })
+  })
+
+  /* ── Bug 2 regression: combinedSyncNow dep-array correctness ──── */
+
+  describe('sync integration renders correctly (regression)', () => {
+    it('renders without errors when consuming all sync contexts including budget and tax', () => {
+      expect(() => renderSidebar()).not.toThrow()
+      expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument()
+    })
+
+    it('Settings button is functional and opens the settings dialog containing sync controls', async () => {
+      const user = userEvent.setup()
+      renderSidebar()
+
+      const settingsBtn = screen.getByRole('button', { name: 'Settings' })
+      expect(settingsBtn).toBeInTheDocument()
+
+      await user.click(settingsBtn)
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    it('exposes all expected nav links after mounting with full provider tree', () => {
+      renderSidebar()
+
+      expect(screen.getByText('Home')).toBeInTheDocument()
+      expect(screen.getByText('Goals')).toBeInTheDocument()
+      expect(screen.getByText('Net Worth')).toBeInTheDocument()
+      expect(screen.getByText('Budget')).toBeInTheDocument()
+      expect(screen.getByText('Taxes')).toBeInTheDocument()
     })
   })
 

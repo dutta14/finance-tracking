@@ -1,6 +1,8 @@
 import { FC, useState, useRef, lazy, Suspense } from 'react'
 import { NavLink, useLocation, Routes, Route } from 'react-router-dom'
-import { Profile } from '../../hooks/useProfile'
+import { useGoals } from '../../contexts/GoalsContext'
+import { useSettings } from '../../contexts/SettingsContext'
+import { useGitHubSyncContext } from '../../contexts/GitHubSyncContext'
 import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry } from './types'
 import { parseCsvImport } from './csvImport'
@@ -13,13 +15,10 @@ import '../../styles/Data.css'
 const Allocation = lazy(() => import('../allocation/Allocation'))
 const SavingsGrowthTracker = lazy(() => import('../tools/components/SavingsGrowthTracker'))
 
-interface DataProps {
-  profile: Profile
-  allowCsvImport?: boolean
-  onDataChange?: (accounts: Account[], balances: BalanceEntry[]) => void
-}
-
-const Data: FC<DataProps> = ({ profile, allowCsvImport = false, onDataChange }) => {
+const Data: FC = () => {
+  const { profile } = useGoals()
+  const { allowCsvImport } = useSettings()
+  const { handleDataChange: onDataChange } = useGitHubSyncContext()
   const { accounts, balances, setAccounts: ctxSetAccounts, setBalances: ctxSetBalances } = useData()
 
   const [showAccountsModal, setShowAccountsModal] = useState(false)
