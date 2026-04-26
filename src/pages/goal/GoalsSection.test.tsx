@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FinancialGoal } from '../../types'
@@ -15,14 +15,20 @@ vi.mock('react-router-dom', async () => {
 
 /* ─── Mock heavy children ─── */
 
-let capturedGridProps: any = {}
+interface CapturedGridProps {
+  goals: FinancialGoal[]
+  onSelectGoal: (id: number, multi: boolean) => void
+  onReorderGoals?: (orderedIds: number[]) => void
+}
+
+let capturedGridProps: CapturedGridProps = { goals: [], onSelectGoal: () => {} }
 
 vi.mock('./components/GoalsMiniGrid', () => ({
-  default: (props: any) => {
+  default: (props: CapturedGridProps) => {
     capturedGridProps = props
     return (
       <div data-testid="goals-mini-grid">
-        {props.goals.map((g: any) => (
+        {props.goals.map((g: FinancialGoal) => (
           <button
             key={g.id}
             data-testid={`card-${g.id}`}
@@ -37,14 +43,14 @@ vi.mock('./components/GoalsMiniGrid', () => ({
 }))
 
 vi.mock('./components/GoalCompareView', () => ({
-  default: ({ goals }: any) => (
-    <div data-testid="compare-view">Comparing {goals.map((g: any) => g.goalName).join(', ')}</div>
+  default: ({ goals }: { goals: FinancialGoal[] }) => (
+    <div data-testid="compare-view">Comparing {goals.map((g: FinancialGoal) => g.goalName).join(', ')}</div>
   ),
 }))
 
 vi.mock('./components/GoalFilterBar', () => {
   const DEFAULT_FILTERS = { retirementAges: [], fiGoalBuckets: [], expenseBuckets: [] }
-  const applyFilters = (goals: any[]) => goals
+  const applyFilters = (goals: FinancialGoal[]) => goals
   return {
     default: () => <div data-testid="filter-bar" />,
     GoalFilters: {},
@@ -58,8 +64,6 @@ vi.mock('../../pages/data/types', () => ({
 }))
 
 /* ─── Helpers ─── */
-
-const noop = () => {}
 
 function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
   return {
@@ -117,7 +121,7 @@ function renderGoalsSection(overrides: Partial<typeof defaultProps> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  capturedGridProps = {}
+  capturedGridProps = { goals: [], onSelectGoal: () => {} }
   localStorage.clear()
 })
 

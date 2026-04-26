@@ -169,7 +169,9 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
                     padding: '6px 10px',
                     fontSize: 11,
                   }}
-                  formatter={(v: any) => formatCurrency(Number(v))}
+                  formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                    formatCurrency(Number(v))
+                  }
                 />
               </PieChart>
             </ResponsiveContainer>

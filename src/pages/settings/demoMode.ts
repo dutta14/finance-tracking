@@ -6,7 +6,7 @@
 
 import type { FinancialGoal, GwGoal } from '../../types'
 import type { Account, BalanceEntry } from '../data/types'
-import type { BudgetStore, CategoryGroup } from '../budget/types'
+import type { CategoryGroup } from '../budget/types'
 
 const BACKUP_KEY = '_demo-backup'
 
@@ -105,7 +105,6 @@ function seedProfile(): void {
 }
 
 function seedGoals(): void {
-  const now = new Date()
   const goals: FinancialGoal[] = [
     {
       id: 1,

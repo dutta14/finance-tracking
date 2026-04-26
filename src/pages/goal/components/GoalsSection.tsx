@@ -30,15 +30,15 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
-  onUpdateGoal,
+  onUpdateGoal: _onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
   onDeleteMultiple,
   onReorderGoals,
   onRenameGoal,
-  onCreateGwGoal,
-  onUpdateGwGoal,
-  onDeleteGwGoal,
+  onCreateGwGoal: _onCreateGwGoal,
+  onUpdateGwGoal: _onUpdateGwGoal,
+  onDeleteGwGoal: _onDeleteGwGoal,
 }) => {
   const navigate = useNavigate()
   const [selectedGoalIds, setSelectedGoalIds] = useState<number[]>([])

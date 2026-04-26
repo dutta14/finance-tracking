@@ -19,7 +19,33 @@ interface GoalFormProps {
 }
 
 const STEPS = ['Name', 'Timeline', 'Expenses', 'Parameters', 'Review'] as const
-type Step = (typeof STEPS)[number]
+
+const RANDOM_NAMES = [
+  'Retire to a Beach',
+  'Golden Years Express',
+  'The Great Escape',
+  'Freedom Fund',
+  'Coast to FIRE',
+  'Hammock Mode',
+  'Savings Speedrun',
+  'FI or Bust',
+  'Early Bird Special',
+  'Nest Egg Supreme',
+  'Operation Chill',
+  'The Money Garden',
+  'Passport to Freedom',
+  'Zero Alarm Clocks',
+  'Latte & Leisure',
+  'Compound Interest Club',
+  'Debt-Free Dreams',
+  'Mountain Retreat Fund',
+  'Sunflower Savings',
+  'Wanderlust Wallet',
+  'Cabin in the Woods',
+  'Coastline Goal',
+  'Rainy Day Rocket',
+  'Tropical Endgame',
+]
 
 const GoalForm: FC<GoalFormProps> = ({
   formData,
@@ -35,33 +61,6 @@ const GoalForm: FC<GoalFormProps> = ({
 }) => {
   const [step, setStep] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const RANDOM_NAMES = [
-    'Retire to a Beach',
-    'Golden Years Express',
-    'The Great Escape',
-    'Freedom Fund',
-    'Coast to FIRE',
-    'Hammock Mode',
-    'Savings Speedrun',
-    'FI or Bust',
-    'Early Bird Special',
-    'Nest Egg Supreme',
-    'Operation Chill',
-    'The Money Garden',
-    'Passport to Freedom',
-    'Zero Alarm Clocks',
-    'Latte & Leisure',
-    'Compound Interest Club',
-    'Debt-Free Dreams',
-    'Mountain Retreat Fund',
-    'Sunflower Savings',
-    'Wanderlust Wallet',
-    'Cabin in the Woods',
-    'Coastline Goal',
-    'Rainy Day Rocket',
-    'Tropical Endgame',
-  ]
 
   const pickRandomName = useCallback(() => {
     const name = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)]
@@ -90,7 +89,7 @@ const GoalForm: FC<GoalFormProps> = ({
     if (profileBirthday && error === 'Please add your birthday in your profile before creating a goal') {
       setError('')
     }
-  }, [profileBirthday])
+  }, [profileBirthday, error, setError])
 
   // Auto-focus first input on step change
   useEffect(() => {

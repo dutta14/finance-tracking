@@ -165,7 +165,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
         color: ln.color,
       }
     })
-  }, [leftNodes, bandTop, bandBot])
+  }, [leftNodes, bandTop, bandBot, BAND_X, incomeCategories])
 
   // Band → right links: each expense item fans out from the central band
   const rightLinks = useMemo(() => {
@@ -186,7 +186,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
         color: rn.color,
       }
     })
-  }, [rightNodes, rightItems, bandTop, bandBot])
+  }, [rightNodes, rightItems, bandTop, bandBot, BAND_X])
 
   if (totalIncome === 0 && totalExpense === 0) {
     return (

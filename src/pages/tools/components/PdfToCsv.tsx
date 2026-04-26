@@ -1,4 +1,6 @@
 import { FC, useState, useCallback, useRef, useEffect } from 'react'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
+import type { TextItem as PdfTextItem } from 'pdfjs-dist/types/src/display/api'
 import '../../../styles/PdfToCsv.css'
 
 interface TextItem {
@@ -124,7 +126,7 @@ const PdfToCsv: FC = () => {
   const overlayRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const addFileInputRef = useRef<HTMLInputElement>(null)
-  const pdfDocRef = useRef<any>(null)
+  const pdfDocRef = useRef<PDFDocumentProxy | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const scaleRef = useRef(1)
   const [zoom, setZoom] = useState(1.0)
@@ -155,13 +157,13 @@ const PdfToCsv: FC = () => {
         const items: TextItem[] = []
         for (const item of textContent.items) {
           if ('str' in item && item.str.trim()) {
-            const tx = (item as any).transform
+            const ti = item as PdfTextItem
             items.push({
-              text: (item as any).str,
-              x: tx[4],
-              y: viewport.height - tx[5],
-              width: (item as any).width,
-              height: (item as any).height,
+              text: ti.str,
+              x: ti.transform[4],
+              y: viewport.height - ti.transform[5],
+              width: ti.width,
+              height: ti.height,
             })
           }
         }
@@ -177,7 +179,7 @@ const PdfToCsv: FC = () => {
     }
   }, [])
 
-  const renderPage = useCallback(async (pdf: any, pageNum: number, z: number) => {
+  const renderPage = useCallback(async (pdf: PDFDocumentProxy, pageNum: number, z: number) => {
     const page = await pdf.getPage(pageNum)
     const baseVp = page.getViewport({ scale: 1 })
     const wrapWidth = wrapRef.current?.clientWidth ?? 700
@@ -190,7 +192,7 @@ const PdfToCsv: FC = () => {
     canvas.width = viewport.width
     canvas.height = viewport.height
     const ctx = canvas.getContext('2d')!
-    await page.render({ canvasContext: ctx, viewport }).promise
+    await page.render({ canvas, canvasContext: ctx, viewport }).promise
   }, [])
 
   useEffect(() => {

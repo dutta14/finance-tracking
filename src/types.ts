@@ -50,5 +50,5 @@ export interface NavigationProps {
 }
 
 export type PageRenderer = {
-  [key in PageType]: FC<any>
+  [key in PageType]: FC<Record<string, never>>
 }

@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useCallback } from 'react'
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,6 +12,7 @@ import {
   ReferenceLine,
   Legend,
 } from 'recharts'
+import type { Props as LegendContentProps } from 'recharts/types/component/DefaultLegendContent'
 import { Account, BalanceEntry, formatMonth, formatCurrency } from './types'
 
 type ChartType = 'fi-gw' | 'net-worth' | 'assets-liabilities'
@@ -30,7 +31,7 @@ const CHART_OPTIONS: { key: ChartType; label: string }[] = [
   { key: 'assets-liabilities', label: 'Assets vs Liabilities' },
 ]
 
-const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, balanceMap }) => {
+const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, allMonths, balanceMap }) => {
   const [chartType, setChartType] = useState<ChartType>('fi-gw')
   const [dateFilter, setDateFilter] = useState<DateFilter>('all')
   const [customFrom, setCustomFrom] = useState('')
@@ -86,11 +87,14 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
   const assetAccounts = accounts.filter(a => (a.nature || 'asset') === 'asset')
   const liabilityAccounts = accounts.filter(a => (a.nature || 'asset') === 'liability')
 
-  const sumForMonth = (accs: Account[], month: string) =>
-    accs.reduce((sum, a) => {
-      const val = balanceMap.get(`${a.id}:${month}`)
-      return val !== undefined ? sum + val : sum
-    }, 0)
+  const sumForMonth = useCallback(
+    (accs: Account[], month: string) =>
+      accs.reduce((sum, a) => {
+        const val = balanceMap.get(`${a.id}:${month}`)
+        return val !== undefined ? sum + val : sum
+      }, 0),
+    [balanceMap],
+  )
 
   const chartData = useMemo(
     () =>
@@ -109,7 +113,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
           liabilities,
         }
       }),
-    [filteredMonths, fiAccounts, gwAccounts, assetAccounts, liabilityAccounts, balanceMap],
+    [filteredMonths, fiAccounts, gwAccounts, assetAccounts, liabilityAccounts, sumForMonth],
   )
 
   const yDomain = useMemo((): [number, number] => {
@@ -150,7 +154,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
   const tooltipLabelStyle = { color: textColor, fontSize: 11, fontWeight: 500, marginBottom: 4 }
   const tooltipItemStyle = { color: tooltipText, fontSize: 12, fontWeight: 600, padding: 0 }
 
-  const renderLegend = (props: { payload?: ReadonlyArray<{ value: string; color: string }> }) => {
+  const renderLegend = (props: LegendContentProps) => {
     const { payload } = props
     if (!payload) return null
     return (
@@ -294,9 +298,11 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
                 contentStyle={tooltipStyle}
                 labelStyle={tooltipLabelStyle}
                 itemStyle={tooltipItemStyle}
-                formatter={(v: any) => formatCurrency(Number(v))}
+                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                  formatCurrency(Number(v))
+                }
               />
-              <Legend content={renderLegend as any} />
+              <Legend content={renderLegend} />
               <Line
                 type="natural"
                 dataKey="fi"
@@ -346,7 +352,9 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
                 contentStyle={tooltipStyle}
                 labelStyle={tooltipLabelStyle}
                 itemStyle={tooltipItemStyle}
-                formatter={(v: any) => formatCurrency(Number(v))}
+                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                  formatCurrency(Number(v))
+                }
               />
               <Line
                 type="natural"
@@ -382,9 +390,11 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
                 contentStyle={tooltipStyle}
                 labelStyle={tooltipLabelStyle}
                 itemStyle={tooltipItemStyle}
-                formatter={(v: any) => formatCurrency(Math.abs(Number(v)))}
+                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                  formatCurrency(Math.abs(Number(v)))
+                }
               />
-              <Legend content={renderLegend as any} />
+              <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[3, 3, 0, 0]} />
               <Bar dataKey="liabilities" name="Liabilities" fill="#ef4444" radius={[0, 0, 3, 3]} />

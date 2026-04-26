@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { loadGoalsFromStorage, saveGoalsToStorage, migrateGoals } from './localStorageService'
 import type { FinancialGoal } from '../../../types'
 
@@ -44,15 +44,15 @@ describe('loadGoalsFromStorage', () => {
   it('migrates legacy planName → goalName fields', () => {
     const legacy = [{ ...mockGoal, planName: 'OldPlan', planCreatedIn: '2024-01', planEndYear: '2049' }]
     // Remove new-style fields
-    delete (legacy[0] as any).goalName
-    delete (legacy[0] as any).goalCreatedIn
-    delete (legacy[0] as any).goalEndYear
+    delete (legacy[0] as unknown as Record<string, unknown>).goalName
+    delete (legacy[0] as unknown as Record<string, unknown>).goalCreatedIn
+    delete (legacy[0] as unknown as Record<string, unknown>).goalEndYear
     localStorage.setItem('financialGoals', JSON.stringify(legacy))
     const result = loadGoalsFromStorage()
     expect(result[0].goalName).toBe('OldPlan')
     expect(result[0].goalCreatedIn).toBe('2024-01')
     expect(result[0].goalEndYear).toBe('2049')
-    expect((result[0] as any).planName).toBeUndefined()
+    expect((result[0] as unknown as Record<string, unknown>).planName).toBeUndefined()
   })
 
   it('migrates from legacy financialPlans key', () => {
@@ -94,9 +94,9 @@ describe('saveGoalsToStorage', () => {
 
 describe('migrateGoals', () => {
   it('migrates legacy field names', () => {
-    const legacy = [{ ...mockGoal, planName: 'Legacy' }] as any[]
-    delete legacy[0].goalName
-    const result = migrateGoals(legacy)
+    const legacyEntry: Record<string, unknown> = { ...mockGoal, planName: 'Legacy' }
+    delete legacyEntry.goalName
+    const result = migrateGoals([legacyEntry] as unknown as FinancialGoal[])
     expect(result[0].goalName).toBe('Legacy')
   })
 

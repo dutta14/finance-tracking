@@ -4,7 +4,7 @@ const STORAGE_KEY = 'financialGoals'
 const LEGACY_STORAGE_KEY = 'financialPlans'
 
 // Migrate legacy field names (planName → goalName, etc.)
-const migrateFields = (items: any[]): FinancialGoal[] =>
+const migrateFields = (items: Record<string, unknown>[]): FinancialGoal[] =>
   items.map(item => {
     const migrated = { ...item }
     if ('planName' in migrated) {
@@ -19,7 +19,7 @@ const migrateFields = (items: any[]): FinancialGoal[] =>
       migrated.goalEndYear = migrated.planEndYear
       delete migrated.planEndYear
     }
-    return migrated as FinancialGoal
+    return migrated as unknown as FinancialGoal
   })
 
 export const loadGoalsFromStorage = (): FinancialGoal[] => {
@@ -27,13 +27,13 @@ export const loadGoalsFromStorage = (): FinancialGoal[] => {
     const savedGoals = localStorage.getItem(STORAGE_KEY)
     if (savedGoals) {
       const parsed = JSON.parse(savedGoals)
-      if (parsed.length > 0) return migrateFields(parsed)
+      if (parsed.length > 0) return migrateFields(parsed as Record<string, unknown>[])
     }
 
     // Migrate from legacy key (also runs if new key held an empty array)
     const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
     if (legacy) {
-      const parsed = migrateFields(JSON.parse(legacy))
+      const parsed = migrateFields(JSON.parse(legacy) as Record<string, unknown>[])
       if (parsed.length > 0) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
         localStorage.removeItem(LEGACY_STORAGE_KEY)
@@ -57,7 +57,7 @@ export const saveGoalsToStorage = (goals: FinancialGoal[]): void => {
 }
 
 export const migrateGoals = (goalsToMigrate: FinancialGoal[]): FinancialGoal[] => {
-  return migrateFields(goalsToMigrate).map(goal => {
+  return migrateFields(goalsToMigrate as unknown as Record<string, unknown>[]).map(goal => {
     if (goal.fiGoal === 0 && goal.expenseValue2047 > 0 && goal.safeWithdrawalRate > 0) {
       const annualExpenseAtRetirement = goal.expenseValue2047
       const safeWithdrawalRateDecimal = goal.safeWithdrawalRate / 100

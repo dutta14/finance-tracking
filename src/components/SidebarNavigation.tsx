@@ -1,4 +1,4 @@
-import { FC, useCallback } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import { NavigationProps } from '../types'
 import { useGoals } from '../contexts/GoalsContext'
 import { useSettings } from '../contexts/SettingsContext'
@@ -9,13 +9,15 @@ import { useImportExport } from '../contexts/ImportExportContext'
 import { useLayout } from '../contexts/LayoutContext'
 import SidebarToggle from './SidebarToggle'
 import { SettingsMenu } from '../pages/settings'
+import type { SettingsSection } from '../pages/settings/types'
 import '../styles/SidebarNavigation.css'
 
 const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
   const { darkMode, setDarkMode, accentTheme, setAccentTheme, allowCsvImport, setAllowCsvImport } = useSettings()
   const { profile, updateProfile } = useGoals()
-  const { handleSyncNow, dirtyFlags, ...ghRest } = useGitHubSyncContext()
-  const gh = { handleSyncNow, dirtyFlags, ...ghRest }
+  const ghContext = useGitHubSyncContext()
+  const { handleSyncNow, dirtyFlags } = ghContext
+  const gh = useMemo(() => ghContext, [ghContext])
   const { budget: budgetDirty, taxes: taxesDirty } = dirtyFlags
   const budgetSync = useBudgetSync()
   const taxSync = useTaxSync()
@@ -27,7 +29,7 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
         ...(forceFull || taxesDirty ? [taxSync.syncTaxNow(message)] : []),
       ])
     },
-    [handleSyncNow, budgetDirty, taxesDirty, budgetSync.syncBudgetNow, taxSync.syncTaxNow],
+    [handleSyncNow, budgetDirty, taxesDirty, budgetSync, taxSync],
   )
   const combinedRestore = useCallback(
     async (data: unknown) => {
@@ -36,7 +38,7 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
       await taxSync.restoreTaxFromGitHub()
       setTimeout(() => window.location.reload(), 100)
     },
-    [gh.applyRestoredSnapshot, budgetSync.restoreBudgetFromGitHub, taxSync.restoreTaxFromGitHub],
+    [gh, budgetSync, taxSync],
   )
   const { handleExport, handleImport, handleFactoryReset } = useImportExport()
   const { sidebarOpen, setSidebarOpen, settingsOpenSection, setSettingsOpenSection, setSearchOpen } = useLayout()
@@ -166,7 +168,7 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
             onExport={handleExport}
             onImport={handleImport}
             externalOpen={!!settingsOpenSection}
-            externalSection={settingsOpenSection as any}
+            externalSection={settingsOpenSection as SettingsSection | undefined}
             onExternalClose={() => setSettingsOpenSection(undefined)}
           />
         </div>

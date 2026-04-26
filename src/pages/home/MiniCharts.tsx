@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useCallback } from 'react'
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,6 +12,7 @@ import {
   ReferenceLine,
   Legend,
 } from 'recharts'
+import type { Props as LegendContentProps } from 'recharts/types/component/DefaultLegendContent'
 import { Account, BalanceEntry, formatMonth, formatCurrency } from '../data/types'
 
 type MiniChartType = 'fi-gw' | 'net-worth' | 'assets-liabilities'
@@ -85,11 +86,14 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
   const assetAccounts = useMemo(() => accounts.filter(a => (a.nature || 'asset') === 'asset'), [accounts])
   const liabilityAccounts = useMemo(() => accounts.filter(a => (a.nature || 'asset') === 'liability'), [accounts])
 
-  const sumForMonth = (accs: Account[], month: string) =>
-    accs.reduce((sum, a) => {
-      const val = balanceMap.get(`${a.id}:${month}`)
-      return val !== undefined ? sum + val : sum
-    }, 0)
+  const sumForMonth = useCallback(
+    (accs: Account[], month: string) =>
+      accs.reduce((sum, a) => {
+        const val = balanceMap.get(`${a.id}:${month}`)
+        return val !== undefined ? sum + val : sum
+      }, 0),
+    [balanceMap],
+  )
 
   const chartData = useMemo(() => {
     return filteredMonths.map(month => {
@@ -107,7 +111,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
         liabilities,
       }
     })
-  }, [filteredMonths, fiAccounts, gwAccounts, assetAccounts, liabilityAccounts, balanceMap])
+  }, [filteredMonths, fiAccounts, gwAccounts, assetAccounts, liabilityAccounts, sumForMonth])
 
   const yDomain = useMemo((): [number, number] => {
     if (chartData.length === 0) return [0, 0]
@@ -152,7 +156,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     return formatCurrency(v)
   }
 
-  const renderLegend = (props: { payload?: ReadonlyArray<{ value: string; color: string }> }) => {
+  const renderLegend = (props: LegendContentProps) => {
     const { payload } = props
     if (!payload) return null
     return (
@@ -317,9 +321,11 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 contentStyle={tooltipStyle}
                 labelStyle={tooltipLabelStyle}
                 itemStyle={tooltipItemStyle}
-                formatter={(v: any) => formatCurrency(Number(v))}
+                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                  formatCurrency(Number(v))
+                }
               />
-              <Legend content={renderLegend as any} />
+              <Legend content={renderLegend} />
               <Line
                 type="natural"
                 dataKey="fi"
@@ -363,7 +369,9 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 contentStyle={tooltipStyle}
                 labelStyle={tooltipLabelStyle}
                 itemStyle={tooltipItemStyle}
-                formatter={(v: any) => formatCurrency(Number(v))}
+                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                  formatCurrency(Number(v))
+                }
               />
               <Line
                 type="natural"
@@ -399,9 +407,11 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 contentStyle={tooltipStyle}
                 labelStyle={tooltipLabelStyle}
                 itemStyle={tooltipItemStyle}
-                formatter={(v: any) => formatCurrency(Math.abs(Number(v)))}
+                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
+                  formatCurrency(Math.abs(Number(v)))
+                }
               />
-              <Legend content={renderLegend as any} />
+              <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[2, 2, 0, 0]} />
               <Bar dataKey="liabilities" name="Liabilities" fill="#ef4444" radius={[0, 0, 2, 2]} />

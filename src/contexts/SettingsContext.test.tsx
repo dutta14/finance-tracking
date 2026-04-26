@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import { SettingsProvider, useSettings } from './SettingsContext'
-import type { ReactNode } from 'react'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
@@ -30,8 +29,6 @@ function ToggleConsumer() {
     </div>
   )
 }
-
-const wrapper = ({ children }: { children: ReactNode }) => <SettingsProvider>{children}</SettingsProvider>
 
 /* ── setup ───────────────────────────────────────────────────────── */
 

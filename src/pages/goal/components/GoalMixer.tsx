@@ -94,7 +94,6 @@ const GoalMixer: FC<GoalMixerProps> = ({
     }
     onCreateGoal(newGoal)
     selectedGwGoals.forEach(gw => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _id, createdAt: _createdAt, ...rest } = gw
       onCreateGwGoal({ ...rest, fiGoalId: newId })
     })

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import type { GwGoal } from '../../../types'
 
 // We need to test the migrateGwFields and load functions which are not exported.
@@ -50,21 +50,21 @@ describe('useGwGoals localStorage migration', () => {
 
 describe('GwGoal field migration logic', () => {
   // Test the migration pattern directly since it's the same as in localStorageService
-  const migrateGwFields = (items: any[]): GwGoal[] =>
+  const migrateGwFields = (items: Record<string, unknown>[]): GwGoal[] =>
     items.map(item => {
       const migrated = { ...item }
       if ('fiPlanId' in migrated) {
         migrated.fiGoalId = migrated.fiPlanId
         delete migrated.fiPlanId
       }
-      return migrated as GwGoal
+      return migrated as unknown as GwGoal
     })
 
   it('renames fiPlanId to fiGoalId', () => {
     const input = [{ id: 1, fiPlanId: 42, label: 'Test' }]
     const result = migrateGwFields(input)
     expect(result[0].fiGoalId).toBe(42)
-    expect((result[0] as any).fiPlanId).toBeUndefined()
+    expect((result[0] as unknown as Record<string, unknown>).fiPlanId).toBeUndefined()
   })
 
   it('leaves fiGoalId untouched if already present', () => {

@@ -233,7 +233,7 @@ const SavingsGrowthTracker: FC = () => {
     const val = editValue.trim() === '' ? undefined : parseFloat(editValue.replace(/[,$]/g, ''))
     const updated = { ...overrides }
     if (!updated[year]) updated[year] = {}
-    ;(updated[year] as any)[field] = val !== undefined && !isNaN(val) ? val : undefined
+    ;(updated[year] as Record<string, number | undefined>)[field] = val !== undefined && !isNaN(val) ? val : undefined
     // Clean empty
     if (Object.values(updated[year]).every(v => v === undefined)) delete updated[year]
     setOverrides(updated)

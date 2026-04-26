@@ -10,12 +10,13 @@ import { BudgetSyncProvider } from '../contexts/BudgetSyncContext'
 import { TaxSyncProvider } from '../contexts/TaxSyncContext'
 import { ImportExportProvider } from '../contexts/ImportExportContext'
 import { LayoutProvider } from '../contexts/LayoutContext'
+import type { PageType } from '../types'
 
 const noop = () => {}
 
 const defaultProps = {
   currentPage: 'home' as const,
-  setCurrentPage: noop as any,
+  setCurrentPage: noop as (page: PageType) => void,
 }
 
 const renderSidebar = (overrides = {}) =>

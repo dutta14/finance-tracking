@@ -2,13 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { FinancialGoal } from '../../types'
+import { FinancialGoal, GwGoal } from '../../types'
 import GoalDetail from './components/GoalDetail'
 
 /* ─── Mock heavy child components ─── */
 
 vi.mock('./components/GoalDetailedCard', () => ({
-  default: ({ goal }: any) => <div data-testid="detailed-card">{goal.goalName}</div>,
+  default: ({ goal }: { goal: FinancialGoal }) => <div data-testid="detailed-card">{goal.goalName}</div>,
 }))
 vi.mock('./components/GoalDiveDeep', () => ({
   default: () => <div data-testid="dive-deep">DiveDeep</div>,
@@ -59,13 +59,13 @@ const defaultProps = {
   goals: threeGoals,
   profileBirthday: '1990-01-01',
   gwGoals: [],
-  onUpdateGoal: noop as any,
+  onUpdateGoal: noop as (goalId: number, g: FinancialGoal) => void,
   onCopyGoal: vi.fn(),
   onDeleteGoal: vi.fn(),
   onRenameGoal: vi.fn(),
-  onCreateGwGoal: noop as any,
-  onUpdateGwGoal: noop as any,
-  onDeleteGwGoal: noop as any,
+  onCreateGwGoal: noop as (data: Omit<GwGoal, 'id' | 'createdAt'>) => void,
+  onUpdateGwGoal: noop as (id: number, u: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void,
+  onDeleteGwGoal: noop as (id: number) => void,
 }
 
 /**

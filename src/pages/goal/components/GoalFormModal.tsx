@@ -19,16 +19,17 @@ interface GoalFormModalProps {
 }
 
 const GoalFormModal: FC<GoalFormModalProps> = props => {
+  const { onCancel, editingGoalId } = props
   const modalRef = useRef<HTMLDivElement>(null)
   useFocusTrap(modalRef, true)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') props.onCancel()
+      if (e.key === 'Escape') onCancel()
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [props.onCancel])
+  }, [onCancel])
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -38,14 +39,14 @@ const GoalFormModal: FC<GoalFormModalProps> = props => {
   }, [])
 
   return (
-    <div className="goal-form-modal-backdrop" onClick={props.onCancel}>
+    <div className="goal-form-modal-backdrop" onClick={onCancel}>
       <div
         ref={modalRef}
         className="goal-form-modal"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={props.editingGoalId ? 'Edit goal' : 'Create new goal'}
+        aria-label={editingGoalId ? 'Edit goal' : 'Create new goal'}
       >
         <GoalForm {...props} />
       </div>

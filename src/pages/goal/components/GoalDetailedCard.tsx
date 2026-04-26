@@ -166,20 +166,12 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
 
   useEffect(() => {
     setEditFields(toEditFields(goal))
-  }, [goal.id])
+  }, [goal])
 
   // Sync fields if goal values change externally while not editing (e.g. Suggest SWR)
   useEffect(() => {
     if (!editing) setEditFields(toEditFields(goal))
-  }, [
-    editing,
-    goal.safeWithdrawalRate,
-    goal.fiGoal,
-    goal.inflationRate,
-    goal.growth,
-    goal.retirementAge,
-    goal.expenseValue,
-  ])
+  }, [editing, goal])
 
   const setEF = (k: keyof EditFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setEditFields(f => ({ ...f, [k]: e.target.value }))

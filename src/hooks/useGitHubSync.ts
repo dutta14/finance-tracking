@@ -345,7 +345,7 @@ export const useGitHubSync = () => {
         }
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, config.filePath, getFileSha, isConfigured],
+    [activeToken, apiHeaders, config.owner, config.repo, config.filePath, getFileSha, isConfigured, clearDirty],
   )
 
   const syncDataNow = useCallback(
@@ -394,7 +394,7 @@ export const useGitHubSync = () => {
         }
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured],
+    [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const syncToolsNow = useCallback(
@@ -438,7 +438,7 @@ export const useGitHubSync = () => {
         }
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured],
+    [activeToken, apiHeaders, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const restoreToolsLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
@@ -499,7 +499,16 @@ export const useGitHubSync = () => {
         }
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, allocationFilePath, getFileShaForPath, isConfigured],
+    [
+      activeToken,
+      apiHeaders,
+      config.owner,
+      config.repo,
+      allocationFilePath,
+      getFileShaForPath,
+      isConfigured,
+      clearDirty,
+    ],
   )
 
   const restoreAllocationLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
@@ -561,7 +570,7 @@ export const useGitHubSync = () => {
         }
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, taxesFilePath, getFileShaForPath, isConfigured],
+    [activeToken, apiHeaders, config.owner, config.repo, taxesFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const restoreTaxesLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {

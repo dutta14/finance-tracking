@@ -23,9 +23,8 @@ const Drive: FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [treeVersion, setTreeVersion] = useState(0)
-  const root = useMemo(() => buildDriveTree(), [treeVersion])
-  const refreshTree = useCallback(() => setTreeVersion(v => v + 1), [])
+  const [root, setRoot] = useState<DriveFolder>(() => buildDriveTree())
+  const refreshTree = useCallback(() => setRoot(buildDriveTree()), [])
 
   const [segments, setSegmentsState] = useState<string[]>(() => segmentsFromUrl(location.pathname))
   const [ownerFilter, setOwnerFilter] = useState<string | null>(null)

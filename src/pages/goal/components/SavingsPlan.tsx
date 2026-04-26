@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo, useState, useCallback } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../../data/types'
@@ -195,41 +195,39 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
   const [fiGrowth, setFiGrowth] = useState(8)
   const [gwGrowth, setGwGrowth] = useState(8)
 
-  const calcPlan = (
-    goalType: 'fi' | 'gw',
-    startMonth: string,
-    growthRate: number,
-    target: number,
-  ): PlanResult | null => {
-    if (!startMonth || months.length === 0 || target <= 0) return null
-    const bal = getTotalForMonth(accounts, balances, startMonth, goalType)
-    const n = monthsBetween(startMonth, retirementMonth)
-    const monthly = calcMonthlySaving(bal, target, growthRate, n)
-    return {
-      startMonth,
-      startBalance: bal,
-      target,
-      monthsRemaining: Math.max(0, n),
-      growthRate,
-      monthlySaving: monthly,
-    }
-  }
+  const calcPlan = useCallback(
+    (goalType: 'fi' | 'gw', startMonth: string, growthRate: number, target: number): PlanResult | null => {
+      if (!startMonth || months.length === 0 || target <= 0) return null
+      const bal = getTotalForMonth(accounts, balances, startMonth, goalType)
+      const n = monthsBetween(startMonth, retirementMonth)
+      const monthly = calcMonthlySaving(bal, target, growthRate, n)
+      return {
+        startMonth,
+        startBalance: bal,
+        target,
+        monthsRemaining: Math.max(0, n),
+        growthRate,
+        monthlySaving: monthly,
+      }
+    },
+    [accounts, balances, months, retirementMonth],
+  )
 
   const fiInitialResult = useMemo(
     () => calcPlan('fi', initialMonth, fiGrowth, fiTarget),
-    [initialMonth, fiGrowth, fiTarget, accounts, balances, months, retirementMonth],
+    [calcPlan, initialMonth, fiGrowth, fiTarget],
   )
   const fiCurrentResult = useMemo(
     () => (months.length > 1 ? calcPlan('fi', currentMonth, fiGrowth, fiTarget) : null),
-    [currentMonth, fiGrowth, fiTarget, accounts, balances, months, retirementMonth],
+    [calcPlan, currentMonth, fiGrowth, fiTarget, months],
   )
   const gwInitialResult = useMemo(
     () => calcPlan('gw', initialMonth, gwGrowth, gwTarget),
-    [initialMonth, gwGrowth, gwTarget, accounts, balances, months, retirementMonth],
+    [calcPlan, initialMonth, gwGrowth, gwTarget],
   )
   const gwCurrentResult = useMemo(
     () => (months.length > 1 ? calcPlan('gw', currentMonth, gwGrowth, gwTarget) : null),
-    [currentMonth, gwGrowth, gwTarget, accounts, balances, months, retirementMonth],
+    [calcPlan, currentMonth, gwGrowth, gwTarget, months],
   )
 
   if (months.length === 0) {

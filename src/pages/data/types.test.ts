@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { Profile } from '../../hooks/useProfile'
 import {
   getTypesForGoal,
   getDefaultType,
@@ -81,7 +82,7 @@ describe('getOwnerLabels', () => {
 
   it('falls back to defaults when names are empty', () => {
     const profile = { name: '', birthday: '', partner: undefined }
-    const labels = getOwnerLabels(profile as any)
+    const labels = getOwnerLabels(profile as Profile)
     expect(labels.primary).toBe('Primary')
     expect(labels.partner).toBe('Partner')
   })

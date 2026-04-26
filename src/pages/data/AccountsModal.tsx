@@ -38,7 +38,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
   onUpdate,
   onBulkUpdate,
   onDelete,
-  onToggleStatus,
+  onToggleStatus: _onToggleStatus,
   onRenameGroup,
   onClose,
 }) => {

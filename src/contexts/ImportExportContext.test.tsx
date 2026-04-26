@@ -74,7 +74,7 @@ describe('ImportExportContext', () => {
 
     createElementSpy.mockImplementation((tag: string) => {
       if (tag === 'a') {
-        return {
+        const anchor = {
           _href: '',
           download: '',
           click: clickSpy,
@@ -84,7 +84,8 @@ describe('ImportExportContext', () => {
           get href() {
             return this._href
           },
-        } as any
+        }
+        return anchor as unknown as HTMLAnchorElement
       }
       return origCreateElement(tag)
     })

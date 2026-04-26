@@ -1,5 +1,4 @@
 import { FC } from 'react'
-import { AssetAllocation } from '../../data/types'
 import { CustomRatio, RatioGoal, GradualGoal } from '../types'
 import { GROUP_COLORS } from '../constants'
 import { DonutChart, RatioBar } from './ChartHelpers'

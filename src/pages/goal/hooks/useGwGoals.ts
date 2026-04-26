@@ -5,14 +5,14 @@ const STORAGE_KEY = 'gw-goals'
 const LEGACY_STORAGE_KEY = 'gw-plans'
 
 // Migrate legacy field names (fiPlanId → fiGoalId)
-const migrateGwFields = (items: any[]): GwGoal[] =>
+const migrateGwFields = (items: Record<string, unknown>[]): GwGoal[] =>
   items.map(item => {
     const migrated = { ...item }
     if ('fiPlanId' in migrated) {
       migrated.fiGoalId = migrated.fiPlanId
       delete migrated.fiPlanId
     }
-    return migrated as GwGoal
+    return migrated as unknown as GwGoal
   })
 
 const load = (): GwGoal[] => {

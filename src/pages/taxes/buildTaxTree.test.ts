@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { buildTaxTree } from './buildTaxTree'
-import type { TaxChecklistItem, TaxYear } from './types'
+import type { TaxYear } from './types'
 
 // buildTaxTree reads from localStorage, so we set up the data there
 

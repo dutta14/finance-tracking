@@ -81,15 +81,15 @@ const ChecklistRow: FC<{
   accounts: Account[]
 }> = ({
   item,
-  year,
+  year: _year,
   onUpload,
   onRemoveFile,
   onRemoveItem,
   onRename,
-  primaryName,
-  partnerName,
-  primaryAvatar,
-  partnerAvatar,
+  primaryName: _primaryName,
+  partnerName: _partnerName,
+  primaryAvatar: _primaryAvatar,
+  partnerAvatar: _partnerAvatar,
   accounts,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -357,7 +357,7 @@ const AddItemModal: FC<{
   owner: TaxDocOwner
   onAdd: (label: string, category: ChecklistCategory) => void
   onClose: () => void
-}> = ({ owner, onAdd, onClose }) => {
+}> = ({ owner: _owner, onAdd, onClose }) => {
   const [label, setLabel] = useState('')
   return (
     <div className="tax-modal-overlay" onClick={onClose}>
@@ -526,7 +526,7 @@ const TaxReturnSection: FC<{
   hasPartner: boolean
 }> = ({
   items,
-  year,
+  year: _year,
   onUpload,
   onRemoveFile,
   onAddReturnEntry,
@@ -766,7 +766,7 @@ const Taxes: FC = () => {
       }
       refreshStorage()
     },
-    [selectedYear, tax, yearData, primaryName, partnerName, accounts, refreshStorage],
+    [selectedYear, tax, yearData, primaryName, partnerName, refreshStorage],
   )
 
   const handleRemoveFile = useCallback(

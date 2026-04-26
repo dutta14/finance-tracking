@@ -39,7 +39,7 @@ beforeEach(() => {
           downloadedFilename = v
         },
       })
-      return el as any
+      return el as unknown as HTMLAnchorElement
     }
     return document.createElement(tag)
   })

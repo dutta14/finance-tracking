@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import type React from 'react'
 import { useFormData } from './useFormData'
 import type { FinancialGoal } from '../../../types'
 
@@ -41,7 +42,7 @@ describe('useFormData', () => {
       act(() => {
         result.current.handleInputChange({
           currentTarget: { name: 'goalName', type: 'text', value: 'My Goal' },
-        } as any)
+        } as React.ChangeEvent<HTMLInputElement>)
       })
       expect(result.current.formData.goalName).toBe('My Goal')
     })
@@ -51,7 +52,7 @@ describe('useFormData', () => {
       act(() => {
         result.current.handleInputChange({
           currentTarget: { name: 'expenseValue', type: 'text', value: '$50,000' },
-        } as any)
+        } as React.ChangeEvent<HTMLInputElement>)
       })
       expect(result.current.formData.expenseValue).toBe('50000')
     })
@@ -61,7 +62,7 @@ describe('useFormData', () => {
       act(() => {
         result.current.handleInputChange({
           currentTarget: { name: 'resetExpenseMonth', type: 'checkbox', checked: true },
-        } as any)
+        } as React.ChangeEvent<HTMLInputElement>)
       })
       expect(result.current.formData.resetExpenseMonth).toBe(true)
     })

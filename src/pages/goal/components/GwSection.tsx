@@ -134,8 +134,6 @@ const GwGoalCard: FC<{
     setEditing(false)
   }
 
-  const years = gw.disburseAge - currentAge
-
   // Exact month count: creation month → birthday month of disbursement year
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(goalCreatedIn)
@@ -149,7 +147,6 @@ const GwGoalCard: FC<{
     dollarView === 'creation'
       ? gw.disburseAmount
       : gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsToDisburse)
-  const displayYear = dollarView === 'creation' ? creationYear : disburseYear
 
   // PV at retirement: inflation-adjust target to disbursement year, then discount back to retirement
   // This gives the nominal $ needed at retirement — constant regardless of creation/disbursement toggle

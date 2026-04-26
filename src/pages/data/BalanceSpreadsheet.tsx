@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useCallback } from 'react'
 import { Profile } from '../../hooks/useProfile'
 import {
   Account,
@@ -91,24 +91,24 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
     setActiveL1(null)
   }
 
-  const matchesFilters = (a: Account) =>
-    (ownerFilter.size === 0 || ownerFilter.has(a.owner)) &&
-    (goalFilter.size === 0 || goalFilter.has(a.goalType)) &&
-    (typeFilter.size === 0 || typeFilter.has(a.type)) &&
-    (natureFilter.size === 0 || natureFilter.has(a.nature || 'asset')) &&
-    (allocationFilter.size === 0 || allocationFilter.has(a.allocation || getDefaultAllocation(a.nature || 'asset')))
+  const matchesFilters = useCallback(
+    (a: Account) =>
+      (ownerFilter.size === 0 || ownerFilter.has(a.owner)) &&
+      (goalFilter.size === 0 || goalFilter.has(a.goalType)) &&
+      (typeFilter.size === 0 || typeFilter.has(a.type)) &&
+      (natureFilter.size === 0 || natureFilter.has(a.nature || 'asset')) &&
+      (allocationFilter.size === 0 || allocationFilter.has(a.allocation || getDefaultAllocation(a.nature || 'asset'))),
+    [ownerFilter, goalFilter, typeFilter, natureFilter, allocationFilter],
+  )
 
   /* Column filtering */
   const visibleAccounts = useMemo(
     () => spreadsheetAccounts.filter(matchesFilters),
-    [spreadsheetAccounts, ownerFilter, goalFilter, typeFilter, natureFilter, allocationFilter],
+    [spreadsheetAccounts, matchesFilters],
   )
 
   /* Total includes active + inactive matching filters */
-  const totalAccounts = useMemo(
-    () => allAccounts.filter(matchesFilters),
-    [allAccounts, ownerFilter, goalFilter, typeFilter, natureFilter, allocationFilter],
-  )
+  const totalAccounts = useMemo(() => allAccounts.filter(matchesFilters), [allAccounts, matchesFilters])
 
   /* Parent/child grouping */
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
