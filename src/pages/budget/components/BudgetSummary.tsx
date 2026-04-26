@@ -24,9 +24,7 @@ const BudgetSummary: FC<BudgetSummaryProps> = ({ totalIncome, totalExpense, save
       </div>
       <div className="budget-summary-card budget-summary-card--save">
         <span className="budget-summary-label">Save Rate {year}</span>
-        <span className="budget-summary-value">
-          {hasData ? `${(saveRate * 100).toFixed(1)}%` : '—'}
-        </span>
+        <span className="budget-summary-value">{hasData ? `${(saveRate * 100).toFixed(1)}%` : '—'}</span>
       </div>
     </div>
   )

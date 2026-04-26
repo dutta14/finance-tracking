@@ -61,9 +61,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   const handleSelectGoal = (goalId: number, multi: boolean): void => {
     if (multi || compareMode) {
       // Cmd+Click or Compare mode: toggle selection
-      setSelectedGoalIds(prev =>
-        prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]
-      )
+      setSelectedGoalIds(prev => (prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]))
       if (!compareMode) setCompareMode(true)
     } else {
       navigate(`/goal/${goalId}`)
@@ -105,11 +103,21 @@ const GoalsSection: FC<GoalsSectionProps> = ({
             <button
               ref={compareBtnRef}
               className={`goal-compare-btn${compareMode ? ' active' : ''}`}
-              onClick={() => compareMode ? exitCompareMode() : setCompareMode(true)}
+              onClick={() => (compareMode ? exitCompareMode() : setCompareMode(true))}
               aria-pressed={compareMode}
               title={compareMode ? 'Exit compare mode' : 'Compare goals'}
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <rect x="1" y="2" width="5.5" height="12" rx="1" />
                 <rect x="9.5" y="2" width="5.5" height="12" rx="1" />
               </svg>
@@ -119,27 +127,33 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           <div className="view-mode-toggle">
             <button
               className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
-              onClick={() => { setViewMode('grid'); localStorage.setItem('goal-view-mode', 'grid') }}
+              onClick={() => {
+                setViewMode('grid')
+                localStorage.setItem('goal-view-mode', 'grid')
+              }}
               aria-label="Grid view"
               title="Grid view"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                <rect x="1" y="1" width="6" height="6" rx="1"/>
-                <rect x="9" y="1" width="6" height="6" rx="1"/>
-                <rect x="1" y="9" width="6" height="6" rx="1"/>
-                <rect x="9" y="9" width="6" height="6" rx="1"/>
+                <rect x="1" y="1" width="6" height="6" rx="1" />
+                <rect x="9" y="1" width="6" height="6" rx="1" />
+                <rect x="1" y="9" width="6" height="6" rx="1" />
+                <rect x="9" y="9" width="6" height="6" rx="1" />
               </svg>
             </button>
             <button
               className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
-              onClick={() => { setViewMode('list'); localStorage.setItem('goal-view-mode', 'list') }}
+              onClick={() => {
+                setViewMode('list')
+                localStorage.setItem('goal-view-mode', 'list')
+              }}
               aria-label="List view"
               title="List view"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                <rect x="1" y="2" width="14" height="2.5" rx="1"/>
-                <rect x="1" y="6.75" width="14" height="2.5" rx="1"/>
-                <rect x="1" y="11.5" width="14" height="2.5" rx="1"/>
+                <rect x="1" y="2" width="14" height="2.5" rx="1" />
+                <rect x="1" y="6.75" width="14" height="2.5" rx="1" />
+                <rect x="1" y="11.5" width="14" height="2.5" rx="1" />
               </svg>
             </button>
           </div>
@@ -147,14 +161,18 @@ const GoalsSection: FC<GoalsSectionProps> = ({
       </div>
       {/* Persistent live region for screen reader announcements */}
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {compareMode && selectedGoalIds.length === 0 &&
+        {compareMode &&
+          selectedGoalIds.length === 0 &&
           `Compare mode active. Click goals to select them for comparison, or use ${modKey}+Click anytime. Press Escape to exit.`}
-        {compareMode && selectedGoalIds.length > 0 &&
+        {compareMode &&
+          selectedGoalIds.length > 0 &&
           `${selectedGoalIds.length} goal${selectedGoalIds.length !== 1 ? 's' : ''} selected for comparison.`}
       </div>
       {compareMode && selectedGoalIds.length > 0 && (
         <div className="goal-selection-bar" aria-label="Selection actions">
-          <span className="goal-selection-count">{selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected</span>
+          <span className="goal-selection-count">
+            {selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected
+          </span>
           <div className="goal-selection-actions">
             <button className="goal-selection-btn goal-selection-btn--danger" onClick={handleDeleteSelected}>
               Delete selected
@@ -205,4 +223,3 @@ const GoalsSection: FC<GoalsSectionProps> = ({
 }
 
 export default GoalsSection
-

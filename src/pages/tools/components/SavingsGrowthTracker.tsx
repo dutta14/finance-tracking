@@ -14,8 +14,7 @@ const fmt = (n: number) =>
 
 const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
 
-const delta = (cur: number, prev: number) =>
-  prev === 0 ? null : ((cur - prev) / Math.abs(prev)) * 100
+const delta = (cur: number, prev: number) => (prev === 0 ? null : ((cur - prev) / Math.abs(prev)) * 100)
 
 /** Net worth at end of each December (or latest available month in each year).
  *  Matches the Data tab's "Total" column: all accounts, raw balance sum. */
@@ -50,7 +49,7 @@ function getYearEndNetWorths(_accounts: Account[], balances: BalanceEntry[]): Ma
 }
 
 interface BudgetYearData {
-  netIncome: number | null   // income - expense (from budget)
+  netIncome: number | null // income - expense (from budget)
   totalIncome: number | null
   totalExpense: number | null
   hasData: boolean
@@ -79,7 +78,9 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
         try {
           const parsed = parseCSV(csvData.csv)
           txns.push(...parsed.map(t => ({ category: t.category, amount: t.amount, monthKey: key })))
-        } catch { /* skip */ }
+        } catch {
+          /* skip */
+        }
       }
       if (txns.length === 0) continue
 
@@ -111,7 +112,9 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
         hasData: true,
       })
     }
-  } catch { /* empty */ }
+  } catch {
+    /* empty */
+  }
   return result
 }
 
@@ -128,7 +131,9 @@ interface YearOverrides {
 function loadOverrides(): Record<number, YearOverrides> {
   try {
     return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}')
-  } catch { return {} }
+  } catch {
+    return {}
+  }
 }
 
 function saveOverrides(o: Record<number, YearOverrides>) {
@@ -142,11 +147,11 @@ interface YearRow {
   netWorth: number | null
   nwChange: number | null
   // Budget-derived
-  totalIncome: number | null   // from budget
-  totalExpense: number | null  // from budget
-  netIncome: number | null     // total income from budget
-  savings: number | null       // netIncome - expense = amount saved
-  growth: number | null        // nwChange - savings = capital growth
+  totalIncome: number | null // from budget
+  totalExpense: number | null // from budget
+  netIncome: number | null // total income from budget
+  savings: number | null // netIncome - expense = amount saved
+  growth: number | null // nwChange - savings = capital growth
   // Overrides
   grossIncome: number | null
   taxes: number | null
@@ -237,7 +242,10 @@ const SavingsGrowthTracker: FC = () => {
     setEditValue('')
   }
 
-  const cancelEdit = () => { setEditCell(null); setEditValue('') }
+  const cancelEdit = () => {
+    setEditCell(null)
+    setEditValue('')
+  }
 
   const renderCell = (row: YearRow, field: string, value: number | null, editable: boolean) => {
     const isEditing = editCell?.year === row.year && editCell?.field === field
@@ -250,18 +258,51 @@ const SavingsGrowthTracker: FC = () => {
           value={editValue}
           onChange={e => setEditValue(e.target.value)}
           onBlur={commitEdit}
-          onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancelEdit() }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commitEdit()
+            if (e.key === 'Escape') cancelEdit()
+          }}
         />
       )
     }
     if (value === null) {
       if (editable) {
-        return <span className="sgt-na sgt-editable" role="button" tabIndex={0} onClick={() => startEdit(row.year, field, null)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEdit(row.year, field, null) } }}>—</span>
+        return (
+          <span
+            className="sgt-na sgt-editable"
+            role="button"
+            tabIndex={0}
+            onClick={() => startEdit(row.year, field, null)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                startEdit(row.year, field, null)
+              }
+            }}
+          >
+            —
+          </span>
+        )
       }
       return <span className="sgt-na">N/A</span>
     }
     if (editable) {
-      return <span className="sgt-editable" role="button" tabIndex={0} onClick={() => startEdit(row.year, field, value)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEdit(row.year, field, value) } }}>{fmt(value)}</span>
+      return (
+        <span
+          className="sgt-editable"
+          role="button"
+          tabIndex={0}
+          onClick={() => startEdit(row.year, field, value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              startEdit(row.year, field, value)
+            }
+          }}
+        >
+          {fmt(value)}
+        </span>
+      )
     }
     return fmt(value)
   }
@@ -289,12 +330,14 @@ const SavingsGrowthTracker: FC = () => {
     return <span className={raw > 0 ? 'sgt-down' : raw < 0 ? 'sgt-up' : ''}>{fmt(raw)}</span>
   }
 
-  const getPrev = (i: number, field: keyof YearRow) => i > 0 ? (rows[i - 1][field] as number | null) : null
+  const getPrev = (i: number, field: keyof YearRow) => (i > 0 ? (rows[i - 1][field] as number | null) : null)
 
   if (rows.length === 0) {
     return (
       <div className="sgt">
-        <p className="sgt-empty">No data available. Add account balances in the Accounts tab and/or upload budget CSVs to get started.</p>
+        <p className="sgt-empty">
+          No data available. Add account balances in the Accounts tab and/or upload budget CSVs to get started.
+        </p>
       </div>
     )
   }
@@ -304,12 +347,28 @@ const SavingsGrowthTracker: FC = () => {
       {/* Toolbar: segmented control + toggle */}
       <div className="sgt-toolbar">
         <div className="sgt-mode-switch" role="group" aria-label="View mode">
-          <button className={`sgt-mode-btn${tab === 'savings' ? ' active' : ''}`} aria-pressed={tab === 'savings'} onClick={() => setTab('savings')}>Savings</button>
-          <button className={`sgt-mode-btn${tab === 'income' ? ' active' : ''}`} aria-pressed={tab === 'income'} onClick={() => setTab('income')}>Income</button>
+          <button
+            className={`sgt-mode-btn${tab === 'savings' ? ' active' : ''}`}
+            aria-pressed={tab === 'savings'}
+            onClick={() => setTab('savings')}
+          >
+            Savings
+          </button>
+          <button
+            className={`sgt-mode-btn${tab === 'income' ? ' active' : ''}`}
+            aria-pressed={tab === 'income'}
+            onClick={() => setTab('income')}
+          >
+            Income
+          </button>
         </div>
         <div className="sgt-toggle-row">
           <span className="sgt-toggle-label">YoY change</span>
-          <button className="sgt-toggle-btn" onClick={() => setShowPct(!showPct)} aria-label={showPct ? 'Show YoY change in dollars' : 'Show YoY change as percentage'}>
+          <button
+            className="sgt-toggle-btn"
+            onClick={() => setShowPct(!showPct)}
+            aria-label={showPct ? 'Show YoY change in dollars' : 'Show YoY change as percentage'}
+          >
             {showPct ? '%' : '$'}
           </button>
         </div>
@@ -320,23 +379,51 @@ const SavingsGrowthTracker: FC = () => {
           <thead>
             {tab === 'savings' ? (
               <tr>
-                <th scope="col" className="sgt-th sgt-th--year">Year</th>
-                <th scope="col" className="sgt-th sgt-th--num">Net Income</th>
-                <th scope="col" className="sgt-th sgt-th--num">Expense</th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">Exp Δ</th>
-                <th scope="col" className="sgt-th sgt-th--num">Savings</th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">Sav Δ</th>
-                <th scope="col" className="sgt-th sgt-th--num">Growth</th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">Gro Δ</th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--nw">Net Worth</th>
+                <th scope="col" className="sgt-th sgt-th--year">
+                  Year
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Net Income
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Expense
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">
+                  Exp Δ
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Savings
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">
+                  Sav Δ
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Growth
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">
+                  Gro Δ
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num sgt-th--nw">
+                  Net Worth
+                </th>
               </tr>
             ) : (
               <tr>
-                <th scope="col" className="sgt-th sgt-th--year">Year</th>
-                <th scope="col" className="sgt-th sgt-th--num">Gross Income</th>
-                <th scope="col" className="sgt-th sgt-th--num">Taxes</th>
-                <th scope="col" className="sgt-th sgt-th--num">Tax Rate</th>
-                <th scope="col" className="sgt-th sgt-th--num">Net Income</th>
+                <th scope="col" className="sgt-th sgt-th--year">
+                  Year
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Gross Income
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Taxes
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Tax Rate
+                </th>
+                <th scope="col" className="sgt-th sgt-th--num">
+                  Net Income
+                </th>
               </tr>
             )}
           </thead>
@@ -346,28 +433,45 @@ const SavingsGrowthTracker: FC = () => {
                 return (
                   <tr key={row.year} className="sgt-row">
                     <td className="sgt-td sgt-td--year">{row.year}</td>
-                    <td className="sgt-td sgt-td--num">{renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}</td>
-                    <td className="sgt-td sgt-td--num">{row.totalExpense !== null ? fmt(row.totalExpense) : <span className="sgt-na">N/A</span>}</td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta">{renderDeltaExpense(row.totalExpense, getPrev(i, 'totalExpense'))}</td>
-                    <td className="sgt-td sgt-td--num sgt-td--highlight">{renderCell(row, 'savings', row.savings, canEdit(row, 'savings'))}</td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta">{renderDelta(row.savings, getPrev(i, 'savings'))}</td>
-                    <td className="sgt-td sgt-td--num sgt-td--highlight">{row.growth !== null ? fmt(row.growth) : <span className="sgt-na">N/A</span>}</td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta">{renderDelta(row.growth, getPrev(i, 'growth'))}</td>
-                    <td className="sgt-td sgt-td--num sgt-td--nw">{row.netWorth !== null ? fmt(row.netWorth) : <span className="sgt-na">N/A</span>}</td>
+                    <td className="sgt-td sgt-td--num">
+                      {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
+                    </td>
+                    <td className="sgt-td sgt-td--num">
+                      {row.totalExpense !== null ? fmt(row.totalExpense) : <span className="sgt-na">N/A</span>}
+                    </td>
+                    <td className="sgt-td sgt-td--num sgt-td--delta">
+                      {renderDeltaExpense(row.totalExpense, getPrev(i, 'totalExpense'))}
+                    </td>
+                    <td className="sgt-td sgt-td--num sgt-td--highlight">
+                      {renderCell(row, 'savings', row.savings, canEdit(row, 'savings'))}
+                    </td>
+                    <td className="sgt-td sgt-td--num sgt-td--delta">
+                      {renderDelta(row.savings, getPrev(i, 'savings'))}
+                    </td>
+                    <td className="sgt-td sgt-td--num sgt-td--highlight">
+                      {row.growth !== null ? fmt(row.growth) : <span className="sgt-na">N/A</span>}
+                    </td>
+                    <td className="sgt-td sgt-td--num sgt-td--delta">
+                      {renderDelta(row.growth, getPrev(i, 'growth'))}
+                    </td>
+                    <td className="sgt-td sgt-td--num sgt-td--nw">
+                      {row.netWorth !== null ? fmt(row.netWorth) : <span className="sgt-na">N/A</span>}
+                    </td>
                   </tr>
                 )
               }
               // Income tab
-              const taxRate = row.grossIncome && row.taxes != null
-                ? ((row.taxes / row.grossIncome) * 100).toFixed(1) + '%'
-                : null
+              const taxRate =
+                row.grossIncome && row.taxes != null ? ((row.taxes / row.grossIncome) * 100).toFixed(1) + '%' : null
               return (
                 <tr key={row.year} className="sgt-row">
                   <td className="sgt-td sgt-td--year">{row.year}</td>
                   <td className="sgt-td sgt-td--num">{renderCell(row, 'grossIncome', row.grossIncome, true)}</td>
                   <td className="sgt-td sgt-td--num">{renderCell(row, 'taxes', row.taxes, true)}</td>
                   <td className="sgt-td sgt-td--num">{taxRate ?? <span className="sgt-na">—</span>}</td>
-                  <td className="sgt-td sgt-td--num">{renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}</td>
+                  <td className="sgt-td sgt-td--num">
+                    {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
+                  </td>
                 </tr>
               )
             })}

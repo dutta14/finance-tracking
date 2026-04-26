@@ -29,8 +29,16 @@ const displayCat = (cat: string, groupName?: string): string => {
 }
 
 const BudgetTable: FC<BudgetTableProps> = ({
-  year, type, categoryGroups, categorySums, monthsWithData,
-  onUploadCSV, onRemoveCSV, onEditCategory, yearTransactions, timePeriod,
+  year,
+  type,
+  categoryGroups,
+  categorySums,
+  monthsWithData,
+  onUploadCSV,
+  onRemoveCSV,
+  onEditCategory,
+  yearTransactions,
+  timePeriod,
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; monthKey: string } | null>(null)
   const [csvError, setCsvError] = useState<string | null>(null)
@@ -41,7 +49,12 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const [filterSearch, setFilterSearch] = useState('')
   const filterRef = useRef<HTMLDivElement>(null)
   const [editingTxn, setEditingTxn] = useState<{ idx: number; value: string } | null>(null)
-  const [confirmNewCat, setConfirmNewCat] = useState<{ idx: number; origIdx: number; name: string; monthKey: string } | null>(null)
+  const [confirmNewCat, setConfirmNewCat] = useState<{
+    idx: number
+    origIdx: number
+    name: string
+    monthKey: string
+  } | null>(null)
   const [showPct, setShowPct] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingMonthRef = useRef<string>('')
@@ -50,20 +63,21 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const [showRemoved, setShowRemoved] = useState(false)
 
   // Removed categories set
-  const removedCategories = new Set(
-    categoryGroups.find(g => g.id === 'removed')?.categories || []
-  )
+  const removedCategories = new Set(categoryGroups.find(g => g.id === 'removed')?.categories || [])
 
   // Filter categories that belong to this table type (income or expense)
   // If a category has ANY negative month, it's an expense (positives are refunds).
   // Only purely-positive categories are income.
-  const isTypeCategory = useCallback((cat: string) => {
-    const monthValues = Object.values(categorySums[cat] || {})
-    const hasNegative = monthValues.some(v => v < 0)
-    if (type === 'expense') return hasNegative
-    // Income: only if never negative
-    return !hasNegative && monthValues.some(v => v > 0)
-  }, [categorySums, type])
+  const isTypeCategory = useCallback(
+    (cat: string) => {
+      const monthValues = Object.values(categorySums[cat] || {})
+      const hasNegative = monthValues.some(v => v < 0)
+      if (type === 'expense') return hasNegative
+      // Income: only if never negative
+      return !hasNegative && monthValues.some(v => v > 0)
+    },
+    [categorySums, type],
+  )
 
   // Get all categories for this type
   const relevantCategories = new Set<string>()
@@ -111,7 +125,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
 
   const getCategoryTotal = (cat: string): number => {
     let total = 0
-    months.forEach(m => { total += getCellValue(cat, m) })
+    months.forEach(m => {
+      total += getCellValue(cat, m)
+    })
     return total
   }
 
@@ -129,16 +145,22 @@ const BudgetTable: FC<BudgetTableProps> = ({
 
   const getGroupYearTotal = (group: CategoryGroup): number => {
     let total = 0
-    months.forEach(m => { total += getGroupTotal(group, m) })
+    months.forEach(m => {
+      total += getGroupTotal(group, m)
+    })
     return total
   }
 
   const grandTotal = (): number => {
     let total = 0
     if (type === 'income') {
-      relevantCategories.forEach(cat => { total += getCategoryTotal(cat) })
+      relevantCategories.forEach(cat => {
+        total += getCategoryTotal(cat)
+      })
     } else {
-      relevantGroups.forEach(g => { total += getGroupYearTotal(g) })
+      relevantGroups.forEach(g => {
+        total += getGroupYearTotal(g)
+      })
     }
     return total
   }
@@ -146,9 +168,13 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const grandPeriodTotal = (period: { monthKeys: string[] }): number => {
     let total = 0
     if (type === 'income') {
-      relevantCategories.forEach(cat => { total += getPeriodValue(cat, period) })
+      relevantCategories.forEach(cat => {
+        total += getPeriodValue(cat, period)
+      })
     } else {
-      relevantGroups.forEach(g => { total += getGroupPeriodTotal(g, period) })
+      relevantGroups.forEach(g => {
+        total += getGroupPeriodTotal(g, period)
+      })
     }
     return total
   }
@@ -183,7 +209,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       const text = ev.target?.result as string
       const result = onUploadCSV(pendingMonthRef.current, text)
       if (!result.ok) {
@@ -246,23 +272,29 @@ const BudgetTable: FC<BudgetTableProps> = ({
           <thead>
             <tr>
               <th className="budget-th budget-th--category">Category</th>
-              {timePeriod === 'month' ? months.map((m, i) => (
-                <th
-                  key={m}
-                  className={`budget-th budget-th--month${monthsWithData.has(m) ? ' has-data' : ''}`}
-                  onContextMenu={e => handleHeaderContextMenu(e, m)}
-                  onClick={() => handleMonthClick(m)}
-                  title="Right-click to upload CSV"
-                >
-                  {shortMonthName(i)}
-                  {monthsWithData.has(m) && <span className="budget-th-dot" />}
-                </th>
-              )) : periods.map(p => (
-                <th key={p.label} className="budget-th budget-th--month">
-                  {p.label}
-                </th>
-              ))}
-              <th className="budget-th budget-th--total budget-th--switchable" onClick={() => setShowPct(p => !p)} title="Click to toggle Total / %">
+              {timePeriod === 'month'
+                ? months.map((m, i) => (
+                    <th
+                      key={m}
+                      className={`budget-th budget-th--month${monthsWithData.has(m) ? ' has-data' : ''}`}
+                      onContextMenu={e => handleHeaderContextMenu(e, m)}
+                      onClick={() => handleMonthClick(m)}
+                      title="Right-click to upload CSV"
+                    >
+                      {shortMonthName(i)}
+                      {monthsWithData.has(m) && <span className="budget-th-dot" />}
+                    </th>
+                  ))
+                : periods.map(p => (
+                    <th key={p.label} className="budget-th budget-th--month">
+                      {p.label}
+                    </th>
+                  ))}
+              <th
+                className="budget-th budget-th--total budget-th--switchable"
+                onClick={() => setShowPct(p => !p)}
+                title="Click to toggle Total / %"
+              >
                 {showPct ? '%' : 'Total'}
               </th>
             </tr>
@@ -271,25 +303,29 @@ const BudgetTable: FC<BudgetTableProps> = ({
             {type === 'income' ? (
               // Income: flat list of categories, no group structure
               <>
-                {[...relevantCategories].sort((a, b) => a.localeCompare(b)).map(cat => {
-                  const total = getCategoryTotal(cat)
-                  return (
-                    <tr key={cat} className="budget-tr--category">
-                      <td className="budget-td budget-td--category-name">{displayCat(cat)}</td>
-                      {periods.map(p => {
-                        const val = getPeriodValue(cat, p)
-                        return (
-                          <td key={p.label} className="budget-td budget-td--number">
-                            {val !== 0 ? fmt(Math.abs(val)) : ''}
-                          </td>
-                        )
-                      })}
-                      <td className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}>
-                        {showPct ? getCategoryPct(cat) : (total !== 0 ? fmt(Math.abs(total)) : '')}
-                      </td>
-                    </tr>
-                  )
-                })}
+                {[...relevantCategories]
+                  .sort((a, b) => a.localeCompare(b))
+                  .map(cat => {
+                    const total = getCategoryTotal(cat)
+                    return (
+                      <tr key={cat} className="budget-tr--category">
+                        <td className="budget-td budget-td--category-name">{displayCat(cat)}</td>
+                        {periods.map(p => {
+                          const val = getPeriodValue(cat, p)
+                          return (
+                            <td key={p.label} className="budget-td budget-td--number">
+                              {val !== 0 ? fmt(Math.abs(val)) : ''}
+                            </td>
+                          )
+                        })}
+                        <td
+                          className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}
+                        >
+                          {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(Math.abs(total)) : ''}
+                        </td>
+                      </tr>
+                    )
+                  })}
               </>
             ) : (
               // Expense: grouped rows
@@ -310,7 +346,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
             )}
             {relevantCategories.size > 0 && (
               <tr className="budget-tr--grand-total">
-                <td className="budget-td budget-td--category"><strong>Grand Total</strong></td>
+                <td className="budget-td budget-td--category">
+                  <strong>Grand Total</strong>
+                </td>
                 {periods.map(p => {
                   const periodTotal = grandPeriodTotal(p)
                   return (
@@ -329,229 +367,273 @@ const BudgetTable: FC<BudgetTableProps> = ({
       </div>
 
       {/* Drill-down panel */}
-      {expandedMonth && (() => {
-        const allTxns = getMonthTransactions(expandedMonth)
-        const removedTxns = showRemoved
-          ? (yearTransactions[expandedMonth] || [])
-              .map((t, i) => ({ ...t, origIdx: i, isRemoved: true as const }))
-              .filter(t => removedCategories.has(t.category))
-          : []
-        const removedCount = (yearTransactions[expandedMonth] || []).filter(t => removedCategories.has(t.category)).length
-        const combined = [
-          ...allTxns.map(t => ({ ...t, isRemoved: false as const })),
-          ...removedTxns,
-        ]
-        const categories = [...new Set(allTxns.map(t => t.category))].sort((a, b) => a.localeCompare(b))
-        const filtered = drilldownCategories.size === 0
-          ? combined
-          : combined.filter(t => t.isRemoved || drilldownCategories.has(t.category))
-        const sorted = [...filtered].sort((a, b) => {
-          let cmp = 0
-          switch (sortCol) {
-            case 'date': cmp = a.date.localeCompare(b.date); break
-            case 'category': cmp = a.category.localeCompare(b.category); break
-            case 'amount': cmp = a.amount - b.amount; break
-            case 'description': cmp = (a.description || '').localeCompare(b.description || ''); break
-          }
-          return sortDir === 'asc' ? cmp : -cmp
-        })
-        const toggleSort = (col: typeof sortCol) => {
-          if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-          else { setSortCol(col); setSortDir(col === 'date' ? 'desc' : 'asc') }
-        }
-        const sortIcon = (col: typeof sortCol) =>
-          sortCol === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''
-        const filterSum = filtered.filter(t => !t.isRemoved).reduce((s, t) => s + t.amount, 0)
-        const allSelected = drilldownCategories.size === 0
-        const realSelected = categories.filter(c => drilldownCategories.has(c)).length
-        const partialSelected = realSelected > 0 && realSelected < categories.length
-        const toggleCategory = (cat: string) => {
-          setDrilldownCategories(prev => {
-            const next = new Set(prev)
-            next.delete('__none__')
-            if (next.has(cat)) next.delete(cat)
-            else next.add(cat)
-            // If all categories are now selected, go back to "all" state
-            if (next.size === categories.length && categories.every(c => next.has(c))) {
-              return new Set()
+      {expandedMonth &&
+        (() => {
+          const allTxns = getMonthTransactions(expandedMonth)
+          const removedTxns = showRemoved
+            ? (yearTransactions[expandedMonth] || [])
+                .map((t, i) => ({ ...t, origIdx: i, isRemoved: true as const }))
+                .filter(t => removedCategories.has(t.category))
+            : []
+          const removedCount = (yearTransactions[expandedMonth] || []).filter(t =>
+            removedCategories.has(t.category),
+          ).length
+          const combined = [...allTxns.map(t => ({ ...t, isRemoved: false as const })), ...removedTxns]
+          const categories = [...new Set(allTxns.map(t => t.category))].sort((a, b) => a.localeCompare(b))
+          const filtered =
+            drilldownCategories.size === 0
+              ? combined
+              : combined.filter(t => t.isRemoved || drilldownCategories.has(t.category))
+          const sorted = [...filtered].sort((a, b) => {
+            let cmp = 0
+            switch (sortCol) {
+              case 'date':
+                cmp = a.date.localeCompare(b.date)
+                break
+              case 'category':
+                cmp = a.category.localeCompare(b.category)
+                break
+              case 'amount':
+                cmp = a.amount - b.amount
+                break
+              case 'description':
+                cmp = (a.description || '').localeCompare(b.description || '')
+                break
             }
-            // If nothing left, use sentinel
-            if (next.size === 0) return new Set(['__none__'])
-            return next
+            return sortDir === 'asc' ? cmp : -cmp
           })
-        }
-        return (
-          <div className="budget-drilldown" ref={drilldownRef}>
-            <div className="budget-drilldown-header">
-              <h4>{shortMonthName(parseInt(expandedMonth.split('-')[1], 10) - 1)} {year} — {type === 'income' ? 'Income' : 'Expense'} Transactions</h4>
-              <button className="budget-drilldown-close" onClick={() => setExpandedMonth(null)}>×</button>
-            </div>
-            {allTxns.length > 0 && (
-              <div className="budget-drilldown-filter">
-                <div className="budget-filter-dropdown" ref={filterRef}>
-                  <button
-                    className="budget-filter-trigger"
-                    onClick={() => { setFilterOpen(v => !v); setFilterSearch('') }}
-                  >
-                    {allSelected
-                      ? 'All Categories'
-                      : (() => {
-                          const count = categories.filter(c => drilldownCategories.has(c)).length
-                          return count === 0 ? 'None selected' : `${count} of ${categories.length} categories`
-                        })()}
-                    <span className="budget-filter-chevron">{filterOpen ? '▲' : '▼'}</span>
-                  </button>
-                  {filterOpen && (
-                    <div className="budget-filter-panel">
-                      <input
-                        className="budget-filter-search"
-                        type="text"
-                        placeholder="Search categories…"
-                        value={filterSearch}
-                        onChange={e => setFilterSearch(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="budget-filter-list">
-                        {!filterSearch && (
-                          <label className="budget-filter-item budget-filter-item--all">
-                            <input
-                              type="checkbox"
-                              checked={allSelected}
-                              ref={el => { if (el) el.indeterminate = partialSelected }}
-                              onChange={() => {
-                                if (allSelected) {
-                                  // Deselect all — set to full set so nothing matches except explicit picks
-                                  setDrilldownCategories(new Set(['__none__']))
-                                } else {
-                                  // Select all
-                                  setDrilldownCategories(new Set())
-                                }
-                              }}
-                            />
-                            <span>All Categories</span>
-                          </label>
-                        )}
-                        {categories
-                          .filter(c => c.toLowerCase().includes(filterSearch.toLowerCase()))
-                          .map(c => (
-                            <label key={c} className="budget-filter-item">
+          const toggleSort = (col: typeof sortCol) => {
+            if (sortCol === col) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+            else {
+              setSortCol(col)
+              setSortDir(col === 'date' ? 'desc' : 'asc')
+            }
+          }
+          const sortIcon = (col: typeof sortCol) => (sortCol === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '')
+          const filterSum = filtered.filter(t => !t.isRemoved).reduce((s, t) => s + t.amount, 0)
+          const allSelected = drilldownCategories.size === 0
+          const realSelected = categories.filter(c => drilldownCategories.has(c)).length
+          const partialSelected = realSelected > 0 && realSelected < categories.length
+          const toggleCategory = (cat: string) => {
+            setDrilldownCategories(prev => {
+              const next = new Set(prev)
+              next.delete('__none__')
+              if (next.has(cat)) next.delete(cat)
+              else next.add(cat)
+              // If all categories are now selected, go back to "all" state
+              if (next.size === categories.length && categories.every(c => next.has(c))) {
+                return new Set()
+              }
+              // If nothing left, use sentinel
+              if (next.size === 0) return new Set(['__none__'])
+              return next
+            })
+          }
+          return (
+            <div className="budget-drilldown" ref={drilldownRef}>
+              <div className="budget-drilldown-header">
+                <h4>
+                  {shortMonthName(parseInt(expandedMonth.split('-')[1], 10) - 1)} {year} —{' '}
+                  {type === 'income' ? 'Income' : 'Expense'} Transactions
+                </h4>
+                <button className="budget-drilldown-close" onClick={() => setExpandedMonth(null)}>
+                  ×
+                </button>
+              </div>
+              {allTxns.length > 0 && (
+                <div className="budget-drilldown-filter">
+                  <div className="budget-filter-dropdown" ref={filterRef}>
+                    <button
+                      className="budget-filter-trigger"
+                      onClick={() => {
+                        setFilterOpen(v => !v)
+                        setFilterSearch('')
+                      }}
+                    >
+                      {allSelected
+                        ? 'All Categories'
+                        : (() => {
+                            const count = categories.filter(c => drilldownCategories.has(c)).length
+                            return count === 0 ? 'None selected' : `${count} of ${categories.length} categories`
+                          })()}
+                      <span className="budget-filter-chevron">{filterOpen ? '▲' : '▼'}</span>
+                    </button>
+                    {filterOpen && (
+                      <div className="budget-filter-panel">
+                        <input
+                          className="budget-filter-search"
+                          type="text"
+                          placeholder="Search categories…"
+                          value={filterSearch}
+                          onChange={e => setFilterSearch(e.target.value)}
+                          autoFocus
+                        />
+                        <div className="budget-filter-list">
+                          {!filterSearch && (
+                            <label className="budget-filter-item budget-filter-item--all">
                               <input
                                 type="checkbox"
-                                checked={allSelected || drilldownCategories.has(c)}
+                                checked={allSelected}
+                                ref={el => {
+                                  if (el) el.indeterminate = partialSelected
+                                }}
                                 onChange={() => {
                                   if (allSelected) {
-                                    // Switching from all → deselect this one
-                                    const remaining = categories.filter(x => x !== c)
-                                    setDrilldownCategories(remaining.length > 0 ? new Set(remaining) : new Set(['__none__']))
+                                    // Deselect all — set to full set so nothing matches except explicit picks
+                                    setDrilldownCategories(new Set(['__none__']))
                                   } else {
-                                    toggleCategory(c)
+                                    // Select all
+                                    setDrilldownCategories(new Set())
                                   }
                                 }}
                               />
-                              <span>{c}</span>
+                              <span>All Categories</span>
                             </label>
-                          ))}
+                          )}
+                          {categories
+                            .filter(c => c.toLowerCase().includes(filterSearch.toLowerCase()))
+                            .map(c => (
+                              <label key={c} className="budget-filter-item">
+                                <input
+                                  type="checkbox"
+                                  checked={allSelected || drilldownCategories.has(c)}
+                                  onChange={() => {
+                                    if (allSelected) {
+                                      // Switching from all → deselect this one
+                                      const remaining = categories.filter(x => x !== c)
+                                      setDrilldownCategories(
+                                        remaining.length > 0 ? new Set(remaining) : new Set(['__none__']),
+                                      )
+                                    } else {
+                                      toggleCategory(c)
+                                    }
+                                  }}
+                                />
+                                <span>{c}</span>
+                              </label>
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+                  {!allSelected && (
+                    <span
+                      className={`budget-drilldown-sum ${type === 'expense' && filterSum > 0 ? 'budget-amt-refund' : ''}`}
+                    >
+                      {fmt(Math.abs(filterSum))}
+                    </span>
+                  )}
+                  {removedCount > 0 && (
+                    <button
+                      className={`budget-removed-pill ${showRemoved ? 'budget-removed-pill--on' : ''}`}
+                      onClick={() => setShowRemoved(v => !v)}
+                    >
+                      Removed ({removedCount})
+                    </button>
                   )}
                 </div>
-                {!allSelected && (
-                  <span className={`budget-drilldown-sum ${type === 'expense' && filterSum > 0 ? 'budget-amt-refund' : ''}`}>
-                    {fmt(Math.abs(filterSum))}
-                  </span>
-                )}
-                {removedCount > 0 && (
-                  <button
-                    className={`budget-removed-pill ${showRemoved ? 'budget-removed-pill--on' : ''}`}
-                    onClick={() => setShowRemoved(v => !v)}
-                  >
-                    Removed ({removedCount})
-                  </button>
+              )}
+              <div className="budget-drilldown-body">
+                {filtered.length === 0 ? (
+                  <p className="budget-drilldown-empty">No {type} transactions for this month.</p>
+                ) : (
+                  <table className="budget-drilldown-table">
+                    <thead>
+                      <tr>
+                        <th className="budget-th-sort" onClick={() => toggleSort('date')}>
+                          Date{sortIcon('date')}
+                        </th>
+                        <th className="budget-th-sort" onClick={() => toggleSort('category')}>
+                          Category{sortIcon('category')}
+                        </th>
+                        <th className="budget-th-sort" onClick={() => toggleSort('amount')}>
+                          Amount{sortIcon('amount')}
+                        </th>
+                        <th className="budget-th-sort" onClick={() => toggleSort('description')}>
+                          Description{sortIcon('description')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sorted.map((t, i) => (
+                        <tr key={i} className={t.isRemoved ? 'budget-drilldown-row--removed' : ''}>
+                          <td>{t.date}</td>
+                          <td
+                            className="budget-drilldown-cat-cell"
+                            onDoubleClick={() => setEditingTxn({ idx: i, value: t.category })}
+                            title="Double-click to edit category"
+                          >
+                            {editingTxn?.idx === i ? (
+                              <input
+                                className="budget-drilldown-cat-input"
+                                value={editingTxn.value}
+                                onChange={e => setEditingTxn({ idx: i, value: e.target.value })}
+                                onBlur={() => {
+                                  const newCat = editingTxn.value.trim()
+                                  if (newCat && newCat !== t.category) {
+                                    const allCats = new Set(
+                                      Object.values(yearTransactions).flatMap(txns => txns.map(tx => tx.category)),
+                                    )
+                                    if (!allCats.has(newCat)) {
+                                      setConfirmNewCat({
+                                        idx: i,
+                                        origIdx: t.origIdx,
+                                        name: newCat,
+                                        monthKey: expandedMonth!,
+                                      })
+                                      setEditingTxn(null)
+                                      return
+                                    }
+                                    onEditCategory(expandedMonth!, t.origIdx, newCat)
+                                    setDrilldownCategories(new Set())
+                                  }
+                                  setEditingTxn(null)
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                                  if (e.key === 'Escape') setEditingTxn(null)
+                                }}
+                                autoFocus
+                              />
+                            ) : confirmNewCat?.idx === i ? (
+                              <div className="budget-confirm-newcat">
+                                <span className="budget-confirm-newcat-text">
+                                  Create new category <strong>"{confirmNewCat.name}"</strong>?
+                                </span>
+                                <button
+                                  className="budget-confirm-newcat-btn budget-confirm-newcat-btn--yes"
+                                  onClick={() => {
+                                    onEditCategory(confirmNewCat.monthKey, confirmNewCat.origIdx, confirmNewCat.name)
+                                    setDrilldownCategories(new Set())
+                                    setConfirmNewCat(null)
+                                  }}
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  className="budget-confirm-newcat-btn budget-confirm-newcat-btn--no"
+                                  onClick={() => setConfirmNewCat(null)}
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              t.category
+                            )}
+                          </td>
+                          <td className={type === 'expense' && t.amount > 0 ? 'budget-amt-refund' : ''}>
+                            {fmt(Math.abs(t.amount))}
+                          </td>
+                          <td>{t.description || ''}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
-            )}
-            <div className="budget-drilldown-body">
-              {filtered.length === 0 ? (
-                <p className="budget-drilldown-empty">No {type} transactions for this month.</p>
-              ) : (
-                <table className="budget-drilldown-table">
-                  <thead>
-                    <tr>
-                      <th className="budget-th-sort" onClick={() => toggleSort('date')}>Date{sortIcon('date')}</th>
-                      <th className="budget-th-sort" onClick={() => toggleSort('category')}>Category{sortIcon('category')}</th>
-                      <th className="budget-th-sort" onClick={() => toggleSort('amount')}>Amount{sortIcon('amount')}</th>
-                      <th className="budget-th-sort" onClick={() => toggleSort('description')}>Description{sortIcon('description')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sorted.map((t, i) => (
-                      <tr key={i} className={t.isRemoved ? 'budget-drilldown-row--removed' : ''}>
-                        <td>{t.date}</td>
-                        <td
-                          className="budget-drilldown-cat-cell"
-                          onDoubleClick={() => setEditingTxn({ idx: i, value: t.category })}
-                          title="Double-click to edit category"
-                        >
-                          {editingTxn?.idx === i ? (
-                            <input
-                              className="budget-drilldown-cat-input"
-                              value={editingTxn.value}
-                              onChange={e => setEditingTxn({ idx: i, value: e.target.value })}
-                              onBlur={() => {
-                                const newCat = editingTxn.value.trim()
-                                if (newCat && newCat !== t.category) {
-                                  const allCats = new Set(
-                                    Object.values(yearTransactions).flatMap(txns => txns.map(tx => tx.category))
-                                  )
-                                  if (!allCats.has(newCat)) {
-                                    setConfirmNewCat({ idx: i, origIdx: t.origIdx, name: newCat, monthKey: expandedMonth! })
-                                    setEditingTxn(null)
-                                    return
-                                  }
-                                  onEditCategory(expandedMonth!, t.origIdx, newCat)
-                                  setDrilldownCategories(new Set())
-                                }
-                                setEditingTxn(null)
-                              }}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
-                                if (e.key === 'Escape') setEditingTxn(null)
-                              }}
-                              autoFocus
-                            />
-                          ) : confirmNewCat?.idx === i ? (
-                            <div className="budget-confirm-newcat">
-                              <span className="budget-confirm-newcat-text">
-                                Create new category <strong>"{confirmNewCat.name}"</strong>?
-                              </span>
-                              <button
-                                className="budget-confirm-newcat-btn budget-confirm-newcat-btn--yes"
-                                onClick={() => {
-                                  onEditCategory(confirmNewCat.monthKey, confirmNewCat.origIdx, confirmNewCat.name)
-                                  setDrilldownCategories(new Set())
-                                  setConfirmNewCat(null)
-                                }}
-                              >Yes</button>
-                              <button
-                                className="budget-confirm-newcat-btn budget-confirm-newcat-btn--no"
-                                onClick={() => setConfirmNewCat(null)}
-                              >No</button>
-                            </div>
-                          ) : t.category}
-                        </td>
-                        <td className={type === 'expense' && t.amount > 0 ? 'budget-amt-refund' : ''}>
-                          {fmt(Math.abs(t.amount))}
-                        </td>
-                        <td>{t.description || ''}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
             </div>
-          </div>
-        )
-      })()}
+          )
+        })()}
 
       {/* Context menu */}
       {contextMenu && (
@@ -572,13 +654,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
         </>
       )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".csv"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-      />
+      <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileChange} />
     </div>
   )
 }
@@ -595,8 +671,15 @@ const GroupRows: FC<{
   isExpense: boolean
   showPct: boolean
 }> = ({
-  group, periods, getPeriodValue, getCategoryTotal, getGroupPeriodTotal, getGroupYearTotal,
-  getCategoryPct, isExpense, showPct,
+  group,
+  periods,
+  getPeriodValue,
+  getCategoryTotal,
+  getGroupPeriodTotal,
+  getGroupYearTotal,
+  getCategoryPct,
+  isExpense,
+  showPct,
 }) => {
   const groupYearTotal = getGroupYearTotal(group)
 
@@ -616,31 +699,33 @@ const GroupRows: FC<{
           )
         })}
         <td className="budget-td budget-td--group-number budget-td--total">
-          {showPct ? '' : (groupYearTotal !== 0 ? fmt(Math.abs(groupYearTotal)) : '')}
+          {showPct ? '' : groupYearTotal !== 0 ? fmt(Math.abs(groupYearTotal)) : ''}
         </td>
       </tr>
       {/* Category rows */}
-      {[...group.categories].sort((a, b) => a.localeCompare(b)).map(cat => {
-        const total = getCategoryTotal(cat)
-        return (
-          <tr key={cat} className="budget-tr--category">
-            <td className="budget-td budget-td--category-name">
-              {displayCat(cat, group.name)}
-            </td>
-            {periods.map(p => {
-              const val = getPeriodValue(cat, p)
-              return (
-                <td key={p.label} className={`budget-td budget-td--number${isExpense && val > 0 ? ' refund' : ''}`}>
-                  {val !== 0 ? fmt(Math.abs(val)) : ''}
-                </td>
-              )
-            })}
-            <td className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}>
-              {showPct ? getCategoryPct(cat) : (total !== 0 ? fmt(Math.abs(total)) : '')}
-            </td>
-          </tr>
-        )
-      })}
+      {[...group.categories]
+        .sort((a, b) => a.localeCompare(b))
+        .map(cat => {
+          const total = getCategoryTotal(cat)
+          return (
+            <tr key={cat} className="budget-tr--category">
+              <td className="budget-td budget-td--category-name">{displayCat(cat, group.name)}</td>
+              {periods.map(p => {
+                const val = getPeriodValue(cat, p)
+                return (
+                  <td key={p.label} className={`budget-td budget-td--number${isExpense && val > 0 ? ' refund' : ''}`}>
+                    {val !== 0 ? fmt(Math.abs(val)) : ''}
+                  </td>
+                )
+              })}
+              <td
+                className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}
+              >
+                {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(Math.abs(total)) : ''}
+              </td>
+            </tr>
+          )
+        })}
     </>
   )
 }

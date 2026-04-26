@@ -9,7 +9,9 @@ import { BudgetConfigData } from '../types'
 const toBase64 = (str: string): string => {
   const bytes = new TextEncoder().encode(str)
   let binary = ''
-  bytes.forEach(b => { binary += String.fromCharCode(b) })
+  bytes.forEach(b => {
+    binary += String.fromCharCode(b)
+  })
   return btoa(binary)
 }
 
@@ -28,9 +30,7 @@ function apiHeaders(token: string): Record<string, string> {
   }
 }
 
-async function getFileSha(
-  config: GitHubSyncConfig, token: string, path: string
-): Promise<string | null> {
+async function getFileSha(config: GitHubSyncConfig, token: string, path: string): Promise<string | null> {
   const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`
   const res = await fetch(url, { headers: apiHeaders(token) })
   if (res.status === 404) return null
@@ -45,7 +45,7 @@ export async function uploadBudgetCSV(
   token: string,
   monthKey: string,
   csvContent: string,
-  message?: string
+  message?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const path = `budget/${monthKey}.csv`
   try {
@@ -81,18 +81,17 @@ export async function uploadBudgetCSV(
 /** List all budget CSVs from GitHub (budget/*.csv) */
 export async function listBudgetCSVs(
   config: GitHubSyncConfig,
-  token: string
+  token: string,
 ): Promise<{ ok: boolean; files?: { name: string; path: string; sha: string }[]; error?: string }> {
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/budget`,
-      { headers: apiHeaders(token) }
-    )
+    const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/budget`, {
+      headers: apiHeaders(token),
+    })
     if (res.status === 404) return { ok: true, files: [] }
     if (!res.ok) {
       return { ok: false, error: `GitHub API error: ${res.status}` }
     }
-    const items = await res.json() as { name: string; path: string; sha: string; type: string }[]
+    const items = (await res.json()) as { name: string; path: string; sha: string; type: string }[]
     const csvFiles = items
       .filter(f => f.type === 'file' && f.name.endsWith('.csv'))
       .map(f => ({ name: f.name, path: f.path, sha: f.sha }))
@@ -106,17 +105,16 @@ export async function listBudgetCSVs(
 export async function downloadBudgetCSV(
   config: GitHubSyncConfig,
   token: string,
-  monthKey: string
+  monthKey: string,
 ): Promise<{ ok: boolean; csv?: string; error?: string }> {
   const path = `budget/${monthKey}.csv`
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`,
-      { headers: apiHeaders(token) }
-    )
+    const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
+      headers: apiHeaders(token),
+    })
     if (res.status === 404) return { ok: false, error: 'File not found' }
     if (!res.ok) return { ok: false, error: `GitHub API error: ${res.status}` }
-    const file = await res.json() as { content?: string; encoding?: string }
+    const file = (await res.json()) as { content?: string; encoding?: string }
     if (!file.content || file.encoding !== 'base64') {
       return { ok: false, error: 'Unexpected file format' }
     }
@@ -130,7 +128,7 @@ export async function downloadBudgetCSV(
 /** Download all budget CSVs from GitHub and return them keyed by month */
 export async function downloadAllBudgetCSVs(
   config: GitHubSyncConfig,
-  token: string
+  token: string,
 ): Promise<{ ok: boolean; csvs?: Record<string, string>; error?: string }> {
   const listResult = await listBudgetCSVs(config, token)
   if (!listResult.ok || !listResult.files) return { ok: false, error: listResult.error }
@@ -150,7 +148,7 @@ export async function downloadAllBudgetCSVs(
 export async function syncAllBudgetCSVs(
   config: GitHubSyncConfig,
   token: string,
-  localCsvs: Record<string, { csv: string }>
+  localCsvs: Record<string, { csv: string }>,
 ): Promise<{ ok: boolean; synced: number; errors: string[] }> {
   const errors: string[] = []
   let synced = 0
@@ -168,7 +166,7 @@ const CONFIG_PATH = 'budget/budget-config.json'
 export async function uploadBudgetConfig(
   config: GitHubSyncConfig,
   token: string,
-  data: BudgetConfigData
+  data: BudgetConfigData,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const sha = await getFileSha(config, token, CONFIG_PATH)
@@ -194,16 +192,15 @@ export async function uploadBudgetConfig(
 /** Download budget config JSON from GitHub */
 export async function downloadBudgetConfig(
   config: GitHubSyncConfig,
-  token: string
+  token: string,
 ): Promise<{ ok: boolean; data?: BudgetConfigData; error?: string }> {
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${CONFIG_PATH}`,
-      { headers: apiHeaders(token) }
-    )
+    const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${CONFIG_PATH}`, {
+      headers: apiHeaders(token),
+    })
     if (res.status === 404) return { ok: true, data: undefined }
     if (!res.ok) return { ok: false, error: `GitHub API error: ${res.status}` }
-    const file = await res.json() as { content?: string; encoding?: string }
+    const file = (await res.json()) as { content?: string; encoding?: string }
     if (!file.content || file.encoding !== 'base64') {
       return { ok: false, error: 'Unexpected file format' }
     }

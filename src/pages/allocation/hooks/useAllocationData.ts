@@ -1,8 +1,5 @@
 import { useMemo } from 'react'
-import {
-  Account, BalanceEntry, AssetAllocation, ALLOCATION_LABELS,
-  getDefaultAllocation,
-} from '../../data/types'
+import { Account, BalanceEntry, AssetAllocation, ALLOCATION_LABELS, getDefaultAllocation } from '../../data/types'
 import { useData } from '../../../contexts/DataContext'
 import { Scope } from '../types'
 import { ALLOC_COLORS, GROUP_COLORS } from '../constants'

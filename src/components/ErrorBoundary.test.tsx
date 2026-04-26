@@ -24,7 +24,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Content')).toBeInTheDocument()
   })
@@ -33,7 +33,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
   })
@@ -42,7 +42,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="page">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument()
   })
@@ -51,7 +51,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="page">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByRole('button', { name: /clear data/i })).toBeInTheDocument()
   })
@@ -60,7 +60,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="page">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     const details = screen.getByText('Show details')
     expect(details).toBeInTheDocument()
@@ -71,7 +71,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="card">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
@@ -81,14 +81,14 @@ describe('ErrorBoundary', () => {
     const { rerender } = render(
       <ErrorBoundary variant="card" resetKey="/old">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
 
     rerender(
       <ErrorBoundary variant="card" resetKey="/new">
         <ThrowingComponent shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Content')).toBeInTheDocument()
   })
@@ -97,20 +97,16 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
-    expect(console.error).toHaveBeenCalledWith(
-      'ErrorBoundary caught:',
-      expect.any(Error),
-      expect.any(String)
-    )
+    expect(console.error).toHaveBeenCalledWith('ErrorBoundary caught:', expect.any(Error), expect.any(String))
   })
 
   it('catches JSON.parse SyntaxError and renders fallback', () => {
     render(
       <ErrorBoundary variant="page">
         <SyntaxErrorComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     expect(screen.getByText(/Unexpected token/)).toBeInTheDocument()
@@ -120,7 +116,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="card">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
     expect(screen.queryByText('Reload page')).not.toBeInTheDocument()
@@ -132,7 +128,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="page">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText(/This will remove all locally stored data/)).toBeInTheDocument()
     expect(screen.getByText(/GitHub Sync is configured/)).toBeInTheDocument()
@@ -146,7 +142,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="page">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     fireEvent.click(screen.getByRole('button', { name: /clear data/i }))
 
@@ -158,7 +154,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary variant="page">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     const details = screen.getByText('Show details').closest('details')!
     const pre = details.querySelector('pre')!
@@ -169,14 +165,14 @@ describe('ErrorBoundary', () => {
     const { rerender } = render(
       <ErrorBoundary variant="card">
         <ThrowingComponent shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
 
     rerender(
       <ErrorBoundary variant="card">
         <ThrowingComponent shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
     expect(screen.getByText('Content')).toBeInTheDocument()

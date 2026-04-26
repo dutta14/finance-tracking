@@ -25,9 +25,16 @@ interface GoalDetailProps {
 }
 
 const GoalDetail: FC<GoalDetailProps> = ({
-  goals, profileBirthday, gwGoals,
-  onUpdateGoal, onCopyGoal, onDeleteGoal, onRenameGoal,
-  onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal,
+  goals,
+  profileBirthday,
+  gwGoals,
+  onUpdateGoal,
+  onCopyGoal,
+  onDeleteGoal,
+  onRenameGoal,
+  onCreateGwGoal,
+  onUpdateGwGoal,
+  onDeleteGwGoal,
 }) => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -56,7 +63,12 @@ const GoalDetail: FC<GoalDetailProps> = ({
   // Arrow key navigation between goals
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      )
+        return
       if (e.key === 'ArrowLeft' && prevGoal) navigate(`/goal/${prevGoal.id}`)
       if (e.key === 'ArrowRight' && nextGoal) navigate(`/goal/${nextGoal.id}`)
     }
@@ -67,7 +79,18 @@ const GoalDetail: FC<GoalDetailProps> = ({
   if (!goal) {
     return (
       <div className="goal-detail-not-found">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ opacity: 0.4 }}>
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 48 48"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          style={{ opacity: 0.4 }}
+        >
           <circle cx="24" cy="24" r="20" />
           <path d="M18 18l12 12M30 18L18 30" />
         </svg>
@@ -79,7 +102,10 @@ const GoalDetail: FC<GoalDetailProps> = ({
     )
   }
 
-  const enterRename = () => { setRenameName(goal.goalName); setRenameMode(true) }
+  const enterRename = () => {
+    setRenameName(goal.goalName)
+    setRenameMode(true)
+  }
   const commitRename = () => {
     if (renameName.trim()) onRenameGoal(goal.id, renameName.trim())
     setRenameMode(false)
@@ -97,7 +123,19 @@ const GoalDetail: FC<GoalDetailProps> = ({
       <div className="goal-detail-header">
         <div className="goal-detail-header-left">
           <Link className="goal-detail-back-link" to="/goal">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M10 3L5 8l5 5" />
+            </svg>
             Goals
           </Link>
           {renameMode ? (
@@ -127,24 +165,46 @@ const GoalDetail: FC<GoalDetailProps> = ({
                 disabled={!prevGoal}
                 aria-label="Previous goal"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M10 3L5 8l5 5" />
+                </svg>
               </button>
-              <span className="goal-detail-step-label" aria-current="step">Goal {currentIndex + 1} of {total}</span>
+              <span className="goal-detail-step-label" aria-current="step">
+                Goal {currentIndex + 1} of {total}
+              </span>
               <button
                 className="goal-detail-step-btn"
                 onClick={() => nextGoal && navigate(`/goal/${nextGoal.id}`)}
                 disabled={!nextGoal}
                 aria-label="Next goal"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
               </button>
             </div>
           )}
-          <GoalActionsMenu
-            onRename={enterRename}
-            onDuplicate={() => onCopyGoal(goal)}
-            onDelete={handleDelete}
-          />
+          <GoalActionsMenu onRename={enterRename} onDuplicate={() => onCopyGoal(goal)} onDelete={handleDelete} />
         </div>
       </div>
 
@@ -157,12 +217,26 @@ const GoalDetail: FC<GoalDetailProps> = ({
             showActions={false}
             showTitle={false}
           />
-          <button
-            className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`}
-            onClick={() => setDiveDeepOpen(v => !v)}
-          >
+          <button className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`} onClick={() => setDiveDeepOpen(v => !v)}>
             {diveDeepOpen ? 'Close Analysis' : 'Deep Analysis'}
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '0.35rem', transform: diveDeepOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                marginLeft: '0.35rem',
+                transform: diveDeepOpen ? 'rotate(180deg)' : 'none',
+                transition: 'transform 0.2s',
+              }}
+              aria-hidden="true"
+            >
+              <path d="M4 6l4 4 4-4" />
+            </svg>
           </button>
           {diveDeepOpen && <GoalDiveDeep goal={goal} profileBirthday={profileBirthday} />}
           {goal.fiGoal > 0 && (

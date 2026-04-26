@@ -27,11 +27,17 @@ beforeEach(() => {
       const el = {
         href: '',
         download: '',
-        click: vi.fn(() => { clickCalled = true }),
+        click: vi.fn(() => {
+          clickCalled = true
+        }),
       }
       Object.defineProperty(el, 'download', {
-        get() { return downloadedFilename },
-        set(v: string) { downloadedFilename = v },
+        get() {
+          return downloadedFilename
+        },
+        set(v: string) {
+          downloadedFilename = v
+        },
       })
       return el as any
     }

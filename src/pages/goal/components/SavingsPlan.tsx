@@ -19,12 +19,15 @@ interface PlanResult {
   monthlySaving: number
 }
 
-const getTotalForMonth = (accounts: Account[], balances: BalanceEntry[], month: string, goalType: 'fi' | 'gw'): number => {
+const getTotalForMonth = (
+  accounts: Account[],
+  balances: BalanceEntry[],
+  month: string,
+  goalType: 'fi' | 'gw',
+): number => {
   const balMap = new Map<number, number>()
   for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
-  return accounts
-    .filter(a => a.goalType === goalType)
-    .reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
+  return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
 }
 
 const getRetirementMonth = (birthday: string, retirementAge: number): string => {
@@ -47,7 +50,7 @@ const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: 
   const factor = Math.pow(1 + r, nMonths)
   const needed = fv - pv * factor
   if (needed <= 0) return 0
-  return needed * r / (factor - 1)
+  return (needed * r) / (factor - 1)
 }
 
 const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number => {
@@ -86,14 +89,16 @@ const PlanBlock: FC<PlanBlockProps> = ({ label, target, initialResult, currentRe
 
   const init = initialResult
   const curr = currentResult
-  const diff = (init && curr) ? curr.monthlySaving - init.monthlySaving : 0
-  const diffPct = (init && curr && init.monthlySaving > 0) ? (diff / init.monthlySaving) * 100 : 0
+  const diff = init && curr ? curr.monthlySaving - init.monthlySaving : 0
+  const diffPct = init && curr && init.monthlySaving > 0 ? (diff / init.monthlySaving) * 100 : 0
   const diffCls = diff > 0 ? 'splan-delta up' : diff < 0 ? 'splan-delta down' : 'splan-delta flat'
 
   return (
     <div className="splan-block">
       <div className="splan-block-header">
-        <h4 className="splan-section-label">{label === 'FI' || label === 'GW' ? <TermAbbr term={label as 'FI' | 'GW'} /> : label}</h4>
+        <h4 className="splan-section-label">
+          {label === 'FI' || label === 'GW' ? <TermAbbr term={label as 'FI' | 'GW'} /> : label}
+        </h4>
         <div className="splan-field splan-field--narrow">
           <label>Growth %</label>
           <input
@@ -140,8 +145,7 @@ const PlanBlock: FC<PlanBlockProps> = ({ label, target, initialResult, currentRe
 
           <div className="splan-delta-bar">
             <span className={diffCls}>
-              {diff > 0 ? '↑' : diff < 0 ? '↓' : '→'}{' '}
-              {formatCurrency(Math.abs(diff))}/mo
+              {diff > 0 ? '↑' : diff < 0 ? '↓' : '→'} {formatCurrency(Math.abs(diff))}/mo
               {diffPct !== 0 && ` (${diff > 0 ? '+' : ''}${diffPct.toFixed(0)}%)`}
             </span>
             <span className="splan-delta-note">
@@ -153,10 +157,22 @@ const PlanBlock: FC<PlanBlockProps> = ({ label, target, initialResult, currentRe
 
       {init && !curr && (
         <div className="splan-results">
-          <div className="splan-row"><span>Balance ({formatMonth(init.startMonth)})</span><span className="splan-val">{formatCurrency(init.startBalance)}</span></div>
-          <div className="splan-row"><span>Gap</span><span className="splan-val">{formatCurrency(Math.max(0, target - init.startBalance))}</span></div>
-          <div className="splan-row"><span>Months Left</span><span className="splan-val">{init.monthsRemaining}</span></div>
-          <div className="splan-row splan-row--highlight"><span>Monthly Save</span><span className="splan-val">{formatCurrency(init.monthlySaving)}</span></div>
+          <div className="splan-row">
+            <span>Balance ({formatMonth(init.startMonth)})</span>
+            <span className="splan-val">{formatCurrency(init.startBalance)}</span>
+          </div>
+          <div className="splan-row">
+            <span>Gap</span>
+            <span className="splan-val">{formatCurrency(Math.max(0, target - init.startBalance))}</span>
+          </div>
+          <div className="splan-row">
+            <span>Months Left</span>
+            <span className="splan-val">{init.monthsRemaining}</span>
+          </div>
+          <div className="splan-row splan-row--highlight">
+            <span>Monthly Save</span>
+            <span className="splan-val">{formatCurrency(init.monthlySaving)}</span>
+          </div>
         </div>
       )}
     </div>
@@ -168,7 +184,7 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
 
   const retirementMonth = useMemo(
     () => getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge),
-    [goal.birthday, profileBirthday, goal.retirementAge]
+    [goal.birthday, profileBirthday, goal.retirementAge],
   )
 
   const fiTarget = goal.fiGoal
@@ -179,18 +195,42 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
   const [fiGrowth, setFiGrowth] = useState(8)
   const [gwGrowth, setGwGrowth] = useState(8)
 
-  const calcPlan = (goalType: 'fi' | 'gw', startMonth: string, growthRate: number, target: number): PlanResult | null => {
+  const calcPlan = (
+    goalType: 'fi' | 'gw',
+    startMonth: string,
+    growthRate: number,
+    target: number,
+  ): PlanResult | null => {
     if (!startMonth || months.length === 0 || target <= 0) return null
     const bal = getTotalForMonth(accounts, balances, startMonth, goalType)
     const n = monthsBetween(startMonth, retirementMonth)
     const monthly = calcMonthlySaving(bal, target, growthRate, n)
-    return { startMonth, startBalance: bal, target, monthsRemaining: Math.max(0, n), growthRate, monthlySaving: monthly }
+    return {
+      startMonth,
+      startBalance: bal,
+      target,
+      monthsRemaining: Math.max(0, n),
+      growthRate,
+      monthlySaving: monthly,
+    }
   }
 
-  const fiInitialResult = useMemo(() => calcPlan('fi', initialMonth, fiGrowth, fiTarget), [initialMonth, fiGrowth, fiTarget, accounts, balances, months, retirementMonth])
-  const fiCurrentResult = useMemo(() => months.length > 1 ? calcPlan('fi', currentMonth, fiGrowth, fiTarget) : null, [currentMonth, fiGrowth, fiTarget, accounts, balances, months, retirementMonth])
-  const gwInitialResult = useMemo(() => calcPlan('gw', initialMonth, gwGrowth, gwTarget), [initialMonth, gwGrowth, gwTarget, accounts, balances, months, retirementMonth])
-  const gwCurrentResult = useMemo(() => months.length > 1 ? calcPlan('gw', currentMonth, gwGrowth, gwTarget) : null, [currentMonth, gwGrowth, gwTarget, accounts, balances, months, retirementMonth])
+  const fiInitialResult = useMemo(
+    () => calcPlan('fi', initialMonth, fiGrowth, fiTarget),
+    [initialMonth, fiGrowth, fiTarget, accounts, balances, months, retirementMonth],
+  )
+  const fiCurrentResult = useMemo(
+    () => (months.length > 1 ? calcPlan('fi', currentMonth, fiGrowth, fiTarget) : null),
+    [currentMonth, fiGrowth, fiTarget, accounts, balances, months, retirementMonth],
+  )
+  const gwInitialResult = useMemo(
+    () => calcPlan('gw', initialMonth, gwGrowth, gwTarget),
+    [initialMonth, gwGrowth, gwTarget, accounts, balances, months, retirementMonth],
+  )
+  const gwCurrentResult = useMemo(
+    () => (months.length > 1 ? calcPlan('gw', currentMonth, gwGrowth, gwTarget) : null),
+    [currentMonth, gwGrowth, gwTarget, accounts, balances, months, retirementMonth],
+  )
 
   if (months.length === 0) {
     return (

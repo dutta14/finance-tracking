@@ -58,7 +58,10 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.mixer-close-btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.mixer-close-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
 
 /* ── Body (two columns) ── */
 .mixer-body {
@@ -147,7 +150,9 @@
   background: var(--color-surface);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
   width: 100%;
 }
 
@@ -209,7 +214,9 @@
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .mixer-gw-item:hover {
@@ -301,7 +308,9 @@
   white-space: nowrap;
 }
 
-.mixer-preview-amount--gw { color: var(--color-positive); }
+.mixer-preview-amount--gw {
+  color: var(--color-positive);
+}
 
 .mixer-preview-row--total {
   margin-top: 0.3rem;
@@ -341,7 +350,9 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.mixer-btn-cancel:hover { background: var(--color-surface-hover); }
+.mixer-btn-cancel:hover {
+  background: var(--color-surface-hover);
+}
 
 .mixer-btn-create {
   background: var(--color-text);
@@ -354,8 +365,13 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.mixer-btn-create:hover:not(:disabled) { background: var(--color-text-heading); }
-.mixer-btn-create:disabled { opacity: 0.45; cursor: not-allowed; }
+.mixer-btn-create:hover:not(:disabled) {
+  background: var(--color-text-heading);
+}
+.mixer-btn-create:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 /* ── Mix & Match trigger button (in Goals page) ── */
 .btn-mix-match {
@@ -374,7 +390,10 @@
   cursor: pointer;
   box-sizing: border-box;
   box-shadow: none;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
 }
 .btn-mix-match:hover:not(:disabled) {
   border-color: var(--color-text-muted);
@@ -388,7 +407,14 @@
 
 /* ── Dark mode ── */
 
-body.dark .mixer-gw-item.checked { background: var(--color-positive-light); border-color: var(--color-positive); }
-body.dark .mixer-gw-pv { color: var(--color-positive); }
+body.dark .mixer-gw-item.checked {
+  background: var(--color-positive-light);
+  border-color: var(--color-positive);
+}
+body.dark .mixer-gw-pv {
+  color: var(--color-positive);
+}
 
-body.dark .mixer-preview-amount--gw { color: var(--color-positive); }
+body.dark .mixer-preview-amount--gw {
+  color: var(--color-positive);
+}

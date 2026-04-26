@@ -22,9 +22,15 @@ describe('buildIndex', () => {
     expect(settings.length).toBeGreaterThan(0)
 
     // Verify known static pages — exhaustive list (no Tools page)
-    expect(pages.map(p => p.label).sort()).toEqual(
-      ['Allocation', 'Budget', 'Drive', 'Goals', 'Home', 'Net Worth', 'Taxes']
-    )
+    expect(pages.map(p => p.label).sort()).toEqual([
+      'Allocation',
+      'Budget',
+      'Drive',
+      'Goals',
+      'Home',
+      'Net Worth',
+      'Taxes',
+    ])
 
     // No dynamic items when localStorage is empty
     expect(items.filter(i => i.category === 'goal')).toHaveLength(0)
@@ -35,10 +41,13 @@ describe('buildIndex', () => {
   })
 
   it('includes FI goals from localStorage', () => {
-    localStorage.setItem('financialGoals', JSON.stringify([
-      { id: 1, goalName: 'Retire Early', progress: 42 },
-      { id: 2, goalName: 'Coast FI', progress: 80 },
-    ]))
+    localStorage.setItem(
+      'financialGoals',
+      JSON.stringify([
+        { id: 1, goalName: 'Retire Early', progress: 42 },
+        { id: 2, goalName: 'Coast FI', progress: 80 },
+      ]),
+    )
 
     const items = buildIndex()
     const goals = items.filter(i => i.category === 'goal')
@@ -59,9 +68,7 @@ describe('buildIndex', () => {
   })
 
   it('shows 0% progress when progress field is missing', () => {
-    localStorage.setItem('financialGoals', JSON.stringify([
-      { id: 1, goalName: 'No Progress' },
-    ]))
+    localStorage.setItem('financialGoals', JSON.stringify([{ id: 1, goalName: 'No Progress' }]))
 
     const items = buildIndex()
     const goal = items.find(i => i.id === 'goal-1')
@@ -69,13 +76,14 @@ describe('buildIndex', () => {
   })
 
   it('includes GW goals with parent goal hints', () => {
-    localStorage.setItem('financialGoals', JSON.stringify([
-      { id: 10, goalName: 'Main Plan', progress: 50 },
-    ]))
-    localStorage.setItem('gw-goals', JSON.stringify([
-      { id: 100, fiGoalId: 10, label: 'New Car Fund' },
-      { id: 101, fiGoalId: 999, label: 'Orphan GW' },
-    ]))
+    localStorage.setItem('financialGoals', JSON.stringify([{ id: 10, goalName: 'Main Plan', progress: 50 }]))
+    localStorage.setItem(
+      'gw-goals',
+      JSON.stringify([
+        { id: 100, fiGoalId: 10, label: 'New Car Fund' },
+        { id: 101, fiGoalId: 999, label: 'Orphan GW' },
+      ]),
+    )
 
     const items = buildIndex()
     const gwItems = items.filter(i => i.id.startsWith('gw-'))
@@ -93,10 +101,13 @@ describe('buildIndex', () => {
   })
 
   it('includes accounts', () => {
-    localStorage.setItem('data-accounts', JSON.stringify([
-      { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
-      { id: 2, name: 'Chase Checking', institution: '', group: '', type: '' },
-    ]))
+    localStorage.setItem(
+      'data-accounts',
+      JSON.stringify([
+        { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
+        { id: 2, name: 'Chase Checking', institution: '', group: '', type: '' },
+      ]),
+    )
 
     const items = buildIndex()
     const accounts = items.filter(i => i.category === 'account')
@@ -113,13 +124,16 @@ describe('buildIndex', () => {
   })
 
   it('includes budget categories and groups', () => {
-    localStorage.setItem('budget-config', JSON.stringify({
-      categoryGroups: [
-        { id: 'housing', name: 'Housing', categories: ['Rent', 'Utilities'] },
-        { id: 'food', name: 'Food', categories: ['Groceries'] },
-        { id: 'removed', name: 'Removed', categories: ['Deleted Stuff'] },
-      ],
-    }))
+    localStorage.setItem(
+      'budget-config',
+      JSON.stringify({
+        categoryGroups: [
+          { id: 'housing', name: 'Housing', categories: ['Rent', 'Utilities'] },
+          { id: 'food', name: 'Food', categories: ['Groceries'] },
+          { id: 'removed', name: 'Removed', categories: ['Deleted Stuff'] },
+        ],
+      }),
+    )
 
     const items = buildIndex()
     const budgetItems = items.filter(i => i.category === 'budget')
@@ -146,19 +160,20 @@ describe('buildIndex', () => {
   })
 
   it('includes tax items and templates', () => {
-    localStorage.setItem('tax-store', JSON.stringify({
-      years: {
-        '2025': {
-          items: [
-            { id: 'w2-main', label: 'W-2 from Employer', owner: 'primary' },
-            { id: '1099-div', label: '1099-DIV Dividends' },
-          ],
+    localStorage.setItem(
+      'tax-store',
+      JSON.stringify({
+        years: {
+          '2025': {
+            items: [
+              { id: 'w2-main', label: 'W-2 from Employer', owner: 'primary' },
+              { id: '1099-div', label: '1099-DIV Dividends' },
+            ],
+          },
         },
-      },
-    }))
-    localStorage.setItem('tax-templates', JSON.stringify([
-      { id: 'tpl-1', name: 'Basic Filing' },
-    ]))
+      }),
+    )
+    localStorage.setItem('tax-templates', JSON.stringify([{ id: 'tpl-1', name: 'Basic Filing' }]))
 
     const items = buildIndex()
     const taxItems = items.filter(i => i.category === 'tax')
@@ -183,10 +198,13 @@ describe('buildIndex', () => {
   })
 
   it('includes allocation custom ratios', () => {
-    localStorage.setItem('allocation-custom-ratios', JSON.stringify([
-      { id: 'r1', name: 'Aggressive Growth', scope: 'retirement' },
-      { id: 'r2', name: 'Conservative', scope: undefined },
-    ]))
+    localStorage.setItem(
+      'allocation-custom-ratios',
+      JSON.stringify([
+        { id: 'r1', name: 'Aggressive Growth', scope: 'retirement' },
+        { id: 'r2', name: 'Conservative', scope: undefined },
+      ]),
+    )
 
     const items = buildIndex()
     const allocs = items.filter(i => i.category === 'allocation')
@@ -240,13 +258,19 @@ describe('search', () => {
   let index: SearchItem[]
 
   beforeEach(() => {
-    localStorage.setItem('financialGoals', JSON.stringify([
-      { id: 1, goalName: 'Retire Early', progress: 50 },
-      { id: 2, goalName: 'Coast FI', progress: 80 },
-    ]))
-    localStorage.setItem('data-accounts', JSON.stringify([
-      { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
-    ]))
+    localStorage.setItem(
+      'financialGoals',
+      JSON.stringify([
+        { id: 1, goalName: 'Retire Early', progress: 50 },
+        { id: 2, goalName: 'Coast FI', progress: 80 },
+      ]),
+    )
+    localStorage.setItem(
+      'data-accounts',
+      JSON.stringify([
+        { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
+      ]),
+    )
     index = buildIndex()
   })
 
@@ -297,13 +321,16 @@ describe('search', () => {
 
   it('respects maxPerGroup cap', () => {
     // Add many goals to test the cap
-    localStorage.setItem('financialGoals', JSON.stringify(
-      Array.from({ length: 10 }, (_, i) => ({
-        id: i + 100,
-        goalName: `TestGoal ${i}`,
-        progress: i * 10,
-      }))
-    ))
+    localStorage.setItem(
+      'financialGoals',
+      JSON.stringify(
+        Array.from({ length: 10 }, (_, i) => ({
+          id: i + 100,
+          goalName: `TestGoal ${i}`,
+          progress: i * 10,
+        })),
+      ),
+    )
     const bigIndex = buildIndex()
     const groups = search(bigIndex, 'TestGoal', 3)
     const goalGroup = groups.find(g => g.category === 'goal')!
@@ -328,9 +355,7 @@ describe('search', () => {
   it('groups results in correct category order', () => {
     // Search for something that hits multiple categories
     // "retirement" appears in FI calculator keywords and in account hint
-    localStorage.setItem('financialGoals', JSON.stringify([
-      { id: 1, goalName: 'Retirement Plan', progress: 30 },
-    ]))
+    localStorage.setItem('financialGoals', JSON.stringify([{ id: 1, goalName: 'Retirement Plan', progress: 30 }]))
     const multiIndex = buildIndex()
     const groups = search(multiIndex, 'retirement')
     const categories = groups.map(g => g.category)
@@ -349,13 +374,16 @@ describe('search', () => {
   })
 
   it('maxPerGroup defaults to 5', () => {
-    localStorage.setItem('financialGoals', JSON.stringify(
-      Array.from({ length: 10 }, (_, i) => ({
-        id: i + 200,
-        goalName: `Alpha ${i}`,
-        progress: 0,
-      }))
-    ))
+    localStorage.setItem(
+      'financialGoals',
+      JSON.stringify(
+        Array.from({ length: 10 }, (_, i) => ({
+          id: i + 200,
+          goalName: `Alpha ${i}`,
+          progress: 0,
+        })),
+      ),
+    )
     const bigIndex = buildIndex()
     const groups = search(bigIndex, 'Alpha')
     const goalGroup = groups.find(g => g.category === 'goal')!

@@ -16,21 +16,28 @@ interface RatioBuilderProps {
 
 const RatioBuilder: FC<RatioBuilderProps> = ({
   activeRatio,
-  onUpdateName, onUpdateScope,
-  onUpdateGroupLabel, onToggleClass, onAddGroup, onRemoveGroup,
+  onUpdateName,
+  onUpdateScope,
+  onUpdateGroupLabel,
+  onToggleClass,
+  onAddGroup,
+  onRemoveGroup,
   goalSection,
 }) => (
   <div className="alloc-ratio-builder">
     <div className="alloc-ratio-builder-header">
       <span className="alloc-ratio-builder-label">Name</span>
-      <input className="alloc-ratio-name-input" value={activeRatio.name}
-        onChange={e => onUpdateName(e.target.value)} />
-      <span className="alloc-ratio-builder-label" style={{ marginLeft: '0.75rem' }}>Scope</span>
+      <input className="alloc-ratio-name-input" value={activeRatio.name} onChange={e => onUpdateName(e.target.value)} />
+      <span className="alloc-ratio-builder-label" style={{ marginLeft: '0.75rem' }}>
+        Scope
+      </span>
       <div className="alloc-page-scope-tabs">
         {(['total', 'fi', 'gw'] as Scope[]).map(s => (
-          <button key={s}
+          <button
+            key={s}
             className={`alloc-page-tab${activeRatio.scope === s ? ' active' : ''}`}
-            onClick={() => onUpdateScope(s)}>
+            onClick={() => onUpdateScope(s)}
+          >
             {s === 'total' ? 'Total' : s.toUpperCase()}
           </button>
         ))}
@@ -48,19 +55,30 @@ const RatioBuilder: FC<RatioBuilderProps> = ({
               onChange={e => onUpdateGroupLabel(gi, e.target.value)}
             />
             {activeRatio.groups.length > 2 && (
-              <button className="alloc-ratio-group-remove" onClick={() => onRemoveGroup(gi)} title="Remove group">×</button>
+              <button className="alloc-ratio-group-remove" onClick={() => onRemoveGroup(gi)} title="Remove group">
+                ×
+              </button>
             )}
           </div>
           <div className="alloc-ratio-class-pills">
             {ALL_CLASSES.map(cls => {
               const isSelected = group.classes.includes(cls)
-              const usedElsewhere = !isSelected && activeRatio.groups.some((g, i) => i !== gi && g.classes.includes(cls))
+              const usedElsewhere =
+                !isSelected && activeRatio.groups.some((g, i) => i !== gi && g.classes.includes(cls))
               return (
-                <button key={cls}
+                <button
+                  key={cls}
                   className={`alloc-ratio-pill${isSelected ? ' active' : ''}${usedElsewhere ? ' used' : ''}`}
                   onClick={() => onToggleClass(gi, cls)}
                   disabled={usedElsewhere}
-                  style={isSelected ? { background: GROUP_COLORS[gi % GROUP_COLORS.length], borderColor: GROUP_COLORS[gi % GROUP_COLORS.length] } : undefined}
+                  style={
+                    isSelected
+                      ? {
+                          background: GROUP_COLORS[gi % GROUP_COLORS.length],
+                          borderColor: GROUP_COLORS[gi % GROUP_COLORS.length],
+                        }
+                      : undefined
+                  }
                 >
                   {ALLOCATION_LABELS[cls]}
                 </button>

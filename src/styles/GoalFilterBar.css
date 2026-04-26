@@ -31,7 +31,10 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-secondary);
   padding: 0.35rem 0.75rem;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   white-space: nowrap;
 }
 
@@ -76,7 +79,7 @@
 }
 
 .filter-pill--active .filter-pill-badge {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
   color: var(--color-text-on-accent);
 }
 
@@ -121,7 +124,7 @@
   background: var(--color-surface-hover);
 }
 
-.filter-option input[type="checkbox"] {
+.filter-option input[type='checkbox'] {
   width: 14px;
   height: 14px;
   cursor: pointer;
@@ -205,6 +208,6 @@ body.dark .filter-pill--active .filter-pill-badge {
   color: var(--color-text-on-accent);
 }
 
-body.dark .filter-option input[type="checkbox"] {
+body.dark .filter-option input[type='checkbox'] {
   accent-color: var(--accent);
 }

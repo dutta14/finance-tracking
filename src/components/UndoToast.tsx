@@ -19,13 +19,14 @@ const UndoToast: FC<UndoToastProps> = ({ message, onUndo, onDismiss, duration = 
   return (
     <div className={`undo-toast${visible ? ' undo-toast--visible' : ''}`}>
       <span className="undo-toast-message">{message}</span>
-      <button className="undo-toast-undo" onClick={onUndo}>Undo</button>
-      <button className="undo-toast-close" onClick={onDismiss} aria-label="Dismiss">✕</button>
+      <button className="undo-toast-undo" onClick={onUndo}>
+        Undo
+      </button>
+      <button className="undo-toast-close" onClick={onDismiss} aria-label="Dismiss">
+        ✕
+      </button>
       <div className="undo-toast-progress">
-        <div
-          className="undo-toast-progress-bar"
-          style={{ animationDuration: `${duration}ms` }}
-        />
+        <div className="undo-toast-progress-bar" style={{ animationDuration: `${duration}ms` }} />
       </div>
     </div>
   )

@@ -7,9 +7,18 @@ const LEGACY_STORAGE_KEY = 'financialPlans'
 const migrateFields = (items: any[]): FinancialGoal[] =>
   items.map(item => {
     const migrated = { ...item }
-    if ('planName' in migrated) { migrated.goalName = migrated.planName; delete migrated.planName }
-    if ('planCreatedIn' in migrated) { migrated.goalCreatedIn = migrated.planCreatedIn; delete migrated.planCreatedIn }
-    if ('planEndYear' in migrated) { migrated.goalEndYear = migrated.planEndYear; delete migrated.planEndYear }
+    if ('planName' in migrated) {
+      migrated.goalName = migrated.planName
+      delete migrated.planName
+    }
+    if ('planCreatedIn' in migrated) {
+      migrated.goalCreatedIn = migrated.planCreatedIn
+      delete migrated.planCreatedIn
+    }
+    if ('planEndYear' in migrated) {
+      migrated.goalEndYear = migrated.planEndYear
+      delete migrated.planEndYear
+    }
     return migrated as FinancialGoal
   })
 

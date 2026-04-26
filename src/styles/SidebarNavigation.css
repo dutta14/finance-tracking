@@ -1,7 +1,6 @@
-
 body.dark .sidebar-link.active {
   color: var(--color-text-on-accent);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .sidebar {
@@ -59,7 +58,9 @@ body.dark .sidebar-link.active {
   font-family: inherit;
   font-size: var(--fs-md);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .sidebar-search-btn:hover {
   border-color: var(--accent-border);
@@ -101,14 +102,16 @@ body.dark .sidebar-link.active {
   border-radius: var(--radius);
   width: 100%;
   text-align: left;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   font-weight: var(--fw-medium);
   position: relative;
 }
 
 .sidebar-link.active {
   color: var(--color-text);
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-link.active::before {
@@ -125,7 +128,7 @@ body.dark .sidebar-link.active {
 
 .sidebar-link:hover {
   color: var(--color-text);
-  background: rgba(0,0,0,0.03);
+  background: rgba(0, 0, 0, 0.03);
 }
 .sidebar-link:focus-visible {
   outline: 2px solid var(--accent);
@@ -139,7 +142,7 @@ body.dark .sidebar-link.active {
   transition: background 0.15s;
 }
 .sidebar-toggle:hover {
-  background: rgba(0,0,0,0.05) !important;
+  background: rgba(0, 0, 0, 0.05) !important;
 }
 
 /* ── Sidebar footer (Drive + Settings) ── */
@@ -165,7 +168,9 @@ body.dark .sidebar-link.active {
   width: 100%;
   text-align: left;
   font-size: var(--fs-sm);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .sidebar-footer-btn:hover {
   background: var(--color-surface-hover);
@@ -190,7 +195,6 @@ body.dark .sidebar-link.active {
 .sidebar-footer-btn--active svg {
   opacity: 1;
 }
-
 
 .sidebar-toggle svg {
   color: var(--sidebar-toggle-color);

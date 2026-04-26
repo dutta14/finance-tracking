@@ -1,7 +1,16 @@
 import { FC, useState, useMemo } from 'react'
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  Tooltip, CartesianGrid, ReferenceLine, Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ReferenceLine,
+  Legend,
 } from 'recharts'
 import { Account, BalanceEntry, formatMonth, formatCurrency } from '../data/types'
 
@@ -33,12 +42,15 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     return [...years].sort()
   }, [allMonths])
 
-  const monthOptions = useMemo(() =>
-    Array.from({ length: 12 }, (_, i) => {
-      const val = String(i + 1).padStart(2, '0')
-      const label = new Date(2000, i).toLocaleString('default', { month: 'short' })
-      return { val, label }
-    }), [])
+  const monthOptions = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => {
+        const val = String(i + 1).padStart(2, '0')
+        const label = new Date(2000, i).toLocaleString('default', { month: 'short' })
+        return { val, label }
+      }),
+    [],
+  )
 
   const filteredMonths = useMemo(() => {
     const ascending = [...allMonths].reverse()
@@ -47,11 +59,16 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     const yr = now.getFullYear().toString()
     const cur = `${yr}-${String(now.getMonth() + 1).padStart(2, '0')}`
     switch (dateFilter) {
-      case 'ytd': return ascending.filter(m => m >= `${yr}-01` && m <= cur)
-      case 'last-12': return ascending.slice(-12)
-      case 'eoy': return ascending.filter(m => m.endsWith('-12'))
-      case 'custom': return ascending.filter(m => (!customFrom || m >= customFrom) && (!customTo || m <= customTo))
-      default: return ascending
+      case 'ytd':
+        return ascending.filter(m => m >= `${yr}-01` && m <= cur)
+      case 'last-12':
+        return ascending.slice(-12)
+      case 'eoy':
+        return ascending.filter(m => m.endsWith('-12'))
+      case 'custom':
+        return ascending.filter(m => (!customFrom || m >= customFrom) && (!customTo || m <= customTo))
+      default:
+        return ascending
     }
   }, [dateFilter, allMonths, customFrom, customTo])
 
@@ -83,7 +100,8 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
       return {
         month,
         label: formatMonth(month),
-        fi, gw,
+        fi,
+        gw,
         netWorth: assets + liabilities,
         assets,
         liabilities,
@@ -93,11 +111,11 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
 
   const yDomain = useMemo((): [number, number] => {
     if (chartData.length === 0) return [0, 0]
-    let min = Infinity, max = -Infinity
+    let min = Infinity,
+      max = -Infinity
     for (const d of chartData) {
-      const vals = chartType === 'fi-gw' ? [d.fi, d.gw]
-        : chartType === 'net-worth' ? [d.netWorth]
-        : [d.assets, d.liabilities]
+      const vals =
+        chartType === 'fi-gw' ? [d.fi, d.gw] : chartType === 'net-worth' ? [d.netWorth] : [d.assets, d.liabilities]
       for (const v of vals) {
         if (v < min) min = v
         if (v > max) max = v
@@ -113,8 +131,18 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
   const tooltipBorder = 'var(--color-border)'
   const tooltipText = 'var(--color-text)'
 
-  const axisTickStyle = { fontSize: 9, fill: textColor, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }
-  const tooltipStyle = { backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '6px 10px' }
+  const axisTickStyle = {
+    fontSize: 9,
+    fill: textColor,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  }
+  const tooltipStyle = {
+    backgroundColor: tooltipBg,
+    border: `1px solid ${tooltipBorder}`,
+    borderRadius: 8,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    padding: '6px 10px',
+  }
   const tooltipLabelStyle = { color: textColor, fontSize: 10, fontWeight: 500, marginBottom: 2 }
   const tooltipItemStyle = { color: tooltipText, fontSize: 11, fontWeight: 600, padding: 0 }
   const shortCurrency = (v: number) => {
@@ -144,12 +172,27 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
       <div className="home-card home-card--charts">
         <div className="home-card-header">
           <h3>Charts</h3>
-          <button className="home-card-link" onClick={onNavigate}>View Data →</button>
+          <button className="home-card-link" onClick={onNavigate}>
+            View Data →
+          </button>
         </div>
         <div className="home-card-cta">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
           <p>Charts will appear once you have balance data across multiple months.</p>
-          <button className="home-card-cta-btn" onClick={onNavigate}>Record balances →</button>
+          <button className="home-card-cta-btn" onClick={onNavigate}>
+            Record balances →
+          </button>
         </div>
       </div>
     )
@@ -159,7 +202,9 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     <div className="home-card home-card--charts">
       <div className="home-card-header">
         <h3>Charts</h3>
-        <button className="home-card-link" onClick={onNavigate}>View Data →</button>
+        <button className="home-card-link" onClick={onNavigate}>
+          View Data →
+        </button>
       </div>
       <div className="home-mini-chart-tabs">
         {CHART_OPTIONS.map(opt => (
@@ -167,39 +212,83 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
             key={opt.key}
             className={`home-mini-tab${chartType === opt.key ? ' active' : ''}`}
             onClick={() => setChartType(opt.key)}
-          >{opt.label}</button>
+          >
+            {opt.label}
+          </button>
         ))}
       </div>
       <div className="home-mini-date-filter">
-        {([['all', 'All'], ['ytd', 'YTD'], ['last-12', '12 mo'], ['eoy', 'Year-End'], ['custom', 'Custom']] as const).map(([key, label]) => (
+        {(
+          [
+            ['all', 'All'],
+            ['ytd', 'YTD'],
+            ['last-12', '12 mo'],
+            ['eoy', 'Year-End'],
+            ['custom', 'Custom'],
+          ] as const
+        ).map(([key, label]) => (
           <button
             key={key}
             className={`home-mini-date-btn${dateFilter === key ? ' active' : ''}`}
             onClick={() => setDateFilter(key as DateFilter)}
-          >{label}</button>
+          >
+            {label}
+          </button>
         ))}
       </div>
       {dateFilter === 'custom' && (
         <div className="home-mini-custom-range">
           <div className="home-mini-range-picker">
-            <select className="home-mini-range-select" value={customFrom ? customFrom.split('-')[0] : ''} onChange={e => setCustomMonth('from', 'year', e.target.value)}>
+            <select
+              className="home-mini-range-select"
+              value={customFrom ? customFrom.split('-')[0] : ''}
+              onChange={e => setCustomMonth('from', 'year', e.target.value)}
+            >
               <option value="">Year</option>
-              {availableYears.map(yr => <option key={yr} value={yr}>{yr}</option>)}
+              {availableYears.map(yr => (
+                <option key={yr} value={yr}>
+                  {yr}
+                </option>
+              ))}
             </select>
-            <select className="home-mini-range-select" value={customFrom ? customFrom.split('-')[1] : ''} onChange={e => setCustomMonth('from', 'month', e.target.value)}>
+            <select
+              className="home-mini-range-select"
+              value={customFrom ? customFrom.split('-')[1] : ''}
+              onChange={e => setCustomMonth('from', 'month', e.target.value)}
+            >
               <option value="">Month</option>
-              {monthOptions.map(({ val, label }) => <option key={val} value={val}>{label}</option>)}
+              {monthOptions.map(({ val, label }) => (
+                <option key={val} value={val}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
           <span className="home-mini-range-sep">to</span>
           <div className="home-mini-range-picker">
-            <select className="home-mini-range-select" value={customTo ? customTo.split('-')[0] : ''} onChange={e => setCustomMonth('to', 'year', e.target.value)}>
+            <select
+              className="home-mini-range-select"
+              value={customTo ? customTo.split('-')[0] : ''}
+              onChange={e => setCustomMonth('to', 'year', e.target.value)}
+            >
               <option value="">Year</option>
-              {availableYears.map(yr => <option key={yr} value={yr}>{yr}</option>)}
+              {availableYears.map(yr => (
+                <option key={yr} value={yr}>
+                  {yr}
+                </option>
+              ))}
             </select>
-            <select className="home-mini-range-select" value={customTo ? customTo.split('-')[1] : ''} onChange={e => setCustomMonth('to', 'month', e.target.value)}>
+            <select
+              className="home-mini-range-select"
+              value={customTo ? customTo.split('-')[1] : ''}
+              onChange={e => setCustomMonth('to', 'month', e.target.value)}
+            >
               <option value="">Month</option>
-              {monthOptions.map(({ val, label }) => <option key={val} value={val}>{label}</option>)}
+              {monthOptions.map(({ val, label }) => (
+                <option key={val} value={val}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -209,31 +298,109 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="label" tick={axisTickStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis domain={yDomain} tickFormatter={shortCurrency} tick={axisTickStyle} axisLine={false} tickLine={false} width={52} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Number(v))} />
+              <XAxis
+                dataKey="label"
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={shortCurrency}
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                width={52}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+                formatter={(v: any) => formatCurrency(Number(v))}
+              />
               <Legend content={renderLegend as any} />
-              <Line type="natural" dataKey="fi" name="FI" stroke="#6366f1" strokeWidth={2} dot={false} activeDot={{ r: 3, strokeWidth: 0, fill: '#6366f1' }} />
-              <Line type="natural" dataKey="gw" name="GW" stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3, strokeWidth: 0, fill: '#f59e0b' }} />
+              <Line
+                type="natural"
+                dataKey="fi"
+                name="FI"
+                stroke="#6366f1"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 3, strokeWidth: 0, fill: '#6366f1' }}
+              />
+              <Line
+                type="natural"
+                dataKey="gw"
+                name="GW"
+                stroke="#f59e0b"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 3, strokeWidth: 0, fill: '#f59e0b' }}
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : chartType === 'net-worth' ? (
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="label" tick={axisTickStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis domain={yDomain} tickFormatter={shortCurrency} tick={axisTickStyle} axisLine={false} tickLine={false} width={52} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Number(v))} />
-              <Line type="natural" dataKey="netWorth" name="Net Worth" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 3, strokeWidth: 0, fill: '#10b981' }} />
+              <XAxis
+                dataKey="label"
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={shortCurrency}
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                width={52}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+                formatter={(v: any) => formatCurrency(Number(v))}
+              />
+              <Line
+                type="natural"
+                dataKey="netWorth"
+                name="Net Worth"
+                stroke="#10b981"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 3, strokeWidth: 0, fill: '#10b981' }}
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }} stackOffset="sign">
               <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="label" tick={axisTickStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis domain={yDomain} tickFormatter={shortCurrency} tick={axisTickStyle} axisLine={false} tickLine={false} width={52} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Math.abs(Number(v)))} />
+              <XAxis
+                dataKey="label"
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={shortCurrency}
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                width={52}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+                formatter={(v: any) => formatCurrency(Math.abs(Number(v)))}
+              />
               <Legend content={renderLegend as any} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[2, 2, 0, 0]} />

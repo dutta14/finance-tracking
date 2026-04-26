@@ -1,8 +1,13 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigData } from '../types'
 import {
-  loadBudgetStore, saveBudgetStore, saveCSVForMonth, deleteCSVForMonth,
-  createYear, getGlobalCategoryGroups, updateGlobalCategoryGroups,
+  loadBudgetStore,
+  saveBudgetStore,
+  saveCSVForMonth,
+  deleteCSVForMonth,
+  createYear,
+  getGlobalCategoryGroups,
+  updateGlobalCategoryGroups,
   saveBudgetSummary,
 } from '../utils/budgetStorage'
 import { parseCSV, buildMonthKey, parseCSVLine, getValidLineIndices } from '../utils/csvParser'
@@ -28,165 +33,195 @@ export function useBudget() {
     }
   }, [selectedYear, store.years, persist])
 
-  const uploadCSV = useCallback((monthKey: string, csvText: string): { ok: boolean; error?: string; transactions?: Transaction[]; newCategories?: string[] } => {
-    try {
-      const transactions = parseCSV(csvText)
-      if (transactions.length === 0) {
-        return { ok: false, error: 'No valid transactions found. Check CSV format.' }
-      }
-      let next = saveCSVForMonth(storeRef.current, monthKey, csvText)
-
-      // Discover new categories and add them to "Others" if not already grouped
-      const currentGroups = getGlobalCategoryGroups(next)
-      const allGroupedCategories = new Set(currentGroups.flatMap(g => g.categories))
-      const newCategories = [...new Set(transactions.map(t => t.category))].filter(c => !allGroupedCategories.has(c))
-
-      if (newCategories.length > 0) {
-        const groups = currentGroups.map(g => {
-          if (g.id === OTHERS_GROUP_ID) {
-            return { ...g, categories: [...g.categories, ...newCategories] }
-          }
-          return g
-        })
-        if (!groups.find(g => g.id === OTHERS_GROUP_ID)) {
-          groups.push({ id: OTHERS_GROUP_ID, name: 'Others', categories: newCategories })
+  const uploadCSV = useCallback(
+    (
+      monthKey: string,
+      csvText: string,
+    ): { ok: boolean; error?: string; transactions?: Transaction[]; newCategories?: string[] } => {
+      try {
+        const transactions = parseCSV(csvText)
+        if (transactions.length === 0) {
+          return { ok: false, error: 'No valid transactions found. Check CSV format.' }
         }
-        next = updateGlobalCategoryGroups(next, groups)
+        let next = saveCSVForMonth(storeRef.current, monthKey, csvText)
+
+        // Discover new categories and add them to "Others" if not already grouped
+        const currentGroups = getGlobalCategoryGroups(next)
+        const allGroupedCategories = new Set(currentGroups.flatMap(g => g.categories))
+        const newCategories = [...new Set(transactions.map(t => t.category))].filter(c => !allGroupedCategories.has(c))
+
+        if (newCategories.length > 0) {
+          const groups = currentGroups.map(g => {
+            if (g.id === OTHERS_GROUP_ID) {
+              return { ...g, categories: [...g.categories, ...newCategories] }
+            }
+            return g
+          })
+          if (!groups.find(g => g.id === OTHERS_GROUP_ID)) {
+            groups.push({ id: OTHERS_GROUP_ID, name: 'Others', categories: newCategories })
+          }
+          next = updateGlobalCategoryGroups(next, groups)
+        }
+
+        persist(next)
+        return { ok: true, transactions, newCategories }
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : 'Failed to parse CSV' }
       }
+    },
+    [persist],
+  )
 
-      persist(next)
-      return { ok: true, transactions, newCategories }
-    } catch (e) {
-      return { ok: false, error: e instanceof Error ? e.message : 'Failed to parse CSV' }
-    }
-  }, [persist])
+  const addTransaction = useCallback(
+    (monthKey: string, csvLine: string) => {
+      const current = storeRef.current
+      const existing = current.csvs[monthKey]
+      let updatedCsv: string
+      if (existing) {
+        const base = existing.csv.endsWith('\n') ? existing.csv : existing.csv + '\n'
+        updatedCsv = base + csvLine
+      } else {
+        updatedCsv = 'Date,Category,Amount,Description\n' + csvLine
+      }
+      return uploadCSV(monthKey, updatedCsv)
+    },
+    [uploadCSV],
+  )
 
-  const addTransaction = useCallback((monthKey: string, csvLine: string) => {
-    const current = storeRef.current
-    const existing = current.csvs[monthKey]
-    let updatedCsv: string
-    if (existing) {
-      const base = existing.csv.endsWith('\n') ? existing.csv : existing.csv + '\n'
-      updatedCsv = base + csvLine
-    } else {
-      updatedCsv = 'Date,Category,Amount,Description\n' + csvLine
-    }
-    return uploadCSV(monthKey, updatedCsv)
-  }, [uploadCSV])
+  const removeCSV = useCallback(
+    (monthKey: string) => {
+      persist(deleteCSVForMonth(storeRef.current, monthKey))
+    },
+    [persist],
+  )
 
-  const removeCSV = useCallback((monthKey: string) => {
-    persist(deleteCSVForMonth(storeRef.current, monthKey))
-  }, [persist])
+  const handleCreateYear = useCallback(
+    (year: number) => {
+      persist(createYear(storeRef.current, year))
+      setSelectedYear(year)
+    },
+    [persist],
+  )
 
-  const handleCreateYear = useCallback((year: number) => {
-    persist(createYear(storeRef.current, year))
-    setSelectedYear(year)
-  }, [persist])
-
-  const handleUpdateCategoryGroups = useCallback((groups: CategoryGroup[]) => {
-    persist(updateGlobalCategoryGroups(storeRef.current, groups))
-  }, [persist])
+  const handleUpdateCategoryGroups = useCallback(
+    (groups: CategoryGroup[]) => {
+      persist(updateGlobalCategoryGroups(storeRef.current, groups))
+    },
+    [persist],
+  )
 
   /** Edit a single transaction's category in the raw CSV */
-  const editCategory = useCallback((monthKey: string, transactionIdx: number, newCategory: string) => {
-    const current = storeRef.current
-    const csvData = current.csvs[monthKey]
-    if (!csvData) return
+  const editCategory = useCallback(
+    (monthKey: string, transactionIdx: number, newCategory: string) => {
+      const current = storeRef.current
+      const csvData = current.csvs[monthKey]
+      if (!csvData) return
 
-    const lines = csvData.csv.split(/\r?\n/)
-    if (lines.length < 2) return
-    const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase())
-    const catIdx = headers.findIndex(h => h === 'category')
-    if (catIdx === -1) return
-
-    // Map parsed-transaction index to actual CSV line number
-    const lineIndices = getValidLineIndices(csvData.csv)
-    if (transactionIdx < 0 || transactionIdx >= lineIndices.length) return
-    const targetLineIdx = lineIndices[transactionIdx]
-
-    const fields = parseCSVLine(lines[targetLineIdx])
-    if (catIdx >= fields.length) return
-    fields[catIdx] = newCategory
-    // Rebuild line, quoting fields that contain commas or quotes
-    lines[targetLineIdx] = fields.map(f =>
-      f.includes(',') || f.includes('"') ? '"' + f.replace(/"/g, '""') + '"' : f
-    ).join(',')
-
-    const newCsv = lines.join('\n')
-    let next: BudgetStore = {
-      ...current,
-      csvs: { ...current.csvs, [monthKey]: { ...csvData, csv: newCsv } },
-    }
-
-    // If new category isn't in any group, add it to "Others"
-    const groups = getGlobalCategoryGroups(next)
-    const allGrouped = new Set(groups.flatMap(g => g.categories))
-    if (!allGrouped.has(newCategory)) {
-      const updated = groups.map(g =>
-        g.id === OTHERS_GROUP_ID ? { ...g, categories: [...g.categories, newCategory] } : g
-      )
-      next = updateGlobalCategoryGroups(next, updated)
-    }
-
-    persist(next)
-  }, [persist])
-
-  /** Merge multiple categories into one: rewrites all CSV data and updates groups */
-  const mergeCategories = useCallback((sourceCategories: string[], targetName: string) => {
-    const current = storeRef.current
-    const sourceSet = new Set(sourceCategories.filter(c => c !== targetName))
-    if (sourceSet.size === 0) return
-
-    // Rewrite CSV texts: replace source category names with target
-    const newCsvs = { ...current.csvs }
-    Object.entries(newCsvs).forEach(([key, csvData]) => {
       const lines = csvData.csv.split(/\r?\n/)
       if (lines.length < 2) return
-      const headers = lines[0].toLowerCase().split(',').map(h => h.trim())
+      const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase())
       const catIdx = headers.findIndex(h => h === 'category')
       if (catIdx === -1) return
 
-      let changed = false
-      const newLines = [lines[0]]
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i]
-        if (!line.trim()) { newLines.push(line); continue }
-        // Simple CSV field replacement for the category column
-        const parts = line.split(',')
-        const cat = parts[catIdx]?.trim().replace(/^"|"$/g, '')
-        if (cat && sourceSet.has(cat)) {
-          parts[catIdx] = targetName
-          changed = true
+      // Map parsed-transaction index to actual CSV line number
+      const lineIndices = getValidLineIndices(csvData.csv)
+      if (transactionIdx < 0 || transactionIdx >= lineIndices.length) return
+      const targetLineIdx = lineIndices[transactionIdx]
+
+      const fields = parseCSVLine(lines[targetLineIdx])
+      if (catIdx >= fields.length) return
+      fields[catIdx] = newCategory
+      // Rebuild line, quoting fields that contain commas or quotes
+      lines[targetLineIdx] = fields
+        .map(f => (f.includes(',') || f.includes('"') ? '"' + f.replace(/"/g, '""') + '"' : f))
+        .join(',')
+
+      const newCsv = lines.join('\n')
+      let next: BudgetStore = {
+        ...current,
+        csvs: { ...current.csvs, [monthKey]: { ...csvData, csv: newCsv } },
+      }
+
+      // If new category isn't in any group, add it to "Others"
+      const groups = getGlobalCategoryGroups(next)
+      const allGrouped = new Set(groups.flatMap(g => g.categories))
+      if (!allGrouped.has(newCategory)) {
+        const updated = groups.map(g =>
+          g.id === OTHERS_GROUP_ID ? { ...g, categories: [...g.categories, newCategory] } : g,
+        )
+        next = updateGlobalCategoryGroups(next, updated)
+      }
+
+      persist(next)
+    },
+    [persist],
+  )
+
+  /** Merge multiple categories into one: rewrites all CSV data and updates groups */
+  const mergeCategories = useCallback(
+    (sourceCategories: string[], targetName: string) => {
+      const current = storeRef.current
+      const sourceSet = new Set(sourceCategories.filter(c => c !== targetName))
+      if (sourceSet.size === 0) return
+
+      // Rewrite CSV texts: replace source category names with target
+      const newCsvs = { ...current.csvs }
+      Object.entries(newCsvs).forEach(([key, csvData]) => {
+        const lines = csvData.csv.split(/\r?\n/)
+        if (lines.length < 2) return
+        const headers = lines[0]
+          .toLowerCase()
+          .split(',')
+          .map(h => h.trim())
+        const catIdx = headers.findIndex(h => h === 'category')
+        if (catIdx === -1) return
+
+        let changed = false
+        const newLines = [lines[0]]
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i]
+          if (!line.trim()) {
+            newLines.push(line)
+            continue
+          }
+          // Simple CSV field replacement for the category column
+          const parts = line.split(',')
+          const cat = parts[catIdx]?.trim().replace(/^"|"$/g, '')
+          if (cat && sourceSet.has(cat)) {
+            parts[catIdx] = targetName
+            changed = true
+          }
+          newLines.push(parts.join(','))
         }
-        newLines.push(parts.join(','))
-      }
-      if (changed) {
-        newCsvs[key] = { ...csvData, csv: newLines.join('\n') }
-      }
-    })
+        if (changed) {
+          newCsvs[key] = { ...csvData, csv: newLines.join('\n') }
+        }
+      })
 
-    // Update groups: remove source categories; target stays in its original group only
-    const currentGroups = getGlobalCategoryGroups(current)
-    // Find which group already contains the target
-    const targetGroupId = currentGroups.find(g => g.categories.includes(targetName))?.id
-    const newGroups = currentGroups.map(g => {
-      const hasSources = g.categories.some(c => sourceSet.has(c))
-      const hasTarget = g.categories.includes(targetName)
-      if (!hasSources && !hasTarget) return g
-      let cats = g.categories.filter(c => !sourceSet.has(c))
-      // Only add target to this group if no group already owns it
-      if (hasSources && !hasTarget && !targetGroupId) {
-        cats = [...cats, targetName]
-      }
-      return { ...g, categories: [...new Set(cats)] }
-    })
+      // Update groups: remove source categories; target stays in its original group only
+      const currentGroups = getGlobalCategoryGroups(current)
+      // Find which group already contains the target
+      const targetGroupId = currentGroups.find(g => g.categories.includes(targetName))?.id
+      const newGroups = currentGroups.map(g => {
+        const hasSources = g.categories.some(c => sourceSet.has(c))
+        const hasTarget = g.categories.includes(targetName)
+        if (!hasSources && !hasTarget) return g
+        let cats = g.categories.filter(c => !sourceSet.has(c))
+        // Only add target to this group if no group already owns it
+        if (hasSources && !hasTarget && !targetGroupId) {
+          cats = [...cats, targetName]
+        }
+        return { ...g, categories: [...new Set(cats)] }
+      })
 
-    persist({
-      ...current,
-      csvs: newCsvs,
-      categoryGroups: newGroups,
-    })
-  }, [persist])
+      persist({
+        ...current,
+        csvs: newCsvs,
+        categoryGroups: newGroups,
+      })
+    },
+    [persist],
+  )
 
   /** Check if a category has any transactions across all years' CSVs */
   const categoryHasTransactions = useCallback((category: string): boolean => {
@@ -207,15 +242,18 @@ export function useBudget() {
   }, [])
 
   /** Remove a category from all groups (only if it has no transactions) */
-  const deleteCategory = useCallback((category: string) => {
-    const current = storeRef.current
-    const groups = getGlobalCategoryGroups(current)
-    const updated = groups.map(g => ({
-      ...g,
-      categories: g.categories.filter(c => c !== category),
-    }))
-    persist(updateGlobalCategoryGroups(current, updated))
-  }, [persist])
+  const deleteCategory = useCallback(
+    (category: string) => {
+      const current = storeRef.current
+      const groups = getGlobalCategoryGroups(current)
+      const updated = groups.map(g => ({
+        ...g,
+        categories: g.categories.filter(c => c !== category),
+      }))
+      persist(updateGlobalCategoryGroups(current, updated))
+    },
+    [persist],
+  )
 
   // Parse all CSVs for the selected year into transactions
   const yearTransactions = useMemo((): Record<string, Transaction[]> => {
@@ -302,24 +340,26 @@ export function useBudget() {
 
   // Persist summary so other pages (Goals) can read savings data without this hook
   useEffect(() => {
-    const annualSavings = monthsWithData.size > 0
-      ? (summary.totalIncome - summary.totalExpense) * (12 / monthsWithData.size)
-      : 0
+    const annualSavings =
+      monthsWithData.size > 0 ? (summary.totalIncome - summary.totalExpense) * (12 / monthsWithData.size) : 0
     saveBudgetSummary({ annualSavings, saveRate: summary.saveRate, monthsOfData: monthsWithData.size })
   }, [summary, monthsWithData])
 
   const years = store.years
 
   /** Apply config pulled from GitHub (merges years and replaces groups) */
-  const applyConfig = useCallback((config: BudgetConfigData) => {
-    const current = storeRef.current
-    const mergedYears = [...new Set([...current.years, ...config.years])].sort()
-    persist({
-      ...current,
-      years: mergedYears,
-      categoryGroups: config.categoryGroups,
-    })
-  }, [persist])
+  const applyConfig = useCallback(
+    (config: BudgetConfigData) => {
+      const current = storeRef.current
+      const mergedYears = [...new Set([...current.years, ...config.years])].sort()
+      persist({
+        ...current,
+        years: mergedYears,
+        categoryGroups: config.categoryGroups,
+      })
+    },
+    [persist],
+  )
 
   return {
     store,

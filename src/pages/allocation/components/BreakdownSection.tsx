@@ -21,17 +21,24 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices }) => {
         <div className="alloc-page-controls">
           <div className="alloc-page-scope-tabs">
             {(['total', 'fi', 'gw'] as Scope[]).map(s => (
-              <button key={s} className={`alloc-page-tab${scope === s ? ' active' : ''}`}
-                onClick={() => setScope(s)}>
+              <button key={s} className={`alloc-page-tab${scope === s ? ' active' : ''}`} onClick={() => setScope(s)}>
                 {s === 'total' ? 'Total' : s.toUpperCase()}
               </button>
             ))}
           </div>
           <div className="alloc-page-toggle">
-            <button className={`alloc-page-toggle-btn${legendMode === 'pct' ? ' active' : ''}`}
-              onClick={() => setLegendMode('pct')}>%</button>
-            <button className={`alloc-page-toggle-btn${legendMode === 'val' ? ' active' : ''}`}
-              onClick={() => setLegendMode('val')}>$</button>
+            <button
+              className={`alloc-page-toggle-btn${legendMode === 'pct' ? ' active' : ''}`}
+              onClick={() => setLegendMode('pct')}
+            >
+              %
+            </button>
+            <button
+              className={`alloc-page-toggle-btn${legendMode === 'val' ? ' active' : ''}`}
+              onClick={() => setLegendMode('val')}
+            >
+              $
+            </button>
           </div>
         </div>
       </div>
@@ -42,9 +49,7 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices }) => {
         <div className="alloc-page-legend-col">
           {slices.length > 0 && (
             <>
-              <div className="alloc-page-total-label">
-                Total: {formatCurrency(total)}
-              </div>
+              <div className="alloc-page-total-label">Total: {formatCurrency(total)}</div>
               <Legend data={slices} total={total} mode={legendMode} />
             </>
           )}

@@ -203,7 +203,9 @@
   opacity: 0.6;
   transition: opacity 0.12s;
 }
-.tax-file-remove:hover { opacity: 1; }
+.tax-file-remove:hover {
+  opacity: 1;
+}
 .tax-item-actions {
   display: flex;
   gap: 0.3rem;
@@ -218,38 +220,54 @@
   font-weight: var(--fw-medium);
   padding: 0.35rem 0.75rem;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 .tax-btn--primary {
   background: var(--accent);
   color: var(--color-text-on-accent);
 }
-.tax-btn--primary:hover { background: var(--accent-hover); }
-.tax-btn--primary:disabled { opacity: 0.5; cursor: default; }
+.tax-btn--primary:hover {
+  background: var(--accent-hover);
+}
+.tax-btn--primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .tax-btn--outline {
   background: none;
   border: 1px solid var(--color-border);
   color: var(--color-text);
 }
-.tax-btn--outline:hover { background: var(--accent-lighter); }
+.tax-btn--outline:hover {
+  background: var(--accent-lighter);
+}
 .tax-btn--sm {
   padding: 0.2rem 0.55rem;
   font-size: var(--fs-sm);
   background: var(--color-surface);
   color: var(--color-text);
 }
-.tax-btn--sm:hover { background: var(--accent-lighter); }
+.tax-btn--sm:hover {
+  background: var(--accent-lighter);
+}
 .tax-btn--muted {
   background: none;
   color: var(--color-text-muted);
 }
-.tax-btn--muted:hover { color: var(--color-negative); background: var(--color-negative-light); }
+.tax-btn--muted:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-light);
+}
 .tax-btn--danger {
   background: var(--color-negative);
   color: var(--color-text-on-accent);
   border: none;
 }
-.tax-btn--danger:hover { background: var(--color-negative-hover); }
+.tax-btn--danger:hover {
+  background: var(--color-negative-hover);
+}
 
 /* Rename inline */
 .tax-rename-btn {
@@ -264,9 +282,16 @@
   line-height: 1;
 }
 .tax-item:hover .tax-rename-btn,
-.tax-rename-btn:focus { opacity: 0.7; }
-.tax-rename-btn:hover { opacity: 1; color: var(--accent); }
-.tax-item-label-text { cursor: default; }
+.tax-rename-btn:focus {
+  opacity: 0.7;
+}
+.tax-rename-btn:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+.tax-item-label-text {
+  cursor: default;
+}
 .tax-rename-input {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
@@ -314,8 +339,13 @@
   align-items: center;
   gap: 0.3rem;
 }
-.tax-tpl-mode-opt.active { color: var(--accent); font-weight: var(--fw-medium); }
-.tax-tpl-mode-opt input { margin: 0; }
+.tax-tpl-mode-opt.active {
+  color: var(--accent);
+  font-weight: var(--fw-medium);
+}
+.tax-tpl-mode-opt input {
+  margin: 0;
+}
 
 /* Template list (import modal) */
 .tax-tpl-list {
@@ -333,10 +363,25 @@
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
 }
-.tax-tpl-info { display: flex; flex-direction: column; gap: 0.1rem; }
-.tax-tpl-name { font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--color-text); }
-.tax-tpl-count { font-size: var(--fs-sm); color: var(--color-text-muted); }
-.tax-tpl-actions { display: flex; gap: 0.3rem; align-items: center; }
+.tax-tpl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.tax-tpl-name {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+.tax-tpl-count {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+.tax-tpl-actions {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
 
 /* Owner avatars */
 .tax-owner-avatar {
@@ -357,8 +402,12 @@
   height: 100%;
   object-fit: cover;
 }
-.tax-owner-primary { background: var(--accent); }
-.tax-owner-partner { background: var(--color-warning); }
+.tax-owner-primary {
+  background: var(--accent);
+}
+.tax-owner-partner {
+  background: var(--color-warning);
+}
 .tax-owner-group {
   display: inline-flex;
   position: relative;
@@ -370,8 +419,14 @@
   position: absolute;
   border: 1.5px solid var(--color-card-bg);
 }
-.tax-owner-group .tax-owner-primary { left: 0; z-index: 2; }
-.tax-owner-group .tax-owner-partner { left: 0.8rem; z-index: 1; }
+.tax-owner-group .tax-owner-primary {
+  left: 0;
+  z-index: 2;
+}
+.tax-owner-group .tax-owner-partner {
+  left: 0.8rem;
+  z-index: 1;
+}
 
 .tax-empty {
   font-size: var(--fs-md);
@@ -391,7 +446,7 @@
   background: var(--color-card-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   min-width: 14rem;
   z-index: 10;
   overflow: hidden;
@@ -416,7 +471,7 @@
 .tax-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -430,7 +485,7 @@
   max-width: 460px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 .tax-modal--sm {
   max-width: 340px;
@@ -485,11 +540,24 @@
   transition: background 0.12s;
   font-size: var(--fs-md);
 }
-.tax-suggest-row:hover { background: var(--accent-lighter); }
-.tax-suggest-row.selected { background: var(--accent-lighter); }
-.tax-suggest-row input { flex-shrink: 0; }
-.tax-suggest-name { font-weight: var(--fw-medium); color: var(--color-text); }
-.tax-suggest-inst { font-size: var(--fs-sm); color: var(--color-text-muted); margin-left: auto; }
+.tax-suggest-row:hover {
+  background: var(--accent-lighter);
+}
+.tax-suggest-row.selected {
+  background: var(--accent-lighter);
+}
+.tax-suggest-row input {
+  flex-shrink: 0;
+}
+.tax-suggest-name {
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+.tax-suggest-inst {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
 .tax-suggest-badge {
   font-size: var(--fs-xs);
   color: var(--color-text-muted);
@@ -500,10 +568,19 @@
 }
 
 /* ── Dark mode ── */
-body.dark .tax-file-chip { background: var(--accent-light); color: var(--accent-text-mid); }
-body.dark .tax-file-remove { color: var(--accent-text-mid); }
-body.dark .tax-rename-btn:hover { color: var(--accent-text-mid); }
-body.dark .tax-tpl-mode-opt.active { color: var(--accent-text-mid); }
+body.dark .tax-file-chip {
+  background: var(--accent-light);
+  color: var(--accent-text-mid);
+}
+body.dark .tax-file-remove {
+  color: var(--accent-text-mid);
+}
+body.dark .tax-rename-btn:hover {
+  color: var(--accent-text-mid);
+}
+body.dark .tax-tpl-mode-opt.active {
+  color: var(--accent-text-mid);
+}
 
 /* Upload error */
 .tax-upload-error {

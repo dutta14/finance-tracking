@@ -31,7 +31,10 @@
   border: none;
   border-radius: calc(var(--radius) - 2px);
   cursor: pointer;
-  transition: background 150ms, color 150ms, box-shadow 150ms;
+  transition:
+    background 150ms,
+    color 150ms,
+    box-shadow 150ms;
 }
 .sgt-mode-btn:hover {
   color: var(--color-text-secondary);
@@ -66,7 +69,9 @@
   background: var(--color-bg);
   color: var(--color-text-heading);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .sgt-toggle-btn:hover {
   border-color: var(--accent);

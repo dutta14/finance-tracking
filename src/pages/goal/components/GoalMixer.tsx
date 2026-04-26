@@ -9,8 +9,9 @@ function computeGwPv(gw: GwGoal, base: FinancialGoal, profileBirthday: string): 
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(base.goalCreatedIn)
   const disburseYear = birthYear + gw.disburseAge
-  const monthsToDisburse = Math.max(0,
-    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
+  const monthsToDisburse = Math.max(
+    0,
+    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
   )
   const disbursementTarget = gw.disburseAmount * Math.pow(1 + base.inflationRate / 100 / 12, monthsToDisburse)
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - base.retirementAge) * 12)
@@ -30,7 +31,13 @@ interface GoalMixerProps {
 }
 
 const GoalMixer: FC<GoalMixerProps> = ({
-  goals, gwGoals, profileBirthday, onCreateGoal, onCreateGwGoal, onClose, onGoToGoal,
+  goals,
+  gwGoals,
+  profileBirthday,
+  onCreateGoal,
+  onCreateGwGoal,
+  onClose,
+  onGoToGoal,
 }) => {
   const [selectedGoalId, setSelectedPlanId] = useState<number | null>(goals[0]?.id ?? null)
   const [selectedGwIds, setSelectedGwIds] = useState<Set<number>>(new Set())
@@ -71,9 +78,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
 
   const gwTotal = useMemo(() => {
     if (!selectedGoal) return 0
-    return selectedGwGoals.reduce(
-      (sum, gw) => sum + computeGwPv(gw, selectedGoal, profileBirthday), 0
-    )
+    return selectedGwGoals.reduce((sum, gw) => sum + computeGwPv(gw, selectedGoal, profileBirthday), 0)
   }, [selectedGwGoals, selectedGoal, profileBirthday])
 
   const totalAtRetirement = (selectedGoal?.fiGoal ?? 0) + gwTotal
@@ -97,14 +102,11 @@ const GoalMixer: FC<GoalMixerProps> = ({
     onGoToGoal(newId)
   }
 
-  const retirementYear = selectedGoal
-    ? new Date(profileBirthday).getFullYear() + selectedGoal.retirementAge
-    : null
+  const retirementYear = selectedGoal ? new Date(profileBirthday).getFullYear() + selectedGoal.retirementAge : null
 
   return (
     <div className="mixer-backdrop" onClick={onClose}>
       <div ref={modalRef} className="mixer-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-
         <div className="mixer-header">
           <div>
             <h2 className="mixer-title">Mix &amp; Match</h2>
@@ -112,13 +114,12 @@ const GoalMixer: FC<GoalMixerProps> = ({
           </div>
           <button className="mixer-close-btn" onClick={onClose} aria-label="Close">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+              <path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
         <div className="mixer-body">
-
           {/* ── FI Base ── */}
           <div className="mixer-col">
             <div className="mixer-col-title">
@@ -171,10 +172,10 @@ const GoalMixer: FC<GoalMixerProps> = ({
                             onChange={() => toggleGw(gw.id)}
                           />
                           <span className="mixer-gw-label">{gw.label || 'Unnamed goal'}</span>
-                          <span className="mixer-gw-meta">age {gw.disburseAge} · {gw.growthRate}%</span>
-                          {selectedGoal && (
-                            <span className="mixer-gw-pv">{dollars(pv)}</span>
-                          )}
+                          <span className="mixer-gw-meta">
+                            age {gw.disburseAge} · {gw.growthRate}%
+                          </span>
+                          {selectedGoal && <span className="mixer-gw-pv">{dollars(pv)}</span>}
                         </label>
                       )
                     })}
@@ -183,7 +184,6 @@ const GoalMixer: FC<GoalMixerProps> = ({
               </div>
             )}
           </div>
-
         </div>
 
         {/* ── Preview ── */}
@@ -224,16 +224,13 @@ const GoalMixer: FC<GoalMixerProps> = ({
         </div>
 
         <div className="mixer-footer">
-          <button className="mixer-btn-cancel" onClick={onClose}>Cancel</button>
-          <button
-            className="mixer-btn-create"
-            disabled={!selectedGoal}
-            onClick={handleCreate}
-          >
+          <button className="mixer-btn-cancel" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="mixer-btn-create" disabled={!selectedGoal} onClick={handleCreate}>
             Create as New Goal →
           </button>
         </div>
-
       </div>
     </div>
   )

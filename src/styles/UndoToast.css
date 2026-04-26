@@ -4,7 +4,9 @@
   left: 50%;
   transform: translateX(-50%) translateY(16px);
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   background: var(--color-tooltip-bg);
   color: var(--color-text-on-accent);
   border-radius: var(--radius);
@@ -84,6 +86,10 @@
 }
 
 @keyframes undo-drain {
-  from { width: 100%; }
-  to   { width: 0%; }
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }

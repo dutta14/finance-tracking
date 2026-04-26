@@ -3,7 +3,11 @@ import { FinancialGoal, GwGoal } from '../../../types'
 import { useTouchDrag } from '../../../hooks/useTouchDrag'
 import GoalMiniCard from './GoalMiniCard'
 
-interface ContextMenuState { x: number; y: number; goalId: number }
+interface ContextMenuState {
+  x: number
+  y: number
+  goalId: number
+}
 
 interface GoalsMiniGridProps {
   goals: FinancialGoal[]
@@ -20,8 +24,17 @@ interface GoalsMiniGridProps {
 }
 
 const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
-  goals, selectedGoalIds, onSelectGoal, viewMode = 'grid', compareMode = false, onReorderGoals,
-  onRenameGoal, onCopyGoal, onDeleteGoal, gwGoals, profileBirthday,
+  goals,
+  selectedGoalIds,
+  onSelectGoal,
+  viewMode = 'grid',
+  compareMode = false,
+  onReorderGoals,
+  onRenameGoal,
+  onCopyGoal,
+  onDeleteGoal,
+  gwGoals,
+  profileBirthday,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -49,7 +62,10 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   }, [renamingId])
 
   const openContextMenu = (e: React.MouseEvent, goalId: number) => {
-    if (touchMovedFlag.current) { touchMovedFlag.current = false; return }
+    if (touchMovedFlag.current) {
+      touchMovedFlag.current = false
+      return
+    }
     e.preventDefault()
     e.stopPropagation()
     const menuWidth = 160
@@ -81,11 +97,19 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>, id: number) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
-    if (id === draggedId) { setDragOverId(null); return }
+    if (id === draggedId) {
+      setDragOverId(null)
+      return
+    }
     const rect = e.currentTarget.getBoundingClientRect()
-    const side: 'before' | 'after' = viewMode === 'list'
-      ? (e.clientY < rect.top + rect.height / 2 ? 'before' : 'after')
-      : (e.clientX < rect.left + rect.width / 2 ? 'before' : 'after')
+    const side: 'before' | 'after' =
+      viewMode === 'list'
+        ? e.clientY < rect.top + rect.height / 2
+          ? 'before'
+          : 'after'
+        : e.clientX < rect.left + rect.width / 2
+          ? 'before'
+          : 'after'
     setDragOverId(id)
     setDragOverSide(side)
   }
@@ -118,19 +142,22 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   const touchTargetId = useRef<number | null>(null)
   const touchTargetSide = useRef<'before' | 'after'>('after')
 
-  const getGoalIdFromPoint = useCallback((x: number, y: number): number | null => {
-    const el = document.elementFromPoint(x, y)
-    if (!el || !gridRef.current) return null
-    const item = (el as HTMLElement).closest?.('.goal-drag-item') as HTMLElement | null
-    if (!item) return null
-    const items = Array.from(gridRef.current.querySelectorAll('.goal-drag-item'))
-    const idx = items.indexOf(item)
-    return idx >= 0 && idx < goals.length ? goals[idx].id : null
-  }, [goals])
+  const getGoalIdFromPoint = useCallback(
+    (x: number, y: number): number | null => {
+      const el = document.elementFromPoint(x, y)
+      if (!el || !gridRef.current) return null
+      const item = (el as HTMLElement).closest?.('.goal-drag-item') as HTMLElement | null
+      if (!item) return null
+      const items = Array.from(gridRef.current.querySelectorAll('.goal-drag-item'))
+      const idx = items.indexOf(item)
+      return idx >= 0 && idx < goals.length ? goals[idx].id : null
+    },
+    [goals],
+  )
 
   const touchDrag = useTouchDrag({
     longPressMs: 300,
-    onDragStart: (idx) => {
+    onDragStart: idx => {
       if (idx >= 0 && idx < goals.length) {
         const id = goals[idx].id
         touchDraggedId.current = id
@@ -149,9 +176,14 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
       const goalIdx = goals.findIndex(g => g.id === targetGoalId)
       if (goalIdx < 0 || goalIdx >= items.length) return
       const rect = items[goalIdx].getBoundingClientRect()
-      const side: 'before' | 'after' = viewMode === 'list'
-        ? (cy < rect.top + rect.height / 2 ? 'before' : 'after')
-        : (cx < rect.left + rect.width / 2 ? 'before' : 'after')
+      const side: 'before' | 'after' =
+        viewMode === 'list'
+          ? cy < rect.top + rect.height / 2
+            ? 'before'
+            : 'after'
+          : cx < rect.left + rect.width / 2
+            ? 'before'
+            : 'after'
       setDragOverId(targetGoalId)
       setDragOverSide(side)
       touchTargetId.current = targetGoalId
@@ -187,23 +219,25 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   })
 
   /* ── Mobile move buttons ── */
-  const moveGoal = useCallback((goalIdx: number, direction: -1 | 1) => {
-    if (!onReorderGoals) return
-    const target = goalIdx + direction
-    if (target < 0 || target >= goals.length) return
-    const ids = goals.map(g => g.id)
-    const [removed] = ids.splice(goalIdx, 1)
-    ids.splice(target, 0, removed)
-    onReorderGoals(ids)
-    const movedGoal = goals[goalIdx]
-    const neighborGoal = goals[target]
-    if (movedGoal && neighborGoal) {
-      const relation = direction < 0
-        ? (viewMode === 'list' ? 'before' : 'before')
-        : (viewMode === 'list' ? 'after' : 'after')
-      setAnnouncement(`${movedGoal.goalName} moved ${relation} ${neighborGoal.goalName}`)
-    }
-  }, [goals, onReorderGoals, viewMode])
+  const moveGoal = useCallback(
+    (goalIdx: number, direction: -1 | 1) => {
+      if (!onReorderGoals) return
+      const target = goalIdx + direction
+      if (target < 0 || target >= goals.length) return
+      const ids = goals.map(g => g.id)
+      const [removed] = ids.splice(goalIdx, 1)
+      ids.splice(target, 0, removed)
+      onReorderGoals(ids)
+      const movedGoal = goals[goalIdx]
+      const neighborGoal = goals[target]
+      if (movedGoal && neighborGoal) {
+        const relation =
+          direction < 0 ? (viewMode === 'list' ? 'before' : 'before') : viewMode === 'list' ? 'after' : 'after'
+        setAnnouncement(`${movedGoal.goalName} moved ${relation} ${neighborGoal.goalName}`)
+      }
+    },
+    [goals, onReorderGoals, viewMode],
+  )
 
   const isHorizontal = viewMode === 'grid'
   const prevLabel = isHorizontal ? '←' : '↑'
@@ -248,13 +282,17 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                     disabled={goalIdx === 0}
                     onClick={() => moveGoal(goalIdx, -1)}
                     aria-label={`Move ${goal.goalName} ${prevDir}`}
-                  >{prevLabel}</button>
+                  >
+                    {prevLabel}
+                  </button>
                   <button
                     className="reorder-move-btn"
                     disabled={goalIdx === goals.length - 1}
                     onClick={() => moveGoal(goalIdx, 1)}
                     aria-label={`Move ${goal.goalName} ${nextDir}`}
-                  >{nextLabel}</button>
+                  >
+                    {nextLabel}
+                  </button>
                 </div>
               )}
               {renamingId === goal.id ? (
@@ -276,7 +314,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                 <GoalMiniCard
                   goal={goal}
                   isSelected={selectedGoalIds.includes(goal.id)}
-                  onClick={(e) => onSelectGoal(goal.id, e.metaKey || e.ctrlKey)}
+                  onClick={e => onSelectGoal(goal.id, e.metaKey || e.ctrlKey)}
                   viewMode={viewMode}
                   compareMode={compareMode}
                   gwGoals={gwGoals}
@@ -287,26 +325,50 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           )
         })}
       </div>
-      <div aria-live="polite" className="sr-only">{announcement}</div>
-      {contextMenu && (() => {
-        const goal = goals.find(p => p.id === contextMenu.goalId)
-        if (!goal) return null
-        return (
-          <div
-            ref={menuRef}
-            className="card-context-menu"
-            style={{ top: contextMenu.y, left: contextMenu.x }}
-          >
-            <button className="card-context-menu-item" onClick={() => { closeContextMenu(); onSelectGoal(goal.id, false) }}>Open</button>
-            <button className="card-context-menu-item" onClick={() => startRename(goal.id, goal.goalName)}>Rename</button>
-            <button className="card-context-menu-item" onClick={() => { closeContextMenu(); onCopyGoal(goal) }}>Duplicate</button>
-            <button className="card-context-menu-item card-context-menu-item--danger" onClick={() => { closeContextMenu(); onDeleteGoal(goal.id) }}>Delete</button>
-          </div>
-        )
-      })()}
+      <div aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
+      {contextMenu &&
+        (() => {
+          const goal = goals.find(p => p.id === contextMenu.goalId)
+          if (!goal) return null
+          return (
+            <div ref={menuRef} className="card-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+              <button
+                className="card-context-menu-item"
+                onClick={() => {
+                  closeContextMenu()
+                  onSelectGoal(goal.id, false)
+                }}
+              >
+                Open
+              </button>
+              <button className="card-context-menu-item" onClick={() => startRename(goal.id, goal.goalName)}>
+                Rename
+              </button>
+              <button
+                className="card-context-menu-item"
+                onClick={() => {
+                  closeContextMenu()
+                  onCopyGoal(goal)
+                }}
+              >
+                Duplicate
+              </button>
+              <button
+                className="card-context-menu-item card-context-menu-item--danger"
+                onClick={() => {
+                  closeContextMenu()
+                  onDeleteGoal(goal.id)
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )
+        })()}
     </>
   )
 }
 
 export default GoalsMiniGrid
-

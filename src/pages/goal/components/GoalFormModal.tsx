@@ -18,7 +18,7 @@ interface GoalFormModalProps {
   setError: (error: string) => void
 }
 
-const GoalFormModal: FC<GoalFormModalProps> = (props) => {
+const GoalFormModal: FC<GoalFormModalProps> = props => {
   const modalRef = useRef<HTMLDivElement>(null)
   useFocusTrap(modalRef, true)
 
@@ -32,7 +32,9 @@ const GoalFormModal: FC<GoalFormModalProps> = (props) => {
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [])
 
   return (

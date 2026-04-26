@@ -17,10 +17,13 @@ export const exportCsv = (accounts: Account[], balances: BalanceEntry[]): void =
 
   // Data rows: month, then each account balance
   const dataRows = allMonths.map(month => {
-    const cells = [month, ...accounts.map(a => {
-      const val = balanceMap.get(`${a.id}:${month}`)
-      return val !== undefined ? String(val) : ''
-    })]
+    const cells = [
+      month,
+      ...accounts.map(a => {
+        const val = balanceMap.get(`${a.id}:${month}`)
+        return val !== undefined ? String(val) : ''
+      }),
+    ]
     return cells.join(',')
   })
 

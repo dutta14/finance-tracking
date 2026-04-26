@@ -32,8 +32,14 @@ export async function saveFileContent(id: string, content: string): Promise<void
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite')
     tx.objectStore(STORE_NAME).put({ id, content })
-    tx.oncomplete = () => { db.close(); resolve() }
-    tx.onerror = () => { db.close(); reject(tx.error) }
+    tx.oncomplete = () => {
+      db.close()
+      resolve()
+    }
+    tx.onerror = () => {
+      db.close()
+      reject(tx.error)
+    }
   })
 }
 
@@ -47,7 +53,10 @@ export async function getFileContent(id: string): Promise<string | null> {
       db.close()
       resolve(req.result ? (req.result as { id: string; content: string }).content : null)
     }
-    req.onerror = () => { db.close(); reject(req.error) }
+    req.onerror = () => {
+      db.close()
+      reject(req.error)
+    }
   })
 }
 
@@ -57,8 +66,14 @@ export async function deleteFileContent(id: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite')
     tx.objectStore(STORE_NAME).delete(id)
-    tx.oncomplete = () => { db.close(); resolve() }
-    tx.onerror = () => { db.close(); reject(tx.error) }
+    tx.oncomplete = () => {
+      db.close()
+      resolve()
+    }
+    tx.onerror = () => {
+      db.close()
+      reject(tx.error)
+    }
   })
 }
 
@@ -70,8 +85,14 @@ export async function deleteMultipleFiles(ids: string[]): Promise<void> {
     const tx = db.transaction(STORE_NAME, 'readwrite')
     const store = tx.objectStore(STORE_NAME)
     for (const id of ids) store.delete(id)
-    tx.oncomplete = () => { db.close(); resolve() }
-    tx.onerror = () => { db.close(); reject(tx.error) }
+    tx.oncomplete = () => {
+      db.close()
+      resolve()
+    }
+    tx.onerror = () => {
+      db.close()
+      reject(tx.error)
+    }
   })
 }
 
@@ -89,7 +110,10 @@ export async function getAllFileContents(): Promise<Map<string, string>> {
       }
       resolve(map)
     }
-    req.onerror = () => { db.close(); reject(req.error) }
+    req.onerror = () => {
+      db.close()
+      reject(req.error)
+    }
   })
 }
 

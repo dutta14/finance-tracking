@@ -1,7 +1,16 @@
 import { FC, useState, useMemo } from 'react'
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  Tooltip, CartesianGrid, ReferenceLine, Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ReferenceLine,
+  Legend,
 } from 'recharts'
 import { Account, BalanceEntry, formatMonth, formatCurrency } from './types'
 
@@ -32,12 +41,15 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
     return [...years].sort()
   }, [allMonths])
 
-  const monthOptions = useMemo(() =>
-    Array.from({ length: 12 }, (_, i) => {
-      const val = String(i + 1).padStart(2, '0')
-      const label = new Date(2000, i).toLocaleString('default', { month: 'short' })
-      return { val, label }
-    }), [])
+  const monthOptions = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => {
+        const val = String(i + 1).padStart(2, '0')
+        const label = new Date(2000, i).toLocaleString('default', { month: 'short' })
+        return { val, label }
+      }),
+    [],
+  )
 
   const filteredMonths = useMemo(() => {
     // allMonths is sorted descending; we want ascending for charts
@@ -47,11 +59,16 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
     const yr = now.getFullYear().toString()
     const cur = `${yr}-${String(now.getMonth() + 1).padStart(2, '0')}`
     switch (dateFilter) {
-      case 'ytd': return ascending.filter(m => m >= `${yr}-01` && m <= cur)
-      case 'last-12': return ascending.slice(-12)
-      case 'eoy': return ascending.filter(m => m.endsWith('-12'))
-      case 'custom': return ascending.filter(m => (!customFrom || m >= customFrom) && (!customTo || m <= customTo))
-      default: return ascending
+      case 'ytd':
+        return ascending.filter(m => m >= `${yr}-01` && m <= cur)
+      case 'last-12':
+        return ascending.slice(-12)
+      case 'eoy':
+        return ascending.filter(m => m.endsWith('-12'))
+      case 'custom':
+        return ascending.filter(m => (!customFrom || m >= customFrom) && (!customTo || m <= customTo))
+      default:
+        return ascending
     }
   }, [dateFilter, allMonths, customFrom, customTo])
 
@@ -75,31 +92,33 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
       return val !== undefined ? sum + val : sum
     }, 0)
 
-  const chartData = useMemo(() =>
-    filteredMonths.map(month => {
-      const fi = sumForMonth(fiAccounts, month)
-      const gw = sumForMonth(gwAccounts, month)
-      const assets = sumForMonth(assetAccounts, month)
-      const liabilities = sumForMonth(liabilityAccounts, month)
-      return {
-        month,
-        label: formatMonth(month),
-        fi, gw,
-        netWorth: assets + liabilities,
-        assets,
-        liabilities,
-      }
-    }),
-    [filteredMonths, fiAccounts, gwAccounts, assetAccounts, liabilityAccounts, balanceMap]
+  const chartData = useMemo(
+    () =>
+      filteredMonths.map(month => {
+        const fi = sumForMonth(fiAccounts, month)
+        const gw = sumForMonth(gwAccounts, month)
+        const assets = sumForMonth(assetAccounts, month)
+        const liabilities = sumForMonth(liabilityAccounts, month)
+        return {
+          month,
+          label: formatMonth(month),
+          fi,
+          gw,
+          netWorth: assets + liabilities,
+          assets,
+          liabilities,
+        }
+      }),
+    [filteredMonths, fiAccounts, gwAccounts, assetAccounts, liabilityAccounts, balanceMap],
   )
 
   const yDomain = useMemo((): [number, number] => {
     if (chartData.length === 0) return [0, 0]
-    let min = Infinity, max = -Infinity
+    let min = Infinity,
+      max = -Infinity
     for (const d of chartData) {
-      const vals = chartType === 'fi-gw' ? [d.fi, d.gw]
-        : chartType === 'net-worth' ? [d.netWorth]
-        : [d.assets, d.liabilities]
+      const vals =
+        chartType === 'fi-gw' ? [d.fi, d.gw] : chartType === 'net-worth' ? [d.netWorth] : [d.assets, d.liabilities]
       for (const v of vals) {
         if (v < min) min = v
         if (v > max) max = v
@@ -116,8 +135,18 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
   const tooltipBorder = 'var(--color-border)'
   const tooltipText = 'var(--color-text)'
 
-  const axisTickStyle = { fontSize: 10, fill: textColor, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }
-  const tooltipStyle = { backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '8px 12px' }
+  const axisTickStyle = {
+    fontSize: 10,
+    fill: textColor,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  }
+  const tooltipStyle = {
+    backgroundColor: tooltipBg,
+    border: `1px solid ${tooltipBorder}`,
+    borderRadius: 8,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    padding: '8px 12px',
+  }
   const tooltipLabelStyle = { color: textColor, fontSize: 11, fontWeight: 500, marginBottom: 4 }
   const tooltipItemStyle = { color: tooltipText, fontSize: 12, fontWeight: 600, padding: 0 }
 
@@ -145,16 +174,28 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
               key={opt.key}
               className={`data-filter-btn${chartType === opt.key ? ' active' : ''}`}
               onClick={() => setChartType(opt.key)}
-            >{opt.label}</button>
+            >
+              {opt.label}
+            </button>
           ))}
         </div>
         <div className="data-charts-date-filter">
-          {([['all', 'All'], ['ytd', 'YTD'], ['last-12', 'Last 12 mo'], ['eoy', 'Year-End'], ['custom', 'Custom']] as const).map(([key, label]) => (
+          {(
+            [
+              ['all', 'All'],
+              ['ytd', 'YTD'],
+              ['last-12', 'Last 12 mo'],
+              ['eoy', 'Year-End'],
+              ['custom', 'Custom'],
+            ] as const
+          ).map(([key, label]) => (
             <button
               key={key}
               className={`data-filter-btn data-filter-btn--sm${dateFilter === key ? ' active' : ''}`}
               onClick={() => setDateFilter(key as DateFilter)}
-            >{label}</button>
+            >
+              {label}
+            </button>
           ))}
         </div>
       </div>
@@ -162,24 +203,56 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
       {dateFilter === 'custom' && (
         <div className="data-charts-custom-range">
           <div className="data-range-picker">
-            <select className="data-range-select" value={customFrom ? customFrom.split('-')[0] : ''} onChange={e => setCustomMonth('from', 'year', e.target.value)}>
+            <select
+              className="data-range-select"
+              value={customFrom ? customFrom.split('-')[0] : ''}
+              onChange={e => setCustomMonth('from', 'year', e.target.value)}
+            >
               <option value="">Year</option>
-              {availableYears.map(yr => <option key={yr} value={yr}>{yr}</option>)}
+              {availableYears.map(yr => (
+                <option key={yr} value={yr}>
+                  {yr}
+                </option>
+              ))}
             </select>
-            <select className="data-range-select" value={customFrom ? customFrom.split('-')[1] : ''} onChange={e => setCustomMonth('from', 'month', e.target.value)}>
+            <select
+              className="data-range-select"
+              value={customFrom ? customFrom.split('-')[1] : ''}
+              onChange={e => setCustomMonth('from', 'month', e.target.value)}
+            >
               <option value="">Month</option>
-              {monthOptions.map(({ val, label }) => <option key={val} value={val}>{label}</option>)}
+              {monthOptions.map(({ val, label }) => (
+                <option key={val} value={val}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
           <span className="data-range-sep">to</span>
           <div className="data-range-picker">
-            <select className="data-range-select" value={customTo ? customTo.split('-')[0] : ''} onChange={e => setCustomMonth('to', 'year', e.target.value)}>
+            <select
+              className="data-range-select"
+              value={customTo ? customTo.split('-')[0] : ''}
+              onChange={e => setCustomMonth('to', 'year', e.target.value)}
+            >
               <option value="">Year</option>
-              {availableYears.map(yr => <option key={yr} value={yr}>{yr}</option>)}
+              {availableYears.map(yr => (
+                <option key={yr} value={yr}>
+                  {yr}
+                </option>
+              ))}
             </select>
-            <select className="data-range-select" value={customTo ? customTo.split('-')[1] : ''} onChange={e => setCustomMonth('to', 'month', e.target.value)}>
+            <select
+              className="data-range-select"
+              value={customTo ? customTo.split('-')[1] : ''}
+              onChange={e => setCustomMonth('to', 'month', e.target.value)}
+            >
               <option value="">Month</option>
-              {monthOptions.map(({ val, label }) => <option key={val} value={val}>{label}</option>)}
+              {monthOptions.map(({ val, label }) => (
+                <option key={val} value={val}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -202,12 +275,46 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="label" tick={axisTickStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis domain={yDomain} tickFormatter={currencyFormatter} tick={axisTickStyle} axisLine={false} tickLine={false} width={80} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Number(v))} />
+              <XAxis
+                dataKey="label"
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={currencyFormatter}
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+                formatter={(v: any) => formatCurrency(Number(v))}
+              />
               <Legend content={renderLegend as any} />
-              <Line type="natural" dataKey="fi" name="FI" stroke="#6366f1" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#6366f1' }} />
-              <Line type="natural" dataKey="gw" name="GW" stroke="#f59e0b" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#f59e0b' }} />
+              <Line
+                type="natural"
+                dataKey="fi"
+                name="FI"
+                stroke="#6366f1"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 0, fill: '#6366f1' }}
+              />
+              <Line
+                type="natural"
+                dataKey="gw"
+                name="GW"
+                stroke="#f59e0b"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 0, fill: '#f59e0b' }}
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : chartType === 'net-worth' ? (
@@ -220,19 +327,63 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances, allMonths, 
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="label" tick={axisTickStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis domain={yDomain} tickFormatter={currencyFormatter} tick={axisTickStyle} axisLine={false} tickLine={false} width={80} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Number(v))} />
-              <Line type="natural" dataKey="netWorth" name="Net Worth" stroke="#10b981" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#10b981' }} />
+              <XAxis
+                dataKey="label"
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={currencyFormatter}
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+                formatter={(v: any) => formatCurrency(Number(v))}
+              />
+              <Line
+                type="natural"
+                dataKey="netWorth"
+                name="Net Worth"
+                stroke="#10b981"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 0, fill: '#10b981' }}
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={380}>
             <BarChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }} stackOffset="sign">
               <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="label" tick={axisTickStyle} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis domain={yDomain} tickFormatter={currencyFormatter} tick={axisTickStyle} axisLine={false} tickLine={false} width={80} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} formatter={(v: any) => formatCurrency(Math.abs(Number(v)))} />
+              <XAxis
+                dataKey="label"
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={currencyFormatter}
+                tick={axisTickStyle}
+                axisLine={false}
+                tickLine={false}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
+                formatter={(v: any) => formatCurrency(Math.abs(Number(v)))}
+              />
               <Legend content={renderLegend as any} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[3, 3, 0, 0]} />

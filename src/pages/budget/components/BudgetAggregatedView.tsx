@@ -14,7 +14,11 @@ const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
 const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
-  year, type, categoryGroups, categorySums, timePeriod,
+  year,
+  type,
+  categoryGroups,
+  categorySums,
+  timePeriod,
 }) => {
   const months = Array.from({ length: 12 }, (_, i) => buildMonthKey(year, i))
 
@@ -44,23 +48,24 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
     return !hasNegative && monthValues.some(v => v > 0)
   }
 
-  const relevantGroups: { id: string; name: string; categories: string[] }[] = type === 'income'
-    ? (() => {
-        const allIncomeCats = Object.keys(categorySums).filter(c => isTypeCategory(c))
-        return allIncomeCats.length > 0 ? [{ id: '__income__', name: 'Income', categories: allIncomeCats }] : []
-      })()
-    : categoryGroups
-        .map(g => ({
-          ...g,
-          categories: g.categories.filter(c => isTypeCategory(c)),
-        }))
-        .filter(g => g.categories.length > 0)
+  const relevantGroups: { id: string; name: string; categories: string[] }[] =
+    type === 'income'
+      ? (() => {
+          const allIncomeCats = Object.keys(categorySums).filter(c => isTypeCategory(c))
+          return allIncomeCats.length > 0 ? [{ id: '__income__', name: 'Income', categories: allIncomeCats }] : []
+        })()
+      : categoryGroups
+          .map(g => ({
+            ...g,
+            categories: g.categories.filter(c => isTypeCategory(c)),
+          }))
+          .filter(g => g.categories.length > 0)
 
   const getGroupPeriodTotal = (group: { categories: string[] }, period: { monthKeys: string[] }): number => {
     let total = 0
     period.monthKeys.forEach(m => {
       group.categories.forEach(cat => {
-        total += (categorySums[cat]?.[m] || 0)
+        total += categorySums[cat]?.[m] || 0
       })
     })
     return total
@@ -69,14 +74,18 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
   const getGroupYearTotal = (group: { categories: string[] }): number => {
     let total = 0
     months.forEach(m => {
-      group.categories.forEach(cat => { total += (categorySums[cat]?.[m] || 0) })
+      group.categories.forEach(cat => {
+        total += categorySums[cat]?.[m] || 0
+      })
     })
     return total
   }
 
   const grandTotal = (): number => {
     let total = 0
-    relevantGroups.forEach(g => { total += getGroupYearTotal(g) })
+    relevantGroups.forEach(g => {
+      total += getGroupYearTotal(g)
+    })
     return total
   }
 
@@ -97,39 +106,58 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
             <tr>
               <th className="budget-th budget-th--category">Group</th>
               {periods.map(p => (
-                <th key={p.label} className="budget-th budget-th--month">{p.label}</th>
+                <th key={p.label} className="budget-th budget-th--month">
+                  {p.label}
+                </th>
               ))}
-              <th className="budget-th budget-th--total budget-th--switchable" onClick={() => setShowPct(p => !p)} title="Click to toggle Total / %">
+              <th
+                className="budget-th budget-th--total budget-th--switchable"
+                onClick={() => setShowPct(p => !p)}
+                title="Click to toggle Total / %"
+              >
                 {showPct ? '%' : 'Total'}
               </th>
             </tr>
           </thead>
           <tbody>
-            {[...relevantGroups].sort((a, b) => a.name.localeCompare(b.name)).map(group => {
-              const yearTotal = getGroupYearTotal(group)
-              return (
-                <tr key={group.id} className="budget-tr--agg-row">
-                  <td className="budget-td budget-td--category"><strong>{group.name}</strong></td>
-                  {periods.map(p => {
-                    const val = getGroupPeriodTotal(group, p)
-                    return (
-                      <td key={p.label} className={`budget-td budget-td--number${type === 'expense' && val > 0 ? ' refund' : ''}`}>
-                        {val !== 0 ? fmt(Math.abs(val)) : ''}
-                      </td>
-                    )
-                  })}
-                  <td className={`budget-td ${showPct ? 'budget-td--pct' : `budget-td--number${type === 'expense' && yearTotal > 0 ? ' refund' : ''}`}`}>
-                    <strong>{showPct ? getGroupPct(group) : (yearTotal !== 0 ? fmt(Math.abs(yearTotal)) : '')}</strong>
-                  </td>
-                </tr>
-              )
-            })}
+            {[...relevantGroups]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map(group => {
+                const yearTotal = getGroupYearTotal(group)
+                return (
+                  <tr key={group.id} className="budget-tr--agg-row">
+                    <td className="budget-td budget-td--category">
+                      <strong>{group.name}</strong>
+                    </td>
+                    {periods.map(p => {
+                      const val = getGroupPeriodTotal(group, p)
+                      return (
+                        <td
+                          key={p.label}
+                          className={`budget-td budget-td--number${type === 'expense' && val > 0 ? ' refund' : ''}`}
+                        >
+                          {val !== 0 ? fmt(Math.abs(val)) : ''}
+                        </td>
+                      )
+                    })}
+                    <td
+                      className={`budget-td ${showPct ? 'budget-td--pct' : `budget-td--number${type === 'expense' && yearTotal > 0 ? ' refund' : ''}`}`}
+                    >
+                      <strong>{showPct ? getGroupPct(group) : yearTotal !== 0 ? fmt(Math.abs(yearTotal)) : ''}</strong>
+                    </td>
+                  </tr>
+                )
+              })}
             {relevantGroups.length > 0 && (
               <tr className="budget-tr--grand-total">
-                <td className="budget-td budget-td--category"><strong>Grand Total</strong></td>
+                <td className="budget-td budget-td--category">
+                  <strong>Grand Total</strong>
+                </td>
                 {periods.map(p => {
                   let periodTotal = 0
-                  relevantGroups.forEach(g => { periodTotal += getGroupPeriodTotal(g, p) })
+                  relevantGroups.forEach(g => {
+                    periodTotal += getGroupPeriodTotal(g, p)
+                  })
                   return (
                     <td key={p.label} className="budget-td budget-td--number">
                       <strong>{periodTotal !== 0 ? fmt(Math.abs(periodTotal)) : ''}</strong>

@@ -5,17 +5,27 @@ import { formatDate, formatRelative } from '../utils'
 
 const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   hasPendingChanges,
-  ghConfig, ghIsConfigured = false,
-  ghSyncStatus = 'idle', ghLastSyncAt = null, ghLastError = null, ghHistory = [],
-  ghHasStoredToken = false, ghTokenUnlocked = false, ghUsingLegacyToken = false,
-  onGhUpdateConfig = () => {}, onGhSaveEncryptedToken = async () => ({ ok: false, message: '' }),
+  ghConfig,
+  ghIsConfigured = false,
+  ghSyncStatus = 'idle',
+  ghLastSyncAt = null,
+  ghLastError = null,
+  ghHistory = [],
+  ghHasStoredToken = false,
+  ghTokenUnlocked = false,
+  ghUsingLegacyToken = false,
+  onGhUpdateConfig = () => {},
+  onGhSaveEncryptedToken = async () => ({ ok: false, message: '' }),
   onGhMigrateLegacyToken = async () => ({ ok: false, message: '' }),
-  onGhUnlockToken = async () => ({ ok: false, message: '' }), onGhLockToken = () => {},
-  onGhSyncNow = async () => {}, onGhFetchHistory = async () => {},
+  onGhUnlockToken = async () => ({ ok: false, message: '' }),
+  onGhLockToken = () => {},
+  onGhSyncNow = async () => {},
+  onGhFetchHistory = async () => {},
   onGhTestConnection = async () => ({ ok: false, message: '', warnings: [] }),
   onGhRestoreLatest = async () => ({ ok: false, message: '' }),
   onGhRestoreFromCommit = async () => ({ ok: false, message: '' }),
-  onGhApplyRestore = async () => {}, ghData = {},
+  onGhApplyRestore = async () => {},
+  ghData = {},
   ghSyncProgress = null,
 }) => {
   const [ghTab, setGhTab] = useState<'config' | 'history'>('config')
@@ -47,40 +57,51 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   }, [ghSyncSuccess])
 
   const handleGhTest = async () => {
-    setGhTesting(true); setGhTestResult(null)
+    setGhTesting(true)
+    setGhTestResult(null)
     const result = await onGhTestConnection?.()
-    setGhTestResult(result); setGhTesting(false)
+    setGhTestResult(result)
+    setGhTesting(false)
   }
 
   const handleGhSaveToken = async () => {
-    setGhSavingToken(true); setGhSaveResult(null)
+    setGhSavingToken(true)
+    setGhSaveResult(null)
     const result = await onGhSaveEncryptedToken?.(ghTokenInput, ghPassphrase)
     setGhSaveResult(result)
-    if (result?.ok) { setGhTokenInput(''); setGhPassphrase('') }
+    if (result?.ok) {
+      setGhTokenInput('')
+      setGhPassphrase('')
+    }
     setGhSavingToken(false)
   }
 
   const handleGhMigrateLegacy = async () => {
-    setGhSavingToken(true); setGhSaveResult(null)
+    setGhSavingToken(true)
+    setGhSaveResult(null)
     const result = await onGhMigrateLegacyToken?.(ghPassphrase)
-    setGhSaveResult(result); setGhSavingToken(false)
+    setGhSaveResult(result)
+    setGhSavingToken(false)
   }
 
   const handleGhUnlock = async () => {
     const result = await onGhUnlockToken?.(ghUnlockPassphrase)
-    if (result?.ok) { setGhUnlockPassphrase(''); setGhSaveResult(null) }
-    else setGhSaveResult(result)
+    if (result?.ok) {
+      setGhUnlockPassphrase('')
+      setGhSaveResult(null)
+    } else setGhSaveResult(result)
   }
 
   const handleGhSyncNow = async () => {
     const msg = `Synced user data on ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`
     await onGhSyncNow?.(ghData, msg)
     // Only show success banner if sync actually ran (not "already up to date")
-    if (!ghSyncProgress || (ghSyncProgress.total > 0)) setGhSyncSuccess(true)
+    if (!ghSyncProgress || ghSyncProgress.total > 0) setGhSyncSuccess(true)
   }
 
   const handleGhRestoreLatest = async () => {
-    setGhRestoring(true); setGhRestoreResult(null)
+    setGhRestoring(true)
+    setGhRestoreResult(null)
     const result = await onGhRestoreLatest?.()
     if (result?.ok && result?.data) await onGhApplyRestore?.(result.data)
     setGhRestoreResult({ ok: result?.ok || false, message: result?.message || '' })
@@ -88,7 +109,8 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   }
 
   const handleGhRestoreCommit = async (commitSha: string) => {
-    setGhRestoringCommitSha(commitSha); setGhRestoreResult(null)
+    setGhRestoringCommitSha(commitSha)
+    setGhRestoreResult(null)
     const result = await onGhRestoreFromCommit?.(commitSha)
     if (result?.ok && result?.data) await onGhApplyRestore?.(result.data)
     setGhRestoreResult({ ok: result?.ok || false, message: result?.message || '' })
@@ -96,8 +118,12 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   }
 
   const DOMAIN_LABELS: Record<SyncDomain, string> = {
-    goals: 'Goals', data: 'Balances', tools: 'Tools',
-    allocation: 'Allocation', taxes: 'Taxes', budget: 'Budget',
+    goals: 'Goals',
+    data: 'Balances',
+    tools: 'Tools',
+    allocation: 'Allocation',
+    taxes: 'Taxes',
+    budget: 'Budget',
   }
   const ALL_DOMAINS: SyncDomain[] = ['goals', 'data', 'tools', 'allocation', 'taxes', 'budget']
 
@@ -105,121 +131,353 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
     <div className="settings-section">
       <div className="settings-section-content" style={{ overflow: 'auto', maxHeight: '60vh' }}>
         <div className="ghsync-tabs">
-          <button onClick={() => setGhTab('config')} className={`ghsync-tab-btn${ghTab === 'config' ? ' active' : ''}`}>Configuration</button>
-          <button onClick={() => { setGhTab('history'); if (ghHistory.length === 0) onGhFetchHistory?.() }} className={`ghsync-tab-btn${ghTab === 'history' ? ' active' : ''}`}>History</button>
+          <button onClick={() => setGhTab('config')} className={`ghsync-tab-btn${ghTab === 'config' ? ' active' : ''}`}>
+            Configuration
+          </button>
+          <button
+            onClick={() => {
+              setGhTab('history')
+              if (ghHistory.length === 0) onGhFetchHistory?.()
+            }}
+            className={`ghsync-tab-btn${ghTab === 'history' ? ' active' : ''}`}
+          >
+            History
+          </button>
         </div>
 
         {ghTab === 'config' && (
           <div className="ghsync-field" style={{ gap: '1rem' }}>
             <div>
               <label className="ghsync-field-label">Token Security</label>
-              {!ghHasStoredToken && <p className="ghsync-field-hint">No token saved yet. Save one encrypted with a passphrase below.</p>}
+              {!ghHasStoredToken && (
+                <p className="ghsync-field-hint">No token saved yet. Save one encrypted with a passphrase below.</p>
+              )}
               {ghHasStoredToken && !ghTokenUnlocked && (
                 <>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input className="ghsync-field-input" style={{ flex: 1 }} type="password" value={ghUnlockPassphrase} onChange={e => setGhUnlockPassphrase(e.target.value)} placeholder="Passphrase to unlock token" onKeyDown={e => { if (e.key === 'Enter') handleGhUnlock() }} />
-                    <button className="ghsync-mini-btn" onClick={handleGhUnlock} style={{ minWidth: '80px' }}>Unlock</button>
+                    <input
+                      className="ghsync-field-input"
+                      style={{ flex: 1 }}
+                      type="password"
+                      value={ghUnlockPassphrase}
+                      onChange={e => setGhUnlockPassphrase(e.target.value)}
+                      placeholder="Passphrase to unlock token"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleGhUnlock()
+                      }}
+                    />
+                    <button className="ghsync-mini-btn" onClick={handleGhUnlock} style={{ minWidth: '80px' }}>
+                      Unlock
+                    </button>
                   </div>
-                  <p className="ghsync-locked-hint">Unlock your token to enable sync, test connection, and edit configuration.</p>
+                  <p className="ghsync-locked-hint">
+                    Unlock your token to enable sync, test connection, and edit configuration.
+                  </p>
                 </>
               )}
               {ghTokenUnlocked && (
                 <>
                   {!ghUnlockDismissed && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '0.4rem', padding: '0.35rem 0.65rem', fontSize: '0.85rem', color: 'var(--color-positive)' }}>
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        background: 'rgba(34,197,94,0.12)',
+                        border: '1px solid rgba(34,197,94,0.3)',
+                        borderRadius: '0.4rem',
+                        padding: '0.35rem 0.65rem',
+                        fontSize: '0.85rem',
+                        color: 'var(--color-positive)',
+                      }}
+                    >
                       <span>Token unlocked for this session</span>
-                      <button onClick={() => setGhUnlockDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-positive)', opacity: 0.7, padding: '0 0.15rem', fontSize: '1rem', lineHeight: 1 }} aria-label="Dismiss">&times;</button>
+                      <button
+                        onClick={() => setGhUnlockDismissed(true)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--color-positive)',
+                          opacity: 0.7,
+                          padding: '0 0.15rem',
+                          fontSize: '1rem',
+                          lineHeight: 1,
+                        }}
+                        aria-label="Dismiss"
+                      >
+                        &times;
+                      </button>
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    {!ghUsingLegacyToken && <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={onGhLockToken}>Lock</button>}
-                    {ghHasStoredToken && !ghShowTokenForm && <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={() => setGhShowTokenForm(true)}>Change token</button>}
+                    {!ghUsingLegacyToken && (
+                      <button
+                        className="ghsync-mini-btn ghsync-mini-btn--ghost"
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                        onClick={onGhLockToken}
+                      >
+                        Lock
+                      </button>
+                    )}
+                    {ghHasStoredToken && !ghShowTokenForm && (
+                      <button
+                        className="ghsync-mini-btn ghsync-mini-btn--ghost"
+                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                        onClick={() => setGhShowTokenForm(true)}
+                      >
+                        Change token
+                      </button>
+                    )}
                   </div>
                 </>
               )}
             </div>
 
             {ghSaveResult && (
-              <p className={ghSaveResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'}>{ghSaveResult.ok ? '✓' : '✗'} {ghSaveResult.message}</p>
+              <p className={ghSaveResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'}>
+                {ghSaveResult.ok ? '✓' : '✗'} {ghSaveResult.message}
+              </p>
             )}
 
             {(ghTokenUnlocked || !ghHasStoredToken) && (
               <>
-                {(!ghHasStoredToken || ghShowTokenForm) ? (
+                {!ghHasStoredToken || ghShowTokenForm ? (
                   <>
                     <div>
                       <label className="ghsync-field-label">{ghHasStoredToken ? 'Replace token' : 'New token'}</label>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input className="ghsync-field-input" style={{ flex: 1 }} type={ghShowToken ? 'text' : 'password'} value={ghTokenInput} onChange={e => setGhTokenInput(e.target.value)} placeholder="github_pat_..." autoComplete="off" />
-                        <button style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setGhShowToken(v => !v)}>{ghShowToken ? 'Hide' : 'Show'}</button>
+                        <input
+                          className="ghsync-field-input"
+                          style={{ flex: 1 }}
+                          type={ghShowToken ? 'text' : 'password'}
+                          value={ghTokenInput}
+                          onChange={e => setGhTokenInput(e.target.value)}
+                          placeholder="github_pat_..."
+                          autoComplete="off"
+                        />
+                        <button
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--accent)',
+                            cursor: 'pointer',
+                            fontSize: '0.85rem',
+                          }}
+                          onClick={() => setGhShowToken(v => !v)}
+                        >
+                          {ghShowToken ? 'Hide' : 'Show'}
+                        </button>
                       </div>
-                      <p className="ghsync-pat-hint">Create a fine-grained PAT at <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>github.com/settings/tokens</a> with Contents write access</p>
+                      <p className="ghsync-pat-hint">
+                        Create a fine-grained PAT at{' '}
+                        <a
+                          href="https://github.com/settings/tokens?type=beta"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                        >
+                          github.com/settings/tokens
+                        </a>{' '}
+                        with Contents write access
+                      </p>
                     </div>
                     <div>
                       <label className="ghsync-field-label">Passphrase for encryption</label>
-                      <input className="ghsync-field-input" style={{ width: '100%' }} type="password" value={ghPassphrase} onChange={e => setGhPassphrase(e.target.value)} placeholder="At least 8 characters" />
+                      <input
+                        className="ghsync-field-input"
+                        style={{ width: '100%' }}
+                        type="password"
+                        value={ghPassphrase}
+                        onChange={e => setGhPassphrase(e.target.value)}
+                        placeholder="At least 8 characters"
+                      />
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="ghsync-mini-btn" onClick={handleGhSaveToken} disabled={ghSavingToken || !ghTokenInput || !ghPassphrase}>{ghSavingToken ? 'Saving…' : 'Save Token'}</button>
+                      <button
+                        className="ghsync-mini-btn"
+                        onClick={handleGhSaveToken}
+                        disabled={ghSavingToken || !ghTokenInput || !ghPassphrase}
+                      >
+                        {ghSavingToken ? 'Saving…' : 'Save Token'}
+                      </button>
                       {ghHasStoredToken && (
-                        <button className="ghsync-mini-btn" style={{ background: 'transparent', color: 'var(--color-text-muted)' }} onClick={() => { setGhShowTokenForm(false); setGhTokenInput(''); setGhPassphrase('') }}>Cancel</button>
+                        <button
+                          className="ghsync-mini-btn"
+                          style={{ background: 'transparent', color: 'var(--color-text-muted)' }}
+                          onClick={() => {
+                            setGhShowTokenForm(false)
+                            setGhTokenInput('')
+                            setGhPassphrase('')
+                          }}
+                        >
+                          Cancel
+                        </button>
                       )}
                       {ghUsingLegacyToken && (
-                        <button className="ghsync-mini-btn" onClick={handleGhMigrateLegacy} disabled={ghSavingToken || !ghPassphrase}>Encrypt Legacy</button>
+                        <button
+                          className="ghsync-mini-btn"
+                          onClick={handleGhMigrateLegacy}
+                          disabled={ghSavingToken || !ghPassphrase}
+                        >
+                          Encrypt Legacy
+                        </button>
                       )}
                     </div>
                   </>
                 ) : ghTokenUnlocked ? null : (
-                  <button className="ghsync-mini-btn ghsync-mini-btn--ghost" onClick={() => setGhShowTokenForm(true)}>Change token</button>
+                  <button className="ghsync-mini-btn ghsync-mini-btn--ghost" onClick={() => setGhShowTokenForm(true)}>
+                    Change token
+                  </button>
                 )}
 
                 {ghConfig?.owner && ghConfig?.repo && !ghEditingRepo ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span style={{ fontSize: '0.8rem' }}>
                       <span style={{ color: 'var(--color-text-muted)', marginRight: '0.25rem' }}>Repo:</span>
-                      <strong style={{ color: 'var(--color-text)' }}>{ghConfig.owner}/{ghConfig.repo}</strong>
+                      <strong style={{ color: 'var(--color-text)' }}>
+                        {ghConfig.owner}/{ghConfig.repo}
+                      </strong>
                     </span>
-                    <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={() => setGhEditingRepo(true)}>Edit</button>
-                    <button className="ghsync-mini-btn ghsync-mini-btn--ghost" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }} onClick={handleGhTest} disabled={ghTesting || !ghTokenUnlocked}>{ghTesting ? 'Testing…' : 'Test'}</button>
-                    {ghTestResult?.ok && <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.55rem', borderRadius: '999px', background: 'rgba(34,197,94,0.15)', color: 'var(--color-positive)', fontWeight: 600 }}>Connected</span>}
+                    <button
+                      className="ghsync-mini-btn ghsync-mini-btn--ghost"
+                      style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                      onClick={() => setGhEditingRepo(true)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="ghsync-mini-btn ghsync-mini-btn--ghost"
+                      style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                      onClick={handleGhTest}
+                      disabled={ghTesting || !ghTokenUnlocked}
+                    >
+                      {ghTesting ? 'Testing…' : 'Test'}
+                    </button>
+                    {ghTestResult?.ok && (
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.15rem 0.55rem',
+                          borderRadius: '999px',
+                          background: 'rgba(34,197,94,0.15)',
+                          color: 'var(--color-positive)',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Connected
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="ghsync-field">
                       <label className="ghsync-field-label">Owner</label>
-                      <input className="ghsync-field-input" type="text" value={ghConfig?.owner || ''} onChange={e => { onGhUpdateConfig?.({ owner: e.target.value }); setGhTestResult(null); if (!ghEditingRepo) setGhEditingRepo(true) }} placeholder="your-github-username" />
+                      <input
+                        className="ghsync-field-input"
+                        type="text"
+                        value={ghConfig?.owner || ''}
+                        onChange={e => {
+                          onGhUpdateConfig?.({ owner: e.target.value })
+                          setGhTestResult(null)
+                          if (!ghEditingRepo) setGhEditingRepo(true)
+                        }}
+                        placeholder="your-github-username"
+                      />
                     </div>
                     <div className="ghsync-field">
                       <label className="ghsync-field-label">Repository</label>
-                      <input className="ghsync-field-input" type="text" value={ghConfig?.repo || ''} onChange={e => { onGhUpdateConfig?.({ repo: e.target.value }); setGhTestResult(null); if (!ghEditingRepo) setGhEditingRepo(true) }} placeholder="finance-backups" />
+                      <input
+                        className="ghsync-field-input"
+                        type="text"
+                        value={ghConfig?.repo || ''}
+                        onChange={e => {
+                          onGhUpdateConfig?.({ repo: e.target.value })
+                          setGhTestResult(null)
+                          if (!ghEditingRepo) setGhEditingRepo(true)
+                        }}
+                        placeholder="finance-backups"
+                      />
                     </div>
                     {ghConfig?.owner && ghConfig?.repo && (
-                      <button className="ghsync-mini-btn" style={{ background: 'transparent', color: 'var(--color-text-muted)', gridColumn: 'span 2', justifySelf: 'start' }} onClick={() => setGhEditingRepo(false)}>Cancel</button>
+                      <button
+                        className="ghsync-mini-btn"
+                        style={{
+                          background: 'transparent',
+                          color: 'var(--color-text-muted)',
+                          gridColumn: 'span 2',
+                          justifySelf: 'start',
+                        }}
+                        onClick={() => setGhEditingRepo(false)}
+                      >
+                        Cancel
+                      </button>
                     )}
                   </div>
                 )}
 
                 <label className="ghsync-autosync-label" style={{ fontSize: '0.8rem' }}>
-                  <input type="checkbox" checked={ghConfig?.autoSync || false} onChange={e => onGhUpdateConfig?.({ autoSync: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={ghConfig?.autoSync || false}
+                    onChange={e => onGhUpdateConfig?.({ autoSync: e.target.checked })}
+                  />
                   Auto-sync (commits ~60 seconds after any change)
                 </label>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '0.5rem',
+                  }}
+                >
                   <div className="ghsync-status-bar" style={{ margin: 0, flex: 1, fontSize: '0.8rem' }}>
-                    {ghSyncStatus === 'syncing' && <><span className="ghsync-spinner" />Syncing…</>}
-                    {ghSyncStatus === 'success' && ghLastSyncAt && <>
-                      <span style={{ color: 'var(--color-positive)', marginRight: '0.5rem' }}>●</span>
-                      Last synced {formatRelative(ghLastSyncAt)} · {formatDate(ghLastSyncAt)}
-                      {hasPendingChanges && <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', color: 'var(--color-warning)', fontWeight: 600 }}>unsaved changes</span>}
-                    </>}
-                    {ghSyncStatus === 'error' && <>
-                      <span style={{ color: 'var(--color-negative)', marginRight: '0.5rem' }}>●</span>
-                      Sync failed: {ghLastError}
-                    </>}
-                    {ghSyncStatus === 'idle' && <>
-                      <span style={{ color: 'var(--color-text-muted)', marginRight: '0.5rem' }}>●</span>
-                      {ghConfig?.owner && ghConfig?.repo ? (hasPendingChanges ? 'Unsaved changes — sync when ready' : (ghHasStoredToken ? (ghTokenUnlocked ? 'Ready to sync' : 'Token locked') : 'Token not set up')) : 'Missing configuration'}
-                    </>}
+                    {ghSyncStatus === 'syncing' && (
+                      <>
+                        <span className="ghsync-spinner" />
+                        Syncing…
+                      </>
+                    )}
+                    {ghSyncStatus === 'success' && ghLastSyncAt && (
+                      <>
+                        <span style={{ color: 'var(--color-positive)', marginRight: '0.5rem' }}>●</span>
+                        Last synced {formatRelative(ghLastSyncAt)} · {formatDate(ghLastSyncAt)}
+                        {hasPendingChanges && (
+                          <span
+                            style={{
+                              marginLeft: '0.5rem',
+                              fontSize: '0.72rem',
+                              color: 'var(--color-warning)',
+                              fontWeight: 600,
+                            }}
+                          >
+                            unsaved changes
+                          </span>
+                        )}
+                      </>
+                    )}
+                    {ghSyncStatus === 'error' && (
+                      <>
+                        <span style={{ color: 'var(--color-negative)', marginRight: '0.5rem' }}>●</span>
+                        Sync failed: {ghLastError}
+                      </>
+                    )}
+                    {ghSyncStatus === 'idle' && (
+                      <>
+                        <span style={{ color: 'var(--color-text-muted)', marginRight: '0.5rem' }}>●</span>
+                        {ghConfig?.owner && ghConfig?.repo
+                          ? hasPendingChanges
+                            ? 'Unsaved changes — sync when ready'
+                            : ghHasStoredToken
+                              ? ghTokenUnlocked
+                                ? 'Ready to sync'
+                                : 'Token locked'
+                              : 'Token not set up'
+                          : 'Missing configuration'}
+                      </>
+                    )}
                   </div>
                   {hasPendingChanges && ghSyncStatus !== 'syncing' && <span className="ghsync-dirty-dot" />}
                   <button
@@ -234,14 +492,22 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                 </div>
 
                 {ghSyncProgress && ghSyncProgress.total === 0 && (
-                  <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>✓ Already up to date</p>
+                  <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>
+                    ✓ Already up to date
+                  </p>
                 )}
                 {ghSyncProgress && ghSyncProgress.total > 0 && (
-                  <div className="ghsync-progress" role="status" aria-label="Sync progress" style={{ marginTop: '0.5rem' }}>
+                  <div
+                    className="ghsync-progress"
+                    role="status"
+                    aria-label="Sync progress"
+                    style={{ marginTop: '0.5rem' }}
+                  >
                     <ul className="ghsync-progress-list" aria-live="polite">
                       {(ghSyncProgress.domains || ALL_DOMAINS).map((domain, idx) => {
                         const isError = ghSyncProgress.errors.some(e => e.startsWith(DOMAIN_LABELS[domain]))
-                        const isDone = !isError && ghSyncProgress.current !== DOMAIN_LABELS[domain] && idx < ghSyncProgress.completed
+                        const isDone =
+                          !isError && ghSyncProgress.current !== DOMAIN_LABELS[domain] && idx < ghSyncProgress.completed
                         const isActive = ghSyncProgress.current === DOMAIN_LABELS[domain]
                         const stateClass = isError ? 'error' : isDone ? 'done' : isActive ? 'active' : 'pending'
                         return (
@@ -255,26 +521,40 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                       })}
                     </ul>
                     {ghSyncProgress.completed === ghSyncProgress.total && ghSyncProgress.errors.length === 0 && (
-                      <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>✓ All synced</p>
+                      <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>
+                        ✓ All synced
+                      </p>
                     )}
                     {ghSyncProgress.errors.length > 0 && (
                       <div style={{ marginTop: '0.5rem' }}>
                         {ghSyncProgress.errors.map((err, i) => (
-                          <p key={i} className="ghsync-result-error" style={{ fontSize: '0.8rem', margin: '0.15rem 0' }}>✕ {err}</p>
+                          <p
+                            key={i}
+                            className="ghsync-result-error"
+                            style={{ fontSize: '0.8rem', margin: '0.15rem 0' }}
+                          >
+                            ✕ {err}
+                          </p>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
                 {!ghSyncProgress && ghSyncSuccess && (
-                  <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>✓ Sync successful</p>
+                  <p className="ghsync-result-success" style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>
+                    ✓ Sync successful
+                  </p>
                 )}
 
-                {ghTestResult && !ghTestResult.ok && (
-                  <p className="ghsync-result-error">✗ {ghTestResult.message}</p>
-                )}
+                {ghTestResult && !ghTestResult.ok && <p className="ghsync-result-error">✗ {ghTestResult.message}</p>}
                 {ghTestResult?.warnings?.length ? (
-                  <div className="ghsync-warning-box">{ghTestResult.warnings.map(w => <p key={w} className="ghsync-warning-item">⚠ {w}</p>)}</div>
+                  <div className="ghsync-warning-box">
+                    {ghTestResult.warnings.map(w => (
+                      <p key={w} className="ghsync-warning-item">
+                        ⚠ {w}
+                      </p>
+                    ))}
+                  </div>
                 ) : null}
               </>
             )}
@@ -283,12 +563,26 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
 
         {ghTab === 'history' && (
           <div>
-            <button className="ghsync-mini-btn" onClick={handleGhRestoreLatest} disabled={!ghIsConfigured || ghRestoring} style={{ marginBottom: '1rem' }}>{ghRestoring ? 'Restoring…' : 'Restore Latest'}</button>
+            <button
+              className="ghsync-mini-btn"
+              onClick={handleGhRestoreLatest}
+              disabled={!ghIsConfigured || ghRestoring}
+              style={{ marginBottom: '1rem' }}
+            >
+              {ghRestoring ? 'Restoring…' : 'Restore Latest'}
+            </button>
             {ghRestoreResult && (
-              <p className={ghRestoreResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'} style={{ marginBottom: '1rem' }}>{ghRestoreResult.ok ? '✓' : '✗'} {ghRestoreResult.message}</p>
+              <p
+                className={ghRestoreResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'}
+                style={{ marginBottom: '1rem' }}
+              >
+                {ghRestoreResult.ok ? '✓' : '✗'} {ghRestoreResult.message}
+              </p>
             )}
             {!ghIsConfigured ? (
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Connect and unlock token to view history.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                Connect and unlock token to view history.
+              </p>
             ) : ghHistory.length === 0 ? (
               <p className="ghsync-field-hint">No commits yet for this file.</p>
             ) : (
@@ -299,7 +593,12 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                       <span className="ghsync-commit-date">{formatRelative(c.date)}</span>
                       <span className="ghsync-commit-message">{c.message}</span>
                     </a>
-                    <button className="ghsync-mini-btn ghsync-commit-restore-btn" onClick={() => handleGhRestoreCommit(c.sha)} disabled={ghRestoring || ghRestoringCommitSha === c.sha} style={{ minWidth: '70px' }}>
+                    <button
+                      className="ghsync-mini-btn ghsync-commit-restore-btn"
+                      onClick={() => handleGhRestoreCommit(c.sha)}
+                      disabled={ghRestoring || ghRestoringCommitSha === c.sha}
+                      style={{ minWidth: '70px' }}
+                    >
                       {ghRestoringCommitSha === c.sha ? 'Restoring…' : 'Restore'}
                     </button>
                   </div>

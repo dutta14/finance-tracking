@@ -11,10 +11,18 @@ beforeEach(() => {
 
 describe('useGwGoals localStorage migration', () => {
   it('loads from gw-goals key', () => {
-    const goals: GwGoal[] = [{
-      id: 1, fiGoalId: 100, label: 'House', createdAt: '2025-01-01',
-      disburseAge: 40, disburseAmount: 50000, growthRate: 7, currentSavings: 10000,
-    }]
+    const goals: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 100,
+        label: 'House',
+        createdAt: '2025-01-01',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 10000,
+      },
+    ]
     localStorage.setItem('gw-goals', JSON.stringify(goals))
     const raw = JSON.parse(localStorage.getItem('gw-goals')!)
     expect(raw).toHaveLength(1)
@@ -22,8 +30,18 @@ describe('useGwGoals localStorage migration', () => {
   })
 
   it('legacy gw-plans key holds old format with fiPlanId', () => {
-    const legacy = [{ id: 1, fiPlanId: 100, label: 'Car', createdAt: '2025-01-01',
-      disburseAge: 35, disburseAmount: 30000, growthRate: 5, currentSavings: 5000 }]
+    const legacy = [
+      {
+        id: 1,
+        fiPlanId: 100,
+        label: 'Car',
+        createdAt: '2025-01-01',
+        disburseAge: 35,
+        disburseAmount: 30000,
+        growthRate: 5,
+        currentSavings: 5000,
+      },
+    ]
     localStorage.setItem('gw-plans', JSON.stringify(legacy))
     // The hook's load() would migrate fiPlanId → fiGoalId and move to gw-goals
     expect(localStorage.getItem('gw-plans')).toBeTruthy()
@@ -35,7 +53,10 @@ describe('GwGoal field migration logic', () => {
   const migrateGwFields = (items: any[]): GwGoal[] =>
     items.map(item => {
       const migrated = { ...item }
-      if ('fiPlanId' in migrated) { migrated.fiGoalId = migrated.fiPlanId; delete migrated.fiPlanId }
+      if ('fiPlanId' in migrated) {
+        migrated.fiGoalId = migrated.fiPlanId
+        delete migrated.fiPlanId
+      }
       return migrated as GwGoal
     })
 

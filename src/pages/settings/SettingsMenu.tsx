@@ -1,6 +1,14 @@
 import { FC, useState, useEffect } from 'react'
 import { Profile } from '../../hooks/useProfile'
-import { GitHubSyncConfig, SyncStatus, SyncDomain, SyncProgress, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
+import {
+  GitHubSyncConfig,
+  SyncStatus,
+  SyncDomain,
+  SyncProgress,
+  CommitEntry,
+  ConnectionTestResult,
+  RestoreResult,
+} from '../../hooks/useGitHubSync'
 import SettingsModal from './SettingsModal'
 import type { SettingsSection } from './types'
 
@@ -51,7 +59,22 @@ interface SettingsMenuProps {
 
 const defaultProfile: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
-const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profile = defaultProfile, onUpdateProfile = () => {}, fiTheme = 'blue', onFiThemeChange = () => {}, gwTheme = 'green', onGwThemeChange = () => {}, homeTheme = 'blue', onHomeThemeChange = () => {}, externalOpen, externalSection, onExternalClose, ...rest }) => {
+const SettingsMenu: FC<SettingsMenuProps> = ({
+  darkMode,
+  onToggleDarkMode,
+  profile = defaultProfile,
+  onUpdateProfile = () => {},
+  fiTheme = 'blue',
+  onFiThemeChange = () => {},
+  gwTheme = 'green',
+  onGwThemeChange = () => {},
+  homeTheme = 'blue',
+  onHomeThemeChange = () => {},
+  externalOpen,
+  externalSection,
+  onExternalClose,
+  ...rest
+}) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [initialSection, setInitialSection] = useState<SettingsSection>('profile')
 
@@ -73,10 +96,19 @@ const SettingsMenu: FC<SettingsMenuProps> = ({ darkMode, onToggleDarkMode, profi
         className="sidebar-footer-btn"
         aria-label="Settings"
         aria-haspopup="dialog"
-        onClick={() => { setInitialSection('profile'); setSettingsModalOpen(true) }}
+        onClick={() => {
+          setInitialSection('profile')
+          setSettingsModalOpen(true)
+        }}
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
-          <path d="M8.3 4.5L8.2 2.2h3.6l-.1 2.3 2.3 1.3 1.9-1.3 1.8 3.2-2 1-.0 2.6 2 1-1.8 3.2-1.9-1.3-2.3 1.3.1 2.3H8.2l.1-2.3-2.3-1.3-1.8 1.3-1.8-3.2 2-1-.0-2.6-2-1 1.8-3.2 1.8 1.3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M8.3 4.5L8.2 2.2h3.6l-.1 2.3 2.3 1.3 1.9-1.3 1.8 3.2-2 1-.0 2.6 2 1-1.8 3.2-1.9-1.3-2.3 1.3.1 2.3H8.2l.1-2.3-2.3-1.3-1.8 1.3-1.8-3.2 2-1-.0-2.6-2-1 1.8-3.2 1.8 1.3z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
         </svg>
         <span className="sidebar-footer-label">Settings</span>

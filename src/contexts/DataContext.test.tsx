@@ -132,11 +132,7 @@ describe('DataContext', () => {
       </DataProvider>,
     )
 
-    expect(JSON.parse(screen.getByTestId('allMonths').textContent!)).toEqual([
-      '2024-01',
-      '2024-02',
-      '2024-03',
-    ])
+    expect(JSON.parse(screen.getByTestId('allMonths').textContent!)).toEqual(['2024-01', '2024-02', '2024-03'])
   })
 
   it('refreshes when a storage event fires from another tab (accounts)', () => {
@@ -152,9 +148,7 @@ describe('DataContext', () => {
     localStorage.setItem('data-accounts', JSON.stringify(newAccounts))
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent('storage', { key: 'data-accounts', newValue: JSON.stringify(newAccounts) }),
-      )
+      window.dispatchEvent(new StorageEvent('storage', { key: 'data-accounts', newValue: JSON.stringify(newAccounts) }))
     })
 
     expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual(newAccounts)
@@ -171,9 +165,7 @@ describe('DataContext', () => {
     localStorage.setItem('data-balances', JSON.stringify(newBalances))
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent('storage', { key: 'data-balances', newValue: JSON.stringify(newBalances) }),
-      )
+      window.dispatchEvent(new StorageEvent('storage', { key: 'data-balances', newValue: JSON.stringify(newBalances) }))
     })
 
     expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual(newBalances)
@@ -237,9 +229,7 @@ describe('DataContext', () => {
     )
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent('storage', { key: 'unrelated-key', newValue: 'whatever' }),
-      )
+      window.dispatchEvent(new StorageEvent('storage', { key: 'unrelated-key', newValue: 'whatever' }))
     })
 
     // accounts should remain unchanged

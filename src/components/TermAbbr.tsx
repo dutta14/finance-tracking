@@ -3,7 +3,7 @@ import '../styles/TermAbbr.css'
 
 const TERMS: Record<string, string> = {
   FI: 'Financial Independence — the portfolio size needed so investment returns cover your living expenses.',
-  GW: 'Generational Wealth — assets earmarked for legacy goals like children\'s education or inheritance.',
+  GW: "Generational Wealth — assets earmarked for legacy goals like children's education or inheritance.",
 }
 
 interface TermAbbrProps {

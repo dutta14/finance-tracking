@@ -29,17 +29,21 @@ describe('buildDriveTree', () => {
     }
     localStorage.setItem('budget-store', JSON.stringify(store))
     // Need budget-config too to avoid migration side effects
-    localStorage.setItem('budget-config', JSON.stringify({
-      version: 1, years: [2024, 2025],
-      categoryGroups: [
-        { id: 'others', name: 'Others', categories: [] },
-        { id: 'removed', name: 'Remove from Budget', categories: [] },
-      ],
-    }))
+    localStorage.setItem(
+      'budget-config',
+      JSON.stringify({
+        version: 1,
+        years: [2024, 2025],
+        categoryGroups: [
+          { id: 'others', name: 'Others', categories: [] },
+          { id: 'removed', name: 'Remove from Budget', categories: [] },
+        ],
+      }),
+    )
 
     const tree = buildDriveTree()
     const budget = tree.folders.find(f => f.slug === 'budget')!
-    
+
     // Should have year folders sorted descending
     expect(budget.folders.length).toBeGreaterThanOrEqual(2)
     expect(budget.folders[0].name).toBe('2025')
@@ -68,10 +72,16 @@ describe('buildDriveTree', () => {
     const taxStore = {
       years: {
         2024: {
-          items: [{
-            id: '1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [],
-            files: [{ id: 'f1', name: 'w2.pdf', content: 'data', ext: 'pdf', uploadedAt: '2025-01-01' }],
-          }],
+          items: [
+            {
+              id: '1',
+              label: 'W-2',
+              owner: 'primary',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'w2.pdf', content: 'data', ext: 'pdf', uploadedAt: '2025-01-01' }],
+            },
+          ],
         },
       },
     }

@@ -19,9 +19,16 @@ describe('useTaxStore', () => {
     })
 
     it('loads existing data from localStorage', () => {
-      localStorage.setItem('tax-store', JSON.stringify({
-        years: { 2024: { items: [{ id: '1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [], files: [] }] } },
-      }))
+      localStorage.setItem(
+        'tax-store',
+        JSON.stringify({
+          years: {
+            2024: {
+              items: [{ id: '1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [], files: [] }],
+            },
+          },
+        }),
+      )
       const { result } = renderHook(() => useTaxStore())
       expect(result.current.allYears).toEqual([2024])
       expect(result.current.getYear(2024).items).toHaveLength(1)
@@ -114,7 +121,11 @@ describe('useTaxStore', () => {
       })
       act(() => {
         result.current.addFileToItem(2025, itemId!, {
-          id: 'f1', name: 'w2.pdf', content: 'base64data', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'f1',
+          name: 'w2.pdf',
+          content: 'base64data',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       const files = result.current.getYear(2025).items[0].files
@@ -135,7 +146,11 @@ describe('useTaxStore', () => {
       })
       act(() => {
         result.current.addFileToItem(2025, itemId!, {
-          id: 'f1', name: 'w2.pdf', content: 'data', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'f1',
+          name: 'w2.pdf',
+          content: 'data',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       act(() => result.current.removeFileFromItem(2025, itemId!, 'f1'))
@@ -153,7 +168,11 @@ describe('useTaxStore', () => {
       })
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'f-async', name: 'w2.pdf', content: 'base64-async-data', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'f-async',
+          name: 'w2.pdf',
+          content: 'base64-async-data',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       const files = result.current.getYear(2025).items[0].files
@@ -173,7 +192,11 @@ describe('useTaxStore', () => {
       })
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'f-no-content', name: 'w2.pdf', content: undefined, ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'f-no-content',
+          name: 'w2.pdf',
+          content: undefined,
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       const files = result.current.getYear(2025).items[0].files
@@ -192,7 +215,11 @@ describe('useTaxStore', () => {
       })
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'f-meta', name: 'doc.pdf', content: 'secret-base64', ext: 'pdf', uploadedAt: '2025-06-01',
+          id: 'f-meta',
+          name: 'doc.pdf',
+          content: 'secret-base64',
+          ext: 'pdf',
+          uploadedAt: '2025-06-01',
         })
       })
       const stored = JSON.parse(localStorage.getItem('tax-store')!)
@@ -206,16 +233,25 @@ describe('useTaxStore', () => {
   describe('migration', () => {
     it('migrates inline content to IndexedDB on load', async () => {
       // Seed localStorage with old-style data (content inline)
-      localStorage.setItem('tax-store', JSON.stringify({
-        years: {
-          2025: {
-            items: [{
-              id: 'item1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [],
-              files: [{ id: 'mf1', name: 'w2.pdf', content: 'migrate-me', ext: 'pdf', uploadedAt: '2025-01-01' }],
-            }],
+      localStorage.setItem(
+        'tax-store',
+        JSON.stringify({
+          years: {
+            2025: {
+              items: [
+                {
+                  id: 'item1',
+                  label: 'W-2',
+                  owner: 'primary',
+                  category: 'paystub',
+                  accountIds: [],
+                  files: [{ id: 'mf1', name: 'w2.pdf', content: 'migrate-me', ext: 'pdf', uploadedAt: '2025-01-01' }],
+                },
+              ],
+            },
           },
-        },
-      }))
+        }),
+      )
 
       renderHook(() => useTaxStore())
 
@@ -234,25 +270,42 @@ describe('useTaxStore', () => {
     })
 
     it('migrates multiple files across multiple years', async () => {
-      localStorage.setItem('tax-store', JSON.stringify({
-        years: {
-          2024: {
-            items: [{
-              id: 'i1', label: '1099', owner: 'primary', category: 'account', accountIds: [],
-              files: [{ id: 'mf-2024', name: '1099.pdf', content: 'old-2024', ext: 'pdf', uploadedAt: '2024-04-01' }],
-            }],
-          },
-          2025: {
-            items: [{
-              id: 'i2', label: 'W-2', owner: 'partner', category: 'paystub', accountIds: [],
-              files: [
-                { id: 'mf-2025a', name: 'w2.pdf', content: 'old-2025a', ext: 'pdf', uploadedAt: '2025-01-01' },
-                { id: 'mf-2025b', name: 'k1.pdf', content: 'old-2025b', ext: 'pdf', uploadedAt: '2025-02-01' },
+      localStorage.setItem(
+        'tax-store',
+        JSON.stringify({
+          years: {
+            2024: {
+              items: [
+                {
+                  id: 'i1',
+                  label: '1099',
+                  owner: 'primary',
+                  category: 'account',
+                  accountIds: [],
+                  files: [
+                    { id: 'mf-2024', name: '1099.pdf', content: 'old-2024', ext: 'pdf', uploadedAt: '2024-04-01' },
+                  ],
+                },
               ],
-            }],
+            },
+            2025: {
+              items: [
+                {
+                  id: 'i2',
+                  label: 'W-2',
+                  owner: 'partner',
+                  category: 'paystub',
+                  accountIds: [],
+                  files: [
+                    { id: 'mf-2025a', name: 'w2.pdf', content: 'old-2025a', ext: 'pdf', uploadedAt: '2025-01-01' },
+                    { id: 'mf-2025b', name: 'k1.pdf', content: 'old-2025b', ext: 'pdf', uploadedAt: '2025-02-01' },
+                  ],
+                },
+              ],
+            },
           },
-        },
-      }))
+        }),
+      )
 
       renderHook(() => useTaxStore())
       await act(async () => {
@@ -266,26 +319,32 @@ describe('useTaxStore', () => {
 
       // All content should be stripped from localStorage
       const stored = JSON.parse(localStorage.getItem('tax-store')!)
-      const allFiles = [
-        ...stored.years['2024'].items[0].files,
-        ...stored.years['2025'].items[0].files,
-      ]
+      const allFiles = [...stored.years['2024'].items[0].files, ...stored.years['2025'].items[0].files]
       for (const f of allFiles) {
         expect(f.content).toBeUndefined()
       }
     })
 
     it('skips migration when no files have inline content', async () => {
-      localStorage.setItem('tax-store', JSON.stringify({
-        years: {
-          2025: {
-            items: [{
-              id: 'i1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [],
-              files: [{ id: 'already-migrated', name: 'w2.pdf', ext: 'pdf', uploadedAt: '2025-01-01' }],
-            }],
+      localStorage.setItem(
+        'tax-store',
+        JSON.stringify({
+          years: {
+            2025: {
+              items: [
+                {
+                  id: 'i1',
+                  label: 'W-2',
+                  owner: 'primary',
+                  category: 'paystub',
+                  accountIds: [],
+                  files: [{ id: 'already-migrated', name: 'w2.pdf', ext: 'pdf', uploadedAt: '2025-01-01' }],
+                },
+              ],
+            },
           },
-        },
-      }))
+        }),
+      )
 
       renderHook(() => useTaxStore())
       await act(async () => {
@@ -308,7 +367,11 @@ describe('useTaxStore', () => {
       // Store via async path so content is in IndexedDB
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'idb-cleanup', name: 'w2.pdf', content: 'cleanup-data', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'idb-cleanup',
+          name: 'w2.pdf',
+          content: 'cleanup-data',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       // Verify content is in IndexedDB
@@ -346,12 +409,20 @@ describe('useTaxStore', () => {
       // Add two files via async so they land in IndexedDB
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'year-f1', name: 'w2.pdf', content: 'year-data-1', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'year-f1',
+          name: 'w2.pdf',
+          content: 'year-data-1',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'year-f2', name: '1099.pdf', content: 'year-data-2', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'year-f2',
+          name: '1099.pdf',
+          content: 'year-data-2',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       // Confirm both are in IndexedDB
@@ -381,12 +452,20 @@ describe('useTaxStore', () => {
       })
       await act(async () => {
         await result.current.addFileToItemAsync(2025, id2025!, {
-          id: 'del-year-f', name: 'w2.pdf', content: 'del-me', ext: 'pdf', uploadedAt: '2025-01-15',
+          id: 'del-year-f',
+          name: 'w2.pdf',
+          content: 'del-me',
+          ext: 'pdf',
+          uploadedAt: '2025-01-15',
         })
       })
       await act(async () => {
         await result.current.addFileToItemAsync(2024, id2024!, {
-          id: 'keep-year-f', name: '1099.pdf', content: 'keep-me', ext: 'pdf', uploadedAt: '2024-01-15',
+          id: 'keep-year-f',
+          name: '1099.pdf',
+          content: 'keep-me',
+          ext: 'pdf',
+          uploadedAt: '2024-01-15',
         })
       })
 
@@ -430,9 +509,7 @@ describe('useTaxStore', () => {
       const { result } = renderHook(() => useTaxStore())
       act(() => result.current.addItem(2025, 'Existing', 'primary', 'custom'))
       act(() => {
-        result.current.createYearWithDefaults(2025, [
-          { label: 'New', owner: 'primary', category: 'paystub' },
-        ])
+        result.current.createYearWithDefaults(2025, [{ label: 'New', owner: 'primary', category: 'paystub' }])
       })
       expect(result.current.getYear(2025).items[0].label).toBe('Existing')
     })

@@ -73,19 +73,9 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
   }
 }
 
-function renderCard(
-  goalOverrides: Partial<FinancialGoal> = {},
-  props: Record<string, any> = {},
-) {
+function renderCard(goalOverrides: Partial<FinancialGoal> = {}, props: Record<string, any> = {}) {
   const goal = makeGoal(goalOverrides)
-  return render(
-    <GoalDetailedCard
-      goal={goal}
-      profileBirthday="1990-01-15"
-      condensed={false}
-      {...props}
-    />,
-  )
+  return render(<GoalDetailedCard goal={goal} profileBirthday="1990-01-15" condensed={false} {...props} />)
 }
 
 beforeEach(() => {

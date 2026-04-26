@@ -36,7 +36,8 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
   const excess = remainingDelta.map((d, i) => ({ idx: i, amount: Math.max(0, -d) })).filter(g => g.amount > 0.01)
   const deficit = remainingDelta.map((d, i) => ({ idx: i, amount: Math.max(0, d) })).filter(g => g.amount > 0.01)
 
-  let ei = 0, di = 0
+  let ei = 0,
+    di = 0
   const exCopy = excess.map(e => ({ ...e }))
   const defCopy = deficit.map(d => ({ ...d }))
   while (ei < exCopy.length && di < defCopy.length) {
@@ -60,16 +61,23 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
     <div className="alloc-rebal-panel">
       <div className="alloc-rebal-header">
         <span className="alloc-ratio-builder-label">Rebalance</span>
-        <button className="alloc-goal-cancel-btn" onClick={onClose}>Close</button>
+        <button className="alloc-goal-cancel-btn" onClick={onClose}>
+          Close
+        </button>
       </div>
 
       <div className="alloc-rebal-field">
         <label className="alloc-goal-field-label">Adding new money?</label>
         <div className="alloc-rebal-input-wrap">
           <span className="alloc-rebal-dollar">$</span>
-          <input type="number" className="alloc-goal-field-input alloc-rebal-money-input"
-            value={newMoney || ''} onChange={e => setNewMoney(Math.max(0, Number(e.target.value)))}
-            placeholder="0" min={0} />
+          <input
+            type="number"
+            className="alloc-goal-field-input alloc-rebal-money-input"
+            value={newMoney || ''}
+            onChange={e => setNewMoney(Math.max(0, Number(e.target.value)))}
+            placeholder="0"
+            min={0}
+          />
         </div>
       </div>
 
@@ -90,8 +98,11 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
               </span>
               <span className="alloc-rebal-cell">{formatCurrency(actualValues[i])}</span>
               <span className="alloc-rebal-cell">{formatCurrency(targetAmounts[i])}</span>
-              <span className={`alloc-rebal-cell alloc-rebal-delta${delta > 0.01 ? ' positive' : delta < -0.01 ? ' negative' : ' zero'}`}>
-                {delta > 0 ? '+' : ''}{formatCurrency(delta)}
+              <span
+                className={`alloc-rebal-cell alloc-rebal-delta${delta > 0.01 ? ' positive' : delta < -0.01 ? ' negative' : ' zero'}`}
+              >
+                {delta > 0 ? '+' : ''}
+                {formatCurrency(delta)}
               </span>
             </div>
           )
@@ -100,7 +111,9 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
           <span className="alloc-rebal-cell alloc-rebal-cell-name">Total</span>
           <span className="alloc-rebal-cell">{formatCurrency(currentTotal)}</span>
           <span className="alloc-rebal-cell">{formatCurrency(totalAfterAdd)}</span>
-          <span className="alloc-rebal-cell">{newMoneyAvailable > 0 ? `+${formatCurrency(newMoneyAvailable)}` : '—'}</span>
+          <span className="alloc-rebal-cell">
+            {newMoneyAvailable > 0 ? `+${formatCurrency(newMoneyAvailable)}` : '—'}
+          </span>
         </div>
       </div>
 
@@ -111,12 +124,16 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
           {newMoneyAvailable > 0 && newMoneyAlloc.some(a => a > 0.01) && (
             <div className="alloc-rebal-action-group">
               <div className="alloc-rebal-action-heading">Allocate new money</div>
-              {newMoneyAlloc.map((amt, i) => amt > 0.01 ? (
-                <div key={i} className="alloc-rebal-action-item alloc-rebal-action-add">
-                  <span className="alloc-rebal-action-icon">＋</span>
-                  <span>Put <strong>{formatCurrency(amt)}</strong> into <strong>{groups[i].label}</strong></span>
-                </div>
-              ) : null)}
+              {newMoneyAlloc.map((amt, i) =>
+                amt > 0.01 ? (
+                  <div key={i} className="alloc-rebal-action-item alloc-rebal-action-add">
+                    <span className="alloc-rebal-action-icon">＋</span>
+                    <span>
+                      Put <strong>{formatCurrency(amt)}</strong> into <strong>{groups[i].label}</strong>
+                    </span>
+                  </div>
+                ) : null,
+              )}
             </div>
           )}
 
@@ -126,7 +143,10 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
               {transfers.map((t, i) => (
                 <div key={i} className="alloc-rebal-action-item alloc-rebal-action-move">
                   <span className="alloc-rebal-action-icon">↻</span>
-                  <span>Move <strong>{formatCurrency(t.amount)}</strong> from <strong>{t.from}</strong> → <strong>{t.to}</strong></span>
+                  <span>
+                    Move <strong>{formatCurrency(t.amount)}</strong> from <strong>{t.from}</strong> →{' '}
+                    <strong>{t.to}</strong>
+                  </span>
                 </div>
               ))}
             </div>
@@ -134,9 +154,7 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
         </div>
       )}
 
-      {!hasAnyAction && (
-        <div className="alloc-rebal-on-track">Your allocation is on track with the goal.</div>
-      )}
+      {!hasAnyAction && <div className="alloc-rebal-on-track">Your allocation is on track with the goal.</div>}
     </div>
   )
 }

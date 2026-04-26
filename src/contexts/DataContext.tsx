@@ -20,20 +20,25 @@ const DataContext = createContext<DataContextValue>({
 export const useData = () => useContext(DataContext)
 
 function loadAccounts(): Account[] {
-  try { return JSON.parse(localStorage.getItem('data-accounts') || '[]') } catch { return [] }
+  try {
+    return JSON.parse(localStorage.getItem('data-accounts') || '[]')
+  } catch {
+    return []
+  }
 }
 function loadBalances(): BalanceEntry[] {
-  try { return JSON.parse(localStorage.getItem('data-balances') || '[]') } catch { return [] }
+  try {
+    return JSON.parse(localStorage.getItem('data-balances') || '[]')
+  } catch {
+    return []
+  }
 }
 
 export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [accounts, setAccountsState] = useState<Account[]>(loadAccounts)
   const [balances, setBalancesState] = useState<BalanceEntry[]>(loadBalances)
 
-  const allMonths = useMemo(
-    () => [...new Set(balances.map(b => b.month))].sort(),
-    [balances]
-  )
+  const allMonths = useMemo(() => [...new Set(balances.map(b => b.month))].sort(), [balances])
 
   const setAccounts = useCallback((updated: Account[]) => {
     setAccountsState(updated)

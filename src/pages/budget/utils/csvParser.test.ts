@@ -1,12 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  parseCSV,
-  parseCSVLine,
-  splitCSVRows,
-  monthKeyFromDate,
-  formatMonthKey,
-  shortMonthName,
-} from './csvParser'
+import { parseCSV, parseCSVLine, splitCSVRows, monthKeyFromDate, formatMonthKey, shortMonthName } from './csvParser'
 
 describe('parseCSVLine', () => {
   it('splits a simple comma-separated line', () => {

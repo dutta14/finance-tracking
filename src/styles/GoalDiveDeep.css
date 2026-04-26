@@ -50,7 +50,9 @@
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   border-radius: var(--radius);
   font-family: inherit;
 }
@@ -112,7 +114,9 @@ body.dark .btn-dive-deep.active {
   cursor: pointer;
   color: var(--color-text-heading);
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .projection-interval-btn:last-child {
@@ -138,7 +142,9 @@ body.dark .btn-dive-deep.active {
   cursor: pointer;
   color: var(--color-text-heading);
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   white-space: nowrap;
 }
 
@@ -168,7 +174,7 @@ body.dark .projection-chart-wrapper {
   border-radius: var(--radius);
   padding: 0.6rem 0.85rem;
   font-size: var(--fs-md);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   min-width: 180px;
 }
 

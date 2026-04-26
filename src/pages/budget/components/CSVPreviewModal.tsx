@@ -39,14 +39,16 @@ const CSVPreviewModal: FC<CSVPreviewModalProps> = ({ csv, monthKey, onConfirm, o
     const kept = headers.map((_, i) => i).filter(i => !excludedCols.has(i))
     const newLines = lines.map(line => {
       const cols = parseCSVLine(line)
-      return kept.map(i => {
-        const val = cols[i] ?? ''
-        // Re-quote if the value contains comma, quote, or newline
-        if (val.includes(',') || val.includes('"') || val.includes('\n') || val.includes('\r')) {
-          return `"${val.replace(/"/g, '""')}"`
-        }
-        return val
-      }).join(',')
+      return kept
+        .map(i => {
+          const val = cols[i] ?? ''
+          // Re-quote if the value contains comma, quote, or newline
+          if (val.includes(',') || val.includes('"') || val.includes('\n') || val.includes('\r')) {
+            return `"${val.replace(/"/g, '""')}"`
+          }
+          return val
+        })
+        .join(',')
     })
     onConfirm(newLines.join('\n'))
   }
@@ -61,7 +63,9 @@ const CSVPreviewModal: FC<CSVPreviewModalProps> = ({ csv, monthKey, onConfirm, o
       <div className="csv-preview-modal" onClick={e => e.stopPropagation()}>
         <div className="csv-preview-header">
           <h3>Preview — {label}</h3>
-          <span className="csv-preview-meta">{totalRows} rows · {headers.length} columns</span>
+          <span className="csv-preview-meta">
+            {totalRows} rows · {headers.length} columns
+          </span>
         </div>
 
         <p className="csv-preview-hint">Click column headers to exclude them.</p>
@@ -101,7 +105,9 @@ const CSVPreviewModal: FC<CSVPreviewModalProps> = ({ csv, monthKey, onConfirm, o
         )}
 
         <div className="csv-preview-actions">
-          <button className="csv-preview-btn csv-preview-btn--cancel" onClick={onCancel}>Cancel</button>
+          <button className="csv-preview-btn csv-preview-btn--cancel" onClick={onCancel}>
+            Cancel
+          </button>
           <button className="csv-preview-btn csv-preview-btn--confirm" onClick={handleConfirm}>
             {excludedCols.size > 0
               ? `Import (${headers.length - excludedCols.size} of ${headers.length} columns)`

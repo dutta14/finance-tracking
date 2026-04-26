@@ -67,13 +67,17 @@
   border-radius: var(--radius);
   cursor: pointer;
   color: var(--color-text-muted);
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
-.alloc-page-tab:hover { color: var(--color-text); }
+.alloc-page-tab:hover {
+  color: var(--color-text);
+}
 .alloc-page-tab.active {
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .alloc-page-toggle {
@@ -92,7 +96,9 @@
   padding: 0.25rem 0.55rem;
   cursor: pointer;
   color: var(--color-text-muted);
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 .alloc-page-toggle-btn.active {
   background: var(--accent-lighter);
@@ -168,7 +174,9 @@
   font-weight: var(--fw-semibold);
   color: var(--accent-text-dark);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 .alloc-ratio-create-btn:hover {
   background: var(--accent-lighter);
@@ -182,7 +190,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   min-width: 200px;
   padding: 4px 0;
 }
@@ -221,9 +229,13 @@
   border-radius: var(--radius);
   background: var(--color-bg);
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
-.alloc-ratio-tab:hover { background: var(--color-surface-hover); }
+.alloc-ratio-tab:hover {
+  background: var(--color-surface-hover);
+}
 .alloc-ratio-tab.active {
   background: var(--accent-lighter);
   border-color: var(--accent-border);
@@ -251,7 +263,9 @@
   padding: 0 0.15rem;
   transition: color 0.12s;
 }
-.alloc-ratio-tab-delete:hover { color: var(--color-negative); }
+.alloc-ratio-tab-delete:hover {
+  color: var(--color-negative);
+}
 
 /* ── Inline delete confirm ───────────────────────────────────── */
 
@@ -267,7 +281,9 @@
   font-size: var(--fs-md);
   color: var(--color-negative);
 }
-.alloc-ratio-confirm-bar strong { font-weight: var(--fw-semibold); }
+.alloc-ratio-confirm-bar strong {
+  font-weight: var(--fw-semibold);
+}
 .alloc-ratio-confirm-yes {
   background: var(--color-negative);
   color: var(--color-text-on-accent);
@@ -281,7 +297,9 @@
   margin-left: auto;
   transition: opacity 0.12s;
 }
-.alloc-ratio-confirm-yes:hover { opacity: 0.85; }
+.alloc-ratio-confirm-yes:hover {
+  opacity: 0.85;
+}
 .alloc-ratio-confirm-no {
   background: none;
   border: 1px solid var(--color-negative-border);
@@ -294,7 +312,9 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-.alloc-ratio-confirm-no:hover { background: var(--color-negative-light); }
+.alloc-ratio-confirm-no:hover {
+  background: var(--color-negative-light);
+}
 
 /* ── Ratio name input ────────────────────────────────────────── */
 
@@ -334,7 +354,10 @@
   font-weight: var(--fw-medium);
   cursor: pointer;
   color: var(--color-text-heading);
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
 }
 .alloc-ratio-preset:hover {
   background: var(--accent-lighter);
@@ -387,7 +410,7 @@
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: var(--color-text-on-accent);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .alloc-ratio-labels {
   display: flex;
@@ -481,7 +504,9 @@
   line-height: 1;
   transition: color 0.12s;
 }
-.alloc-ratio-group-remove:hover { color: var(--color-negative); }
+.alloc-ratio-group-remove:hover {
+  color: var(--color-negative);
+}
 
 .alloc-ratio-class-pills {
   display: flex;
@@ -498,7 +523,10 @@
   background: var(--color-surface);
   cursor: pointer;
   color: var(--color-text-heading);
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
 }
 .alloc-ratio-pill:hover:not(:disabled) {
   border-color: var(--accent-border);
@@ -525,7 +553,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: border-color 0.12s, color 0.12s;
+  transition:
+    border-color 0.12s,
+    color 0.12s;
 }
 .alloc-ratio-add-group:hover {
   border-color: var(--accent-border);
@@ -574,7 +604,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: border-color 0.12s, color 0.12s;
+  transition:
+    border-color 0.12s,
+    color 0.12s;
 }
 .alloc-goal-set-btn:hover {
   border-color: var(--accent-border);
@@ -607,12 +639,23 @@
   cursor: pointer;
   padding: 0.2rem 0.4rem;
   border-radius: var(--radius);
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
-.alloc-goal-edit-btn { color: var(--accent-text-dark); }
-.alloc-goal-edit-btn:hover { background: var(--accent-lighter); }
-.alloc-goal-remove-btn { color: var(--color-text-muted); }
-.alloc-goal-remove-btn:hover { color: var(--color-negative); background: var(--color-negative-light); }
+.alloc-goal-edit-btn {
+  color: var(--accent-text-dark);
+}
+.alloc-goal-edit-btn:hover {
+  background: var(--accent-lighter);
+}
+.alloc-goal-remove-btn {
+  color: var(--color-text-muted);
+}
+.alloc-goal-remove-btn:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-light);
+}
 
 /* ── Goal editor ─────────────────────────────────────────────── */
 
@@ -719,8 +762,12 @@
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
 }
-.alloc-goal-pct-sum.valid { color: var(--color-positive); }
-.alloc-goal-pct-sum.invalid { color: var(--color-negative); }
+.alloc-goal-pct-sum.valid {
+  color: var(--color-positive);
+}
+.alloc-goal-pct-sum.invalid {
+  color: var(--color-negative);
+}
 
 .alloc-goal-editor-actions {
   display: flex;
@@ -743,7 +790,9 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-.alloc-goal-save-btn:not(:disabled):hover { opacity: 0.85; }
+.alloc-goal-save-btn:not(:disabled):hover {
+  opacity: 0.85;
+}
 .alloc-goal-cancel-btn {
   background: none;
   border: 1px solid var(--color-border-light);
@@ -756,7 +805,9 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-.alloc-goal-cancel-btn:hover { background: var(--color-surface-hover); }
+.alloc-goal-cancel-btn:hover {
+  background: var(--color-surface-hover);
+}
 
 /* ── Actual vs Goal bar label ────────────────────────────────── */
 
@@ -774,9 +825,15 @@
   font-weight: var(--fw-semibold);
   margin-left: 0.25rem;
 }
-.alloc-ratio-diff.on-track { color: var(--color-positive); }
-.alloc-ratio-diff.over { color: var(--color-warning); }
-.alloc-ratio-diff.under { color: var(--accent); }
+.alloc-ratio-diff.on-track {
+  color: var(--color-positive);
+}
+.alloc-ratio-diff.over {
+  color: var(--color-warning);
+}
+.alloc-ratio-diff.under {
+  color: var(--accent);
+}
 
 /* ── Rebalance panel ─────────────────────────────────────────── */
 
@@ -859,9 +916,15 @@
   color: var(--color-text-heading);
   font-weight: var(--fw-medium);
 }
-.alloc-rebal-delta.positive { color: var(--color-positive); }
-.alloc-rebal-delta.negative { color: var(--color-negative); }
-.alloc-rebal-delta.zero { color: var(--color-text-muted); }
+.alloc-rebal-delta.positive {
+  color: var(--color-positive);
+}
+.alloc-rebal-delta.negative {
+  color: var(--color-negative);
+}
+.alloc-rebal-delta.zero {
+  color: var(--color-text-muted);
+}
 
 /* Action plan */
 .alloc-rebal-actions {
@@ -899,15 +962,21 @@
   color: var(--color-text-heading);
   padding: 0.2rem 0;
 }
-.alloc-rebal-action-item strong { font-weight: var(--fw-semibold); }
+.alloc-rebal-action-item strong {
+  font-weight: var(--fw-semibold);
+}
 .alloc-rebal-action-icon {
   font-size: var(--fs-md);
   width: 1.2rem;
   text-align: center;
   flex-shrink: 0;
 }
-.alloc-rebal-action-add .alloc-rebal-action-icon { color: var(--color-positive); }
-.alloc-rebal-action-move .alloc-rebal-action-icon { color: var(--accent); }
+.alloc-rebal-action-add .alloc-rebal-action-icon {
+  color: var(--color-positive);
+}
+.alloc-rebal-action-move .alloc-rebal-action-icon {
+  color: var(--accent);
+}
 
 .alloc-rebal-on-track {
   text-align: center;
@@ -929,7 +998,9 @@ body.dark .alloc-ratio-confirm-no {
   color: var(--color-negative-muted);
 }
 
-body.dark .alloc-ratio-pill.active { color: var(--color-text-on-accent); }
+body.dark .alloc-ratio-pill.active {
+  color: var(--color-text-on-accent);
+}
 
 /* ── Responsive ──────────────────────────────────────────────── */
 
@@ -938,10 +1009,14 @@ body.dark .alloc-ratio-pill.active { color: var(--color-text-on-accent); }
     flex-direction: column;
     align-items: stretch;
   }
-  .alloc-page-donut { flex: none; }
+  .alloc-page-donut {
+    flex: none;
+  }
   .alloc-ratio-result-row {
     flex-direction: column;
     align-items: stretch;
   }
-  .alloc-ratio-donut { flex: none; }
+  .alloc-ratio-donut {
+    flex: none;
+  }
 }

@@ -1,5 +1,13 @@
 import { Profile } from '../../hooks/useProfile'
-import { GitHubSyncConfig, SyncStatus, SyncDomain, SyncProgress, CommitEntry, ConnectionTestResult, RestoreResult } from '../../hooks/useGitHubSync'
+import {
+  GitHubSyncConfig,
+  SyncStatus,
+  SyncDomain,
+  SyncProgress,
+  CommitEntry,
+  ConnectionTestResult,
+  RestoreResult,
+} from '../../hooks/useGitHubSync'
 
 export type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced' | 'labs'
 

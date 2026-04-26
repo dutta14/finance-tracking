@@ -39,7 +39,9 @@
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .error-boundary-btn:focus-visible {
   outline: 2px solid var(--accent);
@@ -117,7 +119,9 @@
   border-radius: var(--radius);
   background: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .error-boundary-card-btn:hover {
   background: var(--accent);
@@ -130,7 +134,14 @@
 
 /* Responsive */
 @media (max-width: 640px) {
-  .error-boundary { padding: 1.5rem 1rem; }
-  .error-boundary-icon svg { width: 36px; height: 36px; }
-  .error-boundary-actions { flex-direction: column; }
+  .error-boundary {
+    padding: 1.5rem 1rem;
+  }
+  .error-boundary-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+  .error-boundary-actions {
+    flex-direction: column;
+  }
 }

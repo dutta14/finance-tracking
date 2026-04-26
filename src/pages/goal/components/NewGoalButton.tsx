@@ -6,11 +6,7 @@ interface NewGoalButtonProps {
 }
 
 const NewGoalButton: FC<NewGoalButtonProps> = ({ onClick, style }) => (
-  <button
-    className="goal-action-btn"
-    style={style}
-    onClick={onClick}
-  >
+  <button className="goal-action-btn" style={style} onClick={onClick}>
     + New Goal
   </button>
 )

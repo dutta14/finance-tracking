@@ -1,6 +1,13 @@
 import { FC, useMemo, useState } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
-import { Account, BalanceEntry, ALLOCATION_LABELS, AssetAllocation, formatCurrency, getDefaultAllocation } from '../data/types'
+import {
+  Account,
+  BalanceEntry,
+  ALLOCATION_LABELS,
+  AssetAllocation,
+  formatCurrency,
+  getDefaultAllocation,
+} from '../data/types'
 import TermAbbr from '../../components/TermAbbr'
 
 interface AllocationBreakdownProps {
@@ -86,9 +93,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
           <span className="alloc-legend-dot" style={{ background: entry.color }} />
           <span className="alloc-legend-label">{entry.name}</span>
           <span className="alloc-legend-pct">
-            {legendMode === 'pct'
-              ? `${((entry.value / total) * 100).toFixed(0)}%`
-              : formatCurrency(entry.value)}
+            {legendMode === 'pct' ? `${((entry.value / total) * 100).toFixed(0)}%` : formatCurrency(entry.value)}
           </span>
         </div>
       ))}
@@ -99,7 +104,9 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     if (data.length === 0) {
       return (
         <div className="alloc-section">
-          <h4 className="alloc-section-title">{label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}</h4>
+          <h4 className="alloc-section-title">
+            {label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}
+          </h4>
           <div className="alloc-empty">No data</div>
         </div>
       )
@@ -110,18 +117,18 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     if (chartMode === 'bar') {
       return (
         <div className="alloc-section">
-          <h4 className="alloc-section-title">{label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}</h4>
+          <h4 className="alloc-section-title">
+            {label === 'FI' || label === 'GW' ? <TermAbbr term={label} /> : label}
+          </h4>
           <div className="alloc-bar-wrap">
             <div className="alloc-stacked-bar">
               {data.map((entry, i) => {
                 const pct = ((entry.value / total) * 100).toFixed(1)
                 return (
-                  <div
-                    key={i}
-                    className="alloc-bar-seg"
-                    style={{ width: `${pct}%`, background: entry.color }}
-                  >
-                    <span className="alloc-bar-tooltip">{entry.name}: {pct}% — {formatCurrency(entry.value)}</span>
+                  <div key={i} className="alloc-bar-seg" style={{ width: `${pct}%`, background: entry.color }}>
+                    <span className="alloc-bar-tooltip">
+                      {entry.name}: {pct}% — {formatCurrency(entry.value)}
+                    </span>
                   </div>
                 )
               })}
@@ -154,7 +161,14 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '6px 10px', fontSize: 11 }}
+                  contentStyle={{
+                    backgroundColor: tooltipBg,
+                    border: `1px solid ${tooltipBorder}`,
+                    borderRadius: 8,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    padding: '6px 10px',
+                    fontSize: 11,
+                  }}
                   formatter={(v: any) => formatCurrency(Number(v))}
                 />
               </PieChart>
@@ -171,28 +185,89 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
       <div className="home-card-header">
         <h3>Asset Allocation</h3>
         <div className="alloc-header-right">
-          {onNavigate && <button className="home-card-link" onClick={onNavigate}>View Allocation →</button>}
+          {onNavigate && (
+            <button className="home-card-link" onClick={onNavigate}>
+              View Allocation →
+            </button>
+          )}
           <div className="alloc-toggles">
-          <div className="alloc-toggle">
-            <button className={`alloc-toggle-btn${chartMode === 'bar' ? ' active' : ''}`} onClick={() => setChartMode('bar')} title="Stacked bar">
-              <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6"/><rect x="1" y="8" width="8" height="3" rx="1" fill="currentColor"/></svg>
-            </button>
-            <button className={`alloc-toggle-btn${chartMode === 'pie' ? ' active' : ''}`} onClick={() => setChartMode('pie')} title="Donut chart">
-              <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="10 21.4" strokeDashoffset="0"/><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="8 23.4" strokeDashoffset="-10" opacity=".5"/></svg>
-            </button>
-          </div>
-          <div className="alloc-toggle">
-            <button className={`alloc-toggle-btn${legendMode === 'pct' ? ' active' : ''}`} onClick={() => setLegendMode('pct')}>%</button>
-            <button className={`alloc-toggle-btn${legendMode === 'val' ? ' active' : ''}`} onClick={() => setLegendMode('val')}>$</button>
-          </div>
+            <div className="alloc-toggle">
+              <button
+                className={`alloc-toggle-btn${chartMode === 'bar' ? ' active' : ''}`}
+                onClick={() => setChartMode('bar')}
+                title="Stacked bar"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14">
+                  <rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6" />
+                  <rect x="1" y="8" width="8" height="3" rx="1" fill="currentColor" />
+                </svg>
+              </button>
+              <button
+                className={`alloc-toggle-btn${chartMode === 'pie' ? ' active' : ''}`}
+                onClick={() => setChartMode('pie')}
+                title="Donut chart"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14">
+                  <circle
+                    cx="7"
+                    cy="7"
+                    r="5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeDasharray="10 21.4"
+                    strokeDashoffset="0"
+                  />
+                  <circle
+                    cx="7"
+                    cy="7"
+                    r="5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeDasharray="8 23.4"
+                    strokeDashoffset="-10"
+                    opacity=".5"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="alloc-toggle">
+              <button
+                className={`alloc-toggle-btn${legendMode === 'pct' ? ' active' : ''}`}
+                onClick={() => setLegendMode('pct')}
+              >
+                %
+              </button>
+              <button
+                className={`alloc-toggle-btn${legendMode === 'val' ? ' active' : ''}`}
+                onClick={() => setLegendMode('val')}
+              >
+                $
+              </button>
+            </div>
           </div>
         </div>
       </div>
       {balances.length === 0 ? (
         <div className="home-card-cta">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-9-9" /><path d="M12 3v9h9" /></svg>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 12a9 9 0 11-9-9" />
+            <path d="M12 3v9h9" />
+          </svg>
           <p>See how your assets are distributed once you add accounts and balances.</p>
-          <button className="home-card-cta-btn" onClick={onNavigate}>Set up allocation →</button>
+          <button className="home-card-cta-btn" onClick={onNavigate}>
+            Set up allocation →
+          </button>
         </div>
       ) : (
         <div className={`alloc-grid${chartMode === 'bar' ? ' alloc-grid--vertical' : ''}`}>

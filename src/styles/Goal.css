@@ -41,12 +41,20 @@ section.goal {
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   border-bottom: 2px solid transparent;
-  transition: color 150ms, border-color 150ms;
+  transition:
+    color 150ms,
+    border-color 150ms;
   text-decoration: none;
   cursor: pointer;
 }
-.goal-tab:hover { color: var(--color-text); }
-.goal-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius-sm); }
+.goal-tab:hover {
+  color: var(--color-text);
+}
+.goal-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
 .goal-tab.active {
   color: var(--color-text);
   border-bottom-color: var(--accent);
@@ -184,7 +192,9 @@ section.goal {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: background-color 0.2s ease, filter 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    filter 0.2s ease;
   margin-top: 1.5rem;
   width: 100%;
 }
@@ -217,7 +227,9 @@ section.goal {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .btn-cancel:hover {
@@ -250,7 +262,10 @@ section.goal {
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 .btn-use-recommended:hover {
   background: var(--color-surface-alt);
@@ -275,7 +290,7 @@ section.goal {
   margin-bottom: 0;
 }
 
-.checkbox-group input[type="checkbox"] {
+.checkbox-group input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -393,8 +408,12 @@ section.goal {
   pointer-events: none;
 }
 
-.goals-mini-grid .goal-drag-item--drag-before::before { left: -5px; }
-.goals-mini-grid .goal-drag-item--drag-after::after  { right: -5px; }
+.goals-mini-grid .goal-drag-item--drag-before::before {
+  left: -5px;
+}
+.goals-mini-grid .goal-drag-item--drag-after::after {
+  right: -5px;
+}
 
 /* List: horizontal drop indicator lines */
 .goals-mini-list .goal-drag-item--drag-before::before,
@@ -410,8 +429,12 @@ section.goal {
   pointer-events: none;
 }
 
-.goals-mini-list .goal-drag-item--drag-before::before { top: -4px; }
-.goals-mini-list .goal-drag-item--drag-after::after  { bottom: -4px; }
+.goals-mini-list .goal-drag-item--drag-before::before {
+  top: -4px;
+}
+.goals-mini-list .goal-drag-item--drag-after::after {
+  bottom: -4px;
+}
 
 .goals-grid-wrapper {
   transition: padding-right 0.2s;
@@ -439,12 +462,16 @@ section.goal {
 .goal-drag-item--touch-dragging {
   opacity: 0.6;
   transform: scale(0.97);
-  transition: transform 0.2s, opacity 0.2s;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
 }
 .goal-drag-item--long-press {
   transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 /* Goal reorder touch controls */
@@ -458,16 +485,25 @@ section.goal {
   z-index: 5;
 }
 @media (max-width: 900px) {
-  .goal-reorder-touch-controls { display: flex; }
-  .goal-drag-item { cursor: default; }
+  .goal-reorder-touch-controls {
+    display: flex;
+  }
+  .goal-drag-item {
+    cursor: default;
+  }
 }
 @media (max-width: 640px) {
-  .goal-reorder-touch-controls .reorder-move-btn { width: 32px; height: 32px; min-height: 44px; min-width: 44px; }
+  .goal-reorder-touch-controls .reorder-move-btn {
+    width: 32px;
+    height: 32px;
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* Dark mode */
 body.dark .goal-drag-item--long-press {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 /* Toolbar: filters + count + view toggle */
@@ -525,7 +561,10 @@ body.dark .goal-drag-item--long-press {
   font-size: var(--fs-md);
   padding: 0.35rem 0.75rem;
   color: var(--color-text);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .goal-selection-btn:hover {
@@ -608,7 +647,9 @@ body.dark .goal-drag-item--long-press {
   border-radius: var(--radius);
   display: flex;
   align-items: center;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .view-mode-btn:hover {
@@ -619,7 +660,7 @@ body.dark .goal-drag-item--long-press {
 .view-mode-btn.active {
   color: var(--accent);
   background: var(--color-surface);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .goal-detail-container {
@@ -853,8 +894,14 @@ body.dark .goal-drag-item--long-press {
 }
 
 @keyframes wizard-fade {
-  from { opacity: 0; transform: translateX(12px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .wizard-field {
@@ -898,7 +945,9 @@ body.dark .goal-drag-item--long-press {
   color: var(--color-text);
   background: var(--color-surface);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
@@ -929,7 +978,9 @@ body.dark .goal-drag-item--long-press {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .wizard-btn--back {
@@ -1015,7 +1066,9 @@ body.dark .goal-drag-item--long-press {
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
   padding: 1rem 0.5rem 0.85rem;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .wizard-param-card:focus-within {
   border-color: var(--accent);

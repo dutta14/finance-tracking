@@ -85,11 +85,7 @@ function deduplicateOthers(groups: CategoryGroup[]): CategoryGroup[] {
   groups.forEach(g => {
     if (g.id !== 'others') g.categories.forEach(c => customCats.add(c))
   })
-  return groups.map(g =>
-    g.id === 'others'
-      ? { ...g, categories: g.categories.filter(c => !customCats.has(c)) }
-      : g
-  )
+  return groups.map(g => (g.id === 'others' ? { ...g, categories: g.categories.filter(c => !customCats.has(c)) } : g))
 }
 
 export function loadBudgetStore(): BudgetStore {
@@ -104,12 +100,16 @@ export function loadBudgetStore(): BudgetStore {
     const store: BudgetStore = {
       csvs: parsed.csvs || {},
       configs: parsed.configs || {},
-      years: config.years.length > 0 ? config.years : (parsed.years || []),
+      years: config.years.length > 0 ? config.years : parsed.years || [],
       categoryGroups: config.categoryGroups,
     }
 
     // If old store had categoryGroups but config didn't, migrate
-    if ((!config.categoryGroups || config.categoryGroups.length === 0) && parsed.categoryGroups && parsed.categoryGroups.length > 0) {
+    if (
+      (!config.categoryGroups || config.categoryGroups.length === 0) &&
+      parsed.categoryGroups &&
+      parsed.categoryGroups.length > 0
+    ) {
       store.categoryGroups = parsed.categoryGroups
     }
 

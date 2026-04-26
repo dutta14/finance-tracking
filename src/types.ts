@@ -6,14 +6,14 @@ export interface FinancialGoal {
   id: number
   goalName: string
   createdAt: string
-  
+
   // Personal & Timeline Info
   birthday: string
   goalCreatedIn: string
   goalEndYear: string
   resetExpenseMonth: boolean
   retirementAge: number
-  
+
   // Expense Details
   expenseMonth: number
   expenseValue: number
@@ -21,12 +21,12 @@ export interface FinancialGoal {
   expenseValueMar2026: number
   expenseValue2047: number
   monthlyExpense2047: number
-  
+
   // Financial Parameters
   inflationRate: number
   safeWithdrawalRate: number
   growth: number
-  
+
   // Calculated Fields
   retirement: string
   fiGoal: number
@@ -39,9 +39,9 @@ export interface GwGoal {
   label: string
   createdAt: string
   disburseAge: number
-  disburseAmount: number   // in goal-creation-year (today's) dollars
-  growthRate: number       // % per year, independent of FI growth rate
-  currentSavings: number   // current savings allocated toward this goal
+  disburseAmount: number // in goal-creation-year (today's) dollars
+  growthRate: number // % per year, independent of FI growth rate
+  currentSavings: number // current savings allocated toward this goal
 }
 
 export interface NavigationProps {

@@ -38,11 +38,9 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
 export const FI_TYPES: AccountType[] = ['retirement', 'non-retirement']
 export const GW_TYPES: AccountType[] = ['liquid', 'illiquid']
 
-export const getTypesForGoal = (goal: AccountGoalType): AccountType[] =>
-  goal === 'fi' ? FI_TYPES : GW_TYPES
+export const getTypesForGoal = (goal: AccountGoalType): AccountType[] => (goal === 'fi' ? FI_TYPES : GW_TYPES)
 
-export const getDefaultType = (goal: AccountGoalType): AccountType =>
-  goal === 'fi' ? 'retirement' : 'liquid'
+export const getDefaultType = (goal: AccountGoalType): AccountType => (goal === 'fi' ? 'retirement' : 'liquid')
 
 export const getOwnerLabels = (profile: Profile): Record<AccountOwner, string> => ({
   primary: profile.name || 'Primary',

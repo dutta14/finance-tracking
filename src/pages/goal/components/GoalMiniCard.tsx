@@ -12,14 +12,16 @@ function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: st
   const created = new Date(goal.goalCreatedIn)
   return goals.reduce((sum, gw) => {
     const disburseYear = birthYear + gw.disburseAge
-    const monthsToDisburse = Math.max(0,
-      (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
+    const monthsToDisburse = Math.max(
+      0,
+      (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
     )
     const disbursementTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, monthsToDisburse)
     const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-    const pv = monthsRetToDisburse > 0
-      ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
-      : disbursementTarget
+    const pv =
+      monthsRetToDisburse > 0
+        ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
+        : disbursementTarget
     return sum + pv
   }, 0)
 }
@@ -39,7 +41,15 @@ interface GoalMiniCardProps {
   profileBirthday: string
 }
 
-const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMode = 'grid', compareMode = false, gwGoals, profileBirthday }) => {
+const GoalMiniCard: FC<GoalMiniCardProps> = ({
+  goal,
+  isSelected,
+  onClick,
+  viewMode = 'grid',
+  compareMode = false,
+  gwGoals,
+  profileBirthday,
+}) => {
   const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday)
   const hasGw = gwTotal > 0
   const totalGoals = goal.fiGoal + gwTotal
@@ -99,9 +109,7 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({ goal, isSelected, onClick, viewMo
           <span className="amount">{dollars(totalGoals)}</span>
         </div>
       )}
-      {!hasGw && (
-        <span className="mini-no-gw">FI only</span>
-      )}
+      {!hasGw && <span className="mini-no-gw">FI only</span>}
     </div>
   )
 }

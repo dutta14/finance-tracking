@@ -13,13 +13,26 @@ import GoalSection from './components/GoalSection'
 const Allocation: FC = () => {
   const { allocMap, getSlices, computeRatio } = useAllocationData()
   const {
-    customRatios, activeRatioId, setActiveRatioId,
-    setActivePreset, activeRatio,
-    confirmDeleteId, setConfirmDeleteId,
-    createMenuOpen, setCreateMenuOpen, createMenuRef,
-    createRatio, createFromPreset, requestDeleteRatio, doDeleteRatio,
-    updateGroupLabel, toggleClass, addGroup, removeGroup,
-    updateRatioName, updateRatioScope,
+    customRatios,
+    activeRatioId,
+    setActiveRatioId,
+    setActivePreset,
+    activeRatio,
+    confirmDeleteId,
+    setConfirmDeleteId,
+    createMenuOpen,
+    setCreateMenuOpen,
+    createMenuRef,
+    createRatio,
+    createFromPreset,
+    requestDeleteRatio,
+    doDeleteRatio,
+    updateGroupLabel,
+    toggleClass,
+    addGroup,
+    removeGroup,
+    updateRatioName,
+    updateRatioScope,
     setGoalForScope,
   } = useCustomRatios()
   const { profile, getAge, computeGoalPcts } = useGoals()
@@ -29,8 +42,6 @@ const Allocation: FC = () => {
 
   return (
     <div className="alloc-page">
-
-
       <BreakdownSection getSlices={getSlices} />
 
       <section className="alloc-page-section">
@@ -40,11 +51,18 @@ const Allocation: FC = () => {
           confirmDeleteId={confirmDeleteId}
           createMenuOpen={createMenuOpen}
           createMenuRef={createMenuRef}
-          onSelectRatio={id => { setActiveRatioId(id); setActivePreset(null); setConfirmDeleteId(null) }}
+          onSelectRatio={id => {
+            setActiveRatioId(id)
+            setActivePreset(null)
+            setConfirmDeleteId(null)
+          }}
           onRequestDelete={requestDeleteRatio}
           onConfirmDelete={doDeleteRatio}
           onCancelDelete={() => setConfirmDeleteId(null)}
-          onCreateBlank={() => { createRatio(); setCreateMenuOpen(false) }}
+          onCreateBlank={() => {
+            createRatio()
+            setCreateMenuOpen(false)
+          }}
           onCreateFromPreset={createFromPreset}
           onToggleCreateMenu={() => setCreateMenuOpen(v => !v)}
         />

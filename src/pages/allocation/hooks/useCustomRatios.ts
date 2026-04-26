@@ -4,9 +4,10 @@ import { loadCustomRatios, saveCustomRatios, makeDefaultRatio, makeId } from '..
 
 export function useCustomRatios() {
   const [customRatios, setCustomRatios] = useState<CustomRatio[]>(loadCustomRatios)
-  const [activeRatioId, setActiveRatioId] = useState<string | null>(
-    () => { const saved = loadCustomRatios(); return saved.length > 0 ? saved[0].id : null }
-  )
+  const [activeRatioId, setActiveRatioId] = useState<string | null>(() => {
+    const saved = loadCustomRatios()
+    return saved.length > 0 ? saved[0].id : null
+  })
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
@@ -19,15 +20,18 @@ export function useCustomRatios() {
     saveCustomRatios(next)
   }, [])
 
-  const updateActiveRatio = useCallback((updater: (r: CustomRatio) => CustomRatio) => {
-    if (!activeRatioId) return
-    setActivePreset(null)
-    setCustomRatios(prev => {
-      const next = prev.map(r => r.id === activeRatioId ? updater(r) : r)
-      saveCustomRatios(next)
-      return next
-    })
-  }, [activeRatioId])
+  const updateActiveRatio = useCallback(
+    (updater: (r: CustomRatio) => CustomRatio) => {
+      if (!activeRatioId) return
+      setActivePreset(null)
+      setCustomRatios(prev => {
+        const next = prev.map(r => (r.id === activeRatioId ? updater(r) : r))
+        saveCustomRatios(next)
+        return next
+      })
+    },
+    [activeRatioId],
+  )
 
   const createRatio = () => {
     const nr = makeDefaultRatio()
@@ -76,7 +80,9 @@ export function useCustomRatios() {
 
   const createFromPreset = (preset: RatioPreset) => {
     const nr: CustomRatio = {
-      id: makeId(), name: preset.name, scope: preset.scope,
+      id: makeId(),
+      name: preset.name,
+      scope: preset.scope,
       groups: preset.groups.map(g => ({ label: g.label, classes: [...g.classes] })),
     }
     persist([...customRatios, nr])
@@ -89,14 +95,17 @@ export function useCustomRatios() {
   const applyPreset = (preset: RatioPreset) => {
     setActivePreset(preset.id)
     updateActiveRatio(r => ({
-      ...r, scope: preset.scope, name: preset.name,
+      ...r,
+      scope: preset.scope,
+      name: preset.name,
       groups: preset.groups.map(g => ({ label: g.label, classes: [...g.classes] })),
     }))
   }
 
   const updateGroupLabel = (idx: number, label: string) => {
     updateActiveRatio(r => ({
-      ...r, groups: r.groups.map((g, i) => i === idx ? { ...g, label } : g),
+      ...r,
+      groups: r.groups.map((g, i) => (i === idx ? { ...g, label } : g)),
     }))
   }
 
@@ -110,21 +119,26 @@ export function useCustomRatios() {
         return g
       })
       const used = new Set(next[groupIdx].classes)
-      return { ...r, groups: next.map((g, i) => i === groupIdx ? g : { ...g, classes: g.classes.filter(c => !used.has(c)) }) }
+      return {
+        ...r,
+        groups: next.map((g, i) => (i === groupIdx ? g : { ...g, classes: g.classes.filter(c => !used.has(c)) })),
+      }
     })
   }
 
   const addGroup = () => {
     if (!activeRatio || activeRatio.groups.length >= 6) return
     updateActiveRatio(r => ({
-      ...r, groups: [...r.groups, { label: `Group ${String.fromCharCode(65 + r.groups.length)}`, classes: [] }],
+      ...r,
+      groups: [...r.groups, { label: `Group ${String.fromCharCode(65 + r.groups.length)}`, classes: [] }],
     }))
   }
 
   const removeGroup = (idx: number) => {
     if (!activeRatio || activeRatio.groups.length <= 2) return
     updateActiveRatio(r => ({
-      ...r, groups: r.groups.filter((_, i) => i !== idx),
+      ...r,
+      groups: r.groups.filter((_, i) => i !== idx),
     }))
   }
 
@@ -150,16 +164,27 @@ export function useCustomRatios() {
 
   return {
     customRatios,
-    activeRatioId, setActiveRatioId,
-    activePreset, setActivePreset,
+    activeRatioId,
+    setActiveRatioId,
+    activePreset,
+    setActivePreset,
     activeRatio,
-    confirmDeleteId, setConfirmDeleteId,
-    createMenuOpen, setCreateMenuOpen,
+    confirmDeleteId,
+    setConfirmDeleteId,
+    createMenuOpen,
+    setCreateMenuOpen,
     createMenuRef,
-    createRatio, createFromPreset, requestDeleteRatio, doDeleteRatio,
+    createRatio,
+    createFromPreset,
+    requestDeleteRatio,
+    doDeleteRatio,
     applyPreset,
-    updateGroupLabel, toggleClass, addGroup, removeGroup,
-    updateRatioName, updateRatioScope,
+    updateGroupLabel,
+    toggleClass,
+    addGroup,
+    removeGroup,
+    updateRatioName,
+    updateRatioScope,
     setGoalForScope,
   }
 }

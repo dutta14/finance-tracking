@@ -32,20 +32,26 @@ describe('loadBudgetStore', () => {
   })
 
   it('loads CSVs from store and config from separate key', () => {
-    localStorage.setItem('budget-store', JSON.stringify({
-      csvs: { '2025-01': { month: '2025-01', csv: 'a,b,c', uploadedAt: '2025-01-15' } },
-      configs: {},
-      years: [],
-    }))
-    localStorage.setItem('budget-config', JSON.stringify({
-      version: 1,
-      years: [2025],
-      categoryGroups: [
-        { id: 'food', name: 'Food', categories: ['Groceries'] },
-        { id: 'others', name: 'Others', categories: [] },
-        { id: 'removed', name: 'Remove from Budget', categories: [] },
-      ],
-    }))
+    localStorage.setItem(
+      'budget-store',
+      JSON.stringify({
+        csvs: { '2025-01': { month: '2025-01', csv: 'a,b,c', uploadedAt: '2025-01-15' } },
+        configs: {},
+        years: [],
+      }),
+    )
+    localStorage.setItem(
+      'budget-config',
+      JSON.stringify({
+        version: 1,
+        years: [2025],
+        categoryGroups: [
+          { id: 'food', name: 'Food', categories: ['Groceries'] },
+          { id: 'others', name: 'Others', categories: [] },
+          { id: 'removed', name: 'Remove from Budget', categories: [] },
+        ],
+      }),
+    )
     const store = loadBudgetStore()
     expect(store.csvs['2025-01'].csv).toBe('a,b,c')
     expect(store.years).toEqual([2025])
@@ -125,7 +131,9 @@ describe('getBudgetConfigData', () => {
 describe('getGlobalCategoryGroups', () => {
   it('returns groups from store when present', () => {
     const store: BudgetStore = {
-      csvs: {}, configs: {}, years: [],
+      csvs: {},
+      configs: {},
+      years: [],
       categoryGroups: [
         { id: 'food', name: 'Food', categories: [] },
         { id: 'removed', name: 'Remove from Budget', categories: [] },
@@ -138,7 +146,9 @@ describe('getGlobalCategoryGroups', () => {
 
   it('ensures removed group exists', () => {
     const store: BudgetStore = {
-      csvs: {}, configs: {}, years: [],
+      csvs: {},
+      configs: {},
+      years: [],
       categoryGroups: [{ id: 'food', name: 'Food', categories: [] }],
     }
     const groups = getGlobalCategoryGroups(store)
@@ -217,23 +227,32 @@ describe('createYear', () => {
 
 describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
   it('merges per-year category groups into global groups', () => {
-    localStorage.setItem('budget-store', JSON.stringify({
-      csvs: {},
-      configs: {
-        2024: { year: 2024, categoryGroups: [
-          { id: 'food', name: 'Food', categories: ['Groceries', 'Restaurants'] },
-          { id: 'others', name: 'Others', categories: ['Misc'] },
-          { id: 'removed', name: 'Remove from Budget', categories: [] },
-        ]},
-        2025: { year: 2025, categoryGroups: [
-          { id: 'food', name: 'Food', categories: ['Groceries', 'Coffee'] },
-          { id: 'transport', name: 'Transport', categories: ['Gas'] },
-          { id: 'others', name: 'Others', categories: ['Misc', 'ATM'] },
-          { id: 'removed', name: 'Remove from Budget', categories: [] },
-        ]},
-      },
-      years: [2024, 2025],
-    }))
+    localStorage.setItem(
+      'budget-store',
+      JSON.stringify({
+        csvs: {},
+        configs: {
+          2024: {
+            year: 2024,
+            categoryGroups: [
+              { id: 'food', name: 'Food', categories: ['Groceries', 'Restaurants'] },
+              { id: 'others', name: 'Others', categories: ['Misc'] },
+              { id: 'removed', name: 'Remove from Budget', categories: [] },
+            ],
+          },
+          2025: {
+            year: 2025,
+            categoryGroups: [
+              { id: 'food', name: 'Food', categories: ['Groceries', 'Coffee'] },
+              { id: 'transport', name: 'Transport', categories: ['Gas'] },
+              { id: 'others', name: 'Others', categories: ['Misc', 'ATM'] },
+              { id: 'removed', name: 'Remove from Budget', categories: [] },
+            ],
+          },
+        },
+        years: [2024, 2025],
+      }),
+    )
     // No config key → migration will trigger
     const store = loadBudgetStore()
     const groups = store.categoryGroups!
@@ -252,17 +271,23 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
   })
 
   it('deduplicates categories in Others that exist in custom groups', () => {
-    localStorage.setItem('budget-store', JSON.stringify({
-      csvs: {},
-      configs: {
-        2024: { year: 2024, categoryGroups: [
-          { id: 'food', name: 'Food', categories: ['Groceries'] },
-          { id: 'others', name: 'Others', categories: ['Groceries', 'Misc'] },
-          { id: 'removed', name: 'Remove from Budget', categories: [] },
-        ]},
-      },
-      years: [2024],
-    }))
+    localStorage.setItem(
+      'budget-store',
+      JSON.stringify({
+        csvs: {},
+        configs: {
+          2024: {
+            year: 2024,
+            categoryGroups: [
+              { id: 'food', name: 'Food', categories: ['Groceries'] },
+              { id: 'others', name: 'Others', categories: ['Groceries', 'Misc'] },
+              { id: 'removed', name: 'Remove from Budget', categories: [] },
+            ],
+          },
+        },
+        years: [2024],
+      }),
+    )
     const store = loadBudgetStore()
     const others = store.categoryGroups!.find(g => g.id === 'others')!
     // Groceries is in the food group, so it should be removed from Others

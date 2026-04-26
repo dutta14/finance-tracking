@@ -52,7 +52,9 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .settings-modal-close:hover {
@@ -91,18 +93,20 @@
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   position: relative;
 }
 
 .settings-modal-nav-item:hover {
   color: var(--color-text);
-  background: rgba(0,0,0,0.03);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .settings-modal-nav-item.active {
   color: var(--color-text);
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .settings-modal-nav-item.active::before {
@@ -223,8 +227,6 @@
   color: var(--color-text-muted);
   margin: 0;
 }
-  margin: 0;
-}
 
 /* Partner section */
 .settings-profile-columns {
@@ -335,9 +337,15 @@
 }
 
 @keyframes settings-save-fade {
-  0% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .settings-partner-header {
@@ -370,7 +378,10 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .settings-add-partner-btn:hover {
@@ -419,7 +430,7 @@
 .settings-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-lighter, rgba(99,102,241,0.1));
+  box-shadow: 0 0 0 2px var(--accent-lighter, rgba(99, 102, 241, 0.1));
 }
 
 .settings-description {
@@ -474,7 +485,10 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .settings-btn--secondary:hover {
@@ -519,7 +533,9 @@
 .ghsync-commit-restore-btn {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s, visibility 0.15s;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
 }
 
 .ghsync-commit-item:hover .ghsync-commit-restore-btn {
@@ -606,7 +622,7 @@
   background: color-mix(in srgb, var(--accent) 30%, var(--color-border-light));
 }
 
-.settings-toggle[aria-pressed="true"] {
+.settings-toggle[aria-pressed='true'] {
   background: var(--accent);
 }
 
@@ -622,7 +638,7 @@
   transition: left 0.15s;
 }
 
-.settings-toggle[aria-pressed="true"] .settings-toggle-thumb {
+.settings-toggle[aria-pressed='true'] .settings-toggle-thumb {
   left: 22px;
 }
 
@@ -790,7 +806,7 @@
 
 body.dark .settings-modal-nav-item.active {
   color: var(--color-text-on-accent);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 body.dark .settings-reset-warning svg {
@@ -817,7 +833,9 @@ body.dark .settings-reset-title {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Tab navigation */
@@ -875,7 +893,7 @@ body.dark .settings-reset-title {
 .ghsync-field-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-lighter, rgba(99,102,241,0.1));
+  box-shadow: 0 0 0 2px var(--accent-lighter, rgba(99, 102, 241, 0.1));
 }
 
 .ghsync-field-hint {
@@ -892,7 +910,7 @@ body.dark .settings-reset-title {
   color: var(--color-text-heading);
   cursor: pointer;
 }
-.ghsync-autosync-label input[type="checkbox"] {
+.ghsync-autosync-label input[type='checkbox'] {
   width: 15px;
   height: 15px;
   accent-color: var(--accent-hover);
@@ -1065,7 +1083,9 @@ body.dark .ghsync-mini-btn {
 }
 
 @keyframes ghsync-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Dirty dot indicator on sync button */
@@ -1195,7 +1215,10 @@ body.dark .ghsync-mini-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    border-color 0.15s;
   outline: none;
   position: relative;
 }
@@ -1211,7 +1234,9 @@ body.dark .ghsync-mini-btn {
 
 .settings-palette-swatch.active {
   border-color: var(--color-text-on-accent);
-  box-shadow: 0 0 0 2px var(--swatch-color, var(--accent)), 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 0 0 2px var(--swatch-color, var(--accent)),
+    0 2px 6px rgba(0, 0, 0, 0.15);
   transform: scale(1.1);
 }
 

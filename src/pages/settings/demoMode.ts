@@ -79,7 +79,9 @@ export function exitDemoMode(): void {
         localStorage.setItem(key, value)
       }
     }
-  } catch { /* corrupt backup — just clear */ }
+  } catch {
+    /* corrupt backup — just clear */
+  }
 
   // 3. Remove backup key
   localStorage.removeItem(BACKUP_KEY)
@@ -91,63 +93,196 @@ export function exitDemoMode(): void {
 /* ─── Seed Functions ─────────────────────────────────────────── */
 
 function seedProfile(): void {
-  localStorage.setItem('user-profile', JSON.stringify({
-    name: 'Alex',
-    avatarDataUrl: '',
-    birthday: '1992-03-15',
-    partner: { name: 'Sam', avatarDataUrl: '', birthday: '1994-07-22' },
-  }))
+  localStorage.setItem(
+    'user-profile',
+    JSON.stringify({
+      name: 'Alex',
+      avatarDataUrl: '',
+      birthday: '1992-03-15',
+      partner: { name: 'Sam', avatarDataUrl: '', birthday: '1994-07-22' },
+    }),
+  )
 }
 
 function seedGoals(): void {
   const now = new Date()
   const goals: FinancialGoal[] = [
     {
-      id: 1, goalName: 'Early Retirement', createdAt: '2020-01-15T00:00:00.000Z',
-      birthday: '1992-03-15', goalCreatedIn: '2020-01', goalEndYear: '2050',
-      resetExpenseMonth: false, retirementAge: 50,
-      expenseMonth: 1, expenseValue: 60000, monthlyExpenseValue: 5000,
-      expenseValueMar2026: 68000, expenseValue2047: 120000, monthlyExpense2047: 10000,
-      inflationRate: 3, safeWithdrawalRate: 3.5, growth: 8,
-      retirement: '2042-03', fiGoal: 3428571, progress: 42,
+      id: 1,
+      goalName: 'Early Retirement',
+      createdAt: '2020-01-15T00:00:00.000Z',
+      birthday: '1992-03-15',
+      goalCreatedIn: '2020-01',
+      goalEndYear: '2050',
+      resetExpenseMonth: false,
+      retirementAge: 50,
+      expenseMonth: 1,
+      expenseValue: 60000,
+      monthlyExpenseValue: 5000,
+      expenseValueMar2026: 68000,
+      expenseValue2047: 120000,
+      monthlyExpense2047: 10000,
+      inflationRate: 3,
+      safeWithdrawalRate: 3.5,
+      growth: 8,
+      retirement: '2042-03',
+      fiGoal: 3428571,
+      progress: 42,
     },
     {
-      id: 2, goalName: 'Coast FI', createdAt: '2021-06-01T00:00:00.000Z',
-      birthday: '1992-03-15', goalCreatedIn: '2021-06', goalEndYear: '2055',
-      resetExpenseMonth: false, retirementAge: 55,
-      expenseMonth: 6, expenseValue: 48000, monthlyExpenseValue: 4000,
-      expenseValueMar2026: 53000, expenseValue2047: 95000, monthlyExpense2047: 7917,
-      inflationRate: 3, safeWithdrawalRate: 4, growth: 7,
-      retirement: '2047-03', fiGoal: 2375000, progress: 35,
+      id: 2,
+      goalName: 'Coast FI',
+      createdAt: '2021-06-01T00:00:00.000Z',
+      birthday: '1992-03-15',
+      goalCreatedIn: '2021-06',
+      goalEndYear: '2055',
+      resetExpenseMonth: false,
+      retirementAge: 55,
+      expenseMonth: 6,
+      expenseValue: 48000,
+      monthlyExpenseValue: 4000,
+      expenseValueMar2026: 53000,
+      expenseValue2047: 95000,
+      monthlyExpense2047: 7917,
+      inflationRate: 3,
+      safeWithdrawalRate: 4,
+      growth: 7,
+      retirement: '2047-03',
+      fiGoal: 2375000,
+      progress: 35,
     },
     {
-      id: 3, goalName: 'Partner\'s Plan', createdAt: '2022-01-10T00:00:00.000Z',
-      birthday: '1994-07-22', goalCreatedIn: '2022-01', goalEndYear: '2054',
-      resetExpenseMonth: false, retirementAge: 52,
-      expenseMonth: 1, expenseValue: 45000, monthlyExpenseValue: 3750,
-      expenseValueMar2026: 50000, expenseValue2047: 85000, monthlyExpense2047: 7083,
-      inflationRate: 3, safeWithdrawalRate: 4, growth: 7,
-      retirement: '2046-07', fiGoal: 2125000, progress: 28,
+      id: 3,
+      goalName: "Partner's Plan",
+      createdAt: '2022-01-10T00:00:00.000Z',
+      birthday: '1994-07-22',
+      goalCreatedIn: '2022-01',
+      goalEndYear: '2054',
+      resetExpenseMonth: false,
+      retirementAge: 52,
+      expenseMonth: 1,
+      expenseValue: 45000,
+      monthlyExpenseValue: 3750,
+      expenseValueMar2026: 50000,
+      expenseValue2047: 85000,
+      monthlyExpense2047: 7083,
+      inflationRate: 3,
+      safeWithdrawalRate: 4,
+      growth: 7,
+      retirement: '2046-07',
+      fiGoal: 2125000,
+      progress: 28,
     },
   ]
   localStorage.setItem('financialGoals', JSON.stringify(goals))
 
   const gwGoals: GwGoal[] = [
-    { id: 101, fiGoalId: 1, label: 'House Down Payment', createdAt: '2021-03-01', disburseAge: 35, disburseAmount: 80000, growthRate: 5, currentSavings: 45000 },
-    { id: 102, fiGoalId: 1, label: 'Kids College Fund', createdAt: '2022-01-01', disburseAge: 48, disburseAmount: 120000, growthRate: 6, currentSavings: 18000 },
-    { id: 103, fiGoalId: 2, label: 'Sabbatical Fund', createdAt: '2023-01-01', disburseAge: 40, disburseAmount: 30000, growthRate: 4, currentSavings: 12000 },
-    { id: 104, fiGoalId: 3, label: 'New Car', createdAt: '2023-06-01', disburseAge: 36, disburseAmount: 35000, growthRate: 3, currentSavings: 22000 },
+    {
+      id: 101,
+      fiGoalId: 1,
+      label: 'House Down Payment',
+      createdAt: '2021-03-01',
+      disburseAge: 35,
+      disburseAmount: 80000,
+      growthRate: 5,
+      currentSavings: 45000,
+    },
+    {
+      id: 102,
+      fiGoalId: 1,
+      label: 'Kids College Fund',
+      createdAt: '2022-01-01',
+      disburseAge: 48,
+      disburseAmount: 120000,
+      growthRate: 6,
+      currentSavings: 18000,
+    },
+    {
+      id: 103,
+      fiGoalId: 2,
+      label: 'Sabbatical Fund',
+      createdAt: '2023-01-01',
+      disburseAge: 40,
+      disburseAmount: 30000,
+      growthRate: 4,
+      currentSavings: 12000,
+    },
+    {
+      id: 104,
+      fiGoalId: 3,
+      label: 'New Car',
+      createdAt: '2023-06-01',
+      disburseAge: 36,
+      disburseAmount: 35000,
+      growthRate: 3,
+      currentSavings: 22000,
+    },
   ]
   localStorage.setItem('gw-goals', JSON.stringify(gwGoals))
 }
 
 function seedAccounts(): void {
   const accounts: Account[] = [
-    { id: 1, name: '401(k)', type: 'retirement', owner: 'primary', status: 'active', goalType: 'fi', nature: 'asset', allocation: 'us-stock', institution: 'Fidelity', group: 'Retirement' },
-    { id: 2, name: 'Roth IRA', type: 'retirement', owner: 'primary', status: 'active', goalType: 'fi', nature: 'asset', allocation: 'intl-stock', institution: 'Vanguard', group: 'Retirement' },
-    { id: 3, name: 'Brokerage', type: 'non-retirement', owner: 'joint', status: 'active', goalType: 'fi', nature: 'asset', allocation: 'us-stock', institution: 'Schwab', group: 'Taxable' },
-    { id: 4, name: 'High-Yield Savings', type: 'liquid', owner: 'joint', status: 'active', goalType: 'gw', nature: 'asset', allocation: 'cash', institution: 'Marcus', group: 'Cash' },
-    { id: 5, name: 'Partner 401(k)', type: 'retirement', owner: 'partner', status: 'active', goalType: 'fi', nature: 'asset', allocation: 'bonds', institution: 'T. Rowe Price', group: 'Retirement' },
+    {
+      id: 1,
+      name: '401(k)',
+      type: 'retirement',
+      owner: 'primary',
+      status: 'active',
+      goalType: 'fi',
+      nature: 'asset',
+      allocation: 'us-stock',
+      institution: 'Fidelity',
+      group: 'Retirement',
+    },
+    {
+      id: 2,
+      name: 'Roth IRA',
+      type: 'retirement',
+      owner: 'primary',
+      status: 'active',
+      goalType: 'fi',
+      nature: 'asset',
+      allocation: 'intl-stock',
+      institution: 'Vanguard',
+      group: 'Retirement',
+    },
+    {
+      id: 3,
+      name: 'Brokerage',
+      type: 'non-retirement',
+      owner: 'joint',
+      status: 'active',
+      goalType: 'fi',
+      nature: 'asset',
+      allocation: 'us-stock',
+      institution: 'Schwab',
+      group: 'Taxable',
+    },
+    {
+      id: 4,
+      name: 'High-Yield Savings',
+      type: 'liquid',
+      owner: 'joint',
+      status: 'active',
+      goalType: 'gw',
+      nature: 'asset',
+      allocation: 'cash',
+      institution: 'Marcus',
+      group: 'Cash',
+    },
+    {
+      id: 5,
+      name: 'Partner 401(k)',
+      type: 'retirement',
+      owner: 'partner',
+      status: 'active',
+      goalType: 'fi',
+      nature: 'asset',
+      allocation: 'bonds',
+      institution: 'T. Rowe Price',
+      group: 'Retirement',
+    },
   ]
   localStorage.setItem('data-accounts', JSON.stringify(accounts))
 }
@@ -164,11 +299,11 @@ function seedBalances(): void {
 
   // Account growth profiles: [startBalance, monthlyContribution, annualGrowthPct, volatility]
   const profiles: Record<number, [number, number, number, number]> = {
-    1: [25000, 1800, 9, 0.03],    // 401k — aggressive growth
-    2: [8000, 500, 8, 0.025],     // Roth IRA
+    1: [25000, 1800, 9, 0.03], // 401k — aggressive growth
+    2: [8000, 500, 8, 0.025], // Roth IRA
     3: [15000, 1000, 7.5, 0.035], // Brokerage
-    4: [10000, 800, 4.5, 0.005],  // HYSA — low volatility
-    5: [12000, 1200, 8.5, 0.03],  // Partner 401k
+    4: [10000, 800, 4.5, 0.005], // HYSA — low volatility
+    5: [12000, 1200, 8.5, 0.03], // Partner 401k
   }
 
   for (const [accountId, [startBal, monthlyAdd, annualGrowth, vol]] of Object.entries(profiles)) {
@@ -180,7 +315,7 @@ function seedBalances(): void {
       for (let m = 1; m <= maxMonth; m++) {
         // Simulate: contribution + growth + noise
         balance += monthlyAdd
-        balance *= (1 + monthlyGrowth)
+        balance *= 1 + monthlyGrowth
         // Add some realistic noise
         const noise = 1 + (Math.random() - 0.5) * vol * 2
         balance *= noise
@@ -233,7 +368,8 @@ function seedBudget(): void {
 
       // Income
       lines.push(`${y}-${String(m).padStart(2, '0')}-01,Salary,${8500 + Math.round(Math.random() * 500)}`)
-      if (Math.random() > 0.6) lines.push(`${y}-${String(m).padStart(2, '0')}-15,Side Income,${300 + Math.round(Math.random() * 700)}`)
+      if (Math.random() > 0.6)
+        lines.push(`${y}-${String(m).padStart(2, '0')}-15,Side Income,${300 + Math.round(Math.random() * 700)}`)
       lines.push(`${y}-${String(m).padStart(2, '0')}-28,Interest,${20 + Math.round(Math.random() * 30)}`)
 
       // Expenses (negative amounts)
@@ -246,16 +382,20 @@ function seedBudget(): void {
         const day = String(3 + w * 7).padStart(2, '0')
         lines.push(`${y}-${String(m).padStart(2, '0')}-${day},Groceries,${-(80 + Math.round(Math.random() * 60))}`)
       }
-      if (Math.random() > 0.3) lines.push(`${y}-${String(m).padStart(2, '0')}-12,Restaurants,${-(40 + Math.round(Math.random() * 80))}`)
-      if (Math.random() > 0.5) lines.push(`${y}-${String(m).padStart(2, '0')}-20,Coffee,${-(15 + Math.round(Math.random() * 25))}`)
+      if (Math.random() > 0.3)
+        lines.push(`${y}-${String(m).padStart(2, '0')}-12,Restaurants,${-(40 + Math.round(Math.random() * 80))}`)
+      if (Math.random() > 0.5)
+        lines.push(`${y}-${String(m).padStart(2, '0')}-20,Coffee,${-(15 + Math.round(Math.random() * 25))}`)
 
       // Transport
       lines.push(`${y}-${String(m).padStart(2, '0')}-10,Gas,${-(45 + Math.round(Math.random() * 35))}`)
       if (m % 6 === 1) lines.push(`${y}-${String(m).padStart(2, '0')}-15,Car Insurance,-650`)
-      if (Math.random() > 0.85) lines.push(`${y}-${String(m).padStart(2, '0')}-18,Maintenance,${-(100 + Math.round(Math.random() * 400))}`)
+      if (Math.random() > 0.85)
+        lines.push(`${y}-${String(m).padStart(2, '0')}-18,Maintenance,${-(100 + Math.round(Math.random() * 400))}`)
 
       // Personal
-      if (Math.random() > 0.4) lines.push(`${y}-${String(m).padStart(2, '0')}-08,Shopping,${-(30 + Math.round(Math.random() * 120))}`)
+      if (Math.random() > 0.4)
+        lines.push(`${y}-${String(m).padStart(2, '0')}-08,Shopping,${-(30 + Math.round(Math.random() * 120))}`)
       lines.push(`${y}-${String(m).padStart(2, '0')}-01,Subscriptions,-45`)
       lines.push(`${y}-${String(m).padStart(2, '0')}-01,Gym,-50`)
 
@@ -295,7 +435,8 @@ function seedTaxes(): void {
 
   const templates = [
     {
-      id: 'tpl-1', name: 'Standard Filing',
+      id: 'tpl-1',
+      name: 'Standard Filing',
       items: [
         { label: 'W-2 (Primary)', owner: 'primary', category: 'paystub' },
         { label: 'W-2 (Partner)', owner: 'partner', category: 'paystub' },
@@ -312,14 +453,18 @@ function seedTaxes(): void {
 function seedAllocation(): void {
   const ratios = [
     {
-      id: 'demo-1', name: 'Stock vs Bond', scope: 'fi',
+      id: 'demo-1',
+      name: 'Stock vs Bond',
+      scope: 'fi',
       groups: [
         { label: 'Stocks', classes: ['us-stock', 'intl-stock'] },
         { label: 'Bonds', classes: ['bonds'] },
       ],
     },
     {
-      id: 'demo-2', name: 'US vs International', scope: 'total',
+      id: 'demo-2',
+      name: 'US vs International',
+      scope: 'total',
       groups: [
         { label: 'US Stock', classes: ['us-stock'] },
         { label: 'Intl Stock', classes: ['intl-stock'] },

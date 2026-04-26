@@ -5,7 +5,7 @@ export default defineConfig({
   base: '/finance-tracking/', // Set to your repo name
   plugins: [react()],
   resolve: {
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   test: {
     globals: true,

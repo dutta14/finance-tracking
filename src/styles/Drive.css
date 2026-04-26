@@ -69,7 +69,9 @@
   font-weight: var(--fw-medium);
   cursor: pointer;
   color: var(--color-text);
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .drive-year-tab:hover {
   background: var(--accent-lighter);
@@ -105,9 +107,15 @@
   background: var(--accent-lighter);
 }
 
-.drive-row--folder .drive-icon { color: var(--accent-badge); }
-.drive-row--file .drive-icon { color: var(--accent-icon-subtle); }
-.drive-row--back .drive-icon { color: var(--color-text-muted); }
+.drive-row--folder .drive-icon {
+  color: var(--accent-badge);
+}
+.drive-row--file .drive-icon {
+  color: var(--accent-icon-subtle);
+}
+.drive-row--back .drive-icon {
+  color: var(--color-text-muted);
+}
 
 .drive-row-name {
   flex: 1;
@@ -177,7 +185,10 @@ body.dark .drive-row-tag {
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s;
 }
 .drive-filter-btn:hover {
   background: var(--accent-lighter);
@@ -242,7 +253,9 @@ body.dark .drive-filter-btn.active {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.06),
+    0 2px 12px rgba(0, 0, 0, 0.04);
 }
 .drive-viewer-table {
   width: 100%;
@@ -342,7 +355,9 @@ body.dark .drive-filter-btn.active {
   font-weight: var(--fw-semibold);
   cursor: pointer;
 }
-.drive-add-year-go:hover { opacity: 0.85; }
+.drive-add-year-go:hover {
+  opacity: 0.85;
+}
 .drive-add-year-cancel {
   background: none;
   border: none;
@@ -352,7 +367,9 @@ body.dark .drive-filter-btn.active {
   padding: 0 0.25rem;
   line-height: 1;
 }
-.drive-add-year-cancel:hover { color: var(--color-negative); }
+.drive-add-year-cancel:hover {
+  color: var(--color-negative);
+}
 
 /* ── Dropzone ────────────────────────────────────────────────── */
 
@@ -363,7 +380,9 @@ body.dark .drive-filter-btn.active {
   border-radius: var(--radius);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .drive-dropzone:hover {
   border-color: var(--accent-border);
@@ -407,7 +426,7 @@ body.dark .drive-filter-btn.active {
   padding: 0.6rem 1rem;
   border-radius: var(--radius);
   font-size: var(--fs-md);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   max-width: 90vw;
 }
 .drive-toast-close {
@@ -419,6 +438,8 @@ body.dark .drive-filter-btn.active {
   padding: 0 0.2rem;
   line-height: 1;
 }
-.drive-toast-close:hover { color: var(--color-text-on-accent); }
+.drive-toast-close:hover {
+  color: var(--color-text-on-accent);
+}
 
 /* ── Dark mode additions ─────────────────────────────────────── */

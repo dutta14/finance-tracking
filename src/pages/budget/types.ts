@@ -1,8 +1,8 @@
 /** A single row from a CSV file */
 export interface Transaction {
-  date: string      // ISO date string (yyyy-mm-dd)
-  category: string  // Category name
-  amount: number    // Positive = income, negative = expense
+  date: string // ISO date string (yyyy-mm-dd)
+  category: string // Category name
+  amount: number // Positive = income, negative = expense
   description?: string
 }
 
@@ -18,7 +18,7 @@ export interface MonthCSV {
 
 /** Parsed transactions for a month */
 export interface MonthData {
-  month: string         // "2025-05"
+  month: string // "2025-05"
   transactions: Transaction[]
 }
 

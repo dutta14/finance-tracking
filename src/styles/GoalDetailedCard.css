@@ -258,7 +258,9 @@
   cursor: pointer;
   color: var(--accent-text-mid);
   font-weight: var(--fw-normal);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   white-space: nowrap;
 }
 
@@ -304,7 +306,7 @@
   padding: 0.5rem 0.7rem;
   border-radius: var(--radius);
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   z-index: 100;
   pointer-events: none;
   font-weight: var(--fw-normal);
@@ -370,7 +372,10 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   border-radius: var(--radius);
   padding: 4px 10px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .fi-card-edit-btn:hover {
@@ -427,7 +432,9 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   color: var(--accent-text-dark);
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .fi-form-input:focus {
@@ -467,7 +474,9 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   font-weight: var(--fw-medium);
   color: var(--accent-text-mid);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .fi-form-cancel:hover {
@@ -507,13 +516,13 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 }
 
 /* Status-driven colors via data attribute */
-.fi-card-trajectory[data-status="ahead"],
-.fi-card-trajectory[data-status="on-track"] {
+.fi-card-trajectory[data-status='ahead'],
+.fi-card-trajectory[data-status='on-track'] {
   --trajectory-stroke: var(--color-positive);
   --trajectory-fill: var(--color-positive);
 }
 
-.fi-card-trajectory[data-status="behind"] {
+.fi-card-trajectory[data-status='behind'] {
   --trajectory-stroke: var(--color-warning);
   --trajectory-fill: var(--color-warning);
 }

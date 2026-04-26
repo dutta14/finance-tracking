@@ -9,12 +9,16 @@ const LabsPane: FC = () => {
     <div className="settings-section">
       <h3>Labs</h3>
       <div className="settings-section-content">
-        <p className="settings-description">Try experimental features. These may be incomplete or change without notice.</p>
+        <p className="settings-description">
+          Try experimental features. These may be incomplete or change without notice.
+        </p>
 
         <div className="settings-toggle-row">
           <div>
             <span className="settings-toggle-label">PDF → CSV</span>
-            <span className="settings-toggle-hint">Extract transaction tables from bank or brokerage PDFs into CSV format</span>
+            <span className="settings-toggle-hint">
+              Extract transaction tables from bank or brokerage PDFs into CSV format
+            </span>
           </div>
           <button
             className={`settings-toggle-switch${labPdfToCsv ? ' on' : ''}`}
@@ -42,7 +46,9 @@ const LabsPane: FC = () => {
           </div>
           <button
             className={`settings-toggle-switch${demoActive ? ' on' : ''}`}
-            onClick={() => { demoActive ? exitDemoMode() : enterDemoMode() }}
+            onClick={() => {
+              demoActive ? exitDemoMode() : enterDemoMode()
+            }}
             role="switch"
             aria-checked={demoActive}
           >

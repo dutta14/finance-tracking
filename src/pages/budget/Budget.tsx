@@ -19,19 +19,35 @@ const PdfToCsv = lazy(() => import('../tools/components/PdfToCsv'))
 const Budget: FC = () => {
   const {
     years,
-    selectedYear, setSelectedYear,
-    viewMode, setViewMode,
-    uploadCSV, removeCSV, updateCategoryGroups, mergeCategories, editCategory,
-    categoryHasTransactions, deleteCategory,
+    selectedYear,
+    setSelectedYear,
+    viewMode,
+    setViewMode,
+    uploadCSV,
+    removeCSV,
+    updateCategoryGroups,
+    mergeCategories,
+    editCategory,
+    categoryHasTransactions,
+    deleteCategory,
     addTransaction,
-    yearTransactions, categoryGroups, removedCategories, categorySums, summary, monthsWithData,
+    yearTransactions,
+    categoryGroups,
+    removedCategories,
+    categorySums,
+    summary,
+    monthsWithData,
   } = useBudget()
 
   const {
-    csvPreview, toastMsg,
-    quickUploadRef, bulkUploadRef,
-    handleQuickUpload, handleBulkUpload,
-    handlePreviewConfirm, handlePreviewCancel,
+    csvPreview,
+    toastMsg,
+    quickUploadRef,
+    bulkUploadRef,
+    handleQuickUpload,
+    handleBulkUpload,
+    handlePreviewConfirm,
+    handlePreviewCancel,
   } = useCSVUpload(uploadCSV)
 
   const [showGroupMgr, setShowGroupMgr] = useState(false)
@@ -89,11 +105,7 @@ const Budget: FC = () => {
         onOpenPdfToCsv={pdfToCsvEnabled ? openPdfModal : undefined}
       />
 
-      <ManualTransactionEntry
-        categoryGroups={categoryGroups}
-        years={years}
-        onAdd={addTransaction}
-      />
+      <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
 
       {csvPreview && (
         <CSVPreviewModal
@@ -108,7 +120,14 @@ const Budget: FC = () => {
 
       {Object.keys(yearTransactions).length === 0 && monthsWithData.size === 0 ? (
         <div className="budget-empty-year">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="budget-empty-year-icon">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+            className="budget-empty-year-icon"
+          >
             <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
             <path d="M3 9h18M9 4v16" stroke="currentColor" strokeWidth="1.5" />
           </svg>
@@ -120,7 +139,10 @@ const Budget: FC = () => {
           </p>
           <div className="budget-empty-year-actions">
             {selectedYear <= currentYear && (
-              <button className="budget-action-btn budget-action-btn--accent" onClick={() => quickUploadRef.current?.click()}>
+              <button
+                className="budget-action-btn budget-action-btn--accent"
+                onClick={() => quickUploadRef.current?.click()}
+              >
                 Import CSV
               </button>
             )}
@@ -138,7 +160,7 @@ const Budget: FC = () => {
           {showGroupMgr && (
             <CategoryGroupManager
               groups={categoryGroups}
-              onUpdate={(groups) => updateCategoryGroups(groups)}
+              onUpdate={groups => updateCategoryGroups(groups)}
               onMerge={mergeCategories}
               onDeleteCategory={deleteCategory}
               categoryHasTransactions={categoryHasTransactions}
@@ -149,40 +171,62 @@ const Budget: FC = () => {
           {viewMode === 'detailed' ? (
             <>
               <BudgetTable
-                year={selectedYear} type="income"
-                categoryGroups={categoryGroups} categorySums={categorySums}
+                year={selectedYear}
+                type="income"
+                categoryGroups={categoryGroups}
+                categorySums={categorySums}
                 monthsWithData={monthsWithData}
-                onUploadCSV={uploadCSV} onRemoveCSV={removeCSV} onEditCategory={editCategory}
-                yearTransactions={yearTransactions} timePeriod={timePeriod}
+                onUploadCSV={uploadCSV}
+                onRemoveCSV={removeCSV}
+                onEditCategory={editCategory}
+                yearTransactions={yearTransactions}
+                timePeriod={timePeriod}
               />
               <BudgetTable
-                year={selectedYear} type="expense"
-                categoryGroups={categoryGroups} categorySums={categorySums}
+                year={selectedYear}
+                type="expense"
+                categoryGroups={categoryGroups}
+                categorySums={categorySums}
                 monthsWithData={monthsWithData}
-                onUploadCSV={uploadCSV} onRemoveCSV={removeCSV} onEditCategory={editCategory}
-                yearTransactions={yearTransactions} timePeriod={timePeriod}
+                onUploadCSV={uploadCSV}
+                onRemoveCSV={removeCSV}
+                onEditCategory={editCategory}
+                yearTransactions={yearTransactions}
+                timePeriod={timePeriod}
               />
             </>
           ) : viewMode === 'aggregated' ? (
             <>
               <BudgetAggregatedView
-                year={selectedYear} type="income"
-                categoryGroups={categoryGroups} categorySums={categorySums} timePeriod={timePeriod}
+                year={selectedYear}
+                type="income"
+                categoryGroups={categoryGroups}
+                categorySums={categorySums}
+                timePeriod={timePeriod}
               />
               <BudgetAggregatedView
-                year={selectedYear} type="expense"
-                categoryGroups={categoryGroups} categorySums={categorySums} timePeriod={timePeriod}
+                year={selectedYear}
+                type="expense"
+                categoryGroups={categoryGroups}
+                categorySums={categorySums}
+                timePeriod={timePeriod}
               />
             </>
           ) : (
             <>
               <CashflowBarChart
-                year={selectedYear} yearTransactions={yearTransactions}
-                timePeriod={timePeriod} removedCategories={removedCategories} categorySums={categorySums}
+                year={selectedYear}
+                yearTransactions={yearTransactions}
+                timePeriod={timePeriod}
+                removedCategories={removedCategories}
+                categorySums={categorySums}
               />
               <CashflowSankey
-                year={selectedYear} yearTransactions={yearTransactions}
-                categoryGroups={categoryGroups} removedCategories={removedCategories} categorySums={categorySums}
+                year={selectedYear}
+                yearTransactions={yearTransactions}
+                categoryGroups={categoryGroups}
+                removedCategories={removedCategories}
+                categorySums={categorySums}
               />
             </>
           )}
@@ -200,11 +244,21 @@ const Budget: FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="budget-pdf-modal-header">
-              <h2 id="budget-pdf-title" className="budget-pdf-modal-title">PDF → CSV</h2>
-              <button className="budget-pdf-modal-close" onClick={closePdfModal} aria-label="Close">✕</button>
+              <h2 id="budget-pdf-title" className="budget-pdf-modal-title">
+                PDF → CSV
+              </h2>
+              <button className="budget-pdf-modal-close" onClick={closePdfModal} aria-label="Close">
+                ✕
+              </button>
             </div>
             <div className="budget-pdf-modal-body">
-              <Suspense fallback={<div className="budget-pdf-loading" role="status">Loading…</div>}>
+              <Suspense
+                fallback={
+                  <div className="budget-pdf-loading" role="status">
+                    Loading…
+                  </div>
+                }
+              >
                 <PdfToCsv />
               </Suspense>
             </div>

@@ -4,7 +4,11 @@ import { STORAGE_KEY } from './constants'
 export const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 
 export const loadCustomRatios = (): CustomRatio[] => {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+  } catch {
+    return []
+  }
 }
 
 export const saveCustomRatios = (ratios: CustomRatio[]) => {

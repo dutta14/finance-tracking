@@ -6,13 +6,9 @@ export const useEditingState = () => {
 
   const toggleGoalSelection = (goalId: number, multi = false): void => {
     if (multi) {
-      setSelectedGoalIds(prev =>
-        prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]
-      )
+      setSelectedGoalIds(prev => (prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]))
     } else {
-      setSelectedGoalIds(prev =>
-        prev.length === 1 && prev[0] === goalId ? [] : [goalId]
-      )
+      setSelectedGoalIds(prev => (prev.length === 1 && prev[0] === goalId ? [] : [goalId]))
     }
   }
 

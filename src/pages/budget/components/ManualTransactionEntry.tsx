@@ -25,13 +25,7 @@ function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-
-
-const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
-  categoryGroups,
-  years,
-  onAdd,
-}) => {
+const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroups, years, onAdd }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [date, setDate] = useState(todayISO)
   const [description, setDescription] = useState('')
@@ -90,13 +84,20 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
     setCatQuery(value)
     setCatOpen(false)
     setHighlightIdx(-1)
-    setErrors(prev => { const { category: _, ...rest } = prev; return rest })
+    setErrors(prev => {
+      const { category: _, ...rest } = prev
+      return rest
+    })
   }, [])
 
   const handleCatKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      if (!catOpen) { setCatOpen(true); setHighlightIdx(0); return }
+      if (!catOpen) {
+        setCatOpen(true)
+        setHighlightIdx(0)
+        return
+      }
       setHighlightIdx(prev => Math.min(prev + 1, selectableOptions.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
@@ -110,7 +111,10 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
         handleSubmit()
       }
     } else if (e.key === 'Escape') {
-      if (catOpen) { e.stopPropagation(); setCatOpen(false) }
+      if (catOpen) {
+        e.stopPropagation()
+        setCatOpen(false)
+      }
     } else if (e.key === 'Tab') {
       setCatOpen(false)
     }
@@ -174,12 +178,9 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
     const monthKey = monthKeyFromDate(date)
     const cleanAmount = amount.trim().replace(/[$,\s]/g, '')
     const parsedAmount = parseFloat(cleanAmount)
-    const csvLine = [
-      csvEscape(date),
-      csvEscape(category),
-      String(parsedAmount),
-      csvEscape(description.trim()),
-    ].join(',')
+    const csvLine = [csvEscape(date), csvEscape(category), String(parsedAmount), csvEscape(description.trim())].join(
+      ',',
+    )
 
     onAdd(monthKey, csvLine)
 
@@ -215,7 +216,10 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
                 data-idx={idx}
                 aria-selected={isHighlighted}
                 className={`budget-cat-option${isHighlighted ? ' budget-cat-option--hl' : ''}${cat === category ? ' budget-cat-option--selected' : ''}`}
-                onMouseDown={e => { e.preventDefault(); selectCategory(cat) }}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  selectCategory(cat)
+                }}
                 onMouseEnter={() => setHighlightIdx(idx)}
               >
                 {cat}
@@ -229,40 +233,43 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
 
   return (
     <div className="budget-manual-entry">
-      <button
-        className="budget-add-txn-btn"
-        onClick={toggle}
-        aria-expanded={isOpen}
-      >
+      <button className="budget-add-txn-btn" onClick={toggle} aria-expanded={isOpen}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
           <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
         Add Transaction
       </button>
 
-      <div
-        ref={formRef}
-        className={`budget-txn-form-wrapper${isOpen ? ' budget-txn-form-wrapper--open' : ''}`}
-      >
+      <div ref={formRef} className={`budget-txn-form-wrapper${isOpen ? ' budget-txn-form-wrapper--open' : ''}`}>
         {isOpen && (
           <form className="budget-txn-form" onSubmit={handleSubmit} noValidate>
             <div className="budget-txn-form-grid">
               <div className="budget-txn-field">
-                <label className="budget-txn-label" htmlFor="txn-date">Date</label>
+                <label className="budget-txn-label" htmlFor="txn-date">
+                  Date
+                </label>
                 <input
                   ref={dateRef}
                   id="txn-date"
                   type="date"
                   className={`budget-txn-input${errors.date ? ' budget-txn-input--error' : ''}`}
                   value={date}
-                  onChange={e => { setDate(e.target.value); setErrors(prev => { const { date: _, ...rest } = prev; return rest }) }}
+                  onChange={e => {
+                    setDate(e.target.value)
+                    setErrors(prev => {
+                      const { date: _, ...rest } = prev
+                      return rest
+                    })
+                  }}
                   required
                 />
                 {errors.date && <span className="budget-txn-error">{errors.date}</span>}
               </div>
 
               <div className="budget-txn-field">
-                <label className="budget-txn-label" htmlFor="txn-desc">Description</label>
+                <label className="budget-txn-label" htmlFor="txn-desc">
+                  Description
+                </label>
                 <input
                   id="txn-desc"
                   type="text"
@@ -274,7 +281,9 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
               </div>
 
               <div className="budget-txn-field">
-                <label className="budget-txn-label" htmlFor="txn-amount">Amount</label>
+                <label className="budget-txn-label" htmlFor="txn-amount">
+                  Amount
+                </label>
                 <input
                   id="txn-amount"
                   type="text"
@@ -282,14 +291,22 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
                   className={`budget-txn-input${errors.amount ? ' budget-txn-input--error' : ''}`}
                   placeholder="$0.00"
                   value={amount}
-                  onChange={e => { setAmount(e.target.value); setErrors(prev => { const { amount: _, ...rest } = prev; return rest }) }}
+                  onChange={e => {
+                    setAmount(e.target.value)
+                    setErrors(prev => {
+                      const { amount: _, ...rest } = prev
+                      return rest
+                    })
+                  }}
                   required
                 />
                 {errors.amount && <span className="budget-txn-error">{errors.amount}</span>}
               </div>
 
               <div className="budget-txn-field" ref={catWrapperRef}>
-                <label className="budget-txn-label" htmlFor="txn-category">Category</label>
+                <label className="budget-txn-label" htmlFor="txn-category">
+                  Category
+                </label>
                 <div className="budget-cat-combobox">
                   <input
                     ref={catInputRef}
@@ -309,9 +326,17 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
                       setCategory('')
                       setCatOpen(true)
                       setHighlightIdx(0)
-                      setErrors(prev => { const { category: _, ...rest } = prev; return rest })
+                      setErrors(prev => {
+                        const { category: _, ...rest } = prev
+                        return rest
+                      })
                     }}
-                    onFocus={() => { if (!catOpen) { setCatOpen(true); setHighlightIdx(-1) } }}
+                    onFocus={() => {
+                      if (!catOpen) {
+                        setCatOpen(true)
+                        setHighlightIdx(-1)
+                      }
+                    }}
                     onKeyDown={handleCatKeyDown}
                     required
                   />
@@ -333,13 +358,10 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
                     </button>
                   )}
                   {catOpen && (
-                    <ul
-                      ref={catListRef}
-                      id="txn-cat-listbox"
-                      role="listbox"
-                      className="budget-cat-listbox"
-                    >
-                      {filteredGroups.length > 0 ? renderCatDropdown() : (
+                    <ul ref={catListRef} id="txn-cat-listbox" role="listbox" className="budget-cat-listbox">
+                      {filteredGroups.length > 0 ? (
+                        renderCatDropdown()
+                      ) : (
                         <li className="budget-cat-empty" role="presentation">
                           {visibleGroups.length === 0
                             ? 'No categories — upload a CSV first'
@@ -354,17 +376,10 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
             </div>
 
             <div className="budget-txn-actions">
-              <button
-                type="submit"
-                className={`budget-txn-save${showSuccess ? ' budget-txn-save--success' : ''}`}
-              >
+              <button type="submit" className={`budget-txn-save${showSuccess ? ' budget-txn-save--success' : ''}`}>
                 {showSuccess ? 'Added ✓' : 'Save'}
               </button>
-              <button
-                type="button"
-                className="budget-txn-cancel"
-                onClick={() => setIsOpen(false)}
-              >
+              <button type="button" className="budget-txn-cancel" onClick={() => setIsOpen(false)}>
                 Cancel
               </button>
             </div>

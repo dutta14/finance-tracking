@@ -19,13 +19,30 @@ export const DonutChart: FC<DonutChartProps> = ({ data, innerR = 50, outerR = 90
   return (
     <ResponsiveContainer width="100%" height={height}>
       <PieChart>
-        <Pie data={data} cx="50%" cy="50%" innerRadius={innerR} outerRadius={outerR}
-          paddingAngle={2} dataKey="value" stroke="none">
-          {data.map((d, i) => <Cell key={i} fill={d.color} />)}
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          innerRadius={innerR}
+          outerRadius={outerR}
+          paddingAngle={2}
+          dataKey="value"
+          stroke="none"
+        >
+          {data.map((d, i) => (
+            <Cell key={i} fill={d.color} />
+          ))}
         </Pie>
         <Tooltip
-          contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '6px 10px', fontSize: 12 }}
-          formatter={(v) => formatCurrency(v as number)}
+          contentStyle={{
+            backgroundColor: tooltipBg,
+            border: `1px solid ${tooltipBorder}`,
+            borderRadius: 8,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            padding: '6px 10px',
+            fontSize: 12,
+          }}
+          formatter={v => formatCurrency(v as number)}
         />
       </PieChart>
     </ResponsiveContainer>

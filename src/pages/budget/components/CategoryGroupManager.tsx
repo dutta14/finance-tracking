@@ -11,7 +11,12 @@ interface CategoryGroupManagerProps {
 }
 
 const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
-  groups, onUpdate, onMerge, onDeleteCategory, categoryHasTransactions, categorySums,
+  groups,
+  onUpdate,
+  onMerge,
+  onDeleteCategory,
+  categoryHasTransactions,
+  categorySums,
 }) => {
   const [newGroupName, setNewGroupName] = useState('')
 
@@ -114,7 +119,7 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
   const renameGroup = (id: string) => {
     const name = editName.trim()
     if (!name || id === 'others' || id === 'removed') return
-    onUpdate(groups.map(g => g.id === id ? { ...g, name } : g))
+    onUpdate(groups.map(g => (g.id === id ? { ...g, name } : g)))
     setEditingId(null)
   }
 
@@ -125,10 +130,7 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     onUpdate(
       groups
         .filter(g => g.id !== id)
-        .map(g => g.id === 'others'
-          ? { ...g, categories: [...g.categories, ...group.categories] }
-          : g
-        )
+        .map(g => (g.id === 'others' ? { ...g, categories: [...g.categories, ...group.categories] } : g)),
     )
   }
 
@@ -151,15 +153,17 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
       setDragCat(null)
       return
     }
-    onUpdate(groups.map(g => {
-      if (g.id === dragCat.fromGroupId) {
-        return { ...g, categories: g.categories.filter(c => c !== dragCat.category) }
-      }
-      if (g.id === toGroupId) {
-        return { ...g, categories: [...g.categories, dragCat.category] }
-      }
-      return g
-    }))
+    onUpdate(
+      groups.map(g => {
+        if (g.id === dragCat.fromGroupId) {
+          return { ...g, categories: g.categories.filter(c => c !== dragCat.category) }
+        }
+        if (g.id === toGroupId) {
+          return { ...g, categories: [...g.categories, dragCat.category] }
+        }
+        return g
+      }),
+    )
     setDragCat(null)
   }
 
@@ -202,15 +206,26 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
               className={`budget-group-block${isDropTarget ? ' budget-group-block--drop-target' : ''}${isRemoved ? ' budget-group-block--removed' : ''}`}
               onDragOver={e => handleDragOver(e, g.id)}
               onDrop={e => handleDrop(e, g.id)}
-              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverGroupId(null) }}
+              onDragLeave={e => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverGroupId(null)
+              }}
             >
               <div className="budget-group-header">
                 <button className="budget-group-toggle" onClick={() => toggleExpanded(g.id)}>
                   <svg
-                    width="12" height="12" viewBox="0 0 12 12" fill="none"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
                     style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
                   >
-                    <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M4 2l4 4-4 4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
                 {editingId === g.id ? (
@@ -219,13 +234,21 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                     value={editName}
                     onChange={e => setEditName(e.target.value)}
                     onBlur={() => renameGroup(g.id)}
-                    onKeyDown={e => { if (e.key === 'Enter') renameGroup(g.id); if (e.key === 'Escape') setEditingId(null) }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') renameGroup(g.id)
+                      if (e.key === 'Escape') setEditingId(null)
+                    }}
                     autoFocus
                   />
                 ) : (
                   <span
                     className="budget-group-name"
-                    onDoubleClick={() => { if (!isProtected) { setEditingId(g.id); setEditName(g.name) } }}
+                    onDoubleClick={() => {
+                      if (!isProtected) {
+                        setEditingId(g.id)
+                        setEditName(g.name)
+                      }
+                    }}
                   >
                     {g.name}
                     <span className="budget-group-count">{g.displayCategories.length}</span>
@@ -233,22 +256,33 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                 )}
                 {!isProtected && (
                   <>
-                    <button
-                      className="budget-group-move"
-                      onClick={() => moveGroup(g.id, 'up')}
-                      title="Move group up"
-                    >▲</button>
+                    <button className="budget-group-move" onClick={() => moveGroup(g.id, 'up')} title="Move group up">
+                      ▲
+                    </button>
                     <button
                       className="budget-group-move"
                       onClick={() => moveGroup(g.id, 'down')}
                       title="Move group down"
-                    >▼</button>
+                    >
+                      ▼
+                    </button>
                     <button
                       className="budget-group-rename"
-                      onClick={() => { setEditingId(g.id); setEditName(g.name) }}
+                      onClick={() => {
+                        setEditingId(g.id)
+                        setEditName(g.name)
+                      }}
                       title="Rename group"
-                    >✎</button>
-                    <button className="budget-group-remove" onClick={() => removeGroup(g.id)} title="Delete group (categories move to Others)">×</button>
+                    >
+                      ✎
+                    </button>
+                    <button
+                      className="budget-group-remove"
+                      onClick={() => removeGroup(g.id)}
+                      title="Delete group (categories move to Others)"
+                    >
+                      ×
+                    </button>
                   </>
                 )}
               </div>
@@ -256,31 +290,36 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
               {isExpanded && (
                 <div className="budget-group-cats">
                   {g.displayCategories.length === 0 ? (
-                    <div className="budget-group-cats-empty">
-                      {dragCat ? 'Drop here' : 'No categories'}
-                    </div>
+                    <div className="budget-group-cats-empty">{dragCat ? 'Drop here' : 'No categories'}</div>
                   ) : (
-                    [...g.displayCategories].sort((a, b) => a.localeCompare(b)).map(cat => (
-                      <div
-                        key={cat}
-                        className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeMode && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}`}
-                        draggable={!mergeMode}
-                        onDragStart={e => !mergeMode && handleDragStart(e, cat, g.id)}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => mergeMode && toggleMergeSelect(cat)}
-                        style={mergeMode ? { cursor: 'pointer' } : undefined}
-                      >
-                        <span className="budget-group-cat-handle">⠿</span>
-                        <span className="budget-group-cat-name">{displayCat(cat, g.name)}</span>
-                        {!mergeMode && (
-                          <button
-                            className="budget-group-cat-delete"
-                            onClick={e => { e.stopPropagation(); handleDeleteCat(cat) }}
-                            title="Delete category"
-                          >×</button>
-                        )}
-                      </div>
-                    ))
+                    [...g.displayCategories]
+                      .sort((a, b) => a.localeCompare(b))
+                      .map(cat => (
+                        <div
+                          key={cat}
+                          className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeMode && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}`}
+                          draggable={!mergeMode}
+                          onDragStart={e => !mergeMode && handleDragStart(e, cat, g.id)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => mergeMode && toggleMergeSelect(cat)}
+                          style={mergeMode ? { cursor: 'pointer' } : undefined}
+                        >
+                          <span className="budget-group-cat-handle">⠿</span>
+                          <span className="budget-group-cat-name">{displayCat(cat, g.name)}</span>
+                          {!mergeMode && (
+                            <button
+                              className="budget-group-cat-delete"
+                              onClick={e => {
+                                e.stopPropagation()
+                                handleDeleteCat(cat)
+                              }}
+                              title="Delete category"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))
                   )}
                 </div>
               )}
@@ -295,14 +334,16 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
           value={newGroupName}
           onChange={e => setNewGroupName(e.target.value)}
           placeholder="New group name"
-          onKeyDown={e => { if (e.key === 'Enter') addGroup() }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') addGroup()
+          }}
         />
         <button className="budget-group-add-btn" onClick={addGroup} disabled={!newGroupName.trim()}>
           Add Group
         </button>
         <button
           className={`budget-group-add-btn${mergeMode ? ' budget-merge-active' : ''}`}
-          onClick={() => mergeMode ? cancelMerge() : setMergeMode(true)}
+          onClick={() => (mergeMode ? cancelMerge() : setMergeMode(true))}
         >
           {mergeMode ? 'Cancel Merge' : 'Merge Categories'}
         </button>
@@ -320,9 +361,13 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
               onChange={e => setMergeTargetName(e.target.value)}
             >
               <option value="">Select target name…</option>
-              {[...mergeSelected].sort((a, b) => a.localeCompare(b)).map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              {[...mergeSelected]
+                .sort((a, b) => a.localeCompare(b))
+                .map(c => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
             </select>
             <span className="budget-merge-or">or</span>
             <input
@@ -355,9 +400,13 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
               onChange={e => setDeleteMergeTarget(e.target.value)}
             >
               <option value="">Select target…</option>
-              {allExpenseCats.filter(c => c !== deletingCat).map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              {allExpenseCats
+                .filter(c => c !== deletingCat)
+                .map(c => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
             </select>
             <span className="budget-merge-or">or</span>
             <input
@@ -366,16 +415,15 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
               onChange={e => setDeleteMergeTarget(e.target.value)}
               placeholder="Type new name"
             />
-            <button
-              className="budget-group-add-btn"
-              onClick={confirmDeleteMerge}
-              disabled={!deleteMergeTarget.trim()}
-            >
+            <button className="budget-group-add-btn" onClick={confirmDeleteMerge} disabled={!deleteMergeTarget.trim()}>
               Merge &amp; Delete
             </button>
             <button
               className="budget-group-add-btn"
-              onClick={() => { setDeletingCat(null); setDeleteMergeTarget('') }}
+              onClick={() => {
+                setDeletingCat(null)
+                setDeleteMergeTarget('')
+              }}
             >
               Cancel
             </button>

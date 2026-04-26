@@ -23,10 +23,7 @@ const ageAtCreation = (birthday: string, goalCreatedIn: string): number => {
   const [by, bm, bd] = birthday.split('-').map(Number)
   const created = new Date(goalCreatedIn)
   let age = created.getFullYear() - by
-  if (
-    created.getMonth() + 1 < bm ||
-    (created.getMonth() + 1 === bm && created.getDate() < bd)
-  ) age -= 1
+  if (created.getMonth() + 1 < bm || (created.getMonth() + 1 === bm && created.getDate() < bd)) age -= 1
   return Math.max(age, 0)
 }
 
@@ -54,7 +51,20 @@ const GwGoalCard: FC<{
   onEdit: (fields: GwFormFields) => void
   onDelete: () => void
   gwProgressPct: number
-}> = ({ gw, currentAge, creationYear, inflationRate, retirementAge, goalCreatedIn, profileBirthday, dollarView, onSetDollarView, onEdit, onDelete, gwProgressPct }) => {
+}> = ({
+  gw,
+  currentAge,
+  creationYear,
+  inflationRate,
+  retirementAge,
+  goalCreatedIn,
+  profileBirthday,
+  dollarView,
+  onSetDollarView,
+  onEdit,
+  onDelete,
+  gwProgressPct,
+}) => {
   const [editing, setEditing] = useState(false)
   const [editFields, setEditFields] = useState<GwFormFields>({
     label: gw.label,
@@ -66,7 +76,12 @@ const GwGoalCard: FC<{
   const [pendingDelete, setPendingDelete] = useState(false)
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => () => { if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current) }, [])
+  useEffect(
+    () => () => {
+      if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current)
+    },
+    [],
+  )
 
   const handleDeleteClick = () => {
     setPendingDelete(true)
@@ -87,12 +102,22 @@ const GwGoalCard: FC<{
     const disburseAge = Number(editFields.disburseAge)
     const disburseAmount = Number(editFields.disburseAmount)
     const growthRate = Number(editFields.growthRate)
-    if (!editFields.label.trim()) { setEditError('Label is required.'); return }
-    if (!disburseAge || disburseAge <= currentAge) {
-      setEditError(`Disbursement age must be greater than ${currentAge}.`); return
+    if (!editFields.label.trim()) {
+      setEditError('Label is required.')
+      return
     }
-    if (!disburseAmount || disburseAmount <= 0) { setEditError('Enter a valid target amount.'); return }
-    if (growthRate <= 0 || growthRate > 50) { setEditError('Growth rate must be 0.1–50%.'); return }
+    if (!disburseAge || disburseAge <= currentAge) {
+      setEditError(`Disbursement age must be greater than ${currentAge}.`)
+      return
+    }
+    if (!disburseAmount || disburseAmount <= 0) {
+      setEditError('Enter a valid target amount.')
+      return
+    }
+    if (growthRate <= 0 || growthRate > 50) {
+      setEditError('Growth rate must be 0.1–50%.')
+      return
+    }
     onEdit(editFields)
     setEditing(false)
     setEditError('')
@@ -118,7 +143,7 @@ const GwGoalCard: FC<{
   const retirementYear = birthYear + retirementAge
   const monthsToDisburse = Math.max(
     0,
-    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
+    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
   )
   const displayTarget =
     dollarView === 'creation'
@@ -146,20 +171,28 @@ const GwGoalCard: FC<{
         )}
         <div className="gw-goal-card-actions">
           {!editing && (
-            <button
-              className="gw-goal-edit"
-              onClick={() => setEditing(true)}
-              aria-label="Edit GW goal"
-            >
+            <button className="gw-goal-edit" onClick={() => setEditing(true)} aria-label="Edit GW goal">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <path d="M11.5 2.5 L13.5 4.5 L5 13 H3 V11 L11.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-                <path d="M10 4 L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path
+                  d="M11.5 2.5 L13.5 4.5 L5 13 H3 V11 L11.5 2.5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path d="M10 4 L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
           )}
           <button className="gw-goal-delete" onClick={handleDeleteClick} aria-label="Delete GW goal">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M2.5 3.5h11M6.5 6.5v5M9.5 6.5v5M3.5 3.5l0.5 10c0 0.3 0.2 0.5 0.5 0.5h7c0.3 0 0.5-0.2 0.5-0.5l0.5-10M5.5 3.5V2.5c0-0.3 0.2-0.5 0.5-0.5h4c0.3 0 0.5 0.2 0.5 0.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M2.5 3.5h11M6.5 6.5v5M9.5 6.5v5M3.5 3.5l0.5 10c0 0.3 0.2 0.5 0.5 0.5h7c0.3 0 0.5-0.2 0.5-0.5l0.5-10M5.5 3.5V2.5c0-0.3 0.2-0.5 0.5-0.5h4c0.3 0 0.5 0.2 0.5 0.5v1"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         </div>
@@ -168,8 +201,12 @@ const GwGoalCard: FC<{
       {pendingDelete ? (
         <div className="gw-goal-undo-bar">
           <span className="gw-goal-undo-msg">Goal will be deleted in 10s</span>
-          <button className="gw-goal-undo-btn" onClick={handleUndoDelete}>Undo</button>
-          <div className="gw-goal-undo-progress"><div className="gw-goal-undo-progress-fill" /></div>
+          <button className="gw-goal-undo-btn" onClick={handleUndoDelete}>
+            Undo
+          </button>
+          <div className="gw-goal-undo-progress">
+            <div className="gw-goal-undo-progress-fill" />
+          </div>
         </div>
       ) : editing ? (
         <div className="gw-card-edit-form">
@@ -177,24 +214,55 @@ const GwGoalCard: FC<{
           <div className="gw-form-grid">
             <div className="gw-form-group gw-form-group--full">
               <label className="gw-form-label">Goal label</label>
-              <input className="gw-form-input" type="text" value={editFields.label} onChange={setEF('label')} autoFocus />
+              <input
+                className="gw-form-input"
+                type="text"
+                value={editFields.label}
+                onChange={setEF('label')}
+                autoFocus
+              />
             </div>
             <div className="gw-form-group">
               <label className="gw-form-label">Age at disbursement</label>
-              <input className="gw-form-input" type="number" value={editFields.disburseAge} onChange={setEF('disburseAge')} min={currentAge + 1} step="1" />
+              <input
+                className="gw-form-input"
+                type="number"
+                value={editFields.disburseAge}
+                onChange={setEF('disburseAge')}
+                min={currentAge + 1}
+                step="1"
+              />
             </div>
             <div className="gw-form-group">
               <label className="gw-form-label">Target amount ({creationYear} $)</label>
-              <input className="gw-form-input" type="number" value={editFields.disburseAmount} onChange={setEF('disburseAmount')} min="1" />
+              <input
+                className="gw-form-input"
+                type="number"
+                value={editFields.disburseAmount}
+                onChange={setEF('disburseAmount')}
+                min="1"
+              />
             </div>
             <div className="gw-form-group">
               <label className="gw-form-label">Growth rate (% / yr)</label>
-              <input className="gw-form-input" type="number" value={editFields.growthRate} onChange={setEF('growthRate')} min="0.1" max="50" step="0.1" />
+              <input
+                className="gw-form-input"
+                type="number"
+                value={editFields.growthRate}
+                onChange={setEF('growthRate')}
+                min="0.1"
+                max="50"
+                step="0.1"
+              />
             </div>
           </div>
           <div className="gw-form-actions">
-            <button className="gw-form-save" onClick={handleSave}>Save</button>
-            <button className="gw-form-cancel" onClick={handleCancelEdit}>Cancel</button>
+            <button className="gw-form-save" onClick={handleSave}>
+              Save
+            </button>
+            <button className="gw-form-cancel" onClick={handleCancelEdit}>
+              Cancel
+            </button>
           </div>
         </div>
       ) : (
@@ -211,8 +279,20 @@ const GwGoalCard: FC<{
             <div className="gw-goal-row">
               <span className="gw-goal-row-label">
                 <span className="gw-dollar-toggle">
-                  <button className={`gw-dollar-toggle-btn${dollarView === 'creation' ? ' active' : ''}`} onClick={() => onSetDollarView('creation')} title={`${creationYear} dollars (as entered)`}>Creation</button>
-                  <button className={`gw-dollar-toggle-btn${dollarView === 'disbursement' ? ' active' : ''}`} onClick={() => onSetDollarView('disbursement')} title={`Inflated to disbursement year`}>Disbursement</button>
+                  <button
+                    className={`gw-dollar-toggle-btn${dollarView === 'creation' ? ' active' : ''}`}
+                    onClick={() => onSetDollarView('creation')}
+                    title={`${creationYear} dollars (as entered)`}
+                  >
+                    Creation
+                  </button>
+                  <button
+                    className={`gw-dollar-toggle-btn${dollarView === 'disbursement' ? ' active' : ''}`}
+                    onClick={() => onSetDollarView('disbursement')}
+                    title={`Inflated to disbursement year`}
+                  >
+                    Disbursement
+                  </button>
                 </span>
               </span>
               <span className="gw-goal-row-value gw-goal-row-value--highlight">{dollars(displayTarget)}</span>
@@ -237,7 +317,16 @@ const GwGoalCard: FC<{
   )
 }
 
-const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, onCreateGwGoal, onUpdateGwGoal, onDeleteGwGoal, initialFormOpen }) => {
+const GwSection: FC<GwSectionProps> = ({
+  goal,
+  goals,
+  profileBirthday,
+  gwGoals,
+  onCreateGwGoal,
+  onUpdateGwGoal,
+  onDeleteGwGoal,
+  initialFormOpen,
+}) => {
   const [formOpen, setFormOpen] = useState(initialFormOpen ?? false)
   const [importPickerOpen, setImportPickerOpen] = useState(false)
   const [form, setForm] = useState<GwFormFields>(EMPTY_FORM)
@@ -284,12 +373,22 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
     const disburseAmount = Number(form.disburseAmount)
     const growthRate = Number(form.growthRate)
 
-    if (!form.label.trim()) { setFormError('Please enter a label for this goal.'); return }
-    if (!disburseAge || disburseAge <= currentAge) {
-      setFormError(`Disbursement age must be greater than your current age (${currentAge}).`); return
+    if (!form.label.trim()) {
+      setFormError('Please enter a label for this goal.')
+      return
     }
-    if (!disburseAmount || disburseAmount <= 0) { setFormError('Enter a valid target amount.'); return }
-    if (growthRate <= 0 || growthRate > 50) { setFormError('Growth rate must be between 0 and 50%.'); return }
+    if (!disburseAge || disburseAge <= currentAge) {
+      setFormError(`Disbursement age must be greater than your current age (${currentAge}).`)
+      return
+    }
+    if (!disburseAmount || disburseAmount <= 0) {
+      setFormError('Enter a valid target amount.')
+      return
+    }
+    if (growthRate <= 0 || growthRate > 50) {
+      setFormError('Growth rate must be between 0 and 50%.')
+      return
+    }
 
     onCreateGwGoal({
       fiGoalId: goal.id,
@@ -314,12 +413,14 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
     <section className="gw-section">
       <div className="gw-section-header">
         <div className="gw-section-title-row">
-          <span className="gw-section-badge"><TermAbbr term="GW" /></span>
+          <span className="gw-section-badge">
+            <TermAbbr term="GW" />
+          </span>
           <h2 className="gw-section-title">Generational Wealth</h2>
         </div>
         <p className="gw-section-subtitle">
-          Beyond FI — define endowments for the people who come after you.
-          Each goal shows exactly what to set aside today at your chosen growth rate.
+          Beyond FI — define endowments for the people who come after you. Each goal shows exactly what to set aside
+          today at your chosen growth rate.
         </p>
       </div>
 
@@ -335,7 +436,13 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
           </div>
           <p className="gw-empty-text">No generational wealth goals yet.</p>
           <div className="gw-empty-actions">
-            <button className="gw-add-btn" onClick={() => { setFormOpen(true); setImportPickerOpen(false) }}>
+            <button
+              className="gw-add-btn"
+              onClick={() => {
+                setFormOpen(true)
+                setImportPickerOpen(false)
+              }}
+            >
               + New GW goal
             </button>
             {otherGoals.length > 0 && (
@@ -348,19 +455,27 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
             <div className="gw-import-picker">
               <div className="gw-import-picker-header">
                 <span className="gw-import-picker-title">Copy from existing</span>
-                <button className="gw-import-picker-cancel" onClick={() => setImportPickerOpen(false)}>Cancel</button>
+                <button className="gw-import-picker-cancel" onClick={() => setImportPickerOpen(false)}>
+                  Cancel
+                </button>
               </div>
-              {goals.filter(p => otherGoals.some(g => g.fiGoalId === p.id)).map(srcGoal => (
-                <div key={srcGoal.id} className="gw-import-group">
-                  <div className="gw-import-group-label">{srcGoal.goalName}</div>
-                  {otherGoals.filter(g => g.fiGoalId === srcGoal.id).map(gw => (
-                    <button key={gw.id} className="gw-import-item" onClick={() => handleImport(gw)}>
-                      <span className="gw-import-item-label">{gw.label}</span>
-                      <span className="gw-import-item-meta">Age {gw.disburseAge} · ${Math.round(gw.disburseAmount).toLocaleString()}</span>
-                    </button>
-                  ))}
-                </div>
-              ))}
+              {goals
+                .filter(p => otherGoals.some(g => g.fiGoalId === p.id))
+                .map(srcGoal => (
+                  <div key={srcGoal.id} className="gw-import-group">
+                    <div className="gw-import-group-label">{srcGoal.goalName}</div>
+                    {otherGoals
+                      .filter(g => g.fiGoalId === srcGoal.id)
+                      .map(gw => (
+                        <button key={gw.id} className="gw-import-item" onClick={() => handleImport(gw)}>
+                          <span className="gw-import-item-label">{gw.label}</span>
+                          <span className="gw-import-item-meta">
+                            Age {gw.disburseAge} · ${Math.round(gw.disburseAmount).toLocaleString()}
+                          </span>
+                        </button>
+                      ))}
+                  </div>
+                ))}
             </div>
           )}
         </div>
@@ -381,22 +496,33 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
               dollarView={dollarView}
               onSetDollarView={setDollarView}
               gwProgressPct={gwProgressPct}
-              onEdit={fields => onUpdateGwGoal(gw.id, {
-                label: fields.label.trim(),
-                disburseAge: Number(fields.disburseAge),
-                disburseAmount: Number(fields.disburseAmount),
-                growthRate: Number(fields.growthRate),
-              })}
+              onEdit={fields =>
+                onUpdateGwGoal(gw.id, {
+                  label: fields.label.trim(),
+                  disburseAge: Number(fields.disburseAge),
+                  disburseAmount: Number(fields.disburseAmount),
+                  growthRate: Number(fields.growthRate),
+                })
+              }
               onDelete={() => onDeleteGwGoal(gw.id)}
             />
           ))}
           {!formOpen && (
             <div className="gw-inline-footer">
-              <button className="gw-add-btn gw-add-btn--inline" onClick={() => { setFormOpen(true); setImportPickerOpen(false) }}>
+              <button
+                className="gw-add-btn gw-add-btn--inline"
+                onClick={() => {
+                  setFormOpen(true)
+                  setImportPickerOpen(false)
+                }}
+              >
                 + Add another GW goal
               </button>
               {otherGoals.length > 0 && (
-                <button className="gw-add-btn gw-add-btn--copy gw-add-btn--inline" onClick={() => setImportPickerOpen(v => !v)}>
+                <button
+                  className="gw-add-btn gw-add-btn--copy gw-add-btn--inline"
+                  onClick={() => setImportPickerOpen(v => !v)}
+                >
                   Copy from existing
                 </button>
               )}
@@ -404,19 +530,27 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
                 <div className="gw-import-picker">
                   <div className="gw-import-picker-header">
                     <span className="gw-import-picker-title">Copy from existing</span>
-                    <button className="gw-import-picker-cancel" onClick={() => setImportPickerOpen(false)}>Cancel</button>
+                    <button className="gw-import-picker-cancel" onClick={() => setImportPickerOpen(false)}>
+                      Cancel
+                    </button>
                   </div>
-                  {goals.filter(p => otherGoals.some(g => g.fiGoalId === p.id)).map(srcGoal => (
-                    <div key={srcGoal.id} className="gw-import-group">
-                      <div className="gw-import-group-label">{srcGoal.goalName}</div>
-                      {otherGoals.filter(g => g.fiGoalId === srcGoal.id).map(gw => (
-                        <button key={gw.id} className="gw-import-item" onClick={() => handleImport(gw)}>
-                          <span className="gw-import-item-label">{gw.label}</span>
-                          <span className="gw-import-item-meta">Age {gw.disburseAge} · ${Math.round(gw.disburseAmount).toLocaleString()}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ))}
+                  {goals
+                    .filter(p => otherGoals.some(g => g.fiGoalId === p.id))
+                    .map(srcGoal => (
+                      <div key={srcGoal.id} className="gw-import-group">
+                        <div className="gw-import-group-label">{srcGoal.goalName}</div>
+                        {otherGoals
+                          .filter(g => g.fiGoalId === srcGoal.id)
+                          .map(gw => (
+                            <button key={gw.id} className="gw-import-item" onClick={() => handleImport(gw)}>
+                              <span className="gw-import-item-label">{gw.label}</span>
+                              <span className="gw-import-item-meta">
+                                Age {gw.disburseAge} · ${Math.round(gw.disburseAmount).toLocaleString()}
+                              </span>
+                            </button>
+                          ))}
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -486,12 +620,26 @@ const GwSection: FC<GwSectionProps> = ({ goal, goals, profileBirthday, gwGoals, 
           </div>
 
           <div className="gw-form-actions">
-            <button className="gw-form-save" onClick={handleAdd}>Add goal</button>
-            <button className="gw-form-cancel" onClick={handleCancel}>Cancel</button>
+            <button className="gw-form-save" onClick={handleAdd}>
+              Add goal
+            </button>
+            <button className="gw-form-cancel" onClick={handleCancel}>
+              Cancel
+            </button>
           </div>
           {otherGoals.length > 0 && (
             <p className="gw-form-copy-hint">
-              or <button type="button" className="gw-form-copy-link" onClick={() => { setFormOpen(false); setImportPickerOpen(true) }}>copy from an existing goal</button>
+              or{' '}
+              <button
+                type="button"
+                className="gw-form-copy-link"
+                onClick={() => {
+                  setFormOpen(false)
+                  setImportPickerOpen(true)
+                }}
+              >
+                copy from an existing goal
+              </button>
             </p>
           )}
         </div>

@@ -13,7 +13,11 @@ const CSVViewer: FC<Props> = ({ content, label, ext, onBack }) => {
   const lines = useMemo(() => splitCSVRows(content.trim()), [content])
   const headers = useMemo(() => parseCSVLine(lines[0]).map(h => h.trim()), [lines])
   const rows = useMemo(
-    () => lines.slice(1).filter(l => l.trim()).map(l => parseCSVLine(l)),
+    () =>
+      lines
+        .slice(1)
+        .filter(l => l.trim())
+        .map(l => parseCSVLine(l)),
     [lines],
   )
 
@@ -26,7 +30,17 @@ const CSVViewer: FC<Props> = ({ content, label, ext, onBack }) => {
         </button>
         <h2 className="drive-viewer-title">{label}</h2>
         <div className="drive-viewer-table-wrap">
-          <pre style={{ padding: '1rem', margin: 0, whiteSpace: 'pre-wrap', fontSize: '0.82rem', color: 'var(--color-text)' }}>{content}</pre>
+          <pre
+            style={{
+              padding: '1rem',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              fontSize: '0.82rem',
+              color: 'var(--color-text)',
+            }}
+          >
+            {content}
+          </pre>
         </div>
       </div>
     )

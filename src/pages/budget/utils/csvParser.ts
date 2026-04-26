@@ -38,8 +38,12 @@ function normalizeDate(raw: string): string | null {
   if (usMatch) {
     const [, a, b, y] = usMatch
     // Prefer MM/DD/YYYY; if a > 12, swap to DD/MM/YYYY
-    let m = +a, d = +b
-    if (m > 12 && d <= 12) { m = +b; d = +a }
+    let m = +a,
+      d = +b
+    if (m > 12 && d <= 12) {
+      m = +b
+      d = +a
+    }
     if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
       const date = new Date(+y, m - 1, d)
       if (!isNaN(date.getTime())) return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
@@ -76,14 +80,15 @@ export function parseCSV(csvText: string): Transaction[] {
   const dateIdx = headers.findIndex(h => h === 'date')
   const catIdx = headers.findIndex(h => h === 'category')
   const amtIdx = headers.findIndex(h => h === 'amount')
-  const descIdx = headers.findIndex(h =>
-    h === 'description' || h === 'merchant name' || h === 'original statement' || h === 'notes' || h === 'note'
+  const descIdx = headers.findIndex(
+    h => h === 'description' || h === 'merchant name' || h === 'original statement' || h === 'notes' || h === 'note',
   )
 
   if (dateIdx === -1 || catIdx === -1 || amtIdx === -1) {
     throw new Error(
       'CSV must have headers: Date, Category, Amount. ' +
-      'Optional: Description / Merchant Name / Original Statement. Found: ' + headers.join(', ')
+        'Optional: Description / Merchant Name / Original Statement. Found: ' +
+        headers.join(', '),
     )
   }
 

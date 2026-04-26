@@ -26,7 +26,7 @@ vi.mock('./components/GoalsMiniGrid', () => ({
           <button
             key={g.id}
             data-testid={`card-${g.id}`}
-            onClick={(e) => props.onSelectGoal(g.id, e.metaKey || e.ctrlKey)}
+            onClick={e => props.onSelectGoal(g.id, e.metaKey || e.ctrlKey)}
           >
             {g.goalName}
           </button>
@@ -38,9 +38,7 @@ vi.mock('./components/GoalsMiniGrid', () => ({
 
 vi.mock('./components/GoalCompareView', () => ({
   default: ({ goals }: any) => (
-    <div data-testid="compare-view">
-      Comparing {goals.map((g: any) => g.goalName).join(', ')}
-    </div>
+    <div data-testid="compare-view">Comparing {goals.map((g: any) => g.goalName).join(', ')}</div>
   ),
 }))
 
@@ -180,7 +178,9 @@ describe('Entering and exiting compare mode', () => {
     await user.click(screen.getByRole('button', { name: /exit compare/i }))
 
     expect(screen.getByRole('button', { name: /^compare$/i })).toBeInTheDocument()
-    expect(screen.queryByText(/click goals to select them/i, { selector: '.goal-compare-hint' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/click goals to select them/i, { selector: '.goal-compare-hint' }),
+    ).not.toBeInTheDocument()
   })
 })
 

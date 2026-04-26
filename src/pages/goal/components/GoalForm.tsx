@@ -19,7 +19,7 @@ interface GoalFormProps {
 }
 
 const STEPS = ['Name', 'Timeline', 'Expenses', 'Parameters', 'Review'] as const
-type Step = typeof STEPS[number]
+type Step = (typeof STEPS)[number]
 
 const GoalForm: FC<GoalFormProps> = ({
   formData,
@@ -31,20 +31,36 @@ const GoalForm: FC<GoalFormProps> = ({
   onSetFormFields,
   onSubmit,
   onCancel,
-  setError
+  setError,
 }) => {
   const [step, setStep] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const RANDOM_NAMES = [
-    'Retire to a Beach', 'Golden Years Express', 'The Great Escape',
-    'Freedom Fund', 'Coast to FIRE', 'Hammock Mode',
-    'Savings Speedrun', 'FI or Bust', 'Early Bird Special',
-    'Nest Egg Supreme', 'Operation Chill', 'The Money Garden',
-    'Passport to Freedom', 'Zero Alarm Clocks', 'Latte & Leisure',
-    'Compound Interest Club', 'Debt-Free Dreams', 'Mountain Retreat Fund',
-    'Sunflower Savings', 'Wanderlust Wallet', 'Cabin in the Woods',
-    'Coastline Goal', 'Rainy Day Rocket', 'Tropical Endgame',
+    'Retire to a Beach',
+    'Golden Years Express',
+    'The Great Escape',
+    'Freedom Fund',
+    'Coast to FIRE',
+    'Hammock Mode',
+    'Savings Speedrun',
+    'FI or Bust',
+    'Early Bird Special',
+    'Nest Egg Supreme',
+    'Operation Chill',
+    'The Money Garden',
+    'Passport to Freedom',
+    'Zero Alarm Clocks',
+    'Latte & Leisure',
+    'Compound Interest Club',
+    'Debt-Free Dreams',
+    'Mountain Retreat Fund',
+    'Sunflower Savings',
+    'Wanderlust Wallet',
+    'Cabin in the Woods',
+    'Coastline Goal',
+    'Rainy Day Rocket',
+    'Tropical Endgame',
   ]
 
   const pickRandomName = useCallback(() => {
@@ -85,27 +101,61 @@ const GoalForm: FC<GoalFormProps> = ({
     setError('')
     switch (step) {
       case 0:
-        if (!formData.goalName.trim()) { setError('Please enter a goal name'); return false }
-        if (!profileBirthday) { setError('Please add your birthday in your profile first'); onOpenProfile(); return false }
+        if (!formData.goalName.trim()) {
+          setError('Please enter a goal name')
+          return false
+        }
+        if (!profileBirthday) {
+          setError('Please add your birthday in your profile first')
+          onOpenProfile()
+          return false
+        }
         return true
       case 1:
-        if (!formData.goalCreatedIn) { setError('Please enter the goal creation date'); return false }
-        if (!formData.goalEndYear) { setError('Please enter the goal end year'); return false }
-        if (formData.goalCreatedIn && formData.goalEndYear && formData.goalEndYear <= formData.goalCreatedIn) { setError('Goal end date must be after the start date'); return false }
+        if (!formData.goalCreatedIn) {
+          setError('Please enter the goal creation date')
+          return false
+        }
+        if (!formData.goalEndYear) {
+          setError('Please enter the goal end year')
+          return false
+        }
+        if (formData.goalCreatedIn && formData.goalEndYear && formData.goalEndYear <= formData.goalCreatedIn) {
+          setError('Goal end date must be after the start date')
+          return false
+        }
         if (profileBirthday && formData.goalEndYear) {
           const bYear = new Date(profileBirthday).getFullYear()
           const eYear = new Date(formData.goalEndYear).getFullYear()
-          if (eYear - bYear > 100) { setError('Goal end date must be within 100 years of your date of birth'); return false }
+          if (eYear - bYear > 100) {
+            setError('Goal end date must be within 100 years of your date of birth')
+            return false
+          }
         }
-        if (!formData.retirementAge || Number(formData.retirementAge) <= 0) { setError('Please enter a valid retirement age'); return false }
+        if (!formData.retirementAge || Number(formData.retirementAge) <= 0) {
+          setError('Please enter a valid retirement age')
+          return false
+        }
         return true
       case 2:
-        if (!formData.expenseValue || Number(formData.expenseValue) <= 0) { setError('Please enter a valid annual expense'); return false }
+        if (!formData.expenseValue || Number(formData.expenseValue) <= 0) {
+          setError('Please enter a valid annual expense')
+          return false
+        }
         return true
       case 3:
-        if (formData.inflationRate === '') { setError('Please enter the inflation rate'); return false }
-        if (formData.safeWithdrawalRate === '') { setError('Please enter the safe withdrawal rate'); return false }
-        if (formData.growth === '') { setError('Please enter the growth rate'); return false }
+        if (formData.inflationRate === '') {
+          setError('Please enter the inflation rate')
+          return false
+        }
+        if (formData.safeWithdrawalRate === '') {
+          setError('Please enter the safe withdrawal rate')
+          return false
+        }
+        if (formData.growth === '') {
+          setError('Please enter the growth rate')
+          return false
+        }
         return true
       default:
         return true
@@ -132,15 +182,23 @@ const GoalForm: FC<GoalFormProps> = ({
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-    if (step < STEPS.length - 1) { goNext(); return }
+    if (step < STEPS.length - 1) {
+      goNext()
+      return
+    }
     if (!validateStep()) return
 
     const annualExpense = Number(formData.expenseValue) || 0
     const retirementAge = Number(formData.retirementAge)
     const metrics = calculateGoalMetrics(
-      annualExpense, profileBirthday, retirementAge, formData.goalCreatedIn,
-      Number(formData.inflationRate) || 0, Number(formData.safeWithdrawalRate) || 0,
-      getMonthsBetween, parseDate,
+      annualExpense,
+      profileBirthday,
+      retirementAge,
+      formData.goalCreatedIn,
+      Number(formData.inflationRate) || 0,
+      Number(formData.safeWithdrawalRate) || 0,
+      getMonthsBetween,
+      parseDate,
     )
 
     onSubmit({
@@ -172,31 +230,71 @@ const GoalForm: FC<GoalFormProps> = ({
   const renderReview = () => {
     const retAge = Number(formData.retirementAge)
     const expense = Number(formData.expenseValue)
-    const canCalc = profileBirthday && formData.goalCreatedIn && retAge > 0 && expense > 0
-      && formData.inflationRate !== '' && formData.safeWithdrawalRate !== ''
+    const canCalc =
+      profileBirthday &&
+      formData.goalCreatedIn &&
+      retAge > 0 &&
+      expense > 0 &&
+      formData.inflationRate !== '' &&
+      formData.safeWithdrawalRate !== ''
     let metrics: ReturnType<typeof calculateGoalMetrics> | null = null
     if (canCalc) {
       metrics = calculateGoalMetrics(
-        expense, profileBirthday, retAge, formData.goalCreatedIn,
-        Number(formData.inflationRate) || 0, Number(formData.safeWithdrawalRate) || 0,
-        getMonthsBetween, parseDate,
+        expense,
+        profileBirthday,
+        retAge,
+        formData.goalCreatedIn,
+        Number(formData.inflationRate) || 0,
+        Number(formData.safeWithdrawalRate) || 0,
+        getMonthsBetween,
+        parseDate,
       )
     }
     return (
       <div className="wizard-review">
-        <div className="wizard-review-row"><span className="wizard-review-label">Goal Name</span><span className="wizard-review-value">{formData.goalName}</span></div>
-        <div className="wizard-review-row"><span className="wizard-review-label">Created On</span><span className="wizard-review-value">{formatMonthYear(formData.goalCreatedIn)}</span></div>
-        <div className="wizard-review-row"><span className="wizard-review-label">Retirement Age</span><span className="wizard-review-value">{formData.retirementAge}</span></div>
-        <div className="wizard-review-row"><span className="wizard-review-label">Annual Expense</span><span className="wizard-review-value">{formatCurrency(formData.expenseValue)}</span></div>
-        <div className="wizard-review-row"><span className="wizard-review-label">Inflation</span><span className="wizard-review-value">{formData.inflationRate}%</span></div>
-        <div className="wizard-review-row"><span className="wizard-review-label">SWR</span><span className="wizard-review-value">{formData.safeWithdrawalRate}%</span></div>
-        <div className="wizard-review-row"><span className="wizard-review-label">Growth</span><span className="wizard-review-value">{formData.growth}%</span></div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">Goal Name</span>
+          <span className="wizard-review-value">{formData.goalName}</span>
+        </div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">Created On</span>
+          <span className="wizard-review-value">{formatMonthYear(formData.goalCreatedIn)}</span>
+        </div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">Retirement Age</span>
+          <span className="wizard-review-value">{formData.retirementAge}</span>
+        </div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">Annual Expense</span>
+          <span className="wizard-review-value">{formatCurrency(formData.expenseValue)}</span>
+        </div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">Inflation</span>
+          <span className="wizard-review-value">{formData.inflationRate}%</span>
+        </div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">SWR</span>
+          <span className="wizard-review-value">{formData.safeWithdrawalRate}%</span>
+        </div>
+        <div className="wizard-review-row">
+          <span className="wizard-review-label">Growth</span>
+          <span className="wizard-review-value">{formData.growth}%</span>
+        </div>
         {metrics && (
           <>
             <div className="wizard-review-divider" />
-            <div className="wizard-review-row wizard-review-row--highlight"><span className="wizard-review-label">Retirement</span><span className="wizard-review-value">{metrics.retirementDateFormatted}</span></div>
-            <div className="wizard-review-row wizard-review-row--highlight"><span className="wizard-review-label">FI Goal</span><span className="wizard-review-value">{dollars(metrics.fiGoal)}</span></div>
-            <div className="wizard-review-row"><span className="wizard-review-label">Expense at Retirement</span><span className="wizard-review-value">{dollars(metrics.annualExpenseAtRetirement)}/yr</span></div>
+            <div className="wizard-review-row wizard-review-row--highlight">
+              <span className="wizard-review-label">Retirement</span>
+              <span className="wizard-review-value">{metrics.retirementDateFormatted}</span>
+            </div>
+            <div className="wizard-review-row wizard-review-row--highlight">
+              <span className="wizard-review-label">FI Goal</span>
+              <span className="wizard-review-value">{dollars(metrics.fiGoal)}</span>
+            </div>
+            <div className="wizard-review-row">
+              <span className="wizard-review-label">Expense at Retirement</span>
+              <span className="wizard-review-value">{dollars(metrics.annualExpenseAtRetirement)}/yr</span>
+            </div>
           </>
         )}
       </div>
@@ -213,7 +311,9 @@ const GoalForm: FC<GoalFormProps> = ({
               key={label}
               type="button"
               className={`wizard-dot${i === step ? ' active' : ''}${i < step ? ' done' : ''}`}
-              onClick={() => { if (i < step) setStep(i) }}
+              onClick={() => {
+                if (i < step) setStep(i)
+              }}
               title={label}
             >
               {i < step ? '✓' : i + 1}
@@ -226,7 +326,9 @@ const GoalForm: FC<GoalFormProps> = ({
       <form className="goal-form wizard-body" onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
         {step === 0 && (
           <div className="wizard-step">
-            <label className="wizard-field-label" htmlFor="goalName">What do you want to call this goal?</label>
+            <label className="wizard-field-label" htmlFor="goalName">
+              What do you want to call this goal?
+            </label>
             <input
               ref={inputRef}
               className="wizard-input"
@@ -244,7 +346,9 @@ const GoalForm: FC<GoalFormProps> = ({
         {step === 1 && (
           <div className="wizard-step">
             <div className="wizard-field">
-              <label className="wizard-field-label" htmlFor="goalCreatedIn">When are you creating this goal?</label>
+              <label className="wizard-field-label" htmlFor="goalCreatedIn">
+                When are you creating this goal?
+              </label>
               <input
                 ref={inputRef}
                 className="wizard-input"
@@ -256,7 +360,9 @@ const GoalForm: FC<GoalFormProps> = ({
               />
             </div>
             <div className="wizard-field">
-              <label className="wizard-field-label" htmlFor="goalEndYear">When should this goal end?</label>
+              <label className="wizard-field-label" htmlFor="goalEndYear">
+                When should this goal end?
+              </label>
               <input
                 className="wizard-input"
                 type="date"
@@ -267,7 +373,9 @@ const GoalForm: FC<GoalFormProps> = ({
               />
             </div>
             <div className="wizard-field">
-              <label className="wizard-field-label" htmlFor="retirementAge">At what age do you want to retire?</label>
+              <label className="wizard-field-label" htmlFor="retirementAge">
+                At what age do you want to retire?
+              </label>
               <input
                 className="wizard-input"
                 type="number"
@@ -286,7 +394,8 @@ const GoalForm: FC<GoalFormProps> = ({
         {step === 2 && (
           <div className="wizard-step">
             <label className="wizard-field-label" htmlFor="expenseValue">
-              What are your annual expenses? <span className="wizard-hint">({formatMonthYear(formData.goalCreatedIn)} dollars)</span>
+              What are your annual expenses?{' '}
+              <span className="wizard-hint">({formatMonthYear(formData.goalCreatedIn)} dollars)</span>
             </label>
             <input
               ref={inputRef}
@@ -316,8 +425,12 @@ const GoalForm: FC<GoalFormProps> = ({
             </div>
             <div className="wizard-param-grid">
               <div className="wizard-param-card">
-                <label className="wizard-param-icon" htmlFor="inflationRate">📈</label>
-                <label className="wizard-param-name" htmlFor="inflationRate">Inflation</label>
+                <label className="wizard-param-icon" htmlFor="inflationRate">
+                  📈
+                </label>
+                <label className="wizard-param-name" htmlFor="inflationRate">
+                  Inflation
+                </label>
                 <div className="wizard-param-input-wrap">
                   <input
                     ref={inputRef}
@@ -335,10 +448,19 @@ const GoalForm: FC<GoalFormProps> = ({
                 </div>
               </div>
               <div className="wizard-param-card">
-                <label className="wizard-param-icon" htmlFor="safeWithdrawalRate">🛡️</label>
+                <label className="wizard-param-icon" htmlFor="safeWithdrawalRate">
+                  🛡️
+                </label>
                 <span className="wizard-param-name-row">
-                  <label className="wizard-param-name" htmlFor="safeWithdrawalRate">SWR</label>
-                  <span className="wizard-param-info" title="Safe Withdrawal Rate — the percentage of your portfolio you withdraw annually in retirement. 4% is a common benchmark (the &quot;4% rule&quot;).">ⓘ</span>
+                  <label className="wizard-param-name" htmlFor="safeWithdrawalRate">
+                    SWR
+                  </label>
+                  <span
+                    className="wizard-param-info"
+                    title='Safe Withdrawal Rate — the percentage of your portfolio you withdraw annually in retirement. 4% is a common benchmark (the "4% rule").'
+                  >
+                    ⓘ
+                  </span>
                 </span>
                 <div className="wizard-param-input-wrap">
                   <input
@@ -356,8 +478,12 @@ const GoalForm: FC<GoalFormProps> = ({
                 </div>
               </div>
               <div className="wizard-param-card">
-                <label className="wizard-param-icon" htmlFor="growth">🚀</label>
-                <label className="wizard-param-name" htmlFor="growth">Growth</label>
+                <label className="wizard-param-icon" htmlFor="growth">
+                  🚀
+                </label>
+                <label className="wizard-param-name" htmlFor="growth">
+                  Growth
+                </label>
                 <div className="wizard-param-input-wrap">
                   <input
                     className="wizard-param-input"
@@ -388,22 +514,34 @@ const GoalForm: FC<GoalFormProps> = ({
           <div className="form-error">
             {error}
             {step === 0 && error === 'Please enter a goal name' && (
-              <button type="button" className="random-name-btn" onClick={pickRandomName}>🎲 Pick random name</button>
+              <button type="button" className="random-name-btn" onClick={pickRandomName}>
+                🎲 Pick random name
+              </button>
             )}
-            {step === 1 && (error === 'Goal end date must be within 100 years of your date of birth' || error === 'Please enter the goal end year') && (
-              <button type="button" className="random-name-btn" onClick={setEndTo100thBirthday}>Set to 100th birthday</button>
-            )}
+            {step === 1 &&
+              (error === 'Goal end date must be within 100 years of your date of birth' ||
+                error === 'Please enter the goal end year') && (
+                <button type="button" className="random-name-btn" onClick={setEndTo100thBirthday}>
+                  Set to 100th birthday
+                </button>
+              )}
           </div>
         )}
 
         <div className="wizard-nav">
           {step > 0 ? (
-            <button type="button" className="wizard-btn wizard-btn--back" onClick={goBack}>← Back</button>
+            <button type="button" className="wizard-btn wizard-btn--back" onClick={goBack}>
+              ← Back
+            </button>
           ) : (
-            <button type="button" className="wizard-btn wizard-btn--back" onClick={onCancel}>Cancel</button>
+            <button type="button" className="wizard-btn wizard-btn--back" onClick={onCancel}>
+              Cancel
+            </button>
           )}
           {step < STEPS.length - 1 ? (
-            <button type="button" className="wizard-btn wizard-btn--next" onClick={goNext}>Next →</button>
+            <button type="button" className="wizard-btn wizard-btn--next" onClick={goNext}>
+              Next →
+            </button>
           ) : (
             <button type="submit" className="wizard-btn wizard-btn--create">
               {editingGoalId ? 'Update Goal' : 'Create Goal'}

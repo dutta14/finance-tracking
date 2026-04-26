@@ -25,7 +25,7 @@ export const calculateGoalMetrics = (
   inflationRate: number,
   safeWithdrawalRate: number,
   getMonthsBetween: (start: Date, end: Date) => number,
-  parseDate: (dateStr: string) => Date
+  parseDate: (dateStr: string) => Date,
 ): GoalCalculations => {
   const monthlyExpenseAtCreation = annualExpense / 12
 
@@ -50,7 +50,7 @@ export const calculateGoalMetrics = (
     monthsBetween,
     monthlyExpenseAtRetirement,
     annualExpenseAtRetirement,
-    fiGoal
+    fiGoal,
   }
 }
 
@@ -62,18 +62,19 @@ export function projectFIDate(
   currentNetWorth: number,
   fiGoal: number,
   annualSavings: number,
-  growthRate: number // annual percentage, e.g. 7
+  growthRate: number, // annual percentage, e.g. 7
 ): { date: Date; months: number } | null {
   if (fiGoal <= 0) return null
   if (currentNetWorth >= fiGoal) return { date: new Date(), months: 0 }
   if (annualSavings <= 0 && currentNetWorth < fiGoal) return null
 
-  const monthlyRate = (growthRate / 100) / 12
+  const monthlyRate = growthRate / 100 / 12
   const monthlySavings = annualSavings / 12
   let balance = currentNetWorth
   const now = new Date()
 
-  for (let m = 1; m <= 1200; m++) { // cap at 100 years
+  for (let m = 1; m <= 1200; m++) {
+    // cap at 100 years
     if (monthlyRate > 0) {
       balance = balance * (1 + monthlyRate) + monthlySavings
     } else {

@@ -82,16 +82,37 @@ const SetupProgress: FC<SetupProgressProps> = ({ accounts, balances, goals, hasB
   return (
     <section className="setup-progress" aria-labelledby="setup-heading">
       <div className="setup-progress-header">
-        <h2 id="setup-heading" className="setup-progress-title">Get started with your finances</h2>
-        <span className="setup-progress-count">{completedCount} of {totalSteps} complete</span>
+        <h2 id="setup-heading" className="setup-progress-title">
+          Get started with your finances
+        </h2>
+        <span className="setup-progress-count">
+          {completedCount} of {totalSteps} complete
+        </span>
         <button className="setup-progress-dismiss" onClick={onDismiss} aria-label="Dismiss setup guide">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M18 6 6 18" />
             <path d="M6 6 18 18" />
           </svg>
         </button>
       </div>
-      <div className="setup-progress-bar" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={totalSteps} aria-label="Setup progress">
+      <div
+        className="setup-progress-bar"
+        role="progressbar"
+        aria-valuenow={completedCount}
+        aria-valuemin={0}
+        aria-valuemax={totalSteps}
+        aria-label="Setup progress"
+      >
         <div className="setup-progress-fill" style={{ width: `${(completedCount / totalSteps) * 100}%` }} />
       </div>
       <div className="setup-steps">
@@ -104,7 +125,16 @@ const SetupProgress: FC<SetupProgressProps> = ({ accounts, balances, goals, hasB
           if (done) {
             return (
               <div key={step.id} className="setup-step setup-step--done" aria-label={`${step.title} — complete`}>
-                <svg className="setup-step-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  className="setup-step-check"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
                 <div className="setup-step-text">

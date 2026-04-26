@@ -23,7 +23,7 @@ export const useFinancialGoals = () => {
   }
 
   const updateGoal = (goalId: number, updatedGoal: FinancialGoal): void => {
-    setGoals(prev => prev.map(goal => goal.id === goalId ? updatedGoal : goal))
+    setGoals(prev => prev.map(goal => (goal.id === goalId ? updatedGoal : goal)))
   }
 
   const deleteGoal = (goalId: number): void => {

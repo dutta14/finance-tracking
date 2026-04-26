@@ -4,7 +4,11 @@ import { GoalOwner, RatioGoal } from '../types'
 
 export function useGoals() {
   const profile: Profile = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('user-profile') || '{}') } catch { return {} as Profile }
+    try {
+      return JSON.parse(localStorage.getItem('user-profile') || '{}')
+    } catch {
+      return {} as Profile
+    }
   }, [])
 
   const getAge = (owner: GoalOwner): number | null => {

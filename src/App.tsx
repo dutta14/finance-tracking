@@ -28,20 +28,9 @@ const AppShell: FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { setDarkMode } = useSettings()
-  const {
-    pendingDelete,
-    handleUndoDelete,
-    dismissPendingDelete,
-  } = useGoals()
+  const { pendingDelete, handleUndoDelete, dismissPendingDelete } = useGoals()
   const { handleExport } = useImportExport()
-  const {
-    sidebarOpen,
-    setSidebarOpen,
-    isMobile,
-    searchOpen,
-    setSearchOpen,
-    setSettingsOpenSection,
-  } = useLayout()
+  const { sidebarOpen, setSidebarOpen, isMobile, searchOpen, setSearchOpen, setSettingsOpenSection } = useLayout()
   const currentPage: PageType =
     location.pathname === '/goal' || location.pathname.startsWith('/goal/')
       ? 'goal'

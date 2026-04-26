@@ -142,7 +142,7 @@ body.dark .budget-title {
 .budget-split-drop {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  border-left: 1px solid rgba(0,0,0,0.1);
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
   padding-left: 0.35rem;
   padding-right: 0.35rem;
   min-width: 0;
@@ -162,7 +162,7 @@ body.dark .budget-title {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   min-width: 140px;
 }
@@ -198,7 +198,7 @@ body.dark .budget-title {
   background: var(--color-surface);
   border-radius: var(--radius);
   padding: 1.2rem 1.4rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -236,7 +236,7 @@ body.dark .budget-title {
   overflow-x: hidden;
   max-width: 100%;
   border-radius: var(--radius);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .budget-table {
   width: 100%;
@@ -414,7 +414,7 @@ body.dark .budget-title {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   padding: 0.4rem 0;
   min-width: 220px;
 }
@@ -543,7 +543,7 @@ body.dark .budget-csv-error {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .budget-drilldown-header {
   display: flex;
@@ -602,8 +602,12 @@ body.dark .budget-csv-error {
   color: var(--color-text-heading);
   white-space: nowrap;
 }
-.budget-amt-refund { color: var(--color-positive); }
-.budget-drilldown-table td.budget-amt-refund { color: var(--color-positive); }
+.budget-amt-refund {
+  color: var(--color-positive);
+}
+.budget-drilldown-table td.budget-amt-refund {
+  color: var(--color-positive);
+}
 
 /* Show removed pill */
 .budget-removed-pill {
@@ -757,8 +761,14 @@ body.dark .budget-confirm-newcat-btn--no {
   animation: budget-filter-in 0.12s ease;
 }
 @keyframes budget-filter-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .budget-filter-search {
   padding: 0.4rem 0.6rem;
@@ -794,13 +804,13 @@ body.dark .budget-confirm-newcat-btn--no {
   padding-bottom: 0.4rem;
   font-weight: var(--fw-semibold);
 }
-.budget-filter-item input[type="checkbox"] {
+.budget-filter-item input[type='checkbox'] {
   accent-color: var(--accent);
   width: 14px;
   height: 14px;
   flex-shrink: 0;
 }
-.budget-filter-item input[type="checkbox"]:indeterminate {
+.budget-filter-item input[type='checkbox']:indeterminate {
   appearance: none;
   -webkit-appearance: none;
   width: 14px;
@@ -811,7 +821,7 @@ body.dark .budget-confirm-newcat-btn--no {
   position: relative;
   cursor: pointer;
 }
-.budget-filter-item input[type="checkbox"]:indeterminate::after {
+.budget-filter-item input[type='checkbox']:indeterminate::after {
   content: '';
   position: absolute;
   top: 50%;
@@ -862,7 +872,7 @@ body.dark .budget-confirm-newcat-btn--no {
   border-radius: var(--radius);
   padding: 1rem 1.2rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .budget-group-manager-header {
   margin-bottom: 0.75rem;
@@ -890,7 +900,9 @@ body.dark .budget-confirm-newcat-btn--no {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .budget-group-block--drop-target {
   border-color: var(--accent);
@@ -999,7 +1011,9 @@ body.dark .budget-confirm-newcat-btn--no {
   padding: 0.2rem 0.55rem;
   border-radius: 100px;
   cursor: grab;
-  transition: background 0.1s, box-shadow 0.1s;
+  transition:
+    background 0.1s,
+    box-shadow 0.1s;
   user-select: none;
   background: var(--accent-lighter);
   border: 1px solid var(--accent-border);
@@ -1153,8 +1167,14 @@ body.dark .budget-group-block--removed .budget-group-cat-name {
   animation: budget-drop-fadein 0.15s;
 }
 @keyframes budget-drop-fadein {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .budget-drop-zones-label {
   font-size: var(--fs-sm);
@@ -1246,8 +1266,12 @@ body.dark .budget-drop-zone--removed {
   animation: csv-overlay-in 0.2s ease;
 }
 @keyframes csv-overlay-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .csv-preview-modal {
   background: var(--color-surface);
@@ -1263,8 +1287,14 @@ body.dark .budget-drop-zone--removed {
   animation: csv-modal-in 0.2s ease;
 }
 @keyframes csv-modal-in {
-  from { transform: scale(0.95) translateY(8px); opacity: 0; }
-  to   { transform: scale(1) translateY(0); opacity: 1; }
+  from {
+    transform: scale(0.95) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 .csv-preview-header {
   display: flex;
@@ -1314,7 +1344,9 @@ body.dark .budget-drop-zone--removed {
   font-weight: var(--fw-semibold);
   cursor: pointer;
   user-select: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .csv-preview-table th:hover {
   background: var(--color-surface-hover);
@@ -1480,7 +1512,9 @@ body.dark .cashflow-bar-legend-net.positive {
   cursor: pointer;
   background: transparent;
   color: var(--color-text-muted);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .cashflow-sankey-pill:hover {
   color: var(--color-text-heading);
@@ -1488,7 +1522,7 @@ body.dark .cashflow-bar-legend-net.positive {
 .cashflow-sankey-pill.active {
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 .cashflow-sankey-hint {
   font-size: var(--fs-sm);
@@ -1525,8 +1559,12 @@ body.dark .cashflow-bar-legend-net.positive {
   animation: budget-pdf-overlay-in 0.15s ease-out;
 }
 @keyframes budget-pdf-overlay-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .budget-pdf-modal {
   background: var(--color-surface);
@@ -1541,8 +1579,14 @@ body.dark .cashflow-bar-legend-net.positive {
   animation: budget-pdf-modal-in 0.2s ease-out;
 }
 @keyframes budget-pdf-modal-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .budget-pdf-modal-header {
   display: flex;
@@ -1570,7 +1614,9 @@ body.dark .cashflow-bar-legend-net.positive {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  transition: background 150ms, color 150ms;
+  transition:
+    background 150ms,
+    color 150ms;
 }
 .budget-pdf-modal-close:hover {
   background: var(--color-surface-hover);
@@ -1637,7 +1683,9 @@ body.dark .cashflow-bar-legend-net.positive {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.2s ease, opacity 0.2s ease;
+  transition:
+    max-height 0.2s ease,
+    opacity 0.2s ease;
 }
 .budget-txn-form-wrapper--open {
   max-height: 400px;
@@ -1682,7 +1730,9 @@ body.dark .cashflow-bar-legend-net.positive {
   color: var(--accent-text-dark);
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .budget-txn-input:focus,
 .budget-txn-select:focus {
@@ -1718,7 +1768,9 @@ body.dark .cashflow-bar-legend-net.positive {
   padding: 7px 16px;
   font-weight: var(--fw-semibold);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   font-size: var(--fs-md);
 }
 .budget-txn-save:hover {

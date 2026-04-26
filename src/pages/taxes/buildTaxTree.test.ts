@@ -34,9 +34,7 @@ describe('buildTaxTree', () => {
               owner: 'primary',
               category: 'paystub',
               accountIds: [],
-              files: [
-                { id: 'f1', name: 'w2-2024.pdf', content: 'base64data', ext: 'pdf', uploadedAt: '2025-01-15' },
-              ],
+              files: [{ id: 'f1', name: 'w2-2024.pdf', content: 'base64data', ext: 'pdf', uploadedAt: '2025-01-15' }],
             },
           ],
         } as TaxYear,
@@ -56,15 +54,23 @@ describe('buildTaxTree', () => {
   })
 
   it('includes account names in file meta', () => {
-    const accounts = [{ id: 1, name: 'Fidelity 401k' }, { id: 2, name: 'Vanguard IRA' }]
+    const accounts = [
+      { id: 1, name: 'Fidelity 401k' },
+      { id: 2, name: 'Vanguard IRA' },
+    ]
     const store = {
       years: {
         2024: {
-          items: [{
-            id: '1', label: 'Statements', owner: 'primary', category: 'account',
-            accountIds: [1, 2],
-            files: [{ id: 'f1', name: 'stmt.pdf', content: 'data', ext: 'pdf', uploadedAt: '2025-01-01' }],
-          }],
+          items: [
+            {
+              id: '1',
+              label: 'Statements',
+              owner: 'primary',
+              category: 'account',
+              accountIds: [1, 2],
+              files: [{ id: 'f1', name: 'stmt.pdf', content: 'data', ext: 'pdf', uploadedAt: '2025-01-01' }],
+            },
+          ],
         },
       },
     }
@@ -79,9 +85,42 @@ describe('buildTaxTree', () => {
   it('sorts year folders in descending order', () => {
     const store = {
       years: {
-        2022: { items: [{ id: '1', label: 'A', owner: 'primary', category: 'custom', accountIds: [], files: [{ id: 'f1', name: 'a', content: 'x', ext: 'csv', uploadedAt: 't' }] }] },
-        2024: { items: [{ id: '2', label: 'B', owner: 'primary', category: 'custom', accountIds: [], files: [{ id: 'f2', name: 'b', content: 'x', ext: 'csv', uploadedAt: 't' }] }] },
-        2023: { items: [{ id: '3', label: 'C', owner: 'primary', category: 'custom', accountIds: [], files: [{ id: 'f3', name: 'c', content: 'x', ext: 'csv', uploadedAt: 't' }] }] },
+        2022: {
+          items: [
+            {
+              id: '1',
+              label: 'A',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'a', content: 'x', ext: 'csv', uploadedAt: 't' }],
+            },
+          ],
+        },
+        2024: {
+          items: [
+            {
+              id: '2',
+              label: 'B',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f2', name: 'b', content: 'x', ext: 'csv', uploadedAt: 't' }],
+            },
+          ],
+        },
+        2023: {
+          items: [
+            {
+              id: '3',
+              label: 'C',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f3', name: 'c', content: 'x', ext: 'csv', uploadedAt: 't' }],
+            },
+          ],
+        },
       },
     }
     localStorage.setItem('tax-store', JSON.stringify(store))
@@ -94,7 +133,18 @@ describe('buildTaxTree', () => {
     const store = {
       years: {
         2024: { items: [{ id: '1', label: 'Empty', owner: 'primary', category: 'custom', accountIds: [], files: [] }] },
-        2025: { items: [{ id: '2', label: 'Has File', owner: 'primary', category: 'custom', accountIds: [], files: [{ id: 'f1', name: 'doc.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] }] },
+        2025: {
+          items: [
+            {
+              id: '2',
+              label: 'Has File',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'doc.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
+          ],
+        },
       },
     }
     localStorage.setItem('tax-store', JSON.stringify(store))
@@ -108,10 +158,16 @@ describe('buildTaxTree', () => {
     const store = {
       years: {
         2024: {
-          items: [{
-            id: '1', label: 'W-2', owner: 'partner', category: 'paystub', accountIds: [],
-            files: [{ id: 'f1', name: 'w2.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
-          }],
+          items: [
+            {
+              id: '1',
+              label: 'W-2',
+              owner: 'partner',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'w2.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
+          ],
         },
       },
     }
@@ -126,10 +182,16 @@ describe('buildTaxTree', () => {
     const store = {
       years: {
         2024: {
-          items: [{
-            id: '1', label: 'Doc', owner: 'primary', category: 'custom', accountIds: [],
-            files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
-          }],
+          items: [
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
+          ],
         },
       },
     }

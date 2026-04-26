@@ -1,6 +1,7 @@
 import { useEffect, useRef, RefObject } from 'react'
 
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 export function useFocusTrap(ref: RefObject<HTMLElement | null>, isOpen: boolean) {
   const previousFocus = useRef<HTMLElement | null>(null)

@@ -26,7 +26,7 @@ const defaultFormData: FormData = {
   monthlyExpenseValue: '',
   inflationRate: '',
   safeWithdrawalRate: '',
-  growth: ''
+  growth: '',
 }
 
 export const useFormData = () => {
@@ -40,7 +40,7 @@ export const useFormData = () => {
       const checked = (e.currentTarget as HTMLInputElement).checked
       setFormData(prev => ({
         ...prev,
-        [name]: checked
+        [name]: checked,
       }))
     } else {
       let value = e.currentTarget.value
@@ -49,7 +49,7 @@ export const useFormData = () => {
       }
       setFormData(prev => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }))
     }
   }
@@ -66,7 +66,7 @@ export const useFormData = () => {
       monthlyExpenseValue: '',
       inflationRate: goal.inflationRate.toString(),
       safeWithdrawalRate: goal.safeWithdrawalRate.toString(),
-      growth: goal.growth.toString()
+      growth: goal.growth.toString(),
     })
   }
 
@@ -82,6 +82,6 @@ export const useFormData = () => {
     setError,
     handleInputChange,
     populateFromGoal,
-    resetForm
+    resetForm,
   }
 }

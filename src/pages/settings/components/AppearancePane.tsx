@@ -58,7 +58,13 @@ const AppearancePane: FC<AppearancePaneProps> = ({ darkMode, onToggleDarkMode, f
                   >
                     {isSelected && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                        <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path
+                          d="M1.5 5l2.5 2.5 4.5-4.5"
+                          stroke="white"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </button>

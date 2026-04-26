@@ -139,7 +139,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   margin-top: 0.5rem;
 }
 
@@ -165,7 +165,9 @@
   cursor: pointer;
   padding: 0.15rem 0.35rem;
   border-radius: var(--radius);
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .gw-import-picker-cancel:hover {
@@ -255,7 +257,9 @@
   cursor: pointer;
   color: var(--accent-text-mid);
   font-weight: var(--fw-normal);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   white-space: nowrap;
 }
 
@@ -321,8 +325,12 @@
 }
 
 @keyframes gw-undo-shrink {
-  from { transform: scaleX(1); }
-  to   { transform: scaleX(0); }
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 
 body.dark .gw-goal-undo-msg {
@@ -364,7 +372,9 @@ body.dark .gw-goal-undo-msg {
   border-radius: var(--radius);
   display: flex;
   align-items: center;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .gw-goal-edit:hover {
@@ -403,7 +413,9 @@ body.dark .gw-goal-undo-msg {
   border-radius: var(--radius);
   display: flex;
   align-items: center;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .gw-goal-delete:hover {
@@ -609,7 +621,9 @@ body.dark .gw-goal-undo-msg {
   background: var(--color-surface);
   color: var(--color-text);
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .gw-form-input:focus {
@@ -654,7 +668,9 @@ body.dark .gw-goal-undo-msg {
   padding: 0.5rem 1rem;
   font-size: var(--fs-md);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .gw-form-cancel:hover {

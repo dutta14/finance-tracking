@@ -46,9 +46,9 @@ const Home: FC = () => {
   const allComplete = accounts.length > 0 && balances.length > 0 && goals.length > 0 && hasBudgetData
   const [setupDismissed, setSetupDismissed] = useState(() => localStorage.getItem('onboarding-dismissed') === '1')
 
-  const allMonths = useMemo(() =>
-    [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a)),
-    [balances]
+  const allMonths = useMemo(
+    () => [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a)),
+    [balances],
   )
 
   const balanceMap = useMemo(() => {
@@ -78,7 +78,10 @@ const Home: FC = () => {
 
   const handleDrop = useCallback((idx: number) => {
     const from = dragIdx.current
-    if (from === null || from === idx) { setDragOver(null); return }
+    if (from === null || from === idx) {
+      setDragOver(null)
+      return
+    }
     setOrder(prev => {
       const next = [...prev]
       const [removed] = next.splice(from, 1)
@@ -111,8 +114,12 @@ const Home: FC = () => {
 
   const touchDrag = useTouchDrag({
     longPressMs: 300,
-    onDragStart: (idx) => { touchFromIdx.current = idx },
-    onDragMove: (_cx, _cy) => { /* visual updates handled via getSlotFromPoint */ },
+    onDragStart: idx => {
+      touchFromIdx.current = idx
+    },
+    onDragMove: (_cx, _cy) => {
+      /* visual updates handled via getSlotFromPoint */
+    },
     onDragEnd: () => {
       const from = touchFromIdx.current
       if (from !== null && dragOver !== null && from !== dragOver) {
@@ -165,12 +172,7 @@ const Home: FC = () => {
       allMonths={allMonths}
       onNavigate={() => navigate('/net-worth')}
     />,
-    <GoalsPeek
-      key="goals"
-      goals={goals}
-      gwGoals={gwGoals}
-      onNavigate={() => navigate('/goal')}
-    />,
+    <GoalsPeek key="goals" goals={goals} gwGoals={gwGoals} onNavigate={() => navigate('/goal')} />,
     <AllocationBreakdown
       key="alloc"
       accounts={accounts}
@@ -184,7 +186,13 @@ const Home: FC = () => {
       <div className="home-greeting">
         <h1>{greeting}</h1>
         {setupDismissed && !allComplete && (
-          <button className="setup-guide-link" onClick={() => { localStorage.removeItem('onboarding-dismissed'); setSetupDismissed(false) }}>
+          <button
+            className="setup-guide-link"
+            onClick={() => {
+              localStorage.removeItem('onboarding-dismissed')
+              setSetupDismissed(false)
+            }}
+          >
             Setup guide
           </button>
         )}
@@ -195,7 +203,10 @@ const Home: FC = () => {
           balances={balances}
           goals={goals}
           hasBudgetData={hasBudgetData}
-          onDismiss={() => { localStorage.setItem('onboarding-dismissed', '1'); setSetupDismissed(true) }}
+          onDismiss={() => {
+            localStorage.setItem('onboarding-dismissed', '1')
+            setSetupDismissed(true)
+          }}
         />
       )}
       <div className="home-grid" ref={gridRef}>
@@ -225,20 +236,26 @@ const Home: FC = () => {
                   disabled={pos === 0}
                   onClick={() => moveCard(pos, -1)}
                   aria-label={`Move ${CARD_NAMES[cardIdx]} up`}
-                >↑</button>
+                >
+                  ↑
+                </button>
                 <button
                   className="reorder-move-btn"
                   disabled={pos === order.length - 1}
                   onClick={() => moveCard(pos, 1)}
                   aria-label={`Move ${CARD_NAMES[cardIdx]} down`}
-                >↓</button>
+                >
+                  ↓
+                </button>
               </div>
               {cards[cardIdx]}
             </div>
           )
         })}
       </div>
-      <div aria-live="polite" className="sr-only">{announcement}</div>
+      <div aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
     </div>
   )
 }

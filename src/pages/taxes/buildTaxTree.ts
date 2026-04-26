@@ -5,13 +5,17 @@ import type { Account } from '../data/types'
 function loadTaxStore(): TaxStore {
   try {
     return JSON.parse(localStorage.getItem('tax-store') || '{}')
-  } catch { return { years: {} } }
+  } catch {
+    return { years: {} }
+  }
 }
 
 function loadAccounts(): Account[] {
   try {
     return JSON.parse(localStorage.getItem('data-accounts') || '[]')
-  } catch { return [] }
+  } catch {
+    return []
+  }
 }
 
 function ownerLabel(owner: string): string {
@@ -20,7 +24,9 @@ function ownerLabel(owner: string): string {
     if (owner === 'primary') return profile.name || 'Primary'
     if (owner === 'partner') return profile.partner?.name || 'Partner'
     return 'Joint'
-  } catch { return owner }
+  } catch {
+    return owner
+  }
 }
 
 function categoryLabel(cat: string): string | undefined {
@@ -30,9 +36,13 @@ function categoryLabel(cat: string): string | undefined {
 }
 
 function itemFiles(item: TaxChecklistItem, accounts: Account[]): DriveFile[] {
-  const acctNames = item.accountIds.length > 0
-    ? item.accountIds.map(id => accounts.find(a => a.id === id)?.name).filter(Boolean).join(', ')
-    : undefined
+  const acctNames =
+    item.accountIds.length > 0
+      ? item.accountIds
+          .map(id => accounts.find(a => a.id === id)?.name)
+          .filter(Boolean)
+          .join(', ')
+      : undefined
   return item.files.map(f => ({
     name: f.name,
     slug: f.id,

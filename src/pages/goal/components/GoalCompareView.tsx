@@ -22,7 +22,8 @@ const formatMonthYear = (dateString: string): string => {
   return parseDate(dateString).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-const dollars = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const dollars = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
 const computeGwPv = (gw: GwGoal, goal: FinancialGoal, profileBirthday: string): number => {
   if (!profileBirthday) return gw.disburseAmount
@@ -31,7 +32,7 @@ const computeGwPv = (gw: GwGoal, goal: FinancialGoal, profileBirthday: string): 
   const disburseYear = birthYear + gw.disburseAge
   const monthsToDisburse = Math.max(
     0,
-    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1))
+    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
   )
   const disbursementTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, monthsToDisburse)
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
@@ -46,40 +47,50 @@ interface FiRow {
 }
 
 const FI_ROWS: FiRow[] = [
-  { label: 'Goal Created',                   render: p => formatMonthYear(p.goalCreatedIn) },
-  { label: 'Goal End Year',                  render: p => p.goalEndYear ? String(new Date(p.goalEndYear).getFullYear()) : '—' },
-  { label: 'Retirement Age',                 render: p => String(p.retirementAge) },
-  { label: 'Retirement Date',                render: p => p.retirement },
-  { label: 'Inflation Rate',                 render: p => `${p.inflationRate}%` },
-  { label: 'Safe Withdrawal Rate',           render: p => `${p.safeWithdrawalRate}%` },
-  { label: 'Growth Rate',                    render: p => `${p.growth}%` },
-  { label: 'Annual Expense (at creation)',   render: p => dollars(p.expenseValue) },
+  { label: 'Goal Created', render: p => formatMonthYear(p.goalCreatedIn) },
+  { label: 'Goal End Year', render: p => (p.goalEndYear ? String(new Date(p.goalEndYear).getFullYear()) : '—') },
+  { label: 'Retirement Age', render: p => String(p.retirementAge) },
+  { label: 'Retirement Date', render: p => p.retirement },
+  { label: 'Inflation Rate', render: p => `${p.inflationRate}%` },
+  { label: 'Safe Withdrawal Rate', render: p => `${p.safeWithdrawalRate}%` },
+  { label: 'Growth Rate', render: p => `${p.growth}%` },
+  { label: 'Annual Expense (at creation)', render: p => dollars(p.expenseValue) },
   { label: 'Annual Expense (at retirement)', render: p => dollars(p.expenseValue2047) },
-  { label: 'FI Goal',                        render: p => dollars(p.fiGoal) },
+  { label: 'FI Goal', render: p => dollars(p.fiGoal) },
 ]
 
 const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday }) => {
   const colCount = goals.length + 1
   const { fiTotal } = useMemo(() => getLatestGoalTotals(), [])
 
-  const fiRows: FiRow[] = useMemo(() => [
-    ...FI_ROWS,
-    { label: 'Progress', render: p => {
-      if (p.fiGoal <= 0) return '0.0%'
-      return `${Math.min(100, Math.max(0, (fiTotal / p.fiGoal) * 100)).toFixed(1)}%`
-    }},
-  ], [fiTotal])
+  const fiRows: FiRow[] = useMemo(
+    () => [
+      ...FI_ROWS,
+      {
+        label: 'Progress',
+        render: p => {
+          if (p.fiGoal <= 0) return '0.0%'
+          return `${Math.min(100, Math.max(0, (fiTotal / p.fiGoal) * 100)).toFixed(1)}%`
+        },
+      },
+    ],
+    [fiTotal],
+  )
 
   const gwByGoal = goals.map(goal => gwGoals.filter(g => g.fiGoalId === goal.id))
 
   const allLabels: string[] = []
-  gwByGoal.forEach(goals => goals.forEach(g => {
-    if (!allLabels.includes(g.label)) allLabels.push(g.label)
-  }))
+  gwByGoal.forEach(goals =>
+    goals.forEach(g => {
+      if (!allLabels.includes(g.label)) allLabels.push(g.label)
+    }),
+  )
 
   const gwPvMaps = goals.map((goal, i) => {
     const map: Record<string, number> = {}
-    gwByGoal[i].forEach(g => { map[g.label] = computeGwPv(g, goal, profileBirthday) })
+    gwByGoal[i].forEach(g => {
+      map[g.label] = computeGwPv(g, goal, profileBirthday)
+    })
     return map
   })
 
@@ -88,49 +99,73 @@ const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirt
 
   return (
     <div className="compare-view">
-      <p className="compare-hint">Comparing {goals.length} goals — {modKey}+Click a card to add or remove it</p>
+      <p className="compare-hint">
+        Comparing {goals.length} goals — {modKey}+Click a card to add or remove it
+      </p>
       <div className="compare-table-wrapper">
         <table className="compare-table" aria-label={`Comparison of ${goals.length} goals`}>
           <thead>
             <tr>
-              <th className="compare-label-col" scope="col"><span className="sr-only">Metric</span></th>
+              <th className="compare-label-col" scope="col">
+                <span className="sr-only">Metric</span>
+              </th>
               {goals.map(goal => (
-                <th key={goal.id} className="compare-goal-col" scope="col">{goal.goalName}</th>
+                <th key={goal.id} className="compare-goal-col" scope="col">
+                  {goal.goalName}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             <tr className="compare-section-header">
-              <th colSpan={colCount} scope="colgroup">Financial Independence</th>
+              <th colSpan={colCount} scope="colgroup">
+                Financial Independence
+              </th>
             </tr>
             {fiRows.map(row => (
               <tr key={row.label}>
-                <th className="compare-row-label" scope="row">{row.label}</th>
+                <th className="compare-row-label" scope="row">
+                  {row.label}
+                </th>
                 {goals.map(goal => (
-                  <td key={goal.id} className="compare-row-value">{row.render(goal)}</td>
+                  <td key={goal.id} className="compare-row-value">
+                    {row.render(goal)}
+                  </td>
                 ))}
               </tr>
             ))}
             {hasAnyGw && (
               <>
                 <tr className="compare-section-header compare-section-header--gw">
-                  <th colSpan={colCount} scope="colgroup">Generational Wealth</th>
+                  <th colSpan={colCount} scope="colgroup">
+                    Generational Wealth
+                  </th>
                 </tr>
                 <tr>
-                  <th className="compare-row-label" scope="row"># of Goals</th>
+                  <th className="compare-row-label" scope="row">
+                    # of Goals
+                  </th>
                   {goals.map((goal, i) => (
-                    <td key={goal.id} className="compare-row-value">{gwByGoal[i].length > 0 ? gwByGoal[i].length : '—'}</td>
+                    <td key={goal.id} className="compare-row-value">
+                      {gwByGoal[i].length > 0 ? gwByGoal[i].length : '—'}
+                    </td>
                   ))}
                 </tr>
                 <tr>
-                  <th className="compare-row-label" scope="row">Total PV at Retirement</th>
+                  <th className="compare-row-label" scope="row">
+                    Total PV at Retirement
+                  </th>
                   {goals.map((_, i) => (
-                    <td key={goals[i].id} className="compare-row-value">{gwTotals[i] > 0 ? dollars(gwTotals[i]) : '—'}</td>
+                    <td key={goals[i].id} className="compare-row-value">
+                      {gwTotals[i] > 0 ? dollars(gwTotals[i]) : '—'}
+                    </td>
                   ))}
                 </tr>
                 {allLabels.map(label => (
                   <tr key={label}>
-                    <th className="compare-row-label compare-row-label--indent" scope="row">{label}</th>
+                    <th className="compare-row-label compare-row-label--indent" scope="row">
+                      {label}
+                    </th>
                     {goals.map((goal, i) => (
                       <td key={goal.id} className="compare-row-value">
                         {gwPvMaps[i][label] != null ? dollars(gwPvMaps[i][label]) : '—'}

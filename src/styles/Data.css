@@ -39,7 +39,9 @@
   color: var(--color-text-muted);
   text-decoration: none;
   border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
   cursor: pointer;
 }
 
@@ -82,7 +84,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-heading);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .data-view-accounts-btn:hover {
@@ -128,7 +132,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .data-filter-btn:hover {
@@ -138,7 +144,7 @@
 .data-filter-btn.active {
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 1px 2px rgba(0 ,0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 /* View tabs */
@@ -159,7 +165,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .data-view-tab:hover {
@@ -169,7 +177,7 @@
 .data-view-tab.active {
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 /* Charts */
@@ -267,7 +275,10 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .data-filter-l1-btn:hover {
@@ -352,7 +363,10 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .data-add-btn:hover {
@@ -487,7 +501,9 @@
   gap: 3px;
   white-space: nowrap;
 }
-.data-th-sort-btn:hover { color: var(--color-text-heading); }
+.data-th-sort-btn:hover {
+  color: var(--color-text-heading);
+}
 .data-th-sort-icon {
   font-size: var(--fs-sm);
   color: var(--color-border-light);
@@ -506,10 +522,17 @@
   justify-content: center;
   color: var(--color-border-light);
   border-radius: var(--radius);
-  transition: color 0.12s, background 0.12s;
+  transition:
+    color 0.12s,
+    background 0.12s;
 }
-.data-th-filter-btn:hover { color: var(--color-text-muted); background: var(--color-surface-hover); }
-.data-th-filter-btn.active { color: var(--accent); }
+.data-th-filter-btn:hover {
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+}
+.data-th-filter-btn.active {
+  color: var(--accent);
+}
 
 .data-th-filter-dropdown {
   position: absolute;
@@ -519,7 +542,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   min-width: 140px;
   max-height: 220px;
   display: flex;
@@ -546,7 +569,9 @@
   letter-spacing: 0;
   white-space: nowrap;
 }
-.data-th-filter-option:hover { background: var(--color-surface-hover); }
+.data-th-filter-option:hover {
+  background: var(--color-surface-hover);
+}
 .data-th-filter-option input {
   width: 14px;
   height: 14px;
@@ -567,7 +592,10 @@
   text-transform: none;
   letter-spacing: 0;
 }
-.data-th-filter-clear:hover { color: var(--accent-hover); background: var(--color-bg); }
+.data-th-filter-clear:hover {
+  color: var(--accent-hover);
+  background: var(--color-bg);
+}
 
 /* Groups L2 page */
 .data-modal-header-actions {
@@ -654,7 +682,9 @@
   cursor: pointer;
   padding: 0;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
 }
 
 .data-group-card-header:hover .data-group-rename-btn {
@@ -701,9 +731,15 @@
   flex-shrink: 0;
 }
 
-.data-group-member-dot--primary { background: var(--accent); }
-.data-group-member-dot--partner { background: var(--color-warning); }
-.data-group-member-dot--joint { background: linear-gradient(135deg, var(--accent) 50%, var(--color-warning) 50%); }
+.data-group-member-dot--primary {
+  background: var(--accent);
+}
+.data-group-member-dot--partner {
+  background: var(--color-warning);
+}
+.data-group-member-dot--joint {
+  background: linear-gradient(135deg, var(--accent) 50%, var(--color-warning) 50%);
+}
 
 .data-group-member-inactive {
   font-size: var(--fs-xs);
@@ -767,7 +803,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .data-group-add-btn:hover {
@@ -971,7 +1009,9 @@
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .data-status-toggle.active {
@@ -1005,7 +1045,9 @@
   background: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .data-action-btn:hover {
@@ -1089,7 +1131,9 @@
   color: var(--color-text-muted);
   cursor: pointer;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .data-group-chevron:hover {
@@ -1241,8 +1285,13 @@
   cursor: default;
 }
 @media (max-width: 640px) {
-  .data-copy-forward-label { display: none; }
-  .data-copy-forward-btn { min-width: 32px; justify-content: center; }
+  .data-copy-forward-label {
+    display: none;
+  }
+  .data-copy-forward-btn {
+    min-width: 32px;
+    justify-content: center;
+  }
 }
 
 .data-entry-count {
@@ -1348,7 +1397,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-heading);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .data-import-csv-btn:hover,
@@ -1366,7 +1417,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-negative);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .data-reset-btn:hover {
@@ -1553,7 +1606,9 @@
   color: var(--color-text-muted);
   cursor: pointer;
   padding: 0;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .data-spreadsheet-group-header,
@@ -1898,7 +1953,9 @@ td.data-spreadsheet-inactive {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .data-modal-close:hover {
@@ -1935,8 +1992,13 @@ body.dark .data-filter-clear-btn {
 }
 
 /* Sort/filter dark */
-body.dark .data-th-filter-option input { accent-color: var(--accent-hover); }
-body.dark .data-th-filter-clear:hover { color: var(--accent-text-mid); background: var(--color-bg); }
+body.dark .data-th-filter-option input {
+  accent-color: var(--accent-hover);
+}
+body.dark .data-th-filter-clear:hover {
+  color: var(--accent-text-mid);
+  background: var(--color-bg);
+}
 
 body.dark .data-bulk-group-ok {
   color: var(--color-positive);

@@ -13,25 +13,13 @@ interface GoalCardActionsProps {
 const GoalCardActions: FC<GoalCardActionsProps> = ({ goal, onEdit, onCopy, onDelete }) => {
   return (
     <div className="goal-card-actions">
-      <button
-        className="btn-edit"
-        onClick={() => onEdit(goal)}
-        title="Edit goal"
-      >
+      <button className="btn-edit" onClick={() => onEdit(goal)} title="Edit goal">
         <EditIcon size={18} />
       </button>
-      <button
-        className="btn-copy"
-        onClick={() => onCopy(goal)}
-        title="Copy goal to form"
-      >
+      <button className="btn-copy" onClick={() => onCopy(goal)} title="Copy goal to form">
         <CopyIcon size={18} />
       </button>
-      <button
-        className="btn-delete"
-        onClick={() => onDelete(goal.id)}
-        title="Delete goal"
-      >
+      <button className="btn-delete" onClick={() => onDelete(goal.id)} title="Delete goal">
         <DeleteIcon size={18} />
       </button>
     </div>

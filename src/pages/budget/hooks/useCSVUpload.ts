@@ -6,8 +6,18 @@ export const monthKeyFromFilename = (name: string): string | null => {
   if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}`
 
   const MONTHS: Record<string, string> = {
-    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
-    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+    jan: '01',
+    feb: '02',
+    mar: '03',
+    apr: '04',
+    may: '05',
+    jun: '06',
+    jul: '07',
+    aug: '08',
+    sep: '09',
+    oct: '10',
+    nov: '11',
+    dec: '12',
   }
   const namedMatch = name.match(/Our\s+Finances\s*-\s*(\w+)\s+(\d{4})/i)
   if (namedMatch) {
@@ -17,7 +27,9 @@ export const monthKeyFromFilename = (name: string): string | null => {
   return null
 }
 
-export function useCSVUpload(uploadCSV: (monthKey: string, csv: string) => { ok: boolean; error?: string; newCategories?: string[] }) {
+export function useCSVUpload(
+  uploadCSV: (monthKey: string, csv: string) => { ok: boolean; error?: string; newCategories?: string[] },
+) {
   const [csvPreview, setCsvPreview] = useState<{ monthKey: string; csv: string } | null>(null)
   const [bulkQueue, setBulkQueue] = useState<{ monthKey: string; csv: string }[]>([])
   const [pendingNewCats, setPendingNewCats] = useState<string[]>([])
@@ -40,7 +52,7 @@ export function useCSVUpload(uploadCSV: (monthKey: string, csv: string) => { ok:
       return
     }
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       const text = ev.target?.result as string
       setCsvPreview({ monthKey, csv: text })
     }
@@ -60,9 +72,9 @@ export function useCSVUpload(uploadCSV: (monthKey: string, csv: string) => { ok:
         skipped.push(file.name)
         continue
       }
-      const text = await new Promise<string>((resolve) => {
+      const text = await new Promise<string>(resolve => {
         const reader = new FileReader()
-        reader.onload = (ev) => resolve(ev.target?.result as string)
+        reader.onload = ev => resolve(ev.target?.result as string)
         reader.readAsText(file)
       })
       pending.push({ monthKey, csv: text })
@@ -115,9 +127,13 @@ export function useCSVUpload(uploadCSV: (monthKey: string, csv: string) => { ok:
   }
 
   return {
-    csvPreview, toastMsg,
-    quickUploadRef, bulkUploadRef,
-    handleQuickUpload, handleBulkUpload,
-    handlePreviewConfirm, handlePreviewCancel,
+    csvPreview,
+    toastMsg,
+    quickUploadRef,
+    bulkUploadRef,
+    handleQuickUpload,
+    handleBulkUpload,
+    handlePreviewConfirm,
+    handlePreviewCancel,
   }
 }

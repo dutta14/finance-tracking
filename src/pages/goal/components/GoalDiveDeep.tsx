@@ -1,7 +1,5 @@
 import { FC, useMemo, useState } from 'react'
-import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine
-} from 'recharts'
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from 'recharts'
 import { FinancialGoal } from '../../../types'
 import '../../../styles/GoalDiveDeep.css'
 
@@ -11,7 +9,7 @@ interface GoalDiveDeepProps {
 }
 
 interface ProjectionRow {
-  month: string   // "MMM YYYY"
+  month: string // "MMM YYYY"
   expense: number
   remaining: number
 }
@@ -135,12 +133,14 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({ goal, profileBirthday }) => {
                     key={opt.value}
                     className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
                     onClick={() => setInterval(opt.value)}
-                  >{opt.label}</button>
+                  >
+                    {opt.label}
+                  </button>
                 ))}
               </div>
               <button
                 className="projection-view-toggle"
-                onClick={() => setViewMode(v => v === 'chart' ? 'table' : 'chart')}
+                onClick={() => setViewMode(v => (v === 'chart' ? 'table' : 'chart'))}
               >
                 {viewMode === 'chart' ? 'View Table' : 'View Chart'}
               </button>
@@ -193,40 +193,61 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({ goal, profileBirthday }) => {
                   <tbody>
                     {interval === 'monthly' && groupedByYear
                       ? Array.from(groupedByYear.entries()).flatMap(([year, rows]) => [
-                        <tr key={`year-${year}`} className="projection-year-header">
-                          <td colSpan={3}>
-                            <button
-                              className="projection-year-toggle"
-                              onClick={() => toggleYearExpand(year)}
-                              aria-expanded={expandedYears.has(year)}
-                            >
-                              <svg className="projection-year-chevron" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                {expandedYears.has(year) ? (
-                                  <path d="M3.5 10.5L8 6l4.5 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                ) : (
-                                  <path d="M12.5 5.5L8 10l-4.5-4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                )}
-                              </svg>
-                              {year}
-                            </button>
-                          </td>
-                        </tr>,
-                        ...(expandedYears.has(year) ? rows.map(row => (
+                          <tr key={`year-${year}`} className="projection-year-header">
+                            <td colSpan={3}>
+                              <button
+                                className="projection-year-toggle"
+                                onClick={() => toggleYearExpand(year)}
+                                aria-expanded={expandedYears.has(year)}
+                              >
+                                <svg
+                                  className="projection-year-chevron"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 16 16"
+                                  fill="currentColor"
+                                >
+                                  {expandedYears.has(year) ? (
+                                    <path
+                                      d="M3.5 10.5L8 6l4.5 4.5"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                      fill="none"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  ) : (
+                                    <path
+                                      d="M12.5 5.5L8 10l-4.5-4.5"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                      fill="none"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  )}
+                                </svg>
+                                {year}
+                              </button>
+                            </td>
+                          </tr>,
+                          ...(expandedYears.has(year)
+                            ? rows.map(row => (
+                                <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
+                                  <td>{row.month}</td>
+                                  <td>{dollars(row.expense)}</td>
+                                  <td>{dollars(row.remaining)}</td>
+                                </tr>
+                              ))
+                            : []),
+                        ])
+                      : filteredRows.map(row => (
                           <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
                             <td>{row.month}</td>
                             <td>{dollars(row.expense)}</td>
                             <td>{dollars(row.remaining)}</td>
                           </tr>
-                        )) : []),
-                      ])
-                      : filteredRows.map(row => (
-                        <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
-                          <td>{row.month}</td>
-                          <td>{dollars(row.expense)}</td>
-                          <td>{dollars(row.remaining)}</td>
-                        </tr>
-                      ))
-                    }
+                        ))}
                   </tbody>
                 </table>
               </div>

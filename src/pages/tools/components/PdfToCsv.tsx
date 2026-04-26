@@ -78,13 +78,14 @@ function structureRows(items: TextItem[], yTolerance = 3): string[][] {
       // Assign to column: find the last column start that is <= item.x
       let colIdx = 0
       for (let i = columns.length - 1; i >= 0; i--) {
-        if (item.x >= columns[i] - 5) { colIdx = i; break }
+        if (item.x >= columns[i] - 5) {
+          colIdx = i
+          break
+        }
       }
       const text = item.text.trim()
       if (text) {
-        structured[colIdx] = structured[colIdx]
-          ? structured[colIdx] + ' ' + text
-          : text
+        structured[colIdx] = structured[colIdx] ? structured[colIdx] + ' ' + text : text
       }
     }
     return structured
@@ -203,19 +204,25 @@ const PdfToCsv: FC = () => {
     setSelection(null)
   }, [])
 
-  const handleFileDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    if (file && file.type === 'application/pdf') loadPdf(file)
-    else setError('Please drop a PDF file')
-  }, [loadPdf])
+  const handleFileDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      const file = e.dataTransfer.files[0]
+      if (file && file.type === 'application/pdf') loadPdf(file)
+      else setError('Please drop a PDF file')
+    },
+    [loadPdf],
+  )
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) loadPdf(file)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    if (addFileInputRef.current) addFileInputRef.current.value = ''
-  }, [loadPdf])
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) loadPdf(file)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (addFileInputRef.current) addFileInputRef.current.value = ''
+    },
+    [loadPdf],
+  )
 
   const handleZoom = (delta: number) => {
     setZoom(z => {
@@ -278,7 +285,7 @@ const PdfToCsv: FC = () => {
     }
 
     const rows = structureRows(selected)
-    setPreviewRows(prev => prev ? [...prev, ...rows] : rows)
+    setPreviewRows(prev => (prev ? [...prev, ...rows] : rows))
     setError(null)
   }
   handleMouseUpRef.current = handleMouseUp
@@ -349,7 +356,7 @@ const PdfToCsv: FC = () => {
     const merged = previewRows.map((row, ri) => {
       if (ri === 0) {
         // Header row — replace with "Amount", drop the other
-        const next = row.map((c, i) => i === keepIdx ? 'Amount' : c)
+        const next = row.map((c, i) => (i === keepIdx ? 'Amount' : c))
         return next.filter((_, i) => i !== dropIdx)
       }
       const debitRaw = row[debitIdx].trim()
@@ -367,19 +374,22 @@ const PdfToCsv: FC = () => {
         const n = parseNum(creditRaw)
         amount = '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       }
-      const next = row.map((c, i) => i === keepIdx ? amount : c)
+      const next = row.map((c, i) => (i === keepIdx ? amount : c))
       return next.filter((_, i) => i !== dropIdx)
     })
     setPreviewRows(merged)
   }
 
   // Selection rect for rendering (in canvas coords)
-  const selRect = selStart && selEnd ? {
-    left: Math.min(selStart.x, selEnd.x),
-    top: Math.min(selStart.y, selEnd.y),
-    width: Math.abs(selEnd.x - selStart.x),
-    height: Math.abs(selEnd.y - selStart.y),
-  } : null
+  const selRect =
+    selStart && selEnd
+      ? {
+          left: Math.min(selStart.x, selEnd.x),
+          top: Math.min(selStart.y, selEnd.y),
+          width: Math.abs(selEnd.x - selStart.x),
+          height: Math.abs(selEnd.y - selStart.y),
+        }
+      : null
 
   return (
     <div className="pdf2csv">
@@ -392,15 +402,22 @@ const PdfToCsv: FC = () => {
           onClick={() => fileInputRef.current?.click()}
         >
           <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={handleFileInput} />
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="12" y1="18" x2="12" y2="12" />
             <polyline points="9 15 12 12 15 15" />
           </svg>
-          <p className="pdf2csv-dropzone-text">
-            {loading ? 'Loading PDF…' : 'Drop a PDF here or click to browse'}
-          </p>
+          <p className="pdf2csv-dropzone-text">{loading ? 'Loading PDF…' : 'Drop a PDF here or click to browse'}</p>
         </div>
       )}
 
@@ -413,39 +430,69 @@ const PdfToCsv: FC = () => {
             <span className="pdf2csv-filename">{fileName}</span>
             {pages.length > 1 && (
               <div className="pdf2csv-pages">
-                <button disabled={selectedPage <= 1} onClick={() => handlePageChange(selectedPage - 1)}>←</button>
-                <span>Page {selectedPage} / {pages.length}</span>
-                <button disabled={selectedPage >= pages.length} onClick={() => handlePageChange(selectedPage + 1)}>→</button>
+                <button disabled={selectedPage <= 1} onClick={() => handlePageChange(selectedPage - 1)}>
+                  ←
+                </button>
+                <span>
+                  Page {selectedPage} / {pages.length}
+                </span>
+                <button disabled={selectedPage >= pages.length} onClick={() => handlePageChange(selectedPage + 1)}>
+                  →
+                </button>
               </div>
             )}
             <div className="pdf2csv-zoom">
-              <button onClick={() => handleZoom(-0.1)} disabled={zoom <= 0.25}>−</button>
+              <button onClick={() => handleZoom(-0.1)} disabled={zoom <= 0.25}>
+                −
+              </button>
               <span>{Math.round(zoom * 100)}%</span>
-              <button onClick={() => handleZoom(0.1)} disabled={zoom >= 1}>+</button>
+              <button onClick={() => handleZoom(0.1)} disabled={zoom >= 1}>
+                +
+              </button>
             </div>
-            <button className="pdf2csv-change-btn" onClick={() => { setPages([]); setFileName(null); setSelection(null); setZoom(1) }}>
+            <button
+              className="pdf2csv-change-btn"
+              onClick={() => {
+                setPages([])
+                setFileName(null)
+                setSelection(null)
+                setZoom(1)
+              }}
+            >
               Change file
             </button>
-            <input ref={addFileInputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={handleFileInput} />
+            <input
+              ref={addFileInputRef}
+              type="file"
+              accept=".pdf"
+              style={{ display: 'none' }}
+              onChange={handleFileInput}
+            />
           </div>
 
-          <p className="pdf2csv-hint">Click and drag to select a table region. Each selection appends to the CSV below.</p>
+          <p className="pdf2csv-hint">
+            Click and drag to select a table region. Each selection appends to the CSV below.
+          </p>
 
           <div ref={wrapRef} className="pdf2csv-canvas-wrap">
             <canvas ref={canvasRef} className="pdf2csv-canvas" />
-            <div
-              ref={overlayRef}
-              className="pdf2csv-overlay"
-              onMouseDown={handleMouseDown}
-            >
-              {(selecting && selRect) && (
-                <div className="pdf2csv-sel" style={{ left: selRect.left, top: selRect.top, width: selRect.width, height: selRect.height }} />
+            <div ref={overlayRef} className="pdf2csv-overlay" onMouseDown={handleMouseDown}>
+              {selecting && selRect && (
+                <div
+                  className="pdf2csv-sel"
+                  style={{ left: selRect.left, top: selRect.top, width: selRect.width, height: selRect.height }}
+                />
               )}
-              {(!selecting && selection) && (
-                <div className="pdf2csv-sel pdf2csv-sel--final" style={{
-                  left: selection.x1 * scaleRef.current, top: selection.y1 * scaleRef.current,
-                  width: (selection.x2 - selection.x1) * scaleRef.current, height: (selection.y2 - selection.y1) * scaleRef.current,
-                }} />
+              {!selecting && selection && (
+                <div
+                  className="pdf2csv-sel pdf2csv-sel--final"
+                  style={{
+                    left: selection.x1 * scaleRef.current,
+                    top: selection.y1 * scaleRef.current,
+                    width: (selection.x2 - selection.x1) * scaleRef.current,
+                    height: (selection.y2 - selection.y1) * scaleRef.current,
+                  }}
+                />
               )}
             </div>
           </div>
@@ -485,7 +532,9 @@ const PdfToCsv: FC = () => {
                   <th className="pdf2csv-row-action" />
                   {previewRows[0].map((_, ci) => (
                     <th key={ci} className="pdf2csv-col-action">
-                      <button className="pdf2csv-del-col" title="Remove column" onClick={() => removeCol(ci)}>×</button>
+                      <button className="pdf2csv-del-col" title="Remove column" onClick={() => removeCol(ci)}>
+                        ×
+                      </button>
                     </th>
                   ))}
                 </tr>
@@ -494,9 +543,17 @@ const PdfToCsv: FC = () => {
                 {previewRows.map((row, ri) => (
                   <tr key={ri} className={ri === 0 ? 'pdf2csv-table-header' : ''}>
                     <td className="pdf2csv-row-action">
-                      <button className="pdf2csv-del-row" title="Remove row" onClick={() => removeRow(ri)}>×</button>
+                      <button className="pdf2csv-del-row" title="Remove row" onClick={() => removeRow(ri)}>
+                        ×
+                      </button>
                       {ri > 0 && (
-                        <button className="pdf2csv-merge-row" title="Merge into row above" onClick={() => mergeRowUp(ri)}>↑</button>
+                        <button
+                          className="pdf2csv-merge-row"
+                          title="Merge into row above"
+                          onClick={() => mergeRowUp(ri)}
+                        >
+                          ↑
+                        </button>
                       )}
                     </td>
                     {row.map((cell, ci) => {
@@ -507,7 +564,9 @@ const PdfToCsv: FC = () => {
                           contentEditable
                           suppressContentEditableWarning
                           onBlur={e => editCell(ri, ci, e.currentTarget.textContent || '')}
-                        >{cell}</Tag>
+                        >
+                          {cell}
+                        </Tag>
                       )
                     })}
                   </tr>

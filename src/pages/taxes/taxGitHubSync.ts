@@ -11,13 +11,10 @@ function apiHeaders(token: string): Record<string, string> {
   }
 }
 
-async function getFileSha(
-  config: GitHubSyncConfig, token: string, path: string
-): Promise<string | null> {
-  const res = await fetch(
-    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`,
-    { headers: apiHeaders(token) }
-  )
+async function getFileSha(config: GitHubSyncConfig, token: string, path: string): Promise<string | null> {
+  const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
+    headers: apiHeaders(token),
+  })
   if (res.status === 404) return null
   if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
   const data = await res.json()
@@ -42,17 +39,18 @@ async function uploadTaxFile(
   token: string,
   path: string,
   base64Content: string,
-  message: string
+  message: string,
 ): Promise<{ ok: boolean; error?: string }> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const sha = await getFileSha(config, token, path)
       const body: Record<string, string> = { message, content: base64Content }
       if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`,
-        { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) }
-      )
+      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: apiHeaders(token),
+        body: JSON.stringify(body),
+      })
       if (res.ok) return { ok: true }
       if (res.status === 409 && attempt < 2) {
         await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
@@ -74,14 +72,16 @@ function ownerLabel(owner: string): string {
     if (owner === 'primary') return profile.name || 'Primary'
     if (owner === 'partner') return profile.partner?.name || 'Partner'
     return 'Joint'
-  } catch { return owner }
+  } catch {
+    return owner
+  }
 }
 
 /** Sync all tax document files to GitHub */
 export async function syncAllTaxFiles(
   config: GitHubSyncConfig,
   token: string,
-  store: TaxStore
+  store: TaxStore,
 ): Promise<{ ok: boolean; synced: number; errors: string[] }> {
   const errors: string[] = []
   let synced = 0
@@ -94,7 +94,7 @@ export async function syncAllTaxFiles(
         // Load content from IndexedDB if not inline (post-migration)
         let content = file.content
         if (!content) {
-          content = await getFileContent(file.id) ?? undefined
+          content = (await getFileContent(file.id)) ?? undefined
         }
         if (!content) continue
         const path = filePath(year, oLabel, item.label, file)
@@ -112,14 +112,13 @@ export async function syncAllTaxFiles(
 /** Download all tax files from GitHub and return a map of fileId → base64 content */
 export async function downloadAllTaxFiles(
   config: GitHubSyncConfig,
-  token: string
+  token: string,
 ): Promise<{ ok: boolean; files?: Map<string, string>; error?: string }> {
   try {
     // List years
-    const yearsRes = await fetch(
-      `https://api.github.com/repos/${config.owner}/${config.repo}/contents/taxes`,
-      { headers: apiHeaders(token) }
-    )
+    const yearsRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/taxes`, {
+      headers: apiHeaders(token),
+    })
     if (yearsRes.status === 404) return { ok: true, files: new Map() }
     if (!yearsRes.ok) return { ok: false, error: `GitHub API error: ${yearsRes.status}` }
 
@@ -129,7 +128,7 @@ export async function downloadAllTaxFiles(
     for (const dir of yearDirs.filter(d => d.type === 'dir')) {
       const filesRes = await fetch(
         `https://api.github.com/repos/${config.owner}/${config.repo}/contents/taxes/${dir.name}`,
-        { headers: apiHeaders(token) }
+        { headers: apiHeaders(token) },
       )
       if (!filesRes.ok) continue
       const items = (await filesRes.json()) as { name: string; type: string; sha: string }[]
@@ -142,10 +141,10 @@ export async function downloadAllTaxFiles(
 
         const contentRes = await fetch(
           `https://api.github.com/repos/${config.owner}/${config.repo}/contents/taxes/${dir.name}/${item.name}`,
-          { headers: apiHeaders(token) }
+          { headers: apiHeaders(token) },
         )
         if (!contentRes.ok) continue
-        const fileData = await contentRes.json() as { content?: string; encoding?: string }
+        const fileData = (await contentRes.json()) as { content?: string; encoding?: string }
         if (fileData.content && fileData.encoding === 'base64') {
           files.set(fileId, fileData.content.replace(/\n/g, ''))
         }

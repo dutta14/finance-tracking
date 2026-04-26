@@ -59,29 +59,41 @@ const WelcomeGuide: FC<Props> = ({ greeting }) => {
     <div className="home-page">
       <div className="welcome-hero">
         <h1 className="welcome-title">{greeting}</h1>
-        <p className="welcome-subtitle">
-          Welcome to your personal finance dashboard. Here's how to get started.
-        </p>
+        <p className="welcome-subtitle">Welcome to your personal finance dashboard. Here's how to get started.</p>
       </div>
 
       <div className="welcome-start-hint">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
           <path d="M12 5v14M5 12l7-7 7 7" />
         </svg>
         <span>Start here — add your accounts and first balance snapshot</span>
       </div>
 
       <ol className="welcome-steps">
-        {steps.map((step) => {
+        {steps.map(step => {
           const Icon = step.icon
           return (
             <li key={step.title} className="welcome-step">
-              <div className="welcome-step-icon"><Icon /></div>
+              <div className="welcome-step-icon">
+                <Icon />
+              </div>
               <div className="welcome-step-body">
                 <h2 className="welcome-step-title">{step.title}</h2>
                 <p className="welcome-step-desc">{step.desc}</p>
               </div>
-              <button className="welcome-step-cta" onClick={() => navigate(step.route)}>{step.cta} →</button>
+              <button className="welcome-step-cta" onClick={() => navigate(step.route)}>
+                {step.cta} →
+              </button>
             </li>
           )
         })}

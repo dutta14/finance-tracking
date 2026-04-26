@@ -6,7 +6,9 @@ import { describe, it, expect, beforeEach } from 'vitest'
 const toBase64 = (str: string): string => {
   const bytes = new TextEncoder().encode(str)
   let binary = ''
-  bytes.forEach(b => { binary += String.fromCharCode(b) })
+  bytes.forEach(b => {
+    binary += String.fromCharCode(b)
+  })
   return btoa(binary)
 }
 

@@ -19,7 +19,9 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
       name: name.trim(),
       birthday,
       avatarDataUrl: avatarPreview,
-      partner: hasPartner ? { name: partnerName.trim(), birthday: partnerBirthday, avatarDataUrl: partnerAvatarPreview } : null,
+      partner: hasPartner
+        ? { name: partnerName.trim(), birthday: partnerBirthday, avatarDataUrl: partnerAvatarPreview }
+        : null,
     })
     setProfileEditing(false)
     setProfileSaved(true)
@@ -41,7 +43,9 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
-      reader.onload = (event) => { setAvatarPreview(event.target?.result as string) }
+      reader.onload = event => {
+        setAvatarPreview(event.target?.result as string)
+      }
       reader.readAsDataURL(file)
     }
   }
@@ -50,15 +54,22 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
-      reader.onload = (event) => { setPartnerAvatarPreview(event.target?.result as string) }
+      reader.onload = event => {
+        setPartnerAvatarPreview(event.target?.result as string)
+      }
       reader.readAsDataURL(file)
     }
   }
 
   const avatarSvg = (
     <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-      <circle cx="18" cy="14" r="7" stroke="currentColor" strokeWidth="2"/>
-      <path d="M4 32c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="18" cy="14" r="7" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M4 32c0-7.732 6.268-14 14-14s14 6.268 14 14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   )
 
@@ -71,9 +82,11 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <div className="settings-profile-card settings-profile-card--view" style={{ flex: 1 }}>
                 <div className="settings-profile-view-avatar">
-                  {avatarPreview
-                    ? <img src={avatarPreview} alt="Profile" className="settings-avatar-img" />
-                    : <div className="settings-avatar-placeholder">{avatarSvg}</div>}
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Profile" className="settings-avatar-img" />
+                  ) : (
+                    <div className="settings-avatar-placeholder">{avatarSvg}</div>
+                  )}
                 </div>
                 <div className="settings-profile-view-info">
                   <span className="settings-profile-view-name">{name || 'No name set'}</span>
@@ -83,9 +96,11 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
               {hasPartner && (
                 <div className="settings-profile-card settings-profile-card--view" style={{ flex: 1 }}>
                   <div className="settings-profile-view-avatar">
-                    {partnerAvatarPreview
-                      ? <img src={partnerAvatarPreview} alt="Partner" className="settings-avatar-img" />
-                      : <div className="settings-avatar-placeholder">{avatarSvg}</div>}
+                    {partnerAvatarPreview ? (
+                      <img src={partnerAvatarPreview} alt="Partner" className="settings-avatar-img" />
+                    ) : (
+                      <div className="settings-avatar-placeholder">{avatarSvg}</div>
+                    )}
                   </div>
                   <div className="settings-profile-view-info">
                     <span className="settings-profile-view-name">{partnerName || 'No name set'}</span>
@@ -95,7 +110,9 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
               )}
             </div>
             <div className="settings-save-row">
-              <button className="settings-btn" onClick={() => setProfileEditing(true)}>Edit Profile</button>
+              <button className="settings-btn" onClick={() => setProfileEditing(true)}>
+                Edit Profile
+              </button>
               {profileSaved && <span className="settings-save-flash">Profile saved!</span>}
             </div>
           </>
@@ -105,59 +122,139 @@ const ProfilePane: FC<ProfilePaneProps> = ({ profile, onUpdateProfile }) => {
               <div className="settings-profile-card">
                 <h4 className="settings-profile-card-title">You</h4>
                 <div className="settings-avatar-section">
-                  <button className="settings-avatar-btn" onClick={() => fileInputRef.current?.click()} title="Click to upload a photo" aria-label="Upload profile picture">
-                    {avatarPreview
-                      ? <img src={avatarPreview} alt="Profile" className="settings-avatar-img" />
-                      : <div className="settings-avatar-placeholder">{avatarSvg}</div>}
+                  <button
+                    className="settings-avatar-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Click to upload a photo"
+                    aria-label="Upload profile picture"
+                  >
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Profile" className="settings-avatar-img" />
+                    ) : (
+                      <div className="settings-avatar-placeholder">{avatarSvg}</div>
+                    )}
                     <div className="settings-avatar-overlay">
-                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17h14M10 3l4 4-7 7H3v-4l7-7z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                        <path
+                          d="M3 17h14M10 3l4 4-7 7H3v-4l7-7z"
+                          stroke="white"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </div>
                   </button>
-                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                  />
                 </div>
                 <div className="settings-field">
                   <label className="settings-label">Name</label>
-                  <input type="text" className="settings-input" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+                  <input
+                    type="text"
+                    className="settings-input"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Your name"
+                  />
                 </div>
                 <div className="settings-field">
                   <label className="settings-label">Birthday</label>
-                  <input type="date" className="settings-input" value={birthday} onChange={e => setBirthday(e.target.value)} />
+                  <input
+                    type="date"
+                    className="settings-input"
+                    value={birthday}
+                    onChange={e => setBirthday(e.target.value)}
+                  />
                 </div>
               </div>
               {hasPartner && (
                 <div className="settings-profile-card">
                   <div className="settings-partner-header">
                     <h4 className="settings-profile-card-title">Partner</h4>
-                    <button className="settings-partner-remove" onClick={() => { setHasPartner(false); setPartnerName(''); setPartnerBirthday(''); setPartnerAvatarPreview('') }}>Remove</button>
+                    <button
+                      className="settings-partner-remove"
+                      onClick={() => {
+                        setHasPartner(false)
+                        setPartnerName('')
+                        setPartnerBirthday('')
+                        setPartnerAvatarPreview('')
+                      }}
+                    >
+                      Remove
+                    </button>
                   </div>
                   <div className="settings-avatar-section">
-                    <button className="settings-avatar-btn" onClick={() => partnerFileInputRef.current?.click()} title="Upload partner photo" aria-label="Upload partner picture">
-                      {partnerAvatarPreview
-                        ? <img src={partnerAvatarPreview} alt="Partner" className="settings-avatar-img" />
-                        : <div className="settings-avatar-placeholder">{avatarSvg}</div>}
+                    <button
+                      className="settings-avatar-btn"
+                      onClick={() => partnerFileInputRef.current?.click()}
+                      title="Upload partner photo"
+                      aria-label="Upload partner picture"
+                    >
+                      {partnerAvatarPreview ? (
+                        <img src={partnerAvatarPreview} alt="Partner" className="settings-avatar-img" />
+                      ) : (
+                        <div className="settings-avatar-placeholder">{avatarSvg}</div>
+                      )}
                       <div className="settings-avatar-overlay">
-                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17h14M10 3l4 4-7 7H3v-4l7-7z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                          <path
+                            d="M3 17h14M10 3l4 4-7 7H3v-4l7-7z"
+                            stroke="white"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </div>
                     </button>
-                    <input ref={partnerFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePartnerFileChange} />
+                    <input
+                      ref={partnerFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handlePartnerFileChange}
+                    />
                   </div>
                   <div className="settings-field">
                     <label className="settings-label">Name</label>
-                    <input type="text" className="settings-input" value={partnerName} onChange={e => setPartnerName(e.target.value)} placeholder="Partner's name" />
+                    <input
+                      type="text"
+                      className="settings-input"
+                      value={partnerName}
+                      onChange={e => setPartnerName(e.target.value)}
+                      placeholder="Partner's name"
+                    />
                   </div>
                   <div className="settings-field">
                     <label className="settings-label">Birthday</label>
-                    <input type="date" className="settings-input" value={partnerBirthday} onChange={e => setPartnerBirthday(e.target.value)} />
+                    <input
+                      type="date"
+                      className="settings-input"
+                      value={partnerBirthday}
+                      onChange={e => setPartnerBirthday(e.target.value)}
+                    />
                   </div>
                 </div>
               )}
             </div>
             {!hasPartner && (
-              <button className="settings-add-partner-btn" onClick={() => setHasPartner(true)}>+ Add Partner</button>
+              <button className="settings-add-partner-btn" onClick={() => setHasPartner(true)}>
+                + Add Partner
+              </button>
             )}
             <div className="settings-save-row">
-              <button className="settings-btn" onClick={handleProfileSave}>Save Profile</button>
-              <button className="settings-btn settings-btn--secondary" onClick={handleProfileCancel}>Cancel</button>
+              <button className="settings-btn" onClick={handleProfileSave}>
+                Save Profile
+              </button>
+              <button className="settings-btn settings-btn--secondary" onClick={handleProfileCancel}>
+                Cancel
+              </button>
             </div>
           </>
         )}

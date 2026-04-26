@@ -5,9 +5,14 @@ const parseRow = (line: string): string[] => {
   let current = ''
   let inQuotes = false
   for (const ch of line) {
-    if (ch === '"') { inQuotes = !inQuotes }
-    else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = '' }
-    else { current += ch }
+    if (ch === '"') {
+      inQuotes = !inQuotes
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim())
+      current = ''
+    } else {
+      current += ch
+    }
   }
   result.push(current.trim())
   return result

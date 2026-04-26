@@ -22,10 +22,7 @@ const buildTree = (): DriveFolder => ({
           name: '2025',
           slug: '2025',
           folders: [],
-          files: [
-            makeFile('January 2025', '2025-01'),
-            makeFile('February 2025', '2025-02'),
-          ],
+          files: [makeFile('January 2025', '2025-01'), makeFile('February 2025', '2025-02')],
         },
       ],
       files: [],

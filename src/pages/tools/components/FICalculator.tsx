@@ -24,7 +24,9 @@ function getLastYearExpense(): number {
       try {
         const parsed = parseCSV(csvData.csv)
         txns.push(...parsed.map(t => ({ category: t.category, amount: t.amount, monthKey: key })))
-      } catch { /* skip bad CSV */ }
+      } catch {
+        /* skip bad CSV */
+      }
     }
 
     // Classify categories same as budget table: group by category+month, then
@@ -111,9 +113,16 @@ interface FISim {
 
 const SIMS_KEY = 'fi-simulations'
 function loadSims(): FISim[] {
-  try { return JSON.parse(localStorage.getItem(SIMS_KEY) || '[]') } catch { return [] }
+  try {
+    return JSON.parse(localStorage.getItem(SIMS_KEY) || '[]')
+  } catch {
+    return []
+  }
 }
-function saveSims(sims: FISim[]) { localStorage.setItem(SIMS_KEY, JSON.stringify(sims)); window.dispatchEvent(new Event('tools-changed')) }
+function saveSims(sims: FISim[]) {
+  localStorage.setItem(SIMS_KEY, JSON.stringify(sims))
+  window.dispatchEvent(new Event('tools-changed'))
+}
 
 /** Button that fires once on click, then repeats (accelerating) while held */
 const StepBtn: FC<{ onStep: () => void; children: React.ReactNode }> = ({ onStep, children }) => {
@@ -121,8 +130,14 @@ const StepBtn: FC<{ onStep: () => void; children: React.ReactNode }> = ({ onStep
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const stop = useCallback(() => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
-    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
   }, [])
 
   const start = useCallback(() => {
@@ -170,9 +185,7 @@ const FICalculator: FC = () => {
 
   // Inputs
   const [annualExpense, setAnnualExpense] = useState<number>(lastYearExpense || 60000)
-  const [expenseDisplay, setExpenseDisplay] = useState<string>(
-    Math.round(lastYearExpense || 60000).toLocaleString()
-  )
+  const [expenseDisplay, setExpenseDisplay] = useState<string>(Math.round(lastYearExpense || 60000).toLocaleString())
   const [inflationRate, setInflationRate] = useState<number>(3)
   const [growthRate, setGrowthRate] = useState<number>(8)
   const [lastYear, setLastYear] = useState<number>(defaultLastYear)
@@ -199,40 +212,76 @@ const FICalculator: FC = () => {
     setActiveSim(s.name)
   }, [])
 
-  const handleSave = useCallback((name: string) => {
-    const sim: FISim = {
-      name, annualExpense, inflationRate, growthRate, lastYear,
-      retireYear, primary401kYear, partner401kYear, includeGwLiquid,
-    }
-    const next = [...savedSims.filter(s => s.name !== name), sim]
-    setSavedSims(next)
-    saveSims(next)
-    setActiveSim(name)
-    setShowSaveInput(false)
-    setSaveNameInput('')
-  }, [annualExpense, inflationRate, growthRate, lastYear, retireYear,
-      primary401kYear, partner401kYear, includeGwLiquid, savedSims])
+  const handleSave = useCallback(
+    (name: string) => {
+      const sim: FISim = {
+        name,
+        annualExpense,
+        inflationRate,
+        growthRate,
+        lastYear,
+        retireYear,
+        primary401kYear,
+        partner401kYear,
+        includeGwLiquid,
+      }
+      const next = [...savedSims.filter(s => s.name !== name), sim]
+      setSavedSims(next)
+      saveSims(next)
+      setActiveSim(name)
+      setShowSaveInput(false)
+      setSaveNameInput('')
+    },
+    [
+      annualExpense,
+      inflationRate,
+      growthRate,
+      lastYear,
+      retireYear,
+      primary401kYear,
+      partner401kYear,
+      includeGwLiquid,
+      savedSims,
+    ],
+  )
 
-  const handleDeleteSim = useCallback((name: string) => {
-    const next = savedSims.filter(s => s.name !== name)
-    setSavedSims(next)
-    saveSims(next)
-    if (activeSim === name) setActiveSim(null)
-  }, [savedSims, activeSim])
+  const handleDeleteSim = useCallback(
+    (name: string) => {
+      const next = savedSims.filter(s => s.name !== name)
+      setSavedSims(next)
+      saveSims(next)
+      if (activeSim === name) setActiveSim(null)
+    },
+    [savedSims, activeSim],
+  )
 
   // Current balances
-  const fiRetirementPrimary = useMemo(() =>
-    getLatestBalancesByFilter(accounts, balances, a => a.goalType === 'fi' && a.type === 'retirement' && a.owner === 'primary'),
-    [accounts, balances])
-  const fiRetirementPartner = useMemo(() =>
-    getLatestBalancesByFilter(accounts, balances, a => a.goalType === 'fi' && a.type === 'retirement' && (a.owner === 'partner' || a.owner === 'joint')),
-    [accounts, balances])
-  const fiNonRetirement = useMemo(() =>
-    getLatestBalancesByFilter(accounts, balances, a => a.goalType === 'fi' && a.type === 'non-retirement'),
-    [accounts, balances])
-  const gwLiquid = useMemo(() =>
-    getLatestBalancesByFilter(accounts, balances, a => a.goalType === 'gw' && a.type === 'liquid'),
-    [accounts, balances])
+  const fiRetirementPrimary = useMemo(
+    () =>
+      getLatestBalancesByFilter(
+        accounts,
+        balances,
+        a => a.goalType === 'fi' && a.type === 'retirement' && a.owner === 'primary',
+      ),
+    [accounts, balances],
+  )
+  const fiRetirementPartner = useMemo(
+    () =>
+      getLatestBalancesByFilter(
+        accounts,
+        balances,
+        a => a.goalType === 'fi' && a.type === 'retirement' && (a.owner === 'partner' || a.owner === 'joint'),
+      ),
+    [accounts, balances],
+  )
+  const fiNonRetirement = useMemo(
+    () => getLatestBalancesByFilter(accounts, balances, a => a.goalType === 'fi' && a.type === 'non-retirement'),
+    [accounts, balances],
+  )
+  const gwLiquid = useMemo(
+    () => getLatestBalancesByFilter(accounts, balances, a => a.goalType === 'gw' && a.type === 'liquid'),
+    [accounts, balances],
+  )
 
   // Core FI calculation
   const result = useMemo(() => {
@@ -304,7 +353,10 @@ const FICalculator: FC = () => {
       let injection: string | null = null
 
       // 401k injections
-      if (y === primary401kYear) { nw += primary401kAtAccess; injection = 'Primary 401(k)' }
+      if (y === primary401kYear) {
+        nw += primary401kAtAccess
+        injection = 'Primary 401(k)'
+      }
       if (y === partner401kYear) {
         nw += partner401kAtAccess
         injection = injection ? injection + ' + Partner 401(k)' : 'Partner 401(k)'
@@ -316,7 +368,7 @@ const FICalculator: FC = () => {
       yearByYear.push({ year: y, expense, netWorth: Math.abs(nw) < 1 ? 0 : nw, injection })
 
       // Grow for next year
-      nw *= (1 + g)
+      nw *= 1 + g
     }
 
     return {
@@ -332,9 +384,21 @@ const FICalculator: FC = () => {
       yearsToRetire,
       yearByYear,
     }
-  }, [annualExpense, inflationRate, growthRate, lastYear, retireYear, thisYear,
-      fiRetirementPrimary, fiRetirementPartner, fiNonRetirement, gwLiquid,
-      includeGwLiquid, primary401kYear, partner401kYear])
+  }, [
+    annualExpense,
+    inflationRate,
+    growthRate,
+    lastYear,
+    retireYear,
+    thisYear,
+    fiRetirementPrimary,
+    fiRetirementPartner,
+    fiNonRetirement,
+    gwLiquid,
+    includeGwLiquid,
+    primary401kYear,
+    partner401kYear,
+  ])
 
   return (
     <div className="fi-calc">
@@ -348,12 +412,26 @@ const FICalculator: FC = () => {
               onClick={() => applySnapshot(s)}
             >
               {s.name}
-              <span className="fi-sim-chip-x" onClick={e => { e.stopPropagation(); handleDeleteSim(s.name) }}>×</span>
+              <span
+                className="fi-sim-chip-x"
+                onClick={e => {
+                  e.stopPropagation()
+                  handleDeleteSim(s.name)
+                }}
+              >
+                ×
+              </span>
             </button>
           ))}
         </div>
         {showSaveInput ? (
-          <form className="fi-sim-save-form" onSubmit={e => { e.preventDefault(); if (saveNameInput.trim()) handleSave(saveNameInput.trim()) }}>
+          <form
+            className="fi-sim-save-form"
+            onSubmit={e => {
+              e.preventDefault()
+              if (saveNameInput.trim()) handleSave(saveNameInput.trim())
+            }}
+          >
             <input
               className="fi-sim-save-input"
               placeholder="Simulation name"
@@ -361,11 +439,24 @@ const FICalculator: FC = () => {
               onChange={e => setSaveNameInput(e.target.value)}
               autoFocus
             />
-            <button type="submit" className="fi-sim-save-btn" disabled={!saveNameInput.trim()}>Save</button>
-            <button type="button" className="fi-sim-cancel-btn" onClick={() => { setShowSaveInput(false); setSaveNameInput('') }}>✕</button>
+            <button type="submit" className="fi-sim-save-btn" disabled={!saveNameInput.trim()}>
+              Save
+            </button>
+            <button
+              type="button"
+              className="fi-sim-cancel-btn"
+              onClick={() => {
+                setShowSaveInput(false)
+                setSaveNameInput('')
+              }}
+            >
+              ✕
+            </button>
           </form>
         ) : (
-          <button className="fi-sim-add-btn" onClick={() => setShowSaveInput(true)}>+ Save</button>
+          <button className="fi-sim-add-btn" onClick={() => setShowSaveInput(true)}>
+            + Save
+          </button>
         )}
       </div>
 
@@ -385,15 +476,20 @@ const FICalculator: FC = () => {
               setExpenseDisplay(raw ? num.toLocaleString() : '')
               if (raw) setAnnualExpense(num)
             }}
-            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+            }}
             onBlur={() => setExpenseDisplay(Math.round(annualExpense).toLocaleString())}
           />
         </div>
         {lastYearExpense > 0 && annualExpense !== lastYearExpense && (
-          <button className="fi-calc-link-btn" onClick={() => {
-            setAnnualExpense(lastYearExpense)
-            setExpenseDisplay(Math.round(lastYearExpense).toLocaleString())
-          }}>
+          <button
+            className="fi-calc-link-btn"
+            onClick={() => {
+              setAnnualExpense(lastYearExpense)
+              setExpenseDisplay(Math.round(lastYearExpense).toLocaleString())
+            }}
+          >
             Use last year's ({fmt(lastYearExpense)})
           </button>
         )}
@@ -425,7 +521,9 @@ const FICalculator: FC = () => {
           <span className="fi-calc-stepper-label">Retire in</span>
           <div className="fi-calc-stepper">
             <StepBtn onStep={() => setRetireYear(v => Math.max(thisYear + 1, v - 1))}>−</StepBtn>
-            <span className="fi-calc-step-val">{retireYear} <span className="fi-calc-step-sub">({retireYear - thisYear}yr)</span></span>
+            <span className="fi-calc-step-val">
+              {retireYear} <span className="fi-calc-step-sub">({retireYear - thisYear}yr)</span>
+            </span>
             <StepBtn onStep={() => setRetireYear(v => Math.min(lastYear - 1, v + 1))}>+</StepBtn>
           </div>
         </div>
@@ -467,7 +565,9 @@ const FICalculator: FC = () => {
           className={`fi-calc-toggle ${includeGwLiquid ? 'fi-calc-toggle--on' : ''}`}
           onClick={() => setIncludeGwLiquid(v => !v)}
         >
-          <span className="fi-calc-toggle-track"><span className="fi-calc-toggle-thumb" /></span>
+          <span className="fi-calc-toggle-track">
+            <span className="fi-calc-toggle-thumb" />
+          </span>
           Include GW liquid ({fmt(gwLiquid)})
         </button>
       </div>
@@ -542,10 +642,7 @@ const FICalculator: FC = () => {
               </div>
             </div>
 
-            <button
-              className="fi-calc-expand-btn"
-              onClick={() => setShowYearByYear(v => !v)}
-            >
+            <button className="fi-calc-expand-btn" onClick={() => setShowYearByYear(v => !v)}>
               {showYearByYear ? '▾' : '▸'} Year-by-year projection
             </button>
 

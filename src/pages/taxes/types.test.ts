@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  EMPTY_STORE,
-  getEmptyYear,
-  loadTemplates,
-  saveTemplates,
-} from './types'
+import { EMPTY_STORE, getEmptyYear, loadTemplates, saveTemplates } from './types'
 import type { TaxTemplate } from './types'
 
 beforeEach(() => {
@@ -52,9 +47,7 @@ describe('loadTemplates', () => {
 
 describe('saveTemplates', () => {
   it('persists templates to localStorage', () => {
-    const templates: TaxTemplate[] = [
-      { id: '2', name: 'Custom', items: [] },
-    ]
+    const templates: TaxTemplate[] = [{ id: '2', name: 'Custom', items: [] }]
     saveTemplates(templates)
     const raw = JSON.parse(localStorage.getItem('tax-templates')!)
     expect(raw).toHaveLength(1)

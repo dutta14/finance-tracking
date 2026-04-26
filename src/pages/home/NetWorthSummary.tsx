@@ -98,20 +98,29 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
   // Long-press helpers
   const clearLP = useCallback(() => {
-    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
   }, [])
 
   const startLP = useCallback(() => {
     didLongPress.current = false
-    longPressTimer.current = setTimeout(() => { didLongPress.current = true; setJumpOpen(true) }, LONG_PRESS_MS)
+    longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true
+      setJumpOpen(true)
+    }, LONG_PRESS_MS)
   }, [])
 
-  const endLP = useCallback((dir: 'prev' | 'next') => {
-    clearLP()
-    if (didLongPress.current) return // long-press already opened picker
-    if (dir === 'prev') setMonthIdx(i => Math.min(i + 1, allMonths.length - 1))
-    else setMonthIdx(i => Math.max(i - 1, 0))
-  }, [allMonths.length, clearLP])
+  const endLP = useCallback(
+    (dir: 'prev' | 'next') => {
+      clearLP()
+      if (didLongPress.current) return // long-press already opened picker
+      if (dir === 'prev') setMonthIdx(i => Math.min(i + 1, allMonths.length - 1))
+      else setMonthIdx(i => Math.max(i - 1, 0))
+    },
+    [allMonths.length, clearLP],
+  )
 
   // Close jump picker on outside click
   useEffect(() => {
@@ -142,12 +151,30 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       <div className="home-card home-card--nw">
         <div className="home-card-header">
           <h3>Net Worth</h3>
-          <button className="home-card-link" onClick={onNavigate}>View Data →</button>
+          <button className="home-card-link" onClick={onNavigate}>
+            View Data →
+          </button>
         </div>
         <div className="home-card-cta">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+          </svg>
           <p>Add accounts and record your first balance to see your net worth here.</p>
-          <button className="home-card-cta-btn" onClick={onNavigate}>Add your data →</button>
+          <button className="home-card-cta-btn" onClick={onNavigate}>
+            Add your data →
+          </button>
         </div>
       </div>
     )
@@ -157,7 +184,9 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     <div className="home-card home-card--nw">
       <div className="home-card-header">
         <h3>Net Worth</h3>
-        <button className="home-card-link" onClick={onNavigate}>View Data →</button>
+        <button className="home-card-link" onClick={onNavigate}>
+          View Data →
+        </button>
       </div>
       <div className="nw-headline">
         <button
@@ -167,17 +196,27 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           onMouseUp={() => endLP('prev')}
           onMouseLeave={clearLP}
           onTouchStart={startLP}
-          onTouchEnd={() => { endLP('prev') }}
+          onTouchEnd={() => {
+            endLP('prev')
+          }}
           aria-label="Previous month"
-        >‹</button>
+        >
+          ‹
+        </button>
         <div className="nw-headline-center">
-          <span className="nw-amount">{formatCurrency(netWorth)}
-            {prevNw !== null && (() => {
-              const diff = netWorth - prevNw
-              const cls = diff > 0 ? 'nw-change up' : diff < 0 ? 'nw-change down' : 'nw-change flat'
-              const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : ''
-              return <span className={cls}>{arrow} {formatCurrency(Math.abs(diff))}</span>
-            })()}
+          <span className="nw-amount">
+            {formatCurrency(netWorth)}
+            {prevNw !== null &&
+              (() => {
+                const diff = netWorth - prevNw
+                const cls = diff > 0 ? 'nw-change up' : diff < 0 ? 'nw-change down' : 'nw-change flat'
+                const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : ''
+                return (
+                  <span className={cls}>
+                    {arrow} {formatCurrency(Math.abs(diff))}
+                  </span>
+                )
+              })()}
           </span>
           <span className="nw-date">{formatMonth(selectedMonth)}</span>
         </div>
@@ -188,9 +227,13 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           onMouseUp={() => endLP('next')}
           onMouseLeave={clearLP}
           onTouchStart={startLP}
-          onTouchEnd={() => { endLP('next') }}
+          onTouchEnd={() => {
+            endLP('next')
+          }}
           aria-label="Next month"
-        >›</button>
+        >
+          ›
+        </button>
         {jumpOpen && (
           <div className="nw-jump-picker" ref={jumpRef}>
             {[...monthsByYear.entries()].map(([year, months]) => (
@@ -201,7 +244,10 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
                     <button
                       key={month}
                       className={`nw-jump-month-btn${idx === monthIdx ? ' active' : ''}`}
-                      onClick={() => { setMonthIdx(idx); setJumpOpen(false) }}
+                      onClick={() => {
+                        setMonthIdx(idx)
+                        setJumpOpen(false)
+                      }}
                     >
                       {month.split('-')[1]}
                     </button>
@@ -221,7 +267,14 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             >
               <span className="nw-tree-chevron">
                 <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path d={expanded.has(node.label) ? 'M2 3l3 4 3-4' : 'M3 2l4 3-4 3'} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d={expanded.has(node.label) ? 'M2 3l3 4 3-4' : 'M3 2l4 3-4 3'}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </span>
               <span className="nw-tree-label">{node.label}</span>

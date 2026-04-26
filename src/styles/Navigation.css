@@ -75,12 +75,11 @@ body.dark .nav-link.active {
   border-bottom: 2px solid var(--color-text-on-accent);
 }
 
-  .nav-menu {
-    gap: 1rem;
-  }
+.nav-menu {
+  gap: 1rem;
+}
 
-  .nav-link {
-    font-size: var(--fs-md);
-    padding: 0.4rem 0.6rem;
-  }
+.nav-link {
+  font-size: var(--fs-md);
+  padding: 0.4rem 0.6rem;
 }

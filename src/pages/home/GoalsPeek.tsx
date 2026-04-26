@@ -21,10 +21,15 @@ const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: 
   const factor = Math.pow(1 + r, nMonths)
   const needed = fv - pv * factor
   if (needed <= 0) return 0
-  return needed * r / (factor - 1)
+  return (needed * r) / (factor - 1)
 }
 
-const getTotalForMonth = (accounts: Account[], balances: BalanceEntry[], month: string, goalType: 'fi' | 'gw'): number => {
+const getTotalForMonth = (
+  accounts: Account[],
+  balances: BalanceEntry[],
+  month: string,
+  goalType: 'fi' | 'gw',
+): number => {
   const balMap = new Map<number, number>()
   for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
   return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
@@ -49,12 +54,30 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
       <div className="home-card home-card--goals">
         <div className="home-card-header">
           <h3>Goals</h3>
-          <button className="home-card-link" onClick={onNavigate}>View Goals →</button>
+          <button className="home-card-link" onClick={onNavigate}>
+            View Goals →
+          </button>
         </div>
         <div className="home-card-cta">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /></svg>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="5" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+          </svg>
           <p>Set an FI target or general wealth goal to start tracking your progress.</p>
-          <button className="home-card-cta-btn" onClick={onNavigate}>Create a goal →</button>
+          <button className="home-card-cta-btn" onClick={onNavigate}>
+            Create a goal →
+          </button>
         </div>
       </div>
     )
@@ -64,7 +87,9 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
     <div className="home-card home-card--goals">
       <div className="home-card-header">
         <h3>Goals</h3>
-        <button className="home-card-link" onClick={onNavigate}>View Goals →</button>
+        <button className="home-card-link" onClick={onNavigate}>
+          View Goals →
+        </button>
       </div>
       <div className="goals-peek-list">
         {goals.slice(0, 5).map(goal => {
@@ -136,18 +161,23 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
           }
 
           return (
-            <button
-              key={goal.id}
-              className="goals-peek-item"
-              onClick={onNavigate}
-            >
+            <button key={goal.id} className="goals-peek-item" onClick={onNavigate}>
               <div className="goals-peek-item-top">
                 <span className="goals-peek-name">{goal.goalName}</span>
               </div>
               <div className="goals-peek-bars">
                 <div className="goals-peek-bar-row">
-                  <span className="goals-peek-bar-label"><TermAbbr term="FI" /></span>
-                  <div className="goals-peek-bar-track" role="progressbar" aria-valuenow={Math.round(fiPct)} aria-valuemin={0} aria-valuemax={100} aria-label={`FI progress: ${fiPct.toFixed(0)}%`}>
+                  <span className="goals-peek-bar-label">
+                    <TermAbbr term="FI" />
+                  </span>
+                  <div
+                    className="goals-peek-bar-track"
+                    role="progressbar"
+                    aria-valuenow={Math.round(fiPct)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`FI progress: ${fiPct.toFixed(0)}%`}
+                  >
                     <div className="goals-peek-bar-fill goals-peek-bar-fill--fi" style={{ width: `${fiPct}%` }} />
                   </div>
                   <span className="goals-peek-pct goals-peek-pct--fi">{fiPct.toFixed(0)}%</span>
@@ -155,8 +185,17 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
                 </div>
                 {goalGws.length > 0 && (
                   <div className="goals-peek-bar-row">
-                    <span className="goals-peek-bar-label"><TermAbbr term="GW" /></span>
-                    <div className="goals-peek-bar-track" role="progressbar" aria-valuenow={Math.round(gwPct)} aria-valuemin={0} aria-valuemax={100} aria-label={`General wealth progress: ${gwPct.toFixed(0)}%`}>
+                    <span className="goals-peek-bar-label">
+                      <TermAbbr term="GW" />
+                    </span>
+                    <div
+                      className="goals-peek-bar-track"
+                      role="progressbar"
+                      aria-valuenow={Math.round(gwPct)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`General wealth progress: ${gwPct.toFixed(0)}%`}
+                    >
                       <div className="goals-peek-bar-fill goals-peek-bar-fill--gw" style={{ width: `${gwPct}%` }} />
                     </div>
                     <span className="goals-peek-pct goals-peek-pct--gw">{gwPct.toFixed(0)}%</span>
@@ -166,19 +205,38 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
               </div>
               <div className="goals-peek-item-meta">
                 <span>FI: {goal.fiGoal != null ? formatCurrency(goal.fiGoal) : '—'}</span>
-                {goalGws.length > 0 && <span>{goalGws.length} GW goal{goalGws.length > 1 ? 's' : ''}</span>}
+                {goalGws.length > 0 && (
+                  <span>
+                    {goalGws.length} GW goal{goalGws.length > 1 ? 's' : ''}
+                  </span>
+                )}
                 <span>Retire: {goal.retirement}</span>
                 {fiProjectedLabel && (
-                  <span className={`goals-peek-projected${
-                    fiProjectedType === 'reached' ? ' goals-peek-projected--reached' :
-                    fiProjectedType === 'no-budget' ? ' goals-peek-projected--link' :
-                    fiProjectedType === 'not-reachable' ? ' goals-peek-projected--warn' : ''
-                  }`}>
-                    {fiProjectedType === 'date'
-                      ? <>FI by <span className="goals-peek-projected-date">{fiProjectedLabel}</span></>
-                      : fiProjectedType === 'reached'
-                        ? <><span role="img" aria-label="celebration">🎉</span> Goal reached!</>
-                        : fiProjectedLabel}
+                  <span
+                    className={`goals-peek-projected${
+                      fiProjectedType === 'reached'
+                        ? ' goals-peek-projected--reached'
+                        : fiProjectedType === 'no-budget'
+                          ? ' goals-peek-projected--link'
+                          : fiProjectedType === 'not-reachable'
+                            ? ' goals-peek-projected--warn'
+                            : ''
+                    }`}
+                  >
+                    {fiProjectedType === 'date' ? (
+                      <>
+                        FI by <span className="goals-peek-projected-date">{fiProjectedLabel}</span>
+                      </>
+                    ) : fiProjectedType === 'reached' ? (
+                      <>
+                        <span role="img" aria-label="celebration">
+                          🎉
+                        </span>{' '}
+                        Goal reached!
+                      </>
+                    ) : (
+                      fiProjectedLabel
+                    )}
                   </span>
                 )}
               </div>

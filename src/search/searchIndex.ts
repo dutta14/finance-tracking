@@ -43,7 +43,15 @@ export interface SearchGroup {
 /* ─── Category display order & labels ─── */
 
 const CATEGORY_ORDER: SearchCategory[] = [
-  'page', 'command', 'goal', 'account', 'budget', 'tax', 'allocation', 'tool', 'settings',
+  'page',
+  'command',
+  'goal',
+  'account',
+  'budget',
+  'tax',
+  'allocation',
+  'tool',
+  'settings',
 ]
 
 const CATEGORY_LABELS: Record<SearchCategory, string> = {
@@ -63,36 +71,215 @@ export const getCategoryLabel = (cat: SearchCategory): string => CATEGORY_LABELS
 /* ─── Static items (always available) ─── */
 
 const STATIC_PAGES: SearchItem[] = [
-  { id: 'page-home', category: 'page', label: 'Home', hint: 'Dashboard overview', icon: 'home', keywords: ['home', 'dashboard', 'overview'], route: '/' },
-  { id: 'page-goals', category: 'page', label: 'Goals', hint: 'FI goal plans', icon: 'target', keywords: ['goals', 'fi', 'financial independence', 'fire'], route: '/goal' },
-  { id: 'page-net-worth', category: 'page', label: 'Net Worth', hint: 'Accounts & balances', icon: 'chart', keywords: ['data', 'accounts', 'balances', 'net worth'], route: '/net-worth' },
-  { id: 'page-budget', category: 'page', label: 'Budget', hint: 'Monthly spending', icon: 'dollar', keywords: ['budget', 'spending', 'expenses', 'income'], route: '/budget' },
-  { id: 'page-allocation', category: 'page', label: 'Allocation', hint: 'Asset allocation & rebalance', icon: 'scale', keywords: ['allocation', 'rebalance', 'asset', 'portfolio'], route: '/net-worth/allocation' },
-  { id: 'page-taxes', category: 'page', label: 'Taxes', hint: 'Tax document checklist', icon: 'clipboard', keywords: ['taxes', 'tax', 'checklist', 'w2', '1099'], route: '/taxes' },
-  { id: 'page-drive', category: 'page', label: 'Drive', hint: 'Uploaded files', icon: 'folder', keywords: ['drive', 'files', 'uploads', 'documents'], route: '/drive' },
+  {
+    id: 'page-home',
+    category: 'page',
+    label: 'Home',
+    hint: 'Dashboard overview',
+    icon: 'home',
+    keywords: ['home', 'dashboard', 'overview'],
+    route: '/',
+  },
+  {
+    id: 'page-goals',
+    category: 'page',
+    label: 'Goals',
+    hint: 'FI goal plans',
+    icon: 'target',
+    keywords: ['goals', 'fi', 'financial independence', 'fire'],
+    route: '/goal',
+  },
+  {
+    id: 'page-net-worth',
+    category: 'page',
+    label: 'Net Worth',
+    hint: 'Accounts & balances',
+    icon: 'chart',
+    keywords: ['data', 'accounts', 'balances', 'net worth'],
+    route: '/net-worth',
+  },
+  {
+    id: 'page-budget',
+    category: 'page',
+    label: 'Budget',
+    hint: 'Monthly spending',
+    icon: 'dollar',
+    keywords: ['budget', 'spending', 'expenses', 'income'],
+    route: '/budget',
+  },
+  {
+    id: 'page-allocation',
+    category: 'page',
+    label: 'Allocation',
+    hint: 'Asset allocation & rebalance',
+    icon: 'scale',
+    keywords: ['allocation', 'rebalance', 'asset', 'portfolio'],
+    route: '/net-worth/allocation',
+  },
+  {
+    id: 'page-taxes',
+    category: 'page',
+    label: 'Taxes',
+    hint: 'Tax document checklist',
+    icon: 'clipboard',
+    keywords: ['taxes', 'tax', 'checklist', 'w2', '1099'],
+    route: '/taxes',
+  },
+  {
+    id: 'page-drive',
+    category: 'page',
+    label: 'Drive',
+    hint: 'Uploaded files',
+    icon: 'folder',
+    keywords: ['drive', 'files', 'uploads', 'documents'],
+    route: '/drive',
+  },
 ]
 
 const STATIC_COMMANDS: SearchItem[] = [
-  { id: 'cmd-dark-mode', category: 'command', label: 'Toggle Dark Mode', hint: 'Switch between light and dark', icon: 'moon', keywords: ['dark mode', 'light mode', 'theme', 'appearance'], route: '', actionId: 'toggle-dark-mode' },
-  { id: 'cmd-settings', category: 'command', label: 'Open Settings', hint: 'App preferences', icon: 'gear', keywords: ['settings', 'preferences', 'config'], route: '', actionId: 'open-settings' },
-  { id: 'cmd-profile', category: 'command', label: 'Open Profile', hint: 'Edit name & avatar', icon: 'user', keywords: ['profile', 'name', 'avatar'], route: '', actionId: 'open-profile' },
-  { id: 'cmd-new-goal', category: 'command', label: 'New Goal', hint: 'Create a new FI goal', icon: 'plus', keywords: ['new goal', 'add goal', 'create goal'], route: '/goal', actionId: 'new-goal' },
-  { id: 'cmd-demo', category: 'command', label: 'Toggle Demo Mode', hint: 'Show sample data for demos', icon: 'play', keywords: ['demo', 'sample data', 'demo mode'], route: '', actionId: 'toggle-demo' },
-  { id: 'cmd-export', category: 'command', label: 'Export Data', hint: 'Download a JSON backup', icon: 'download', keywords: ['export', 'backup', 'download'], route: '', actionId: 'export-data' },
+  {
+    id: 'cmd-dark-mode',
+    category: 'command',
+    label: 'Toggle Dark Mode',
+    hint: 'Switch between light and dark',
+    icon: 'moon',
+    keywords: ['dark mode', 'light mode', 'theme', 'appearance'],
+    route: '',
+    actionId: 'toggle-dark-mode',
+  },
+  {
+    id: 'cmd-settings',
+    category: 'command',
+    label: 'Open Settings',
+    hint: 'App preferences',
+    icon: 'gear',
+    keywords: ['settings', 'preferences', 'config'],
+    route: '',
+    actionId: 'open-settings',
+  },
+  {
+    id: 'cmd-profile',
+    category: 'command',
+    label: 'Open Profile',
+    hint: 'Edit name & avatar',
+    icon: 'user',
+    keywords: ['profile', 'name', 'avatar'],
+    route: '',
+    actionId: 'open-profile',
+  },
+  {
+    id: 'cmd-new-goal',
+    category: 'command',
+    label: 'New Goal',
+    hint: 'Create a new FI goal',
+    icon: 'plus',
+    keywords: ['new goal', 'add goal', 'create goal'],
+    route: '/goal',
+    actionId: 'new-goal',
+  },
+  {
+    id: 'cmd-demo',
+    category: 'command',
+    label: 'Toggle Demo Mode',
+    hint: 'Show sample data for demos',
+    icon: 'play',
+    keywords: ['demo', 'sample data', 'demo mode'],
+    route: '',
+    actionId: 'toggle-demo',
+  },
+  {
+    id: 'cmd-export',
+    category: 'command',
+    label: 'Export Data',
+    hint: 'Download a JSON backup',
+    icon: 'download',
+    keywords: ['export', 'backup', 'download'],
+    route: '',
+    actionId: 'export-data',
+  },
 ]
 
 const STATIC_TOOLS: SearchItem[] = [
-  { id: 'tool-fi-calc', category: 'tool', label: 'FI Calculator', hint: 'Estimate FI readiness', icon: 'calculator', keywords: ['fi calculator', 'financial independence', 'fire', 'retirement'], route: '/goal/calculator' },
-  { id: 'tool-savings-growth', category: 'tool', label: 'Growth Tracker', hint: 'Break down savings vs. capital gains', icon: 'trending', keywords: ['savings', 'growth', 'tracker', 'capital gains'], route: '/net-worth/growth' },
-  { id: 'tool-pdf-csv', category: 'tool', label: 'PDF → CSV', hint: 'Extract tables from PDFs', icon: 'file', keywords: ['pdf', 'csv', 'extract', 'convert'], route: '/budget' },
+  {
+    id: 'tool-fi-calc',
+    category: 'tool',
+    label: 'FI Calculator',
+    hint: 'Estimate FI readiness',
+    icon: 'calculator',
+    keywords: ['fi calculator', 'financial independence', 'fire', 'retirement'],
+    route: '/goal/calculator',
+  },
+  {
+    id: 'tool-savings-growth',
+    category: 'tool',
+    label: 'Growth Tracker',
+    hint: 'Break down savings vs. capital gains',
+    icon: 'trending',
+    keywords: ['savings', 'growth', 'tracker', 'capital gains'],
+    route: '/net-worth/growth',
+  },
+  {
+    id: 'tool-pdf-csv',
+    category: 'tool',
+    label: 'PDF → CSV',
+    hint: 'Extract tables from PDFs',
+    icon: 'file',
+    keywords: ['pdf', 'csv', 'extract', 'convert'],
+    route: '/budget',
+  },
 ]
 
 const STATIC_SETTINGS: SearchItem[] = [
-  { id: 'settings-profile', category: 'settings', label: 'Profile Settings', hint: 'Name, avatar, birthday', icon: 'user', keywords: ['profile', 'name', 'avatar', 'birthday'], route: '', actionId: 'open-settings-profile' },
-  { id: 'settings-github', category: 'settings', label: 'GitHub Sync', hint: 'Backup & sync to GitHub', icon: 'cloud', keywords: ['github', 'sync', 'backup', 'cloud'], route: '', actionId: 'open-settings-github' },
-  { id: 'settings-appearance', category: 'settings', label: 'Appearance', hint: 'Theme, accent color', icon: 'palette', keywords: ['appearance', 'theme', 'color', 'accent'], route: '', actionId: 'open-settings-appearance' },
-  { id: 'settings-advanced', category: 'settings', label: 'Advanced Settings', hint: 'Import, export, factory reset', icon: 'sliders', keywords: ['advanced', 'import', 'reset', 'csv import'], route: '', actionId: 'open-settings-advanced' },
-  { id: 'settings-labs', category: 'settings', label: 'Labs', hint: 'Experimental features', icon: 'flask', keywords: ['labs', 'experimental', 'beta', 'demo mode'], route: '', actionId: 'open-settings-labs' },
+  {
+    id: 'settings-profile',
+    category: 'settings',
+    label: 'Profile Settings',
+    hint: 'Name, avatar, birthday',
+    icon: 'user',
+    keywords: ['profile', 'name', 'avatar', 'birthday'],
+    route: '',
+    actionId: 'open-settings-profile',
+  },
+  {
+    id: 'settings-github',
+    category: 'settings',
+    label: 'GitHub Sync',
+    hint: 'Backup & sync to GitHub',
+    icon: 'cloud',
+    keywords: ['github', 'sync', 'backup', 'cloud'],
+    route: '',
+    actionId: 'open-settings-github',
+  },
+  {
+    id: 'settings-appearance',
+    category: 'settings',
+    label: 'Appearance',
+    hint: 'Theme, accent color',
+    icon: 'palette',
+    keywords: ['appearance', 'theme', 'color', 'accent'],
+    route: '',
+    actionId: 'open-settings-appearance',
+  },
+  {
+    id: 'settings-advanced',
+    category: 'settings',
+    label: 'Advanced Settings',
+    hint: 'Import, export, factory reset',
+    icon: 'sliders',
+    keywords: ['advanced', 'import', 'reset', 'csv import'],
+    route: '',
+    actionId: 'open-settings-advanced',
+  },
+  {
+    id: 'settings-labs',
+    category: 'settings',
+    label: 'Labs',
+    hint: 'Experimental features',
+    icon: 'flask',
+    keywords: ['labs', 'experimental', 'beta', 'demo mode'],
+    route: '',
+    actionId: 'open-settings-labs',
+  },
 ]
 
 /* ─── Dynamic index builders ─── */
@@ -126,7 +313,9 @@ function indexGoals(): SearchItem[] {
         route: '/goal',
       })
     }
-  } catch { /* ignore corrupt data */ }
+  } catch {
+    /* ignore corrupt data */
+  }
   return items
 }
 
@@ -145,7 +334,9 @@ function indexAccounts(): SearchItem[] {
         route: '/net-worth',
       })
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return items
 }
 
@@ -177,7 +368,9 @@ function indexBudgetCategories(): SearchItem[] {
         })
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return items
 }
 
@@ -213,7 +406,9 @@ function indexTaxItems(): SearchItem[] {
         route: '/taxes',
       })
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return items
 }
 
@@ -232,7 +427,9 @@ function indexAllocationRatios(): SearchItem[] {
         route: '/net-worth/allocation',
       })
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return items
 }
 
@@ -255,10 +452,7 @@ export function buildIndex(): SearchItem[] {
 export function search(items: SearchItem[], query: string, maxPerGroup = 5): SearchGroup[] {
   if (!query.trim()) {
     // Show pages + commands when empty
-    return groupItems(
-      [...STATIC_PAGES, ...STATIC_COMMANDS],
-      Infinity,
-    )
+    return groupItems([...STATIC_PAGES, ...STATIC_COMMANDS], Infinity)
   }
 
   const q = query.toLowerCase().trim()
@@ -272,7 +466,10 @@ export function search(items: SearchItem[], query: string, maxPerGroup = 5): Sea
   // Sort by score desc, then alphabetically
   scored.sort((a, b) => b.score - a.score || a.item.label.localeCompare(b.item.label))
 
-  return groupItems(scored.map(s => s.item), maxPerGroup)
+  return groupItems(
+    scored.map(s => s.item),
+    maxPerGroup,
+  )
 }
 
 function scoreMatch(item: SearchItem, query: string): number {

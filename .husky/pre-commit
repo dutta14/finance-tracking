@@ -1,2 +1,4 @@
 npm audit --audit-level=high
+npx prettier --check src/
+npx eslint src/ --max-warnings=50
 npx vitest run

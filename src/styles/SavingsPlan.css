@@ -19,7 +19,9 @@
   padding: 1.1rem 1.3rem;
   margin-bottom: 1.4rem;
 }
-.splan-block:last-child { margin-bottom: 0; }
+.splan-block:last-child {
+  margin-bottom: 0;
+}
 .splan-block-header {
   display: flex;
   justify-content: space-between;
@@ -146,9 +148,15 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.splan-delta.up { color: var(--color-negative); }
-.splan-delta.down { color: var(--color-positive); }
-.splan-delta.flat { color: var(--color-text-muted); }
+.splan-delta.up {
+  color: var(--color-negative);
+}
+.splan-delta.down {
+  color: var(--color-positive);
+}
+.splan-delta.flat {
+  color: var(--color-text-muted);
+}
 .splan-delta-note {
   font-size: var(--fs-sm);
   color: var(--color-text-muted);

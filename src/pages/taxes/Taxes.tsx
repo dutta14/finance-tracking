@@ -16,29 +16,52 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
-function nextFileId(): string { return `f${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }
+function nextFileId(): string {
+  return `f${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+}
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
 /* ── owner badge ──────────────────────────────────────────── */
-const OwnerBadge: FC<{ owner: TaxDocOwner; primaryName: string; partnerName: string; primaryAvatar?: string; partnerAvatar?: string }> = ({ owner, primaryName, partnerName, primaryAvatar, partnerAvatar }) => {
+const OwnerBadge: FC<{
+  owner: TaxDocOwner
+  primaryName: string
+  partnerName: string
+  primaryAvatar?: string
+  partnerAvatar?: string
+}> = ({ owner, primaryName, partnerName, primaryAvatar, partnerAvatar }) => {
   const pi = (primaryName || 'P')[0].toUpperCase()
   const si = (partnerName || 'S')[0].toUpperCase()
   if (owner === 'joint') {
     return (
       <span className="tax-owner-group" title="Joint">
-        <span className="tax-owner-avatar tax-owner-primary">{primaryAvatar ? <img src={primaryAvatar} alt="" /> : pi}</span>
-        <span className="tax-owner-avatar tax-owner-partner">{partnerAvatar ? <img src={partnerAvatar} alt="" /> : si}</span>
+        <span className="tax-owner-avatar tax-owner-primary">
+          {primaryAvatar ? <img src={primaryAvatar} alt="" /> : pi}
+        </span>
+        <span className="tax-owner-avatar tax-owner-partner">
+          {partnerAvatar ? <img src={partnerAvatar} alt="" /> : si}
+        </span>
       </span>
     )
   }
   const isPartner = owner === 'partner'
   return (
-    <span className={`tax-owner-avatar ${isPartner ? 'tax-owner-partner' : 'tax-owner-primary'}`} title={isPartner ? partnerName : primaryName}>
-      {isPartner
-        ? (partnerAvatar ? <img src={partnerAvatar} alt="" /> : si)
-        : (primaryAvatar ? <img src={primaryAvatar} alt="" /> : pi)}
+    <span
+      className={`tax-owner-avatar ${isPartner ? 'tax-owner-partner' : 'tax-owner-primary'}`}
+      title={isPartner ? partnerName : primaryName}
+    >
+      {isPartner ? (
+        partnerAvatar ? (
+          <img src={partnerAvatar} alt="" />
+        ) : (
+          si
+        )
+      ) : primaryAvatar ? (
+        <img src={primaryAvatar} alt="" />
+      ) : (
+        pi
+      )}
     </span>
   )
 }
@@ -56,14 +79,30 @@ const ChecklistRow: FC<{
   primaryAvatar?: string
   partnerAvatar?: string
   accounts: Account[]
-}> = ({ item, year, onUpload, onRemoveFile, onRemoveItem, onRename, primaryName, partnerName, primaryAvatar, partnerAvatar, accounts }) => {
+}> = ({
+  item,
+  year,
+  onUpload,
+  onRemoveFile,
+  onRemoveItem,
+  onRename,
+  primaryName,
+  partnerName,
+  primaryAvatar,
+  partnerAvatar,
+  accounts,
+}) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.label)
   const hasFiles = item.files.length > 0
-  const linkedAccts = item.accountIds.length > 0
-    ? item.accountIds.map(id => accounts.find(a => a.id === id)?.name).filter(Boolean).join(', ')
-    : null
+  const linkedAccts =
+    item.accountIds.length > 0
+      ? item.accountIds
+          .map(id => accounts.find(a => a.id === id)?.name)
+          .filter(Boolean)
+          .join(', ')
+      : null
 
   const commitRename = () => {
     const trimmed = draft.trim()
@@ -75,9 +114,7 @@ const ChecklistRow: FC<{
   return (
     <div className={`tax-item${hasFiles ? ' tax-item--done' : ''}`}>
       <div className="tax-item-check">
-        {hasFiles
-          ? <span className="tax-item-tick">✓</span>
-          : <span className="tax-item-empty" />}
+        {hasFiles ? <span className="tax-item-tick">✓</span> : <span className="tax-item-empty" />}
       </div>
       <div className="tax-item-body">
         <div className="tax-item-label">
@@ -87,13 +124,36 @@ const ChecklistRow: FC<{
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onBlur={commitRename}
-              onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setDraft(item.label); setEditing(false) } }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commitRename()
+                if (e.key === 'Escape') {
+                  setDraft(item.label)
+                  setEditing(false)
+                }
+              }}
               autoFocus
             />
           ) : (
             <>
-              <span className="tax-item-label-text" onDoubleClick={() => { setDraft(item.label); setEditing(true) }}>{item.label}</span>
-              <button className="tax-rename-btn" onClick={() => { setDraft(item.label); setEditing(true) }} title="Rename">✎</button>
+              <span
+                className="tax-item-label-text"
+                onDoubleClick={() => {
+                  setDraft(item.label)
+                  setEditing(true)
+                }}
+              >
+                {item.label}
+              </span>
+              <button
+                className="tax-rename-btn"
+                onClick={() => {
+                  setDraft(item.label)
+                  setEditing(true)
+                }}
+                title="Rename"
+              >
+                ✎
+              </button>
             </>
           )}
           {!editing && linkedAccts && <span className="tax-item-acct">{linkedAccts}</span>}
@@ -103,7 +163,9 @@ const ChecklistRow: FC<{
             {item.files.map(f => (
               <span key={f.id} className="tax-file-chip">
                 <span className="tax-file-name">{f.name}</span>
-                <button className="tax-file-remove" onClick={() => onRemoveFile(item.id, f.id)} title="Remove file">×</button>
+                <button className="tax-file-remove" onClick={() => onRemoveFile(item.id, f.id)} title="Remove file">
+                  ×
+                </button>
               </span>
             ))}
           </div>
@@ -118,9 +180,20 @@ const ChecklistRow: FC<{
           type="file"
           multiple
           style={{ display: 'none' }}
-          onChange={e => { if (e.target.files?.length) { onUpload(item.id, e.target.files); e.target.value = '' } }}
+          onChange={e => {
+            if (e.target.files?.length) {
+              onUpload(item.id, e.target.files)
+              e.target.value = ''
+            }
+          }}
         />
-        <button className="tax-btn tax-btn--sm tax-btn--muted" onClick={() => onRemoveItem(item.id)} title="Remove item">×</button>
+        <button
+          className="tax-btn tax-btn--sm tax-btn--muted"
+          onClick={() => onRemoveItem(item.id)}
+          title="Remove item"
+        >
+          ×
+        </button>
       </div>
     </div>
   )
@@ -145,16 +218,42 @@ const OwnerSection: FC<{
   partnerAvatar?: string
   accounts: Account[]
   hasSuggestions: boolean
-}> = ({ owner, title, items, year, onUpload, onRemoveFile, onRemoveItem, onRename, onAddItem, onAddPaystub, onSuggestAccounts, primaryName, partnerName, primaryAvatar, partnerAvatar, accounts, hasSuggestions }) => {
+}> = ({
+  owner,
+  title,
+  items,
+  year,
+  onUpload,
+  onRemoveFile,
+  onRemoveItem,
+  onRename,
+  onAddItem,
+  onAddPaystub,
+  onSuggestAccounts,
+  primaryName,
+  partnerName,
+  primaryAvatar,
+  partnerAvatar,
+  accounts,
+  hasSuggestions,
+}) => {
   const done = items.filter(i => i.files.length > 0).length
   const hasPaystub = items.some(i => i.category === 'paystub')
   const showPaystubBtn = owner !== 'joint' && !hasPaystub
   return (
     <div className="tax-section">
       <div className="tax-section-header">
-        <OwnerBadge owner={owner} primaryName={primaryName} partnerName={partnerName} primaryAvatar={primaryAvatar} partnerAvatar={partnerAvatar} />
+        <OwnerBadge
+          owner={owner}
+          primaryName={primaryName}
+          partnerName={partnerName}
+          primaryAvatar={primaryAvatar}
+          partnerAvatar={partnerAvatar}
+        />
         <h3 className="tax-section-title">{title}</h3>
-        <span className="tax-section-count">{done}/{items.length}</span>
+        <span className="tax-section-count">
+          {done}/{items.length}
+        </span>
       </div>
       {items.length === 0 && <p className="tax-empty">No items yet</p>}
       {items.map(item => (
@@ -174,9 +273,19 @@ const OwnerSection: FC<{
         />
       ))}
       <div className="tax-section-actions">
-        <button className="tax-btn tax-btn--outline" onClick={() => onAddItem(owner)}>+ Add Item</button>
-        {showPaystubBtn && <button className="tax-btn tax-btn--outline" onClick={() => onAddPaystub(owner)}>+ Add Paystub</button>}
-        {hasSuggestions && <button className="tax-btn tax-btn--outline" onClick={() => onSuggestAccounts(owner)}>+ From Accounts</button>}
+        <button className="tax-btn tax-btn--outline" onClick={() => onAddItem(owner)}>
+          + Add Item
+        </button>
+        {showPaystubBtn && (
+          <button className="tax-btn tax-btn--outline" onClick={() => onAddPaystub(owner)}>
+            + Add Paystub
+          </button>
+        )}
+        {hasSuggestions && (
+          <button className="tax-btn tax-btn--outline" onClick={() => onSuggestAccounts(owner)}>
+            + From Accounts
+          </button>
+        )}
       </div>
     </div>
   )
@@ -193,9 +302,7 @@ const SuggestModal: FC<{
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const ownerFilter = owner === 'joint' ? 'joint' : owner
-  const suggestions = accounts.filter(a =>
-    a.owner === ownerFilter && !alreadyLinked.has(a.id)
-  )
+  const suggestions = accounts.filter(a => a.owner === ownerFilter && !alreadyLinked.has(a.id))
 
   const toggle = (id: number) => {
     setSelected(prev => {
@@ -218,7 +325,9 @@ const SuggestModal: FC<{
     <div className="tax-modal-overlay" onClick={onClose}>
       <div className="tax-modal" onClick={e => e.stopPropagation()}>
         <h3>Add from Accounts</h3>
-        <p className="tax-modal-hint">Select accounts to create checklist items for. You can select multiple for a consolidated document.</p>
+        <p className="tax-modal-hint">
+          Select accounts to create checklist items for. You can select multiple for a consolidated document.
+        </p>
         {suggestions.length === 0 && <p className="tax-empty">All accounts already have items</p>}
         <div className="tax-suggest-list">
           {suggestions.map(a => (
@@ -231,7 +340,9 @@ const SuggestModal: FC<{
           ))}
         </div>
         <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>Cancel</button>
+          <button className="tax-btn tax-btn--outline" onClick={onClose}>
+            Cancel
+          </button>
           <button className="tax-btn tax-btn--primary" onClick={handleAdd} disabled={selected.size === 0}>
             Add {selected.size > 1 ? `(${selected.size} accounts)` : selected.size === 1 ? '1 account' : ''}
           </button>
@@ -252,10 +363,33 @@ const AddItemModal: FC<{
     <div className="tax-modal-overlay" onClick={onClose}>
       <div className="tax-modal tax-modal--sm" onClick={e => e.stopPropagation()}>
         <h3>Add Checklist Item</h3>
-        <input className="tax-input" placeholder="Item name" value={label} onChange={e => setLabel(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter' && label.trim()) { onAdd(label.trim(), 'custom'); onClose() } }} />
+        <input
+          className="tax-input"
+          placeholder="Item name"
+          value={label}
+          onChange={e => setLabel(e.target.value)}
+          autoFocus
+          onKeyDown={e => {
+            if (e.key === 'Enter' && label.trim()) {
+              onAdd(label.trim(), 'custom')
+              onClose()
+            }
+          }}
+        />
         <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>Cancel</button>
-          <button className="tax-btn tax-btn--primary" disabled={!label.trim()} onClick={() => { onAdd(label.trim(), 'custom'); onClose() }}>Add</button>
+          <button className="tax-btn tax-btn--outline" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="tax-btn tax-btn--primary"
+            disabled={!label.trim()}
+            onClick={() => {
+              onAdd(label.trim(), 'custom')
+              onClose()
+            }}
+          >
+            Add
+          </button>
         </div>
       </div>
     </div>
@@ -277,11 +411,14 @@ const SaveTemplateModal: FC<{
     <div className="tax-modal-overlay" onClick={onClose}>
       <div className="tax-modal tax-modal--sm" onClick={e => e.stopPropagation()}>
         <h3>Save as Template</h3>
-        <p className="tax-modal-hint">Save the current checklist structure (without documents) as a reusable template.</p>
+        <p className="tax-modal-hint">
+          Save the current checklist structure (without documents) as a reusable template.
+        </p>
         {templates.length > 0 && (
           <div className="tax-tpl-mode">
             <label className={`tax-tpl-mode-opt${mode === 'update' ? ' active' : ''}`}>
-              <input type="radio" name="tpl-mode" checked={mode === 'update'} onChange={() => setMode('update')} /> Update existing
+              <input type="radio" name="tpl-mode" checked={mode === 'update'} onChange={() => setMode('update')} />{' '}
+              Update existing
             </label>
             <label className={`tax-tpl-mode-opt${mode === 'new' ? ' active' : ''}`}>
               <input type="radio" name="tpl-mode" checked={mode === 'new'} onChange={() => setMode('new')} /> Create new
@@ -290,18 +427,36 @@ const SaveTemplateModal: FC<{
         )}
         {mode === 'update' && templates.length > 0 ? (
           <select className="tax-input" value={selectedId} onChange={e => setSelectedId(e.target.value)}>
-            {templates.map(t => <option key={t.id} value={t.id}>{t.name} ({t.items.length} items)</option>)}
+            {templates.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.items.length} items)
+              </option>
+            ))}
           </select>
         ) : (
-          <input className="tax-input" placeholder="Template name" value={name} onChange={e => setName(e.target.value)} autoFocus
-            onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSaveNew(name.trim()) }} />
+          <input
+            className="tax-input"
+            placeholder="Template name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            autoFocus
+            onKeyDown={e => {
+              if (e.key === 'Enter' && name.trim()) onSaveNew(name.trim())
+            }}
+          />
         )}
         <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>Cancel</button>
+          <button className="tax-btn tax-btn--outline" onClick={onClose}>
+            Cancel
+          </button>
           {mode === 'update' && templates.length > 0 ? (
-            <button className="tax-btn tax-btn--primary" disabled={!selectedId} onClick={() => onUpdate(selectedId)}>Update Template</button>
+            <button className="tax-btn tax-btn--primary" disabled={!selectedId} onClick={() => onUpdate(selectedId)}>
+              Update Template
+            </button>
           ) : (
-            <button className="tax-btn tax-btn--primary" disabled={!name.trim()} onClick={() => onSaveNew(name.trim())}>Save New</button>
+            <button className="tax-btn tax-btn--primary" disabled={!name.trim()} onClick={() => onSaveNew(name.trim())}>
+              Save New
+            </button>
           )}
         </div>
       </div>
@@ -332,15 +487,25 @@ const ImportTemplateModal: FC<{
                   <span className="tax-tpl-count">{t.items.length} items</span>
                 </div>
                 <div className="tax-tpl-actions">
-                  <button className="tax-btn tax-btn--primary tax-btn--sm" onClick={() => onImport(t)}>Use</button>
-                  <button className="tax-btn tax-btn--sm tax-btn--muted" onClick={() => onDelete(t.id)} title="Delete template">×</button>
+                  <button className="tax-btn tax-btn--primary tax-btn--sm" onClick={() => onImport(t)}>
+                    Use
+                  </button>
+                  <button
+                    className="tax-btn tax-btn--sm tax-btn--muted"
+                    onClick={() => onDelete(t.id)}
+                    title="Delete template"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
         <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>Cancel</button>
+          <button className="tax-btn tax-btn--outline" onClick={onClose}>
+            Cancel
+          </button>
         </div>
       </div>
     </div>
@@ -359,7 +524,18 @@ const TaxReturnSection: FC<{
   primaryAvatar?: string
   partnerAvatar?: string
   hasPartner: boolean
-}> = ({ items, year, onUpload, onRemoveFile, onAddReturnEntry, primaryName, partnerName, primaryAvatar, partnerAvatar, hasPartner }) => {
+}> = ({
+  items,
+  year,
+  onUpload,
+  onRemoveFile,
+  onAddReturnEntry,
+  primaryName,
+  partnerName,
+  primaryAvatar,
+  partnerAvatar,
+  hasPartner,
+}) => {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -372,10 +548,21 @@ const TaxReturnSection: FC<{
   return (
     <div className="tax-section tax-section--return">
       <div className="tax-section-header">
-        <svg className="tax-section-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          className="tax-section-icon"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
           <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
         </svg>
         <h3 className="tax-section-title">Tax Returns</h3>
         <div className="tax-return-menu-wrap">
@@ -398,9 +585,7 @@ const TaxReturnSection: FC<{
         </div>
       </div>
 
-      {!jointReturn && !hasSingleReturns && (
-        <p className="tax-empty">No return uploaded yet. Use the menu to add.</p>
-      )}
+      {!jointReturn && !hasSingleReturns && <p className="tax-empty">No return uploaded yet. Use the menu to add.</p>}
 
       {[jointReturn, primaryReturn, partnerReturn].filter(Boolean).map(item => (
         <div key={item!.id} className={`tax-item${item!.files.length > 0 ? ' tax-item--done' : ''}`}>
@@ -409,7 +594,13 @@ const TaxReturnSection: FC<{
           </div>
           <div className="tax-item-body">
             <div className="tax-item-label">
-              <OwnerBadge owner={item!.owner} primaryName={primaryName} partnerName={partnerName} primaryAvatar={primaryAvatar} partnerAvatar={partnerAvatar} />
+              <OwnerBadge
+                owner={item!.owner}
+                primaryName={primaryName}
+                partnerName={partnerName}
+                primaryAvatar={primaryAvatar}
+                partnerAvatar={partnerAvatar}
+              />
               <span style={{ marginLeft: '0.5rem' }}>{item!.label}</span>
             </div>
             {item!.files.length > 0 && (
@@ -417,7 +608,9 @@ const TaxReturnSection: FC<{
                 {item!.files.map(f => (
                   <span key={f.id} className="tax-file-chip">
                     <span className="tax-file-name">{f.name}</span>
-                    <button className="tax-file-remove" onClick={() => onRemoveFile(item!.id, f.id)} title="Remove">×</button>
+                    <button className="tax-file-remove" onClick={() => onRemoveFile(item!.id, f.id)} title="Remove">
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
@@ -428,10 +621,17 @@ const TaxReturnSection: FC<{
               {item!.files.length > 0 ? 'Replace' : 'Upload'}
             </button>
             <input
-              ref={el => { inputRefs.current[item!.id] = el }}
+              ref={el => {
+                inputRefs.current[item!.id] = el
+              }}
               type="file"
               style={{ display: 'none' }}
-              onChange={e => { if (e.target.files?.length) { onUpload(item!.id, e.target.files); e.target.value = '' } }}
+              onChange={e => {
+                if (e.target.files?.length) {
+                  onUpload(item!.id, e.target.files)
+                  e.target.value = ''
+                }
+              }}
             />
           </div>
         </div>
@@ -494,9 +694,13 @@ const Taxes: FC = () => {
 
   // Refresh storage estimate on mount
   const refreshStorage = useCallback(() => {
-    getStorageEstimate().then(est => setStorageMB(est.usedMB)).catch(() => {})
+    getStorageEstimate()
+      .then(est => setStorageMB(est.usedMB))
+      .catch(() => {})
   }, [])
-  useEffect(() => { refreshStorage() }, [refreshStorage])
+  useEffect(() => {
+    refreshStorage()
+  }, [refreshStorage])
 
   // Items by owner
   const primaryItems = yearData.items.filter(i => i.owner === 'primary' && i.category !== 'tax-return')
@@ -523,51 +727,68 @@ const Taxes: FC = () => {
     tax.createYearWithDefaults(selectedYear, defaults)
   }
 
-  const handleUpload = useCallback(async (itemId: string, files: FileList) => {
-    if (tax.migrating) {
-      setUploadError('Please wait — migrating existing files to new storage…')
-      return
-    }
-    const item = yearData.items.find(i => i.id === itemId)
-    for (const file of Array.from(files)) {
-      // File size guard
-      if (file.size > MAX_FILE_SIZE) {
-        setUploadError(`${file.name} exceeds the 10 MB limit and was not uploaded.`)
-        continue
+  const handleUpload = useCallback(
+    async (itemId: string, files: FileList) => {
+      if (tax.migrating) {
+        setUploadError('Please wait — migrating existing files to new storage…')
+        return
       }
+      const item = yearData.items.find(i => i.id === itemId)
+      for (const file of Array.from(files)) {
+        // File size guard
+        if (file.size > MAX_FILE_SIZE) {
+          setUploadError(`${file.name} exceeds the 10 MB limit and was not uploaded.`)
+          continue
+        }
 
-      const content = await fileToBase64(file)
-      const ext = file.name.split('.').pop() || ''
+        const content = await fileToBase64(file)
+        const ext = file.name.split('.').pop() || ''
 
-      // Build standardized name: Owner_Label.ext
-      let displayName = file.name
-      if (item) {
-        const ownerLabel = item.owner === 'primary' ? primaryName
-          : item.owner === 'partner' ? partnerName : 'Joint'
-        displayName = `${ownerLabel}_${item.label}.${ext}`
+        // Build standardized name: Owner_Label.ext
+        let displayName = file.name
+        if (item) {
+          const ownerLabel = item.owner === 'primary' ? primaryName : item.owner === 'partner' ? partnerName : 'Joint'
+          displayName = `${ownerLabel}_${item.label}.${ext}`
+        }
+
+        const docFile: TaxDocFile = {
+          id: nextFileId(),
+          name: displayName,
+          content,
+          ext,
+          uploadedAt: new Date().toISOString(),
+        }
+        try {
+          await tax.addFileToItemAsync(selectedYear, itemId, docFile)
+        } catch {
+          setUploadError(`Failed to save ${file.name}. Storage may be unavailable in private browsing.`)
+        }
       }
+      refreshStorage()
+    },
+    [selectedYear, tax, yearData, primaryName, partnerName, accounts, refreshStorage],
+  )
 
-      const docFile: TaxDocFile = { id: nextFileId(), name: displayName, content, ext, uploadedAt: new Date().toISOString() }
-      try {
-        await tax.addFileToItemAsync(selectedYear, itemId, docFile)
-      } catch {
-        setUploadError(`Failed to save ${file.name}. Storage may be unavailable in private browsing.`)
-      }
-    }
-    refreshStorage()
-  }, [selectedYear, tax, yearData, primaryName, partnerName, accounts, refreshStorage])
+  const handleRemoveFile = useCallback(
+    (itemId: string, fileId: string) => {
+      tax.removeFileFromItem(selectedYear, itemId, fileId)
+    },
+    [selectedYear, tax],
+  )
 
-  const handleRemoveFile = useCallback((itemId: string, fileId: string) => {
-    tax.removeFileFromItem(selectedYear, itemId, fileId)
-  }, [selectedYear, tax])
+  const handleRemoveItem = useCallback(
+    (itemId: string) => {
+      tax.removeItem(selectedYear, itemId)
+    },
+    [selectedYear, tax],
+  )
 
-  const handleRemoveItem = useCallback((itemId: string) => {
-    tax.removeItem(selectedYear, itemId)
-  }, [selectedYear, tax])
-
-  const handleRename = useCallback((itemId: string, newLabel: string) => {
-    tax.updateItem(selectedYear, itemId, { label: newLabel })
-  }, [selectedYear, tax])
+  const handleRename = useCallback(
+    (itemId: string, newLabel: string) => {
+      tax.updateItem(selectedYear, itemId, { label: newLabel })
+    },
+    [selectedYear, tax],
+  )
 
   const handleAddItem = (owner: TaxDocOwner) => setAddModal(owner)
   const handleSuggestAccounts = (owner: TaxDocOwner) => setSuggestModal(owner)
@@ -588,9 +809,12 @@ const Taxes: FC = () => {
   }
 
   const handleAddReturnEntry = (owner: TaxDocOwner) => {
-    const label = owner === 'joint' ? 'Joint Tax Return'
-      : owner === 'primary' ? `${primaryName}'s Tax Return`
-      : `${partnerName}'s Tax Return`
+    const label =
+      owner === 'joint'
+        ? 'Joint Tax Return'
+        : owner === 'primary'
+          ? `${primaryName}'s Tax Return`
+          : `${partnerName}'s Tax Return`
     tax.addItem(selectedYear, label, owner, 'tax-return')
   }
 
@@ -605,9 +829,17 @@ const Taxes: FC = () => {
         <h1 className="tax-heading">Taxes</h1>
         {storageMB !== null && <span className="tax-storage-indicator">{storageMB} MB used</span>}
         <div className="tax-year-nav">
-          <button className="tax-year-btn" onClick={() => setSelectedYear(y => y - 1)}>←</button>
+          <button className="tax-year-btn" onClick={() => setSelectedYear(y => y - 1)}>
+            ←
+          </button>
           <span className="tax-year-label">{selectedYear}</span>
-          <button className="tax-year-btn" onClick={() => setSelectedYear(y => y + 1)} disabled={selectedYear >= CURRENT_YEAR}>→</button>
+          <button
+            className="tax-year-btn"
+            onClick={() => setSelectedYear(y => y + 1)}
+            disabled={selectedYear >= CURRENT_YEAR}
+          >
+            →
+          </button>
         </div>
       </div>
 
@@ -618,9 +850,13 @@ const Taxes: FC = () => {
           <h2>No tax prep for {selectedYear}</h2>
           <p>Create a checklist to start tracking documents for this tax year.</p>
           <div className="tax-empty-actions">
-            <button className="tax-btn tax-btn--primary" onClick={createYear}>Create {selectedYear} Tax Prep</button>
+            <button className="tax-btn tax-btn--primary" onClick={createYear}>
+              Create {selectedYear} Tax Prep
+            </button>
             {tax.templates.length > 0 && (
-              <button className="tax-btn tax-btn--outline" onClick={() => setImportTemplateModal(true)}>Import from Template</button>
+              <button className="tax-btn tax-btn--outline" onClick={() => setImportTemplateModal(true)}>
+                Import from Template
+              </button>
             )}
           </div>
         </div>
@@ -628,8 +864,26 @@ const Taxes: FC = () => {
         <div className="tax-body">
           {/* Save as Template / Delete year */}
           <div className="tax-template-bar">
-            <button className="tax-btn tax-btn--outline tax-btn--template" onClick={() => setSaveTemplateModal(true)}>💾 Save as Template</button>
-            <button className="tax-btn tax-btn--template tax-btn--danger" onClick={() => setConfirmDelete(true)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:'-1px'}}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Delete Year</button>
+            <button className="tax-btn tax-btn--outline tax-btn--template" onClick={() => setSaveTemplateModal(true)}>
+              💾 Save as Template
+            </button>
+            <button className="tax-btn tax-btn--template tax-btn--danger" onClick={() => setConfirmDelete(true)}>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ verticalAlign: '-1px' }}
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+              </svg>{' '}
+              Delete Year
+            </button>
           </div>
 
           {/* Primary section */}
@@ -722,25 +976,28 @@ const Taxes: FC = () => {
           onClose={() => setSuggestModal(null)}
         />
       )}
-      {addModal && (
-        <AddItemModal
-          owner={addModal}
-          onAdd={handleAddCustom}
-          onClose={() => setAddModal(null)}
-        />
-      )}
+      {addModal && <AddItemModal owner={addModal} onAdd={handleAddCustom} onClose={() => setAddModal(null)} />}
       {saveTemplateModal && (
         <SaveTemplateModal
           templates={tax.templates}
-          onSaveNew={name => { tax.saveAsTemplate(name, selectedYear); setSaveTemplateModal(false) }}
-          onUpdate={id => { tax.updateTemplate(id, selectedYear); setSaveTemplateModal(false) }}
+          onSaveNew={name => {
+            tax.saveAsTemplate(name, selectedYear)
+            setSaveTemplateModal(false)
+          }}
+          onUpdate={id => {
+            tax.updateTemplate(id, selectedYear)
+            setSaveTemplateModal(false)
+          }}
           onClose={() => setSaveTemplateModal(false)}
         />
       )}
       {importTemplateModal && (
         <ImportTemplateModal
           templates={tax.templates}
-          onImport={tpl => { tax.createYearFromTemplate(selectedYear, tpl); setImportTemplateModal(false) }}
+          onImport={tpl => {
+            tax.createYearFromTemplate(selectedYear, tpl)
+            setImportTemplateModal(false)
+          }}
           onDelete={id => tax.deleteTemplate(id)}
           onClose={() => setImportTemplateModal(false)}
         />
@@ -749,10 +1006,22 @@ const Taxes: FC = () => {
         <div className="tax-modal-overlay" onClick={() => setConfirmDelete(false)}>
           <div className="tax-modal tax-modal--sm" onClick={e => e.stopPropagation()}>
             <h3>Delete {selectedYear} Tax Prep?</h3>
-            <p className="tax-modal-hint">This will remove all checklist items and uploaded documents for {selectedYear}. This cannot be undone.</p>
+            <p className="tax-modal-hint">
+              This will remove all checklist items and uploaded documents for {selectedYear}. This cannot be undone.
+            </p>
             <div className="tax-modal-actions">
-              <button className="tax-btn tax-btn--outline" onClick={() => setConfirmDelete(false)}>Cancel</button>
-              <button className="tax-btn tax-btn--danger" onClick={() => { tax.deleteYear(selectedYear); setConfirmDelete(false) }}>Delete</button>
+              <button className="tax-btn tax-btn--outline" onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </button>
+              <button
+                className="tax-btn tax-btn--danger"
+                onClick={() => {
+                  tax.deleteYear(selectedYear)
+                  setConfirmDelete(false)
+                }}
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

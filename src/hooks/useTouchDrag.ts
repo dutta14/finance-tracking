@@ -23,13 +23,7 @@ interface UseTouchDragResult {
 }
 
 export function useTouchDrag(options: UseTouchDragOptions): UseTouchDragResult {
-  const {
-    longPressMs = 300,
-    onDragStart,
-    onDragMove,
-    onDragEnd,
-    getSlotFromPoint,
-  } = options
+  const { longPressMs = 300, onDragStart, onDragMove, onDragEnd, getSlotFromPoint } = options
 
   const [isDragging, setIsDragging] = useState(false)
   const [isLongPressing, setIsLongPressing] = useState(false)
@@ -52,63 +46,75 @@ export function useTouchDrag(options: UseTouchDragOptions): UseTouchDragResult {
     }
   }, [])
 
-  const handleTouchStart = useCallback((idx: number, e: React.TouchEvent) => {
-    touchMovedRef.current = false
-    activeIdx.current = idx
-    slotElement.current = e.currentTarget as HTMLElement
+  const handleTouchStart = useCallback(
+    (idx: number, e: React.TouchEvent) => {
+      touchMovedRef.current = false
+      activeIdx.current = idx
+      slotElement.current = e.currentTarget as HTMLElement
 
-    // 150ms feedback timer for long-press visual hint
-    feedbackTimer.current = setTimeout(() => {
-      setIsLongPressing(true)
-    }, 150)
+      // 150ms feedback timer for long-press visual hint
+      feedbackTimer.current = setTimeout(() => {
+        setIsLongPressing(true)
+      }, 150)
 
-    // 300ms timer to actually start the drag
-    longPressTimer.current = setTimeout(() => {
-      setIsDragging(true)
-      setIsLongPressing(false)
-      setDragIdx(idx)
-      touchMovedRef.current = true
-      if (slotElement.current) {
-        slotElement.current.style.touchAction = 'none'
+      // 300ms timer to actually start the drag
+      longPressTimer.current = setTimeout(() => {
+        setIsDragging(true)
+        setIsLongPressing(false)
+        setDragIdx(idx)
+        touchMovedRef.current = true
+        if (slotElement.current) {
+          slotElement.current.style.touchAction = 'none'
+        }
+        navigator.vibrate?.(10)
+        onDragStart(idx)
+      }, longPressMs)
+    },
+    [longPressMs, onDragStart],
+  )
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      const touch = e.touches[0]
+      if (!isDragging) {
+        // If the user moves before long-press fires, cancel
+        clearTimers()
+        setIsLongPressing(false)
+        return
       }
-      navigator.vibrate?.(10)
-      onDragStart(idx)
-    }, longPressMs)
-  }, [longPressMs, onDragStart])
+      e.preventDefault()
+      onDragMove(touch.clientX, touch.clientY)
+      getSlotFromPoint(touch.clientX, touch.clientY)
+    },
+    [isDragging, clearTimers, onDragMove, getSlotFromPoint],
+  )
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0]
-    if (!isDragging) {
-      // If the user moves before long-press fires, cancel
+  const handleTouchEnd = useCallback(
+    (_e: React.TouchEvent) => {
       clearTimers()
+      if (slotElement.current) {
+        slotElement.current.style.touchAction = ''
+      }
+      if (isDragging) {
+        onDragEnd()
+      }
+      setIsDragging(false)
       setIsLongPressing(false)
-      return
-    }
-    e.preventDefault()
-    onDragMove(touch.clientX, touch.clientY)
-    getSlotFromPoint(touch.clientX, touch.clientY)
-  }, [isDragging, clearTimers, onDragMove, getSlotFromPoint])
+      setDragIdx(null)
+      activeIdx.current = null
+      slotElement.current = null
+    },
+    [isDragging, clearTimers, onDragEnd],
+  )
 
-  const handleTouchEnd = useCallback((_e: React.TouchEvent) => {
-    clearTimers()
-    if (slotElement.current) {
-      slotElement.current.style.touchAction = ''
-    }
-    if (isDragging) {
-      onDragEnd()
-    }
-    setIsDragging(false)
-    setIsLongPressing(false)
-    setDragIdx(null)
-    activeIdx.current = null
-    slotElement.current = null
-  }, [isDragging, clearTimers, onDragEnd])
-
-  const getTouchHandlers = useCallback((idx: number): TouchHandlers => ({
-    onTouchStart: (e: React.TouchEvent) => handleTouchStart(idx, e),
-    onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd,
-  }), [handleTouchStart, handleTouchMove, handleTouchEnd])
+  const getTouchHandlers = useCallback(
+    (idx: number): TouchHandlers => ({
+      onTouchStart: (e: React.TouchEvent) => handleTouchStart(idx, e),
+      onTouchMove: handleTouchMove,
+      onTouchEnd: handleTouchEnd,
+    }),
+    [handleTouchStart, handleTouchMove, handleTouchEnd],
+  )
 
   return {
     getTouchHandlers,

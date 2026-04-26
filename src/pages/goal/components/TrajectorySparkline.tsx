@@ -14,15 +14,13 @@ const TrajectorySparkline: FC<{
   caption: string
 }> = ({ currentNetWorth, fiGoal, annualSavings, growthRate, months, dateLabel, trajectoryStatus, caption }) => {
   const points = useMemo(() => {
-    const monthlyRate = (growthRate / 100) / 12
+    const monthlyRate = growthRate / 100 / 12
     const monthlySavings = annualSavings / 12
     let balance = currentNetWorth
     const step = Math.max(1, Math.floor(months / 40))
     const pts: number[] = [balance]
     for (let m = 1; m <= months; m++) {
-      balance = monthlyRate > 0
-        ? balance * (1 + monthlyRate) + monthlySavings
-        : balance + monthlySavings
+      balance = monthlyRate > 0 ? balance * (1 + monthlyRate) + monthlySavings : balance + monthlySavings
       if (m % step === 0 || m === months) pts.push(Math.min(balance, fiGoal * 1.05))
     }
     return pts
@@ -43,7 +41,9 @@ const TrajectorySparkline: FC<{
 
   const dataBottom = margin.top + dataH
   const linePath = points.map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ')
-  const areaPath = linePath + ` L${toX(points.length - 1).toFixed(1)},${dataBottom.toFixed(1)} L${margin.left},${dataBottom.toFixed(1)} Z`
+  const areaPath =
+    linePath +
+    ` L${toX(points.length - 1).toFixed(1)},${dataBottom.toFixed(1)} L${margin.left},${dataBottom.toFixed(1)} Z`
   const goalY = toY(fiGoal)
   const endX = toX(points.length - 1)
   const endY = toY(points[points.length - 1])
@@ -53,16 +53,56 @@ const TrajectorySparkline: FC<{
   const dateLabelY = Math.max(9, endY - dateLabelGap)
 
   return (
-    <figure className="fi-card-trajectory" data-status={trajectoryStatus} role="figure" aria-label="Savings trajectory projection">
+    <figure
+      className="fi-card-trajectory"
+      data-status={trajectoryStatus}
+      role="figure"
+      aria-label="Savings trajectory projection"
+    >
       <figcaption className="sr-only">{caption}</figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
-        <line x1={margin.left} y1={goalY} x2={margin.left + dataW} y2={goalY} stroke="var(--color-text-muted)" strokeWidth="1" strokeDasharray="4 3" />
-        <text x={margin.left + dataW + 4} y={goalY + 3} fill="var(--color-text-muted)" fontSize="9" fontWeight="500" textAnchor="start">Goal</text>
+        <line
+          x1={margin.left}
+          y1={goalY}
+          x2={margin.left + dataW}
+          y2={goalY}
+          stroke="var(--color-text-muted)"
+          strokeWidth="1"
+          strokeDasharray="4 3"
+        />
+        <text
+          x={margin.left + dataW + 4}
+          y={goalY + 3}
+          fill="var(--color-text-muted)"
+          fontSize="9"
+          fontWeight="500"
+          textAnchor="start"
+        >
+          Goal
+        </text>
         <path d={areaPath} fill="var(--trajectory-fill)" opacity="0.12" />
-        <path d={linePath} fill="none" stroke="var(--trajectory-stroke)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d={linePath}
+          fill="none"
+          stroke="var(--trajectory-stroke)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <circle cx={endX} cy={endY} r="3" fill="var(--trajectory-stroke)" />
-        <text x={endX} y={dateLabelY} fill="var(--trajectory-stroke)" fontSize="9" fontWeight="600" textAnchor={endX > margin.left + dataW - 20 ? 'end' : 'middle'}>{dateLabel}</text>
-        <text x={margin.left} y={H - 2} fill="var(--color-text-muted)" fontSize="8" fontWeight="400">Now</text>
+        <text
+          x={endX}
+          y={dateLabelY}
+          fill="var(--trajectory-stroke)"
+          fontSize="9"
+          fontWeight="600"
+          textAnchor={endX > margin.left + dataW - 20 ? 'end' : 'middle'}
+        >
+          {dateLabel}
+        </text>
+        <text x={margin.left} y={H - 2} fill="var(--color-text-muted)" fontSize="8" fontWeight="400">
+          Now
+        </text>
       </svg>
     </figure>
   )

@@ -50,7 +50,9 @@ const TEMPLATES_KEY = 'tax-templates'
 export function loadTemplates(): TaxTemplate[] {
   try {
     return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]')
-  } catch { return [] }
+  } catch {
+    return []
+  }
 }
 
 export function saveTemplates(templates: TaxTemplate[]) {

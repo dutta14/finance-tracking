@@ -1,19 +1,19 @@
 export interface DriveFile {
-  name: string        // display name, e.g. "May 2025"
-  slug: string        // URL-safe identifier, e.g. "2025-05"
-  ext: string         // "csv", "json", etc.
+  name: string // display name, e.g. "May 2025"
+  slug: string // URL-safe identifier, e.g. "2025-05"
+  ext: string // "csv", "json", etc.
   content: string
   uploadedAt: string
   meta?: {
-    owner?: string       // e.g. "Primary", "Partner", "Joint"
-    accounts?: string    // e.g. "Fidelity 401k, Vanguard IRA"
-    category?: string    // e.g. "Paystub", "Tax Return"
+    owner?: string // e.g. "Primary", "Partner", "Joint"
+    accounts?: string // e.g. "Fidelity 401k, Vanguard IRA"
+    category?: string // e.g. "Paystub", "Tax Return"
   }
 }
 
 export interface DriveFolder {
-  name: string        // display name, e.g. "Budget" or "2025"
-  slug: string        // URL-safe identifier
+  name: string // display name, e.g. "Budget" or "2025"
+  slug: string // URL-safe identifier
   folders: DriveFolder[]
   files: DriveFile[]
 }

@@ -31,10 +31,13 @@ const Drive: FC = () => {
   const [ownerFilter, setOwnerFilter] = useState<string | null>(null)
   const [sortField, setSortField] = useState<'name' | 'owner' | 'date'>('name')
 
-  const goTo = useCallback((segs: string[]) => {
-    setSegmentsState(segs)
-    navigate(urlFromSegments(segs))
-  }, [navigate])
+  const goTo = useCallback(
+    (segs: string[]) => {
+      setSegmentsState(segs)
+      navigate(urlFromSegments(segs))
+    },
+    [navigate],
+  )
 
   // Sync state on browser back/forward
   useEffect(() => {
@@ -44,16 +47,24 @@ const Drive: FC = () => {
   const resolved = useMemo(() => resolvePathSegments(root, segments), [root, segments])
 
   const {
-    csvPreview, toastMsg, dismissToast, dragOver, fileInputRef,
-    handlePreviewConfirm, handlePreviewCancel,
-    handleDragEnter, handleDragLeave, handleDragOver, handleDrop,
-    handleFileInputChange, openFilePicker,
+    csvPreview,
+    toastMsg,
+    dismissToast,
+    dragOver,
+    fileInputRef,
+    handlePreviewConfirm,
+    handlePreviewCancel,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop,
+    handleFileInputChange,
+    openFilePicker,
   } = useDriveUpload(refreshTree)
 
   // ── Folder / root view ──────────────────────────────────────
-  const folder: DriveFolder = resolved.kind === 'folder' ? resolved.folder
-    : resolved.kind === 'root' ? resolved.folder
-    : root // notfound fallback → root
+  const folder: DriveFolder =
+    resolved.kind === 'folder' ? resolved.folder : resolved.kind === 'root' ? resolved.folder : root // notfound fallback → root
 
   const isRoot = segments.length === 0
 
@@ -87,9 +98,8 @@ const Drive: FC = () => {
   }, [folder.files, ownerFilter, sortField])
 
   // For budget year folders, find sibling year tabs
-  const parentFolder = resolved.kind === 'folder' && resolved.parents.length > 0
-    ? resolved.parents[resolved.parents.length - 1]
-    : null
+  const parentFolder =
+    resolved.kind === 'folder' && resolved.parents.length > 0 ? resolved.parents[resolved.parents.length - 1] : null
   const siblingYearFolders = parentFolder?.folders
   const currentSlug = resolved.kind === 'folder' ? resolved.folder.slug : null
 
@@ -107,20 +117,11 @@ const Drive: FC = () => {
             </button>
             <h2 className="drive-viewer-title">{file.name}</h2>
             <div className="drive-pdf-wrap">
-              <iframe
-                src={file.content}
-                title={file.name}
-                className="drive-pdf-frame"
-              />
+              <iframe src={file.content} title={file.name} className="drive-pdf-frame" />
             </div>
           </div>
         ) : (
-          <CSVViewer
-            content={file.content}
-            label={file.name}
-            ext={file.ext}
-            onBack={() => goTo(parentSegs)}
-          />
+          <CSVViewer content={file.content} label={file.name} ext={file.ext} onBack={() => goTo(parentSegs)} />
         )}
       </div>
     )
@@ -134,10 +135,7 @@ const Drive: FC = () => {
 
       {/* Breadcrumb */}
       <nav className="drive-breadcrumb">
-        <button
-          className={`drive-breadcrumb-item${isRoot ? ' active' : ''}`}
-          onClick={() => goTo([])}
-        >
+        <button className={`drive-breadcrumb-item${isRoot ? ' active' : ''}`} onClick={() => goTo([])}>
           Drive
         </button>
         {segments.map((seg, i) => {
@@ -148,10 +146,7 @@ const Drive: FC = () => {
           return (
             <span key={i}>
               <span className="drive-breadcrumb-sep">/</span>
-              <button
-                className={`drive-breadcrumb-item${isLast ? ' active' : ''}`}
-                onClick={() => goTo(crumbSegs)}
-              >
+              <button className={`drive-breadcrumb-item${isLast ? ' active' : ''}`} onClick={() => goTo(crumbSegs)}>
                 {label}
               </button>
             </span>
@@ -182,20 +177,39 @@ const Drive: FC = () => {
             <button
               className={`drive-filter-btn${ownerFilter === null ? ' active' : ''}`}
               onClick={() => setOwnerFilter(null)}
-            >All</button>
+            >
+              All
+            </button>
             {ownerOptions.map(o => (
               <button
                 key={o}
                 className={`drive-filter-btn${ownerFilter === o ? ' active' : ''}`}
                 onClick={() => setOwnerFilter(ownerFilter === o ? null : o)}
-              >{o}</button>
+              >
+                {o}
+              </button>
             ))}
           </div>
           <div className="drive-filter-group">
             <span className="drive-filter-label">Sort:</span>
-            <button className={`drive-filter-btn${sortField === 'name' ? ' active' : ''}`} onClick={() => setSortField('name')}>Name</button>
-            <button className={`drive-filter-btn${sortField === 'owner' ? ' active' : ''}`} onClick={() => setSortField('owner')}>Owner</button>
-            <button className={`drive-filter-btn${sortField === 'date' ? ' active' : ''}`} onClick={() => setSortField('date')}>Date</button>
+            <button
+              className={`drive-filter-btn${sortField === 'name' ? ' active' : ''}`}
+              onClick={() => setSortField('name')}
+            >
+              Name
+            </button>
+            <button
+              className={`drive-filter-btn${sortField === 'owner' ? ' active' : ''}`}
+              onClick={() => setSortField('owner')}
+            >
+              Owner
+            </button>
+            <button
+              className={`drive-filter-btn${sortField === 'date' ? ' active' : ''}`}
+              onClick={() => setSortField('date')}
+            >
+              Date
+            </button>
           </div>
         </div>
       )}
@@ -209,11 +223,7 @@ const Drive: FC = () => {
           </div>
         )}
         {folder.folders.map(sub => (
-          <div
-            key={sub.slug}
-            className="drive-row drive-row--folder"
-            onClick={() => goTo([...segments, sub.slug])}
-          >
+          <div key={sub.slug} className="drive-row drive-row--folder" onClick={() => goTo([...segments, sub.slug])}>
             <FolderIcon />
             <span className="drive-row-name">{sub.name}</span>
             <span className="drive-row-meta">
@@ -222,11 +232,7 @@ const Drive: FC = () => {
           </div>
         ))}
         {displayFiles.map(file => (
-          <div
-            key={file.slug}
-            className="drive-row drive-row--file"
-            onClick={() => goTo([...segments, file.slug])}
-          >
+          <div key={file.slug} className="drive-row drive-row--file" onClick={() => goTo([...segments, file.slug])}>
             <FileIcon ext={file.ext || getFileExt(file.name)} />
             <span className="drive-row-name">{file.name}</span>
             {file.meta?.owner && <span className="drive-row-tag">{file.meta.owner}</span>}
@@ -247,9 +253,17 @@ const Drive: FC = () => {
           onDrop={handleDrop}
           onClick={openFilePicker}
         >
-          <input ref={fileInputRef} type="file" accept=".csv" multiple
-            style={{ display: 'none' }} onChange={handleFileInputChange} />
-          <div className="drive-dropzone-icon"><UploadIcon /></div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFileInputChange}
+          />
+          <div className="drive-dropzone-icon">
+            <UploadIcon />
+          </div>
           <div className="drive-dropzone-text">
             {dragOver ? 'Drop CSV files here' : 'Drag & drop CSV files or click to browse'}
           </div>
@@ -261,16 +275,16 @@ const Drive: FC = () => {
 
       {/* Empty state */}
       {isRoot && folder.folders.length === 0 && folder.files.length === 0 && (
-        <div className="drive-empty">
-          No budget files yet. Upload CSVs in the Budget page to see them here.
-        </div>
+        <div className="drive-empty">No budget files yet. Upload CSVs in the Budget page to see them here.</div>
       )}
 
       {/* Toast */}
       {toastMsg && (
         <div className="drive-toast">
           <span>{toastMsg}</span>
-          <button className="drive-toast-close" onClick={dismissToast}>×</button>
+          <button className="drive-toast-close" onClick={dismissToast}>
+            ×
+          </button>
         </div>
       )}
 

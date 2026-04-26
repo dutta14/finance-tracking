@@ -1,8 +1,8 @@
-import { FC } from 'react';
+import { FC } from 'react'
 
 interface SidebarToggleProps {
-  expanded: boolean;
-  onToggle: () => void;
+  expanded: boolean
+  onToggle: () => void
 }
 
 const SidebarToggle: FC<SidebarToggleProps> = ({ expanded, onToggle }) => (
@@ -28,6 +28,6 @@ const SidebarToggle: FC<SidebarToggleProps> = ({ expanded, onToggle }) => (
       <rect x="4" y="13.8" width="14" height="2.2" rx="1.1" fill="currentColor" />
     </svg>
   </button>
-);
+)
 
-export default SidebarToggle;
+export default SidebarToggle

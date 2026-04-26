@@ -41,7 +41,7 @@ describe('formatMonthYear', () => {
 describe('getMonthsBetween', () => {
   it('returns 12 for exactly one year apart (same day)', () => {
     const start = new Date(2024, 0, 15) // Jan 15
-    const end = new Date(2025, 0, 15)   // Jan 15
+    const end = new Date(2025, 0, 15) // Jan 15
     expect(getMonthsBetween(start, end)).toBe(12)
   })
 
@@ -52,14 +52,14 @@ describe('getMonthsBetween', () => {
 
   it('subtracts 1 when start day > end day (DATEDIF behavior)', () => {
     const start = new Date(2025, 0, 31) // Jan 31
-    const end = new Date(2025, 2, 15)   // Mar 15
+    const end = new Date(2025, 2, 15) // Mar 15
     // 2 months difference, but 31 > 15, so 1
     expect(getMonthsBetween(start, end)).toBe(1)
   })
 
   it('does not subtract when start day <= end day', () => {
     const start = new Date(2025, 0, 10) // Jan 10
-    const end = new Date(2025, 2, 15)   // Mar 15
+    const end = new Date(2025, 2, 15) // Mar 15
     expect(getMonthsBetween(start, end)).toBe(2)
   })
 

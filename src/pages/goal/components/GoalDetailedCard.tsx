@@ -64,11 +64,7 @@ const formatRetirementDate = (date: Date): string =>
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
-function runProjection(
-  goal: FinancialGoal,
-  profileBirthday: string,
-  fiGoal: number,
-): { remaining: number }[] {
+function runProjection(goal: FinancialGoal, profileBirthday: string, fiGoal: number): { remaining: number }[] {
   if (!profileBirthday || !goal.goalEndYear || !fiGoal) return []
   const [by, bm, bd] = profileBirthday.split('-').map(Number)
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
@@ -132,16 +128,33 @@ const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ 
   return (
     <span className="fi-goal-info" tabIndex={0} aria-describedby={tooltipId}>
       <svg className="fi-goal-info-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-        <rect x="7.25" y="7" width="1.5" height="5" rx="0.75" fill="currentColor"/>
-        <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="currentColor"/>
+        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="7.25" y="7" width="1.5" height="5" rx="0.75" fill="currentColor" />
+        <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="currentColor" />
       </svg>
-      <span id={tooltipId} role="tooltip" className={`fi-goal-tooltip${align === 'left' ? ' fi-goal-tooltip--left' : ''}`}>{tooltip}</span>
+      <span
+        id={tooltipId}
+        role="tooltip"
+        className={`fi-goal-tooltip${align === 'left' ? ' fi-goal-tooltip--left' : ''}`}
+      >
+        {tooltip}
+      </span>
     </span>
   )
 }
 
-const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, onEdit, onCopy, onDelete, onUpdateGoal, showActions = true, condensed = false, showTitle = true, initialEditing = false }) => {
+const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
+  goal,
+  profileBirthday,
+  onEdit,
+  onCopy,
+  onDelete,
+  onUpdateGoal,
+  showActions = true,
+  condensed = false,
+  showTitle = true,
+  initialEditing = false,
+}) => {
   const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
   const [amountView, setAmountView] = useState<'annual' | 'monthly'>('annual')
   const [suggesting, setSuggesting] = useState(false)
@@ -158,21 +171,43 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
   // Sync fields if goal values change externally while not editing (e.g. Suggest SWR)
   useEffect(() => {
     if (!editing) setEditFields(toEditFields(goal))
-  }, [editing, goal.safeWithdrawalRate, goal.fiGoal, goal.inflationRate, goal.growth, goal.retirementAge, goal.expenseValue])
+  }, [
+    editing,
+    goal.safeWithdrawalRate,
+    goal.fiGoal,
+    goal.inflationRate,
+    goal.growth,
+    goal.retirementAge,
+    goal.expenseValue,
+  ])
 
   const setEF = (k: keyof EditFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setEditFields(f => ({ ...f, [k]: e.target.value }))
 
   const handleEditSave = () => {
-    if (!editFields.goalCreatedIn) { setEditError('Goal creation date is required'); return }
-    if (!editFields.retirementAge || Number(editFields.retirementAge) <= 0) { setEditError('Valid retirement age required'); return }
-    if (!editFields.expenseValue || Number(editFields.expenseValue) <= 0) { setEditError('Valid annual expense required'); return }
+    if (!editFields.goalCreatedIn) {
+      setEditError('Goal creation date is required')
+      return
+    }
+    if (!editFields.retirementAge || Number(editFields.retirementAge) <= 0) {
+      setEditError('Valid retirement age required')
+      return
+    }
+    if (!editFields.expenseValue || Number(editFields.expenseValue) <= 0) {
+      setEditError('Valid annual expense required')
+      return
+    }
     const annualExpense = Number(editFields.expenseValue)
     const retirementAge = Number(editFields.retirementAge)
     const metrics = calculateGoalMetrics(
-      annualExpense, profileBirthday, retirementAge, editFields.goalCreatedIn,
-      Number(editFields.inflationRate) || 0, Number(editFields.safeWithdrawalRate) || 0,
-      getMonthsBetween, utilParseDate,
+      annualExpense,
+      profileBirthday,
+      retirementAge,
+      editFields.goalCreatedIn,
+      Number(editFields.inflationRate) || 0,
+      Number(editFields.safeWithdrawalRate) || 0,
+      getMonthsBetween,
+      utilParseDate,
     )
     onUpdateGoal?.(goal.id, {
       ...goal,
@@ -200,7 +235,11 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
   }
 
   const birthDate = parseDate(profileBirthday)
-  const retirementDate = new Date(birthDate.getFullYear() + goal.retirementAge, birthDate.getMonth(), birthDate.getDate())
+  const retirementDate = new Date(
+    birthDate.getFullYear() + goal.retirementAge,
+    birthDate.getMonth(),
+    birthDate.getDate(),
+  )
   const retirementDateLabel = formatRetirementDate(retirementDate)
   const depletionMonth = useMemo(() => findDepletionMonth(goal, profileBirthday), [goal, profileBirthday])
 
@@ -287,17 +326,38 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
       absDiffMonths,
       diffText,
     }
-  }, [goal.fiGoal, goal.retirementAge, profileBirthday, fiTotal, hasBudgetData, budgetAnnualSavings, budgetSaveRateValue])
+  }, [
+    goal.fiGoal,
+    goal.retirementAge,
+    profileBirthday,
+    fiTotal,
+    hasBudgetData,
+    budgetAnnualSavings,
+    budgetSaveRateValue,
+  ])
 
   return (
     <div className={`fi-card${condensed ? ' fi-card--flat' : ''}`}>
       {/* ── Warning banner ── */}
       {depletionMonth && (
         <div className="fi-card-warning">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }}>
-            <path d="M8 1.5L1 14.5h14L8 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-            <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.75" fill="currentColor"/>
-            <rect x="7.25" y="11.5" width="1.5" height="1.5" rx="0.75" fill="currentColor"/>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+            style={{ flexShrink: 0, marginTop: 1 }}
+          >
+            <path
+              d="M8 1.5L1 14.5h14L8 1.5z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.75" fill="currentColor" />
+            <rect x="7.25" y="11.5" width="1.5" height="1.5" rx="0.75" fill="currentColor" />
           </svg>
           <span style={{ flex: 1 }}>Not sustainable beyond {depletionMonth}</span>
           {onUpdateGoal && (
@@ -310,28 +370,40 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
 
       {/* ── Header ── */}
       {(showTitle || (showActions && onEdit && onCopy && onDelete)) && (
-      <div className="fi-card-header">
-        <div className="fi-card-title-row">
-          <span className="fi-card-badge"><TermAbbr term="FI" /></span>
-          {showTitle && <h3 className="fi-card-title">{goal.goalName}</h3>}
+        <div className="fi-card-header">
+          <div className="fi-card-title-row">
+            <span className="fi-card-badge">
+              <TermAbbr term="FI" />
+            </span>
+            {showTitle && <h3 className="fi-card-title">{goal.goalName}</h3>}
+          </div>
+          {showActions && onEdit && onCopy && onDelete && (
+            <GoalCardActions goal={goal} onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} />
+          )}
         </div>
-        {showActions && onEdit && onCopy && onDelete && (
-          <GoalCardActions goal={goal} onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} />
-        )}
-      </div>
       )}
 
       {/* ── Edit Button (Solo Page) ── */}
       {!showActions && onUpdateGoal && !editing && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
-          <button
-            className="fi-card-edit-btn"
-            onClick={() => setEditing(true)}
-            title="Edit goal"
-          >
+          <button className="fi-card-edit-btn" onClick={() => setEditing(true)} title="Edit goal">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M1.5 14.5h2.25L12.5 5.25 10.25 3 1.5 11.75v2.75z" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10.75 2.5l2.25 2.25" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M1.5 14.5h2.25L12.5 5.25 10.25 3 1.5 11.75v2.75z"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10.75 2.5l2.25 2.25"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Edit
           </button>
@@ -344,234 +416,351 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({ goal, profileBirthday, on
           <div className="fi-form-grid">
             <div className="fi-form-group">
               <label className="fi-form-label">Goal Creation Date</label>
-              <input className="fi-form-input" type="date" value={editFields.goalCreatedIn} onChange={setEF('goalCreatedIn')} />
+              <input
+                className="fi-form-input"
+                type="date"
+                value={editFields.goalCreatedIn}
+                onChange={setEF('goalCreatedIn')}
+              />
             </div>
             <div className="fi-form-group">
               <label className="fi-form-label">Goal End Year</label>
-              <input className="fi-form-input" type="date" value={editFields.goalEndYear} onChange={setEF('goalEndYear')} />
+              <input
+                className="fi-form-input"
+                type="date"
+                value={editFields.goalEndYear}
+                onChange={setEF('goalEndYear')}
+              />
             </div>
             <div className="fi-form-group">
               <label className="fi-form-label">Retirement Age</label>
-              <input className="fi-form-input" type="number" value={editFields.retirementAge} onChange={setEF('retirementAge')} min="0" step="1" />
+              <input
+                className="fi-form-input"
+                type="number"
+                value={editFields.retirementAge}
+                onChange={setEF('retirementAge')}
+                min="0"
+                step="1"
+              />
             </div>
             <div className="fi-form-group">
               <label className="fi-form-label">Annual Expense ($)</label>
-              <input className="fi-form-input" type="number" value={editFields.expenseValue} onChange={setEF('expenseValue')} min="0" />
+              <input
+                className="fi-form-input"
+                type="number"
+                value={editFields.expenseValue}
+                onChange={setEF('expenseValue')}
+                min="0"
+              />
             </div>
             <div className="fi-form-group">
               <label className="fi-form-label">Inflation Rate (%)</label>
-              <input className="fi-form-input" type="number" value={editFields.inflationRate} onChange={setEF('inflationRate')} step="0.1" />
+              <input
+                className="fi-form-input"
+                type="number"
+                value={editFields.inflationRate}
+                onChange={setEF('inflationRate')}
+                step="0.1"
+              />
             </div>
             <div className="fi-form-group">
               <label className="fi-form-label">Safe Withdrawal Rate (%)</label>
-              <input className="fi-form-input" type="number" value={editFields.safeWithdrawalRate} onChange={setEF('safeWithdrawalRate')} step="0.1" />
+              <input
+                className="fi-form-input"
+                type="number"
+                value={editFields.safeWithdrawalRate}
+                onChange={setEF('safeWithdrawalRate')}
+                step="0.1"
+              />
             </div>
             <div className="fi-form-group">
               <label className="fi-form-label">Growth Rate (%)</label>
-              <input className="fi-form-input" type="number" value={editFields.growth} onChange={setEF('growth')} step="0.1" />
+              <input
+                className="fi-form-input"
+                type="number"
+                value={editFields.growth}
+                onChange={setEF('growth')}
+                step="0.1"
+              />
             </div>
           </div>
           <div className="fi-form-actions">
-            <button className="fi-form-save" onClick={handleEditSave}>Save</button>
-            <button className="fi-form-cancel" onClick={handleEditCancel}>Cancel</button>
+            <button className="fi-form-save" onClick={handleEditSave}>
+              Save
+            </button>
+            <button className="fi-form-cancel" onClick={handleEditCancel}>
+              Cancel
+            </button>
           </div>
         </div>
       ) : (
         <>
           {/* ── Parameters ── */}
-          {!condensed && <div className="fi-card-section">
-        <h4 className="fi-card-section-title">Parameters</h4>
-        <div className="fi-card-rows">
-          <div className="fi-card-row">
-            <span className="fi-card-row-label">Goal Created</span>
-            <span className="fi-card-row-value">{goal.goalCreatedIn ? formatMonthYear(goal.goalCreatedIn) : 'N/A'}</span>
-          </div>
-          <div className="fi-card-row">
-            <span className="fi-card-row-label">Retirement</span>
-            <span className="fi-card-row-value">
-              {retirementDateLabel}
-              <InfoIcon tooltip={<>Birthday ({formatFullDate(profileBirthday)}) + retirement age ({goal.retirementAge})</>} align="left" />
-            </span>
-          </div>
-          <div className="fi-card-row">
-            <span className="fi-card-row-label">Inflation</span>
-            <span className="fi-card-row-value">{goal.inflationRate}%</span>
-          </div>
-          <div className="fi-card-row">
-            <span className="fi-card-row-label">
-              Safe Withdrawal Rate
-              <InfoIcon tooltip="The % of your portfolio you withdraw annually in retirement." />
-            </span>
-            <span className="fi-card-row-value">{goal.safeWithdrawalRate}%</span>
-          </div>
-          <div className="fi-card-row">
-            <span className="fi-card-row-label">Portfolio Growth</span>
-            <span className="fi-card-row-value">{goal.growth}%</span>
-          </div>
-        </div>
-      </div>}
+          {!condensed && (
+            <div className="fi-card-section">
+              <h4 className="fi-card-section-title">Parameters</h4>
+              <div className="fi-card-rows">
+                <div className="fi-card-row">
+                  <span className="fi-card-row-label">Goal Created</span>
+                  <span className="fi-card-row-value">
+                    {goal.goalCreatedIn ? formatMonthYear(goal.goalCreatedIn) : 'N/A'}
+                  </span>
+                </div>
+                <div className="fi-card-row">
+                  <span className="fi-card-row-label">Retirement</span>
+                  <span className="fi-card-row-value">
+                    {retirementDateLabel}
+                    <InfoIcon
+                      tooltip={
+                        <>
+                          Birthday ({formatFullDate(profileBirthday)}) + retirement age ({goal.retirementAge})
+                        </>
+                      }
+                      align="left"
+                    />
+                  </span>
+                </div>
+                <div className="fi-card-row">
+                  <span className="fi-card-row-label">Inflation</span>
+                  <span className="fi-card-row-value">{goal.inflationRate}%</span>
+                </div>
+                <div className="fi-card-row">
+                  <span className="fi-card-row-label">
+                    Safe Withdrawal Rate
+                    <InfoIcon tooltip="The % of your portfolio you withdraw annually in retirement." />
+                  </span>
+                  <span className="fi-card-row-value">{goal.safeWithdrawalRate}%</span>
+                </div>
+                <div className="fi-card-row">
+                  <span className="fi-card-row-label">Portfolio Growth</span>
+                  <span className="fi-card-row-value">{goal.growth}%</span>
+                </div>
+              </div>
+            </div>
+          )}
 
-      {/* ── Expense Analysis ── */}
-      {!condensed && <div className="fi-card-section">
-        <div className="fi-card-section-header">
-          <h4 className="fi-card-section-title">Expenses</h4>
-          <div className="expense-toggle">
-            <button
-              className={`expense-toggle-btn${expenseView === 'creation' ? ' active' : ''}`}
-              onClick={() => setExpenseView('creation')}
-              title={`Values as of ${creationYear}`}
-            >At Creation</button>
-            <button
-              className={`expense-toggle-btn${expenseView === 'retirement' ? ' active' : ''}`}
-              onClick={() => setExpenseView('retirement')}
-              title={`Values as of ${retirementYear}`}
-            >At Retirement</button>
-          </div>
-        </div>
-        <div className="fi-card-rows">
-          {expenseView === 'creation' ? (
-            <div className="fi-card-row">
-              <span className="fi-card-row-label">
-                <span className="expense-toggle">
-                  <button className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`} onClick={() => setAmountView('annual')}>Annual</button>
-                  <button className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`} onClick={() => setAmountView('monthly')}>Monthly</button>
-                </span>
+          {/* ── Expense Analysis ── */}
+          {!condensed && (
+            <div className="fi-card-section">
+              <div className="fi-card-section-header">
+                <h4 className="fi-card-section-title">Expenses</h4>
+                <div className="expense-toggle">
+                  <button
+                    className={`expense-toggle-btn${expenseView === 'creation' ? ' active' : ''}`}
+                    onClick={() => setExpenseView('creation')}
+                    title={`Values as of ${creationYear}`}
+                  >
+                    At Creation
+                  </button>
+                  <button
+                    className={`expense-toggle-btn${expenseView === 'retirement' ? ' active' : ''}`}
+                    onClick={() => setExpenseView('retirement')}
+                    title={`Values as of ${retirementYear}`}
+                  >
+                    At Retirement
+                  </button>
+                </div>
+              </div>
+              <div className="fi-card-rows">
+                {expenseView === 'creation' ? (
+                  <div className="fi-card-row">
+                    <span className="fi-card-row-label">
+                      <span className="expense-toggle">
+                        <button
+                          className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`}
+                          onClick={() => setAmountView('annual')}
+                        >
+                          Annual
+                        </button>
+                        <button
+                          className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`}
+                          onClick={() => setAmountView('monthly')}
+                        >
+                          Monthly
+                        </button>
+                      </span>
+                    </span>
+                    <span className="fi-card-row-value">
+                      {dollars(amountView === 'annual' ? goal.expenseValue : goal.monthlyExpenseValue)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="fi-card-row">
+                    <span className="fi-card-row-label">
+                      <span className="expense-toggle">
+                        <button
+                          className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`}
+                          onClick={() => setAmountView('annual')}
+                        >
+                          Annual
+                        </button>
+                        <button
+                          className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`}
+                          onClick={() => setAmountView('monthly')}
+                        >
+                          Monthly
+                        </button>
+                      </span>
+                      <InfoIcon
+                        tooltip={
+                          <>
+                            Inflated at {goal.inflationRate}% for {inflationYears} yrs.
+                            <br />
+                            {dollars(amountView === 'annual' ? goal.expenseValue : goal.monthlyExpenseValue)} →{' '}
+                            {dollars(amountView === 'annual' ? goal.expenseValue2047 : goal.monthlyExpense2047)}
+                          </>
+                        }
+                      />
+                    </span>
+                    <span className="fi-card-row-value">
+                      {dollars(amountView === 'annual' ? goal.expenseValue2047 : goal.monthlyExpense2047)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── FI Goal callout ── */}
+          <div className="fi-card-goal">
+            <div className="fi-card-goal-top">
+              <span className="fi-card-goal-label">
+                FI Goal
+                <InfoIcon
+                  tooltip={
+                    <>
+                      Annual expense at retirement ÷ SWR.
+                      <br />
+                      {dollars(goal.expenseValue2047)} ÷ {goal.safeWithdrawalRate}% = {dollars(goal.fiGoal)}
+                    </>
+                  }
+                />
               </span>
-              <span className="fi-card-row-value">{dollars(amountView === 'annual' ? goal.expenseValue : goal.monthlyExpenseValue)}</span>
+              <span className="fi-card-goal-amount">{dollars(goal.fiGoal)}</span>
             </div>
-          ) : (
-            <div className="fi-card-row">
-              <span className="fi-card-row-label">
-                <span className="expense-toggle">
-                  <button className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`} onClick={() => setAmountView('annual')}>Annual</button>
-                  <button className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`} onClick={() => setAmountView('monthly')}>Monthly</button>
-                </span>
-                <InfoIcon tooltip={<>Inflated at {goal.inflationRate}% for {inflationYears} yrs.<br />{dollars(amountView === 'annual' ? goal.expenseValue : goal.monthlyExpenseValue)} → {dollars(amountView === 'annual' ? goal.expenseValue2047 : goal.monthlyExpense2047)}</>} />
-              </span>
-              <span className="fi-card-row-value">{dollars(amountView === 'annual' ? goal.expenseValue2047 : goal.monthlyExpense2047)}</span>
+            <div className="fi-card-progress-row">
+              <div
+                className="fi-card-progress-bar-track"
+                role="progressbar"
+                aria-valuenow={Math.round(fiProgress)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`FI goal progress: ${fiProgress.toFixed(1)}%`}
+              >
+                <div className="fi-card-progress-bar-fill" style={{ width: `${progressClamped}%` }} />
+              </div>
+              <span className="fi-card-progress-pct">{fiProgress.toFixed(1)}%</span>
             </div>
-          )}
-        </div>
-      </div>}
-
-      {/* ── FI Goal callout ── */}
-      <div className="fi-card-goal">
-        <div className="fi-card-goal-top">
-          <span className="fi-card-goal-label">
-            FI Goal
-            <InfoIcon tooltip={<>Annual expense at retirement ÷ SWR.<br />{dollars(goal.expenseValue2047)} ÷ {goal.safeWithdrawalRate}% = {dollars(goal.fiGoal)}</>} />
-          </span>
-          <span className="fi-card-goal-amount">{dollars(goal.fiGoal)}</span>
-        </div>
-        <div className="fi-card-progress-row">
-          <div
-            className="fi-card-progress-bar-track"
-            role="progressbar"
-            aria-valuenow={Math.round(fiProgress)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`FI goal progress: ${fiProgress.toFixed(1)}%`}
-          >
-            <div
-              className="fi-card-progress-bar-fill"
-              style={{ width: `${progressClamped}%` }}
-            />
-          </div>
-          <span className="fi-card-progress-pct">{fiProgress.toFixed(1)}%</span>
-        </div>
-      </div>
-
-      {/* ── Savings → Goal Timeline Projection ── */}
-      {!condensed && (
-        <div className="fi-card-section fi-card-projection">
-          <div className="fi-card-section-header">
-            <h4 className="fi-card-section-title">Projected Timeline</h4>
-            <InfoIcon tooltip="Based on your current savings rate and growth assumptions" align="left" />
           </div>
 
-          {projection.state === 'no-goal' && (
-            <div className="fi-card-rows">
-              <div className="fi-card-row">
-                <span className="fi-card-row-label">Projected completion</span>
-                <span className="fi-card-row-value">—</span>
+          {/* ── Savings → Goal Timeline Projection ── */}
+          {!condensed && (
+            <div className="fi-card-section fi-card-projection">
+              <div className="fi-card-section-header">
+                <h4 className="fi-card-section-title">Projected Timeline</h4>
+                <InfoIcon tooltip="Based on your current savings rate and growth assumptions" align="left" />
               </div>
-            </div>
-          )}
 
-          {projection.state === 'reached' && (
-            <div className="fi-card-rows">
-              <div className="fi-card-row">
-                <span className="fi-card-row-value fi-card-row-value--ahead" style={{ fontWeight: 'var(--fw-semibold)' }}>
-                  <span role="img" aria-label="celebration">🎉</span> Goal reached!
-                </span>
-              </div>
-            </div>
-          )}
-
-          {projection.state === 'no-budget' && (
-            <div className="fi-card-rows">
-              <div className="fi-card-row">
-                <a href="#/budget" className="fi-card-projection-link">Add budget data to see projections</a>
-              </div>
-            </div>
-          )}
-
-          {projection.state === 'not-reachable' && (
-            <div className="fi-card-rows">
-              <div className="fi-card-row">
-                <span className="fi-card-row-value fi-card-row-value--behind">Not reachable at current rate</span>
-              </div>
-            </div>
-          )}
-
-          {projection.state === 'projected' && (() => {
-            const trajectoryStatus: TrajectoryStatus =
-              projection.absDiffMonths <= 6 ? 'on-track' : projection.ahead ? 'ahead' : 'behind'
-
-            const projectedDateFull = projection.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-            const diffYears = Math.round(projection.absDiffMonths / 12)
-            const diffDesc = projection.absDiffMonths <= 6
-              ? `on track with your ${retirementDateLabel} target retirement`
-              : `${diffYears} year${diffYears !== 1 ? 's' : ''} ${projection.ahead ? 'ahead of' : 'behind'} your ${retirementDateLabel} target retirement`
-            const caption = `Projected to reach your FI goal of ${dollars(projection.fiGoal)} by ${projectedDateFull}, ${diffDesc}.`
-
-            return (
-              <>
+              {projection.state === 'no-goal' && (
                 <div className="fi-card-rows">
                   <div className="fi-card-row">
-                    <span className="fi-card-row-label">Monthly savings</span>
-                    <span className="fi-card-row-value">{dollars(projection.monthlySavings)}</span>
-                  </div>
-                  <div className="fi-card-row">
                     <span className="fi-card-row-label">Projected completion</span>
-                    <span className="fi-card-row-value fi-card-row-value--projected">{projection.dateLabel}</span>
+                    <span className="fi-card-row-value">—</span>
                   </div>
+                </div>
+              )}
+
+              {projection.state === 'reached' && (
+                <div className="fi-card-rows">
                   <div className="fi-card-row">
-                    <span className="fi-card-row-label">vs. target retirement</span>
-                    <span className={`fi-card-row-value fi-card-row-value--${projection.ahead ? 'ahead' : 'behind'}`}>
-                      {projection.diffText}
+                    <span
+                      className="fi-card-row-value fi-card-row-value--ahead"
+                      style={{ fontWeight: 'var(--fw-semibold)' }}
+                    >
+                      <span role="img" aria-label="celebration">
+                        🎉
+                      </span>{' '}
+                      Goal reached!
                     </span>
                   </div>
                 </div>
-                <TrajectorySparkline
-                  currentNetWorth={projection.currentNetWorth}
-                  fiGoal={projection.fiGoal}
-                  annualSavings={projection.monthlySavings * 12}
-                  growthRate={DEFAULT_PRE_FI_GROWTH_RATE}
-                  months={projection.months}
-                  dateLabel={projection.shortDateLabel}
-                  trajectoryStatus={trajectoryStatus}
-                  caption={caption}
-                />
-              </>
-            )
-          })()}
-        </div>
-      )}
+              )}
 
-      {!condensed && <div className="fi-card-meta">
-        <small>Created {goal.createdAt}</small>
-      </div>}
+              {projection.state === 'no-budget' && (
+                <div className="fi-card-rows">
+                  <div className="fi-card-row">
+                    <a href="#/budget" className="fi-card-projection-link">
+                      Add budget data to see projections
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {projection.state === 'not-reachable' && (
+                <div className="fi-card-rows">
+                  <div className="fi-card-row">
+                    <span className="fi-card-row-value fi-card-row-value--behind">Not reachable at current rate</span>
+                  </div>
+                </div>
+              )}
+
+              {projection.state === 'projected' &&
+                (() => {
+                  const trajectoryStatus: TrajectoryStatus =
+                    projection.absDiffMonths <= 6 ? 'on-track' : projection.ahead ? 'ahead' : 'behind'
+
+                  const projectedDateFull = projection.date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                  const diffYears = Math.round(projection.absDiffMonths / 12)
+                  const diffDesc =
+                    projection.absDiffMonths <= 6
+                      ? `on track with your ${retirementDateLabel} target retirement`
+                      : `${diffYears} year${diffYears !== 1 ? 's' : ''} ${projection.ahead ? 'ahead of' : 'behind'} your ${retirementDateLabel} target retirement`
+                  const caption = `Projected to reach your FI goal of ${dollars(projection.fiGoal)} by ${projectedDateFull}, ${diffDesc}.`
+
+                  return (
+                    <>
+                      <div className="fi-card-rows">
+                        <div className="fi-card-row">
+                          <span className="fi-card-row-label">Monthly savings</span>
+                          <span className="fi-card-row-value">{dollars(projection.monthlySavings)}</span>
+                        </div>
+                        <div className="fi-card-row">
+                          <span className="fi-card-row-label">Projected completion</span>
+                          <span className="fi-card-row-value fi-card-row-value--projected">{projection.dateLabel}</span>
+                        </div>
+                        <div className="fi-card-row">
+                          <span className="fi-card-row-label">vs. target retirement</span>
+                          <span
+                            className={`fi-card-row-value fi-card-row-value--${projection.ahead ? 'ahead' : 'behind'}`}
+                          >
+                            {projection.diffText}
+                          </span>
+                        </div>
+                      </div>
+                      <TrajectorySparkline
+                        currentNetWorth={projection.currentNetWorth}
+                        fiGoal={projection.fiGoal}
+                        annualSavings={projection.monthlySavings * 12}
+                        growthRate={DEFAULT_PRE_FI_GROWTH_RATE}
+                        months={projection.months}
+                        dateLabel={projection.shortDateLabel}
+                        trajectoryStatus={trajectoryStatus}
+                        caption={caption}
+                      />
+                    </>
+                  )
+                })()}
+            </div>
+          )}
+
+          {!condensed && (
+            <div className="fi-card-meta">
+              <small>Created {goal.createdAt}</small>
+            </div>
+          )}
         </>
       )}
     </div>

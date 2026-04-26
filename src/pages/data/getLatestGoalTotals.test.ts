@@ -37,10 +37,7 @@ describe('getLatestGoalTotals', () => {
   })
 
   it('computes FI total from latest month balances', () => {
-    const accounts = [
-      makeAccount({ id: 1, goalType: 'fi' }),
-      makeAccount({ id: 2, goalType: 'fi' }),
-    ]
+    const accounts = [makeAccount({ id: 1, goalType: 'fi' }), makeAccount({ id: 2, goalType: 'fi' })]
     const balances = [
       makeBalance(1, '2025-01', 50000),
       makeBalance(2, '2025-01', 30000),
@@ -57,14 +54,8 @@ describe('getLatestGoalTotals', () => {
   })
 
   it('computes GW total separately', () => {
-    const accounts = [
-      makeAccount({ id: 1, goalType: 'fi' }),
-      makeAccount({ id: 2, goalType: 'gw', type: 'liquid' }),
-    ]
-    const balances = [
-      makeBalance(1, '2025-03', 100000),
-      makeBalance(2, '2025-03', 20000),
-    ]
+    const accounts = [makeAccount({ id: 1, goalType: 'fi' }), makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
+    const balances = [makeBalance(1, '2025-03', 100000), makeBalance(2, '2025-03', 20000)]
     localStorage.setItem('data-accounts', JSON.stringify(accounts))
     localStorage.setItem('data-balances', JSON.stringify(balances))
 
@@ -78,10 +69,7 @@ describe('getLatestGoalTotals', () => {
       makeAccount({ id: 1, goalType: 'fi', status: 'active' }),
       makeAccount({ id: 2, goalType: 'fi', status: 'inactive' }),
     ]
-    const balances = [
-      makeBalance(1, '2025-01', 50000),
-      makeBalance(2, '2025-01', 999999),
-    ]
+    const balances = [makeBalance(1, '2025-01', 50000), makeBalance(2, '2025-01', 999999)]
     localStorage.setItem('data-accounts', JSON.stringify(accounts))
     localStorage.setItem('data-balances', JSON.stringify(balances))
 

@@ -22,7 +22,10 @@ const GoalActionsMenu: FC<GoalActionsMenuProps> = ({ onEdit, onRename, onGoToGoa
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
-  const run = (fn?: () => void) => { setOpen(false); fn?.() }
+  const run = (fn?: () => void) => {
+    setOpen(false)
+    fn?.()
+  }
 
   return (
     <div className="goal-actions-menu" ref={ref}>
@@ -33,18 +36,38 @@ const GoalActionsMenu: FC<GoalActionsMenuProps> = ({ onEdit, onRename, onGoToGoa
         aria-expanded={open}
       >
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="3" cy="8" r="1.5"/>
-          <circle cx="8" cy="8" r="1.5"/>
-          <circle cx="13" cy="8" r="1.5"/>
+          <circle cx="3" cy="8" r="1.5" />
+          <circle cx="8" cy="8" r="1.5" />
+          <circle cx="13" cy="8" r="1.5" />
         </svg>
       </button>
       {open && (
         <div className="goal-actions-menu-dropdown">
-          {onEdit && <button className="goal-actions-menu-item" onClick={() => run(onEdit)}>Edit</button>}
-          {onRename && <button className="goal-actions-menu-item" onClick={() => run(onRename)}>Rename</button>}
-          {onGoToGoal && <button className="goal-actions-menu-item" onClick={() => run(onGoToGoal)}>Go to Goal</button>}
-          {onDuplicate && <button className="goal-actions-menu-item" onClick={() => run(onDuplicate)}>Duplicate</button>}
-          {onDelete && <button className="goal-actions-menu-item goal-actions-menu-item--danger" onClick={() => run(onDelete)}>Delete</button>}
+          {onEdit && (
+            <button className="goal-actions-menu-item" onClick={() => run(onEdit)}>
+              Edit
+            </button>
+          )}
+          {onRename && (
+            <button className="goal-actions-menu-item" onClick={() => run(onRename)}>
+              Rename
+            </button>
+          )}
+          {onGoToGoal && (
+            <button className="goal-actions-menu-item" onClick={() => run(onGoToGoal)}>
+              Go to Goal
+            </button>
+          )}
+          {onDuplicate && (
+            <button className="goal-actions-menu-item" onClick={() => run(onDuplicate)}>
+              Duplicate
+            </button>
+          )}
+          {onDelete && (
+            <button className="goal-actions-menu-item goal-actions-menu-item--danger" onClick={() => run(onDelete)}>
+              Delete
+            </button>
+          )}
         </div>
       )}
     </div>

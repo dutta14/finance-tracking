@@ -41,7 +41,6 @@ const Goal: FC = () => {
   const [copySourceGoalId, setCopySourceGoalId] = useState<number | null>(null)
   const [mixerOpen, setMixerOpen] = useState(false)
 
-
   const handleCreateGoal = (goal: FinancialGoal): void => {
     if (editingGoalId) {
       updateGoal(editingGoalId, goal)
@@ -86,17 +85,22 @@ const Goal: FC = () => {
               {activeTab === 'plans' && (
                 <div className="goal-header-actions">
                   {goals.length > 0 && gwGoals.length > 0 && (
-                    <button
-                      className="goal-action-btn"
-                      onClick={() => setMixerOpen(true)}
-                      title="Mix & Match goals"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-                        <path d="M2 4h5l2 8h5M2 12h5l2-8h5"/>
-                        <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none"/>
-                        <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none"/>
-                        <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none"/>
-                        <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none"/>
+                    <button className="goal-action-btn" onClick={() => setMixerOpen(true)} title="Mix & Match goals">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 4h5l2 8h5M2 12h5l2-8h5" />
+                        <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none" />
+                        <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none" />
                       </svg>
                       Mix &amp; Match
                     </button>
@@ -113,78 +117,101 @@ const Goal: FC = () => {
             </div>
 
             <nav className="goal-tab-bar" aria-label="Goals sections">
-              <NavLink to="/goal" end className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}>Plans</NavLink>
-              <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>Calculator</NavLink>
+              <NavLink
+                to="/goal"
+                end
+                className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
+              >
+                Plans
+              </NavLink>
+              <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
+                Calculator
+              </NavLink>
             </nav>
           </>
         )}
 
         <Routes>
-          <Route index element={
-            <>
-              <div className="goal-container">
-                <GoalsSection
-                  goals={goals}
-                  profileBirthday={profileBirthday}
-                  gwGoals={gwGoals}
-                  onUpdateGoal={updateGoal}
-                  onCopyGoal={handleCopyGoal}
-                  onDeleteGoal={deleteGoal}
-                  onDeleteMultiple={onDeleteMultipleGoals}
-                  onReorderGoals={reorderGoals}
-                  onRenameGoal={handleRenameGoal}
-                  onCreateGwGoal={onCreateGwGoal}
-                  onUpdateGwGoal={onUpdateGwGoal}
-                  onDeleteGwGoal={onDeleteGwGoal}
-                />
-              </div>
+          <Route
+            index
+            element={
+              <>
+                <div className="goal-container">
+                  <GoalsSection
+                    goals={goals}
+                    profileBirthday={profileBirthday}
+                    gwGoals={gwGoals}
+                    onUpdateGoal={updateGoal}
+                    onCopyGoal={handleCopyGoal}
+                    onDeleteGoal={deleteGoal}
+                    onDeleteMultiple={onDeleteMultipleGoals}
+                    onReorderGoals={reorderGoals}
+                    onRenameGoal={handleRenameGoal}
+                    onCreateGwGoal={onCreateGwGoal}
+                    onUpdateGwGoal={onUpdateGwGoal}
+                    onDeleteGwGoal={onDeleteGwGoal}
+                  />
+                </div>
 
-              {showForm && (
-                <GoalFormModal
-                  formData={formData}
-                  error={error}
-                  editingGoalId={editingGoalId}
-                  profileBirthday={profileBirthday}
-                  onOpenProfile={onOpenProfile}
-                  onInputChange={handleInputChange}
-                  onSetFormFields={(fields) => setFormData(prev => ({ ...prev, ...fields }))}
-                  onSubmit={handleCreateGoal}
-                  onCancel={handleCancelEdit}
-                  setError={setError}
-                />
-              )}
-              {mixerOpen && (
-                <GoalMixer
-                  goals={goals}
-                  gwGoals={gwGoals}
-                  profileBirthday={profileBirthday}
-                  onCreateGoal={createGoal}
-                  onCreateGwGoal={onCreateGwGoal}
-                  onClose={() => setMixerOpen(false)}
-                  onGoToGoal={(goalId) => navigate(`/goal/${goalId}`)}
-                />
-              )}
-            </>
-          } />
-          <Route path="calculator" element={
-            <Suspense fallback={<div className="goal-tab-loading" role="status">Loading…</div>}>
-              <FICalculator />
-            </Suspense>
-          } />
-          <Route path=":id" element={
-            <GoalDetail
-              goals={goals}
-              profileBirthday={profileBirthday}
-              gwGoals={gwGoals}
-              onUpdateGoal={updateGoal}
-              onCopyGoal={handleCopyGoal}
-              onDeleteGoal={deleteGoal}
-              onRenameGoal={handleRenameGoal}
-              onCreateGwGoal={onCreateGwGoal}
-              onUpdateGwGoal={onUpdateGwGoal}
-              onDeleteGwGoal={onDeleteGwGoal}
-            />
-          } />
+                {showForm && (
+                  <GoalFormModal
+                    formData={formData}
+                    error={error}
+                    editingGoalId={editingGoalId}
+                    profileBirthday={profileBirthday}
+                    onOpenProfile={onOpenProfile}
+                    onInputChange={handleInputChange}
+                    onSetFormFields={fields => setFormData(prev => ({ ...prev, ...fields }))}
+                    onSubmit={handleCreateGoal}
+                    onCancel={handleCancelEdit}
+                    setError={setError}
+                  />
+                )}
+                {mixerOpen && (
+                  <GoalMixer
+                    goals={goals}
+                    gwGoals={gwGoals}
+                    profileBirthday={profileBirthday}
+                    onCreateGoal={createGoal}
+                    onCreateGwGoal={onCreateGwGoal}
+                    onClose={() => setMixerOpen(false)}
+                    onGoToGoal={goalId => navigate(`/goal/${goalId}`)}
+                  />
+                )}
+              </>
+            }
+          />
+          <Route
+            path="calculator"
+            element={
+              <Suspense
+                fallback={
+                  <div className="goal-tab-loading" role="status">
+                    Loading…
+                  </div>
+                }
+              >
+                <FICalculator />
+              </Suspense>
+            }
+          />
+          <Route
+            path=":id"
+            element={
+              <GoalDetail
+                goals={goals}
+                profileBirthday={profileBirthday}
+                gwGoals={gwGoals}
+                onUpdateGoal={updateGoal}
+                onCopyGoal={handleCopyGoal}
+                onDeleteGoal={deleteGoal}
+                onRenameGoal={handleRenameGoal}
+                onCreateGwGoal={onCreateGwGoal}
+                onUpdateGwGoal={onUpdateGwGoal}
+                onDeleteGwGoal={onDeleteGwGoal}
+              />
+            }
+          />
         </Routes>
       </div>
     </section>
@@ -192,4 +219,3 @@ const Goal: FC = () => {
 }
 
 export default Goal
-

@@ -8,7 +8,10 @@ const LEGACY_STORAGE_KEY = 'gw-plans'
 const migrateGwFields = (items: any[]): GwGoal[] =>
   items.map(item => {
     const migrated = { ...item }
-    if ('fiPlanId' in migrated) { migrated.fiGoalId = migrated.fiPlanId; delete migrated.fiPlanId }
+    if ('fiPlanId' in migrated) {
+      migrated.fiGoalId = migrated.fiPlanId
+      delete migrated.fiPlanId
+    }
     return migrated as GwGoal
   })
 
@@ -58,7 +61,7 @@ export const useGwGoals = () => {
   }
 
   const updateGwGoal = (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>): void => {
-    setGwGoals(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
+    setGwGoals(prev => prev.map(p => (p.id === id ? { ...p, ...updates } : p)))
   }
 
   const importGwGoals = (incoming: GwGoal[]): void => {

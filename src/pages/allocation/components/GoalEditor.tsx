@@ -14,7 +14,16 @@ interface GoalEditorProps {
   onCancel: () => void
 }
 
-const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, hasPartner, primaryName, partnerName, onSave, onCancel }) => {
+const GoalEditor: FC<GoalEditorProps> = ({
+  groups,
+  existingGoal,
+  hasPrimary,
+  hasPartner,
+  primaryName,
+  partnerName,
+  onSave,
+  onCancel,
+}) => {
   const n = groups.length
   const evenPct = Math.floor(100 / n)
   const remainder = 100 - evenPct * n
@@ -24,13 +33,19 @@ const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, has
   const [startAge, setStartAge] = useState(existingGoal?.type === 'gradual' ? existingGoal.startAge : 30)
   const [endAge, setEndAge] = useState(existingGoal?.type === 'gradual' ? existingGoal.endAge : 60)
   const [pcts, setPcts] = useState<number[]>(
-    existingGoal?.type === 'constant' ? [...existingGoal.pcts] : Array.from({ length: n }, (_, i) => evenPct + (i === 0 ? remainder : 0))
+    existingGoal?.type === 'constant'
+      ? [...existingGoal.pcts]
+      : Array.from({ length: n }, (_, i) => evenPct + (i === 0 ? remainder : 0)),
   )
   const [startPcts, setStartPcts] = useState<number[]>(
-    existingGoal?.type === 'gradual' ? [...existingGoal.startPcts] : Array.from({ length: n }, (_, i) => evenPct + (i === 0 ? remainder : 0))
+    existingGoal?.type === 'gradual'
+      ? [...existingGoal.startPcts]
+      : Array.from({ length: n }, (_, i) => evenPct + (i === 0 ? remainder : 0)),
   )
   const [endPcts, setEndPcts] = useState<number[]>(
-    existingGoal?.type === 'gradual' ? [...existingGoal.endPcts] : Array.from({ length: n }, (_, i) => evenPct + (i === 0 ? remainder : 0))
+    existingGoal?.type === 'gradual'
+      ? [...existingGoal.endPcts]
+      : Array.from({ length: n }, (_, i) => evenPct + (i === 0 ? remainder : 0)),
   )
 
   const updatePct = (arr: number[], setArr: (v: number[]) => void, idx: number, val: number) => {
@@ -58,10 +73,18 @@ const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, has
       <div className="alloc-goal-editor-header">
         <span className="alloc-ratio-builder-label">Goal Type</span>
         <div className="alloc-page-scope-tabs">
-          <button className={`alloc-page-tab${goalType === 'constant' ? ' active' : ''}`}
-            onClick={() => setGoalType('constant')}>Constant</button>
-          <button className={`alloc-page-tab${goalType === 'gradual' ? ' active' : ''}`}
-            onClick={() => setGoalType('gradual')}>Gradual</button>
+          <button
+            className={`alloc-page-tab${goalType === 'constant' ? ' active' : ''}`}
+            onClick={() => setGoalType('constant')}
+          >
+            Constant
+          </button>
+          <button
+            className={`alloc-page-tab${goalType === 'gradual' ? ' active' : ''}`}
+            onClick={() => setGoalType('gradual')}
+          >
+            Gradual
+          </button>
         </div>
       </div>
 
@@ -70,19 +93,43 @@ const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, has
           <div className="alloc-goal-field-row">
             <label className="alloc-goal-field-label">Based on</label>
             <div className="alloc-page-scope-tabs">
-              <button className={`alloc-page-tab${owner === 'primary' ? ' active' : ''}`}
-                onClick={() => setOwner('primary')} disabled={!hasPrimary}>{primaryName || 'Primary'}</button>
-              <button className={`alloc-page-tab${owner === 'partner' ? ' active' : ''}`}
-                onClick={() => setOwner('partner')} disabled={!hasPartner}>{partnerName || 'Partner'}</button>
+              <button
+                className={`alloc-page-tab${owner === 'primary' ? ' active' : ''}`}
+                onClick={() => setOwner('primary')}
+                disabled={!hasPrimary}
+              >
+                {primaryName || 'Primary'}
+              </button>
+              <button
+                className={`alloc-page-tab${owner === 'partner' ? ' active' : ''}`}
+                onClick={() => setOwner('partner')}
+                disabled={!hasPartner}
+              >
+                {partnerName || 'Partner'}
+              </button>
             </div>
           </div>
           <div className="alloc-goal-field-row">
             <label className="alloc-goal-field-label">Start age</label>
-            <input type="number" className="alloc-goal-field-input" value={startAge}
-              onChange={e => setStartAge(Number(e.target.value))} min={0} max={120} />
-            <label className="alloc-goal-field-label" style={{ marginLeft: '0.75rem' }}>End age</label>
-            <input type="number" className="alloc-goal-field-input" value={endAge}
-              onChange={e => setEndAge(Number(e.target.value))} min={0} max={120} />
+            <input
+              type="number"
+              className="alloc-goal-field-input"
+              value={startAge}
+              onChange={e => setStartAge(Number(e.target.value))}
+              min={0}
+              max={120}
+            />
+            <label className="alloc-goal-field-label" style={{ marginLeft: '0.75rem' }}>
+              End age
+            </label>
+            <input
+              type="number"
+              className="alloc-goal-field-input"
+              value={endAge}
+              onChange={e => setEndAge(Number(e.target.value))}
+              min={0}
+              max={120}
+            />
           </div>
         </div>
       )}
@@ -96,8 +143,14 @@ const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, has
                 <span className="alloc-ratio-group-dot" style={{ background: GROUP_COLORS[i % GROUP_COLORS.length] }} />
                 {g.label}
               </span>
-              <input type="number" className="alloc-goal-field-input" value={pcts[i] ?? 0}
-                onChange={e => updatePct(pcts, setPcts, i, Number(e.target.value))} min={0} max={100} />
+              <input
+                type="number"
+                className="alloc-goal-field-input"
+                value={pcts[i] ?? 0}
+                onChange={e => updatePct(pcts, setPcts, i, Number(e.target.value))}
+                min={0}
+                max={100}
+              />
               <span className="alloc-goal-pct-unit">%</span>
             </div>
           ))}
@@ -121,11 +174,23 @@ const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, has
                 {g.label}
               </span>
               <div className="alloc-goal-pct-pair">
-                <input type="number" className="alloc-goal-field-input" value={startPcts[i] ?? 0}
-                  onChange={e => updatePct(startPcts, setStartPcts, i, Number(e.target.value))} min={0} max={100} />
+                <input
+                  type="number"
+                  className="alloc-goal-field-input"
+                  value={startPcts[i] ?? 0}
+                  onChange={e => updatePct(startPcts, setStartPcts, i, Number(e.target.value))}
+                  min={0}
+                  max={100}
+                />
                 <span className="alloc-goal-pct-arrow">→</span>
-                <input type="number" className="alloc-goal-field-input" value={endPcts[i] ?? 0}
-                  onChange={e => updatePct(endPcts, setEndPcts, i, Number(e.target.value))} min={0} max={100} />
+                <input
+                  type="number"
+                  className="alloc-goal-field-input"
+                  value={endPcts[i] ?? 0}
+                  onChange={e => updatePct(endPcts, setEndPcts, i, Number(e.target.value))}
+                  min={0}
+                  max={100}
+                />
               </div>
             </div>
           ))}
@@ -141,10 +206,16 @@ const GoalEditor: FC<GoalEditorProps> = ({ groups, existingGoal, hasPrimary, has
       )}
 
       <div className="alloc-goal-editor-actions">
-        <button className="alloc-goal-save-btn"
+        <button
+          className="alloc-goal-save-btn"
           disabled={goalType === 'constant' ? !constantValid : !gradualValid}
-          onClick={handleSave}>Save Goal</button>
-        <button className="alloc-goal-cancel-btn" onClick={onCancel}>Cancel</button>
+          onClick={handleSave}
+        >
+          Save Goal
+        </button>
+        <button className="alloc-goal-cancel-btn" onClick={onCancel}>
+          Cancel
+        </button>
       </div>
     </div>
   )

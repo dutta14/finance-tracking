@@ -15,11 +15,11 @@ export const getMonthsBetween = (startDate: Date, endDate: Date): number => {
   const yearsDiff = endDate.getFullYear() - startDate.getFullYear()
   const monthsDiff = endDate.getMonth() - startDate.getMonth()
   let totalMonths = yearsDiff * 12 + monthsDiff
-  
+
   // DATEDIF counts complete months - if start day > end day, subtract 1
   if (startDate.getDate() > endDate.getDate()) {
     totalMonths--
   }
-  
+
   return totalMonths
 }

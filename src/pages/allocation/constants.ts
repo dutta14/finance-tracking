@@ -11,7 +11,15 @@ export const ALLOC_COLORS: Record<AssetAllocation, string> = {
   debt: '#ef4444',
 }
 
-export const ALL_CLASSES: AssetAllocation[] = ['us-stock', 'intl-stock', 'bonds', 'cash', 'real-estate', 'others', 'debt']
+export const ALL_CLASSES: AssetAllocation[] = [
+  'us-stock',
+  'intl-stock',
+  'bonds',
+  'cash',
+  'real-estate',
+  'others',
+  'debt',
+]
 
 export const PRESETS: RatioPreset[] = [
   {

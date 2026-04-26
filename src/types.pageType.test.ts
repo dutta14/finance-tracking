@@ -16,12 +16,18 @@ describe('PageType', () => {
     // because the switch wouldn't cover 'tools'.
     const assertExhaustive = (p: PageType): string => {
       switch (p) {
-        case 'home': return 'home'
-        case 'goal': return 'goal'
-        case 'net-worth': return 'net-worth'
-        case 'budget': return 'budget'
-        case 'drive': return 'drive'
-        case 'taxes': return 'taxes'
+        case 'home':
+          return 'home'
+        case 'goal':
+          return 'goal'
+        case 'net-worth':
+          return 'net-worth'
+        case 'budget':
+          return 'budget'
+        case 'drive':
+          return 'drive'
+        case 'taxes':
+          return 'taxes'
       }
     }
 

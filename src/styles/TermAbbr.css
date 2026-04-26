@@ -19,7 +19,7 @@
   white-space: normal;
   width: max-content;
   max-width: 240px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
   z-index: 10000;
   pointer-events: none;
   text-transform: none;
