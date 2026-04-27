@@ -272,6 +272,10 @@ section.goal {
   color: var(--color-text);
   border-color: var(--color-text-muted);
 }
+.btn-use-recommended:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .checkbox-group {
   display: flex;
@@ -349,6 +353,10 @@ section.goal {
 .random-name-btn:hover {
   background: var(--color-negative);
   color: var(--color-text-on-accent);
+}
+.random-name-btn:focus-visible {
+  outline: 2px solid var(--color-negative);
+  outline-offset: 2px;
 }
 
 /* Results Section */
@@ -871,6 +879,10 @@ body.dark .goal-drag-item--long-press {
   color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-focus-ring);
 }
+.wizard-dot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .wizard-step-label {
   font-size: var(--fs-sm);
@@ -901,6 +913,13 @@ body.dark .goal-drag-item--long-press {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-step,
+  .template-picker {
+    animation: none;
   }
 }
 
@@ -1008,6 +1027,10 @@ body.dark .goal-drag-item--long-press {
 }
 .wizard-btn--create:hover {
   filter: brightness(1.08);
+}
+.wizard-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Review step */

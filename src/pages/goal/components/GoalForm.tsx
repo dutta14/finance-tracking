@@ -1,8 +1,11 @@
 import { FC, FormEvent, useEffect, useState, useRef, useCallback } from 'react'
+
 import { FinancialGoal } from '../../../types'
 import { FormData } from '../hooks/useFormData'
+import { GoalTemplate } from '../data/goalTemplates'
 import { calculateGoalMetrics } from '../utils/goalCalculations'
 import { parseDate, getMonthsBetween, formatMonthYear } from '../utils/dateHelpers'
+import TemplatePicker from './TemplatePicker'
 import '../../../styles/Goal.css'
 
 interface GoalFormProps {
@@ -60,7 +63,9 @@ const GoalForm: FC<GoalFormProps> = ({
   setError,
 }) => {
   const [step, setStep] = useState(0)
+  const [showTemplates, setShowTemplates] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const reviewRef = useRef<HTMLDivElement>(null)
 
   const pickRandomName = useCallback(() => {
     const name = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)]
@@ -68,13 +73,39 @@ const GoalForm: FC<GoalFormProps> = ({
     setError('')
   }, [onSetFormFields, setError])
 
+  const handleSelectTemplate = useCallback(
+    (template: GoalTemplate) => {
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+      let goalEndYear = ''
+      if (profileBirthday) {
+        const [y, m, d] = profileBirthday.split('-')
+        goalEndYear = `${Number(y) + 100}-${m}-${d}`
+      }
+
+      onSetFormFields({
+        goalName: template.name,
+        goalCreatedIn: todayStr,
+        goalEndYear,
+        retirementAge: String(template.retirementAge),
+        expenseValue: String(template.annualExpense),
+        inflationRate: String(template.inflationRate),
+        safeWithdrawalRate: String(template.safeWithdrawalRate),
+        growth: String(template.growth),
+      })
+      setShowTemplates(false)
+      setError('')
+      setStep(4)
+      setTimeout(() => reviewRef.current?.focus(), 80)
+    },
+    [onSetFormFields, setError, profileBirthday],
+  )
+
   const setEndTo100thBirthday = useCallback(() => {
     if (!profileBirthday) return
-    const bd = new Date(profileBirthday)
-    const y = bd.getFullYear() + 100
-    const m = String(bd.getMonth() + 1).padStart(2, '0')
-    const d = String(bd.getDate()).padStart(2, '0')
-    onSetFormFields({ goalEndYear: `${y}-${m}-${d}` })
+    const [y, m, d] = profileBirthday.split('-')
+    onSetFormFields({ goalEndYear: `${Number(y) + 100}-${m}-${d}` })
     setError('')
   }, [profileBirthday, onSetFormFields, setError])
 
@@ -124,8 +155,10 @@ const GoalForm: FC<GoalFormProps> = ({
           return false
         }
         if (profileBirthday && formData.goalEndYear) {
-          const bYear = new Date(profileBirthday).getFullYear()
-          const eYear = new Date(formData.goalEndYear).getFullYear()
+          const [bYearStr] = profileBirthday.split('-')
+          const [eYearStr] = formData.goalEndYear.split('-')
+          const bYear = Number(bYearStr)
+          const eYear = Number(eYearStr)
           if (eYear - bYear > 100) {
             setError('Goal end date must be within 100 years of your date of birth')
             return false
@@ -175,6 +208,8 @@ const GoalForm: FC<GoalFormProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault()
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'BUTTON') return
       if (step < STEPS.length - 1) goNext()
     }
   }
@@ -250,7 +285,7 @@ const GoalForm: FC<GoalFormProps> = ({
       )
     }
     return (
-      <div className="wizard-review">
+      <div className="wizard-review" tabIndex={-1} ref={reviewRef}>
         <div className="wizard-review-row">
           <span className="wizard-review-label">Goal Name</span>
           <span className="wizard-review-value">{formData.goalName}</span>
@@ -313,13 +348,18 @@ const GoalForm: FC<GoalFormProps> = ({
               onClick={() => {
                 if (i < step) setStep(i)
               }}
-              title={label}
+              aria-label={`Step ${i + 1}: ${label}${i === step ? ' (current)' : i < step ? ' (completed)' : ''}`}
+              aria-current={i === step ? 'step' : undefined}
+              disabled={i > step}
             >
               {i < step ? '✓' : i + 1}
             </button>
           ))}
         </div>
         <span className="wizard-step-label">{STEPS[step]}</span>
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          Step {step + 1} of {STEPS.length}: {STEPS[step]}
+        </span>
       </div>
 
       <form className="goal-form wizard-body" onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
@@ -339,6 +379,16 @@ const GoalForm: FC<GoalFormProps> = ({
               onChange={onInputChange}
               autoFocus
             />
+            {editingGoalId === null && (
+              <div className="wizard-step-name-actions">
+                <button type="button" className="btn-use-template" onClick={() => setShowTemplates(prev => !prev)}>
+                  {showTemplates ? 'Hide Templates' : 'Use Template'}
+                </button>
+              </div>
+            )}
+            {showTemplates && editingGoalId === null && (
+              <TemplatePicker onSelect={handleSelectTemplate} onClose={() => setShowTemplates(false)} />
+            )}
           </div>
         )}
 
@@ -454,11 +504,12 @@ const GoalForm: FC<GoalFormProps> = ({
                   <label className="wizard-param-name" htmlFor="safeWithdrawalRate">
                     SWR
                   </label>
-                  <span
-                    className="wizard-param-info"
-                    title='Safe Withdrawal Rate — the percentage of your portfolio you withdraw annually in retirement. 4% is a common benchmark (the "4% rule").'
-                  >
+                  <span className="wizard-param-info" id="swr-description">
                     ⓘ
+                  </span>
+                  <span className="sr-only" id="swr-help-text">
+                    Safe Withdrawal Rate — the percentage of your portfolio you withdraw annually in retirement. 4% is a
+                    common benchmark (the "4% rule").
                   </span>
                 </span>
                 <div className="wizard-param-input-wrap">
@@ -472,6 +523,7 @@ const GoalForm: FC<GoalFormProps> = ({
                     onChange={onInputChange}
                     min="0"
                     step="0.1"
+                    aria-describedby="swr-help-text"
                   />
                   <span className="wizard-param-unit">%</span>
                 </div>
@@ -510,7 +562,7 @@ const GoalForm: FC<GoalFormProps> = ({
         )}
 
         {error && (
-          <div className="form-error">
+          <div className="form-error" role="alert">
             {error}
             {step === 0 && error === 'Please enter a goal name' && (
               <button type="button" className="random-name-btn" onClick={pickRandomName}>
@@ -538,11 +590,11 @@ const GoalForm: FC<GoalFormProps> = ({
             </button>
           )}
           {step < STEPS.length - 1 ? (
-            <button type="button" className="wizard-btn wizard-btn--next" onClick={goNext}>
+            <button key="next" type="button" className="wizard-btn wizard-btn--next" onClick={goNext}>
               Next →
             </button>
           ) : (
-            <button type="submit" className="wizard-btn wizard-btn--create">
+            <button key="submit" type="submit" className="wizard-btn wizard-btn--create">
               {editingGoalId ? 'Update Goal' : 'Create Goal'}
             </button>
           )}

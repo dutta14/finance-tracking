@@ -1,0 +1,137 @@
+/* Template Picker */
+.template-picker {
+  margin-top: 1rem;
+  animation: wizard-fade 0.2s ease;
+}
+
+.template-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.template-picker-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.template-picker-close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--fs-md);
+  cursor: pointer;
+  padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition:
+    color 150ms,
+    background 150ms;
+  line-height: 1;
+}
+.template-picker-close:hover {
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+}
+
+.template-picker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Template card */
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms,
+    background 150ms;
+  outline: none;
+}
+.template-card:hover {
+  border-color: var(--accent);
+  background: var(--color-surface);
+}
+.template-card:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+}
+
+.template-card-name {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.template-card-desc {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.template-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.template-card-stat {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Button style for "Use Template" in the wizard */
+.btn-use-template {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.65rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background 150ms,
+    color 150ms,
+    border-color 150ms;
+}
+.btn-use-template:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+.btn-use-template:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.wizard-step-name-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .template-card-stats {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

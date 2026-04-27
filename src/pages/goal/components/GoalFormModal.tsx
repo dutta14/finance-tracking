@@ -39,7 +39,7 @@ const GoalFormModal: FC<GoalFormModalProps> = props => {
   }, [])
 
   return (
-    <div className="goal-form-modal-backdrop" onClick={onCancel}>
+    <div className="goal-form-modal-backdrop">
       <div
         ref={modalRef}
         className="goal-form-modal"
