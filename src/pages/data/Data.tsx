@@ -31,14 +31,21 @@ const Data: FC = () => {
   const [showInactive, setShowInactive] = useState(false)
   const [dataView, setDataView] = useState<'charts' | 'spreadsheet'>('charts')
 
+  const accountsRef = useRef(accounts)
+  accountsRef.current = accounts
+  const balancesRef = useRef(balances)
+  balancesRef.current = balances
+
   const saveAccounts = (updated: Account[]) => {
     ctxSetAccounts(updated)
-    onDataChange?.(updated, balances)
+    accountsRef.current = updated
+    onDataChange?.(updated, balancesRef.current)
   }
 
   const saveBalances = (updated: BalanceEntry[]) => {
     ctxSetBalances(updated)
-    onDataChange?.(accounts, updated)
+    balancesRef.current = updated
+    onDataChange?.(accountsRef.current, updated)
   }
 
   // Use when updating both in the same handler to avoid stale closure
