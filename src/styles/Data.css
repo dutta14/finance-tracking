@@ -848,9 +848,10 @@
   cursor: pointer;
 }
 
-.data-bulk-bar select:focus {
+.data-bulk-bar select:focus-visible {
   outline: none;
-  border-color: var(--accent-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring, rgba(59, 130, 246, 0.15));
 }
 
 .data-bulk-clear {

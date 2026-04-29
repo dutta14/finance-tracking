@@ -700,9 +700,10 @@
   color: var(--color-text);
   background: var(--color-surface);
 }
-.alloc-goal-field-input:focus {
+.alloc-goal-field-input:focus-visible {
   outline: none;
-  border-color: var(--accent-border);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring, rgba(59, 130, 246, 0.15));
 }
 
 .alloc-goal-pct-grid {

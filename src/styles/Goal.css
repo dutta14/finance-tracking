@@ -172,10 +172,11 @@ section.goal {
   transition: border-color 0.2s ease;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
+.form-group input:focus-visible,
+.form-group textarea:focus-visible {
   outline: none;
-  border-color: var(--color-text-muted);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring, rgba(59, 130, 246, 0.15));
 }
 
 .form-group textarea {
