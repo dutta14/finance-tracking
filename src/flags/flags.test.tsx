@@ -487,7 +487,33 @@ describe('FlagProvider integration', () => {
     expect(result.current).toBe('world')
   })
 
-  it('isAdmin is true when token exists', async () => {
+  it('isAdmin is true when fetchConfig succeeds', async () => {
+    const configContent = btoa(JSON.stringify({ version: 1, updatedAt: '', flags: {} }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ content: configContent, sha: 'abc123' }),
+      }),
+    )
+
+    function Consumer() {
+      const { isAdmin } = useContext(FlagContext)
+      return <span data-testid="admin">{String(isAdmin)}</span>
+    }
+
+    await act(async () => {
+      render(
+        <FlagProvider>
+          <Consumer />
+        </FlagProvider>,
+      )
+    })
+
+    expect(screen.getByTestId('admin')).toHaveTextContent('true')
+  })
+
+  it('isAdmin is false when fetchConfig returns non-200', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -509,7 +535,7 @@ describe('FlagProvider integration', () => {
       )
     })
 
-    expect(screen.getByTestId('admin')).toHaveTextContent('true')
+    expect(screen.getByTestId('admin')).toHaveTextContent('false')
   })
 
   it('environment is staging for non-production hostnames', async () => {

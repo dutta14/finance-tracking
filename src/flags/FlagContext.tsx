@@ -106,17 +106,17 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
   const [configSha, setConfigSha] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const environment: 'production' | 'staging' =
     window.location.hostname === 'dutta14.github.io' ? 'production' : 'staging'
-
-  const isAdmin = !!activeToken
 
   /* ── Fetch rollout config from GitHub ──────────────────────────── */
 
   const fetchConfig = useCallback(async () => {
     if (!activeToken) {
       setRolloutConfig(EMPTY_CONFIG)
+      setIsAdmin(false)
       return
     }
 
@@ -133,10 +133,13 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
       })
 
       if (!res.ok) {
+        setIsAdmin(false)
         setRolloutConfig(EMPTY_CONFIG)
         setConfigSha(null)
         return
       }
+
+      setIsAdmin(true)
 
       const data = await res.json()
       if (!data.content) {
@@ -153,6 +156,7 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
         setRolloutConfig(parsed)
       }
     } catch (e) {
+      setIsAdmin(false)
       setError(e instanceof Error ? e.message : String(e))
       setRolloutConfig(EMPTY_CONFIG)
     } finally {

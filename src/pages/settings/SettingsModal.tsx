@@ -8,6 +8,7 @@ import AdvancedPane from './components/AdvancedPane'
 import LabsPane from './components/LabsPane'
 import FlagAdminPane from './components/FlagAdminPane'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import { useFlagContext } from '../../flags/FlagContext'
 import '../../styles/SettingsModal.css'
 
 const SettingsModal: FC<SettingsModalProps> = props => {
@@ -23,6 +24,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
 
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
   const modalRef = useRef<HTMLDivElement>(null)
+  const { isAdmin } = useFlagContext()
   useFocusTrap(modalRef, true)
 
   useEffect(() => {
@@ -107,15 +109,17 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               </svg>
               Labs
             </button>
-            <button
-              className={`settings-modal-nav-item${activeSection === 'flags' ? ' active' : ''}`}
-              onClick={() => setActiveSection('flags')}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M3 1v14h1V9h8l-2-4 2-4H4V1H3zm1 1.5h6.5L9 6l1.5 2.5H4V2.5z" />
-              </svg>
-              Feature Flags
-            </button>
+            {isAdmin && (
+              <button
+                className={`settings-modal-nav-item${activeSection === 'flags' ? ' active' : ''}`}
+                onClick={() => setActiveSection('flags')}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M3 1v14h1V9h8l-2-4 2-4H4V1H3zm1 1.5h6.5L9 6l1.5 2.5H4V2.5z" />
+                </svg>
+                Feature Flags
+              </button>
+            )}
           </nav>
 
           <div className="settings-modal-detail">
@@ -162,7 +166,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               />
             )}
             {activeSection === 'labs' && <LabsPane />}
-            {activeSection === 'flags' && <FlagAdminPane />}
+            {activeSection === 'flags' && isAdmin && <FlagAdminPane />}
           </div>
         </div>
       </div>
