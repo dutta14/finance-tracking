@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Modern Design System (behind MODERN_DESIGN feature flag)
+   All styles scoped under body.modern-design
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── #20: Inter font + tabular-nums ───────────────────────────── */
+
+body.modern-design {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-variant-numeric: tabular-nums;
+}
+
+body.modern-design {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.875rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.125rem;
+}

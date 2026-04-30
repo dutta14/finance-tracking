@@ -24,6 +24,8 @@ import SearchModal from './components/SearchModal'
 import { isDemoActive, enterDemoMode, exitDemoMode } from './pages/settings/demoMode'
 import './styles/ErrorBoundary.css'
 import './styles/colorThemes.css'
+import './styles/modern-design.css'
+import { ModernDesignToggle } from './flags/ModernDesignToggle'
 
 const AppShell: FC = () => {
   const navigate = useNavigate()
@@ -89,6 +91,7 @@ const AppShell: FC = () => {
   )
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <ModernDesignToggle />
       {sidebarOpen && (
         <SidebarNavigation
           currentPage={currentPage}

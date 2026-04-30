@@ -9,7 +9,8 @@
     see CSP violations in the console during development. That's expected and
     harmless — this policy is tuned for the production build.
   -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; font-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; font-src 'self' https://fonts.gstatic.com">
+
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Finance Tracking</title>
   <link rel="stylesheet" href="/styles/normalize.css">
