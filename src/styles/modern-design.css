@@ -74,3 +74,45 @@ body.modern-design .settings-modal,
 body.modern-design .search-overlay .search-modal {
   box-shadow: var(--shadow-lg);
 }
+
+/* ── #23: Premium input styling ───────────────────────────────── */
+
+body.modern-design input:not([type='checkbox']):not([type='radio']),
+body.modern-design select,
+body.modern-design textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.modern-design input:not([type='checkbox']):not([type='radio']):hover,
+body.modern-design select:hover {
+  border-color: var(--accent-border);
+}
+
+body.modern-design input:not([type='checkbox']):not([type='radio']):focus,
+body.modern-design select:focus,
+body.modern-design textarea:focus {
+  border-color: var(--accent);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+body.modern-design input:not([type='checkbox']):not([type='radio'])::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+body.modern-design.dark input:not([type='checkbox']):not([type='radio']):focus,
+body.modern-design.dark select:focus,
+body.modern-design.dark textarea:focus {
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.2),
+    0 0 20px rgba(59, 130, 246, 0.15);
+}
