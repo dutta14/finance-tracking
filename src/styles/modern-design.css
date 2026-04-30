@@ -116,3 +116,40 @@ body.modern-design.dark textarea:focus {
     0 0 0 3px rgba(59, 130, 246, 0.2),
     0 0 20px rgba(59, 130, 246, 0.15);
 }
+
+/* ── #24: Dark mode surface layering + glow ───────────────────── */
+
+body.modern-design.dark {
+  --color-bg: #0f172a;
+  --color-surface-sunken: #0d1322;
+  --color-surface: #1e293b;
+  --color-surface-alt: #1a2332;
+  --color-surface-raised: #263347;
+  --color-surface-hover: rgba(255, 255, 255, 0.05);
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-heading: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-positive: #34d399;
+  --color-negative: #f87171;
+  --color-warning: #fbbf24;
+  --accent-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+body.modern-design.dark {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.06), transparent), var(--color-bg);
+}
+
+body.modern-design.dark .home-card:hover,
+body.modern-design.dark .fi-card:hover,
+body.modern-design.dark .goal-card:hover {
+  border-color: rgba(59, 130, 246, 0.15);
+  box-shadow:
+    var(--shadow-md),
+    0 0 30px rgba(59, 130, 246, 0.05);
+}
+
+body.modern-design.dark .settings-modal,
+body.modern-design.dark .search-overlay .search-modal {
+  background: var(--color-surface-raised);
+}
