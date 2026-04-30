@@ -355,8 +355,8 @@
 }
 
 .mixer-btn-create {
-  background: var(--color-text);
-  color: var(--color-text-on-accent);
+  background: var(--accent);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1.3rem;
@@ -366,7 +366,8 @@
   transition: background 0.15s;
 }
 .mixer-btn-create:hover:not(:disabled) {
-  background: var(--color-text-heading);
+  background: var(--accent-hover, var(--accent));
+  filter: brightness(1.1);
 }
 .mixer-btn-create:disabled {
   opacity: 0.45;
