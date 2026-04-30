@@ -284,3 +284,35 @@ body.modern-design .budget-view-btn.active {
   font-weight: var(--fw-semibold);
   border-bottom: none;
 }
+
+/* ── #28: Dark mode accent glow ───────────────────────────────── */
+
+body.modern-design.dark button:focus-visible,
+body.modern-design.dark a:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--accent),
+    0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+body.modern-design.dark .nw-change.up,
+body.modern-design.dark .cashflow-bar-legend-net.positive,
+body.modern-design.dark .alloc-rebal-delta.positive {
+  color: var(--color-positive);
+  text-shadow: 0 0 20px rgba(52, 211, 153, 0.2);
+}
+
+body.modern-design.dark .nw-change.down,
+body.modern-design.dark .cashflow-bar-legend-net.negative,
+body.modern-design.dark .alloc-rebal-delta.negative {
+  color: var(--color-negative);
+  text-shadow: 0 0 20px rgba(248, 113, 113, 0.2);
+}
+
+/* ── #29: Budget total column width fix (tabular-nums causes wider numbers) ── */
+
+body.modern-design .budget-th--total,
+body.modern-design .budget-td--total {
+  min-width: 90px;
+  width: auto;
+}
