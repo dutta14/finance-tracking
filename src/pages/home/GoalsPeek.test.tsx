@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
 import GoalsPeek from './GoalsPeek'
@@ -25,6 +25,12 @@ vi.mock('../../components/TermAbbr', () => ({
 }))
 
 vi.mock('../../styles/Home.css', () => ({}))
+
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return { ...actual, useNavigate: () => mockNavigate }
+})
 
 import { useData } from '../../contexts/DataContext'
 import { getBudgetSaveRate } from '../budget/utils/budgetStorage'
@@ -259,5 +265,38 @@ describe('GoalsPeek overflow', () => {
     const goals = Array.from({ length: 3 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
     renderPeek(goals)
     expect(screen.queryByText(/more goal/)).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Goal item navigation — clicking a goal navigates to its detail page
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek navigation', () => {
+  it('navigates to the goal detail page when clicking a specific goal', () => {
+    const goal = makeGoal({ id: 42, goalName: 'Coast FIRE' })
+    renderPeek([goal])
+    const goalButton = screen.getByRole('button', { name: /Coast FIRE/i })
+    fireEvent.click(goalButton)
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/42')
+  })
+
+  it('navigates to the correct detail page for each goal', () => {
+    const goals = [makeGoal({ id: 7, goalName: 'Early Retirement' }), makeGoal({ id: 13, goalName: 'Lean FIRE' })]
+    renderPeek(goals)
+
+    fireEvent.click(screen.getByRole('button', { name: /Early Retirement/i }))
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/7')
+
+    mockNavigate.mockClear()
+
+    fireEvent.click(screen.getByRole('button', { name: /Lean FIRE/i }))
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/13')
+  })
+
+  it('header "View Goals" link still calls onNavigate (list page)', () => {
+    renderPeek()
+    fireEvent.click(screen.getByText('View Goals →'))
+    expect(noop).toHaveBeenCalled()
   })
 })

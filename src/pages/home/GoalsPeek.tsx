@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
 import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry, formatCurrency } from '../data/types'
@@ -37,6 +38,7 @@ const getTotalForMonth = (
 
 const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
   const { accounts, balances, allMonths } = useData()
+  const navigate = useNavigate()
 
   const { fiTotal, gwTotal, latestMonth, profileBirthday } = useMemo(() => {
     const latest = allMonths[allMonths.length - 1] || ''
@@ -161,7 +163,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
           }
 
           return (
-            <button key={goal.id} className="goals-peek-item" onClick={onNavigate}>
+            <button key={goal.id} className="goals-peek-item" onClick={() => navigate(`/goal/${goal.id}`)}>
               <div className="goals-peek-item-top">
                 <span className="goals-peek-name">{goal.goalName}</span>
                 {fiProjectedLabel && (
