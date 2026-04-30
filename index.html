@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; font-src 'self' https://fonts.gstatic.com">
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!--
-    Content Security Policy — deployed to GitHub Pages (no HTTP header control).
-    Vite dev mode injects inline scripts for HMR/React Fast Refresh, so you'll
-    see CSP violations in the console during development. That's expected and
-    harmless — this policy is tuned for the production build.
-  -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; font-src 'self'">
+  <!-- CSP is injected at build time only (see vite.config.js csp plugin) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/finance-tracking/favicon.svg">
   <title>Finance Tracking</title>
   
   
-  <script type="module" crossorigin src="/finance-tracking/assets/index-11db0474.js"></script>
-  <link rel="stylesheet" href="/finance-tracking/assets/index-4111ee07.css">
+  <script type="module" crossorigin src="/finance-tracking/assets/index-a47ed198.js"></script>
+  <link rel="stylesheet" href="/finance-tracking/assets/index-381e2494.css">
 </head>
 <body>
   <div id="root"></div>
