@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, cleanup } from '@testing-library/react'
+import { render } from '@testing-library/react'
 
 const mockUseFlag = vi.fn()
 vi.mock('./useFlag', () => ({ useFlag: (...args: unknown[]) => mockUseFlag(...args) }))
