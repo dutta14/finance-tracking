@@ -18,12 +18,7 @@ export interface SettingsModalProps {
   onUpdateProfile: (updates: Partial<Profile>) => void
   hasPendingChanges: boolean
   initialSection?: SettingsSection
-  fiTheme?: string
-  onFiThemeChange?: (theme: string) => void
-  gwTheme?: string
-  onGwThemeChange?: (theme: string) => void
-  homeTheme?: string
-  onHomeThemeChange?: (theme: string) => void
+
   ghConfig?: GitHubSyncConfig
   ghIsConfigured?: boolean
   ghSyncStatus?: SyncStatus
@@ -90,8 +85,6 @@ export interface GitHubSyncPaneProps {
 export interface AppearancePaneProps {
   darkMode: boolean
   onToggleDarkMode: () => void
-  fiTheme: string
-  onFiThemeChange: (theme: string) => void
 }
 
 export interface AdvancedPaneProps {

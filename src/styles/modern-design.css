@@ -295,24 +295,98 @@ body.modern-design.dark a:focus-visible {
     0 0 20px rgba(59, 130, 246, 0.15);
 }
 
-body.modern-design.dark .nw-change.up,
-body.modern-design.dark .cashflow-bar-legend-net.positive,
-body.modern-design.dark .alloc-rebal-delta.positive {
-  color: var(--color-positive);
-  text-shadow: 0 0 20px rgba(52, 211, 153, 0.2);
-}
-
-body.modern-design.dark .nw-change.down,
-body.modern-design.dark .cashflow-bar-legend-net.negative,
-body.modern-design.dark .alloc-rebal-delta.negative {
-  color: var(--color-negative);
-  text-shadow: 0 0 20px rgba(248, 113, 113, 0.2);
-}
-
 /* ── #29: Budget total column width fix (tabular-nums causes wider numbers) ── */
 
 body.modern-design .budget-th--total,
 body.modern-design .budget-td--total {
   min-width: 90px;
   width: auto;
+}
+
+/* ── #29: Borderless table rows ───────────────────────────────── */
+
+body.modern-design table:not([class]),
+body.modern-design .modern-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+body.modern-design table:not([class]) th,
+body.modern-design .modern-table th {
+  padding: 8px 16px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+  border-left: none;
+  border-right: none;
+}
+
+body.modern-design table:not([class]) td,
+body.modern-design .modern-table td {
+  padding: 12px 16px;
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  border-left: none;
+  border-right: none;
+  font-variant-numeric: tabular-nums;
+}
+
+body.modern-design table:not([class]) tbody tr,
+body.modern-design .modern-table tbody tr {
+  transition: background 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.modern-design table:not([class]) tbody tr:hover,
+body.modern-design .modern-table tbody tr:hover {
+  background: var(--color-surface-hover);
+}
+
+body.modern-design table:not([class]) tbody tr:last-child td,
+body.modern-design .modern-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+body.modern-design .budget-td--total,
+body.modern-design .budget-th--total {
+  border-left: 2px solid var(--color-border);
+}
+
+body.modern-design .budget-td {
+  padding: 0.4rem 0.25rem;
+  font-size: var(--fs-sm);
+}
+
+body.modern-design .budget-td--number,
+body.modern-design .budget-td--group-number {
+  text-align: right;
+}
+
+body.modern-design .budget-th {
+  padding: 0.5rem 0.25rem;
+  text-align: right;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* ─── Page Title Typography (Kai spec) ─── */
+body.modern-design .budget-title,
+body.modern-design .home-greeting h1,
+body.modern-design .welcome-title,
+body.modern-design .tax-heading,
+body.modern-design .goal-header h1,
+body.modern-design .alloc-page-title,
+body.modern-design .data-header h1,
+body.modern-design .drive-title,
+body.modern-design .settings-section h3 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
 }

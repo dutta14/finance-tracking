@@ -49,7 +49,6 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    document.body.dataset.accentTheme = accentTheme
     localStorage.setItem('accentTheme', accentTheme)
   }, [accentTheme])
 

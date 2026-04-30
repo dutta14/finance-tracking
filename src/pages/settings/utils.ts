@@ -1,15 +1,3 @@
-export const COLOR_PALETTES = [
-  { id: 'blue', label: 'Blue', color: '#3b82f6' },
-  { id: 'green', label: 'Green', color: '#22c55e' },
-  { id: 'red', label: 'Red', color: '#ef4444' },
-  { id: 'amber', label: 'Amber', color: '#f59e0b' },
-  { id: 'purple', label: 'Purple', color: '#a855f7' },
-  { id: 'orange', label: 'Orange', color: '#f97316' },
-  { id: 'teal', label: 'Teal', color: '#14b8a6' },
-  { id: 'rose', label: 'Rose', color: '#f43f5e' },
-  { id: 'slate', label: 'Slate', color: '#64748b' },
-]
-
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
     month: 'short',

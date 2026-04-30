@@ -152,7 +152,6 @@ describe('SettingsContext', () => {
 
     expect(screen.getByTestId('accentTheme').textContent).toBe('green')
     expect(localStorage.getItem('accentTheme')).toBe('green')
-    expect(document.body.dataset.accentTheme).toBe('green')
   })
 
   it('toggle CSV import updates state and persists', () => {

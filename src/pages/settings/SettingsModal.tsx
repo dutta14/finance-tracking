@@ -17,8 +17,6 @@ const SettingsModal: FC<SettingsModalProps> = props => {
     profile,
     onUpdateProfile,
     hasPendingChanges = false,
-    fiTheme = 'blue',
-    onFiThemeChange = () => {},
     onClose = () => {},
     initialSection = 'profile',
   } = props
@@ -151,12 +149,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               />
             )}
             {activeSection === 'appearance' && (
-              <AppearancePane
-                darkMode={darkMode}
-                onToggleDarkMode={onToggleDarkMode}
-                fiTheme={fiTheme}
-                onFiThemeChange={onFiThemeChange}
-              />
+              <AppearancePane darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
             )}
             {activeSection === 'advanced' && (
               <AdvancedPane

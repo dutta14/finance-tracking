@@ -17,12 +17,6 @@ interface SettingsMenuProps {
   onToggleDarkMode: () => void
   profile?: Profile
   onUpdateProfile?: (updates: Partial<Profile>) => void
-  fiTheme?: string
-  onFiThemeChange?: (theme: string) => void
-  gwTheme?: string
-  onGwThemeChange?: (theme: string) => void
-  homeTheme?: string
-  onHomeThemeChange?: (theme: string) => void
   hasPendingChanges?: boolean
   ghConfig?: GitHubSyncConfig
   ghIsConfigured?: boolean
@@ -64,12 +58,6 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
   onToggleDarkMode,
   profile = defaultProfile,
   onUpdateProfile = () => {},
-  fiTheme = 'blue',
-  onFiThemeChange = () => {},
-  gwTheme = 'green',
-  onGwThemeChange = () => {},
-  homeTheme = 'blue',
-  onHomeThemeChange = () => {},
   externalOpen,
   externalSection,
   onExternalClose,
@@ -119,12 +107,6 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
           onToggleDarkMode={onToggleDarkMode}
           profile={profile}
           onUpdateProfile={onUpdateProfile}
-          fiTheme={fiTheme}
-          onFiThemeChange={onFiThemeChange}
-          gwTheme={gwTheme}
-          onGwThemeChange={onGwThemeChange}
-          homeTheme={homeTheme}
-          onHomeThemeChange={onHomeThemeChange}
           hasPendingChanges={rest.hasPendingChanges ?? false}
           ghConfig={rest.ghConfig}
           ghIsConfigured={rest.ghIsConfigured}

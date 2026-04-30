@@ -13,7 +13,7 @@ import type { SettingsSection } from '../pages/settings/types'
 import '../styles/SidebarNavigation.css'
 
 const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
-  const { darkMode, setDarkMode, accentTheme, setAccentTheme, allowCsvImport, setAllowCsvImport } = useSettings()
+  const { darkMode, setDarkMode, allowCsvImport, setAllowCsvImport } = useSettings()
   const { profile, updateProfile } = useGoals()
   const ghContext = useGitHubSyncContext()
   const { handleSyncNow, dirtyFlags } = ghContext
@@ -132,12 +132,6 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
             onToggleDarkMode={() => setDarkMode(!darkMode)}
             profile={profile}
             onUpdateProfile={updateProfile}
-            fiTheme={accentTheme}
-            onFiThemeChange={setAccentTheme}
-            gwTheme={accentTheme}
-            onGwThemeChange={setAccentTheme}
-            homeTheme={accentTheme}
-            onHomeThemeChange={setAccentTheme}
             hasPendingChanges={gh.hasPendingChanges}
             ghConfig={gh.config}
             ghIsConfigured={gh.isConfigured}
