@@ -26,3 +26,17 @@ body.modern-design {
   --fs-lg: 1rem;
   --fs-xl: 1.125rem;
 }
+
+/* ── #21: Translucent borders ─────────────────────────────────── */
+
+body.modern-design {
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-light: rgba(0, 0, 0, 0.04);
+  --accent-border: rgba(59, 130, 246, 0.2);
+}
+
+body.modern-design.dark {
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-light: rgba(255, 255, 255, 0.04);
+  --accent-border: rgba(59, 130, 246, 0.25);
+}
