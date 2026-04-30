@@ -186,3 +186,48 @@ body.modern-design button:active {
     transform: none;
   }
 }
+
+/* ── #26: Glass sidebar ───────────────────────────────────────── */
+
+body.modern-design .sidebar {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.modern-design.dark .sidebar {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+body.modern-design .sidebar-link.active {
+  background: var(--accent-lighter, rgba(59, 130, 246, 0.08));
+  color: var(--accent);
+  font-weight: var(--fw-semibold);
+}
+
+body.modern-design.dark .sidebar-link.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.1);
+}
+
+body.modern-design .sidebar-menu {
+  gap: 2px;
+}
+
+body.modern-design .sidebar-link {
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+body.modern-design .main-content {
+  background: var(--color-bg, #ffffff);
+}
+
+body.modern-design.dark .main-content {
+  background: var(--color-bg, #0f172a);
+}
