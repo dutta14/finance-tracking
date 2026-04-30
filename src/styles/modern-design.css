@@ -153,3 +153,36 @@ body.modern-design.dark .settings-modal,
 body.modern-design.dark .search-overlay .search-modal {
   background: var(--color-surface-raised);
 }
+
+/* ── #25: Global transition baseline ──────────────────────────── */
+
+body.modern-design {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 350ms;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+body.modern-design a,
+body.modern-design button {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 120ms;
+}
+
+body.modern-design button:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.modern-design,
+  body.modern-design * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  body.modern-design button:active {
+    transform: none;
+  }
+}
