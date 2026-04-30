@@ -471,10 +471,10 @@
   text-align: right;
 }
 .goals-peek-pct--fi {
-  color: var(--accent);
+  color: var(--color-positive);
 }
 .goals-peek-pct--gw {
-  color: var(--color-warning);
+  color: var(--color-positive);
 }
 .goals-peek-monthly {
   font-size: var(--fs-xs);
@@ -517,10 +517,10 @@
   transition: width 0.3s ease;
 }
 .goals-peek-bar-fill--fi {
-  background: var(--accent);
+  background: var(--color-positive);
 }
 .goals-peek-bar-fill--gw {
-  background: var(--color-warning);
+  background: var(--color-positive);
 }
 .goals-peek-item-meta {
   display: flex;
