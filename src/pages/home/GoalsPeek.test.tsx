@@ -249,14 +249,14 @@ describe('GoalsPeek projection — fiGoal is 0', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek overflow', () => {
-  it('shows "+N more goals" when there are more than 5 goals', () => {
-    const goals = Array.from({ length: 7 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
+  it('shows "+N more goals" when there are more than 3 goals', () => {
+    const goals = Array.from({ length: 5 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
     renderPeek(goals)
     expect(screen.getByText('+2 more goals')).toBeInTheDocument()
   })
 
-  it('does not show overflow text when there are 5 or fewer goals', () => {
-    const goals = Array.from({ length: 5 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
+  it('does not show overflow text when there are 3 or fewer goals', () => {
+    const goals = Array.from({ length: 3 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
     renderPeek(goals)
     expect(screen.queryByText(/more goal/)).not.toBeInTheDocument()
   })

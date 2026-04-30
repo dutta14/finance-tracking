@@ -439,14 +439,18 @@
   cursor: pointer;
   transition:
     border-color 0.15s,
-    background 0.15s;
+    background 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
   text-align: left;
   font: inherit;
   color: inherit;
 }
 .goals-peek-item:hover {
-  border-color: var(--color-border-light);
-  background: var(--color-surface-hover);
+  background: var(--color-surface-active, var(--color-surface-hover));
+  border-color: var(--accent-border, var(--color-border-light));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.04));
 }
 .goals-peek-item-top {
   display: flex;
@@ -474,7 +478,7 @@
   color: var(--color-positive);
 }
 .goals-peek-pct--gw {
-  color: var(--color-positive);
+  color: var(--accent);
 }
 .goals-peek-monthly {
   font-size: var(--fs-xs);
@@ -520,7 +524,7 @@
   background: var(--color-positive);
 }
 .goals-peek-bar-fill--gw {
-  background: var(--color-positive);
+  background: var(--accent);
 }
 .goals-peek-item-meta {
   display: flex;
