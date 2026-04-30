@@ -1,0 +1,328 @@
+/* Feature Flag Admin Pane */
+
+.ff-section-title {
+  margin: 0 0 0.25rem 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ff-override-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ff-override-item {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-alt, var(--color-bg));
+}
+
+.ff-override-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.ff-flag-name {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  background: var(--color-surface-hover, rgba(0, 0, 0, 0.04));
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 3px);
+}
+
+.ff-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 3px);
+  line-height: 1.4;
+}
+
+.ff-badge--boolean {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: var(--accent);
+}
+
+.ff-badge--string {
+  background: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  color: var(--color-warning);
+}
+
+.ff-badge--number {
+  background: color-mix(in srgb, var(--color-positive) 25%, transparent);
+  color: var(--color-positive);
+}
+
+.ff-badge--json {
+  background: color-mix(in srgb, var(--color-negative) 25%, transparent);
+  color: var(--color-negative);
+}
+
+.ff-flag-description {
+  margin: 0 0 0.5rem;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.ff-override-item-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ff-resolved-value {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.ff-resolved-value--override {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: var(--fw-medium);
+}
+
+.ff-inline-input {
+  max-width: 180px;
+  padding: 0.3rem 0.5rem;
+  font-size: var(--fs-sm);
+}
+
+.ff-json-input {
+  width: 100%;
+  max-width: 280px;
+  min-height: 60px;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: var(--fs-sm);
+  resize: vertical;
+}
+
+.ff-reset-btn {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-negative);
+  background: none;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--color-negative);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.ff-reset-btn:hover {
+  background: var(--color-negative);
+  color: var(--color-text-on-accent);
+}
+
+.ff-reset-btn:focus-visible,
+.ff-refresh-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-toggle-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ff-sr-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Rollout Config Section */
+.ff-rollout-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.ff-rollout-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ff-rollout-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ff-env-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm, 3px);
+  line-height: 1.4;
+}
+
+.ff-env-badge--production {
+  background: color-mix(in srgb, var(--color-positive) 25%, transparent);
+  color: var(--color-positive);
+}
+
+.ff-env-badge--staging {
+  background: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  color: var(--color-warning);
+}
+
+.ff-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.ff-refresh-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.ff-percentage-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ff-percentage-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  min-width: 60px;
+}
+
+.ff-percentage-input {
+  width: 72px;
+  padding: 0.3rem 0.5rem;
+  font-size: var(--fs-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-height: 44px;
+}
+
+.ff-percentage-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-lighter, rgba(99, 102, 241, 0.1));
+}
+
+.ff-percentage-hint {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.ff-helper-text {
+  margin: 0.25rem 0 0;
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.ff-save-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ff-save-status {
+  font-size: var(--fs-sm);
+  min-height: 1.2em;
+}
+
+.ff-save-status--success {
+  color: var(--color-positive);
+  font-weight: var(--fw-medium);
+}
+
+.ff-save-status--error {
+  color: var(--color-negative);
+  font-weight: var(--fw-medium);
+}
+
+/* Loading skeleton */
+.ff-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ff-skeleton {
+  height: 60px;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover, rgba(0, 0, 0, 0.04)) 25%,
+    var(--color-bg, rgba(0, 0, 0, 0.02)) 50%,
+    var(--color-surface-hover, rgba(0, 0, 0, 0.04)) 75%
+  );
+  background-size: 200% 100%;
+  animation: ff-shimmer 1.5s infinite;
+}
+
+@keyframes ff-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.ff-error-msg {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--color-negative);
+  line-height: 1.5;
+}

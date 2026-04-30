@@ -6,6 +6,7 @@ import GitHubSyncPane from './components/GitHubSyncPane'
 import AppearancePane from './components/AppearancePane'
 import AdvancedPane from './components/AdvancedPane'
 import LabsPane from './components/LabsPane'
+import FlagAdminPane from './components/FlagAdminPane'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import '../../styles/SettingsModal.css'
 
@@ -108,6 +109,15 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               </svg>
               Labs
             </button>
+            <button
+              className={`settings-modal-nav-item${activeSection === 'flags' ? ' active' : ''}`}
+              onClick={() => setActiveSection('flags')}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M3 1v14h1V9h8l-2-4 2-4H4V1H3zm1 1.5h6.5L9 6l1.5 2.5H4V2.5z" />
+              </svg>
+              Feature Flags
+            </button>
           </nav>
 
           <div className="settings-modal-detail">
@@ -159,6 +169,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               />
             )}
             {activeSection === 'labs' && <LabsPane />}
+            {activeSection === 'flags' && <FlagAdminPane />}
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ import { TaxSyncProvider } from './contexts/TaxSyncContext'
 import { GoalsProvider, useGoals } from './contexts/GoalsContext'
 import { ImportExportProvider, useImportExport } from './contexts/ImportExportContext'
 import { LayoutProvider, useLayout } from './contexts/LayoutContext'
+import { FlagProvider } from './flags/FlagContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import UndoToast from './components/UndoToast'
 import SearchModal from './components/SearchModal'
@@ -201,17 +202,19 @@ const App: FC = () => (
     <SettingsProvider>
       <GoalsProvider>
         <GitHubSyncProvider>
-          <BudgetSyncProvider>
-            <TaxSyncProvider>
-              <DataProvider>
-                <LayoutProvider>
-                  <ImportExportProvider>
-                    <AppShell />
-                  </ImportExportProvider>
-                </LayoutProvider>
-              </DataProvider>
-            </TaxSyncProvider>
-          </BudgetSyncProvider>
+          <FlagProvider>
+            <BudgetSyncProvider>
+              <TaxSyncProvider>
+                <DataProvider>
+                  <LayoutProvider>
+                    <ImportExportProvider>
+                      <AppShell />
+                    </ImportExportProvider>
+                  </LayoutProvider>
+                </DataProvider>
+              </TaxSyncProvider>
+            </BudgetSyncProvider>
+          </FlagProvider>
         </GitHubSyncProvider>
       </GoalsProvider>
     </SettingsProvider>

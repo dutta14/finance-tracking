@@ -9,7 +9,7 @@ import {
   RestoreResult,
 } from '../../hooks/useGitHubSync'
 
-export type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced' | 'labs'
+export type SettingsSection = 'profile' | 'github' | 'appearance' | 'advanced' | 'labs' | 'flags'
 
 export interface SettingsModalProps {
   darkMode: boolean
