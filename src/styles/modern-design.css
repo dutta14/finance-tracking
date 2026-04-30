@@ -231,3 +231,56 @@ body.modern-design .main-content {
 body.modern-design.dark .main-content {
   background: var(--color-bg, #0f172a);
 }
+
+/* ── #27: Pill tabs replace underline tabs ────────────────────── */
+
+body.modern-design .goal-tab-bar,
+body.modern-design .nw-tab-bar,
+body.modern-design .data-view-tabs,
+body.modern-design .budget-view-toggle {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  overflow: visible;
+}
+
+body.modern-design .goal-tab,
+body.modern-design .nw-tab,
+body.modern-design .data-view-tab,
+body.modern-design .budget-view-btn {
+  flex: 0 1 auto;
+  padding: 7px 16px;
+  border-radius: calc(var(--radius) - 2px);
+  border: none;
+  border-bottom: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+body.modern-design .goal-tab:hover,
+body.modern-design .nw-tab:hover,
+body.modern-design .data-view-tab:hover,
+body.modern-design .budget-view-btn:not(.active):hover {
+  color: var(--color-text);
+}
+
+body.modern-design .goal-tab.active,
+body.modern-design .nw-tab.active,
+body.modern-design .data-view-tab.active,
+body.modern-design .budget-view-btn.active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-xs);
+  font-weight: var(--fw-semibold);
+  border-bottom: none;
+}
