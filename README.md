@@ -59,21 +59,34 @@ Hierarchical file browser for all uploaded documents:
 
 - **FI Calculator** — Simulate retirement readiness with configurable growth rates, inflation, and historical return assumptions.
 - **Savings/Growth Tracker** — Break down net worth changes into savings contributions vs. capital gains. Year-over-year analysis with editable income data.
-- **PDF to CSV** *(Labs)* — Extract transaction tables from bank PDFs with smart column detection.
+- **PDF to CSV** _(Labs)_ — Extract transaction tables from bank PDFs with smart column detection.
 
 ### Settings
 
 - **Profile** — Name, birthday, avatar, and optional partner profile for joint planning.
-- **Appearance** — Dark/light mode with 9 accent color themes applied globally.
+- **Appearance** — Dark/light mode. Modern design system (Inter font, glass surfaces, premium inputs) toggled via feature flag.
 - **GitHub Sync** — Encrypted backup to a private GitHub repo (AES-256 with PBKDF2). Auto-sync with 60-second debounce, manual sync, commit history, and point-in-time restore.
 - **Advanced** — Data export/import, CSV import toggle, factory reset.
 - **Labs** — Toggle experimental features like PDF-to-CSV.
+
+### Search
+
+Global search modal (`⌘K`) indexes all pages, goals, accounts, and settings for instant navigation.
+
+### Feature Flags
+
+Runtime feature flag system with percentage-based rollout. Resolution order: local override → rollout percentage → default. Config stored in `feature-flags.json`; admin writes require auth, reads are public.
+
+### Goal Templates
+
+Presets for common FI strategies: Early Retirement, Coast FI, Barista FI, Lean FI, Fat FI, and General Wealth Building.
 
 ## Privacy & Security
 
 - **No server, no account.** All data lives in your browser's localStorage.
 - **GitHub tokens are encrypted** at rest with a passphrase using AES-256-GCM + PBKDF2. Tokens are only decrypted in memory for the current session.
 - **No telemetry or analytics.** The app is a static site deployed to GitHub Pages.
+- **Feature flag config** is fetched publicly (no auth) as a static JSON file. No user data is sent.
 
 ## Tech Stack
 
@@ -82,6 +95,9 @@ Hierarchical file browser for all uploaded documents:
 - Recharts (charts)
 - PDF.js (PDF parsing)
 - Vite (build)
+- Vitest + @testing-library/react (testing)
+- ESLint + Prettier (linting/formatting)
+- GitHub Actions (CI/CD)
 - GitHub Pages (deploy)
 
 ## Getting Started
@@ -92,6 +108,25 @@ npm run dev
 ```
 
 Opens at `http://localhost:5173`.
+
+## Testing
+
+686+ tests across 56 files. Run with:
+
+```bash
+npm test            # Watch mode
+npm run test:run    # Single run (CI)
+npm run test:coverage  # With coverage report
+```
+
+## CI/CD
+
+GitHub Actions runs on every push and PR to `main`:
+
+1. **Build job** — `npm audit`, Prettier check, ESLint (`--max-warnings=0`), Vitest, production build.
+2. **Deploy job** — On push to `main` only, deploys to GitHub Pages via `actions/deploy-pages@v4`.
+
+Requires repo Settings → Pages → Source = "GitHub Actions".
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for project structure and development details.
 
