@@ -40,3 +40,37 @@ body.modern-design.dark {
   --color-border-light: rgba(255, 255, 255, 0.04);
   --accent-border: rgba(59, 130, 246, 0.25);
 }
+
+/* ── #22: Composite shadow system ─────────────────────────────── */
+
+body.modern-design {
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.02), 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+body.modern-design.dark {
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 16px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.modern-design .home-card,
+body.modern-design .fi-card,
+body.modern-design .goal-card {
+  box-shadow: var(--shadow-sm);
+}
+
+body.modern-design .home-card:hover,
+body.modern-design .fi-card:hover,
+body.modern-design .goal-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+body.modern-design .settings-modal,
+body.modern-design .search-overlay .search-modal {
+  box-shadow: var(--shadow-lg);
+}
