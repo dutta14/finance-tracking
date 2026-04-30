@@ -44,7 +44,34 @@ export interface FlagContextValue {
 
 const OVERRIDES_KEY = 'flag-overrides'
 const CLIENT_ID_KEY = 'flag-client-id'
+const CACHE_KEY = 'flag-rollout-cache'
+const CACHE_MAX_AGE_MS = 5 * 60 * 1000 // 5 minutes
 const EMPTY_CONFIG: RolloutConfig = { version: 1, updatedAt: '', flags: {} }
+
+/* ── Cache helpers ────────────────────────────────────────────────── */
+
+interface CachedConfig {
+  config: RolloutConfig
+  fetchedAt: number
+}
+
+function getCachedConfig(): CachedConfig | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function setCachedConfig(config: RolloutConfig): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ config, fetchedAt: Date.now() }))
+  } catch {
+    /* localStorage full */
+  }
+}
 
 /* ── Context ──────────────────────────────────────────────────────── */
 
@@ -114,55 +141,173 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
   /* ── Fetch rollout config from GitHub ──────────────────────────── */
 
   const fetchConfig = useCallback(async () => {
-    if (!activeToken) {
-      setRolloutConfig(EMPTY_CONFIG)
-      setIsAdmin(false)
+    // Check cache first — if fresh, skip network entirely
+    const cached = getCachedConfig()
+    if (cached && Date.now() - cached.fetchedAt < CACHE_MAX_AGE_MS) {
+      setRolloutConfig(cached.config)
+      if (!activeToken) {
+        setIsAdmin(false)
+        setConfigSha(null)
+      }
+      // Still do authenticated fetch for admin status if token exists
+      if (activeToken) {
+        setIsLoading(true)
+        setError(null)
+        try {
+          const adminRes = await fetch(
+            'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
+            {
+              headers: {
+                Authorization: `Bearer ${activeToken}`,
+                Accept: 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+              },
+            },
+          )
+
+          if (adminRes.ok) {
+            const data = await adminRes.json()
+            const decoded = atob(data.content)
+            const parsed = JSON.parse(decoded) as RolloutConfig
+            if (!parsed.flags || typeof parsed.flags !== 'object' || Array.isArray(parsed.flags)) {
+              console.warn('Invalid rollout config: flags must be an object, using defaults')
+              setRolloutConfig(EMPTY_CONFIG)
+            } else {
+              setRolloutConfig(parsed)
+              setCachedConfig(parsed)
+            }
+            setIsAdmin(true)
+            setConfigSha(data.sha || null)
+          } else if (adminRes.status === 404) {
+            setRolloutConfig(EMPTY_CONFIG)
+            setConfigSha(null)
+            setIsAdmin(true)
+          } else {
+            // 403 or other — not admin, keep cached config
+            setIsAdmin(false)
+            setConfigSha(null)
+          }
+        } catch {
+          setIsAdmin(false)
+          setConfigSha(null)
+        }
+        setIsLoading(false)
+      }
       return
     }
 
     setIsLoading(true)
     setError(null)
 
-    try {
-      const res = await fetch('https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json', {
-        headers: {
-          Authorization: `Bearer ${activeToken}`,
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-        },
-      })
+    if (activeToken) {
+      // Authenticated fetch — gives both config content AND SHA (no race condition)
+      try {
+        const adminRes = await fetch(
+          'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
+          {
+            headers: {
+              Authorization: `Bearer ${activeToken}`,
+              Accept: 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+            },
+          },
+        )
 
-      if (!res.ok) {
+        if (adminRes.ok) {
+          const data = await adminRes.json()
+          if (!data.content) {
+            throw new Error('GitHub API response missing content field')
+          }
+          const decoded = atob(data.content)
+          const parsed = JSON.parse(decoded) as RolloutConfig
+          if (!parsed.flags || typeof parsed.flags !== 'object' || Array.isArray(parsed.flags)) {
+            console.warn('Invalid rollout config: flags must be an object, using defaults')
+            setRolloutConfig(EMPTY_CONFIG)
+          } else {
+            setRolloutConfig(parsed)
+            setCachedConfig(parsed)
+          }
+          setIsAdmin(true)
+          setConfigSha(data.sha || null)
+        } else if (adminRes.status === 404) {
+          // File doesn't exist yet — clean state, admin can create it
+          setRolloutConfig(EMPTY_CONFIG)
+          setConfigSha(null)
+          setIsAdmin(true)
+        } else {
+          // 403 = no access to source repo — fall back to public fetch
+          setIsAdmin(false)
+          setConfigSha(null)
+          await fetchPublicConfig()
+        }
+      } catch {
+        // Network error on auth'd fetch — fall back to public
         setIsAdmin(false)
-        setRolloutConfig(EMPTY_CONFIG)
         setConfigSha(null)
-        return
+        try {
+          await fetchPublicConfig()
+        } catch (publicErr) {
+          setError(publicErr instanceof Error ? publicErr.message : String(publicErr))
+          setRolloutConfig(EMPTY_CONFIG)
+        }
       }
+    } else {
+      // No token — public fetch only
+      setIsAdmin(false)
+      setConfigSha(null)
+      try {
+        await fetchPublicConfig()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e))
+        setRolloutConfig(EMPTY_CONFIG)
+      }
+    }
 
-      setIsAdmin(true)
+    setIsLoading(false)
+  }, [activeToken])
 
-      const data = await res.json()
+  async function fetchPublicConfig(): Promise<void> {
+    const publicRes = await fetch('https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json', {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    })
+
+    if (publicRes.ok) {
+      const data = await publicRes.json()
       if (!data.content) {
         throw new Error('GitHub API response missing content field')
       }
-      setConfigSha(data.sha || null)
-
       const decoded = atob(data.content)
       const parsed = JSON.parse(decoded) as RolloutConfig
       if (!parsed.flags || typeof parsed.flags !== 'object' || Array.isArray(parsed.flags)) {
         console.warn('Invalid rollout config: flags must be an object, using defaults')
-        setRolloutConfig({ version: 1, updatedAt: '', flags: {} })
+        setRolloutConfig(EMPTY_CONFIG)
       } else {
         setRolloutConfig(parsed)
+        setCachedConfig(parsed)
       }
-    } catch (e) {
-      setIsAdmin(false)
-      setError(e instanceof Error ? e.message : String(e))
+    } else if (publicRes.status === 404) {
+      // File doesn't exist — not an error
       setRolloutConfig(EMPTY_CONFIG)
-    } finally {
-      setIsLoading(false)
+    } else if (publicRes.status === 403) {
+      // Rate limited — use cache if available
+      const rateLimitRemaining = publicRes.headers.get('X-RateLimit-Remaining')
+      if (rateLimitRemaining === '0' || rateLimitRemaining === null) {
+        const cached = getCachedConfig()
+        if (cached) {
+          setRolloutConfig(cached.config)
+        } else {
+          setRolloutConfig(EMPTY_CONFIG)
+        }
+      } else {
+        setRolloutConfig(EMPTY_CONFIG)
+      }
+    } else {
+      setRolloutConfig(EMPTY_CONFIG)
     }
-  }, [activeToken])
+  }
 
   useEffect(() => {
     fetchConfig()

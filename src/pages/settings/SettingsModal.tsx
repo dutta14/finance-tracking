@@ -28,6 +28,12 @@ const SettingsModal: FC<SettingsModalProps> = props => {
   useFocusTrap(modalRef, true)
 
   useEffect(() => {
+    if (!isAdmin && activeSection === 'flags') {
+      setActiveSection('profile')
+    }
+  }, [isAdmin, activeSection])
+
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }

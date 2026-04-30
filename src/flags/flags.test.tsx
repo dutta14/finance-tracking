@@ -487,7 +487,7 @@ describe('FlagProvider integration', () => {
     expect(result.current).toBe('world')
   })
 
-  it('isAdmin is true when fetchConfig succeeds', async () => {
+  it('isAdmin is true when authenticated fetchConfig succeeds', async () => {
     const configContent = btoa(JSON.stringify({ version: 1, updatedAt: '', flags: {} }))
     vi.stubGlobal(
       'fetch',
@@ -513,14 +513,21 @@ describe('FlagProvider integration', () => {
     expect(screen.getByTestId('admin')).toHaveTextContent('true')
   })
 
-  it('isAdmin is false when fetchConfig returns non-200', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: false,
-        json: () => Promise.resolve({}),
-      }),
-    )
+  it('isAdmin is false when admin fetch returns 403 and falls back to public', async () => {
+    const configContent = btoa(JSON.stringify({ version: 1, updatedAt: '', flags: {} }))
+    const mockFetch = vi.fn()
+    // Auth fetch fails (user has token but not a repo collaborator)
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: () => Promise.resolve({}),
+    })
+    // Public fetch fallback succeeds
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ content: configContent, sha: 'pub-sha' }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
 
     function Consumer() {
       const { isAdmin } = useContext(FlagContext)
@@ -536,6 +543,87 @@ describe('FlagProvider integration', () => {
     })
 
     expect(screen.getByTestId('admin')).toHaveTextContent('false')
+  })
+
+  it('public fetch succeeds without token — rolloutConfig applied, isAdmin false', async () => {
+    mockActiveToken.mockReturnValue(null)
+    try {
+      const configContent = btoa(
+        JSON.stringify({
+          version: 1,
+          updatedAt: '2024-06-01',
+          flags: { 'test-flag': { percentage: 100 } },
+        }),
+      )
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ content: configContent }),
+        }),
+      )
+
+      function Consumer() {
+        const { isAdmin, rolloutConfig } = useContext(FlagContext)
+        return (
+          <div>
+            <span data-testid="admin">{String(isAdmin)}</span>
+            <span data-testid="config">{JSON.stringify(rolloutConfig)}</span>
+          </div>
+        )
+      }
+
+      await act(async () => {
+        render(
+          <FlagProvider>
+            <Consumer />
+          </FlagProvider>,
+        )
+      })
+
+      expect(screen.getByTestId('admin')).toHaveTextContent('false')
+      expect(screen.getByTestId('config')).toHaveTextContent('"test-flag"')
+    } finally {
+      mockActiveToken.mockReturnValue('test-token')
+    }
+  })
+
+  it('public fetch fails without token — falls back to defaults, isAdmin false', async () => {
+    mockActiveToken.mockReturnValue(null)
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+          json: () => Promise.resolve({}),
+        }),
+      )
+
+      function Consumer() {
+        const { isAdmin } = useContext(FlagContext)
+        const value = useFlag(testFlag)
+        return (
+          <div>
+            <span data-testid="admin">{String(isAdmin)}</span>
+            <span data-testid="flag-value">{String(value)}</span>
+          </div>
+        )
+      }
+
+      await act(async () => {
+        render(
+          <FlagProvider>
+            <Consumer />
+          </FlagProvider>,
+        )
+      })
+
+      expect(screen.getByTestId('admin')).toHaveTextContent('false')
+      expect(screen.getByTestId('flag-value')).toHaveTextContent('false')
+    } finally {
+      mockActiveToken.mockReturnValue('test-token')
+    }
   })
 
   it('environment is staging for non-production hostnames', async () => {
@@ -736,6 +824,7 @@ describe('error handling and edge cases', () => {
       const initialConfig: RolloutConfig = { version: 1, updatedAt: '2024-01-01', flags: {} }
       const mockFetch = vi.fn()
 
+      // Auth'd fetch (single fetch — gives config + SHA)
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -795,6 +884,7 @@ describe('error handling and edge cases', () => {
       const initialConfig: RolloutConfig = { version: 1, updatedAt: '', flags: {} }
       const mockFetch = vi.fn()
 
+      // Auth'd fetch (single fetch)
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -857,6 +947,7 @@ describe('error handling and edge cases', () => {
 
     const mockFetch = vi.fn()
 
+    // Initial auth'd fetch (single call)
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () =>
@@ -887,6 +978,10 @@ describe('error handling and edge cases', () => {
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('false')
 
+    // Clear cache so refresh actually hits the network
+    localStorage.removeItem('flag-rollout-cache')
+
+    // Refresh auth'd fetch (single call)
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () =>
