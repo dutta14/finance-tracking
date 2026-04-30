@@ -26,11 +26,11 @@ const TrajectorySparkline: FC<{
     return pts
   }, [currentNetWorth, fiGoal, annualSavings, growthRate, months])
 
-  const W = 280
-  const H = 80
+  const W = 560
+  const H = 160
   // Margins reserve space for annotations outside the data area:
   // top: date label above endpoint dot; right: "Goal" label; bottom: "Now" label; left: text start
-  const margin = { top: 14, right: 35, bottom: 12, left: 4 }
+  const margin = { top: 28, right: 70, bottom: 24, left: 8 }
   const dataW = W - margin.left - margin.right
   const dataH = H - margin.top - margin.bottom
   const max = Math.max(...points, fiGoal)
@@ -49,8 +49,8 @@ const TrajectorySparkline: FC<{
   const endY = toY(points[points.length - 1])
 
   // Place date label above dot, but shift further up if it overlaps the goal line
-  const dateLabelGap = Math.abs(endY - goalY) < 12 ? 14 : 7
-  const dateLabelY = Math.max(9, endY - dateLabelGap)
+  const dateLabelGap = Math.abs(endY - goalY) < 24 ? 28 : 16
+  const dateLabelY = Math.max(18, endY - dateLabelGap)
 
   return (
     <figure
@@ -67,15 +67,16 @@ const TrajectorySparkline: FC<{
           x2={margin.left + dataW}
           y2={goalY}
           stroke="var(--color-text-muted)"
-          strokeWidth="1"
-          strokeDasharray="4 3"
+          strokeWidth="1.5"
+          strokeDasharray="6 5"
         />
         <text
           x={margin.left + dataW + 4}
-          y={goalY + 3}
+          y={goalY + 4}
           fill="var(--color-text-muted)"
-          fontSize="9"
-          fontWeight="500"
+          fillOpacity="0.55"
+          fontSize="13"
+          fontWeight="400"
           textAnchor="start"
         >
           Goal
@@ -85,22 +86,30 @@ const TrajectorySparkline: FC<{
           d={linePath}
           fill="none"
           stroke="var(--trajectory-stroke)"
-          strokeWidth="2"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx={endX} cy={endY} r="3" fill="var(--trajectory-stroke)" />
+        <circle cx={endX} cy={endY} r="4" fill="var(--trajectory-stroke)" />
         <text
           x={endX}
           y={dateLabelY}
           fill="var(--trajectory-stroke)"
-          fontSize="9"
-          fontWeight="600"
-          textAnchor={endX > margin.left + dataW - 20 ? 'end' : 'middle'}
+          fillOpacity="0.70"
+          fontSize="13"
+          fontWeight="500"
+          textAnchor={endX > margin.left + dataW - 40 ? 'end' : 'middle'}
         >
           {dateLabel}
         </text>
-        <text x={margin.left} y={H - 2} fill="var(--color-text-muted)" fontSize="8" fontWeight="400">
+        <text
+          x={margin.left}
+          y={H - 4}
+          fill="var(--color-text-muted)"
+          fillOpacity="0.50"
+          fontSize="11"
+          fontWeight="400"
+        >
           Now
         </text>
       </svg>

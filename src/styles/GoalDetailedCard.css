@@ -507,12 +507,15 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   margin-top: var(--space-xs, 0.5rem);
   overflow: hidden;
   position: relative; /* anchor for sr-only figcaption */
+  display: flex;
+  justify-content: center;
 }
 
 .fi-card-trajectory svg {
   width: 100%;
   height: auto;
   display: block;
+  max-width: 560px;
 }
 
 /* Status-driven colors via data attribute */
