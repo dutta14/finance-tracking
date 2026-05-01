@@ -1,5 +1,6 @@
 import { createContext, useContext, useCallback, useEffect, useRef, useMemo, FC, ReactNode } from 'react'
 import { useGitHubSyncContext } from './GitHubSyncContext'
+import { useEncryption } from './EncryptionContext'
 import { syncAllTaxFiles } from '../pages/taxes/taxGitHubSync'
 
 export interface TaxSyncContextValue {
@@ -22,6 +23,7 @@ export const useTaxSync = (): TaxSyncContextValue => {
 export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { config, activeToken, isConfigured, markDirty, clearDirty, syncTaxesNow, restoreTaxesLatest } =
     useGitHubSyncContext()
+  const { cryptoKey } = useEncryption()
 
   // Refs to avoid stale closures in the debounced auto-sync setTimeout (Bug 2 fix)
   const configRef = useRef(config)
@@ -36,6 +38,10 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     isConfiguredRef.current = isConfigured
   }, [isConfigured])
+  const cryptoKeyRef = useRef(cryptoKey)
+  useEffect(() => {
+    cryptoKeyRef.current = cryptoKey
+  }, [cryptoKey])
 
   // Auto-sync taxes when tax-store changes (60s debounce)
   useEffect(() => {
@@ -53,7 +59,7 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
         await syncTaxesNow(taxesPayload)
         if (isConfiguredRef.current && tokenRef.current) {
-          await syncAllTaxFiles(configRef.current, tokenRef.current, taxStore).catch(e =>
+          await syncAllTaxFiles(configRef.current, tokenRef.current, taxStore, cryptoKeyRef.current).catch(e =>
             console.error('Tax file auto-sync error:', e),
           )
         }
@@ -77,13 +83,13 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
       await syncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
       if (isConfiguredRef.current && tokenRef.current) {
         const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
-        await syncAllTaxFiles(configRef.current, tokenRef.current, taxStore).catch(e =>
+        await syncAllTaxFiles(configRef.current, tokenRef.current, taxStore, cryptoKey).catch(e =>
           console.error('Tax file sync error:', e),
         )
       }
       clearDirty('taxes')
     },
-    [syncTaxesNow, clearDirty],
+    [syncTaxesNow, clearDirty, cryptoKey],
   )
 
   const restoreTaxFromGitHub = useCallback(async (): Promise<void> => {

@@ -11,6 +11,7 @@ import type {
 } from './types'
 import { EMPTY_STORE, getEmptyYear, loadTemplates, saveTemplates } from './types'
 import { saveFileContent, deleteFileContent, deleteMultipleFiles } from '../../utils/taxFileDB'
+import { useEncryption } from '../../contexts/EncryptionContext'
 
 const STORAGE_KEY = 'tax-store'
 
@@ -65,6 +66,7 @@ function collectFileIds(yearData: TaxYear): string[] {
 export function useTaxStore() {
   const [store, setStore] = useState<TaxStore>(load)
   const [migrating, setMigrating] = useState(false)
+  const { cryptoKey } = useEncryption()
 
   // Run one-time migration on mount
   useEffect(() => {
@@ -215,7 +217,7 @@ export function useTaxStore() {
       const yr = store.years[year]
       if (!yr) return
       if (file.content) {
-        await saveFileContent(file.id, file.content)
+        await saveFileContent(file.id, file.content, cryptoKey)
       }
       const metadataFile: TaxDocFile = { ...file, content: undefined }
       const next = {
@@ -230,7 +232,7 @@ export function useTaxStore() {
       }
       persist(next)
     },
-    [store, persist],
+    [store, persist, cryptoKey],
   )
 
   const removeFileFromItem = useCallback(

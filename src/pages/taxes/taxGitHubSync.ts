@@ -82,6 +82,7 @@ export async function syncAllTaxFiles(
   config: GitHubSyncConfig,
   token: string,
   store: TaxStore,
+  cryptoKey?: CryptoKey | null,
 ): Promise<{ ok: boolean; synced: number; errors: string[] }> {
   const errors: string[] = []
   let synced = 0
@@ -94,7 +95,7 @@ export async function syncAllTaxFiles(
         // Load content from IndexedDB if not inline (post-migration)
         let content = file.content
         if (!content) {
-          content = (await getFileContent(file.id)) ?? undefined
+          content = (await getFileContent(file.id, cryptoKey)) ?? undefined
         }
         if (!content) continue
         const path = filePath(year, oLabel, item.label, file)

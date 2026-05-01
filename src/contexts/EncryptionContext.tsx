@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, useCallback, useMemo, FC, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, FC, ReactNode } from 'react'
 import { deriveKey, encryptString, decryptString, bytesToB64, b64ToBytes } from '../utils/crypto'
 import type { EncryptedEnvelope } from '../utils/crypto'
 import { SENSITIVE_KEYS } from '../utils/encryptedStorage'
+import { migratePlaintextToEncrypted, isMigrationIncomplete, recoverMigration } from '../utils/migratePlaintext'
+import { reencryptIDBContents, decryptIDBContents } from '../utils/taxFileDB'
 
 // ── Constants ────────────────────────────────────────────────────
 
@@ -82,6 +84,13 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
   const [isEncryptionEnabled, setIsEncryptionEnabled] = useState<boolean>(readEnabled)
   const [isSettingUp, setIsSettingUp] = useState(false)
 
+  // Recover from interrupted migration on mount
+  useEffect(() => {
+    if (isMigrationIncomplete()) {
+      recoverMigration()
+    }
+  }, [])
+
   const isLocked = isEncryptionEnabled && cryptoKey === null
 
   const unlock = useCallback(async (passphrase: string): Promise<boolean> => {
@@ -110,28 +119,14 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
       const salt = crypto.getRandomValues(new Uint8Array(16))
       const key = await deriveKey(passphrase, salt)
 
-      // Encrypt all 13 sensitive keys that already have data
-      for (const k of SENSITIVE_KEYS) {
-        const raw = localStorage.getItem(k)
-        if (raw === null) continue
-        // Skip if already encrypted
-        try {
-          const parsed: unknown = JSON.parse(raw)
-          if (typeof parsed === 'object' && parsed !== null) {
-            const obj = parsed as Record<string, unknown>
-            if (obj.v === 1 && typeof obj.iv === 'string' && typeof obj.ct === 'string') continue
-          }
-        } catch {
-          /* not JSON — encrypt as-is */
-        }
-        const envelope = await encryptString(raw, key)
-        localStorage.setItem(k, JSON.stringify(envelope))
-      }
-
-      // Store salt and verification
+      // Store salt and verification first (needed for unlock if app restarts)
       localStorage.setItem(LS_SALT, bytesToB64(salt))
       const verifyEnvelope = await encryptString(VERIFY_PLAINTEXT, key)
       localStorage.setItem(LS_VERIFY, JSON.stringify(verifyEnvelope))
+
+      // Atomic migration: encrypt to temp keys → verify → swap
+      await migratePlaintextToEncrypted(key)
+
       localStorage.setItem(LS_ENABLED, '1')
 
       setCryptoKey(key)
@@ -179,6 +174,9 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
     const verifyEnvelope = await encryptString(VERIFY_PLAINTEXT, newKey)
     localStorage.setItem(LS_VERIFY, JSON.stringify(verifyEnvelope))
 
+    // Re-encrypt IndexedDB tax file content
+    await reencryptIDBContents(oldKey, newKey)
+
     setCryptoKey(newKey)
     return true
   }, [])
@@ -209,6 +207,9 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
         // Not an encrypted envelope — leave as-is
       }
     }
+
+    // Decrypt IndexedDB tax file content back to plaintext
+    await decryptIDBContents(key)
 
     // Remove encryption artifacts
     localStorage.removeItem(LS_SALT)
