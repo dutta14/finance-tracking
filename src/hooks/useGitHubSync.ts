@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { deriveKey, bytesToB64, b64ToBytes } from '../utils/crypto'
 
 export interface GitHubSyncConfig {
   owner: string
@@ -80,34 +81,13 @@ const fromBase64 = (b64: string): string => {
   return new TextDecoder().decode(bytes)
 }
 
-const bytesToB64 = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes))
-const b64ToBytes = (b64: string): Uint8Array => Uint8Array.from(atob(b64), c => c.charCodeAt(0))
-
-const deriveAesKey = async (passphrase: string, salt: Uint8Array): Promise<CryptoKey> => {
-  const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, [
-    'deriveKey',
-  ])
-  return crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations: 310000,
-      hash: 'SHA-256',
-    },
-    baseKey,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt'],
-  )
-}
-
 const encryptToken = async (
   token: string,
   passphrase: string,
 ): Promise<{ encryptedToken: string; tokenSalt: string; tokenIv: string }> => {
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const iv = crypto.getRandomValues(new Uint8Array(12))
-  const key = await deriveAesKey(passphrase, salt)
+  const key = await deriveKey(passphrase, salt)
   const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token))
   return {
     encryptedToken: bytesToB64(new Uint8Array(ciphertext)),
@@ -122,7 +102,7 @@ const decryptToken = async (
   tokenSalt: string,
   tokenIv: string,
 ): Promise<string> => {
-  const key = await deriveAesKey(passphrase, b64ToBytes(tokenSalt))
+  const key = await deriveKey(passphrase, b64ToBytes(tokenSalt))
   const plaintext = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv: b64ToBytes(tokenIv) },
     key,
