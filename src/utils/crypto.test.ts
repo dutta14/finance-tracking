@@ -47,6 +47,13 @@ describe('encryptString / decryptString', () => {
     expect(await decryptString(envelope, key)).toBe(large)
   })
 
+  it('round-trips a very large payload (~500 KB) without stack overflow', async () => {
+    const key = await makeKey()
+    const veryLarge = 'y'.repeat(500_000)
+    const envelope = await encryptString(veryLarge, key)
+    expect(await decryptString(envelope, key)).toBe(veryLarge)
+  })
+
   it('produces unique ciphertext per call (random IV)', async () => {
     const key = await makeKey()
     const e1 = await encryptString('same', key)

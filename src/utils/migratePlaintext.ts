@@ -86,15 +86,15 @@ export async function migratePlaintextToEncrypted(cryptoKey: CryptoKey): Promise
       localStorage.setItem(key, encryptedValue)
       localStorage.removeItem(tempKey(key))
     }
+
+    // 5. Encrypt any plaintext IndexedDB records (tax file content)
+    await migrateIDBToEncrypted(cryptoKey)
   } catch (error) {
     // Abort: clean up all temp keys, remove sentinel
     cleanupTempKeys()
     localStorage.removeItem(LS_MIGRATION)
     throw error
   }
-
-  // 5. Encrypt any plaintext IndexedDB records (tax file content)
-  await migrateIDBToEncrypted(cryptoKey)
 
   // 6. Remove migration sentinel (caller sets encryption-enabled)
   localStorage.removeItem(LS_MIGRATION)

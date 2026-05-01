@@ -19,7 +19,16 @@ export interface EncryptedEnvelope {
 
 // ── Base64 helpers ─────────────────────────────────────────────
 
-export const bytesToB64 = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes))
+export const bytesToB64 = (bytes: Uint8Array): string => {
+  // Process in 32 KB chunks to avoid "Maximum call stack size exceeded"
+  // when spreading large arrays into String.fromCharCode().
+  const CHUNK = 0x8000
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
+  }
+  return btoa(binary)
+}
 
 export const b64ToBytes = (b64: string): Uint8Array => Uint8Array.from(atob(b64), c => c.charCodeAt(0))
 
