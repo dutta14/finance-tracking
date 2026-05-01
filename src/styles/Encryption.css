@@ -1,0 +1,542 @@
+/* ═══════════════════════════════════════════════════
+   Encryption UI — Unlock Screen + Settings Security
+   ═══════════════════════════════════════════════════ */
+
+/* ── Keyframes ──────────────────────────────────── */
+
+@keyframes unlock-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-6px);
+  }
+  30% {
+    transform: translateX(5px);
+  }
+  45% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes unlock-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes security-form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Part 1: Unlock Screen ─────────────────────── */
+
+.unlock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: 1.5rem;
+}
+
+.unlock-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.unlock-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.unlock-brand-icon {
+  color: var(--accent);
+}
+
+.unlock-brand-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.unlock-header {
+  text-align: center;
+}
+
+.unlock-title {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.025em;
+}
+
+.unlock-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.unlock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Shared field classes (Unlock + Security) ──── */
+
+.unlock-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.unlock-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+}
+
+.unlock-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.unlock-input-wrapper--shake {
+  animation: unlock-shake 400ms var(--ease-out);
+}
+
+.unlock-input {
+  width: 100%;
+  padding: 10px 14px;
+  padding-right: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: var(--fs-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  transition:
+    border-color 120ms var(--ease-out),
+    box-shadow 120ms var(--ease-out);
+}
+
+.unlock-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.unlock-input:hover {
+  border-color: var(--accent-border);
+}
+
+.unlock-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+  outline: none;
+}
+
+.unlock-input--error {
+  border-color: var(--color-negative);
+}
+
+.unlock-input--error:focus {
+  box-shadow: 0 0 0 3px var(--color-negative-light);
+}
+
+.unlock-toggle-visibility {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.unlock-toggle-visibility:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.unlock-toggle-visibility:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.unlock-error {
+  font-size: var(--fs-sm);
+  color: var(--color-negative);
+  margin: 0;
+  min-height: 1.25rem;
+}
+
+/* ── Submit button ──────────────────────────────── */
+
+.unlock-submit {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: var(--radius);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+
+.unlock-submit:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.unlock-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.unlock-submit:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--accent);
+  outline: none;
+}
+
+.unlock-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.unlock-submit--loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.unlock-submit-spinner {
+  animation: unlock-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Help section ───────────────────────────────── */
+
+.unlock-help {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.unlock-help-trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.unlock-help-trigger:hover {
+  color: var(--color-text);
+}
+
+.unlock-help-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.unlock-help-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 350ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+}
+
+.unlock-help-panel--expanded {
+  max-height: 300px;
+  opacity: 1;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-align: left;
+}
+
+.unlock-help-panel p {
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+  line-height: 1.6;
+  margin: 0 0 0.75rem 0;
+}
+
+.unlock-help-panel p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Part 2: Settings Security Pane ────────────── */
+
+.security-status {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 1rem;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.security-status-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
+}
+
+.security-status-icon.enabled {
+  background: var(--color-positive-light);
+  color: var(--color-positive);
+}
+
+.security-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.security-status-label {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.security-status-check {
+  color: var(--color-positive);
+}
+
+.security-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Danger outline button variant */
+.settings-btn--danger-outline {
+  align-self: flex-start;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  color: var(--color-negative);
+  border: 1px solid var(--color-negative-border);
+  border-radius: var(--radius);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.settings-btn--danger-outline:hover {
+  background: var(--color-negative-light);
+  border-color: var(--color-negative);
+}
+
+/* Inline form containers */
+.security-setup-form,
+.security-change-form,
+.security-disable-confirm {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: security-form-enter 200ms var(--ease-out);
+}
+
+.security-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.security-form-header h4,
+.security-change-form h4 {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.security-form-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.security-form-close:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.security-mismatch {
+  font-size: var(--fs-sm);
+  color: var(--color-negative);
+  margin: 0;
+}
+
+.security-warning {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: var(--color-warning-light);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.security-warning svg {
+  flex-shrink: 0;
+}
+
+.security-warning p {
+  font-size: var(--fs-sm);
+  color: var(--color-warning-text, var(--color-text));
+  line-height: 1.5;
+  margin: 0;
+}
+
+.security-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* ── Reduced motion ─────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .unlock-input-wrapper--shake {
+    animation: none;
+  }
+
+  .unlock-help-panel {
+    transition-duration: 0.01ms;
+  }
+
+  .security-setup-form,
+  .security-change-form,
+  .security-disable-confirm {
+    animation: none;
+  }
+}
+
+/* ── Mobile ─────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .unlock-screen {
+    padding: 1rem;
+  }
+
+  .unlock-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .unlock-brand-title {
+    font-size: var(--fs-md);
+  }
+
+  .unlock-title {
+    font-size: var(--fs-lg);
+  }
+}
+
+/* ── Modern design shadow overrides ────────────── */
+
+body.modern-design .unlock-card {
+  box-shadow: var(--shadow-lg);
+}
+
+body.modern-design.dark .unlock-card {
+  box-shadow:
+    var(--shadow-lg),
+    0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+body.modern-design.dark .unlock-input:focus {
+  box-shadow:
+    0 0 0 3px var(--accent-light),
+    0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+body.modern-design.dark .unlock-submit:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--accent),
+    0 0 20px rgba(59, 130, 246, 0.15);
+}

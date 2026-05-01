@@ -7,6 +7,7 @@ import AppearancePane from './components/AppearancePane'
 import AdvancedPane from './components/AdvancedPane'
 import LabsPane from './components/LabsPane'
 import FlagAdminPane from './components/FlagAdminPane'
+import SecurityPane from './components/SecurityPane'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { useFlagContext } from '../../flags/FlagContext'
 import '../../styles/SettingsModal.css'
@@ -98,6 +99,15 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               Appearance
             </button>
             <button
+              className={`settings-modal-nav-item${activeSection === 'security' ? ' active' : ''}`}
+              onClick={() => setActiveSection('security')}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 1L2 4v3.5c0 3.7 2.56 7.16 6 8 3.44-.84 6-4.3 6-8V4L8 1zm0 1.18L13 5v2.5c0 3.14-2.18 6.1-5 6.87-2.82-.77-5-3.73-5-6.87V5l5-2.82z" />
+              </svg>
+              Security
+            </button>
+            <button
               className={`settings-modal-nav-item${activeSection === 'advanced' ? ' active' : ''}`}
               onClick={() => setActiveSection('advanced')}
             >
@@ -161,6 +171,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             {activeSection === 'appearance' && (
               <AppearancePane darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
             )}
+            {activeSection === 'security' && <SecurityPane />}
             {activeSection === 'advanced' && (
               <AdvancedPane
                 allowCsvImport={props.allowCsvImport ?? false}
