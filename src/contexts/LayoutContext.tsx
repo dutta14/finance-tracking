@@ -43,7 +43,7 @@ export const LayoutProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === 'd') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
         e.preventDefault()
         isDemoActive() ? exitDemoMode() : enterDemoMode()
       }
