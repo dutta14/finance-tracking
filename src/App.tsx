@@ -11,6 +11,7 @@ import Drive from './pages/drive/Drive'
 import Taxes from './pages/taxes/Taxes'
 import { DataProvider } from './contexts/DataContext'
 import { SettingsProvider, useSettings } from './contexts/SettingsContext'
+import { EncryptionProvider, useEncryption } from './contexts/EncryptionContext'
 import { GitHubSyncProvider } from './contexts/GitHubSyncContext'
 import { BudgetSyncProvider } from './contexts/BudgetSyncContext'
 import { TaxSyncProvider } from './contexts/TaxSyncContext'
@@ -19,6 +20,7 @@ import { ImportExportProvider, useImportExport } from './contexts/ImportExportCo
 import { LayoutProvider, useLayout } from './contexts/LayoutContext'
 import { FlagProvider } from './flags/FlagContext'
 import ErrorBoundary from './components/ErrorBoundary'
+import UnlockScreen from './components/UnlockScreen'
 import UndoToast from './components/UndoToast'
 import SearchModal from './components/SearchModal'
 import { isDemoActive, enterDemoMode, exitDemoMode } from './pages/settings/demoMode'
@@ -200,26 +202,38 @@ const AppShell: FC = () => {
     </div>
   )
 }
+const AppGate: FC = () => {
+  const { isLocked } = useEncryption()
+
+  if (isLocked) return <UnlockScreen />
+
+  return (
+    <GoalsProvider>
+      <GitHubSyncProvider>
+        <FlagProvider>
+          <BudgetSyncProvider>
+            <TaxSyncProvider>
+              <DataProvider>
+                <ImportExportProvider>
+                  <AppShell />
+                </ImportExportProvider>
+              </DataProvider>
+            </TaxSyncProvider>
+          </BudgetSyncProvider>
+        </FlagProvider>
+      </GitHubSyncProvider>
+    </GoalsProvider>
+  )
+}
+
 const App: FC = () => (
   <ErrorBoundary variant="page">
     <SettingsProvider>
-      <GoalsProvider>
-        <GitHubSyncProvider>
-          <FlagProvider>
-            <BudgetSyncProvider>
-              <TaxSyncProvider>
-                <DataProvider>
-                  <LayoutProvider>
-                    <ImportExportProvider>
-                      <AppShell />
-                    </ImportExportProvider>
-                  </LayoutProvider>
-                </DataProvider>
-              </TaxSyncProvider>
-            </BudgetSyncProvider>
-          </FlagProvider>
-        </GitHubSyncProvider>
-      </GoalsProvider>
+      <EncryptionProvider>
+        <LayoutProvider>
+          <AppGate />
+        </LayoutProvider>
+      </EncryptionProvider>
     </SettingsProvider>
   </ErrorBoundary>
 )
