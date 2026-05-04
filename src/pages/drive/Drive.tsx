@@ -2,11 +2,14 @@ import { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import CSVPreviewModal from '../budget/components/CSVPreviewModal'
 import '../../styles/Drive.css'
-import { FileIcon, getFileExt, FolderIcon, BackIcon, UploadIcon } from './driveIcons'
+import { FileIcon, getFileExt, FolderIcon, BackIcon, UploadIcon, RenameIcon } from './driveIcons'
 import { buildDriveTree } from './buildBudgetTree'
 import CSVViewer from './CSVViewer'
 import { useDriveUpload } from './useDriveUpload'
 import { resolvePathSegments } from './types'
+import { useEncryption } from '../../contexts/EncryptionContext'
+import { loadBudgetStore, saveBudgetStore, renameBudgetMonth } from '../budget/utils/budgetStorage'
+import { formatMonthKey } from '../budget/utils/csvParser'
 import type { DriveFolder, DriveFile } from './types'
 
 function segmentsFromUrl(pathname: string): string[] {
@@ -60,6 +63,42 @@ const Drive: FC = () => {
     handleFileInputChange,
     openFilePicker,
   } = useDriveUpload(refreshTree)
+
+  // ── Rename state ─────────────────────────────────────────────
+  const [renameSlug, setRenameSlug] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [renameWarning, setRenameWarning] = useState<string | null>(null)
+
+  const isBudgetPath = segments.length >= 1 && segments[0] === 'budget'
+
+  const openRename = useCallback((slug: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRenameSlug(slug)
+    setRenameValue(slug)
+    setRenameWarning(null)
+  }, [])
+
+  const cancelRename = useCallback(() => {
+    setRenameSlug(null)
+    setRenameValue('')
+    setRenameWarning(null)
+  }, [])
+
+  const confirmRename = useCallback(async () => {
+    if (!renameSlug || !renameValue || renameSlug === renameValue) {
+      cancelRename()
+      return
+    }
+    const store = await loadBudgetStore(cryptoKey)
+    if (store.csvs[renameValue] && !renameWarning) {
+      setRenameWarning(`${formatMonthKey(renameValue)} already has data. Replace it?`)
+      return
+    }
+    const updated = renameBudgetMonth(store, renameSlug, renameValue)
+    await saveBudgetStore(updated, cryptoKey)
+    cancelRename()
+    refreshTree()
+  }, [renameSlug, renameValue, renameWarning, cryptoKey, cancelRename, refreshTree])
 
   // ── Folder / root view ──────────────────────────────────────
   const folder: DriveFolder =
@@ -231,13 +270,52 @@ const Drive: FC = () => {
           </div>
         ))}
         {displayFiles.map(file => (
-          <div key={file.slug} className="drive-row drive-row--file" onClick={() => goTo([...segments, file.slug])}>
-            <FileIcon ext={file.ext || getFileExt(file.name)} />
-            <span className="drive-row-name">{file.name}</span>
-            {file.meta?.owner && <span className="drive-row-tag">{file.meta.owner}</span>}
-            {file.meta?.category && <span className="drive-row-tag drive-row-tag--cat">{file.meta.category}</span>}
-            {file.meta?.accounts && <span className="drive-row-tag drive-row-tag--acct">{file.meta.accounts}</span>}
-            <span className="drive-row-meta">{new Date(file.uploadedAt).toLocaleDateString()}</span>
+          <div key={file.slug} className="drive-row drive-row--file">
+            <div className="drive-row-main" onClick={() => goTo([...segments, file.slug])}>
+              <FileIcon ext={file.ext || getFileExt(file.name)} />
+              <span className="drive-row-name">{file.name}</span>
+              {file.meta?.owner && <span className="drive-row-tag">{file.meta.owner}</span>}
+              {file.meta?.category && <span className="drive-row-tag drive-row-tag--cat">{file.meta.category}</span>}
+              {file.meta?.accounts && <span className="drive-row-tag drive-row-tag--acct">{file.meta.accounts}</span>}
+              <span className="drive-row-meta">{new Date(file.uploadedAt).toLocaleDateString()}</span>
+            </div>
+            {isBudgetPath && (
+              <button
+                className="drive-rename-btn"
+                title="Move to different month"
+                onClick={e => openRename(file.slug, e)}
+                aria-label={`Rename ${file.name}`}
+              >
+                <RenameIcon />
+              </button>
+            )}
+            {renameSlug === file.slug && (
+              <div className="drive-rename-popover" onClick={e => e.stopPropagation()}>
+                <label className="drive-rename-label" htmlFor="drive-rename-input">
+                  Move to month:
+                </label>
+                <input
+                  id="drive-rename-input"
+                  type="month"
+                  className="drive-rename-input"
+                  value={renameValue}
+                  onChange={e => {
+                    setRenameValue(e.target.value)
+                    setRenameWarning(null)
+                  }}
+                  autoFocus
+                />
+                {renameWarning && <p className="drive-rename-warning">{renameWarning}</p>}
+                <div className="drive-rename-actions">
+                  <button className="drive-rename-confirm" onClick={confirmRename}>
+                    {renameWarning ? 'Replace' : 'Move'}
+                  </button>
+                  <button className="drive-rename-cancel" onClick={cancelRename}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

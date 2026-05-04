@@ -444,3 +444,109 @@ body.dark .drive-filter-btn.active {
 }
 
 /* ── Dark mode additions ─────────────────────────────────────── */
+
+/* ── Rename ──────────────────────────────────────────────────── */
+
+.drive-row--file {
+  position: relative;
+  flex-wrap: wrap;
+}
+.drive-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.drive-rename-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  opacity: 0;
+  transition:
+    opacity 0.12s,
+    color 0.12s;
+}
+.drive-row--file:hover .drive-rename-btn {
+  opacity: 1;
+}
+.drive-rename-btn:hover {
+  color: var(--accent);
+}
+.drive-rename-btn:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.drive-rename-popover {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  background: var(--color-surface-alt);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.drive-rename-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+}
+.drive-rename-input {
+  font: inherit;
+  font-size: var(--fs-md);
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  background: var(--color-surface);
+  width: 180px;
+}
+.drive-rename-input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring, rgba(59, 130, 246, 0.15));
+}
+.drive-rename-warning {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-negative);
+  font-weight: var(--fw-medium);
+}
+.drive-rename-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+.drive-rename-confirm {
+  background: var(--accent);
+  color: var(--color-text-on-accent);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.drive-rename-confirm:hover {
+  opacity: 0.85;
+}
+.drive-rename-cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.drive-rename-cancel:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}

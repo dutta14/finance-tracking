@@ -214,6 +214,20 @@ export function deleteCSVForMonth(store: BudgetStore, monthKey: string): BudgetS
   return updated
 }
 
+export function renameBudgetMonth(store: BudgetStore, oldKey: string, newKey: string): BudgetStore {
+  if (oldKey === newKey) return store
+  const csv = store.csvs[oldKey]
+  if (!csv) return store
+  const updated = { ...store, csvs: { ...store.csvs } }
+  delete updated.csvs[oldKey]
+  updated.csvs[newKey] = { ...csv, month: newKey }
+  const newYear = parseInt(newKey.split('-')[0], 10)
+  if (!updated.years.includes(newYear)) {
+    updated.years = [...updated.years, newYear].sort()
+  }
+  return updated
+}
+
 export function createYear(store: BudgetStore, year: number): BudgetStore {
   if (store.years.includes(year)) return store
   return {

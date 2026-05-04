@@ -10,6 +10,7 @@ import {
   saveCSVForMonth,
   deleteCSVForMonth,
   createYear,
+  renameBudgetMonth,
   getBudgetSaveRate,
   saveBudgetSummary,
 } from './budgetStorage'
@@ -208,6 +209,74 @@ describe('deleteCSVForMonth', () => {
     const result = deleteCSVForMonth(store, '2025-01')
     expect(result.csvs['2025-01']).toBeUndefined()
     expect(result.csvs['2025-02']).toBeTruthy()
+  })
+})
+
+describe('renameBudgetMonth', () => {
+  it('moves CSV from old key to new key', () => {
+    const store: BudgetStore = {
+      csvs: {
+        '2025-05': { month: '2025-05', csv: 'data', uploadedAt: 't' },
+      },
+      configs: {},
+      years: [2025],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+    const result = renameBudgetMonth(store, '2025-05', '2025-04')
+    expect(result.csvs['2025-04']).toBeTruthy()
+    expect(result.csvs['2025-04'].month).toBe('2025-04')
+    expect(result.csvs['2025-04'].csv).toBe('data')
+    expect(result.csvs['2025-05']).toBeUndefined()
+  })
+
+  it('returns same store when oldKey === newKey', () => {
+    const store: BudgetStore = {
+      csvs: { '2025-05': { month: '2025-05', csv: 'data', uploadedAt: 't' } },
+      configs: {},
+      years: [2025],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+    const result = renameBudgetMonth(store, '2025-05', '2025-05')
+    expect(result).toBe(store)
+  })
+
+  it('returns same store when oldKey does not exist', () => {
+    const store: BudgetStore = {
+      csvs: {},
+      configs: {},
+      years: [],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+    const result = renameBudgetMonth(store, '2025-05', '2025-04')
+    expect(result).toBe(store)
+  })
+
+  it('adds new year when moving to a different year', () => {
+    const store: BudgetStore = {
+      csvs: { '2025-05': { month: '2025-05', csv: 'data', uploadedAt: 't' } },
+      configs: {},
+      years: [2025],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+    const result = renameBudgetMonth(store, '2025-05', '2024-12')
+    expect(result.years).toContain(2024)
+    expect(result.years).toContain(2025)
+    expect(result.years).toEqual([2024, 2025])
+  })
+
+  it('overwrites existing data at the target month', () => {
+    const store: BudgetStore = {
+      csvs: {
+        '2025-05': { month: '2025-05', csv: 'may-data', uploadedAt: 't1' },
+        '2025-04': { month: '2025-04', csv: 'old-april', uploadedAt: 't0' },
+      },
+      configs: {},
+      years: [2025],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+    const result = renameBudgetMonth(store, '2025-05', '2025-04')
+    expect(result.csvs['2025-04'].csv).toBe('may-data')
+    expect(result.csvs['2025-05']).toBeUndefined()
   })
 })
 
