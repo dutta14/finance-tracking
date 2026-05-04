@@ -7,7 +7,6 @@ import { buildDriveTree } from './buildBudgetTree'
 import CSVViewer from './CSVViewer'
 import { useDriveUpload } from './useDriveUpload'
 import { resolvePathSegments } from './types'
-import { useEncryption } from '../../contexts/EncryptionContext'
 import { loadBudgetStore, saveBudgetStore, renameBudgetMonth } from '../budget/utils/budgetStorage'
 import { formatMonthKey } from '../budget/utils/csvParser'
 import type { DriveFolder, DriveFile } from './types'
@@ -89,16 +88,16 @@ const Drive: FC = () => {
       cancelRename()
       return
     }
-    const store = await loadBudgetStore(cryptoKey)
+    const store = loadBudgetStore()
     if (store.csvs[renameValue] && !renameWarning) {
       setRenameWarning(`${formatMonthKey(renameValue)} already has data. Replace it?`)
       return
     }
     const updated = renameBudgetMonth(store, renameSlug, renameValue)
-    await saveBudgetStore(updated, cryptoKey)
+    saveBudgetStore(updated)
     cancelRename()
     refreshTree()
-  }, [renameSlug, renameValue, renameWarning, cryptoKey, cancelRename, refreshTree])
+  }, [renameSlug, renameValue, renameWarning, cancelRename, refreshTree])
 
   // ── Folder / root view ──────────────────────────────────────
   const folder: DriveFolder =

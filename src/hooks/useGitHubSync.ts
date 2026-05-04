@@ -259,6 +259,7 @@ export const useGitHubSync = () => {
       if (!activeToken) throw new Error('Token is not unlocked.')
       const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
         headers: apiHeaders(activeToken),
+        cache: 'no-store',
       })
       if (res.status === 404) return null
       if (res.status === 401) throw new Error('Invalid token — check the token is correct and not expired.')

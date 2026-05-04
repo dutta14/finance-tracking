@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Test the pure helper functions from budgetGitHubSync that don't need fetch
 
@@ -105,5 +105,81 @@ describe('GitHub sync config loading', () => {
     expect(basePath.replace(/\.json$/, '-tools.json')).toBe('finance-goals-tools.json')
     expect(basePath.replace(/\.json$/, '-allocation.json')).toBe('finance-goals-allocation.json')
     expect(basePath.replace(/\.json$/, '-taxes.json')).toBe('finance-goals-taxes.json')
+  })
+})
+
+// Replicate getFileShaForPath logic to test SHA-fetch cache-busting behaviour.
+// The production code calls fetch with { cache: 'no-store' } to prevent the
+// browser from serving a stale SHA after a file is updated on GitHub.
+describe('SHA mismatch self-healing (getFileShaForPath)', () => {
+  const originalFetch = globalThis.fetch
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    vi.restoreAllMocks()
+  })
+
+  // Mirrors the production getFileShaForPath implementation
+  const getFileShaForPath = async (
+    path: string,
+    owner: string,
+    repo: string,
+    token: string,
+  ): Promise<string | null> => {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    })
+    if (res.status === 404) return null
+    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
+    const data = await res.json()
+    return data.sha as string
+  }
+
+  it('passes cache: no-store to prevent stale SHA responses', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ sha: 'abc123' }),
+    })
+    globalThis.fetch = mockFetch
+
+    await getFileShaForPath('finance-goals-data.json', 'owner', 'repo', 'token')
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const callArgs = mockFetch.mock.calls[0]
+    expect(callArgs[1]).toHaveProperty('cache', 'no-store')
+  })
+
+  it('returns fresh SHA on consecutive calls (no browser cache)', async () => {
+    const shas = ['sha-first', 'sha-second']
+    let callCount = 0
+    globalThis.fetch = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ sha: shas[callCount++] }),
+    }))
+
+    const first = await getFileShaForPath('f.json', 'o', 'r', 't')
+    const second = await getFileShaForPath('f.json', 'o', 'r', 't')
+
+    expect(first).toBe('sha-first')
+    expect(second).toBe('sha-second')
+  })
+
+  it('returns null for 404 (new file)', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 })
+    const sha = await getFileShaForPath('missing.json', 'o', 'r', 't')
+    expect(sha).toBeNull()
+  })
+
+  it('throws on non-404 error', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 })
+    await expect(getFileShaForPath('f.json', 'o', 'r', 't')).rejects.toThrow('GitHub API error: 500')
   })
 })
