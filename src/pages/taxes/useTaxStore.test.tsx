@@ -3,6 +3,10 @@ import { renderHook, act } from '@testing-library/react'
 import 'fake-indexeddb/auto'
 import { useTaxStore } from './useTaxStore'
 import { getFileContent } from '../../utils/taxFileDB'
+import { EncryptionProvider } from '../../contexts/EncryptionContext'
+import type { ReactNode } from 'react'
+
+const wrapper = ({ children }: { children: ReactNode }) => <EncryptionProvider>{children}</EncryptionProvider>
 
 beforeEach(() => {
   localStorage.clear()
@@ -13,7 +17,7 @@ beforeEach(() => {
 describe('useTaxStore', () => {
   describe('initial state', () => {
     it('starts with empty store when nothing in localStorage', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       expect(result.current.allYears).toEqual([])
       expect(result.current.store.years).toEqual({})
     })
@@ -29,7 +33,7 @@ describe('useTaxStore', () => {
           },
         }),
       )
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       expect(result.current.allYears).toEqual([2024])
       expect(result.current.getYear(2024).items).toHaveLength(1)
     })
@@ -37,19 +41,19 @@ describe('useTaxStore', () => {
 
   describe('getYear', () => {
     it('returns empty year for non-existent year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       expect(result.current.getYear(2099)).toEqual({ items: [] })
     })
   })
 
   describe('yearExists', () => {
     it('returns false for unknown year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       expect(result.current.yearExists(2099)).toBe(false)
     })
 
     it('returns true after ensuring a year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.ensureYear(2025))
       expect(result.current.yearExists(2025)).toBe(true)
     })
@@ -57,7 +61,7 @@ describe('useTaxStore', () => {
 
   describe('ensureYear', () => {
     it('creates an empty year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.ensureYear(2025))
       expect(result.current.getYear(2025)).toEqual({ items: [] })
       // Should persist to localStorage
@@ -66,7 +70,7 @@ describe('useTaxStore', () => {
     })
 
     it('does not overwrite existing year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.addItem(2025, 'W-2', 'primary', 'paystub'))
       act(() => result.current.ensureYear(2025))
       expect(result.current.getYear(2025).items).toHaveLength(1)
@@ -75,7 +79,7 @@ describe('useTaxStore', () => {
 
   describe('addItem / removeItem', () => {
     it('adds an item to a year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.addItem(2025, 'W-2', 'primary', 'paystub'))
       const items = result.current.getYear(2025).items
       expect(items).toHaveLength(1)
@@ -85,7 +89,7 @@ describe('useTaxStore', () => {
     })
 
     it('removes an item by id', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -98,7 +102,7 @@ describe('useTaxStore', () => {
 
   describe('updateItem', () => {
     it('updates item fields', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -113,7 +117,7 @@ describe('useTaxStore', () => {
 
   describe('addFileToItem / removeFileFromItem', () => {
     it('adds a file to a checklist item and strips content from localStorage', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -138,7 +142,7 @@ describe('useTaxStore', () => {
     })
 
     it('removes a file from a checklist item', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -160,7 +164,7 @@ describe('useTaxStore', () => {
 
   describe('addFileToItemAsync', () => {
     it('saves content to IndexedDB and strips it from localStorage', async () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -184,7 +188,7 @@ describe('useTaxStore', () => {
     })
 
     it('handles file with undefined content gracefully', async () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -207,7 +211,7 @@ describe('useTaxStore', () => {
     })
 
     it('stores metadata in localStorage without content', async () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -253,7 +257,7 @@ describe('useTaxStore', () => {
         }),
       )
 
-      renderHook(() => useTaxStore())
+      renderHook(() => useTaxStore(), { wrapper })
 
       // Wait for async migration
       await act(async () => {
@@ -307,7 +311,7 @@ describe('useTaxStore', () => {
         }),
       )
 
-      renderHook(() => useTaxStore())
+      renderHook(() => useTaxStore(), { wrapper })
       await act(async () => {
         await new Promise(r => setTimeout(r, 100))
       })
@@ -346,7 +350,7 @@ describe('useTaxStore', () => {
         }),
       )
 
-      renderHook(() => useTaxStore())
+      renderHook(() => useTaxStore(), { wrapper })
       await act(async () => {
         await new Promise(r => setTimeout(r, 50))
       })
@@ -358,7 +362,7 @@ describe('useTaxStore', () => {
 
   describe('removeFileFromItem - IndexedDB cleanup', () => {
     it('deletes content from IndexedDB when a file is removed', async () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -392,7 +396,7 @@ describe('useTaxStore', () => {
 
   describe('deleteYear - IndexedDB batch cleanup', () => {
     it('removes a year entirely', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.ensureYear(2025))
       act(() => result.current.deleteYear(2025))
       expect(result.current.yearExists(2025)).toBe(false)
@@ -400,7 +404,7 @@ describe('useTaxStore', () => {
     })
 
     it('batch-deletes all IndexedDB files for the deleted year', async () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let itemId: string
       act(() => {
         const item = result.current.addItem(2025, 'W-2', 'primary', 'paystub')
@@ -443,7 +447,7 @@ describe('useTaxStore', () => {
     })
 
     it('does not remove IndexedDB files from other years', async () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       let id2025: string
       let id2024: string
       act(() => {
@@ -482,7 +486,7 @@ describe('useTaxStore', () => {
 
   describe('allYears', () => {
     it('returns years sorted descending', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.ensureYear(2023))
       act(() => result.current.ensureYear(2025))
       act(() => result.current.ensureYear(2024))
@@ -492,7 +496,7 @@ describe('useTaxStore', () => {
 
   describe('createYearWithDefaults', () => {
     it('creates a year with default checklist items', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => {
         result.current.createYearWithDefaults(2025, [
           { label: 'W-2', owner: 'primary', category: 'paystub' },
@@ -506,7 +510,7 @@ describe('useTaxStore', () => {
     })
 
     it('does not overwrite existing year', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.addItem(2025, 'Existing', 'primary', 'custom'))
       act(() => {
         result.current.createYearWithDefaults(2025, [{ label: 'New', owner: 'primary', category: 'paystub' }])
@@ -517,7 +521,7 @@ describe('useTaxStore', () => {
 
   describe('template operations', () => {
     it('saves a year as a template', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.addItem(2025, 'W-2', 'primary', 'paystub'))
       act(() => result.current.saveAsTemplate('My Template', 2025))
       expect(result.current.templates).toHaveLength(1)
@@ -526,7 +530,7 @@ describe('useTaxStore', () => {
     })
 
     it('creates a year from a template', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.addItem(2024, 'W-2', 'primary', 'paystub'))
       act(() => result.current.saveAsTemplate('Tpl', 2024))
       act(() => result.current.createYearFromTemplate(2025, result.current.templates[0]))
@@ -536,7 +540,7 @@ describe('useTaxStore', () => {
     })
 
     it('deletes a template', () => {
-      const { result } = renderHook(() => useTaxStore())
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
       act(() => result.current.addItem(2024, 'W-2', 'primary', 'paystub'))
       act(() => result.current.saveAsTemplate('Tpl', 2024))
       const tplId = result.current.templates[0].id

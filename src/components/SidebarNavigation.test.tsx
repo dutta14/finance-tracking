@@ -10,6 +10,7 @@ import { BudgetSyncProvider } from '../contexts/BudgetSyncContext'
 import { TaxSyncProvider } from '../contexts/TaxSyncContext'
 import { ImportExportProvider } from '../contexts/ImportExportContext'
 import { LayoutProvider } from '../contexts/LayoutContext'
+import { EncryptionProvider } from '../contexts/EncryptionContext'
 import type { PageType } from '../types'
 
 const noop = () => {}
@@ -22,21 +23,23 @@ const defaultProps = {
 const renderSidebar = (overrides = {}) =>
   render(
     <MemoryRouter>
-      <SettingsProvider>
-        <GoalsProvider>
-          <GitHubSyncProvider>
-            <BudgetSyncProvider>
-              <TaxSyncProvider>
-                <LayoutProvider>
-                  <ImportExportProvider>
-                    <SidebarNavigation {...defaultProps} {...overrides} />
-                  </ImportExportProvider>
-                </LayoutProvider>
-              </TaxSyncProvider>
-            </BudgetSyncProvider>
-          </GitHubSyncProvider>
-        </GoalsProvider>
-      </SettingsProvider>
+      <EncryptionProvider>
+        <SettingsProvider>
+          <GoalsProvider>
+            <GitHubSyncProvider>
+              <BudgetSyncProvider>
+                <TaxSyncProvider>
+                  <LayoutProvider>
+                    <ImportExportProvider>
+                      <SidebarNavigation {...defaultProps} {...overrides} />
+                    </ImportExportProvider>
+                  </LayoutProvider>
+                </TaxSyncProvider>
+              </BudgetSyncProvider>
+            </GitHubSyncProvider>
+          </GoalsProvider>
+        </SettingsProvider>
+      </EncryptionProvider>
     </MemoryRouter>,
   )
 

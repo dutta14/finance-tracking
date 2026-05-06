@@ -5,18 +5,21 @@ import { TaxSyncProvider, useTaxSync } from './TaxSyncContext'
 import { GitHubSyncProvider } from './GitHubSyncContext'
 import { SettingsProvider } from './SettingsContext'
 import { GoalsProvider } from './GoalsContext'
+import { EncryptionProvider } from './EncryptionContext'
 import type { ReactNode } from 'react'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <SettingsProvider>
-    <GoalsProvider>
-      <GitHubSyncProvider>
-        <TaxSyncProvider>{children}</TaxSyncProvider>
-      </GitHubSyncProvider>
-    </GoalsProvider>
-  </SettingsProvider>
+  <EncryptionProvider>
+    <SettingsProvider>
+      <GoalsProvider>
+        <GitHubSyncProvider>
+          <TaxSyncProvider>{children}</TaxSyncProvider>
+        </GitHubSyncProvider>
+      </GoalsProvider>
+    </SettingsProvider>
+  </EncryptionProvider>
 )
 
 function TaxSyncConsumer() {
@@ -40,15 +43,17 @@ describe('TaxSyncContext', () => {
 
   it('exposes tax sync state', () => {
     render(
-      <SettingsProvider>
-        <GoalsProvider>
-          <GitHubSyncProvider>
-            <TaxSyncProvider>
-              <TaxSyncConsumer />
-            </TaxSyncProvider>
-          </GitHubSyncProvider>
-        </GoalsProvider>
-      </SettingsProvider>,
+      <EncryptionProvider>
+        <SettingsProvider>
+          <GoalsProvider>
+            <GitHubSyncProvider>
+              <TaxSyncProvider>
+                <TaxSyncConsumer />
+              </TaxSyncProvider>
+            </GitHubSyncProvider>
+          </GoalsProvider>
+        </SettingsProvider>
+      </EncryptionProvider>,
     )
 
     expect(screen.getByTestId('hasSyncTaxNow').textContent).toBe('true')
