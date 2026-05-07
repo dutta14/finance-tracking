@@ -4,6 +4,7 @@ import type { EncryptedEnvelope } from '../utils/crypto'
 import { SENSITIVE_KEYS } from '../utils/encryptedStorage'
 import { migratePlaintextToEncrypted, isMigrationIncomplete, recoverMigration } from '../utils/migratePlaintext'
 import { reencryptIDBContents, decryptIDBContents } from '../utils/taxFileDB'
+import { appStorage } from '../utils/appStorage'
 
 // ── Constants ────────────────────────────────────────────────────
 
@@ -84,11 +85,25 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
   const [isEncryptionEnabled, setIsEncryptionEnabled] = useState<boolean>(readEnabled)
   const [isSettingUp, setIsSettingUp] = useState(false)
 
+  // Set initial appStorage mode on mount
+  useEffect(() => {
+    appStorage.setMode(isEncryptionEnabled ? 'enabled' : 'disabled')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Recover from interrupted migration on mount
   useEffect(() => {
     if (isMigrationIncomplete()) {
       recoverMigration()
     }
+  }, [])
+
+  // Listen for remote lock signal from other tabs
+  useEffect(() => {
+    const handler = () => {
+      setCryptoKey(null)
+    }
+    window.addEventListener('encryption-remote-lock', handler)
+    return () => window.removeEventListener('encryption-remote-lock', handler)
   }, [])
 
   const isLocked = isEncryptionEnabled && cryptoKey === null
@@ -100,6 +115,8 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
       const key = await deriveKey(passphrase, salt)
       const ok = await verifyPassphrase(key)
       if (ok) {
+        appStorage.setCryptoKey(key)
+        await appStorage.hydrate(key)
         setCryptoKey(key)
         return true
       }
@@ -110,6 +127,7 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
   }, [])
 
   const lock = useCallback((): void => {
+    appStorage.lock()
     setCryptoKey(null)
   }, [])
 
@@ -128,6 +146,10 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
       await migratePlaintextToEncrypted(key)
 
       localStorage.setItem(LS_ENABLED, '1')
+
+      appStorage.setMode('enabled')
+      appStorage.setCryptoKey(key)
+      await appStorage.hydrate(key)
 
       setCryptoKey(key)
       setIsEncryptionEnabled(true)
@@ -215,6 +237,10 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(LS_SALT)
     localStorage.removeItem(LS_VERIFY)
     localStorage.removeItem(LS_ENABLED)
+
+    appStorage.setMode('disabled')
+    appStorage.setCryptoKey(null)
+    appStorage.lock()
 
     setCryptoKey(null)
     setIsEncryptionEnabled(false)
