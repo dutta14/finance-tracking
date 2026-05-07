@@ -1,14 +1,11 @@
 import { useMemo } from 'react'
 import { Profile } from '../../../hooks/useProfile'
 import { GoalOwner, RatioGoal } from '../types'
+import { appStorage } from '../../../utils/appStorage'
 
 export function useGoals() {
   const profile: Profile = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user-profile') || '{}')
-    } catch {
-      return {} as Profile
-    }
+    return appStorage.getJSON<Profile>('user-profile', {} as Profile)
   }, [])
 
   const getAge = (owner: GoalOwner): number | null => {

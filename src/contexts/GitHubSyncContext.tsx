@@ -13,6 +13,7 @@ import { useSettings } from './SettingsContext'
 import { useGoals } from './GoalsContext'
 import type { FinancialGoal, GwGoal } from '../types'
 import type { Account, BalanceEntry } from '../pages/data/types'
+import { appStorage } from '../utils/appStorage'
 
 export interface GitHubSyncContextValue {
   config: GitHubSyncConfig
@@ -67,12 +68,9 @@ const DOMAIN_LABELS: Record<string, string> = {
 }
 
 const getDataSnapshot = (): { accounts: Account[]; balances: BalanceEntry[] } => {
-  try {
-    const accounts = JSON.parse(localStorage.getItem('data-accounts') || '[]')
-    const balances = JSON.parse(localStorage.getItem('data-balances') || '[]')
-    return { accounts, balances }
-  } catch {
-    return { accounts: [], balances: [] }
+  return {
+    accounts: appStorage.getJSON<Account[]>('data-accounts', []),
+    balances: appStorage.getJSON<BalanceEntry[]>('data-balances', []),
   }
 }
 
@@ -224,8 +222,8 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
                 {
                   version: 1,
                   exportedAt: new Date().toISOString(),
-                  fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
-                  sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
+                  fiSimulations: appStorage.getJSON('fi-simulations', []),
+                  sgtOverrides: appStorage.getJSON('sgt-overrides', {}),
                 },
                 message ? `Tools: ${message}` : undefined,
               )
@@ -236,7 +234,7 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
                 {
                   version: 1,
                   exportedAt: new Date().toISOString(),
-                  allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
+                  allocationCustomRatios: appStorage.getJSON('allocation-custom-ratios', []),
                 },
                 message ? `Allocation: ${message}` : undefined,
               )
@@ -337,34 +335,32 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
           updateGhConfig(restoredGhConfig)
         }
         await new Promise(r => setTimeout(r, 300))
-        localStorage.setItem('financialGoals', JSON.stringify(incomingGoals))
-        localStorage.setItem('gw-goals', JSON.stringify(restoreGwGoals))
-        localStorage.setItem('user-profile', JSON.stringify(restoreProfile || profile))
+        appStorage.setJSON('financialGoals', incomingGoals)
+        appStorage.setJSON('gw-goals', restoreGwGoals)
+        appStorage.setJSON('user-profile', restoreProfile || profile)
         localStorage.setItem('github-sync-config', JSON.stringify(restoredGhConfig))
         try {
           const dataResult = await restoreDataLatest()
           if (dataResult.ok && dataResult.data) {
             const d = dataResult.data as { accounts?: unknown; balances?: unknown }
-            if (Array.isArray(d.accounts)) localStorage.setItem('data-accounts', JSON.stringify(d.accounts))
-            if (Array.isArray(d.balances)) localStorage.setItem('data-balances', JSON.stringify(d.balances))
+            if (Array.isArray(d.accounts)) appStorage.setJSON('data-accounts', d.accounts)
+            if (Array.isArray(d.balances)) appStorage.setJSON('data-balances', d.balances)
           } else {
-            if (Array.isArray(parsed?.dataAccounts))
-              localStorage.setItem('data-accounts', JSON.stringify(parsed.dataAccounts))
-            if (Array.isArray(parsed?.dataBalances))
-              localStorage.setItem('data-balances', JSON.stringify(parsed.dataBalances))
+            if (Array.isArray(parsed?.dataAccounts)) appStorage.setJSON('data-accounts', parsed.dataAccounts)
+            if (Array.isArray(parsed?.dataBalances)) appStorage.setJSON('data-balances', parsed.dataBalances)
           }
           const toolsResult = await restoreToolsLatest()
           if (toolsResult.ok && toolsResult.data) {
             const t = toolsResult.data as { fiSimulations?: unknown; sgtOverrides?: unknown }
-            if (Array.isArray(t.fiSimulations)) localStorage.setItem('fi-simulations', JSON.stringify(t.fiSimulations))
+            if (Array.isArray(t.fiSimulations)) appStorage.setJSON('fi-simulations', t.fiSimulations)
             if (t.sgtOverrides && typeof t.sgtOverrides === 'object')
-              localStorage.setItem('sgt-overrides', JSON.stringify(t.sgtOverrides))
+              appStorage.setJSON('sgt-overrides', t.sgtOverrides)
           }
           const allocResult = await restoreAllocationLatest()
           if (allocResult.ok && allocResult.data) {
             const a = allocResult.data as { allocationCustomRatios?: unknown }
             if (Array.isArray(a.allocationCustomRatios))
-              localStorage.setItem('allocation-custom-ratios', JSON.stringify(a.allocationCustomRatios))
+              appStorage.setJSON('allocation-custom-ratios', a.allocationCustomRatios)
           }
         } catch {
           markRestored()

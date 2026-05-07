@@ -3,6 +3,7 @@ import { GwGoal } from '../types'
 import { useGoals } from './GoalsContext'
 import { useSettings } from './SettingsContext'
 import { loadBudgetStore, saveBudgetStore } from '../pages/budget/utils/budgetStorage'
+import { appStorage } from '../utils/appStorage'
 
 export interface ImportExportContextValue {
   handleExport: () => void
@@ -27,16 +28,10 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
   const { darkMode, setDarkMode, accentTheme, setAccentTheme, allowCsvImport, setAllowCsvImport } = useSettings()
 
   const handleExport = useCallback((): void => {
-    const dataSnapshot = (() => {
-      try {
-        return {
-          accounts: JSON.parse(localStorage.getItem('data-accounts') || '[]'),
-          balances: JSON.parse(localStorage.getItem('data-balances') || '[]'),
-        }
-      } catch {
-        return { accounts: [], balances: [] }
-      }
-    })()
+    const dataSnapshot = {
+      accounts: appStorage.getJSON('data-accounts', []),
+      balances: appStorage.getJSON('data-balances', []),
+    }
     const budgetStore = loadBudgetStore()
     const json = JSON.stringify(
       {
@@ -56,11 +51,11 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
         dataBalances: dataSnapshot.balances,
         budgetCsvs: budgetStore.csvs,
         budgetConfig: { years: budgetStore.years, categoryGroups: budgetStore.categoryGroups },
-        fiSimulations: JSON.parse(localStorage.getItem('fi-simulations') || '[]'),
-        sgtOverrides: JSON.parse(localStorage.getItem('sgt-overrides') || '{}'),
-        allocationCustomRatios: JSON.parse(localStorage.getItem('allocation-custom-ratios') || '[]'),
-        taxStore: JSON.parse(localStorage.getItem('tax-store') || '{}'),
-        taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
+        fiSimulations: appStorage.getJSON('fi-simulations', []),
+        sgtOverrides: appStorage.getJSON('sgt-overrides', {}),
+        allocationCustomRatios: appStorage.getJSON('allocation-custom-ratios', []),
+        taxStore: appStorage.getJSON('tax-store', {}),
+        taxTemplates: appStorage.getJSON('tax-templates', []),
       },
       null,
       2,
@@ -94,27 +89,22 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
             if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
             if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
           }
-          if (Array.isArray(parsed?.dataAccounts))
-            localStorage.setItem('data-accounts', JSON.stringify(parsed.dataAccounts))
-          if (Array.isArray(parsed?.dataBalances))
-            localStorage.setItem('data-balances', JSON.stringify(parsed.dataBalances))
+          if (Array.isArray(parsed?.dataAccounts)) appStorage.setJSON('data-accounts', parsed.dataAccounts)
+          if (Array.isArray(parsed?.dataBalances)) appStorage.setJSON('data-balances', parsed.dataBalances)
           if (parsed?.budgetCsvs && typeof parsed.budgetCsvs === 'object') {
             const store = loadBudgetStore()
             store.csvs = parsed.budgetCsvs as typeof store.csvs
             saveBudgetStore(store)
           }
           if (parsed?.budgetConfig && typeof parsed.budgetConfig === 'object')
-            localStorage.setItem('budget-config', JSON.stringify(parsed.budgetConfig))
-          if (Array.isArray(parsed?.fiSimulations))
-            localStorage.setItem('fi-simulations', JSON.stringify(parsed.fiSimulations))
+            appStorage.setJSON('budget-config', parsed.budgetConfig)
+          if (Array.isArray(parsed?.fiSimulations)) appStorage.setJSON('fi-simulations', parsed.fiSimulations)
           if (parsed?.sgtOverrides && typeof parsed.sgtOverrides === 'object')
-            localStorage.setItem('sgt-overrides', JSON.stringify(parsed.sgtOverrides))
+            appStorage.setJSON('sgt-overrides', parsed.sgtOverrides)
           if (Array.isArray(parsed?.allocationCustomRatios))
-            localStorage.setItem('allocation-custom-ratios', JSON.stringify(parsed.allocationCustomRatios))
-          if (parsed?.taxStore && typeof parsed.taxStore === 'object')
-            localStorage.setItem('tax-store', JSON.stringify(parsed.taxStore))
-          if (Array.isArray(parsed?.taxTemplates))
-            localStorage.setItem('tax-templates', JSON.stringify(parsed.taxTemplates))
+            appStorage.setJSON('allocation-custom-ratios', parsed.allocationCustomRatios)
+          if (parsed?.taxStore && typeof parsed.taxStore === 'object') appStorage.setJSON('tax-store', parsed.taxStore)
+          if (Array.isArray(parsed?.taxTemplates)) appStorage.setJSON('tax-templates', parsed.taxTemplates)
           if (parsed?.settings?.homeCardOrder)
             localStorage.setItem('home-card-order', parsed.settings.homeCardOrder as string)
           window.dispatchEvent(new Event('data-changed'))

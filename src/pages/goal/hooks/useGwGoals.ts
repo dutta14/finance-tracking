@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { GwGoal } from '../../../types'
+import { appStorage } from '../../../utils/appStorage'
 
 const STORAGE_KEY = 'gw-goals'
 const LEGACY_STORAGE_KEY = 'gw-plans'
@@ -17,7 +18,7 @@ const migrateGwFields = (items: Record<string, unknown>[]): GwGoal[] =>
 
 const load = (): GwGoal[] => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = appStorage.getString(STORAGE_KEY)
     if (raw) {
       const parsed = migrateGwFields(JSON.parse(raw))
       if (parsed.length > 0) return parsed
@@ -28,7 +29,7 @@ const load = (): GwGoal[] => {
     if (legacy) {
       const parsed = migrateGwFields(JSON.parse(legacy))
       if (parsed.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+        appStorage.setJSON(STORAGE_KEY, parsed)
         localStorage.removeItem(LEGACY_STORAGE_KEY)
         return parsed
       }
@@ -44,7 +45,7 @@ export const useGwGoals = () => {
   const [gwGoals, setGwGoals] = useState<GwGoal[]>(load)
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(gwGoals))
+    appStorage.setJSON(STORAGE_KEY, gwGoals)
   }, [gwGoals])
 
   const createGwGoal = (goal: Omit<GwGoal, 'id' | 'createdAt'>): void => {

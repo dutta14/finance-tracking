@@ -1,22 +1,20 @@
 import { BudgetStore, CategoryGroup, BudgetConfigData } from '../types'
+import { appStorage } from '../../../utils/appStorage'
 
 /**
  * Lightweight budget savings-rate reader for use outside the useBudget hook.
  * Reads the persisted summary written by useBudget — no CSV re-parsing.
  */
 export function getBudgetSaveRate(): { annualSavings: number; saveRate: number; monthsOfData: number } | null {
-  try {
-    const raw = localStorage.getItem('budget-summary')
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
+  return appStorage.getJSON<{ annualSavings: number; saveRate: number; monthsOfData: number } | null>(
+    'budget-summary',
+    null,
+  )
 }
 
 /** Persist budget summary so other pages can read it without useBudget */
 export function saveBudgetSummary(summary: { annualSavings: number; saveRate: number; monthsOfData: number }): void {
-  localStorage.setItem('budget-summary', JSON.stringify(summary))
+  appStorage.setJSON('budget-summary', summary)
 }
 
 const STORAGE_KEY = 'budget-store'
@@ -90,9 +88,8 @@ function deduplicateOthers(groups: CategoryGroup[]): CategoryGroup[] {
 
 export function loadBudgetStore(): BudgetStore {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...EMPTY_STORE }
-    const parsed = JSON.parse(raw) as BudgetStore
+    const parsed = appStorage.getJSON<BudgetStore | null>(STORAGE_KEY, null)
+    if (!parsed) return { ...EMPTY_STORE }
 
     // Load config from separate key (or migrate from old format)
     const config = loadBudgetConfig()
@@ -138,7 +135,7 @@ export function saveBudgetStore(store: BudgetStore): void {
     configs: {},
     years: [],
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(csvOnly))
+  appStorage.setJSON(STORAGE_KEY, csvOnly)
   window.dispatchEvent(new Event('budget-changed'))
 
   // Save config separately
@@ -150,17 +147,11 @@ export function saveBudgetStore(store: BudgetStore): void {
 }
 
 export function loadBudgetConfig(): BudgetConfigData {
-  try {
-    const raw = localStorage.getItem(CONFIG_KEY)
-    if (!raw) return { version: 1, years: [], categoryGroups: [] }
-    return JSON.parse(raw) as BudgetConfigData
-  } catch {
-    return { version: 1, years: [], categoryGroups: [] }
-  }
+  return appStorage.getJSON<BudgetConfigData>(CONFIG_KEY, { version: 1, years: [], categoryGroups: [] })
 }
 
 export function saveBudgetConfig(config: BudgetConfigData): void {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config))
+  appStorage.setJSON(CONFIG_KEY, config)
   window.dispatchEvent(new Event('budget-changed'))
 }
 

@@ -2,6 +2,7 @@ import { createContext, useContext, useCallback, useEffect, useRef, useMemo, FC,
 import { useGitHubSyncContext } from './GitHubSyncContext'
 import { useEncryption } from './EncryptionContext'
 import { syncAllTaxFiles } from '../pages/taxes/taxGitHubSync'
+import { appStorage } from '../utils/appStorage'
 
 export interface TaxSyncContextValue {
   syncTaxNow: (message?: string) => Promise<void>
@@ -50,12 +51,12 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
       markDirty('taxes')
       if (timer) clearTimeout(timer)
       timer = setTimeout(async () => {
-        const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
+        const taxStore = appStorage.getJSON('tax-store', {})
         const taxesPayload = {
           version: 1,
           exportedAt: new Date().toISOString(),
           taxStore,
-          taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
+          taxTemplates: appStorage.getJSON('tax-templates', []),
         }
         await syncTaxesNow(taxesPayload)
         if (isConfiguredRef.current && tokenRef.current) {
@@ -77,12 +78,12 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
       const taxesPayload = {
         version: 1,
         exportedAt: new Date().toISOString(),
-        taxStore: JSON.parse(localStorage.getItem('tax-store') || '{}'),
-        taxTemplates: JSON.parse(localStorage.getItem('tax-templates') || '[]'),
+        taxStore: appStorage.getJSON('tax-store', {}),
+        taxTemplates: appStorage.getJSON('tax-templates', []),
       }
       await syncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
       if (isConfiguredRef.current && tokenRef.current) {
-        const taxStore = JSON.parse(localStorage.getItem('tax-store') || '{}')
+        const taxStore = appStorage.getJSON('tax-store', {})
         await syncAllTaxFiles(configRef.current, tokenRef.current, taxStore, cryptoKey).catch(e =>
           console.error('Tax file sync error:', e),
         )
@@ -96,8 +97,8 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const taxResult = await restoreTaxesLatest()
     if (taxResult.ok && taxResult.data) {
       const t = taxResult.data as { taxStore?: unknown; taxTemplates?: unknown }
-      if (t.taxStore && typeof t.taxStore === 'object') localStorage.setItem('tax-store', JSON.stringify(t.taxStore))
-      if (Array.isArray(t.taxTemplates)) localStorage.setItem('tax-templates', JSON.stringify(t.taxTemplates))
+      if (t.taxStore && typeof t.taxStore === 'object') appStorage.setJSON('tax-store', t.taxStore)
+      if (Array.isArray(t.taxTemplates)) appStorage.setJSON('tax-templates', t.taxTemplates)
     }
   }, [restoreTaxesLatest])
 

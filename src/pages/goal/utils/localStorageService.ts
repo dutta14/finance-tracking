@@ -1,4 +1,5 @@
 import { FinancialGoal } from '../../../types'
+import { appStorage } from '../../../utils/appStorage'
 
 const STORAGE_KEY = 'financialGoals'
 const LEGACY_STORAGE_KEY = 'financialPlans'
@@ -24,7 +25,7 @@ const migrateFields = (items: Record<string, unknown>[]): FinancialGoal[] =>
 
 export const loadGoalsFromStorage = (): FinancialGoal[] => {
   try {
-    const savedGoals = localStorage.getItem(STORAGE_KEY)
+    const savedGoals = appStorage.getString(STORAGE_KEY)
     if (savedGoals) {
       const parsed = JSON.parse(savedGoals)
       if (parsed.length > 0) return migrateFields(parsed as Record<string, unknown>[])
@@ -35,7 +36,7 @@ export const loadGoalsFromStorage = (): FinancialGoal[] => {
     if (legacy) {
       const parsed = migrateFields(JSON.parse(legacy) as Record<string, unknown>[])
       if (parsed.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+        appStorage.setJSON(STORAGE_KEY, parsed)
         localStorage.removeItem(LEGACY_STORAGE_KEY)
         return parsed
       }
@@ -50,7 +51,7 @@ export const loadGoalsFromStorage = (): FinancialGoal[] => {
 
 export const saveGoalsToStorage = (goals: FinancialGoal[]): void => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(goals))
+    appStorage.setJSON(STORAGE_KEY, goals)
   } catch (err) {
     console.error('Failed to save goals to localStorage:', err)
   }

@@ -12,20 +12,16 @@ import type {
 import { EMPTY_STORE, getEmptyYear, loadTemplates, saveTemplates } from './types'
 import { saveFileContent, deleteFileContent, deleteMultipleFiles } from '../../utils/taxFileDB'
 import { useEncryption } from '../../contexts/EncryptionContext'
+import { appStorage } from '../../utils/appStorage'
 
 const STORAGE_KEY = 'tax-store'
 
 function load(): TaxStore {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : EMPTY_STORE
-  } catch {
-    return EMPTY_STORE
-  }
+  return appStorage.getJSON<TaxStore>(STORAGE_KEY, EMPTY_STORE)
 }
 
 function save(store: TaxStore) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+  appStorage.setJSON(STORAGE_KEY, store)
 }
 
 let uid = Date.now()
@@ -49,7 +45,7 @@ async function migrateContentToIndexedDB(store: TaxStore): Promise<TaxStore> {
     }
   }
   if (migrated) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    appStorage.setJSON(STORAGE_KEY, next)
   }
   return next
 }

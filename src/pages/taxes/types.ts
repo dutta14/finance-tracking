@@ -1,3 +1,5 @@
+import { appStorage } from '../../utils/appStorage'
+
 export type TaxDocOwner = 'primary' | 'partner' | 'joint'
 
 export type ChecklistCategory = 'paystub' | 'account' | 'tax-return' | 'custom'
@@ -48,13 +50,9 @@ export interface TaxTemplate {
 const TEMPLATES_KEY = 'tax-templates'
 
 export function loadTemplates(): TaxTemplate[] {
-  try {
-    return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]')
-  } catch {
-    return []
-  }
+  return appStorage.getJSON<TaxTemplate[]>(TEMPLATES_KEY, [])
 }
 
 export function saveTemplates(templates: TaxTemplate[]) {
-  localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates))
+  appStorage.setJSON(TEMPLATES_KEY, templates)
 }

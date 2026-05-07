@@ -6,6 +6,7 @@ import { Account, BalanceEntry, formatCurrency } from '../data/types'
 import { projectFIDate, DEFAULT_PRE_FI_GROWTH_RATE } from '../goal/utils/goalCalculations'
 import { getBudgetSaveRate } from '../budget/utils/budgetStorage'
 import TermAbbr from '../../components/TermAbbr'
+import { appStorage } from '../../utils/appStorage'
 
 interface GoalsPeekProps {
   goals: FinancialGoal[]
@@ -44,7 +45,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
     const latest = allMonths[allMonths.length - 1] || ''
     const fiT = latest ? getTotalForMonth(accounts, balances, latest, 'fi') : 0
     const gwT = latest ? getTotalForMonth(accounts, balances, latest, 'gw') : 0
-    const pb = JSON.parse(localStorage.getItem('user-profile') || '{}').birthday || '1990-01'
+    const pb = appStorage.getJSON<{ birthday?: string }>('user-profile', {}).birthday || '1990-01'
     return { fiTotal: fiT, gwTotal: gwT, latestMonth: latest, profileBirthday: pb }
   }, [accounts, balances, allMonths])
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, FC, ReactNode } from 'react'
 import type { Account, BalanceEntry } from '../pages/data/types'
+import { appStorage } from '../utils/appStorage'
 
 interface DataContextValue {
   accounts: Account[]
@@ -20,18 +21,10 @@ const DataContext = createContext<DataContextValue>({
 export const useData = () => useContext(DataContext)
 
 function loadAccounts(): Account[] {
-  try {
-    return JSON.parse(localStorage.getItem('data-accounts') || '[]')
-  } catch {
-    return []
-  }
+  return appStorage.getJSON<Account[]>('data-accounts', [])
 }
 function loadBalances(): BalanceEntry[] {
-  try {
-    return JSON.parse(localStorage.getItem('data-balances') || '[]')
-  } catch {
-    return []
-  }
+  return appStorage.getJSON<BalanceEntry[]>('data-balances', [])
 }
 
 export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -42,27 +35,29 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const setAccounts = useCallback((updated: Account[]) => {
     setAccountsState(updated)
-    localStorage.setItem('data-accounts', JSON.stringify(updated))
+    appStorage.setJSON('data-accounts', updated)
   }, [])
 
   const setBalances = useCallback((updated: BalanceEntry[]) => {
     setBalancesState(updated)
-    localStorage.setItem('data-balances', JSON.stringify(updated))
+    appStorage.setJSON('data-balances', updated)
   }, [])
 
   useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'data-accounts') setAccountsState(loadAccounts())
-      if (e.key === 'data-balances') setBalancesState(loadBalances())
-    }
+    const unsub1 = appStorage.subscribe('data-accounts', () => {
+      setAccountsState(loadAccounts())
+    })
+    const unsub2 = appStorage.subscribe('data-balances', () => {
+      setBalancesState(loadBalances())
+    })
     const handleCustom = () => {
       setAccountsState(loadAccounts())
       setBalancesState(loadBalances())
     }
-    window.addEventListener('storage', handleStorage)
     window.addEventListener('data-changed', handleCustom)
     return () => {
-      window.removeEventListener('storage', handleStorage)
+      unsub1()
+      unsub2()
       window.removeEventListener('data-changed', handleCustom)
     }
   }, [])

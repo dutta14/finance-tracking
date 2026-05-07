@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { appStorage } from '../utils/appStorage'
 
 export interface Profile {
   name: string
@@ -15,8 +16,7 @@ const STORAGE_KEY = 'user-profile'
 
 const loadProfile = (): Profile => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) return JSON.parse(stored)
+    return appStorage.getJSON<Profile>(STORAGE_KEY, { name: '', avatarDataUrl: '', birthday: '' })
   } catch {
     /* ignore */
   }
@@ -29,7 +29,7 @@ export const useProfile = () => {
   const updateProfile = (updates: Partial<Profile>) => {
     setProfile(prev => {
       const next = { ...prev, ...updates }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      appStorage.setJSON(STORAGE_KEY, next)
       return next
     })
   }
