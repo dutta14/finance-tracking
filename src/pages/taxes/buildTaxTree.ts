@@ -1,32 +1,21 @@
 import type { DriveFolder, DriveFile } from '../drive/types'
 import type { TaxStore, TaxChecklistItem } from './types'
 import type { Account } from '../data/types'
+import { appStorage } from '../../utils/appStorage'
 
 function loadTaxStore(): TaxStore {
-  try {
-    return JSON.parse(localStorage.getItem('tax-store') || '{}')
-  } catch {
-    return { years: {} }
-  }
+  return appStorage.getJSON<TaxStore>('tax-store', { years: {} })
 }
 
 function loadAccounts(): Account[] {
-  try {
-    return JSON.parse(localStorage.getItem('data-accounts') || '[]')
-  } catch {
-    return []
-  }
+  return appStorage.getJSON<Account[]>('data-accounts', [])
 }
 
 function ownerLabel(owner: string): string {
-  try {
-    const profile = JSON.parse(localStorage.getItem('user-profile') || '{}')
-    if (owner === 'primary') return profile.name || 'Primary'
-    if (owner === 'partner') return profile.partner?.name || 'Partner'
-    return 'Joint'
-  } catch {
-    return owner
-  }
+  const profile = appStorage.getJSON<{ name?: string; partner?: { name?: string } }>('user-profile', {})
+  if (owner === 'primary') return profile.name || 'Primary'
+  if (owner === 'partner') return profile.partner?.name || 'Partner'
+  return 'Joint'
 }
 
 function categoryLabel(cat: string): string | undefined {

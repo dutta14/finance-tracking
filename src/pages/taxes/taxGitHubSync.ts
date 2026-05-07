@@ -1,6 +1,7 @@
 import { GitHubSyncConfig } from '../../hooks/useGitHubSync'
 import type { TaxStore, TaxDocFile } from './types'
 import { getFileContent } from '../../utils/taxFileDB'
+import { appStorage } from '../../utils/appStorage'
 
 function apiHeaders(token: string): Record<string, string> {
   return {
@@ -67,14 +68,10 @@ async function uploadTaxFile(
 }
 
 function ownerLabel(owner: string): string {
-  try {
-    const profile = JSON.parse(localStorage.getItem('user-profile') || '{}')
-    if (owner === 'primary') return profile.name || 'Primary'
-    if (owner === 'partner') return profile.partner?.name || 'Partner'
-    return 'Joint'
-  } catch {
-    return owner
-  }
+  const profile = appStorage.getJSON<{ name?: string; partner?: { name?: string } }>('user-profile', {})
+  if (owner === 'primary') return profile.name || 'Primary'
+  if (owner === 'partner') return profile.partner?.name || 'Partner'
+  return 'Joint'
 }
 
 /** Sync all tax document files to GitHub */

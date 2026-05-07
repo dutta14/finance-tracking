@@ -3,6 +3,7 @@ import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
+import { appStorage } from '../../../utils/appStorage'
 import '../../../styles/FICalculator.css'
 
 const REMOVED_GROUP_ID = 'removed'
@@ -85,14 +86,10 @@ interface ProfileData {
 }
 
 function loadProfile(): ProfileData {
-  try {
-    const raw = JSON.parse(localStorage.getItem('user-profile') || '{}')
-    return {
-      primaryBirthYear: getBirthYear(raw.birthday || ''),
-      partnerBirthYear: raw.partner ? getBirthYear(raw.partner.birthday || '') : null,
-    }
-  } catch {
-    return { primaryBirthYear: null, partnerBirthYear: null }
+  const raw = appStorage.getJSON<{ birthday?: string; partner?: { birthday?: string } }>('user-profile', {})
+  return {
+    primaryBirthYear: getBirthYear(raw.birthday || ''),
+    partnerBirthYear: raw.partner ? getBirthYear(raw.partner.birthday || '') : null,
   }
 }
 

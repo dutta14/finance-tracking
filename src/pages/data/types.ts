@@ -81,11 +81,13 @@ export const formatMonth = (ym: string) => {
 export const formatCurrency = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
+import { appStorage } from '../../utils/appStorage'
+
 /** Read accounts + balances from localStorage and return the latest-month FI and GW totals. */
 export const getLatestGoalTotals = (): { fiTotal: number; gwTotal: number } => {
   try {
-    const accounts: Account[] = JSON.parse(localStorage.getItem('data-accounts') || '[]')
-    const balances: BalanceEntry[] = JSON.parse(localStorage.getItem('data-balances') || '[]')
+    const accounts: Account[] = appStorage.getJSON<Account[]>('data-accounts', [])
+    const balances: BalanceEntry[] = appStorage.getJSON<BalanceEntry[]>('data-balances', [])
     if (accounts.length === 0 || balances.length === 0) return { fiTotal: 0, gwTotal: 0 }
     const months = [...new Set(balances.map(b => b.month))].sort()
     const latest = months[months.length - 1]
