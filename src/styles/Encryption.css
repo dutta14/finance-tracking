@@ -183,8 +183,10 @@
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -218,7 +220,7 @@
 
 .unlock-error {
   font-size: var(--fs-sm);
-  color: var(--color-negative);
+  color: #dc2626;
   margin: 0;
   min-height: 1.25rem;
 }
@@ -323,6 +325,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   text-align: left;
+  display: block;
 }
 
 .unlock-help-panel p {
@@ -408,6 +411,11 @@
   border-color: var(--color-negative);
 }
 
+.settings-btn--danger-outline:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Inline form containers */
 .security-setup-form,
 .security-change-form,
@@ -447,6 +455,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .security-form-close:hover {
@@ -454,9 +464,14 @@
   background: var(--color-surface-hover);
 }
 
+.security-form-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .security-mismatch {
   font-size: var(--fs-sm);
-  color: var(--color-negative);
+  color: #dc2626;
   margin: 0;
 }
 
@@ -491,6 +506,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .unlock-input-wrapper--shake {
+    animation: none;
+  }
+
+  .unlock-submit-spinner {
     animation: none;
   }
 

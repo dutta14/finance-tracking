@@ -104,6 +104,13 @@ if (typeof window !== 'undefined') {
       notifySubscribers(e.key, e.newValue)
     }
   })
+
+  // Flush pending persists when tab becomes hidden (prevents data loss on tab switch)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && _pendingPersists.size > 0) {
+      flushPersists()
+    }
+  })
 }
 
 // ── Public API ─────────────────────────────────────────────────

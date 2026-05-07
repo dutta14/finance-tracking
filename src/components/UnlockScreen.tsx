@@ -88,7 +88,7 @@ const UnlockScreen: FC = () => {
 
   return (
     <div className="unlock-screen">
-      <main className="unlock-card" role="main">
+      <main className="unlock-card">
         <div className="unlock-brand">
           <ShieldLockIcon />
           <h1 className="unlock-brand-title">Finance Tracker</h1>
@@ -138,6 +138,7 @@ const UnlockScreen: FC = () => {
             className={`unlock-help-panel${helpExpanded ? ' unlock-help-panel--expanded' : ''}`}
             role="region"
             aria-label="Passphrase recovery help"
+            hidden={!helpExpanded}
           >
             <p>
               <strong>Your data is encrypted locally.</strong> Without the correct passphrase, it cannot be recovered.
