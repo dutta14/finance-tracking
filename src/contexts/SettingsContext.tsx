@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, FC, ReactNode, Dispatch, SetStateAction } from 'react'
+import { getStorageItem, setStorageItem } from '../utils/storage'
 
 export interface SettingsContextValue {
   darkMode: boolean
@@ -24,7 +25,7 @@ export const useSettings = (): SettingsContextValue => {
 export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false
-    const stored = localStorage.getItem('darkMode')
+    const stored = getStorageItem('darkMode', '')
     if (stored === '1') return true
     if (stored === '0') return false
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
@@ -32,29 +33,29 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const [accentTheme, setAccentTheme] = useState(() => {
     if (typeof window === 'undefined') return 'blue'
-    return localStorage.getItem('accentTheme') || localStorage.getItem('fiTheme') || 'blue'
+    return getStorageItem('accentTheme', '') || getStorageItem('fiTheme', '') || 'blue'
   })
 
   const [allowCsvImport, setAllowCsvImport] = useState(() => {
     if (typeof window === 'undefined') return false
-    return localStorage.getItem('allowCsvImport') === '1'
+    return getStorageItem('allowCsvImport', '0') === '1'
   })
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (darkMode) document.body.classList.add('dark')
     else document.body.classList.remove('dark')
-    localStorage.setItem('darkMode', darkMode ? '1' : '0')
+    setStorageItem('darkMode', darkMode ? '1' : '0')
   }, [darkMode])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    localStorage.setItem('accentTheme', accentTheme)
+    setStorageItem('accentTheme', accentTheme)
   }, [accentTheme])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    localStorage.setItem('allowCsvImport', allowCsvImport ? '1' : '0')
+    setStorageItem('allowCsvImport', allowCsvImport ? '1' : '0')
   }, [allowCsvImport])
 
   const value = useMemo<SettingsContextValue>(

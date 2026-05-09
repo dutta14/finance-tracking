@@ -7,6 +7,7 @@ import GoalFilterBar, { GoalFilters, DEFAULT_FILTERS, applyFilters } from './Goa
 import '../../../styles/Goal.css'
 import '../../../styles/GoalFilterBar.css'
 import '../../../styles/GoalCompareView.css'
+import { getStorageItem, setStorageItem } from '../../../utils/storage'
 
 const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
 const modKey = isMac ? '⌘' : 'Ctrl'
@@ -46,7 +47,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   const compareBtnRef = useRef<HTMLButtonElement>(null)
   const selectedGoals = goals.filter(p => selectedGoalIds.includes(p.id))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
-    const stored = localStorage.getItem('goal-view-mode')
+    const stored = getStorageItem('goal-view-mode', 'grid')
     return stored === 'list' ? 'list' : 'grid'
   })
   const [filters, setFilters] = useState<GoalFilters>(DEFAULT_FILTERS)
@@ -129,7 +130,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
               onClick={() => {
                 setViewMode('grid')
-                localStorage.setItem('goal-view-mode', 'grid')
+                setStorageItem('goal-view-mode', 'grid')
               }}
               aria-label="Grid view"
               title="Grid view"
@@ -145,7 +146,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
               onClick={() => {
                 setViewMode('list')
-                localStorage.setItem('goal-view-mode', 'list')
+                setStorageItem('goal-view-mode', 'list')
               }}
               aria-label="List view"
               title="List view"

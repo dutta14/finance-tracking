@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { Account, BalanceEntry } from '../../pages/data/types'
 import type { FinancialGoal } from '../../types'
 import '../../styles/SetupProgress.css'
+import { getStorageItem } from '../../utils/storage'
 
 interface Step {
   id: string
@@ -31,7 +32,7 @@ export function isOnboardingComplete(
 }
 
 export function isOnboardingDismissed(): boolean {
-  return localStorage.getItem('onboarding-dismissed') === '1'
+  return getStorageItem('onboarding-dismissed', '0') === '1'
 }
 
 const SetupProgress: FC<SetupProgressProps> = ({ accounts, balances, goals, hasBudgetData, onDismiss }) => {

@@ -111,13 +111,13 @@ interface FISim {
 const SIMS_KEY = 'fi-simulations'
 function loadSims(): FISim[] {
   try {
-    return JSON.parse(localStorage.getItem(SIMS_KEY) || '[]')
+    return appStorage.getJSON<FISim[]>(SIMS_KEY, [])
   } catch {
     return []
   }
 }
 function saveSims(sims: FISim[]) {
-  localStorage.setItem(SIMS_KEY, JSON.stringify(sims))
+  appStorage.setJSON(SIMS_KEY, sims)
   window.dispatchEvent(new Event('tools-changed'))
 }
 

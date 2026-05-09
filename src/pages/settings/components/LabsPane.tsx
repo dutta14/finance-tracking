@@ -1,8 +1,9 @@
 import { FC, useState } from 'react'
 import { isDemoActive, enterDemoMode, exitDemoMode } from '../demoMode'
+import { getStorageItem, setStorageItem } from '../../../utils/storage'
 
 const LabsPane: FC = () => {
-  const [labPdfToCsv, setLabPdfToCsv] = useState(() => localStorage.getItem('lab-pdf-to-csv') === '1')
+  const [labPdfToCsv, setLabPdfToCsv] = useState(() => getStorageItem('lab-pdf-to-csv', '0') === '1')
   const [demoActive] = useState(isDemoActive)
 
   return (
@@ -25,7 +26,7 @@ const LabsPane: FC = () => {
             onClick={() => {
               const next = !labPdfToCsv
               setLabPdfToCsv(next)
-              localStorage.setItem('lab-pdf-to-csv', next ? '1' : '0')
+              setStorageItem('lab-pdf-to-csv', next ? '1' : '0')
               window.dispatchEvent(new Event('labs-changed'))
             }}
             role="switch"

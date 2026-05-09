@@ -1,6 +1,7 @@
 import { createContext, useContext, FC, ReactNode, useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useGitHubSyncContext } from '../contexts/GitHubSyncContext'
 import type { FlagDefinition, FlagType } from './flagSystem'
+import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/storage'
 
 /* ── Hash function (deterministic, non-negative) ─────────────────── */
 
@@ -42,9 +43,6 @@ export interface FlagContextValue {
   clientId: string
 }
 
-const OVERRIDES_KEY = 'flag-overrides'
-const CLIENT_ID_KEY = 'flag-client-id'
-const CACHE_KEY = 'flag-rollout-cache'
 const CACHE_MAX_AGE_MS = 5 * 60 * 1000 // 5 minutes
 const EMPTY_CONFIG: RolloutConfig = { version: 1, updatedAt: '', flags: {} }
 
@@ -56,18 +54,12 @@ interface CachedConfig {
 }
 
 function getCachedConfig(): CachedConfig | null {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
+  return getStorageItem('flag-rollout-cache', null) as CachedConfig | null
 }
 
 function setCachedConfig(config: RolloutConfig): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ config, fetchedAt: Date.now() }))
+    setStorageItem('flag-rollout-cache', { config, fetchedAt: Date.now() })
   } catch {
     /* localStorage full */
   }
@@ -101,21 +93,15 @@ export function useFlagContext(): FlagContextValue {
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
 function getOrCreateClientId(): string {
-  const existing = localStorage.getItem(CLIENT_ID_KEY)
+  const existing = getStorageItem('flag-client-id', '')
   if (existing) return existing
   const id = crypto.randomUUID()
-  localStorage.setItem(CLIENT_ID_KEY, id)
+  setStorageItem('flag-client-id', id)
   return id
 }
 
 function loadOverrides(): Record<string, unknown> {
-  try {
-    const raw = localStorage.getItem(OVERRIDES_KEY)
-    if (!raw) return {}
-    return JSON.parse(raw) as Record<string, unknown>
-  } catch {
-    return {}
-  }
+  return getStorageItem('flag-overrides', {})
 }
 
 /* ── Provider ─────────────────────────────────────────────────────── */
@@ -347,7 +333,7 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
     setOverrides(prev => {
       const next = { ...prev, [flagId]: value }
       try {
-        localStorage.setItem(OVERRIDES_KEY, JSON.stringify(next))
+        setStorageItem('flag-overrides', next)
       } catch {
         // localStorage may be full — override still applies in-memory
       }
@@ -359,7 +345,7 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
 
   const resetAllOverrides = useCallback(() => {
     setOverrides({})
-    localStorage.removeItem(OVERRIDES_KEY)
+    removeStorageItem('flag-overrides')
   }, [])
 
   /* ── saveRolloutConfig ─────────────────────────────────────────── */

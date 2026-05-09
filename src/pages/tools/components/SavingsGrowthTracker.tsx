@@ -3,6 +3,7 @@ import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
+import { appStorage } from '../../../utils/appStorage'
 import '../../../styles/SavingsGrowthTracker.css'
 
 const REMOVED_GROUP_ID = 'removed'
@@ -130,14 +131,14 @@ interface YearOverrides {
 
 function loadOverrides(): Record<number, YearOverrides> {
   try {
-    return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}')
+    return appStorage.getJSON<Record<number, YearOverrides>>(OVERRIDES_KEY, {})
   } catch {
     return {}
   }
 }
 
 function saveOverrides(o: Record<number, YearOverrides>) {
-  localStorage.setItem(OVERRIDES_KEY, JSON.stringify(o))
+  appStorage.setJSON(OVERRIDES_KEY, o)
   window.dispatchEvent(new Event('tools-changed'))
 }
 

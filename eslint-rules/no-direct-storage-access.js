@@ -24,6 +24,7 @@ const SENSITIVE_KEYS = [
 const EXEMPT_FILES = [
   'src/utils/appStorage.ts',
   'src/utils/encryptedStorage.ts',
+  'src/utils/storage.ts',
   'src/utils/migratePlaintext.ts',
   'src/contexts/EncryptionContext.tsx',
   'src/pages/settings/demoMode.ts',

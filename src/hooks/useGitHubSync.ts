@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { deriveKey, bytesToB64, b64ToBytes } from '../utils/crypto'
+import { getStorageItem, setStorageItem } from '../utils/storage'
 
 export interface GitHubSyncConfig {
   owner: string
@@ -54,15 +55,13 @@ const DEBOUNCE_MS = 60_000
 
 const loadConfig = (): GitHubSyncConfig => {
   try {
-    const raw = localStorage.getItem(CONFIG_KEY)
-    if (!raw) return DEFAULT_CONFIG
-    const parsed = { ...DEFAULT_CONFIG, ...JSON.parse(raw) }
+    const parsed = { ...DEFAULT_CONFIG, ...getStorageItem('github-sync-config', DEFAULT_CONFIG) }
     // Always use canonical file path — older configs may have a custom value
     parsed.filePath = DEFAULT_CONFIG.filePath
     // Strip legacy plaintext token if present
     if ('legacyToken' in parsed) {
-      delete parsed.legacyToken
-      localStorage.setItem(CONFIG_KEY, JSON.stringify(parsed))
+      delete (parsed as Record<string, unknown>).legacyToken
+      setStorageItem('github-sync-config', parsed)
     }
     return parsed
   } catch {
@@ -172,9 +171,8 @@ export const useGitHubSync = () => {
   const updateConfig = useCallback((updates: Partial<GitHubSyncConfig>) => {
     setConfigState(prev => {
       const next = { ...prev, ...updates }
-      // Ensure we persist all config fields to localStorage
       try {
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(next))
+        setStorageItem('github-sync-config', next)
         // Verify it was written successfully by reading it back
         const verify = localStorage.getItem(CONFIG_KEY)
         if (!verify) {
@@ -214,7 +212,7 @@ export const useGitHubSync = () => {
             ...prev,
             ...encrypted,
           }
-          localStorage.setItem(CONFIG_KEY, JSON.stringify(next))
+          setStorageItem('github-sync-config', next)
           return next
         })
         setSessionToken(token.trim())

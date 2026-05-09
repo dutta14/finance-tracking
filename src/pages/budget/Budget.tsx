@@ -12,6 +12,7 @@ import CSVPreviewModal from './components/CSVPreviewModal'
 import CashflowBarChart from './components/CashflowBarChart'
 import CashflowSankey from './components/CashflowSankey'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import { getStorageItem } from '../../utils/storage'
 import '../../styles/Budget.css'
 
 const PdfToCsv = lazy(() => import('../tools/components/PdfToCsv'))
@@ -55,7 +56,7 @@ const Budget: FC = () => {
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
   const [showPdfToCsv, setShowPdfToCsv] = useState(false)
-  const pdfToCsvEnabled = localStorage.getItem('lab-pdf-to-csv') === '1'
+  const pdfToCsvEnabled = getStorageItem('lab-pdf-to-csv', '0') === '1'
 
   const pdfModalRef = useRef<HTMLDivElement>(null)
   const pdfTriggerRef = useRef<HTMLElement | null>(null)

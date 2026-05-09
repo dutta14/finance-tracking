@@ -9,19 +9,14 @@ import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
 import SetupProgress from './SetupProgress'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
+import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/storage'
 import '../../styles/Home.css'
 
-const STORAGE_KEY = 'home-card-order'
 const DEFAULT_ORDER = [0, 1, 2, 3]
 
 function loadOrder(): number[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed) && parsed.length === 4) return parsed
-    }
-  } catch {}
+  const parsed = getStorageItem('home-card-order', DEFAULT_ORDER)
+  if (Array.isArray(parsed) && parsed.length === 4) return parsed
   return DEFAULT_ORDER
 }
 
@@ -44,7 +39,7 @@ const Home: FC = () => {
   }, [])
 
   const allComplete = accounts.length > 0 && balances.length > 0 && goals.length > 0 && hasBudgetData
-  const [setupDismissed, setSetupDismissed] = useState(() => localStorage.getItem('onboarding-dismissed') === '1')
+  const [setupDismissed, setSetupDismissed] = useState(() => getStorageItem('onboarding-dismissed', '0') === '1')
 
   const allMonths = useMemo(
     () => [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a)),
@@ -86,7 +81,7 @@ const Home: FC = () => {
       const next = [...prev]
       const [removed] = next.splice(from, 1)
       next.splice(idx, 0, removed)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      setStorageItem('home-card-order', next)
       setAnnouncement(`${CARD_NAMES[removed]} moved to position ${idx + 1}`)
       return next
     })
@@ -127,7 +122,7 @@ const Home: FC = () => {
           const next = [...prev]
           const [removed] = next.splice(from, 1)
           next.splice(dragOver, 0, removed)
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+          setStorageItem('home-card-order', next)
           setAnnouncement(`${CARD_NAMES[removed]} moved to position ${dragOver + 1}`)
           return next
         })
@@ -150,7 +145,7 @@ const Home: FC = () => {
       const next = [...prev]
       const [removed] = next.splice(pos, 1)
       next.splice(target, 0, removed)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      setStorageItem('home-card-order', next)
       setAnnouncement(`${CARD_NAMES[removed]} moved to position ${target + 1}`)
       return next
     })
@@ -189,7 +184,7 @@ const Home: FC = () => {
           <button
             className="setup-guide-link"
             onClick={() => {
-              localStorage.removeItem('onboarding-dismissed')
+              removeStorageItem('onboarding-dismissed')
               setSetupDismissed(false)
             }}
           >
@@ -204,7 +199,7 @@ const Home: FC = () => {
           goals={goals}
           hasBudgetData={hasBudgetData}
           onDismiss={() => {
-            localStorage.setItem('onboarding-dismissed', '1')
+            setStorageItem('onboarding-dismissed', '1')
             setSetupDismissed(true)
           }}
         />
