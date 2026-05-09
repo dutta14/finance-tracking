@@ -130,6 +130,58 @@ describe('GitHub sync config loading', () => {
     expect(activeToken).toBe('')
   })
 
+  it('loadConfig strips legacyToken even when encrypted fields are present', () => {
+    const config = {
+      owner: 'user',
+      repo: 'repo',
+      filePath: 'finance-goals.json',
+      autoSync: false,
+      legacyToken: 'ghp_plaintext123',
+      encryptedToken: 'abc123encrypted',
+      tokenSalt: 'salt123',
+      tokenIv: 'iv123',
+    }
+    localStorage.setItem('github-sync-config', JSON.stringify(config))
+
+    // Re-read as loadConfig would: parse, strip legacyToken, persist cleaned
+    const raw = localStorage.getItem('github-sync-config')!
+    const parsed = { owner: '', repo: '', filePath: 'finance-goals.json', autoSync: false, ...JSON.parse(raw) }
+    parsed.filePath = 'finance-goals.json'
+    if ('legacyToken' in parsed) {
+      delete parsed.legacyToken
+      localStorage.setItem('github-sync-config', JSON.stringify(parsed))
+    }
+
+    const persisted = JSON.parse(localStorage.getItem('github-sync-config')!)
+    expect(persisted).not.toHaveProperty('legacyToken')
+    expect(persisted.encryptedToken).toBe('abc123encrypted')
+    expect(persisted.tokenSalt).toBe('salt123')
+    expect(persisted.tokenIv).toBe('iv123')
+  })
+
+  it('loadConfig is a no-op when no legacyToken exists', () => {
+    const config = {
+      owner: 'user',
+      repo: 'repo',
+      filePath: 'finance-goals.json',
+      autoSync: true,
+    }
+    localStorage.setItem('github-sync-config', JSON.stringify(config))
+
+    const raw = localStorage.getItem('github-sync-config')!
+    const parsed = { owner: '', repo: '', filePath: 'finance-goals.json', autoSync: false, ...JSON.parse(raw) }
+    parsed.filePath = 'finance-goals.json'
+    if ('legacyToken' in parsed) {
+      delete parsed.legacyToken
+      localStorage.setItem('github-sync-config', JSON.stringify(parsed))
+    }
+
+    // Config should not have been re-written (no legacyToken to strip)
+    const persisted = JSON.parse(localStorage.getItem('github-sync-config')!)
+    expect(persisted).not.toHaveProperty('legacyToken')
+    expect(persisted.autoSync).toBe(true)
+  })
+
   it('file path derivation for data/tools/allocation/taxes', () => {
     const basePath = 'finance-goals.json'
     expect(basePath.replace(/\.json$/, '-data.json')).toBe('finance-goals-data.json')

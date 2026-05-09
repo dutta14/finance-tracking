@@ -336,5 +336,202 @@ describe('validateImportPayload', () => {
       const result = validateImportPayload(42)
       expect(result.valid).toBe(false)
     })
+
+    it('does not include sanitized when validation fails', () => {
+      const result = validateImportPayload({ goals: 'not an array' })
+      expect(result.valid).toBe(false)
+      expect(result.sanitized).toBeUndefined()
+    })
+
+    it('treats non-number version as warning', () => {
+      const result = validateImportPayload(makePayload({ version: 'v2' }))
+      expect(result.valid).toBe(true)
+      expect(result.warnings.some(w => w.includes('version'))).toBe(true)
+      expect(result.sanitized!.version).toBeUndefined()
+    })
+  })
+
+  describe('goal edge cases', () => {
+    it('skips goal with whitespace-only goalName', () => {
+      const result = validateImportPayload(makePayload({ goals: [{ id: 1, goalName: '   ' }] }))
+      expect(result.valid).toBe(false)
+      expect(result.warnings.some(w => w.includes('goalName'))).toBe(true)
+    })
+
+    it('skips goal that is not an object (e.g. string)', () => {
+      const result = validateImportPayload(makePayload({ goals: ['not-a-goal', validGoal] }))
+      expect(result.valid).toBe(true)
+      expect(result.sanitized!.goals).toHaveLength(1)
+      expect(result.warnings.some(w => w.includes('goals[0]') && w.includes('not an object'))).toBe(true)
+    })
+  })
+
+  describe('gwGoals edge cases', () => {
+    it('warns when gwGoals is not an array', () => {
+      const result = validateImportPayload(makePayload({ gwGoals: 'not-array' }))
+      expect(result.valid).toBe(true)
+      expect(result.warnings.some(w => w.includes('gwGoals') && w.includes('not an array'))).toBe(true)
+    })
+
+    it('skips gwGoal missing fiGoalId', () => {
+      const result = validateImportPayload(makePayload({ gwGoals: [{ id: 1, label: 'Test' }] }))
+      expect(result.warnings.some(w => w.includes('gwGoals[0]') && w.includes('fiGoalId'))).toBe(true)
+    })
+
+    it('skips gwGoal with empty label', () => {
+      const result = validateImportPayload(makePayload({ gwGoals: [{ id: 1, fiGoalId: 1, label: '  ' }] }))
+      expect(result.warnings.some(w => w.includes('gwGoals[0]') && w.includes('label'))).toBe(true)
+    })
+
+    it('skips gwGoal that is not an object', () => {
+      const result = validateImportPayload(makePayload({ gwGoals: [42] }))
+      expect(result.warnings.some(w => w.includes('gwGoals[0]') && w.includes('not an object'))).toBe(true)
+    })
+  })
+
+  describe('profile edge cases', () => {
+    it('ignores profile that is not an object', () => {
+      const result = validateImportPayload(makePayload({ profile: 'not-an-object' }))
+      expect(result.valid).toBe(true)
+      expect(result.warnings.some(w => w.includes('profile') && w.includes('not an object'))).toBe(true)
+    })
+
+    it('drops oversized partner avatar data URL', () => {
+      const hugeAvatar = 'data:image/png;base64,' + 'B'.repeat(3 * 1024 * 1024)
+      const result = validateImportPayload(
+        makePayload({
+          profile: { name: 'Alice', partner: { name: 'Bob', birthday: '', avatarDataUrl: hugeAvatar } },
+        }),
+      )
+      expect(result.sanitized!.profile!.partner!.avatarDataUrl).toBe('')
+      expect(result.warnings.some(w => w.includes('partner.avatarDataUrl'))).toBe(true)
+    })
+  })
+
+  describe('settings edge cases', () => {
+    it('ignores settings that is not an object', () => {
+      const result = validateImportPayload(makePayload({ settings: 'string' }))
+      expect(result.valid).toBe(true)
+      expect(result.sanitized!.settings).toBeUndefined()
+    })
+
+    it('coerces truthy non-boolean darkMode value', () => {
+      const result = validateImportPayload(makePayload({ settings: { accentTheme: 'blue', darkMode: 1 } }))
+      expect(result.sanitized!.settings!.darkMode).toBe(true)
+    })
+
+    it('coerces falsy non-boolean allowCsvImport value', () => {
+      const result = validateImportPayload(makePayload({ settings: { accentTheme: 'blue', allowCsvImport: 0 } }))
+      expect(result.sanitized!.settings!.allowCsvImport).toBe(false)
+    })
+
+    it('sanitizes homeCardOrder string', () => {
+      const result = validateImportPayload(
+        makePayload({ settings: { accentTheme: 'blue', homeCardOrder: '[0,1,2,3]' } }),
+      )
+      expect(result.sanitized!.settings!.homeCardOrder).toBe('[0,1,2,3]')
+    })
+  })
+
+  describe('optional field type mismatches', () => {
+    it('warns when budgetConfig is not an object', () => {
+      const result = validateImportPayload(makePayload({ budgetConfig: [1, 2] }))
+      expect(result.warnings.some(w => w.includes('budgetConfig'))).toBe(true)
+    })
+
+    it('warns when fiSimulations is not an array', () => {
+      const result = validateImportPayload(makePayload({ fiSimulations: 'nope' }))
+      expect(result.warnings.some(w => w.includes('fiSimulations'))).toBe(true)
+    })
+
+    it('warns when sgtOverrides is not an object', () => {
+      const result = validateImportPayload(makePayload({ sgtOverrides: [1] }))
+      expect(result.warnings.some(w => w.includes('sgtOverrides'))).toBe(true)
+    })
+
+    it('warns when allocationCustomRatios is not an array', () => {
+      const result = validateImportPayload(makePayload({ allocationCustomRatios: {} }))
+      expect(result.warnings.some(w => w.includes('allocationCustomRatios'))).toBe(true)
+    })
+
+    it('warns when taxStore is not an object', () => {
+      const result = validateImportPayload(makePayload({ taxStore: 'bad' }))
+      expect(result.warnings.some(w => w.includes('taxStore'))).toBe(true)
+    })
+
+    it('warns when taxTemplates is not an array', () => {
+      const result = validateImportPayload(makePayload({ taxTemplates: {} }))
+      expect(result.warnings.some(w => w.includes('taxTemplates'))).toBe(true)
+    })
+
+    it('warns when gitHubConfig is not an object', () => {
+      const result = validateImportPayload(makePayload({ gitHubConfig: 'nope' }))
+      expect(result.warnings.some(w => w.includes('gitHubConfig'))).toBe(true)
+    })
+
+    it('warns when budgetCsvs is not an object', () => {
+      const result = validateImportPayload(makePayload({ budgetCsvs: [1] }))
+      expect(result.warnings.some(w => w.includes('budgetCsvs'))).toBe(true)
+    })
+  })
+
+  describe('account/balance edge cases', () => {
+    it('skips dataAccounts item that is not an object', () => {
+      const result = validateImportPayload(makePayload({ dataAccounts: [42, validAccount] }))
+      expect(result.sanitized!.dataAccounts).toHaveLength(1)
+      expect(result.warnings.some(w => w.includes('dataAccounts[0]') && w.includes('not an object'))).toBe(true)
+    })
+
+    it('skips account with whitespace-only name', () => {
+      const result = validateImportPayload(makePayload({ dataAccounts: [{ id: 1, name: '   ' }] }))
+      expect(result.warnings.some(w => w.includes('dataAccounts[0]') && w.includes('name'))).toBe(true)
+    })
+
+    it('skips dataBalances item that is not an object', () => {
+      const result = validateImportPayload(makePayload({ dataBalances: ['nope', validBalance] }))
+      expect(result.sanitized!.dataBalances).toHaveLength(1)
+      expect(result.warnings.some(w => w.includes('dataBalances[0]') && w.includes('not an object'))).toBe(true)
+    })
+
+    it('skips balance missing id', () => {
+      const result = validateImportPayload(
+        makePayload({ dataBalances: [{ accountId: 1, month: '2025-01', balance: 100 }] }),
+      )
+      expect(result.warnings.some(w => w.includes('dataBalances[0]') && w.includes('id'))).toBe(true)
+    })
+
+    it('skips balance missing accountId', () => {
+      const result = validateImportPayload(makePayload({ dataBalances: [{ id: 1, month: '2025-01', balance: 100 }] }))
+      expect(result.warnings.some(w => w.includes('dataBalances[0]') && w.includes('accountId'))).toBe(true)
+    })
+  })
+
+  describe('tax template edge cases', () => {
+    it('skips template missing name', () => {
+      const result = validateImportPayload(makePayload({ taxTemplates: [{ id: 't1', items: [] }] }))
+      expect(result.warnings.some(w => w.includes('taxTemplates[0]') && w.includes('name'))).toBe(true)
+    })
+
+    it('skips template that is not an object', () => {
+      const result = validateImportPayload(makePayload({ taxTemplates: ['bad'] }))
+      expect(result.warnings.some(w => w.includes('taxTemplates[0]') && w.includes('not an object'))).toBe(true)
+    })
+  })
+
+  describe('XSS payload handling', () => {
+    it('strips HTML from profile names but does not strip from goal names', () => {
+      const xssGoal = { ...validGoal, goalName: '<script>alert("xss")</script>Evil Goal' }
+      const result = validateImportPayload(
+        makePayload({
+          goals: [xssGoal],
+          profile: { name: '<img onerror=alert(1)>Alice', birthday: '', avatarDataUrl: '' },
+        }),
+      )
+      expect(result.valid).toBe(true)
+      // Goals pass through as-is (caller must escape on render)
+      expect(result.sanitized!.goals[0].goalName).toBe('<script>alert("xss")</script>Evil Goal')
+      // Profile names are sanitized
+      expect(result.sanitized!.profile!.name).toBe('Alice')
+    })
   })
 })

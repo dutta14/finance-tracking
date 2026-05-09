@@ -62,4 +62,20 @@ describe('composeProviders', () => {
     )
     expect(screen.getByTestId('val').textContent).toBe('inner')
   })
+
+  it('sets displayName to ComposedProviders', () => {
+    const Providers = composeProviders(ProviderA, ProviderB)
+    expect(Providers.displayName).toBe('ComposedProviders')
+  })
+
+  it('works with a single provider', () => {
+    const Providers = composeProviders(ProviderA)
+    const Reader: FC = () => <span data-testid="a">{useContext(CtxA)}</span>
+    render(
+      <Providers>
+        <Reader />
+      </Providers>,
+    )
+    expect(screen.getByTestId('a').textContent).toBe('from-a')
+  })
 })
