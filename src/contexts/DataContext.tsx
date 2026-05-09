@@ -62,11 +62,12 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [])
 
-  return (
-    <DataContext.Provider value={{ accounts, balances, allMonths, setAccounts, setBalances }}>
-      {children}
-    </DataContext.Provider>
+  const value = useMemo<DataContextValue>(
+    () => ({ accounts, balances, allMonths, setAccounts, setBalances }),
+    [accounts, balances, allMonths, setAccounts, setBalances],
   )
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
 
 export default DataContext

@@ -1,4 +1,4 @@
-import { createContext, useContext, FC, ReactNode, useState, useCallback, useEffect, useRef } from 'react'
+import { createContext, useContext, FC, ReactNode, useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useGitHubSyncContext } from '../contexts/GitHubSyncContext'
 import type { FlagDefinition, FlagType } from './flagSystem'
 
@@ -411,20 +411,35 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
 
   /* ── Context value ─────────────────────────────────────────────── */
 
-  const value: FlagContextValue = {
-    resolveFlag,
-    overrides,
-    rolloutConfig,
-    setOverride,
-    resetAllOverrides,
-    saveRolloutConfig,
-    refresh,
-    isAdmin,
-    isLoading,
-    error,
-    environment,
-    clientId: clientIdRef.current,
-  }
+  const value = useMemo<FlagContextValue>(
+    () => ({
+      resolveFlag,
+      overrides,
+      rolloutConfig,
+      setOverride,
+      resetAllOverrides,
+      saveRolloutConfig,
+      refresh,
+      isAdmin,
+      isLoading,
+      error,
+      environment,
+      clientId: clientIdRef.current,
+    }),
+    [
+      resolveFlag,
+      overrides,
+      rolloutConfig,
+      setOverride,
+      resetAllOverrides,
+      saveRolloutConfig,
+      refresh,
+      isAdmin,
+      isLoading,
+      error,
+      environment,
+    ],
+  )
 
   return <FlagContext.Provider value={value}>{children}</FlagContext.Provider>
 }
