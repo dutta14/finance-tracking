@@ -1,14 +1,15 @@
-import { FC, useCallback } from 'react'
+import { FC, lazy, Suspense, useCallback } from 'react'
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { PageType } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
-import Home from './pages/home/Home'
-import Goal from './pages/goal/Goal'
-import Data from './pages/data/Data'
-import Budget from './pages/budget/Budget'
-import Drive from './pages/drive/Drive'
-import Taxes from './pages/taxes/Taxes'
+
+const Home = lazy(() => import('./pages/home/Home'))
+const Goal = lazy(() => import('./pages/goal/Goal'))
+const Data = lazy(() => import('./pages/data/Data'))
+const Budget = lazy(() => import('./pages/budget/Budget'))
+const Drive = lazy(() => import('./pages/drive/Drive'))
+const Taxes = lazy(() => import('./pages/taxes/Taxes'))
 import { DataProvider } from './contexts/DataContext'
 import { SettingsProvider, useSettings } from './contexts/SettingsContext'
 import { EncryptionProvider, useEncryption } from './contexts/EncryptionContext'
@@ -130,60 +131,68 @@ const AppShell: FC = () => {
             <button onClick={exitDemoMode}>Exit Demo</button>
           </div>
         )}
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ErrorBoundary variant="card" resetKey={location.pathname}>
-                <Home />
-              </ErrorBoundary>
-            }
-          />
-          <Route
-            path="/goal/*"
-            element={
-              <ErrorBoundary variant="card" resetKey={location.pathname}>
-                <Goal />
-              </ErrorBoundary>
-            }
-          />
-          <Route
-            path="/net-worth/*"
-            element={
-              <ErrorBoundary variant="card" resetKey={location.pathname}>
-                <Data />
-              </ErrorBoundary>
-            }
-          />
-          <Route path="/data" element={<Navigate to="/net-worth" replace />} />
-          <Route
-            path="/budget"
-            element={
-              <ErrorBoundary variant="card" resetKey={location.pathname}>
-                <Budget />
-              </ErrorBoundary>
-            }
-          />
-          <Route path="/tools" element={<Navigate to="/budget" replace />} />
-          <Route
-            path="/drive/*"
-            element={
-              <ErrorBoundary variant="card" resetKey={location.pathname}>
-                <Drive />
-              </ErrorBoundary>
-            }
-          />
-          <Route path="/allocation" element={<Navigate to="/net-worth/allocation" replace />} />
-          <Route
-            path="/taxes"
-            element={
-              <ErrorBoundary variant="card" resetKey={location.pathname}>
-                <Taxes />
-              </ErrorBoundary>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense
+          fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+              Loading…
+            </div>
+          }
+        >
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Home />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/goal/*"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Goal />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/net-worth/*"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Data />
+                </ErrorBoundary>
+              }
+            />
+            <Route path="/data" element={<Navigate to="/net-worth" replace />} />
+            <Route
+              path="/budget"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Budget />
+                </ErrorBoundary>
+              }
+            />
+            <Route path="/tools" element={<Navigate to="/budget" replace />} />
+            <Route
+              path="/drive/*"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Drive />
+                </ErrorBoundary>
+              }
+            />
+            <Route path="/allocation" element={<Navigate to="/net-worth/allocation" replace />} />
+            <Route
+              path="/taxes"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Taxes />
+                </ErrorBoundary>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </main>
       {pendingDelete && (
         <UndoToast
