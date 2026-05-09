@@ -13,10 +13,8 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   ghHistory = [],
   ghHasStoredToken = false,
   ghTokenUnlocked = false,
-  ghUsingLegacyToken = false,
   onGhUpdateConfig = () => {},
   onGhSaveEncryptedToken = async () => ({ ok: false, message: '' }),
-  onGhMigrateLegacyToken = async () => ({ ok: false, message: '' }),
   onGhUnlockToken = async () => ({ ok: false, message: '' }),
   onGhLockToken = () => {},
   onGhSyncNow = async () => {},
@@ -73,14 +71,6 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
       setGhTokenInput('')
       setGhPassphrase('')
     }
-    setGhSavingToken(false)
-  }
-
-  const handleGhMigrateLegacy = async () => {
-    setGhSavingToken(true)
-    setGhSaveResult(null)
-    const result = await onGhMigrateLegacyToken?.(ghPassphrase)
-    setGhSaveResult(result)
     setGhSavingToken(false)
   }
 
@@ -211,15 +201,13 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    {!ghUsingLegacyToken && (
-                      <button
-                        className="ghsync-mini-btn ghsync-mini-btn--ghost"
-                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
-                        onClick={onGhLockToken}
-                      >
-                        Lock
-                      </button>
-                    )}
+                    <button
+                      className="ghsync-mini-btn ghsync-mini-btn--ghost"
+                      style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                      onClick={onGhLockToken}
+                    >
+                      Lock
+                    </button>
                     {ghHasStoredToken && !ghShowTokenForm && (
                       <button
                         className="ghsync-mini-btn ghsync-mini-btn--ghost"
@@ -312,15 +300,6 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                           }}
                         >
                           Cancel
-                        </button>
-                      )}
-                      {ghUsingLegacyToken && (
-                        <button
-                          className="ghsync-mini-btn"
-                          onClick={handleGhMigrateLegacy}
-                          disabled={ghSavingToken || !ghPassphrase}
-                        >
-                          Encrypt Legacy
                         </button>
                       )}
                     </div>

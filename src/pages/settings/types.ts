@@ -27,10 +27,8 @@ export interface SettingsModalProps {
   ghHistory?: CommitEntry[]
   ghHasStoredToken?: boolean
   ghTokenUnlocked?: boolean
-  ghUsingLegacyToken?: boolean
   onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
   onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhLockToken?: () => void
   onGhSyncNow?: (data: object, message?: string) => Promise<void>
@@ -65,10 +63,8 @@ export interface GitHubSyncPaneProps {
   ghHistory?: CommitEntry[]
   ghHasStoredToken?: boolean
   ghTokenUnlocked?: boolean
-  ghUsingLegacyToken?: boolean
   onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
   onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhLockToken?: () => void
   onGhSyncNow?: (data: object, message?: string) => Promise<void>

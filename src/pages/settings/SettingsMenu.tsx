@@ -26,10 +26,8 @@ interface SettingsMenuProps {
   ghHistory?: CommitEntry[]
   ghHasStoredToken?: boolean
   ghTokenUnlocked?: boolean
-  ghUsingLegacyToken?: boolean
   onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
   onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhMigrateLegacyToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhLockToken?: () => void
   onGhSyncNow?: (data: object, message?: string) => Promise<void>
@@ -116,10 +114,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
           ghHistory={rest.ghHistory}
           ghHasStoredToken={rest.ghHasStoredToken}
           ghTokenUnlocked={rest.ghTokenUnlocked}
-          ghUsingLegacyToken={rest.ghUsingLegacyToken}
           onGhUpdateConfig={rest.onGhUpdateConfig}
           onGhSaveEncryptedToken={rest.onGhSaveEncryptedToken}
-          onGhMigrateLegacyToken={rest.onGhMigrateLegacyToken}
           onGhUnlockToken={rest.onGhUnlockToken}
           onGhLockToken={rest.onGhLockToken}
           onGhSyncNow={rest.onGhSyncNow}

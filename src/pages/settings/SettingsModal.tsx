@@ -151,10 +151,8 @@ const SettingsModal: FC<SettingsModalProps> = props => {
                 ghHistory={props.ghHistory}
                 ghHasStoredToken={props.ghHasStoredToken}
                 ghTokenUnlocked={props.ghTokenUnlocked}
-                ghUsingLegacyToken={props.ghUsingLegacyToken}
                 onGhUpdateConfig={props.onGhUpdateConfig}
                 onGhSaveEncryptedToken={props.onGhSaveEncryptedToken}
-                onGhMigrateLegacyToken={props.onGhMigrateLegacyToken}
                 onGhUnlockToken={props.onGhUnlockToken}
                 onGhLockToken={props.onGhLockToken}
                 onGhSyncNow={props.onGhSyncNow}

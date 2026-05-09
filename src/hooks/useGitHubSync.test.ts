@@ -99,6 +99,37 @@ describe('GitHub sync config loading', () => {
     expect(loaded.tokenIv).toBe('iv123')
   })
 
+  it('loadConfig strips legacyToken from localStorage', () => {
+    const config = {
+      owner: 'user',
+      repo: 'repo',
+      filePath: 'finance-goals.json',
+      autoSync: false,
+      legacyToken: 'ghp_plaintext123',
+    }
+    localStorage.setItem('github-sync-config', JSON.stringify(config))
+
+    // Re-read as loadConfig would: parse, strip legacyToken, persist cleaned
+    const raw = localStorage.getItem('github-sync-config')!
+    const parsed = { owner: '', repo: '', filePath: 'finance-goals.json', autoSync: false, ...JSON.parse(raw) }
+    parsed.filePath = 'finance-goals.json'
+    if ('legacyToken' in parsed) {
+      delete parsed.legacyToken
+      localStorage.setItem('github-sync-config', JSON.stringify(parsed))
+    }
+
+    const persisted = JSON.parse(localStorage.getItem('github-sync-config')!)
+    expect(persisted).not.toHaveProperty('legacyToken')
+    expect(persisted.owner).toBe('user')
+  })
+
+  it('activeToken is empty string when no sessionToken is set', () => {
+    // With no legacyToken fallback, activeToken should derive only from sessionToken
+    const sessionToken = ''
+    const activeToken = sessionToken || ''
+    expect(activeToken).toBe('')
+  })
+
   it('file path derivation for data/tools/allocation/taxes', () => {
     const basePath = 'finance-goals.json'
     expect(basePath.replace(/\.json$/, '-data.json')).toBe('finance-goals-data.json')

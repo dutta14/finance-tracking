@@ -29,9 +29,7 @@ export interface GitHubSyncContextValue {
   history: CommitEntry[]
   hasStoredToken: boolean
   tokenUnlocked: boolean
-  usingLegacyToken: boolean
   saveEncryptedToken: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  migrateLegacyToken: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   unlockToken: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   lockToken: () => void
   fetchHistory: () => Promise<void>
@@ -89,10 +87,8 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
     history: ghHistory,
     hasStoredToken,
     tokenUnlocked,
-    usingLegacyToken,
     activeToken: ghActiveToken,
     saveEncryptedToken,
-    migrateLegacyToken,
     unlockToken,
     lockToken,
     syncNow,
@@ -330,7 +326,6 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
             encryptedToken: ghConfig.encryptedToken,
             tokenSalt: ghConfig.tokenSalt,
             tokenIv: ghConfig.tokenIv,
-            legacyToken: ghConfig.legacyToken,
           }
           updateGhConfig(restoredGhConfig)
         }
@@ -413,9 +408,7 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
       history: ghHistory,
       hasStoredToken,
       tokenUnlocked,
-      usingLegacyToken,
       saveEncryptedToken,
-      migrateLegacyToken,
       unlockToken,
       lockToken,
       fetchHistory,
@@ -445,9 +438,7 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
       ghHistory,
       hasStoredToken,
       tokenUnlocked,
-      usingLegacyToken,
       saveEncryptedToken,
-      migrateLegacyToken,
       unlockToken,
       lockToken,
       fetchHistory,

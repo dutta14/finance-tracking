@@ -9,7 +9,6 @@ export interface GitHubSyncConfig {
   encryptedToken?: string
   tokenSalt?: string
   tokenIv?: string
-  legacyToken?: string
 }
 
 export interface CommitEntry {
@@ -60,6 +59,11 @@ const loadConfig = (): GitHubSyncConfig => {
     const parsed = { ...DEFAULT_CONFIG, ...JSON.parse(raw) }
     // Always use canonical file path — older configs may have a custom value
     parsed.filePath = DEFAULT_CONFIG.filePath
+    // Strip legacy plaintext token if present
+    if ('legacyToken' in parsed) {
+      delete parsed.legacyToken
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(parsed))
+    }
     return parsed
   } catch {
     return DEFAULT_CONFIG
@@ -160,10 +164,9 @@ export const useGitHubSync = () => {
   const lastSyncedJsonRef = useRef<string | null>(null)
   const lastSyncedDataJsonRef = useRef<string | null>(null)
 
-  const hasStoredToken = !!(config.encryptedToken || config.legacyToken)
-  const usingLegacyToken = !!config.legacyToken
-  const tokenUnlocked = !!(sessionToken || config.legacyToken)
-  const activeToken = sessionToken || config.legacyToken || ''
+  const hasStoredToken = !!config.encryptedToken
+  const tokenUnlocked = !!sessionToken
+  const activeToken = sessionToken || ''
   const isConfigured = !!(activeToken && config.owner && config.repo && config.filePath)
 
   const updateConfig = useCallback((updates: Partial<GitHubSyncConfig>) => {
@@ -210,7 +213,6 @@ export const useGitHubSync = () => {
           const next: GitHubSyncConfig = {
             ...prev,
             ...encrypted,
-            legacyToken: undefined,
           }
           localStorage.setItem(CONFIG_KEY, JSON.stringify(next))
           return next
@@ -224,17 +226,8 @@ export const useGitHubSync = () => {
     [],
   )
 
-  const migrateLegacyToken = useCallback(
-    async (passphrase: string): Promise<{ ok: boolean; message: string }> => {
-      if (!config.legacyToken) return { ok: false, message: 'No legacy token to migrate.' }
-      return saveEncryptedToken(config.legacyToken, passphrase)
-    },
-    [config.legacyToken, saveEncryptedToken],
-  )
-
   const unlockToken = useCallback(
     async (passphrase: string): Promise<{ ok: boolean; message: string }> => {
-      if (config.legacyToken) return { ok: true, message: 'Legacy token is active. Migrate it to encrypt at rest.' }
       if (!config.encryptedToken || !config.tokenSalt || !config.tokenIv) {
         return { ok: false, message: 'No encrypted token is stored yet.' }
       }
@@ -630,15 +623,11 @@ export const useGitHubSync = () => {
       if (scopes && scopes.includes('repo')) {
         warnings.push('Token has broad repo scope. Prefer a fine-grained token limited to one backup repo.')
       }
-      if (usingLegacyToken) {
-        warnings.push('Token is currently stored as plaintext. Migrate to encrypted storage with a passphrase.')
-      }
-
       return { ok: true, message: `Connected to ${repoData.full_name}`, warnings }
     } catch {
       return { ok: false, message: 'Network error. Check your connection.', warnings: [] }
     }
-  }, [activeToken, apiHeaders, config.owner, config.repo, usingLegacyToken])
+  }, [activeToken, apiHeaders, config.owner, config.repo])
 
   const restoreFromCommit = useCallback(
     async (commitSha: string): Promise<RestoreResult> => {
@@ -795,10 +784,8 @@ export const useGitHubSync = () => {
     history,
     hasStoredToken,
     tokenUnlocked,
-    usingLegacyToken,
     activeToken,
     saveEncryptedToken,
-    migrateLegacyToken,
     unlockToken,
     lockToken,
     syncNow,
