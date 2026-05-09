@@ -1,9 +1,10 @@
 import { createContext, useContext, useCallback, useMemo, FC, ReactNode } from 'react'
-import { GwGoal } from '../types'
 import { useGoals } from './GoalsContext'
 import { useSettings } from './SettingsContext'
 import { loadBudgetStore, saveBudgetStore } from '../pages/budget/utils/budgetStorage'
 import { appStorage } from '../utils/appStorage'
+import { validateImportPayload } from '../utils/importValidator'
+import { getStorageItem, setStorageItem } from '../utils/storage'
 
 export interface ImportExportContextValue {
   handleExport: () => void
@@ -44,8 +45,8 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
           accentTheme,
           darkMode,
           allowCsvImport,
-          goalViewMode: localStorage.getItem('goal-view-mode') || '',
-          homeCardOrder: localStorage.getItem('home-card-order') || '',
+          goalViewMode: getStorageItem('goal-view-mode', ''),
+          homeCardOrder: JSON.stringify(getStorageItem('home-card-order', [0, 1, 2, 3])),
         },
         dataAccounts: dataSnapshot.accounts,
         dataBalances: dataSnapshot.balances,
@@ -74,43 +75,59 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
       const reader = new FileReader()
       reader.onload = e => {
         try {
-          const parsed = JSON.parse(e.target?.result as string)
-          const incoming = Array.isArray(parsed) ? parsed : parsed?.goals || parsed?.plans
-          if (!Array.isArray(incoming)) throw new Error('Invalid format')
-          importGoals(incoming)
-          if (parsed?.profile && typeof parsed.profile === 'object') updateProfile(parsed.profile)
-          if (Array.isArray(parsed?.gwGoals || parsed?.gwPlans))
-            importGwGoals((parsed.gwGoals || parsed.gwPlans) as GwGoal[])
-          if (parsed?.settings && typeof parsed.settings === 'object') {
-            const s = parsed.settings as Record<string, string>
-            if (s.accentTheme) setAccentTheme(s.accentTheme)
-            else if (s.fiTheme) setAccentTheme(s.fiTheme)
-            if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
-            if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
-            if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
+          const rawText = e.target?.result as string
+          const parsed = JSON.parse(rawText)
+          const result = validateImportPayload(parsed, rawText.length)
+
+          if (!result.valid || !result.sanitized) {
+            alert(`Import failed:\n${result.errors.join('\n')}`)
+            return
           }
-          if (Array.isArray(parsed?.dataAccounts)) appStorage.setJSON('data-accounts', parsed.dataAccounts)
-          if (Array.isArray(parsed?.dataBalances)) appStorage.setJSON('data-balances', parsed.dataBalances)
-          if (parsed?.budgetCsvs && typeof parsed.budgetCsvs === 'object') {
+
+          if (result.warnings.length > 0) {
+            console.warn('[import] Warnings:', result.warnings)
+          }
+
+          const data = result.sanitized
+
+          importGoals(data.goals)
+          if (data.profile) updateProfile(data.profile)
+          if (data.gwGoals) importGwGoals(data.gwGoals)
+
+          if (data.settings) {
+            if (data.settings.accentTheme) setAccentTheme(data.settings.accentTheme)
+            if (data.settings.darkMode !== undefined) setDarkMode(!!data.settings.darkMode)
+            if (data.settings.allowCsvImport !== undefined) setAllowCsvImport(!!data.settings.allowCsvImport)
+            if (data.settings.goalViewMode) setStorageItem('goal-view-mode', data.settings.goalViewMode)
+            if (data.settings.homeCardOrder) {
+              try {
+                const order = JSON.parse(data.settings.homeCardOrder) as number[]
+                setStorageItem('home-card-order', order)
+              } catch {
+                localStorage.setItem('home-card-order', data.settings.homeCardOrder)
+              }
+            }
+          }
+
+          if (data.dataAccounts) appStorage.setJSON('data-accounts', data.dataAccounts)
+          if (data.dataBalances) appStorage.setJSON('data-balances', data.dataBalances)
+
+          if (data.budgetCsvs) {
             const store = loadBudgetStore()
-            store.csvs = parsed.budgetCsvs as typeof store.csvs
+            store.csvs = data.budgetCsvs as typeof store.csvs
             saveBudgetStore(store)
           }
-          if (parsed?.budgetConfig && typeof parsed.budgetConfig === 'object')
-            appStorage.setJSON('budget-config', parsed.budgetConfig)
-          if (Array.isArray(parsed?.fiSimulations)) appStorage.setJSON('fi-simulations', parsed.fiSimulations)
-          if (parsed?.sgtOverrides && typeof parsed.sgtOverrides === 'object')
-            appStorage.setJSON('sgt-overrides', parsed.sgtOverrides)
-          if (Array.isArray(parsed?.allocationCustomRatios))
-            appStorage.setJSON('allocation-custom-ratios', parsed.allocationCustomRatios)
-          if (parsed?.taxStore && typeof parsed.taxStore === 'object') appStorage.setJSON('tax-store', parsed.taxStore)
-          if (Array.isArray(parsed?.taxTemplates)) appStorage.setJSON('tax-templates', parsed.taxTemplates)
-          if (parsed?.settings?.homeCardOrder)
-            localStorage.setItem('home-card-order', parsed.settings.homeCardOrder as string)
+          if (data.budgetConfig) appStorage.setJSON('budget-config', data.budgetConfig)
+          if (data.fiSimulations) appStorage.setJSON('fi-simulations', data.fiSimulations)
+          if (data.sgtOverrides) appStorage.setJSON('sgt-overrides', data.sgtOverrides)
+          if (data.allocationCustomRatios) appStorage.setJSON('allocation-custom-ratios', data.allocationCustomRatios)
+          if (data.taxStore) appStorage.setJSON('tax-store', data.taxStore)
+          if (data.taxTemplates) appStorage.setJSON('tax-templates', data.taxTemplates)
+
           window.dispatchEvent(new Event('data-changed'))
           setTimeout(() => window.location.reload(), 200)
         } catch {
-          alert('Could not import: the file is not a valid finance goals export.')
+          alert('Could not import: the file is not valid JSON.')
         }
       }
       reader.readAsText(file)

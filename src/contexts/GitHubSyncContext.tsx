@@ -11,9 +11,11 @@ import type {
 } from '../hooks/useGitHubSync'
 import { useSettings } from './SettingsContext'
 import { useGoals } from './GoalsContext'
-import type { FinancialGoal, GwGoal } from '../types'
+import type { GwGoal } from '../types'
 import type { Account, BalanceEntry } from '../pages/data/types'
 import { appStorage } from '../utils/appStorage'
+import { getStorageItem, setStorageItem } from '../utils/storage'
+import { validateImportPayload } from '../utils/importValidator'
 
 export interface GitHubSyncContextValue {
   config: GitHubSyncConfig
@@ -196,8 +198,8 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
                     accentTheme,
                     darkMode,
                     allowCsvImport,
-                    goalViewMode: localStorage.getItem('goal-view-mode') || '',
-                    homeCardOrder: localStorage.getItem('home-card-order') || '',
+                    goalViewMode: getStorageItem('goal-view-mode', ''),
+                    homeCardOrder: JSON.stringify(getStorageItem('home-card-order', [0, 1, 2, 3])),
                   },
                 },
                 message,
@@ -274,50 +276,51 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
   const applyRestoredSnapshot = useCallback(
     async (data: unknown): Promise<void> => {
       try {
-        const parsed = data as {
-          version?: number
-          goals?: unknown
-          plans?: unknown
-          profile?: unknown
-          gwGoals?: unknown
-          gwPlans?: unknown
-          settings?: unknown
-          gitHubConfig?: unknown
-          dataAccounts?: unknown
-          dataBalances?: unknown
+        const result = validateImportPayload(data)
+
+        if (!result.valid || !result.sanitized) {
+          console.error('Restore validation failed:', result.errors)
+          throw new Error(`Invalid backup data: ${result.errors.join('; ')}`)
         }
-        const incomingGoals = Array.isArray(parsed)
-          ? parsed
-          : Array.isArray(parsed?.goals)
-            ? parsed.goals
-            : Array.isArray(parsed?.plans)
-              ? parsed.plans
-              : []
-        if (!Array.isArray(incomingGoals) || incomingGoals.length === 0)
-          throw new Error('No valid goals data in backup')
-        importGoals(incomingGoals as FinancialGoal[])
+
+        if (result.warnings.length > 0) {
+          console.warn('[restore] Warnings:', result.warnings)
+        }
+
+        const validated = result.sanitized
+
+        importGoals(validated.goals)
+
         let restoreProfile: Partial<typeof profile> = profile
-        if (parsed?.profile && typeof parsed.profile === 'object') {
-          restoreProfile = parsed.profile as Partial<typeof profile>
+        if (validated.profile) {
+          restoreProfile = validated.profile
           updateProfile(restoreProfile)
         }
+
         let restoreGwGoals: GwGoal[] = []
-        if (Array.isArray(parsed?.gwGoals || parsed?.gwPlans)) {
-          restoreGwGoals = (parsed.gwGoals || parsed.gwPlans) as GwGoal[]
+        if (validated.gwGoals) {
+          restoreGwGoals = validated.gwGoals
           importGwGoals(restoreGwGoals)
         }
-        if (parsed?.settings && typeof parsed.settings === 'object') {
-          const s = parsed.settings as Record<string, unknown>
-          if (s.accentTheme) setAccentTheme(s.accentTheme as string)
-          else if (s.fiTheme) setAccentTheme(s.fiTheme as string)
-          if (s.darkMode !== undefined) setDarkMode(!!s.darkMode)
-          if (s.allowCsvImport !== undefined) setAllowCsvImport(!!s.allowCsvImport)
-          if (s.goalViewMode) localStorage.setItem('goal-view-mode', s.goalViewMode as string)
-          if (s.homeCardOrder) localStorage.setItem('home-card-order', s.homeCardOrder as string)
+
+        if (validated.settings) {
+          if (validated.settings.accentTheme) setAccentTheme(validated.settings.accentTheme)
+          if (validated.settings.darkMode !== undefined) setDarkMode(!!validated.settings.darkMode)
+          if (validated.settings.allowCsvImport !== undefined) setAllowCsvImport(!!validated.settings.allowCsvImport)
+          if (validated.settings.goalViewMode) setStorageItem('goal-view-mode', validated.settings.goalViewMode)
+          if (validated.settings.homeCardOrder) {
+            try {
+              const order = JSON.parse(validated.settings.homeCardOrder) as number[]
+              setStorageItem('home-card-order', order)
+            } catch {
+              localStorage.setItem('home-card-order', validated.settings.homeCardOrder)
+            }
+          }
         }
+
         let restoredGhConfig = ghConfig
-        if (parsed?.gitHubConfig && typeof parsed.gitHubConfig === 'object') {
-          const cfg = parsed.gitHubConfig as Record<string, unknown>
+        if (validated.gitHubConfig) {
+          const cfg = validated.gitHubConfig
           restoredGhConfig = {
             owner: (cfg.owner as string) || '',
             repo: (cfg.repo as string) || '',
@@ -329,11 +332,13 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
           }
           updateGhConfig(restoredGhConfig)
         }
+
         await new Promise(r => setTimeout(r, 300))
-        appStorage.setJSON('financialGoals', incomingGoals)
+        appStorage.setJSON('financialGoals', validated.goals)
         appStorage.setJSON('gw-goals', restoreGwGoals)
         appStorage.setJSON('user-profile', restoreProfile || profile)
-        localStorage.setItem('github-sync-config', JSON.stringify(restoredGhConfig))
+        setStorageItem('github-sync-config', restoredGhConfig)
+
         try {
           const dataResult = await restoreDataLatest()
           if (dataResult.ok && dataResult.data) {
@@ -341,8 +346,8 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
             if (Array.isArray(d.accounts)) appStorage.setJSON('data-accounts', d.accounts)
             if (Array.isArray(d.balances)) appStorage.setJSON('data-balances', d.balances)
           } else {
-            if (Array.isArray(parsed?.dataAccounts)) appStorage.setJSON('data-accounts', parsed.dataAccounts)
-            if (Array.isArray(parsed?.dataBalances)) appStorage.setJSON('data-balances', parsed.dataBalances)
+            if (validated.dataAccounts) appStorage.setJSON('data-accounts', validated.dataAccounts)
+            if (validated.dataBalances) appStorage.setJSON('data-balances', validated.dataBalances)
           }
           const toolsResult = await restoreToolsLatest()
           if (toolsResult.ok && toolsResult.data) {
@@ -360,6 +365,7 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
         } catch {
           markRestored()
         }
+
         await new Promise(r => setTimeout(r, 100))
       } catch (e) {
         console.error('Restore error:', e instanceof Error ? e.message : e)
