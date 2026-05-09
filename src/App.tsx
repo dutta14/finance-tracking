@@ -29,6 +29,38 @@ import './styles/ErrorBoundary.css'
 import './styles/colorThemes.css'
 import './styles/modern-design.css'
 import { ModernDesignToggle } from './flags/ModernDesignToggle'
+import { composeProviders } from './utils/composeProviders'
+
+/*
+ * Provider dependency order (outermost → innermost):
+ *
+ * Tier 1 – independent (no context dependencies):
+ *   SettingsProvider, EncryptionProvider, LayoutProvider
+ *
+ * (AppGate checks EncryptionProvider.isLocked before rendering Tier 2+)
+ *
+ * Tier 2 – independent within the authenticated tree:
+ *   GoalsProvider (uses useProfile hook, not a context)
+ *   DataProvider
+ *
+ * Tier 3 – depends on Tier 1 + 2 contexts:
+ *   GitHubSyncProvider  → useGoals, useSettings
+ *   FlagProvider         → useGitHubSyncContext
+ *   BudgetSyncProvider   → useGitHubSyncContext
+ *   TaxSyncProvider      → useGitHubSyncContext, useEncryption
+ *   ImportExportProvider → useGoals, useSettings
+ */
+const OuterProviders = composeProviders(SettingsProvider, EncryptionProvider, LayoutProvider)
+
+const InnerProviders = composeProviders(
+  GoalsProvider,
+  DataProvider,
+  GitHubSyncProvider,
+  FlagProvider,
+  BudgetSyncProvider,
+  TaxSyncProvider,
+  ImportExportProvider,
+)
 
 const AppShell: FC = () => {
   const navigate = useNavigate()
@@ -217,33 +249,17 @@ const AppGate: FC = () => {
   if (isLocked) return <UnlockScreen />
 
   return (
-    <GoalsProvider>
-      <GitHubSyncProvider>
-        <FlagProvider>
-          <BudgetSyncProvider>
-            <TaxSyncProvider>
-              <DataProvider>
-                <ImportExportProvider>
-                  <AppShell />
-                </ImportExportProvider>
-              </DataProvider>
-            </TaxSyncProvider>
-          </BudgetSyncProvider>
-        </FlagProvider>
-      </GitHubSyncProvider>
-    </GoalsProvider>
+    <InnerProviders>
+      <AppShell />
+    </InnerProviders>
   )
 }
 
 const App: FC = () => (
   <ErrorBoundary variant="page">
-    <SettingsProvider>
-      <EncryptionProvider>
-        <LayoutProvider>
-          <AppGate />
-        </LayoutProvider>
-      </EncryptionProvider>
-    </SettingsProvider>
+    <OuterProviders>
+      <AppGate />
+    </OuterProviders>
   </ErrorBoundary>
 )
 export default App
