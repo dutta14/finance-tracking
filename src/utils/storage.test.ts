@@ -243,11 +243,11 @@ describe('getStorageItem (remaining key validators)', () => {
 // ── initStorageSchema — edge cases ──────────────────────────────
 
 describe('initStorageSchema (edge cases)', () => {
-  it('does not upgrade when stored version is non-numeric string (NaN < 1 is false)', () => {
+  it('treats non-numeric stored version as 0 and runs migration', () => {
     localStorage.setItem('storage-schema-version', 'abc')
     initStorageSchema()
-    // Number('abc') → NaN, and NaN < 1 is false, so no upgrade occurs
-    expect(localStorage.getItem('storage-schema-version')).toBe('abc')
+    // NaN is coerced to 0, so migration runs and version is set to current
+    expect(localStorage.getItem('storage-schema-version')).toBe('1')
   })
 })
 

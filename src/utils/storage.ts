@@ -24,8 +24,8 @@ const CURRENT_SCHEMA_VERSION = 1
  * Call once at app startup (e.g. in main.tsx).
  */
 export function initStorageSchema(): void {
-  const stored = localStorage.getItem(SCHEMA_VERSION_KEY)
-  const version = stored ? Number(stored) : 0
+  const stored = Number(localStorage.getItem(SCHEMA_VERSION_KEY) || '0')
+  const version = Number.isNaN(stored) ? 0 : stored
 
   if (version < CURRENT_SCHEMA_VERSION) {
     // Future: run migrations here based on `version`

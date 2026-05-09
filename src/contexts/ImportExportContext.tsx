@@ -104,7 +104,7 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
                 const order = JSON.parse(data.settings.homeCardOrder) as number[]
                 setStorageItem('home-card-order', order)
               } catch {
-                localStorage.setItem('home-card-order', data.settings.homeCardOrder)
+                console.warn('[restore] Invalid homeCardOrder format, skipping')
               }
             }
           }

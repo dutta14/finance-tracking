@@ -313,7 +313,7 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
               const order = JSON.parse(validated.settings.homeCardOrder) as number[]
               setStorageItem('home-card-order', order)
             } catch {
-              localStorage.setItem('home-card-order', validated.settings.homeCardOrder)
+              console.warn('[restore] Invalid homeCardOrder format, skipping')
             }
           }
         }
