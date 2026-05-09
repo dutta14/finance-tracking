@@ -165,7 +165,11 @@ const AppShell: FC = () => {
         )}
         <Suspense
           fallback={
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <div
+              role="status"
+              aria-label="Loading page"
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+            >
               Loading…
             </div>
           }

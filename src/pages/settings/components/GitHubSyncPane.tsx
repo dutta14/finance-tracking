@@ -140,7 +140,9 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
             <div>
               <label className="ghsync-field-label">Token Security</label>
               {!ghHasStoredToken && (
-                <p className="ghsync-field-hint">No token saved yet. Save one encrypted with a passphrase below.</p>
+                <p className="ghsync-field-hint" role="status">
+                  No token saved yet. Save one encrypted with a passphrase below.
+                </p>
               )}
               {ghHasStoredToken && !ghTokenUnlocked && (
                 <>
@@ -169,6 +171,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                 <>
                   {!ghUnlockDismissed && (
                     <div
+                      role="status"
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -223,7 +226,10 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
             </div>
 
             {ghSaveResult && (
-              <p className={ghSaveResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'}>
+              <p
+                role={ghSaveResult.ok ? 'status' : 'alert'}
+                className={ghSaveResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'}
+              >
                 {ghSaveResult.ok ? '✓' : '✗'} {ghSaveResult.message}
               </p>
             )}
@@ -525,7 +531,11 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                   </p>
                 )}
 
-                {ghTestResult && !ghTestResult.ok && <p className="ghsync-result-error">✗ {ghTestResult.message}</p>}
+                {ghTestResult && !ghTestResult.ok && (
+                  <p role="alert" className="ghsync-result-error">
+                    ✗ {ghTestResult.message}
+                  </p>
+                )}
                 {ghTestResult?.warnings?.length ? (
                   <div className="ghsync-warning-box">
                     {ghTestResult.warnings.map(w => (
@@ -552,6 +562,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
             </button>
             {ghRestoreResult && (
               <p
+                role={ghRestoreResult.ok ? 'status' : 'alert'}
                 className={ghRestoreResult.ok ? 'ghsync-result-success' : 'ghsync-result-error'}
                 style={{ marginBottom: '1rem' }}
               >
