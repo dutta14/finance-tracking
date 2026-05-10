@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import TemplatePicker from './TemplatePicker'
 import { GOAL_TEMPLATES } from '../data/goalTemplates'
 
@@ -21,38 +22,40 @@ describe('TemplatePicker', () => {
     }
   })
 
-  it('calls onSelect with correct template when a card is clicked', () => {
+  it('calls onSelect with correct template when a card is clicked', async () => {
+    const user = userEvent.setup()
     render(<TemplatePicker onSelect={onSelect} onClose={onClose} />)
-    fireEvent.click(screen.getByText('Coast FI'))
+    await user.click(screen.getByText('Coast FI'))
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(onSelect).toHaveBeenCalledWith(GOAL_TEMPLATES.find(t => t.id === 'coast-fi'))
   })
 
-  it('calls onSelect when Enter is pressed on a focused card', () => {
+  it('calls onSelect when Enter is pressed on a focused card', async () => {
+    const user = userEvent.setup()
     render(<TemplatePicker onSelect={onSelect} onClose={onClose} />)
     const buttons = screen.getAllByRole('button').filter(b => b.classList.contains('template-card'))
     const fatFiBtn = buttons.find(b => b.textContent!.includes('Fat FI'))!
-    fireEvent.keyDown(fatFiBtn, { key: 'Enter' })
-    fireEvent.keyUp(fatFiBtn, { key: 'Enter' })
-    fireEvent.click(fatFiBtn)
+    fatFiBtn.focus()
+    await user.keyboard('{Enter}')
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(onSelect).toHaveBeenCalledWith(GOAL_TEMPLATES.find(t => t.id === 'fat-fi'))
   })
 
-  it('calls onSelect when Space is pressed on a focused card', () => {
+  it('calls onSelect when Space is pressed on a focused card', async () => {
+    const user = userEvent.setup()
     render(<TemplatePicker onSelect={onSelect} onClose={onClose} />)
     const buttons = screen.getAllByRole('button').filter(b => b.classList.contains('template-card'))
     const baristaBtn = buttons.find(b => b.textContent!.includes('Barista FI'))!
-    fireEvent.keyDown(baristaBtn, { key: ' ' })
-    fireEvent.keyUp(baristaBtn, { key: ' ' })
-    fireEvent.click(baristaBtn)
+    baristaBtn.focus()
+    await user.keyboard(' ')
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(onSelect).toHaveBeenCalledWith(GOAL_TEMPLATES.find(t => t.id === 'barista-fi'))
   })
 
-  it('calls onClose when close button is clicked', () => {
+  it('calls onClose when close button is clicked', async () => {
+    const user = userEvent.setup()
     render(<TemplatePicker onSelect={onSelect} onClose={onClose} />)
-    fireEvent.click(screen.getByLabelText('Close template picker'))
+    await user.click(screen.getByLabelText('Close template picker'))
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 

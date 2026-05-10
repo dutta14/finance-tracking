@@ -33,6 +33,7 @@ describe('useFormData', () => {
     expect(result.current.formData.goalName).toBe('')
     expect(result.current.formData.retirementAge).toBe('')
     expect(result.current.formData.resetExpenseMonth).toBe(false)
+    expect(result.current.formData.goalCreatedIn).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(result.current.error).toBe('')
   })
 

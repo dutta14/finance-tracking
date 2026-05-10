@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import GoalFormModal from './GoalFormModal'
 import { FormData } from '../hooks/useFormData'
 
@@ -63,26 +64,29 @@ describe('GoalFormModal', () => {
     expect(screen.getByRole('dialog', { name: 'Edit goal' })).toBeInTheDocument()
   })
 
-  it('does not call onCancel or onSubmit when clicking the backdrop', () => {
+  it('does not call onCancel or onSubmit when clicking the backdrop', async () => {
+    const user = userEvent.setup()
     render(<GoalFormModal {...defaultProps} />)
     const backdrop = screen.getByRole('dialog').parentElement!
-    fireEvent.click(backdrop)
+    await user.click(backdrop)
 
     expect(defaultProps.onCancel).not.toHaveBeenCalled()
     expect(defaultProps.onSubmit).not.toHaveBeenCalled()
   })
 
-  it('does not close the modal when clicking the backdrop', () => {
+  it('does not close the modal when clicking the backdrop', async () => {
+    const user = userEvent.setup()
     render(<GoalFormModal {...defaultProps} />)
     const backdrop = screen.getByRole('dialog').parentElement!
-    fireEvent.click(backdrop)
+    await user.click(backdrop)
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('calls onCancel when Escape key is pressed', () => {
+  it('calls onCancel when Escape key is pressed', async () => {
+    const user = userEvent.setup()
     render(<GoalFormModal {...defaultProps} />)
-    fireEvent.keyDown(document, { key: 'Escape' })
+    await user.keyboard('{Escape}')
 
     expect(defaultProps.onCancel).toHaveBeenCalledTimes(1)
   })
