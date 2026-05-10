@@ -31,6 +31,7 @@ const LabsPane: FC = () => {
             }}
             role="switch"
             aria-checked={labPdfToCsv}
+            aria-label="PDF → CSV"
           >
             <span className="settings-toggle-knob" />
           </button>
@@ -52,6 +53,7 @@ const LabsPane: FC = () => {
             }}
             role="switch"
             aria-checked={demoActive}
+            aria-label="Demo Mode"
           >
             <span className="settings-toggle-knob" />
           </button>

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 /* ── Hoisted mocks ────────────────────────────────────────────────── */
 
@@ -82,5 +83,108 @@ describe('SettingsModal Feature Flags tab gating', () => {
     mockIsAdmin.value = true
     render(<SettingsModal {...defaultProps} initialSection="flags" />)
     expect(screen.getByTestId('flag-admin-pane')).toBeInTheDocument()
+  })
+})
+
+/* ── Tab navigation ──────────────────────────────────────────── */
+
+describe('SettingsModal tab navigation', () => {
+  it('renders Profile pane by default', () => {
+    render(<SettingsModal {...defaultProps} />)
+    expect(screen.getByTestId('profile-pane')).toBeInTheDocument()
+  })
+
+  it('switches to GitHub Sync pane when tab is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('button', { name: /github sync/i }))
+    expect(screen.getByTestId('github-pane')).toBeInTheDocument()
+    expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
+  })
+
+  it('switches to Appearance pane when tab is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('button', { name: /appearance/i }))
+    expect(screen.getByTestId('appearance-pane')).toBeInTheDocument()
+  })
+
+  it('switches to Advanced pane when tab is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('button', { name: /advanced/i }))
+    expect(screen.getByTestId('advanced-pane')).toBeInTheDocument()
+  })
+
+  it('switches to Labs pane when tab is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('button', { name: /labs/i }))
+    expect(screen.getByTestId('labs-pane')).toBeInTheDocument()
+  })
+
+  it('renders the correct pane when initialSection is set', () => {
+    render(<SettingsModal {...defaultProps} initialSection="appearance" />)
+    expect(screen.getByTestId('appearance-pane')).toBeInTheDocument()
+    expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
+  })
+})
+
+/* ── Close behavior ──────────────────────────────────────────── */
+
+describe('SettingsModal close behavior', () => {
+  it('calls onClose when Escape key is pressed', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.keyboard('{Escape}')
+    expect(defaultProps.onClose).toHaveBeenCalledOnce()
+  })
+
+  it('calls onClose when backdrop overlay is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    const dialog = screen.getByRole('dialog')
+    await user.click(dialog.parentElement!)
+    expect(defaultProps.onClose).toHaveBeenCalledOnce()
+  })
+
+  it('does not call onClose when modal content is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    const dialog = screen.getByRole('dialog')
+    await user.click(dialog)
+    expect(defaultProps.onClose).not.toHaveBeenCalled()
+  })
+
+  it('calls onClose when close button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('button', { name: /close/i }))
+    expect(defaultProps.onClose).toHaveBeenCalledOnce()
+  })
+})
+
+/* ── Modal structure ─────────────────────────────────────────── */
+
+describe('SettingsModal structure', () => {
+  it('renders with role="dialog" and aria-modal="true"', () => {
+    render(<SettingsModal {...defaultProps} />)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+  })
+
+  it('renders Settings title', () => {
+    render(<SettingsModal {...defaultProps} />)
+    expect(screen.getByText('Settings')).toBeInTheDocument()
+  })
+
+  it('renders all 6 nav tabs when not admin', () => {
+    render(<SettingsModal {...defaultProps} />)
+    expect(screen.getByRole('button', { name: /profile/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /github sync/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /appearance/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /security/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /advanced/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /labs/i })).toBeInTheDocument()
   })
 })

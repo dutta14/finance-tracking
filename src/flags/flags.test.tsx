@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { render, screen, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useContext, type ReactNode, type FC } from 'react'
 import { defineFlag } from './flagSystem'
 import { FlagContext, FlagProvider, hashCode, type FlagContextValue, type RolloutConfig } from './FlagContext'
@@ -182,15 +183,77 @@ describe('FlagContext resolution', () => {
   it('percentage rollout: hash < percentage → enabled', () => {
     const clientId = 'client-abc'
     const hash = hashCode('test-flag' + clientId) % 100
-    const isEnabled = hash < 50
-    expect(typeof isEnabled).toBe('boolean')
+    // Set percentage just above the hash so hash < percentage → enabled
+    const percentage = hash + 1
+
+    const wrapper: FC<{ children: ReactNode }> = ({ children }) => (
+      <FlagContext.Provider
+        value={{
+          resolveFlag: (flag) => {
+            if (flag.type === 'boolean' && typeof percentage === 'number') {
+              const clampedPct = Math.min(100, Math.max(0, percentage))
+              const h = hashCode(flag.id + clientId) % 100
+              return (h < clampedPct) as typeof flag.default
+            }
+            return flag.default
+          },
+          overrides: {},
+          rolloutConfig: { version: 1, updatedAt: '', flags: { 'test-flag': { percentage } } },
+          setOverride: () => {},
+          resetAllOverrides: () => {},
+          saveRolloutConfig: async () => {},
+          refresh: async () => {},
+          isAdmin: false,
+          isLoading: false,
+          error: null,
+          environment: 'staging',
+          clientId,
+        }}
+      >
+        {children}
+      </FlagContext.Provider>
+    )
+
+    const { result } = renderHook(() => useFlag(testFlag), { wrapper })
+    expect(result.current).toBe(true)
   })
 
   it('percentage rollout: hash >= percentage → disabled', () => {
     const clientId = 'some-fixed-client-id'
     const hash = hashCode('test-flag' + clientId) % 100
-    expect(hash).toBeGreaterThanOrEqual(0)
-    expect(hash).toBeLessThan(100)
+    // Set percentage equal to hash so hash >= percentage → disabled
+    const percentage = hash
+
+    const wrapper: FC<{ children: ReactNode }> = ({ children }) => (
+      <FlagContext.Provider
+        value={{
+          resolveFlag: (flag) => {
+            if (flag.type === 'boolean' && typeof percentage === 'number') {
+              const clampedPct = Math.min(100, Math.max(0, percentage))
+              const h = hashCode(flag.id + clientId) % 100
+              return (h < clampedPct) as typeof flag.default
+            }
+            return flag.default
+          },
+          overrides: {},
+          rolloutConfig: { version: 1, updatedAt: '', flags: { 'test-flag': { percentage } } },
+          setOverride: () => {},
+          resetAllOverrides: () => {},
+          saveRolloutConfig: async () => {},
+          refresh: async () => {},
+          isAdmin: false,
+          isLoading: false,
+          error: null,
+          environment: 'staging',
+          clientId,
+        }}
+      >
+        {children}
+      </FlagContext.Provider>
+    )
+
+    const { result } = renderHook(() => useFlag(testFlag), { wrapper })
+    expect(result.current).toBe(false)
   })
 })
 
@@ -323,9 +386,8 @@ describe('FlagProvider integration', () => {
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('true')
 
-    await act(async () => {
-      screen.getByTestId('reset').click()
-    })
+    const user = userEvent.setup()
+    await user.click(screen.getByTestId('reset'))
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('false')
     expect(localStorage.getItem('flag-overrides')).toBeNull()
@@ -363,9 +425,8 @@ describe('FlagProvider integration', () => {
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('false')
 
-    await act(async () => {
-      screen.getByTestId('enable').click()
-    })
+    const user = userEvent.setup()
+    await user.click(screen.getByTestId('enable'))
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('true')
     expect(JSON.parse(localStorage.getItem('flag-overrides') || '{}')).toEqual({ 'test-flag': true })
@@ -770,9 +831,8 @@ describe('error handling and edge cases', () => {
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('false')
 
-    await act(async () => {
-      screen.getByTestId('enable').click()
-    })
+    const user = userEvent.setup()
+    await user.click(screen.getByTestId('enable'))
 
     expect(screen.getByTestId('flag-value')).toHaveTextContent('true')
   })

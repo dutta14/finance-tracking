@@ -35,7 +35,6 @@ function ToggleConsumer() {
 beforeEach(() => {
   localStorage.clear()
   document.body.classList.remove('dark')
-  delete document.body.dataset.accentTheme
 })
 
 /* ── tests ───────────────────────────────────────────────────────── */

@@ -112,10 +112,10 @@ describe('FlagAdminPane', () => {
   it('renders all flags from FLAGS definitions', () => {
     render(<FlagAdminPane />)
 
-    expect(screen.getAllByText('darkMode').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('apiUrl').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('maxRetries').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('featureConfig').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('darkMode')).toHaveLength(2)
+    expect(screen.getAllByText('apiUrl')).toHaveLength(2)
+    expect(screen.getAllByText('maxRetries')).toHaveLength(2)
+    expect(screen.getAllByText('featureConfig')).toHaveLength(2)
   })
 
   it('renders type badges correctly per flag type', () => {
@@ -146,7 +146,7 @@ describe('FlagAdminPane', () => {
     const resetBtn = screen.getByRole('button', { name: /reset all overrides/i })
     await userEvent.click(resetBtn)
 
-    expect(mockResetAllOverrides).toHaveBeenCalled()
+    expect(mockResetAllOverrides).toHaveBeenCalledWith()
   })
 
   it('rollout config section hidden when isAdmin is false', () => {
@@ -253,7 +253,7 @@ describe('FlagAdminPane', () => {
     render(<FlagAdminPane />)
 
     const configTexts = screen.getAllByText('using public config')
-    expect(configTexts.length).toBeGreaterThan(0)
+    expect(configTexts.length).toBe(4)
   })
 
   it('shows override indicator when override is active', () => {

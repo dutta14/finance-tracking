@@ -51,10 +51,15 @@ describe('enterDemoMode', () => {
     expect(accounts[0].name).toBe('401(k)')
 
     const balances = JSON.parse(localStorage.getItem('data-balances')!)
-    expect(balances.length).toBeGreaterThan(100) // ~10 years × 12 months × 5 accounts
+    const now = new Date()
+    // 5 accounts × months from Jan 2016 to current month
+    const expectedBalances = 5 * ((now.getFullYear() - 2016) * 12 + (now.getMonth() + 1))
+    expect(balances).toHaveLength(expectedBalances)
 
     const budgetStore = JSON.parse(localStorage.getItem('budget-store')!)
-    expect(Object.keys(budgetStore.csvs).length).toBeGreaterThan(12) // at least 2 years
+    // 3 years of monthly CSVs: (currentYear-2) through current month
+    const expectedCsvs = 12 + 12 + (now.getMonth() + 1)
+    expect(Object.keys(budgetStore.csvs)).toHaveLength(expectedCsvs)
 
     const gwGoals = JSON.parse(localStorage.getItem('gw-goals')!)
     expect(gwGoals.length).toBe(4)
@@ -76,11 +81,22 @@ describe('enterDemoMode', () => {
   it('is idempotent — does nothing if already active', () => {
     enterDemoMode()
     reloadStub.mockReset()
-    const backupBefore = localStorage.getItem('_demo-backup')
+
+    const snapshotBefore: Record<string, string | null> = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)!
+      snapshotBefore[key] = localStorage.getItem(key)
+    }
 
     enterDemoMode()
 
-    expect(localStorage.getItem('_demo-backup')).toBe(backupBefore)
+    const snapshotAfter: Record<string, string | null> = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)!
+      snapshotAfter[key] = localStorage.getItem(key)
+    }
+
+    expect(snapshotAfter).toEqual(snapshotBefore)
     expect(reloadStub).not.toHaveBeenCalled()
   })
 })
