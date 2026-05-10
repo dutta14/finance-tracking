@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useGoals } from './useGoals'
+import { appStorage } from '../../../utils/appStorage'
 import type { RatioGoal } from '../types'
 
 beforeEach(() => {
@@ -14,7 +15,7 @@ afterEach(() => {
 })
 
 function setProfile(profile: object) {
-  localStorage.setItem('user-profile', JSON.stringify(profile))
+  appStorage.setJSON('user-profile', profile)
 }
 
 describe('useGoals', () => {
@@ -125,6 +126,7 @@ describe('useGoals', () => {
       // 80 + (40-80)*0.3 = 80 - 12 = 68
       // 20 + (60-20)*0.3 = 20 + 12 = 32
       expect(pcts).toEqual([68, 32])
+      expect(pcts!.reduce((a, b) => a + b, 0)).toBe(100)
     })
 
     it('returns null when age is unavailable for gradual goal', () => {

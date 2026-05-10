@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { makeId, loadCustomRatios, saveCustomRatios, makeDefaultRatio } from './utils'
+import { appStorage } from '../../utils/appStorage'
 
 beforeEach(() => {
   localStorage.clear()
@@ -25,7 +26,7 @@ describe('loadCustomRatios', () => {
 
   it('returns parsed ratios from localStorage', () => {
     const ratio = { id: 'test', name: 'Test', scope: 'total', groups: [] }
-    localStorage.setItem('allocation-custom-ratios', JSON.stringify([ratio]))
+    appStorage.setJSON('allocation-custom-ratios', [ratio])
     const result = loadCustomRatios()
     expect(result).toHaveLength(1)
     expect(result[0].name).toBe('Test')
@@ -38,10 +39,19 @@ describe('loadCustomRatios', () => {
 })
 
 describe('saveCustomRatios', () => {
+  it('dispatches allocation-changed event', () => {
+    const spy = vi.fn()
+    window.addEventListener('allocation-changed', spy)
+    const ratio = { id: 'a', name: 'R1', scope: 'fi' as const, groups: [] }
+    saveCustomRatios([ratio])
+    expect(spy).toHaveBeenCalledTimes(1)
+    window.removeEventListener('allocation-changed', spy)
+  })
+
   it('persists ratios to localStorage', () => {
     const ratio = { id: 'a', name: 'R1', scope: 'fi' as const, groups: [] }
     saveCustomRatios([ratio])
-    const raw = JSON.parse(localStorage.getItem('allocation-custom-ratios')!)
+    const raw = appStorage.getJSON<Record<string, unknown>[]>('allocation-custom-ratios', [])
     expect(raw).toHaveLength(1)
     expect(raw[0].name).toBe('R1')
   })

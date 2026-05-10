@@ -25,7 +25,7 @@ describe('ALL_CLASSES', () => {
 
 describe('PRESETS', () => {
   it('has at least 3 presets', () => {
-    expect(PRESETS.length).toBeGreaterThanOrEqual(3)
+    expect(PRESETS).toHaveLength(4)
   })
 
   it('each preset has id, name, scope, and at least 2 groups', () => {
