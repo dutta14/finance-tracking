@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import { GoalsProvider, useGoals } from './GoalsContext'
@@ -59,6 +59,10 @@ function GoalsConsumer() {
 beforeEach(() => {
   localStorage.clear()
   vi.useFakeTimers()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 /* ── tests ───────────────────────────────────────────────────────── */

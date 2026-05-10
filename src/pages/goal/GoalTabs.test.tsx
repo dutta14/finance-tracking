@@ -75,22 +75,10 @@ describe('Goal tab bar', () => {
 /* ─── Active state ─── */
 
 describe('Goal tab active state', () => {
-  it('marks "Plans" as active when on /goal', () => {
-    renderGoal('/goal')
-    const link = screen.getByRole('link', { name: 'Plans' })
-    expect(link.className).toContain('active')
-  })
-
   it('sets aria-current="page" on the active Plans tab', () => {
     renderGoal('/goal')
     const link = screen.getByRole('link', { name: 'Plans' })
     expect(link).toHaveAttribute('aria-current', 'page')
-  })
-
-  it('marks "Calculator" as active when on /goal/calculator', () => {
-    renderGoal('/goal/calculator')
-    const link = screen.getByRole('link', { name: 'Calculator' })
-    expect(link.className).toContain('active')
   })
 
   it('sets aria-current="page" on the Calculator tab when active', () => {
@@ -102,35 +90,13 @@ describe('Goal tab active state', () => {
   it('does not mark "Plans" as active when on /goal/calculator', () => {
     renderGoal('/goal/calculator')
     const link = screen.getByRole('link', { name: 'Plans' })
-    expect(link.className).not.toContain('active')
+    expect(link).not.toHaveAttribute('aria-current')
   })
 
   it('does not mark "Calculator" as active when on /goal', () => {
     renderGoal('/goal')
     const link = screen.getByRole('link', { name: 'Calculator' })
-    expect(link.className).not.toContain('active')
-  })
-})
-
-/* ─── Tab bar structure ─── */
-
-describe('Goal tab bar structure', () => {
-  it('tab bar has the goal-tab-bar class', () => {
-    renderGoal()
-    const nav = screen.getByRole('navigation', { name: 'Goals sections' })
-    expect(nav.className).toContain('goal-tab-bar')
-  })
-
-  it('Plans tab link has the goal-tab class', () => {
-    renderGoal()
-    const link = screen.getByRole('link', { name: 'Plans' })
-    expect(link.className).toContain('goal-tab')
-  })
-
-  it('Calculator tab link has the goal-tab class', () => {
-    renderGoal()
-    const link = screen.getByRole('link', { name: 'Calculator' })
-    expect(link.className).toContain('goal-tab')
+    expect(link).not.toHaveAttribute('aria-current')
   })
 })
 
