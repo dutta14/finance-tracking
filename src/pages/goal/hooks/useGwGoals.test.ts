@@ -1,16 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useGwGoals } from './useGwGoals'
+import { appStorage } from '../../../utils/appStorage'
 import type { GwGoal } from '../../../types'
-
-// We need to test the migrateGwFields and load functions which are not exported.
-// Instead, we test the hook's behavior through its public API.
-// Since the hook uses localStorage, we test the key migration behavior.
 
 beforeEach(() => {
   localStorage.clear()
 })
 
-describe('useGwGoals localStorage migration', () => {
-  it('loads from gw-goals key', () => {
+describe('useGwGoals hook', () => {
+  it('loads goals from gw-goals key', () => {
     const goals: GwGoal[] = [
       {
         id: 1,
@@ -23,13 +22,13 @@ describe('useGwGoals localStorage migration', () => {
         currentSavings: 10000,
       },
     ]
-    localStorage.setItem('gw-goals', JSON.stringify(goals))
-    const raw = JSON.parse(localStorage.getItem('gw-goals')!)
-    expect(raw).toHaveLength(1)
-    expect(raw[0].label).toBe('House')
+    appStorage.setJSON('gw-goals', goals)
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].label).toBe('House')
   })
 
-  it('legacy gw-plans key holds old format with fiPlanId', () => {
+  it('migrates legacy gw-plans key with fiPlanId → fiGoalId', () => {
     const legacy = [
       {
         id: 1,
@@ -43,8 +42,17 @@ describe('useGwGoals localStorage migration', () => {
       },
     ]
     localStorage.setItem('gw-plans', JSON.stringify(legacy))
-    // The hook's load() would migrate fiPlanId → fiGoalId and move to gw-goals
-    expect(localStorage.getItem('gw-plans')).toBeTruthy()
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].fiGoalId).toBe(100)
+    expect((result.current.gwGoals[0] as unknown as Record<string, unknown>).fiPlanId).toBeUndefined()
+    // Legacy key should be removed after migration
+    expect(localStorage.getItem('gw-plans')).toBeNull()
+  })
+
+  it('returns empty array when nothing stored', () => {
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toEqual([])
   })
 })
 
