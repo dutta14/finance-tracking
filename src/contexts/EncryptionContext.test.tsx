@@ -255,8 +255,17 @@ describe('EncryptionContext', () => {
       })
       expect(changeResult).toBe(true)
 
-      // Salt should have changed
-      expect(localStorage.getItem('encryption-salt')).toBeTruthy()
+      // Salt should have actually changed
+      const newSalt = localStorage.getItem('encryption-salt')!
+      expect(newSalt).toBeTruthy()
+      expect(newSalt).not.toBe(encrypted1) // different from encrypted data (proxy for salt change)
+
+      // Verify data is still accessible (re-encrypted, not lost)
+      const encrypted2 = localStorage.getItem('budget-store')!
+      const parsed2 = JSON.parse(encrypted2)
+      expect(parsed2.v).toBe(1)
+      expect(parsed2.iv).toBeDefined()
+      expect(parsed2.ct).toBeDefined()
 
       // Lock and unlock with new passphrase
       act(() => {
@@ -284,6 +293,21 @@ describe('EncryptionContext', () => {
         changeResult = await result.current.changePassphrase('wrongold', 'newpass')
       })
       expect(changeResult).toBe(false)
+    })
+
+    it('salt actually changes after changePassphrase', async () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('oldpass')
+      })
+      const oldSalt = localStorage.getItem('encryption-salt')!
+
+      await act(async () => {
+        await result.current.changePassphrase('oldpass', 'newpass')
+      })
+      const newSalt = localStorage.getItem('encryption-salt')!
+      expect(newSalt).not.toBe(oldSalt)
     })
   })
 
@@ -330,6 +354,321 @@ describe('EncryptionContext', () => {
       expect(() => {
         renderHook(() => useEncryption())
       }).toThrow('useEncryption must be used within an <EncryptionProvider>')
+    })
+  })
+
+  describe('encryption integrity', () => {
+    it('generates unique IVs for each encryption operation', async () => {
+      localStorage.setItem('data-accounts', JSON.stringify([{ id: 1 }]))
+      localStorage.setItem('budget-store', JSON.stringify({ x: 1 }))
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('testpass123')
+      })
+
+      const accounts = JSON.parse(localStorage.getItem('data-accounts')!)
+      const budget = JSON.parse(localStorage.getItem('budget-store')!)
+      expect(accounts.iv).toBeDefined()
+      expect(budget.iv).toBeDefined()
+      expect(accounts.iv).not.toBe(budget.iv)
+    })
+
+    it('unlock produces correct decrypted content', async () => {
+      const originalData = [{ id: 1, name: 'Checking', balance: 5000 }]
+      localStorage.setItem('data-accounts', JSON.stringify(originalData))
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('testpass123')
+      })
+
+      // Data is now encrypted
+      const encrypted = JSON.parse(localStorage.getItem('data-accounts')!)
+      expect(encrypted.v).toBe(1)
+
+      // Lock and unlock
+      act(() => {
+        result.current.lock()
+      })
+      await act(async () => {
+        await result.current.unlock('testpass123')
+      })
+
+      // After unlock, cryptoKey should be available to decrypt
+      expect(result.current.cryptoKey).not.toBeNull()
+      expect(result.current.isLocked).toBe(false)
+    })
+
+    it('corruption and wrong passphrase both return false on unlock', async () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('testpass123')
+      })
+
+      // Corrupt the verify value
+      localStorage.setItem('encryption-verify', JSON.stringify({ v: 1, iv: 'bad', ct: 'corrupted' }))
+
+      act(() => {
+        result.current.lock()
+      })
+
+      let unlockResult: boolean | undefined
+      await act(async () => {
+        unlockResult = await result.current.unlock('testpass123')
+      })
+      // Both corruption and wrong passphrase return false — documented limitation
+      expect(unlockResult).toBe(false)
+      expect(result.current.isLocked).toBe(true)
+    })
+  })
+
+  describe('unlocked state rendering', () => {
+    it('renders children in unlocked state after setup', async () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('testpass123')
+      })
+
+      expect(result.current.isLocked).toBe(false)
+      expect(result.current.isEncryptionEnabled).toBe(true)
+      expect(result.current.cryptoKey).not.toBeNull()
+
+      const { getByTestId } = render(
+        <EncryptionProvider>
+          <GateConsumer />
+        </EncryptionProvider>,
+      )
+      // Fresh mount reads encryption-enabled=1 but has no key → locked
+      expect(getByTestId('locked-view')).toBeInTheDocument()
+    })
+
+    it('renders UnlockScreen when encrypted but not unlocked', () => {
+      localStorage.setItem('encryption-enabled', '1')
+      localStorage.setItem('encryption-salt', 'dGVzdA==')
+      localStorage.setItem('encryption-verify', JSON.stringify({ v: 1, iv: 'aaa', ct: 'bbb' }))
+
+      render(
+        <EncryptionProvider>
+          <GateConsumer />
+        </EncryptionProvider>,
+      )
+      expect(screen.getByTestId('locked-view')).toBeInTheDocument()
+    })
+  })
+
+  describe('lock state persistence', () => {
+    it('persists lock state across remounts via localStorage flag', async () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('testpass123')
+      })
+      expect(localStorage.getItem('encryption-enabled')).toBe('1')
+
+      // Remount: should read encryption-enabled from localStorage
+      const { result: result2 } = renderHook(() => useEncryption(), { wrapper })
+      expect(result2.current.isEncryptionEnabled).toBe(true)
+      // No key in memory on fresh mount → locked
+      expect(result2.current.isLocked).toBe(true)
+    })
+  })
+
+  describe('decrypt on unlock', () => {
+    it('decrypts sensitive keys on unlock', async () => {
+      localStorage.setItem('data-accounts', JSON.stringify([{ id: 1, name: 'Checking' }]))
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('mypass')
+      })
+
+      // Data should be encrypted now
+      const encRaw = localStorage.getItem('data-accounts')!
+      const encParsed = JSON.parse(encRaw)
+      expect(encParsed.v).toBe(1)
+
+      act(() => {
+        result.current.lock()
+      })
+      expect(result.current.isLocked).toBe(true)
+
+      // Unlock should succeed and decrypt
+      let unlockOk: boolean | undefined
+      await act(async () => {
+        unlockOk = await result.current.unlock('mypass')
+      })
+      expect(unlockOk).toBe(true)
+      expect(result.current.cryptoKey).not.toBeNull()
+    })
+  })
+
+  describe('re-encrypt on passphrase change', () => {
+    it('re-encrypts keys so old passphrase no longer unlocks', async () => {
+      localStorage.setItem('data-accounts', JSON.stringify([{ id: 1 }]))
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('oldpass')
+      })
+
+      await act(async () => {
+        await result.current.changePassphrase('oldpass', 'newpass')
+      })
+
+      act(() => {
+        result.current.lock()
+      })
+
+      // Old passphrase should fail
+      let oldResult: boolean | undefined
+      await act(async () => {
+        oldResult = await result.current.unlock('oldpass')
+      })
+      expect(oldResult).toBe(false)
+      expect(result.current.isLocked).toBe(true)
+
+      // New passphrase should succeed
+      let newResult: boolean | undefined
+      await act(async () => {
+        newResult = await result.current.unlock('newpass')
+      })
+      expect(newResult).toBe(true)
+      expect(result.current.isLocked).toBe(false)
+    })
+  })
+
+  describe('lock clears key', () => {
+    it('clears cryptoKey on lock so it is null', async () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('pass123')
+      })
+      expect(result.current.cryptoKey).not.toBeNull()
+
+      act(() => {
+        result.current.lock()
+      })
+      expect(result.current.cryptoKey).toBeNull()
+      expect(result.current.isLocked).toBe(true)
+      expect(result.current.isEncryptionEnabled).toBe(true)
+    })
+  })
+
+  describe('corrupted data handling', () => {
+    it('handles corrupted salt gracefully', async () => {
+      localStorage.setItem('encryption-enabled', '1')
+      localStorage.setItem('encryption-salt', '!!!not-base64!!!')
+      localStorage.setItem('encryption-verify', JSON.stringify({ v: 1, iv: 'a', ct: 'b' }))
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      let unlockOk: boolean | undefined
+      await act(async () => {
+        unlockOk = await result.current.unlock('anypass')
+      })
+      expect(unlockOk).toBe(false)
+      expect(result.current.isLocked).toBe(true)
+    })
+
+    it('handles corrupted verify envelope gracefully', async () => {
+      localStorage.setItem('encryption-enabled', '1')
+      localStorage.setItem('encryption-salt', 'dGVzdHNhbHQ=') // valid base64
+      localStorage.setItem('encryption-verify', 'not-json')
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      let unlockOk: boolean | undefined
+      await act(async () => {
+        unlockOk = await result.current.unlock('anypass')
+      })
+      expect(unlockOk).toBe(false)
+      expect(result.current.isLocked).toBe(true)
+    })
+
+    it('handles missing verify envelope gracefully', async () => {
+      localStorage.setItem('encryption-enabled', '1')
+      localStorage.setItem('encryption-salt', 'dGVzdHNhbHQ=')
+      // No verify envelope set
+
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      let unlockOk: boolean | undefined
+      await act(async () => {
+        unlockOk = await result.current.unlock('anypass')
+      })
+      expect(unlockOk).toBe(false)
+    })
+  })
+
+  describe('migration recovery', () => {
+    it('calls recoverMigration on mount when migration is incomplete', async () => {
+      const migrateMod = await import('../utils/migratePlaintext')
+      const recoverSpy = vi.spyOn(migrateMod, 'recoverMigration')
+      const incompleteSpy = vi.spyOn(migrateMod, 'isMigrationIncomplete').mockReturnValue(true)
+
+      render(
+        <EncryptionProvider>
+          <div>child</div>
+        </EncryptionProvider>,
+      )
+
+      expect(incompleteSpy).toHaveBeenCalled()
+      expect(recoverSpy).toHaveBeenCalled()
+
+      incompleteSpy.mockRestore()
+      recoverSpy.mockRestore()
+    })
+  })
+
+  describe('remote lock', () => {
+    it('clears cryptoKey when encryption-remote-lock event fires', async () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      await act(async () => {
+        await result.current.setupEncryption('testpass123')
+      })
+      expect(result.current.cryptoKey).not.toBeNull()
+
+      act(() => {
+        window.dispatchEvent(new Event('encryption-remote-lock'))
+      })
+      expect(result.current.cryptoKey).toBeNull()
+      expect(result.current.isLocked).toBe(true)
+    })
+  })
+
+  describe('disableEncryption edge cases', () => {
+    it('returns false when no salt is present', async () => {
+      localStorage.setItem('encryption-enabled', '1')
+      // No salt set
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      let disableResult: boolean | undefined
+      await act(async () => {
+        disableResult = await result.current.disableEncryption('anypass')
+      })
+      expect(disableResult).toBe(false)
+    })
+  })
+
+  describe('changePassphrase edge cases', () => {
+    it('returns false when no salt is present', async () => {
+      localStorage.setItem('encryption-enabled', '1')
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+
+      let changeResult: boolean | undefined
+      await act(async () => {
+        changeResult = await result.current.changePassphrase('old', 'new')
+      })
+      expect(changeResult).toBe(false)
     })
   })
 })

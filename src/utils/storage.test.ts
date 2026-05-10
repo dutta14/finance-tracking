@@ -52,9 +52,10 @@ describe('getStorageItem (string keys)', () => {
   })
 
   it('returns fallback for empty accentTheme', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     localStorage.setItem('accentTheme', '')
     expect(getStorageItem('accentTheme', 'blue')).toBe('blue')
+    expect(warn).toHaveBeenCalled()
   })
 
   it('validates goal-view-mode', () => {
@@ -95,21 +96,24 @@ describe('getStorageItem (JSON keys)', () => {
   })
 
   it('returns fallback for corrupt JSON', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     localStorage.setItem('home-card-order', '{not json')
     expect(getStorageItem('home-card-order', [0, 1, 2, 3])).toEqual([0, 1, 2, 3])
+    expect(warn).toHaveBeenCalled()
   })
 
   it('returns fallback for wrong type (string instead of array)', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     localStorage.setItem('home-card-order', '"hello"')
     expect(getStorageItem('home-card-order', [0, 1, 2, 3])).toEqual([0, 1, 2, 3])
+    expect(warn).toHaveBeenCalled()
   })
 
   it('returns fallback for home-card-order with wrong length', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     localStorage.setItem('home-card-order', '[0, 1]')
     expect(getStorageItem('home-card-order', [0, 1, 2, 3])).toEqual([0, 1, 2, 3])
+    expect(warn).toHaveBeenCalled()
   })
 
   it('validates github-sync-config', () => {

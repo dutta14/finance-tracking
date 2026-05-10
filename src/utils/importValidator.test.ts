@@ -186,6 +186,7 @@ describe('validateImportPayload', () => {
       )
       expect(result.valid).toBe(true)
       expect(result.sanitized!.profile!.name).toBe('alert("xss")Alice')
+      expect(result.sanitized!.profile!.name).not.toMatch(/<[^>]*>/)
       expect(result.warnings.some(w => w.includes('profile.name'))).toBe(true)
     })
 
@@ -202,6 +203,7 @@ describe('validateImportPayload', () => {
         makePayload({ profile: { name: 'Alice', partner: { name: '<b>Bob</b>', birthday: '', avatarDataUrl: '' } } }),
       )
       expect(result.sanitized!.profile!.partner!.name).toBe('Bob')
+      expect(result.sanitized!.profile!.partner!.name).not.toMatch(/<[^>]*>/)
     })
 
     it('drops oversized avatar data URLs', () => {

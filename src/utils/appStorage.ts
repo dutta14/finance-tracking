@@ -269,4 +269,11 @@ export const appStorage = {
   setMode,
   setCryptoKey,
   getMode,
+  /** Reset internal shared state — for test isolation only */
+  _reset(): void {
+    _subscribers.clear()
+    _pendingPersists.clear()
+    _persistScheduled = false
+    _memoryStore.clear()
+  },
 } as const

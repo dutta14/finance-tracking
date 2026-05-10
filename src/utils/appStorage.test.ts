@@ -26,6 +26,7 @@ describe('appStorage', () => {
     // Reset appStorage state between tests
     appStorage.setMode('disabled')
     appStorage.setCryptoKey(null)
+    appStorage._reset()
     vi.clearAllMocks()
   })
 
@@ -170,12 +171,16 @@ describe('appStorage', () => {
     await new Promise(resolve => queueMicrotask(resolve))
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    expect(crypto.encryptString).toHaveBeenCalled()
+    expect(crypto.encryptString).toHaveBeenCalledWith(
+      JSON.stringify({ name: 'Secret' }),
+      mockCryptoKey,
+    )
     const stored = localStorage.getItem('user-profile')
     expect(stored).not.toBeNull()
     const parsed = JSON.parse(stored!)
     expect(parsed.v).toBe(1)
-    expect(parsed.iv).toBe('mock-iv')
+    // Verify ciphertext is the base64-encoded plaintext (per mock behavior)
+    expect(atob(parsed.ct)).toBe(JSON.stringify({ name: 'Secret' }))
   })
 
   it('multiple rapid writes coalesce', async () => {

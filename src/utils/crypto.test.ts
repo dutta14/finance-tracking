@@ -56,9 +56,17 @@ describe('encryptString / decryptString', () => {
 
   it('produces unique ciphertext per call (random IV)', async () => {
     const key = await makeKey()
-    const e1 = await encryptString('same', key)
-    const e2 = await encryptString('same', key)
-    expect(e1.ct).not.toBe(e2.ct)
+    const envelopes = await Promise.all(
+      Array.from({ length: 10 }, () => encryptString('same', key)),
+    )
+    // Extract IVs and verify all are unique
+    const ivs = envelopes.map(e => e.iv)
+    const uniqueIvs = new Set(ivs)
+    expect(uniqueIvs.size).toBe(10)
+    // Ciphertexts should also all differ
+    const cts = envelopes.map(e => e.ct)
+    const uniqueCts = new Set(cts)
+    expect(uniqueCts.size).toBe(10)
   })
 
   it('throws when decrypting with a different key', async () => {
