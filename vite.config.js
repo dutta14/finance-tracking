@@ -37,5 +37,18 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
     exclude: ['e2e/**', 'node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      thresholds: {
+        statements: 90,
+      },
+      exclude: [
+        'e2e/**',
+        'node_modules/**',
+        'src/test/**',
+        'src/vite-env.d.ts',
+        '*.config.*',
+      ],
+    },
   },
 })
