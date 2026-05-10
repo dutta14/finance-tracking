@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import SecurityPane from './SecurityPane'
 
 const mockEncryption = {
@@ -43,62 +44,68 @@ describe('SecurityPane', () => {
 
   // ── Setup form ──
 
-  it('shows setup form when Enable Encryption is clicked', () => {
+  it('shows setup form when Enable Encryption is clicked', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
     expect(screen.getByText('Set up encryption')).toBeInTheDocument()
     expect(screen.getByLabelText('New passphrase')).toBeInTheDocument()
     expect(screen.getByLabelText('Confirm passphrase')).toBeInTheDocument()
   })
 
-  it('setup form shows mismatch error when passphrases differ', () => {
+  it('setup form shows mismatch error when passphrases differ', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'abc' } })
-    fireEvent.change(screen.getByLabelText('Confirm passphrase'), { target: { value: 'xyz' } })
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.type(screen.getByLabelText('New passphrase'), 'abc')
+    await user.type(screen.getByLabelText('Confirm passphrase'), 'xyz')
     expect(screen.getByText("Passphrases don't match")).toBeInTheDocument()
   })
 
-  it('setup form enable button is disabled until passphrases match', () => {
+  it('setup form enable button is disabled until passphrases match', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
     // Find submit within the form
     const submitBtn = screen.getAllByRole('button', { name: 'Enable Encryption' })
     const formSubmit = submitBtn.find(b => b.getAttribute('type') === 'submit')!
     expect(formSubmit).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'abc' } })
-    fireEvent.change(screen.getByLabelText('Confirm passphrase'), { target: { value: 'abc' } })
+    await user.type(screen.getByLabelText('New passphrase'), 'abc')
+    await user.type(screen.getByLabelText('Confirm passphrase'), 'abc')
     expect(formSubmit).not.toBeDisabled()
   })
 
   it('calls setupEncryption on valid setup form submission', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'pass123' } })
-    fireEvent.change(screen.getByLabelText('Confirm passphrase'), { target: { value: 'pass123' } })
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.type(screen.getByLabelText('New passphrase'), 'pass123')
+    await user.type(screen.getByLabelText('Confirm passphrase'), 'pass123')
 
     const submitBtn = screen.getAllByRole('button', { name: 'Enable Encryption' })
     const formSubmit = submitBtn.find(b => b.getAttribute('type') === 'submit')!
-    fireEvent.click(formSubmit)
+    await user.click(formSubmit)
 
     await waitFor(() => {
       expect(mockEncryption.setupEncryption).toHaveBeenCalledWith('pass123')
     })
   })
 
-  it('shows warning about recovery in setup form', () => {
+  it('shows warning about recovery in setup form', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
     expect(screen.getByText(/your data cannot be recovered/)).toBeInTheDocument()
   })
 
-  it('closes setup form on Cancel click', () => {
+  it('closes setup form on Cancel click', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
     expect(screen.getByText('Set up encryption')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByText('Set up encryption')).not.toBeInTheDocument()
   })
 
@@ -127,33 +134,36 @@ describe('SecurityPane', () => {
 
   // ── Change passphrase form ──
 
-  it('opens change passphrase form', () => {
+  it('opens change passphrase form', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Change Passphrase' }))
+    await user.click(screen.getByRole('button', { name: 'Change Passphrase' }))
     expect(screen.getByText('Change passphrase')).toBeInTheDocument()
     expect(screen.getByLabelText('Current passphrase')).toBeInTheDocument()
     expect(screen.getByLabelText('New passphrase')).toBeInTheDocument()
     expect(screen.getByLabelText('Confirm new passphrase')).toBeInTheDocument()
   })
 
-  it('change form shows mismatch error', () => {
+  it('change form shows mismatch error', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Change Passphrase' }))
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'new1' } })
-    fireEvent.change(screen.getByLabelText('Confirm new passphrase'), { target: { value: 'new2' } })
+    await user.click(screen.getByRole('button', { name: 'Change Passphrase' }))
+    await user.type(screen.getByLabelText('New passphrase'), 'new1')
+    await user.type(screen.getByLabelText('Confirm new passphrase'), 'new2')
     expect(screen.getByText("Passphrases don't match")).toBeInTheDocument()
   })
 
   it('calls changePassphrase on valid change form submission', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Change Passphrase' }))
-    fireEvent.change(screen.getByLabelText('Current passphrase'), { target: { value: 'old' } })
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'new' } })
-    fireEvent.change(screen.getByLabelText('Confirm new passphrase'), { target: { value: 'new' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Update Passphrase' }))
+    await user.click(screen.getByRole('button', { name: 'Change Passphrase' }))
+    await user.type(screen.getByLabelText('Current passphrase'), 'old')
+    await user.type(screen.getByLabelText('New passphrase'), 'new')
+    await user.type(screen.getByLabelText('Confirm new passphrase'), 'new')
+    await user.click(screen.getByRole('button', { name: 'Update Passphrase' }))
 
     await waitFor(() => {
       expect(mockEncryption.changePassphrase).toHaveBeenCalledWith('old', 'new')
@@ -161,14 +171,15 @@ describe('SecurityPane', () => {
   })
 
   it('shows error when current passphrase is incorrect', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     mockEncryption.changePassphrase.mockResolvedValue(false)
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Change Passphrase' }))
-    fireEvent.change(screen.getByLabelText('Current passphrase'), { target: { value: 'wrong' } })
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'new' } })
-    fireEvent.change(screen.getByLabelText('Confirm new passphrase'), { target: { value: 'new' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Update Passphrase' }))
+    await user.click(screen.getByRole('button', { name: 'Change Passphrase' }))
+    await user.type(screen.getByLabelText('Current passphrase'), 'wrong')
+    await user.type(screen.getByLabelText('New passphrase'), 'new')
+    await user.type(screen.getByLabelText('Confirm new passphrase'), 'new')
+    await user.click(screen.getByRole('button', { name: 'Update Passphrase' }))
 
     await waitFor(() => {
       const alerts = screen.getAllByRole('alert')
@@ -178,52 +189,56 @@ describe('SecurityPane', () => {
   })
 
   it('shows success flash after passphrase change', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     mockEncryption.changePassphrase.mockResolvedValue(true)
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Change Passphrase' }))
-    fireEvent.change(screen.getByLabelText('Current passphrase'), { target: { value: 'old' } })
-    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'new' } })
-    fireEvent.change(screen.getByLabelText('Confirm new passphrase'), { target: { value: 'new' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Update Passphrase' }))
+    await user.click(screen.getByRole('button', { name: 'Change Passphrase' }))
+    await user.type(screen.getByLabelText('Current passphrase'), 'old')
+    await user.type(screen.getByLabelText('New passphrase'), 'new')
+    await user.type(screen.getByLabelText('Confirm new passphrase'), 'new')
+    await user.click(screen.getByRole('button', { name: 'Update Passphrase' }))
 
     await waitFor(() => {
       expect(screen.getByText('Passphrase updated ✓')).toBeInTheDocument()
     })
   })
 
-  it('closes change form on Cancel', () => {
+  it('closes change form on Cancel', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Change Passphrase' }))
+    await user.click(screen.getByRole('button', { name: 'Change Passphrase' }))
     expect(screen.getByText('Change passphrase')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByText('Change passphrase')).not.toBeInTheDocument()
   })
 
   // ── Disable encryption ──
 
-  it('opens disable confirmation panel', () => {
+  it('opens disable confirmation panel', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Disable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Disable Encryption' }))
     expect(screen.getByText('Disable encryption?')).toBeInTheDocument()
     expect(screen.getByText(/decrypted and stored in plain text/)).toBeInTheDocument()
     expect(screen.getByLabelText('Enter passphrase to confirm')).toBeInTheDocument()
   })
 
   it('calls disableEncryption on valid submission', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Disable Encryption' }))
-    fireEvent.change(screen.getByLabelText('Enter passphrase to confirm'), { target: { value: 'pass' } })
+    await user.click(screen.getByRole('button', { name: 'Disable Encryption' }))
+    await user.type(screen.getByLabelText('Enter passphrase to confirm'), 'pass')
 
     // Find the danger submit button inside the disable form
     const dangerBtn = screen
       .getAllByRole('button')
       .find(b => b.textContent === 'Disable Encryption' && b.getAttribute('type') === 'submit')!
-    fireEvent.click(dangerBtn)
+    await user.click(dangerBtn)
 
     await waitFor(() => {
       expect(mockEncryption.disableEncryption).toHaveBeenCalledWith('pass')
@@ -231,16 +246,17 @@ describe('SecurityPane', () => {
   })
 
   it('shows error on incorrect passphrase during disable', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     mockEncryption.disableEncryption.mockResolvedValue(false)
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Disable Encryption' }))
-    fireEvent.change(screen.getByLabelText('Enter passphrase to confirm'), { target: { value: 'wrong' } })
+    await user.click(screen.getByRole('button', { name: 'Disable Encryption' }))
+    await user.type(screen.getByLabelText('Enter passphrase to confirm'), 'wrong')
 
     const dangerBtn = screen
       .getAllByRole('button')
       .find(b => b.textContent === 'Disable Encryption' && b.getAttribute('type') === 'submit')!
-    fireEvent.click(dangerBtn)
+    await user.click(dangerBtn)
 
     await waitFor(() => {
       const alerts = screen.getAllByRole('alert')
@@ -249,13 +265,14 @@ describe('SecurityPane', () => {
     })
   })
 
-  it('closes disable form on Cancel', () => {
+  it('closes disable form on Cancel', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Disable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Disable Encryption' }))
     expect(screen.getByText('Disable encryption?')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByText('Disable encryption?')).not.toBeInTheDocument()
   })
 
@@ -267,10 +284,11 @@ describe('SecurityPane', () => {
     expect(statusEl).toHaveAttribute('aria-live', 'polite')
   })
 
-  it('disable form passphrase has aria-describedby linking to warning', () => {
+  it('disable form passphrase has aria-describedby linking to warning', async () => {
+    const user = userEvent.setup()
     mockEncryption.isEncryptionEnabled = true
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Disable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Disable Encryption' }))
     const input = screen.getByLabelText('Enter passphrase to confirm')
     const describedBy = input.getAttribute('aria-describedby')
     expect(describedBy).toContain('disable-warning-message')
@@ -278,11 +296,12 @@ describe('SecurityPane', () => {
 
   // ── Escape key ──
 
-  it('closes active form on Escape key', () => {
+  it('closes active form on Escape key', async () => {
+    const user = userEvent.setup()
     render(<SecurityPane />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable Encryption' }))
+    await user.click(screen.getByRole('button', { name: 'Enable Encryption' }))
     expect(screen.getByText('Set up encryption')).toBeInTheDocument()
-    fireEvent.keyDown(document, { key: 'Escape' })
+    await user.keyboard('{Escape}')
     expect(screen.queryByText('Set up encryption')).not.toBeInTheDocument()
   })
 })
