@@ -3,7 +3,7 @@
 **Created:** 2026-05-10
 **Owner:** Rowan (Engineering Manager)
 **Duration:** 10 weeks (5 sprints × 2 weeks)
-**Status:** Not started
+**Status:** In Progress
 
 ---
 
@@ -38,6 +38,20 @@
 **Capacity:** Sam 75%, Drew 60%, Finley 60%, Ellis 75%, Quinn 60%, River idle, Mika idle
 
 **Notes:** #63 depends on #42 (CI pipeline). River and Mika use this sprint for design/research on #48 and #49.
+
+### Execution Order
+
+| Seq | Issue | Days | Dev | Blockers |
+|-----|-------|------|-----|----------|
+| 1 | #39 Template card `:active` state | Day 1 | Sam | — |
+| 2 | #43 `aria-expanded` for screen readers | Day 1 | Sam | — |
+| 3 | #40 Goal modal close affordance | Days 2–3 | Sam | #39, #43 |
+| 4 | #42 Staging env, E2E in CI, strip logs | Days 1–4 | Drew + Finley | — |
+| 5 | #63 Dependabot config | Day 5+ | Finley | #42 |
+| 6 | #44 Inline style consolidation | Days 5–8 | Drew + Sam | #39, #43, #42 |
+
+- Ellis writes unit tests alongside each feature as it lands
+- Quinn writes E2E tests for #40, #43, #42, #44 after features land
 
 ---
 
