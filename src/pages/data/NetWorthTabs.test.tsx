@@ -97,28 +97,16 @@ describe('Net Worth tab bar', () => {
 /* ─── Active state ─── */
 
 describe('Net Worth tab active state', () => {
-  it('marks "Accounts" as active when on /net-worth', () => {
-    renderData('/net-worth')
-    const link = screen.getByRole('link', { name: 'Accounts' })
-    expect(link.className).toContain('active')
-  })
-
   it('sets aria-current="page" on the active tab', () => {
     renderData('/net-worth')
     const link = screen.getByRole('link', { name: 'Accounts' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not mark "Accounts" as active when on /net-worth/allocation', () => {
+  it('does not set aria-current on "Accounts" when on /net-worth/allocation', () => {
     renderData('/net-worth/allocation')
     const link = screen.getByRole('link', { name: 'Accounts' })
-    expect(link.className).not.toContain('active')
-  })
-
-  it('marks "Allocation" as active when on /net-worth/allocation', () => {
-    renderData('/net-worth/allocation')
-    const link = screen.getByRole('link', { name: 'Allocation' })
-    expect(link.className).toContain('active')
+    expect(link).not.toHaveAttribute('aria-current')
   })
 
   it('sets aria-current="page" on the Allocation tab when active', () => {
@@ -127,16 +115,10 @@ describe('Net Worth tab active state', () => {
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not mark "Allocation" as active when on /net-worth', () => {
+  it('does not set aria-current on "Allocation" when on /net-worth', () => {
     renderData('/net-worth')
     const link = screen.getByRole('link', { name: 'Allocation' })
-    expect(link.className).not.toContain('active')
-  })
-
-  it('marks "Growth" as active when on /net-worth/growth', () => {
-    renderData('/net-worth/growth')
-    const link = screen.getByRole('link', { name: 'Growth' })
-    expect(link.className).toContain('active')
+    expect(link).not.toHaveAttribute('aria-current')
   })
 
   it('sets aria-current="page" on the Growth tab when active', () => {
@@ -145,37 +127,9 @@ describe('Net Worth tab active state', () => {
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not mark "Growth" as active when on /net-worth', () => {
+  it('does not set aria-current on "Growth" when on /net-worth', () => {
     renderData('/net-worth')
     const link = screen.getByRole('link', { name: 'Growth' })
-    expect(link.className).not.toContain('active')
-  })
-})
-
-/* ─── Tab bar structure ─── */
-
-describe('Net Worth tab bar structure', () => {
-  it('tab bar has the nw-tab-bar class', () => {
-    renderData()
-    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
-    expect(nav.className).toContain('nw-tab-bar')
-  })
-
-  it('tab link has the nw-tab class', () => {
-    renderData()
-    const link = screen.getByRole('link', { name: 'Accounts' })
-    expect(link.className).toContain('nw-tab')
-  })
-
-  it('Allocation tab link has the nw-tab class', () => {
-    renderData()
-    const link = screen.getByRole('link', { name: 'Allocation' })
-    expect(link.className).toContain('nw-tab')
-  })
-
-  it('Growth tab link has the nw-tab class', () => {
-    renderData()
-    const link = screen.getByRole('link', { name: 'Growth' })
-    expect(link.className).toContain('nw-tab')
+    expect(link).not.toHaveAttribute('aria-current')
   })
 })

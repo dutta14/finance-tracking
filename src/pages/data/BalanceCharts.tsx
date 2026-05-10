@@ -177,6 +177,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
             <button
               key={opt.key}
               className={`data-filter-btn${chartType === opt.key ? ' active' : ''}`}
+              aria-pressed={chartType === opt.key}
               onClick={() => setChartType(opt.key)}
             >
               {opt.label}
