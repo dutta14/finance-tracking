@@ -50,8 +50,6 @@ export async function uploadBudgetCSV(
   const path = `budget/${monthKey}.csv`
   try {
     const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`
-    console.log('[budget-sync] PUT CSV', { url, monthKey, contentLen: csvContent.length })
-
     // Retry loop for 409 conflicts (concurrent commits)
     for (let attempt = 0; attempt < 3; attempt++) {
       const sha = await getFileSha(config, token, path)
@@ -62,7 +60,6 @@ export async function uploadBudgetCSV(
       const res = await fetch(url, { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) })
       if (res.ok) return { ok: true }
       if (res.status === 409 && attempt < 2) {
-        console.log(`[budget-sync] 409 conflict on ${monthKey}, retrying (${attempt + 1}/3)`)
         await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
         continue
       }
@@ -174,7 +171,6 @@ export async function uploadBudgetConfig(
     const body: Record<string, string> = { message: 'Budget config update', content }
     if (sha) body.sha = sha
     const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${CONFIG_PATH}`
-    console.log('[budget-sync] PUT config', { url, years: data.years, groups: data.categoryGroups?.length })
     const res = await fetch(url, { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))

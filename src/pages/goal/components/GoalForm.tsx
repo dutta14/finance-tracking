@@ -339,6 +339,9 @@ const GoalForm: FC<GoalFormProps> = ({
     <div className="goal-form-section goal-wizard">
       <div className="wizard-header">
         <h2>{editingGoalId ? 'Edit Goal' : 'New Goal'}</h2>
+        <button type="button" className="wizard-close-btn" onClick={onCancel} aria-label="Close">
+          <span aria-hidden="true">✕</span>
+        </button>
         <div className="wizard-progress">
           {STEPS.map((label, i) => (
             <button
