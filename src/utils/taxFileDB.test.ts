@@ -205,7 +205,7 @@ describe('taxFileDB', () => {
       const largeContent = 'x'.repeat(1024 * 1024) // ~1 MB
       await saveFileContent('big', largeContent)
       const after = await getStorageEstimate()
-      expect(after.usedMB).toBeGreaterThanOrEqual(before.usedMB)
+      expect(after.usedMB).toBeGreaterThan(before.usedMB)
     })
   })
 

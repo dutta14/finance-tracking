@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { EMPTY_STORE, getEmptyYear, loadTemplates, saveTemplates } from './types'
+import { appStorage } from '../../utils/appStorage'
 import type { TaxTemplate } from './types'
 
 beforeEach(() => {
@@ -32,7 +33,7 @@ describe('loadTemplates', () => {
     const templates: TaxTemplate[] = [
       { id: '1', name: 'Standard', items: [{ label: 'W-2', owner: 'primary', category: 'paystub' }] },
     ]
-    localStorage.setItem('tax-templates', JSON.stringify(templates))
+    appStorage.setJSON('tax-templates', templates)
     const result = loadTemplates()
     expect(result).toHaveLength(1)
     expect(result[0].name).toBe('Standard')
@@ -49,7 +50,7 @@ describe('saveTemplates', () => {
   it('persists templates to localStorage', () => {
     const templates: TaxTemplate[] = [{ id: '2', name: 'Custom', items: [] }]
     saveTemplates(templates)
-    const raw = JSON.parse(localStorage.getItem('tax-templates')!)
+    const raw = appStorage.getJSON<Record<string, unknown>[]>('tax-templates', [])
     expect(raw).toHaveLength(1)
     expect(raw[0].name).toBe('Custom')
   })
@@ -57,7 +58,7 @@ describe('saveTemplates', () => {
   it('overwrites existing templates', () => {
     saveTemplates([{ id: '1', name: 'First', items: [] }])
     saveTemplates([{ id: '2', name: 'Second', items: [] }])
-    const raw = JSON.parse(localStorage.getItem('tax-templates')!)
+    const raw = appStorage.getJSON<Record<string, unknown>[]>('tax-templates', [])
     expect(raw).toHaveLength(1)
     expect(raw[0].name).toBe('Second')
   })

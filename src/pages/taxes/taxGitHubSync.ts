@@ -23,13 +23,13 @@ async function getFileSha(config: GitHubSyncConfig, token: string, path: string)
 }
 
 /** Strip data-URL prefix to get raw base64 */
-function stripDataUrl(content: string): string {
+export function stripDataUrl(content: string): string {
   const idx = content.indexOf(',')
   return idx >= 0 ? content.slice(idx + 1) : content
 }
 
 /** Build GitHub path: taxes/<year>/<owner>_<label>.<ext> */
-function filePath(year: number, ownerLabel: string, itemLabel: string, file: TaxDocFile): string {
+export function filePath(year: number, ownerLabel: string, itemLabel: string, file: TaxDocFile): string {
   const safeName = `${ownerLabel}_${itemLabel}`.replace(/[^a-zA-Z0-9_\- ]/g, '').replace(/\s+/g, '_')
   return `taxes/${year}/${safeName}_${file.id}.${file.ext}`
 }

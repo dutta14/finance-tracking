@@ -201,4 +201,28 @@ describe('buildTaxTree', () => {
     const tree = buildTaxTree()
     expect(tree.folders[0].files[0].meta?.owner).toBe('Primary')
   })
+
+  it('returns undefined category for unknown category values', () => {
+    const store = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'primary',
+              category: 'unknown-category',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
+          ],
+        },
+      },
+    }
+    localStorage.setItem('tax-store', JSON.stringify(store))
+    localStorage.setItem('user-profile', '{}')
+
+    const tree = buildTaxTree()
+    expect(tree.folders[0].files[0].meta?.category).toBeUndefined()
+  })
 })
