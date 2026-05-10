@@ -61,7 +61,8 @@
   transition:
     border-color 150ms,
     box-shadow 150ms,
-    background 150ms;
+    background 150ms,
+    transform 150ms;
   outline: none;
 }
 .template-card:hover {
@@ -71,6 +72,11 @@
 .template-card:focus-visible {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-focus-ring);
+}
+.template-card:active {
+  background: var(--color-surface-alt);
+  border-color: var(--accent);
+  transform: scale(0.98);
 }
 
 .template-card-name {
@@ -111,7 +117,8 @@
   transition:
     background 150ms,
     color 150ms,
-    border-color 150ms;
+    border-color 150ms,
+    transform 150ms;
 }
 .btn-use-template:hover {
   background: var(--color-surface-alt);
@@ -122,11 +129,22 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+.btn-use-template:active {
+  background: var(--color-surface-alt);
+  transform: scale(0.97);
+}
 
 .wizard-step-name-actions {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .template-card:active,
+  .btn-use-template:active {
+    transform: none;
+  }
 }
 
 @media (max-width: 480px) {

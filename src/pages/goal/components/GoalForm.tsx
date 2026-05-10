@@ -381,7 +381,13 @@ const GoalForm: FC<GoalFormProps> = ({
             />
             {editingGoalId === null && (
               <div className="wizard-step-name-actions">
-                <button type="button" className="btn-use-template" onClick={() => setShowTemplates(prev => !prev)}>
+                <button
+                  type="button"
+                  className="btn-use-template"
+                  onClick={() => setShowTemplates(prev => !prev)}
+                  aria-expanded={showTemplates}
+                  aria-controls="template-picker"
+                >
                   {showTemplates ? 'Hide Templates' : 'Use Template'}
                 </button>
               </div>

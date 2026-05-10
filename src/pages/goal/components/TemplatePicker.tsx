@@ -11,7 +11,7 @@ const TemplatePicker: FC<TemplatePickerProps> = ({ onSelect, onClose }) => {
   const dollars = (n: number) => '$' + n.toLocaleString()
 
   return (
-    <div className="template-picker">
+    <div id="template-picker" className="template-picker">
       <div className="template-picker-header">
         <span className="template-picker-title">Choose a template</span>
         <button type="button" className="template-picker-close" onClick={onClose} aria-label="Close template picker">
