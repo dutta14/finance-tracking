@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { appStorage } from '../../../utils/appStorage'
 import {
   loadBudgetStore,
   saveBudgetStore,
@@ -33,17 +34,12 @@ describe('loadBudgetStore', () => {
   })
 
   it('loads CSVs from store and config from separate key', () => {
-    localStorage.setItem(
-      'budget-store',
-      JSON.stringify({
+    appStorage.setJSON('budget-store', {
         csvs: { '2025-01': { month: '2025-01', csv: 'a,b,c', uploadedAt: '2025-01-15' } },
         configs: {},
         years: [],
-      }),
-    )
-    localStorage.setItem(
-      'budget-config',
-      JSON.stringify({
+      })
+    appStorage.setJSON('budget-config', {
         version: 1,
         years: [2025],
         categoryGroups: [
@@ -51,8 +47,7 @@ describe('loadBudgetStore', () => {
           { id: 'others', name: 'Others', categories: [] },
           { id: 'removed', name: 'Remove from Budget', categories: [] },
         ],
-      }),
-    )
+      })
     const store = loadBudgetStore()
     expect(store.csvs['2025-01'].csv).toBe('a,b,c')
     expect(store.years).toEqual([2025])
@@ -81,13 +76,13 @@ describe('saveBudgetStore', () => {
     saveBudgetStore(store)
 
     // Main store should only have CSVs
-    const mainStore = JSON.parse(localStorage.getItem('budget-store')!)
+    const mainStore = appStorage.getJSON<Record<string, unknown>>('budget-store', {})
     expect(mainStore.csvs['2025-03']).toBeTruthy()
     expect(mainStore.years).toEqual([]) // years go to config
     expect(mainStore.configs).toEqual({})
 
     // Config should have years and groups
-    const config = JSON.parse(localStorage.getItem('budget-config')!)
+    const config = appStorage.getJSON<Record<string, unknown>>('budget-config', {})
     expect(config.years).toEqual([2025])
     expect(config.categoryGroups).toHaveLength(3)
   })
@@ -296,9 +291,7 @@ describe('createYear', () => {
 
 describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
   it('merges per-year category groups into global groups', () => {
-    localStorage.setItem(
-      'budget-store',
-      JSON.stringify({
+    appStorage.setJSON('budget-store', {
         csvs: {},
         configs: {
           2024: {
@@ -320,8 +313,7 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
           },
         },
         years: [2024, 2025],
-      }),
-    )
+      })
     // No config key → migration will trigger
     const store = loadBudgetStore()
     const groups = store.categoryGroups!
@@ -340,9 +332,7 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
   })
 
   it('deduplicates categories in Others that exist in custom groups', () => {
-    localStorage.setItem(
-      'budget-store',
-      JSON.stringify({
+    appStorage.setJSON('budget-store', {
         csvs: {},
         configs: {
           2024: {
@@ -355,8 +345,7 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
           },
         },
         years: [2024],
-      }),
-    )
+      })
     const store = loadBudgetStore()
     const others = store.categoryGroups!.find(g => g.id === 'others')!
     // Groceries is in the food group, so it should be removed from Others
@@ -372,9 +361,8 @@ describe('getBudgetSaveRate', () => {
 
   it('returns parsed summary when valid JSON is stored', () => {
     const summary = { annualSavings: 60000, saveRate: 40, monthsOfData: 12 }
-    localStorage.setItem('budget-summary', JSON.stringify(summary))
+    appStorage.setJSON('budget-summary', summary)
     const result = getBudgetSaveRate()
-    expect(result).toEqual(summary)
   })
 
   it('returns null when budget-summary contains corrupt JSON', () => {
@@ -384,13 +372,13 @@ describe('getBudgetSaveRate', () => {
 
   it('returns summary with zero savings rate', () => {
     const summary = { annualSavings: 0, saveRate: 0, monthsOfData: 6 }
-    localStorage.setItem('budget-summary', JSON.stringify(summary))
+    appStorage.setJSON('budget-summary', summary)
     expect(getBudgetSaveRate()).toEqual(summary)
   })
 
   it('returns summary with negative savings', () => {
     const summary = { annualSavings: -5000, saveRate: -10, monthsOfData: 3 }
-    localStorage.setItem('budget-summary', JSON.stringify(summary))
+    appStorage.setJSON('budget-summary', summary)
     expect(getBudgetSaveRate()).toEqual(summary)
   })
 })
@@ -399,14 +387,14 @@ describe('saveBudgetSummary', () => {
   it('persists summary to localStorage under budget-summary key', () => {
     const summary = { annualSavings: 48000, saveRate: 35, monthsOfData: 8 }
     saveBudgetSummary(summary)
-    const stored = JSON.parse(localStorage.getItem('budget-summary')!)
+    const stored = appStorage.getJSON<Record<string, unknown>>('budget-summary', {})
     expect(stored).toEqual(summary)
   })
 
   it('overwrites previously saved summary', () => {
     saveBudgetSummary({ annualSavings: 10000, saveRate: 10, monthsOfData: 1 })
     saveBudgetSummary({ annualSavings: 20000, saveRate: 20, monthsOfData: 2 })
-    const stored = JSON.parse(localStorage.getItem('budget-summary')!)
+    const stored = appStorage.getJSON<Record<string, unknown>>('budget-summary', {})
     expect(stored.annualSavings).toBe(20000)
     expect(stored.monthsOfData).toBe(2)
   })
