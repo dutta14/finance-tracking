@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { getLatestGoalTotals } from './types'
+import { appStorage } from '../../utils/appStorage'
 import type { Account, BalanceEntry } from './types'
 
 beforeEach(() => {
@@ -31,8 +32,8 @@ describe('getLatestGoalTotals', () => {
   })
 
   it('returns zeros when accounts exist but no balances', () => {
-    localStorage.setItem('data-accounts', JSON.stringify([makeAccount()]))
-    localStorage.setItem('data-balances', '[]')
+    appStorage.setJSON('data-accounts', [makeAccount()])
+    appStorage.setJSON('data-balances', [])
     expect(getLatestGoalTotals()).toEqual({ fiTotal: 0, gwTotal: 0 })
   })
 
@@ -44,8 +45,8 @@ describe('getLatestGoalTotals', () => {
       makeBalance(1, '2025-02', 55000),
       makeBalance(2, '2025-02', 32000),
     ]
-    localStorage.setItem('data-accounts', JSON.stringify(accounts))
-    localStorage.setItem('data-balances', JSON.stringify(balances))
+    appStorage.setJSON('data-accounts', accounts)
+    appStorage.setJSON('data-balances', balances)
 
     const result = getLatestGoalTotals()
     // Latest month is 2025-02
@@ -56,8 +57,8 @@ describe('getLatestGoalTotals', () => {
   it('computes GW total separately', () => {
     const accounts = [makeAccount({ id: 1, goalType: 'fi' }), makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
     const balances = [makeBalance(1, '2025-03', 100000), makeBalance(2, '2025-03', 20000)]
-    localStorage.setItem('data-accounts', JSON.stringify(accounts))
-    localStorage.setItem('data-balances', JSON.stringify(balances))
+    appStorage.setJSON('data-accounts', accounts)
+    appStorage.setJSON('data-balances', balances)
 
     const result = getLatestGoalTotals()
     expect(result.fiTotal).toBe(100000)
@@ -70,8 +71,8 @@ describe('getLatestGoalTotals', () => {
       makeAccount({ id: 2, goalType: 'fi', status: 'inactive' }),
     ]
     const balances = [makeBalance(1, '2025-01', 50000), makeBalance(2, '2025-01', 999999)]
-    localStorage.setItem('data-accounts', JSON.stringify(accounts))
-    localStorage.setItem('data-balances', JSON.stringify(balances))
+    appStorage.setJSON('data-accounts', accounts)
+    appStorage.setJSON('data-balances', balances)
 
     expect(getLatestGoalTotals().fiTotal).toBe(50000)
   })
@@ -88,8 +89,8 @@ describe('getLatestGoalTotals', () => {
       makeBalance(1, '2025-01', 45000),
       makeBalance(1, '2025-02', 50000),
     ]
-    localStorage.setItem('data-accounts', JSON.stringify(accounts))
-    localStorage.setItem('data-balances', JSON.stringify(balances))
+    appStorage.setJSON('data-accounts', accounts)
+    appStorage.setJSON('data-balances', balances)
 
     expect(getLatestGoalTotals().fiTotal).toBe(50000)
   })

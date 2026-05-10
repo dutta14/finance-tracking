@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { appStorage } from '../../utils/appStorage'
 import { FinancialGoal, GwGoal } from '../../types'
 import GoalsPeek from './GoalsPeek'
 
@@ -84,7 +86,7 @@ function makeBalance(accountId: number, month: string, balance: number) {
 }
 
 function setProfileBirthday(birthday: string) {
-  localStorage.setItem('user-profile', JSON.stringify({ birthday }))
+  appStorage.setJSON('user-profile', { birthday })
 }
 
 const noop = vi.fn()
@@ -229,10 +231,11 @@ describe('GoalsPeek projection — FI date projected', () => {
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderPeek([makeGoal({ fiGoal: 2_000_000 })])
     // Should render "FI by" followed by a Mon YYYY date
-    expect(screen.getByText('FI by')).toBeInTheDocument()
-    const dateEl = screen.getByText('FI by').closest('span')?.querySelector('.goals-peek-projected-date')
-    expect(dateEl).toBeInTheDocument()
-    expect(dateEl!.textContent).toMatch(/[A-Z][a-z]{2} \d{4}/)
+    const fiByText = screen.getByText('FI by')
+    expect(fiByText).toBeInTheDocument()
+    const container = fiByText.closest('span')
+    expect(container).toBeInTheDocument()
+    expect(container!.textContent).toMatch(/FI by [A-Z][a-z]{2} \d{4}/)
   })
 })
 
@@ -273,30 +276,117 @@ describe('GoalsPeek overflow', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek navigation', () => {
-  it('navigates to the goal detail page when clicking a specific goal', () => {
+  it('navigates to the goal detail page when clicking a specific goal', async () => {
+    const user = userEvent.setup()
     const goal = makeGoal({ id: 42, goalName: 'Coast FIRE' })
     renderPeek([goal])
     const goalButton = screen.getByRole('button', { name: /Coast FIRE/i })
-    fireEvent.click(goalButton)
+    await user.click(goalButton)
     expect(mockNavigate).toHaveBeenCalledWith('/goal/42')
   })
 
-  it('navigates to the correct detail page for each goal', () => {
+  it('navigates to the correct detail page for each goal', async () => {
+    const user = userEvent.setup()
     const goals = [makeGoal({ id: 7, goalName: 'Early Retirement' }), makeGoal({ id: 13, goalName: 'Lean FIRE' })]
     renderPeek(goals)
 
-    fireEvent.click(screen.getByRole('button', { name: /Early Retirement/i }))
+    await user.click(screen.getByRole('button', { name: /Early Retirement/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/goal/7')
 
     mockNavigate.mockClear()
 
-    fireEvent.click(screen.getByRole('button', { name: /Lean FIRE/i }))
+    await user.click(screen.getByRole('button', { name: /Lean FIRE/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/goal/13')
   })
 
-  it('header "View Goals" link still calls onNavigate (list page)', () => {
+  it('header "View Goals" link still calls onNavigate (list page)', async () => {
+    const user = userEvent.setup()
     renderPeek()
-    fireEvent.click(screen.getByText('View Goals →'))
+    await user.click(screen.getByText('View Goals →'))
+    expect(noop).toHaveBeenCalledWith(expect.objectContaining({ type: 'click' }))
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   SI-19: GoalsPeek integration — summary cards and progress
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek summary cards and progress', () => {
+  it('renders goal summary cards with name and FI progress bar', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+
+    // Goal name visible
+    expect(screen.getByText('Retire Early')).toBeInTheDocument()
+    // FI progress bar exists with correct aria-label
+    const fiBar = screen.getByRole('progressbar', { name: /FI progress/i })
+    expect(fiBar).toBeInTheDocument()
+    // FI target visible in meta
+    expect(screen.getByText(/FI:/)).toBeInTheDocument()
+  })
+
+  it('shows empty state message and CTA when no goals exist', async () => {
+    const user = userEvent.setup()
+    renderPeek([])
+
+    expect(screen.getByText(/set an fi target/i)).toBeInTheDocument()
+    const ctaBtn = screen.getByRole('button', { name: /create a goal/i })
+    expect(ctaBtn).toBeInTheDocument()
+    await user.click(ctaBtn)
     expect(noop).toHaveBeenCalled()
+  })
+
+  it('navigates to the correct goal detail page on card click', async () => {
+    const user = userEvent.setup()
+    const goal = makeGoal({ id: 99, goalName: 'Fat FIRE' })
+    renderPeek([goal])
+
+    const goalCard = screen.getByRole('button', { name: /Fat FIRE/i })
+    await user.click(goalCard)
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/99')
+  })
+
+  it('displays the correct FI progress percentage based on current totals', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-06', 750_000)],
+      allMonths: ['2025-06'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    renderPeek([makeGoal({ fiGoal: 1_500_000 })])
+
+    // 750k / 1.5M = 50%
+    const fiBar = screen.getByRole('progressbar', { name: /FI progress: 50%/i })
+    expect(fiBar).toBeInTheDocument()
+    expect(fiBar).toHaveAttribute('aria-valuenow', '50')
+    expect(screen.getByText('50%')).toBeInTheDocument()
+  })
+
+  it('renders without crashing when profile birthday is missing from appStorage', () => {
+    appStorage.remove('user-profile')
+    renderPeek([makeGoal()])
+    expect(screen.getByText('Retire Early')).toBeInTheDocument()
+  })
+
+  it('handles invalid birthday format gracefully', () => {
+    setProfileBirthday('not-a-date')
+    renderPeek([makeGoal()])
+    expect(screen.getByText('Retire Early')).toBeInTheDocument()
+  })
+
+  it('renders with empty gwGoals array', () => {
+    renderPeek([makeGoal()], [])
+    expect(screen.getByText('Retire Early')).toBeInTheDocument()
   })
 })

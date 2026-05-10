@@ -215,6 +215,7 @@ const Home: FC = () => {
             <div
               key={cardIdx}
               className={slotClass}
+              data-testid={`drag-slot-${pos}`}
               draggable
               onDragStart={() => handleDragStart(pos)}
               onDragOver={e => handleDragOver(e, pos)}

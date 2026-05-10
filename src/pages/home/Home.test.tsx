@@ -132,8 +132,8 @@ describe('Home cards', () => {
   })
 
   it('renders four draggable card slots', () => {
-    const { container } = renderHome()
-    const slots = container.querySelectorAll('[draggable="true"]')
+    renderHome()
+    const slots = screen.getAllByTestId(/^drag-slot-/)
     expect(slots).toHaveLength(4)
   })
 })
@@ -144,8 +144,8 @@ describe('Home cards', () => {
 
 describe('Home card reorder via drag', () => {
   it('reorders cards on drag and drop', () => {
-    const { container } = renderHome()
-    const slots = container.querySelectorAll('[draggable="true"]')
+    renderHome()
+    const slots = screen.getAllByTestId(/^drag-slot-/)
 
     fireEvent.dragStart(slots[0])
     fireEvent.dragOver(slots[2], { dataTransfer: { dropEffect: '' } })
@@ -155,15 +155,15 @@ describe('Home card reorder via drag', () => {
     expect(screen.getByText(/moved to position/)).toBeInTheDocument()
 
     // Verify actual card order: default [NW, Charts, Goals, Alloc] → [Charts, Goals, NW, Alloc]
-    const cardOrder = Array.from(container.querySelectorAll('[data-testid$="-card"]')).map(el =>
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el =>
       el.getAttribute('data-testid'),
     )
     expect(cardOrder).toEqual(['charts-card', 'goals-card', 'nw-card', 'alloc-card'])
   })
 
   it('persists reorder to localStorage', () => {
-    const { container } = renderHome()
-    const slots = container.querySelectorAll('[draggable="true"]')
+    renderHome()
+    const slots = screen.getAllByTestId(/^drag-slot-/)
 
     fireEvent.dragStart(slots[0])
     fireEvent.dragOver(slots[1], { dataTransfer: { dropEffect: '' } })

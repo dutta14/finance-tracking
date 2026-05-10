@@ -8,14 +8,17 @@ import type { Account, BalanceEntry } from './types'
 let createdUrl: string
 let downloadedFilename: string
 let clickCalled: boolean
+let capturedBlob: Blob | null
 
 beforeEach(() => {
   createdUrl = ''
   downloadedFilename = ''
   clickCalled = false
+  capturedBlob = null
 
-  vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
+  vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob) => {
     createdUrl = 'blob:mock-url'
+    capturedBlob = blob
     return createdUrl
   })
 
@@ -83,10 +86,31 @@ describe('exportCsv', () => {
     expect(downloadedFilename).toMatch(/^finance-data-\d{4}-\d{2}-\d{2}\.csv$/)
   })
 
-  it('calls URL.revokeObjectURL after download', () => {
+  it('CSV content matches expected data', async () => {
+    const accounts = [makeAccount(1, 'Fidelity 401k', 'Fidelity'), makeAccount(2, 'Roth IRA')]
+    const balances = [makeBalance(1, '2025-01', 50000), makeBalance(2, '2025-01', 12000)]
+    exportCsv(accounts, balances)
+
+    expect(capturedBlob).not.toBeNull()
+    const csv = await capturedBlob!.text()
+    const rows = csv.split('\n')
+    expect(rows).toHaveLength(3)
+    expect(rows[0]).toBe(',Fidelity,')
+    expect(rows[1]).toBe(',Fidelity 401k,Roth IRA')
+    expect(rows[2]).toBe('2025-01,50000,12000')
+  })
+
+  it('calls URL.revokeObjectURL after download', async () => {
     const accounts = [makeAccount(1, 'Test')]
     const balances = [makeBalance(1, '2025-01', 100)]
     exportCsv(accounts, balances)
     expect(URL.revokeObjectURL).toHaveBeenCalled()
+
+    // Verify CSV content via capturedBlob
+    expect(capturedBlob).not.toBeNull()
+    const csvContent = await capturedBlob!.text()
+    expect(csvContent).toContain('Test')
+    expect(csvContent).toContain('2025-01')
+    expect(csvContent).toContain('100')
   })
 })
