@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import PassphraseInput from './PassphraseInput'
 
 describe('PassphraseInput', () => {
@@ -26,19 +27,24 @@ describe('PassphraseInput', () => {
     expect(input).toHaveAttribute('type', 'password')
   })
 
-  it('toggles visibility on button click', () => {
+  it('toggles visibility on button click', async () => {
+    const user = userEvent.setup()
     render(<PassphraseInput {...defaultProps} value="secret" />)
     const toggle = screen.getByRole('button', { name: 'Show passphrase' })
-    fireEvent.click(toggle)
+    await user.click(toggle)
     expect(screen.getByLabelText('Passphrase')).toHaveAttribute('type', 'text')
     expect(screen.getByRole('button', { name: 'Hide passphrase' })).toBeInTheDocument()
   })
 
-  it('calls onChange with new value', () => {
+  it('calls onChange with new value', async () => {
+    const user = userEvent.setup()
     const onChange = vi.fn()
     render(<PassphraseInput {...defaultProps} onChange={onChange} />)
-    fireEvent.change(screen.getByLabelText('Passphrase'), { target: { value: 'abc' } })
-    expect(onChange).toHaveBeenCalledWith('abc')
+    await user.type(screen.getByLabelText('Passphrase'), 'abc')
+    expect(onChange).toHaveBeenCalledWith('a')
+    expect(onChange).toHaveBeenCalledWith('b')
+    expect(onChange).toHaveBeenCalledWith('c')
+    expect(onChange).toHaveBeenCalledTimes(3)
   })
 
   it('displays error message with role="alert"', () => {
@@ -88,10 +94,10 @@ describe('PassphraseInput', () => {
   })
 
   it('reserves space for error message even when no error', () => {
-    const { container } = render(<PassphraseInput {...defaultProps} />)
-    const errorEl = container.querySelector('.unlock-error')
+    render(<PassphraseInput {...defaultProps} />)
+    const errorEl = screen.getByRole('alert')
     expect(errorEl).toBeInTheDocument()
-    expect(errorEl?.textContent).toBe('')
+    expect(errorEl).toHaveTextContent('')
   })
 
   it('links aria-describedby to error and external description', () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import ErrorBoundary from './ErrorBoundary'
 
 const ThrowingComponent = ({ shouldThrow }: { shouldThrow: boolean }) => {
@@ -85,12 +86,40 @@ describe('ErrorBoundary', () => {
     )
     expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
 
+    // Change ONLY resetKey — child still throws, but error state should reset first
+    // then re-catch the new error. This proves resetKey triggers state reset.
     rerender(
       <ErrorBoundary variant="card" resetKey="/new">
+        <ThrowingComponent shouldThrow={true} />
+      </ErrorBoundary>,
+    )
+    // Error boundary reset → child rendered → child threw → caught again
+    expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
+
+    // Now verify that changing resetKey with non-throwing child shows content
+    rerender(
+      <ErrorBoundary variant="card" resetKey="/final">
         <ThrowingComponent shouldThrow={false} />
       </ErrorBoundary>,
     )
     expect(screen.getByText('Content')).toBeInTheDocument()
+  })
+
+  it('does not reset error state when resetKey stays the same', () => {
+    const { rerender } = render(
+      <ErrorBoundary variant="card" resetKey="/same">
+        <ThrowingComponent shouldThrow={true} />
+      </ErrorBoundary>,
+    )
+    expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
+
+    // Rerender with same resetKey but non-throwing child — error should persist
+    rerender(
+      <ErrorBoundary variant="card" resetKey="/same">
+        <ThrowingComponent shouldThrow={false} />
+      </ErrorBoundary>,
+    )
+    expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
   })
 
   it('logs to console.error via componentDidCatch', () => {
@@ -134,7 +163,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/GitHub Sync is configured/)).toBeInTheDocument()
   })
 
-  it('"Clear data & reload" calls localStorage.clear and indexedDB.deleteDatabase', () => {
+  it('"Clear data & reload" calls localStorage.clear and indexedDB.deleteDatabase', async () => {
+    const user = userEvent.setup()
     const clearSpy = vi.spyOn(Storage.prototype, 'clear').mockImplementation(() => {})
     const deleteDbSpy = vi.fn(() => ({}) as IDBOpenDBRequest)
     vi.stubGlobal('indexedDB', { deleteDatabase: deleteDbSpy })
@@ -144,7 +174,7 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent shouldThrow={true} />
       </ErrorBoundary>,
     )
-    fireEvent.click(screen.getByRole('button', { name: /clear data/i }))
+    await user.click(screen.getByRole('button', { name: /clear data/i }))
 
     expect(clearSpy).toHaveBeenCalled()
     expect(deleteDbSpy).toHaveBeenCalledWith('finance-tracking-files')
@@ -161,20 +191,27 @@ describe('ErrorBoundary', () => {
     expect(pre.textContent).toContain('Test error')
   })
 
-  it('retry button in card variant resets boundary and re-renders children', () => {
-    const { rerender } = render(
+  it('retry button in card variant resets boundary and re-renders children', async () => {
+    const user = userEvent.setup()
+    // shouldThrow controls whether the child throws. We start with true,
+    // then switch to false before clicking Retry so the retry path is exercised.
+    let shouldThrow = true
+    const Conditional = () => {
+      if (shouldThrow) throw new Error('Test error')
+      return <div>Content</div>
+    }
+
+    render(
       <ErrorBoundary variant="card">
-        <ThrowingComponent shouldThrow={true} />
+        <Conditional />
       </ErrorBoundary>,
     )
     expect(screen.getByText('Something went wrong on this page.')).toBeInTheDocument()
 
-    rerender(
-      <ErrorBoundary variant="card">
-        <ThrowingComponent shouldThrow={false} />
-      </ErrorBoundary>,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    // Set shouldThrow = false so that when Retry resets the boundary and
+    // re-renders children, the component succeeds
+    shouldThrow = false
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
     expect(screen.getByText('Content')).toBeInTheDocument()
   })
 })

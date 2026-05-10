@@ -4,6 +4,7 @@ import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
 import { appStorage } from '../../../utils/appStorage'
+import { calculateFI } from '../utils/fiCalculations'
 import '../../../styles/FICalculator.css'
 
 const REMOVED_GROUP_ID = 'removed'
@@ -282,105 +283,26 @@ const FICalculator: FC = () => {
 
   // Core FI calculation
   const result = useMemo(() => {
-    const g = growthRate / 100
-    const inf = inflationRate / 100
     const yearsToRetire = retireYear - thisYear
     const yearsInRetirement = lastYear - retireYear
 
-    if (yearsInRetirement <= 0) return null
-
-    // Step 1: What expense will be in the retirement year?
-    const expenseAtRetirement = annualExpense * Math.pow(1 + inf, yearsToRetire)
-
-    // Step 2: Grow retirement accounts to their respective access years
-    const primary401kAtAccess = fiRetirementPrimary * Math.pow(1 + g, primary401kYear - thisYear)
-    const partner401kAtAccess = fiRetirementPartner * Math.pow(1 + g, partner401kYear - thisYear)
-
-    // Step 3: Simulate year-by-year backwards from lastYear to retireYear
-    // C[y] = E[y] + C[y+1]/(1+g), starting from C[lastYear+1]=0
-    // Expense at year y: expenseAtRetirement * (1+inf)^(y - retireYear)
-    // Clamp to 0 at each step: non-retirement corpus can never be negative.
-    // This ensures excess 401k money doesn't reduce corpus needed before access year.
-    let corpus = 0
-    for (let y = lastYear; y >= retireYear; y--) {
-      corpus = corpus / (1 + g)
-      const yearIdx = y - retireYear
-      const expenseThisYear = expenseAtRetirement * Math.pow(1 + inf, yearIdx)
-      corpus += expenseThisYear
-
-      // If a 401k becomes accessible this year, it reduces what corpus needs to cover
-      if (y === primary401kYear) corpus -= primary401kAtAccess
-      if (y === partner401kYear) corpus -= partner401kAtAccess
-
-      // Can't need negative money — excess 401k is surplus, not a reduction of earlier needs
-      corpus = Math.max(0, corpus)
-    }
-
-    // corpus is now the amount needed from non-retirement sources at retirement year
-    const corpusNeededFromNonRetirement = Math.max(0, corpus)
-
-    // Step 4: Grow non-retirement FI accounts to retirement year
-    const fiNonRetAtRetire = fiNonRetirement * Math.pow(1 + g, yearsToRetire)
-
-    // Step 5: Optionally include GW liquid
-    const gwLiquidAtRetire = includeGwLiquid ? gwLiquid * Math.pow(1 + g, yearsToRetire) : 0
-
-    const existingAtRetire = fiNonRetAtRetire + gwLiquidAtRetire
-    const gap = Math.max(0, corpusNeededFromNonRetirement - existingAtRetire)
-
-    // Step 6: How much to save per year until retirement?
-    // Future value of annuity: FV = PMT * ((1+g)^n - 1) / g
-    let annualSaving = 0
-    if (yearsToRetire > 0 && gap > 0) {
-      if (g === 0) {
-        annualSaving = gap / yearsToRetire
-      } else {
-        const fvFactor = (Math.pow(1 + g, yearsToRetire) - 1) / g
-        annualSaving = gap / fvFactor
-      }
-    }
-
-    // Step 7: Forward simulation for year-by-year breakdown
-    // Start with the corpus at retirement (assuming gap is filled)
-    const startingCorpus = corpusNeededFromNonRetirement
-    const yearByYear: { year: number; expense: number; netWorth: number; injection: string | null }[] = []
-    let nw = startingCorpus
-    for (let y = retireYear; y <= lastYear; y++) {
-      const yearIdx = y - retireYear
-      let injection: string | null = null
-
-      // 401k injections
-      if (y === primary401kYear) {
-        nw += primary401kAtAccess
-        injection = 'Primary 401(k)'
-      }
-      if (y === partner401kYear) {
-        nw += partner401kAtAccess
-        injection = injection ? injection + ' + Partner 401(k)' : 'Partner 401(k)'
-      }
-
-      const expense = expenseAtRetirement * Math.pow(1 + inf, yearIdx)
-      nw -= expense
-
-      yearByYear.push({ year: y, expense, netWorth: Math.abs(nw) < 1 ? 0 : nw, injection })
-
-      // Grow for next year
-      nw *= 1 + g
-    }
-
-    return {
-      corpusNeededFromNonRetirement,
-      primary401kAtAccess,
-      partner401kAtAccess,
-      fiNonRetAtRetire,
-      gwLiquidAtRetire,
-      existingAtRetire,
-      gap,
-      annualSaving,
-      expenseAtRetirement,
+    return calculateFI({
+      annualExpense,
+      inflationRate,
+      growthRate,
       yearsToRetire,
-      yearByYear,
-    }
+      yearsInRetirement,
+      fiRetirementPrimary,
+      fiRetirementPartner,
+      fiNonRetirement,
+      gwLiquid,
+      includeGwLiquid,
+      primary401kYear,
+      partner401kYear,
+      retireYear,
+      lastYear,
+      thisYear,
+    })
   }, [
     annualExpense,
     inflationRate,

@@ -17,7 +17,7 @@ const UndoToast: FC<UndoToastProps> = ({ message, onUndo, onDismiss, duration = 
   }, [])
 
   return (
-    <div className={`undo-toast${visible ? ' undo-toast--visible' : ''}`}>
+    <div className={`undo-toast${visible ? ' undo-toast--visible' : ''}`} role="alert">
       <span className="undo-toast-message">{message}</span>
       <button className="undo-toast-undo" onClick={onUndo}>
         Undo

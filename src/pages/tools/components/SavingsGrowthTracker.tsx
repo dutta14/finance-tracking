@@ -4,6 +4,7 @@ import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
 import { appStorage } from '../../../utils/appStorage'
+import { delta } from '../utils/savingsCalc'
 import '../../../styles/SavingsGrowthTracker.css'
 
 const REMOVED_GROUP_ID = 'removed'
@@ -14,8 +15,6 @@ const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
 const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
-
-const delta = (cur: number, prev: number) => (prev === 0 ? null : ((cur - prev) / Math.abs(prev)) * 100)
 
 /** Net worth at end of each December (or latest available month in each year).
  *  Matches the Data tab's "Total" column: all accounts, raw balance sum. */

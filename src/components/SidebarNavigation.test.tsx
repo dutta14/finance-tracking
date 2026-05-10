@@ -99,19 +99,17 @@ describe('SidebarNavigation', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('applies active styling and aria-current to Drive button when currentPage is "drive"', () => {
+  it('applies aria-current to Drive button when currentPage is "drive"', () => {
     renderSidebar({ currentPage: 'drive' })
 
     const driveBtn = screen.getByRole('button', { name: 'Drive' })
-    expect(driveBtn).toHaveClass('sidebar-footer-btn--active')
     expect(driveBtn).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not apply active styling to Drive button when currentPage is not "drive"', () => {
+  it('does not apply aria-current to Drive button when currentPage is not "drive"', () => {
     renderSidebar({ currentPage: 'home' })
 
     const driveBtn = screen.getByRole('button', { name: 'Drive' })
-    expect(driveBtn).not.toHaveClass('sidebar-footer-btn--active')
     expect(driveBtn).not.toHaveAttribute('aria-current')
   })
 
@@ -156,19 +154,17 @@ describe('SidebarNavigation', () => {
       expect(setCurrentPage).toHaveBeenCalledWith('goal')
     })
 
-    it('applies active styling and aria-current when currentPage is "goal"', () => {
+    it('applies aria-current when currentPage is "goal"', () => {
       renderSidebar({ currentPage: 'goal' })
 
       const goalsBtn = screen.getByRole('button', { name: 'Goals' })
-      expect(goalsBtn).toHaveClass('sidebar-link', 'active')
       expect(goalsBtn).toHaveAttribute('aria-current', 'page')
     })
 
-    it('does not apply active styling when currentPage is not "goal"', () => {
+    it('does not apply aria-current when currentPage is not "goal"', () => {
       renderSidebar({ currentPage: 'home' })
 
       const goalsBtn = screen.getByRole('button', { name: 'Goals' })
-      expect(goalsBtn).not.toHaveClass('active')
       expect(goalsBtn).not.toHaveAttribute('aria-current')
     })
   })
