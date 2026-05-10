@@ -263,7 +263,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
       {csvError && (
         <div className="budget-csv-error">
           <span>⚠ {csvError}</span>
-          <button onClick={() => setCsvError(null)}>×</button>
+          <button aria-label="Dismiss error" onClick={() => setCsvError(null)}>×</button>
         </div>
       )}
 
@@ -638,7 +638,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
       {/* Context menu */}
       {contextMenu && (
         <>
-          <div className="budget-ctx-backdrop" onClick={() => setContextMenu(null)} />
+          <div className="budget-ctx-backdrop" data-testid="ctx-menu-backdrop" onClick={() => setContextMenu(null)} />
           <div className="budget-ctx-menu" style={{ left: contextMenu.x, top: contextMenu.y }}>
             <button className="budget-ctx-item" onClick={handleUploadClick}>
               Upload CSV for {shortMonthName(parseInt(contextMenu.monthKey.split('-')[1], 10) - 1)}
@@ -654,7 +654,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
         </>
       )}
 
-      <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileChange} />
+      <input ref={fileInputRef} type="file" accept=".csv" data-testid="csv-file-input" style={{ display: 'none' }} onChange={handleFileChange} />
     </div>
   )
 }
