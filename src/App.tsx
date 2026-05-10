@@ -125,7 +125,7 @@ const AppShell: FC = () => {
     [navigate, setDarkMode, setSettingsOpenSection, handleExport],
   )
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout">
       <ModernDesignToggle />
       {sidebarOpen && (
         <SidebarNavigation
@@ -136,24 +136,12 @@ const AppShell: FC = () => {
           }}
         />
       )}
-      {isMobile && sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 199, background: 'rgba(0,0,0,0.4)' }}
-        />
-      )}
+      {isMobile && sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="sidebar-overlay" />}
       <main
-        className={`main-content${!sidebarOpen ? ' sidebar-closed' : ''}`}
-        style={{
-          flex: 1,
-          marginLeft: !isMobile && sidebarOpen ? 220 : 0,
-          padding: 0,
-          minHeight: '100vh',
-          transition: 'margin-left 0.2s',
-        }}
+        className={`main-content${!sidebarOpen ? ' sidebar-closed' : ''}${!isMobile && sidebarOpen ? ' sidebar-open' : ''}`}
       >
         {!sidebarOpen && (
-          <div style={{ position: 'fixed', top: '1.25rem', left: '0.75rem', zIndex: 300 }}>
+          <div className="sidebar-toggle-wrapper">
             <SidebarToggle expanded={false} onToggle={() => setSidebarOpen(true)} />
           </div>
         )}
@@ -165,11 +153,7 @@ const AppShell: FC = () => {
         )}
         <Suspense
           fallback={
-            <div
-              role="status"
-              aria-label="Loading page"
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
-            >
+            <div role="status" aria-label="Loading page" className="loading-fallback">
               Loading…
             </div>
           }

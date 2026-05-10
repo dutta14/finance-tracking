@@ -1893,3 +1893,12 @@ body.dark .cashflow-bar-legend-net.positive {
     text-align: center;
   }
 }
+
+/* ── Inline style migrations ── */
+.budget-group-cat--clickable {
+  cursor: pointer;
+}
+
+.cashflow-section-title--flush {
+  margin: 0;
+}

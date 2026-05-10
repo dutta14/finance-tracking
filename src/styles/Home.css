@@ -995,3 +995,18 @@ body.dark .home-card-cta-btn:hover {
     transition: none;
   }
 }
+
+/* ── Inline style migrations ── */
+.data-chart-legend--compact {
+  padding-top: 4px;
+  gap: 10px;
+}
+
+.data-chart-legend-item--sm {
+  font-size: 0.7rem;
+}
+
+.data-chart-legend-dot--sm {
+  width: 6px;
+  height: 6px;
+}

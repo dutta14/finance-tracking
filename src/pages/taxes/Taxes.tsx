@@ -601,7 +601,7 @@ const TaxReturnSection: FC<{
                 primaryAvatar={primaryAvatar}
                 partnerAvatar={partnerAvatar}
               />
-              <span style={{ marginLeft: '0.5rem' }}>{item!.label}</span>
+              <span className="tax-item-label-text">{item!.label}</span>
             </div>
             {item!.files.length > 0 && (
               <div className="tax-item-files">
@@ -877,7 +877,7 @@ const Taxes: FC = () => {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ verticalAlign: '-1px' }}
+                className="tax-icon-align"
               >
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />

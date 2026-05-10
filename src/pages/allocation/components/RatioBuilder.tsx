@@ -28,9 +28,7 @@ const RatioBuilder: FC<RatioBuilderProps> = ({
     <div className="alloc-ratio-builder-header">
       <span className="alloc-ratio-builder-label">Name</span>
       <input className="alloc-ratio-name-input" value={activeRatio.name} onChange={e => onUpdateName(e.target.value)} />
-      <span className="alloc-ratio-builder-label" style={{ marginLeft: '0.75rem' }}>
-        Scope
-      </span>
+      <span className="alloc-ratio-builder-label alloc-ratio-builder-label--spaced">Scope</span>
       <div className="alloc-page-scope-tabs">
         {(['total', 'fi', 'gw'] as Scope[]).map(s => (
           <button

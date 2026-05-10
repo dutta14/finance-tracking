@@ -340,3 +340,12 @@ body.dark .pdf2csv-error {
   border-color: var(--color-negative-border);
   color: var(--color-negative-muted);
 }
+
+/* ── Inline style migrations ── */
+.pdf2csv-col-checkbox {
+  width: 1.2rem;
+}
+
+.pdf2csv-col-narrow {
+  width: 1%;
+}

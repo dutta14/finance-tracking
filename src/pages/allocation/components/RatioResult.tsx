@@ -36,7 +36,7 @@ const RatioResult: FC<RatioResultProps> = ({ activeRatio, ratioData, ratioTotal,
 
           {goalData && (
             <>
-              <div className="alloc-ratio-bar-label" style={{ marginTop: '0.75rem' }}>
+              <div className="alloc-ratio-bar-label alloc-ratio-bar-label--spaced">
                 Goal{scopeGoal?.type === 'gradual' ? ` (age ${getAge((scopeGoal as GradualGoal).owner) ?? '?'})` : ''}
               </div>
               <div className="alloc-ratio-bar-wrap">

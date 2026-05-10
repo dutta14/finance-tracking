@@ -565,3 +565,23 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
     transition: none;
   }
 }
+
+/* ── Inline style migrations ── */
+.fi-card-warning-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.fi-card-warning-text {
+  flex: 1;
+}
+
+.fi-card-edit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.fi-card-row-value--semibold {
+  font-weight: var(--fw-semibold);
+}

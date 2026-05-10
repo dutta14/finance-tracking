@@ -1021,3 +1021,28 @@ body.dark .alloc-ratio-pill.active {
     flex: none;
   }
 }
+
+/* ── Inline style migrations ── */
+.alloc-goal-field-label--spaced {
+  margin-left: 0.75rem;
+}
+
+.alloc-goal-pct-header--flex {
+  flex: 1;
+}
+
+.alloc-ratio-bar-label--spaced {
+  margin-top: 0.75rem;
+}
+
+.alloc-ratio-builder-label--spaced {
+  margin-left: 0.75rem;
+}
+
+.budget-group-chevron {
+  transition: transform 0.15s;
+}
+
+.budget-group-chevron--open {
+  transform: rotate(90deg);
+}

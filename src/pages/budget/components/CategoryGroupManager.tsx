@@ -297,12 +297,11 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                       .map(cat => (
                         <div
                           key={cat}
-                          className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeMode && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}`}
+                          className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeMode && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}${mergeMode ? ' budget-group-cat--clickable' : ''}`}
                           draggable={!mergeMode}
                           onDragStart={e => !mergeMode && handleDragStart(e, cat, g.id)}
                           onDragEnd={handleDragEnd}
                           onClick={() => mergeMode && toggleMergeSelect(cat)}
-                          style={mergeMode ? { cursor: 'pointer' } : undefined}
                         >
                           <span className="budget-group-cat-handle">⠿</span>
                           <span className="budget-group-cat-name">{displayCat(cat, g.name)}</span>

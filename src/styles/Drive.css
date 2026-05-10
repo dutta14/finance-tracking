@@ -550,3 +550,12 @@ body.dark .drive-filter-btn.active {
   border-color: var(--color-text-muted);
   color: var(--color-text);
 }
+
+/* ── Inline style migrations ── */
+.drive-viewer-pre {
+  padding: 1rem;
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+  color: var(--color-text);
+}

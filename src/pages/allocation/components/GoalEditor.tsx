@@ -119,9 +119,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
               min={0}
               max={120}
             />
-            <label className="alloc-goal-field-label" style={{ marginLeft: '0.75rem' }}>
-              End age
-            </label>
+            <label className="alloc-goal-field-label alloc-goal-field-label--spaced">End age</label>
             <input
               type="number"
               className="alloc-goal-field-input"
@@ -163,7 +161,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
       {goalType === 'gradual' && (
         <div className="alloc-goal-pct-grid">
           <div className="alloc-goal-pct-cols">
-            <span className="alloc-goal-pct-header" style={{ flex: 1 }} />
+            <span className="alloc-goal-pct-header alloc-goal-pct-header--flex" />
             <span className="alloc-goal-pct-header">Start %</span>
             <span className="alloc-goal-pct-header">End %</span>
           </div>

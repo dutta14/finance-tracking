@@ -339,7 +339,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
             viewBox="0 0 16 16"
             fill="none"
             aria-hidden="true"
-            style={{ flexShrink: 0, marginTop: 1 }}
+            className="fi-card-warning-icon"
           >
             <path
               d="M8 1.5L1 14.5h14L8 1.5z"
@@ -351,7 +351,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
             <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.75" fill="currentColor" />
             <rect x="7.25" y="11.5" width="1.5" height="1.5" rx="0.75" fill="currentColor" />
           </svg>
-          <span style={{ flex: 1 }}>Not sustainable beyond {depletionMonth}</span>
+          <span className="fi-card-warning-text">Not sustainable beyond {depletionMonth}</span>
           {onUpdateGoal && (
             <button className="fi-card-warning-suggest" onClick={handleSuggest} disabled={suggesting}>
               {suggesting ? 'Searching…' : 'Suggest SWR'}
@@ -377,7 +377,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
 
       {/* ── Edit Button (Solo Page) ── */}
       {!showActions && onUpdateGoal && !editing && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+        <div className="fi-card-edit-row">
           <button className="fi-card-edit-btn" onClick={() => setEditing(true)} title="Edit goal">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
@@ -665,10 +665,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
               {projection.state === 'reached' && (
                 <div className="fi-card-rows">
                   <div className="fi-card-row">
-                    <span
-                      className="fi-card-row-value fi-card-row-value--ahead"
-                      style={{ fontWeight: 'var(--fw-semibold)' }}
-                    >
+                    <span className="fi-card-row-value fi-card-row-value--ahead fi-card-row-value--semibold">
                       <span role="img" aria-label="celebration">
                         🎉
                       </span>{' '}

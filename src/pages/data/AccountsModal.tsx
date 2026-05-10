@@ -467,8 +467,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
                   <div className="data-group-card-header">
                     <span className="data-group-card-name">{pendingGroupName}</span>
                     <button
-                      className="data-group-rename-btn"
-                      style={{ opacity: 1 }}
+                      className="data-group-rename-btn data-group-rename-btn--visible"
                       title="Remove"
                       onClick={() => setPendingGroupName(null)}
                     >
@@ -765,7 +764,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
               )}
 
               {filteredAccounts.length === 0 ? (
-                <div className="data-empty" style={{ padding: '2rem 1rem' }}>
+                <div className="data-empty settings-data-empty">
                   <p className="data-empty-title">No accounts</p>
                   <p className="data-empty-subtitle">Click "+ Add Account" to create one</p>
                 </div>

@@ -140,6 +140,15 @@ body.dark .sidebar-link.active {
   --sidebar-toggle-color: var(--color-text-muted);
   border-radius: var(--radius);
   transition: background 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  outline: none;
+  font-size: 1.2rem;
+  color: var(--sidebar-toggle-color, #000);
+  display: flex;
+  align-items: center;
 }
 .sidebar-toggle:hover {
   background: rgba(0, 0, 0, 0.05) !important;

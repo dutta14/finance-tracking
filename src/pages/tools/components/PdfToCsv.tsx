@@ -526,8 +526,8 @@ const PdfToCsv: FC = () => {
           <div className="pdf2csv-table-wrap">
             <table className="pdf2csv-table">
               <colgroup>
-                <col style={{ width: '1.2rem' }} />
-                <col style={{ width: '1%' }} />
+                <col className="pdf2csv-col-checkbox" />
+                <col className="pdf2csv-col-narrow" />
               </colgroup>
               <thead>
                 <tr>

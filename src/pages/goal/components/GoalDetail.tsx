@@ -89,7 +89,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
-          style={{ opacity: 0.4 }}
+          className="goal-detail-not-found-icon"
         >
           <circle cx="24" cy="24" r="20" />
           <path d="M18 18l12 12M30 18L18 30" />
@@ -228,11 +228,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{
-                marginLeft: '0.35rem',
-                transform: diveDeepOpen ? 'rotate(180deg)' : 'none',
-                transition: 'transform 0.2s',
-              }}
+              className={`goal-detail-chevron${diveDeepOpen ? ' goal-detail-chevron--open' : ''}`}
               aria-hidden="true"
             >
               <path d="M4 6l4 4 4-4" />

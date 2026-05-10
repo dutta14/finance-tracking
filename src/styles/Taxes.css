@@ -596,3 +596,12 @@ body.dark .tax-tpl-mode-opt.active {
   color: var(--color-muted, var(--color-text-muted));
   margin-left: auto;
 }
+
+/* ── Inline style migrations ── */
+.tax-item-label-text {
+  margin-left: 0.5rem;
+}
+
+.tax-icon-align {
+  vertical-align: -1px;
+}

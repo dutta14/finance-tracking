@@ -36,7 +36,7 @@ const LabsPane: FC = () => {
           </button>
         </div>
 
-        <div className="settings-toggle-row" style={{ marginTop: '0.75rem' }}>
+        <div className="settings-toggle-row settings-toggle-row--top-spaced">
           <div>
             <span className="settings-toggle-label">Demo Mode</span>
             <span className="settings-toggle-hint">

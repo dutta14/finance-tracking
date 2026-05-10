@@ -30,17 +30,7 @@ const CSVViewer: FC<Props> = ({ content, label, ext, onBack }) => {
         </button>
         <h2 className="drive-viewer-title">{label}</h2>
         <div className="drive-viewer-table-wrap">
-          <pre
-            style={{
-              padding: '1rem',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              fontSize: '0.82rem',
-              color: 'var(--color-text)',
-            }}
-          >
-            {content}
-          </pre>
+          <pre className="drive-viewer-pre">{content}</pre>
         </div>
       </div>
     )

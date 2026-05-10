@@ -2019,3 +2019,8 @@ body.dark .data-inline-cancel {
   background: var(--color-negative-light);
   color: var(--color-negative-muted);
 }
+
+/* ── Inline style migrations ── */
+.data-group-rename-btn--visible {
+  opacity: 1;
+}

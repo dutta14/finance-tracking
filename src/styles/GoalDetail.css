@@ -240,3 +240,17 @@
     font-size: var(--fs-lg);
   }
 }
+
+/* ── Inline style migrations ── */
+.goal-detail-not-found-icon {
+  opacity: 0.4;
+}
+
+.goal-detail-chevron {
+  margin-left: 0.35rem;
+  transition: transform 0.2s;
+}
+
+.goal-detail-chevron--open {
+  transform: rotate(180deg);
+}

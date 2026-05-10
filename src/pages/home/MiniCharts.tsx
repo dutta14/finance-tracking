@@ -160,10 +160,10 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     const { payload } = props
     if (!payload) return null
     return (
-      <div className="data-chart-legend" style={{ paddingTop: 4, gap: 10 }}>
+      <div className="data-chart-legend data-chart-legend--compact">
         {payload.map((entry, i) => (
-          <span key={i} className="data-chart-legend-item" style={{ fontSize: '0.7rem' }}>
-            <span className="data-chart-legend-dot" style={{ background: entry.color, width: 6, height: 6 }} />
+          <span key={i} className="data-chart-legend-item data-chart-legend-item--sm">
+            <span className="data-chart-legend-dot data-chart-legend-dot--sm" style={{ background: entry.color }} />
             {entry.value}
           </span>
         ))}

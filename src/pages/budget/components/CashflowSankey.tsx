@@ -200,9 +200,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   return (
     <div className="cashflow-sankey-wrap">
       <div className="cashflow-sankey-header">
-        <h3 className="cashflow-section-title" style={{ margin: 0 }}>
-          Cashflow Sankey
-        </h3>
+        <h3 className="cashflow-section-title cashflow-section-title--flush">Cashflow Sankey</h3>
         <div className="cashflow-sankey-pills">
           <button
             className={`cashflow-sankey-pill${mode === 'group' ? ' active' : ''}`}

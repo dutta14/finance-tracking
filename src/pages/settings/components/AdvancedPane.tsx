@@ -26,7 +26,7 @@ const AdvancedPane: FC<AdvancedPaneProps> = ({
       <div className="settings-section-content">
         <p className="settings-description">Manage app data and reset your application</p>
 
-        <div className="settings-toggle-row" style={{ marginBottom: '1rem' }}>
+        <div className="settings-toggle-row settings-toggle-row--spaced">
           <div>
             <span className="settings-toggle-label">Allow CSV imports &amp; resets</span>
             <span className="settings-toggle-hint">Show import and reset buttons on the Data page</span>
@@ -41,7 +41,7 @@ const AdvancedPane: FC<AdvancedPaneProps> = ({
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div className="settings-data-actions">
           <button className="settings-btn settings-btn--secondary" onClick={onExport}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
