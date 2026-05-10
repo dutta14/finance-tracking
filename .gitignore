@@ -37,3 +37,4 @@ memories/
 # Playwright
 e2e-results/
 playwright-report/
+coverage/

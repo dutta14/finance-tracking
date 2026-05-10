@@ -55,75 +55,77 @@
 
 ---
 
-## Sprint 2: "Coverage + Feature Kickoff" (Weeks 3–4)
+## Sprint 2: "Coverage" (Weeks 3–4)
 
-**Theme:** Test coverage ramp + first features + E2E wave 1
+**Theme:** Test coverage 40%→90% — all hands on testing
 **Prerequisites:** Sprint 1 complete (#42 CI pipeline live)
 
 | Issue | Title | Size | Dev | Tests | E2E |
 |-------|-------|------|-----|-------|-----|
-| #45 | Test coverage 40%→60% (72 files) | XL | Drew + Sam | Ellis | — |
-| #48 | Projection Explorer chart | L | River | Ellis | Quinn |
-| #49 | Mix & Match template options | L | Mika + Sam | Ellis | Quinn |
-| #54 | E2E: Home Dashboard (20 cases) | M | — | — | Quinn |
-| #55 | E2E: Goals (23 cases) | M | — | — | Quinn |
+| #45 | Test coverage 40%→90% | XXL | Drew + Sam + Mika + River | Ellis | — |
 
-**Capacity:** Sam 100%, River 100%, Drew 75%, Mika 75%, Ellis 100%, Quinn 100%
+**Capacity:** Drew 100%, Sam 100%, Mika 100%, River 100%, Ellis 100%, Quinn idle (prep for S3)
 
-**Notes:** #45 is XL — Tier 1 (Taxes.tsx, AccountsModal, useFocusTrap) must finish this sprint. Tier 2–3 overflow into Sprint 3.
+**Notes:** Everyone writes tests. No features, no distractions. Quinn uses this sprint to prep page objects and E2E infrastructure for Sprint 3.
 
 ---
 
-## Sprint 3: "Leverage + Sync" (Weeks 5–6)
+## Sprint 3: "E2E" (Weeks 5–6)
 
-**Theme:** Leverage Planner v1 + sync conflicts + E2E wave 2
-**Prerequisites:** Sprint 2 complete (#48, #49 landed; #45 Tier 1 done)
+**Theme:** Full Playwright E2E suite — all 9 suites consolidated
+**Prerequisites:** Sprint 2 complete (90% unit coverage provides stable foundation)
 
 | Issue | Title | Size | Dev | Tests | E2E |
 |-------|-------|------|-----|-------|-----|
-| #46 | Sync conflict detection/resolution | L | Drew | Ellis | — |
-| #50 | Leverage Planner v1 (A/L ratio) | L | River + Mika | Ellis | Quinn |
+| #54 | E2E: Home Dashboard (20 cases) | M | — | — | Quinn |
+| #55 | E2E: Goals (23 cases) | M | — | — | Quinn |
 | #56 | E2E: Goal Projections (16 cases) | M | — | — | Quinn |
 | #57 | E2E: Net Worth (23 cases) | M | — | — | Quinn |
 | #58 | E2E: Budget (25 cases) | L | — | — | Quinn |
-
-**Capacity:** Drew 100%, River 100%, Mika 75%, Sam 60% (#45 overflow), Ellis 100%, Quinn 100%
-
-**Notes:** #50 is the gate for #51 and #52. Must land by sprint end.
-
----
-
-## Sprint 4: "Leverage Phase 2 + React Upgrade" (Weeks 7–8)
-
-**Theme:** Leverage extensions + major dependency upgrade
-**Prerequisites:** #50 landed (blocks #51, #52); #45 substantially complete
-
-| Issue | Title | Size | Dev | Tests | E2E |
-|-------|-------|------|-----|-------|-----|
-| #51 | A/L Ratio Trend Line Chart | M | River | Ellis | Quinn |
-| #52 | Scenario Comparison (up to 3) | L | River + Mika | Ellis | Quinn |
-| #53 | React 18→19, Vite 4→6 | M | Drew | Ellis | Quinn |
 | #59 | E2E: Taxes (22 cases) | M | — | — | Quinn |
 | #60 | E2E: Drive & Settings (28 cases) | L | — | — | Quinn |
-
-**Capacity:** Drew 100%, River 100%, Mika 75%, Sam 50% (#53 support), Ellis 100%, Quinn 100%, Finley 30% (#53 CI)
-
-**Notes:** #53 scheduled after test coverage is high (safety net). River sequences #51 → #52 within sprint.
-
----
-
-## Sprint 5: "Decomposition + Final E2E" (Weeks 9–10)
-
-**Theme:** God-component refactor + E2E completion + stabilization
-**Prerequisites:** #45 complete (coverage enables safe decomposition); #53 landed and stable
-
-| Issue | Title | Size | Dev | Tests | E2E |
-|-------|-------|------|-----|-------|-----|
-| #41 | Break up god-components (Taxes 1033L, AccountsModal 989L, useGitHubSync 831L) | L | Drew + Sam | Ellis | — |
 | #61 | E2E: Navigation & Responsiveness (27 cases) | M | — | — | Quinn |
 | #62 | E2E: Cross-page Integration (38 cases) | L | — | — | Quinn |
 
-**Capacity:** Drew 100%, Sam 75%, Ellis 75%, Quinn 100%, River/Mika/Finley idle (buffer for bug fixes)
+**Capacity:** Quinn 100% (lead), Sam 50% (assist on feature-heavy suites), Mika 50% (assist)
+
+**Notes:** Unit coverage from S2 makes E2E page objects easier. Sam and Mika assist on suites that require deep component knowledge.
+
+---
+
+## Sprint 4: "Features + Upgrade" (Weeks 7–8)
+
+**Theme:** First real feature work + React/Vite upgrade (safe with 90% unit + full E2E)
+**Prerequisites:** Sprint 3 complete (full test safety net in place)
+
+| Issue | Title | Size | Dev | Tests | E2E |
+|-------|-------|------|-----|-------|-----|
+| #48 | Projection Explorer chart | L | River | Ellis | Quinn |
+| #49 | Mix & Match template options | L | Mika + Sam | Ellis | Quinn |
+| #46 | Sync conflict detection/resolution | L | Drew | Ellis | — |
+| #53 | React 18→19, Vite 4→6 | M | Drew + Finley | Ellis | Quinn |
+
+**Capacity:** Drew 100%, Sam 75%, River 100%, Mika 75%, Ellis 100%, Quinn 50%, Finley 30%
+
+**Notes:** No dependencies between these — all parallel. React upgrade is safe now with full test coverage.
+
+---
+
+## Sprint 5: "Leverage + Decomposition" (Weeks 9–10)
+
+**Theme:** Leverage Planner suite + god-component refactor
+**Prerequisites:** #50 gates #51/#52; #45 (90% coverage) enables safe decomposition
+
+| Issue | Title | Size | Dev | Tests | E2E |
+|-------|-------|------|-----|-------|-----|
+| #50 | Leverage Planner v1 (A/L ratio) | L | River + Mika | Ellis | Quinn |
+| #51 | A/L Ratio Trend Line Chart | M | River | Ellis | Quinn |
+| #52 | Scenario Comparison (up to 3) | L | River + Mika | Ellis | Quinn |
+| #41 | Break up god-components (Taxes 1033L, AccountsModal 989L, useGitHubSync 831L) | L | Drew + Sam | Ellis | — |
+
+**Capacity:** Drew 100%, Sam 75%, River 100%, Mika 75%, Ellis 100%, Quinn 75%
+
+**Notes:** #50 → #51 → #52 sequenced within sprint. #41 runs in parallel (no deps on Leverage).
 
 ---
 
@@ -132,20 +134,16 @@
 ```
 Sprint 1                Sprint 2             Sprint 3             Sprint 4             Sprint 5
 ────────                ────────             ────────             ────────             ────────
-#42 (CI) ──────────────────────────────────→ #63 (Dependabot)
-#42 (CI) ──→ #54,#55 (E2E wave 1)
-                        #45 (coverage) ──────────────────────────────────────────────→ #41 (decomp)
-                        #48 (Projection)
-                        #49 (Mix&Match)
-                                             #50 (Leverage v1) ──→ #51 (A/L Trend)
-                                             #50 (Leverage v1) ──→ #52 (Scenarios)
-                                                                  #53 (React/Vite)
-                                             #46 (Sync)
+#42 (CI) ─────→ #45 (coverage 90%) ──→ #54-62 (all E2E) ──→ #48,#49,#46,#53 ──→ #50→#51→#52
+                 #45 (coverage 90%) ──────────────────────────────────────────────→ #41 (decomp)
+                                                                #53 (React/Vite)
+                                                                                    #50→#51 (A/L)
+                                                                                    #50→#52 (Scenarios)
 ```
 
 ## Key Risks
 
-1. **#45 (XL)** — test coverage is the largest item. Tiers 2–3 may overflow. Mitigated by scheduling #41 (which depends on coverage) in Sprint 5.
-2. **#53 (React/Vite upgrade)** — breaking changes risk. Mitigated by scheduling after coverage is high + buffer from Sam and Finley.
-3. **Quinn's E2E load** — Quinn has E2E work every sprint. Monitor for burnout. River/Mika can pick up E2E in Sprint 5 if needed.
-4. **#50 as gate** — Leverage Planner v1 blocks two follow-up issues. Must land cleanly in Sprint 3.
+1. **#45 (XXL)** — 40%→90% is the largest item in the entire plan. Full sprint dedicated. Mitigated by all-hands staffing.
+2. **S3 E2E volume** — 9 E2E suites in one sprint is heavy for Quinn. Mitigated by Sam + Mika assist.
+3. **#53 (React/Vite upgrade)** — breaking changes risk. Mitigated by scheduling after 90% unit + full E2E coverage.
+4. **#50 as gate** — Leverage Planner v1 blocks #51 and #52. Sequenced within Sprint 5.
