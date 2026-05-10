@@ -466,8 +466,10 @@ describe('Props interface has no external selection state', () => {
   it('GoalsSection renders without any selectedGoalIds prop', () => {
     // If GoalsSection required selectedGoalIds as a prop,
     // this render would fail TypeScript checks or throw.
-    const { container } = renderGoalsSection()
-    expect(container).toBeTruthy()
+    renderGoalsSection()
+    // #59: Assert specific content within the container instead of trivial toBeTruthy
+    expect(screen.getByTestId('goals-mini-grid')).toBeInTheDocument()
+    expect(screen.getByTestId('filter-bar')).toBeInTheDocument()
   })
 })
 
@@ -489,5 +491,64 @@ describe('Empty states', () => {
   it('shows singular count "1 goal" when one goal exists', () => {
     renderGoalsSection({ goals: [goalA] })
     expect(screen.getByText('1 goal')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   14. View mode toggle
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('View mode toggle', () => {
+  it('renders grid and list view toggle buttons', () => {
+    renderGoalsSection()
+    expect(screen.getByRole('button', { name: /grid view/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /list view/i })).toBeInTheDocument()
+  })
+
+  it('persists view mode to localStorage when list is selected', async () => {
+    const user = userEvent.setup()
+    renderGoalsSection()
+
+    await user.click(screen.getByRole('button', { name: /list view/i }))
+
+    expect(localStorage.getItem('goal-view-mode')).toBe('list')
+  })
+
+  it('persists view mode to localStorage when grid is selected', async () => {
+    const user = userEvent.setup()
+    localStorage.setItem('goal-view-mode', 'list')
+    renderGoalsSection()
+
+    await user.click(screen.getByRole('button', { name: /grid view/i }))
+
+    expect(localStorage.getItem('goal-view-mode')).toBe('grid')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   15. Screen reader announcements in compare mode
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Screen reader announcements', () => {
+  it('announces compare mode instructions when entering compare mode with no selection', async () => {
+    const user = userEvent.setup()
+    renderGoalsSection()
+
+    await user.click(screen.getByRole('button', { name: /^compare$/i }))
+
+    const liveRegion = screen.getByRole('status')
+    expect(liveRegion).toHaveTextContent(/compare mode active/i)
+  })
+
+  it('announces selected count when goals are selected in compare mode', async () => {
+    const user = userEvent.setup()
+    renderGoalsSection()
+
+    await user.click(screen.getByRole('button', { name: /^compare$/i }))
+    await user.click(screen.getByTestId('card-1'))
+    await user.click(screen.getByTestId('card-2'))
+
+    const liveRegion = screen.getByRole('status')
+    expect(liveRegion).toHaveTextContent(/2 goals selected for comparison/i)
   })
 })
