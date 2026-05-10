@@ -53,7 +53,7 @@ const DEFAULT_CONFIG: GitHubSyncConfig = {
 
 const DEBOUNCE_MS = 60_000
 
-const loadConfig = (): GitHubSyncConfig => {
+export const loadConfig = (): GitHubSyncConfig => {
   try {
     const parsed = { ...DEFAULT_CONFIG, ...getStorageItem('github-sync-config', DEFAULT_CONFIG) }
     // Always use canonical file path — older configs may have a custom value
@@ -69,7 +69,7 @@ const loadConfig = (): GitHubSyncConfig => {
   }
 }
 
-const toBase64 = (str: string): string => {
+export const toBase64 = (str: string): string => {
   const bytes = new TextEncoder().encode(str)
   let binary = ''
   bytes.forEach(b => {
@@ -78,7 +78,7 @@ const toBase64 = (str: string): string => {
   return btoa(binary)
 }
 
-const fromBase64 = (b64: string): string => {
+export const fromBase64 = (b64: string): string => {
   const bin = atob(b64)
   const bytes = Uint8Array.from(bin, c => c.charCodeAt(0))
   return new TextDecoder().decode(bytes)
