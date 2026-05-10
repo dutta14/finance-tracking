@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { loadGoalsFromStorage, saveGoalsToStorage, migrateGoals } from './localStorageService'
+import { appStorage } from '../../../utils/appStorage'
 import type { FinancialGoal } from '../../../types'
 
 const mockGoal: FinancialGoal = {
@@ -35,7 +36,7 @@ describe('loadGoalsFromStorage', () => {
   })
 
   it('loads goals from financialGoals key', () => {
-    localStorage.setItem('financialGoals', JSON.stringify([mockGoal]))
+    appStorage.setJSON('financialGoals', [mockGoal])
     const result = loadGoalsFromStorage()
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('Retire Early')
@@ -47,7 +48,7 @@ describe('loadGoalsFromStorage', () => {
     delete (legacy[0] as unknown as Record<string, unknown>).goalName
     delete (legacy[0] as unknown as Record<string, unknown>).goalCreatedIn
     delete (legacy[0] as unknown as Record<string, unknown>).goalEndYear
-    localStorage.setItem('financialGoals', JSON.stringify(legacy))
+    appStorage.setJSON('financialGoals', legacy)
     const result = loadGoalsFromStorage()
     expect(result[0].goalName).toBe('OldPlan')
     expect(result[0].goalCreatedIn).toBe('2024-01')
@@ -61,7 +62,7 @@ describe('loadGoalsFromStorage', () => {
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('Retire Early')
     // Should have moved data to new key and removed old
-    expect(localStorage.getItem('financialGoals')).toBeTruthy()
+    expect(appStorage.getString('financialGoals')).toBeTruthy()
     expect(localStorage.getItem('financialPlans')).toBeNull()
   })
 
@@ -71,7 +72,7 @@ describe('loadGoalsFromStorage', () => {
   })
 
   it('returns empty array when stored value is empty array', () => {
-    localStorage.setItem('financialGoals', '[]')
+    appStorage.setJSON('financialGoals', [])
     expect(loadGoalsFromStorage()).toEqual([])
   })
 })
@@ -79,16 +80,14 @@ describe('loadGoalsFromStorage', () => {
 describe('saveGoalsToStorage', () => {
   it('persists goals to localStorage', () => {
     saveGoalsToStorage([mockGoal])
-    const raw = localStorage.getItem('financialGoals')
-    expect(raw).toBeTruthy()
-    const parsed = JSON.parse(raw!)
+    const parsed = appStorage.getJSON<Record<string, unknown>[]>('financialGoals', [])
     expect(parsed).toHaveLength(1)
     expect(parsed[0].goalName).toBe('Retire Early')
   })
 
   it('handles empty array', () => {
     saveGoalsToStorage([])
-    expect(JSON.parse(localStorage.getItem('financialGoals')!)).toEqual([])
+    expect(appStorage.getJSON('financialGoals', null)).toEqual([])
   })
 })
 

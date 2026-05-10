@@ -73,9 +73,8 @@ describe('calculateGoalMetrics', () => {
       getMonthsBetween,
       parseDate,
     )
-    // After ~30 years of 3% inflation, expenses should roughly double
-    expect(result.annualExpenseAtRetirement).toBeGreaterThan(baseParams.annualExpense)
-    expect(result.monthlyExpenseAtRetirement).toBeGreaterThan(baseParams.annualExpense / 12)
+    // After ~30 years of 3% inflation on $60k, 3% compounded over ~365 months ≈ $149k
+    expect(result.annualExpenseAtRetirement).toBeCloseTo(149262, -2)
   })
 
   it('calculates FI goal using safe withdrawal rate', () => {
@@ -134,8 +133,7 @@ describe('projectFIDate', () => {
   it('returns projected date and months when savings can reach fiGoal', () => {
     const result = projectFIDate(100_000, 500_000, 50_000, 8)
     expect(result).not.toBeNull()
-    expect(result!.months).toBeGreaterThan(0)
-    expect(result!.date).toBeInstanceOf(Date)
+    expect(result!.months).toBe(67)
   })
 
   it('returns months: 0 and current date when net worth already exceeds fiGoal', () => {
@@ -186,8 +184,9 @@ describe('projectFIDate', () => {
   })
 
   it('reaches the 1200-month cap and returns null for extreme goals', () => {
-    // Need 1 trillion, saving $1/year at 0% growth → 1 trillion years
-    const result = projectFIDate(0, 1_000_000_000_000, 1, 0)
+    // $0 current, $200k goal, $1200/yr savings, 0% growth
+    // At $100/month that takes 2000 months (>1200 cap) → null
+    const result = projectFIDate(0, 200_000, 1_200, 0)
     expect(result).toBeNull()
   })
 
@@ -216,5 +215,22 @@ describe('projectFIDate', () => {
     const expectedMonth = (now.getMonth() + result!.months) % 12
     expect(result!.date.getFullYear()).toBe(expectedYear)
     expect(result!.date.getMonth()).toBe(expectedMonth)
+  })
+})
+
+describe('calculateGoalMetrics — negative inflation (deflation)', () => {
+  it('reduces future expenses when inflation is negative', () => {
+    const result = calculateGoalMetrics(
+      60000,
+      '1990-06-15',
+      65,
+      '2025-01',
+      -2,
+      4,
+      getMonthsBetween,
+      parseDate,
+    )
+    expect(result.annualExpenseAtRetirement).toBeLessThan(60000)
+    expect(result.fiGoal).toBeLessThan(60000 / 0.04)
   })
 })
