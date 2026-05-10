@@ -204,7 +204,7 @@ describe('useTouchDrag', () => {
     expect(onDragStart).toHaveBeenCalled()
   })
 
-  it('timers continue after unmount (no explicit cleanup)', () => {
+  it('clears timers on unmount (no leak)', () => {
     const onDragStart = vi.fn()
     const { result, unmount } = renderHook(() => useTouchDrag(makeOptions({ onDragStart })))
 
@@ -215,13 +215,12 @@ describe('useTouchDrag', () => {
 
     unmount()
 
-    // The hook does not clear timers on unmount, so the callback fires.
-    // React suppresses the state update, but onDragStart is still called.
+    // After unmount, timers should be cleared so onDragStart never fires
     act(() => {
       vi.advanceTimersByTime(500)
     })
 
-    expect(onDragStart).toHaveBeenCalledWith(0)
+    expect(onDragStart).not.toHaveBeenCalled()
   })
 
   it('resets all state on touchEnd after drag', () => {

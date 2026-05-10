@@ -45,7 +45,7 @@ describe('buildDriveTree', () => {
     const budget = tree.folders.find(f => f.slug === 'budget')!
 
     // Should have year folders sorted descending
-    expect(budget.folders.length).toBeGreaterThanOrEqual(2)
+    expect(budget.folders).toHaveLength(2)
     expect(budget.folders[0].name).toBe('2025')
     expect(budget.folders[1].name).toBe('2024')
 

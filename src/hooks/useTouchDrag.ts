@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState, useEffect } from 'react'
 
 interface UseTouchDragOptions {
   longPressMs?: number
@@ -43,6 +43,14 @@ export function useTouchDrag(options: UseTouchDragOptions): UseTouchDragResult {
     if (feedbackTimer.current !== null) {
       clearTimeout(feedbackTimer.current)
       feedbackTimer.current = null
+    }
+  }, [])
+
+  // Clean up timers on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current !== null) clearTimeout(longPressTimer.current)
+      if (feedbackTimer.current !== null) clearTimeout(feedbackTimer.current)
     }
   }, [])
 

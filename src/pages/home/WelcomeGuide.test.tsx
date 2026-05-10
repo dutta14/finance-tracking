@@ -17,6 +17,7 @@ describe('WelcomeGuide', () => {
     const steps = screen.getAllByRole('heading', { level: 2 })
     const titles = steps.map(h => h.textContent)
 
+    expect(titles).toHaveLength(5)
     expect(titles).toEqual(['Net Worth', 'Goals', 'Allocation', 'Budget', 'Drive'])
     expect(titles).not.toContain('Tools')
   })
