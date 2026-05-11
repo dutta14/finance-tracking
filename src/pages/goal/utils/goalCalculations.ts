@@ -33,7 +33,8 @@ export const calculateGoalMetrics = (
   const retirementDate = new Date(birthDate.getFullYear() + retirementAge, birthDate.getMonth(), birthDate.getDate())
   const retirementDateFormatted = retirementDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 
-  const goalCreatedDate = new Date(goalCreatedIn)
+  const [gcYear, gcMonth] = goalCreatedIn.split('-').map(Number)
+  const goalCreatedDate = new Date(gcYear, gcMonth - 1, 1)
   const monthsBetween = getMonthsBetween(goalCreatedDate, retirementDate)
 
   const inflationRateMonthly = (inflationRate || 0) / 100 / 12

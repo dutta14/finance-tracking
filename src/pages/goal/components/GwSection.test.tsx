@@ -574,7 +574,7 @@ describe('GwSection', () => {
         growthRate: 6,
       })
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('$120,039')).toBeInTheDocument()
+      expect(screen.getByText('$119,740')).toBeInTheDocument()
     })
   })
 })

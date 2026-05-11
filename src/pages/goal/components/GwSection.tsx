@@ -22,8 +22,8 @@ const ageAtCreation = (birthday: string, goalCreatedIn: string): number => {
   if (!birthday || !goalCreatedIn) return 0
   const [by, bm, bd] = birthday.split('-').map(Number)
   const created = new Date(goalCreatedIn)
-  let age = created.getFullYear() - by
-  if (created.getMonth() + 1 < bm || (created.getMonth() + 1 === bm && created.getDate() < bd)) age -= 1
+  let age = created.getUTCFullYear() - by
+  if (created.getUTCMonth() + 1 < bm || (created.getUTCMonth() + 1 === bm && created.getUTCDate() < bd)) age -= 1
   return Math.max(age, 0)
 }
 
@@ -141,7 +141,7 @@ const GwGoalCard: FC<{
   const retirementYear = birthYear + retirementAge
   const monthsToDisburse = Math.max(
     0,
-    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
+    (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
   )
   const displayTarget =
     dollarView === 'creation'
