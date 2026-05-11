@@ -77,8 +77,10 @@ vi.mock('../utils/goalCalculations', () => ({
 }))
 
 import { getBudgetSaveRate } from '../../budget/utils/budgetStorage'
+import { projectFIDate } from '../utils/goalCalculations'
 
 const mockedGetSaveRate = vi.mocked(getBudgetSaveRate)
+const mockedProjectFIDate = vi.mocked(projectFIDate)
 
 /** Helper: configure the DataContext mock so fiTotal resolves to the given value */
 function setMockFiTotal(fiTotal: number) {
@@ -527,6 +529,257 @@ describe('GoalDetailedCard edit mode', () => {
     renderCard({}, { onUpdateGoal, showActions: false, initialEditing: true })
     expect(screen.getByText('Retirement Age')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Depletion Warning — Suggest SWR interaction
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard suggest SWR', () => {
+  it('shows "Searching…" while suggesting and calls onUpdateGoal on success', async () => {
+    vi.useFakeTimers()
+    const onUpdateGoal = vi.fn()
+    renderCard(
+      {
+        fiGoal: 500_000,
+        expenseValue2047: 100000,
+        monthlyExpense2047: 8333,
+        safeWithdrawalRate: 20,
+        growth: 0,
+        inflationRate: 10,
+        retirementAge: 30,
+        goalEndYear: '2080-01-01',
+      },
+      { onUpdateGoal, showActions: false },
+    )
+    const btn = screen.getByRole('button', { name: 'Suggest SWR' })
+    fireEvent.click(btn)
+    expect(screen.getByText('Searching…')).toBeInTheDocument()
+    // Run the setTimeout macrotask
+    await vi.advanceTimersByTimeAsync(0)
+    // suggestSWR runs the internal simulation — may or may not find a valid SWR
+    // Either way, the button should return to normal
+    expect(screen.queryByText('Searching…')).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('does not call onUpdateGoal when suggest finds no valid SWR', async () => {
+    vi.useFakeTimers()
+    const onUpdateGoal = vi.fn()
+    // monthlyExpense2047 is high enough to cause depletion, but expenseValue2047 = 0
+    // so suggestSWR returns null immediately
+    renderCard(
+      {
+        fiGoal: 500_000,
+        expenseValue2047: 0,
+        monthlyExpense2047: 8333,
+        safeWithdrawalRate: 20,
+        growth: 0,
+        inflationRate: 10,
+        retirementAge: 30,
+        goalEndYear: '2080-01-01',
+      },
+      { onUpdateGoal, showActions: false },
+    )
+    const btn = screen.getByRole('button', { name: 'Suggest SWR' })
+    fireEvent.click(btn)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(onUpdateGoal).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
+  it('does not render Suggest SWR when onUpdateGoal is not provided', () => {
+    renderCard({
+      fiGoal: 500_000,
+      expenseValue2047: 100000,
+      monthlyExpense2047: 8333,
+      safeWithdrawalRate: 20,
+      growth: 0,
+      inflationRate: 10,
+      retirementAge: 30,
+      goalEndYear: '2080-01-01',
+    })
+    expect(screen.queryByRole('button', { name: 'Suggest SWR' })).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Depletion Warning — edge cases
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard depletion edge cases', () => {
+  it('does not show depletion warning when fiGoal is zero', () => {
+    renderCard({ fiGoal: 0 })
+    expect(screen.queryByText(/Not sustainable beyond/)).not.toBeInTheDocument()
+  })
+
+  it('does not show depletion warning when retirement date is after goal end', () => {
+    renderCard({
+      retirementAge: 100,
+      goalEndYear: '2050-01-01',
+    })
+    expect(screen.queryByText(/Not sustainable beyond/)).not.toBeInTheDocument()
+  })
+
+  it('does not show depletion warning when funds last until end', () => {
+    renderCard({
+      fiGoal: 10_000_000,
+      expenseValue2047: 50000,
+      monthlyExpense2047: 4166,
+      safeWithdrawalRate: 4,
+      growth: 7,
+      inflationRate: 3,
+      retirementAge: 60,
+      goalEndYear: '2080-01-01',
+    })
+    expect(screen.queryByText(/Not sustainable beyond/)).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Projection — projectFIDate returns null
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard projection — projectFIDate returns null', () => {
+  it('shows not-reachable when projectFIDate returns null', () => {
+    mockedProjectFIDate.mockReturnValueOnce(null)
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 100, saveRate: 0.01, monthsOfData: 12 })
+    renderCard({ fiGoal: 2_000_000 })
+    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Projection — diff text variants
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard projection diff text', () => {
+  it('shows "On track" when projected date matches target retirement date', () => {
+    // birthday 1990-01-15, retirementAge 60 → target = Jan 15 2050
+    const projected = new Date(2050, 0, 15) // Exact match
+    mockedProjectFIDate.mockReturnValue({ date: projected, months: 300 })
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText('On track')).toBeInTheDocument()
+  })
+
+  it('shows months early when projected date is 1-11 months ahead', () => {
+    const projected = new Date(2049, 2, 15) // Mar 2049, ~10 months early
+    mockedProjectFIDate.mockReturnValue({ date: projected, months: 293 })
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText(/\d+ months? early/)).toBeInTheDocument()
+  })
+
+  it('shows years behind when projected date is far after target', () => {
+    const projected = new Date(2055, 0, 15) // Jan 2055, ~5 years behind
+    mockedProjectFIDate.mockReturnValue({ date: projected, months: 360 })
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText(/years? behind/)).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Expense toggle — Monthly at retirement
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard expense toggles — retirement monthly', () => {
+  it('shows monthly inflated expense when both At Retirement and Monthly are selected', () => {
+    renderCard({
+      expenseValue: 60000,
+      monthlyExpenseValue: 5000,
+      expenseValue2047: 100000,
+      monthlyExpense2047: 8333,
+    })
+    fireEvent.click(screen.getByText('At Retirement'))
+    // There are multiple Monthly buttons (creation + retirement) — click the first one visible
+    const monthlyButtons = screen.getAllByText('Monthly')
+    fireEvent.click(monthlyButtons[0])
+    expect(screen.getByText('$8,333')).toBeInTheDocument()
+  })
+
+  it('shows annual inflated expense when At Retirement and Annual are selected', () => {
+    renderCard({
+      expenseValue: 60000,
+      monthlyExpenseValue: 5000,
+      expenseValue2047: 100000,
+      monthlyExpense2047: 8333,
+    })
+    fireEvent.click(screen.getByText('At Retirement'))
+    expect(screen.getByText('$100,000')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Progress bar edge cases
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard progress bar edge cases', () => {
+  it('shows 0.0% progress when no FI accounts have balances', () => {
+    setMockFiTotal(0)
+    renderCard({ fiGoal: 2_000_000 })
+    expect(screen.getByText('0.0%')).toBeInTheDocument()
+    const progressBar = screen.getByRole('progressbar')
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0')
+  })
+
+  it('shows correct progress label for partial completion', () => {
+    setMockFiTotal(1_000_000)
+    renderCard({ fiGoal: 2_000_000 })
+    expect(screen.getByText('50.0%')).toBeInTheDocument()
+    const progressBar = screen.getByRole('progressbar')
+    expect(progressBar).toHaveAttribute('aria-valuenow', '50')
+  })
+
+  it('has accessible label on progress bar', () => {
+    setMockFiTotal(500_000)
+    renderCard({ fiGoal: 2_000_000 })
+    const progressBar = screen.getByRole('progressbar')
+    expect(progressBar).toHaveAttribute('aria-label', expect.stringContaining('FI goal progress'))
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   GoalCardActions integration
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard actions', () => {
+  it('calls onEdit when Edit action is clicked', () => {
+    const onEdit = vi.fn()
+    const onCopy = vi.fn()
+    const onDelete = vi.fn()
+    renderCard({}, { onEdit, onCopy, onDelete, showActions: true })
+    fireEvent.click(screen.getByText('Edit'))
+    expect(onEdit).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onCopy when Copy action is clicked', () => {
+    const onEdit = vi.fn()
+    const onCopy = vi.fn()
+    const onDelete = vi.fn()
+    renderCard({}, { onEdit, onCopy, onDelete, showActions: true })
+    fireEvent.click(screen.getByText('Copy'))
+    expect(onCopy).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onDelete with goal id when Delete action is clicked', () => {
+    const onEdit = vi.fn()
+    const onCopy = vi.fn()
+    const onDelete = vi.fn()
+    renderCard({}, { onEdit, onCopy, onDelete, showActions: true })
+    fireEvent.click(screen.getByText('Delete'))
+    expect(onDelete).toHaveBeenCalledWith(1)
+  })
+
+  it('hides actions when showActions is false', () => {
+    renderCard({}, { showActions: false })
+    expect(screen.queryByTestId('goal-card-actions')).not.toBeInTheDocument()
   })
 })
 

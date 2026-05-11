@@ -263,7 +263,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
       {csvError && (
         <div className="budget-csv-error">
           <span>⚠ {csvError}</span>
-          <button aria-label="Dismiss error" onClick={() => setCsvError(null)}>×</button>
+          <button aria-label="Dismiss error" onClick={() => setCsvError(null)}>
+            ×
+          </button>
         </div>
       )}
 
@@ -654,7 +656,14 @@ const BudgetTable: FC<BudgetTableProps> = ({
         </>
       )}
 
-      <input ref={fileInputRef} type="file" accept=".csv" data-testid="csv-file-input" style={{ display: 'none' }} onChange={handleFileChange} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        data-testid="csv-file-input"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
     </div>
   )
 }

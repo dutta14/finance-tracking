@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { syncAllTaxFiles, downloadAllTaxFiles, stripDataUrl, filePath } from './taxGitHubSync'
-import type { TaxStore } from './types'
+import type { TaxStore, TaxDocFile } from './types'
 import type { GitHubSyncConfig } from '../../hooks/useGitHubSync'
 
 // stripDataUrl and filePath are now exported from the source module
@@ -33,22 +33,22 @@ describe('stripDataUrl', () => {
 
 describe('filePath', () => {
   it('builds correct path with clean names', () => {
-    const result = filePath(2024, 'Jane', 'W-2', { id: 'abc123', ext: 'pdf' } as any)
+    const result = filePath(2024, 'Jane', 'W-2', { id: 'abc123', ext: 'pdf' } as TaxDocFile)
     expect(result).toBe('taxes/2024/Jane_W-2_abc123.pdf')
   })
 
   it('sanitizes special characters in names', () => {
-    const result = filePath(2024, 'Jane', 'Tax Return (Federal)', { id: 'f1', ext: 'pdf' } as any)
+    const result = filePath(2024, 'Jane', 'Tax Return (Federal)', { id: 'f1', ext: 'pdf' } as TaxDocFile)
     expect(result).toBe('taxes/2024/Jane_Tax_Return_Federal_f1.pdf')
   })
 
   it('collapses multiple spaces', () => {
-    const result = filePath(2024, 'Jane  Doe', 'My  Document', { id: 'f1', ext: 'csv' } as any)
+    const result = filePath(2024, 'Jane  Doe', 'My  Document', { id: 'f1', ext: 'csv' } as TaxDocFile)
     expect(result).toBe('taxes/2024/Jane_Doe_My_Document_f1.csv')
   })
 
   it('handles minimal inputs', () => {
-    const result = filePath(2025, 'A', 'B', { id: 'x', ext: 'txt' } as any)
+    const result = filePath(2025, 'A', 'B', { id: 'x', ext: 'txt' } as TaxDocFile)
     expect(result).toBe('taxes/2025/A_B_x.txt')
   })
 })
@@ -106,7 +106,6 @@ describe('syncAllTaxFiles', () => {
     }
     const putBodies: Record<string, string>[] = []
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
       if (init?.method === 'PUT') {
         putBodies.push(JSON.parse(init.body as string))
         return new Response(JSON.stringify({ content: {} }), { status: 201 })
@@ -274,10 +273,8 @@ describe('downloadAllTaxFiles', () => {
   })
 
   it('returns files from taxes directory with decoded base64', async () => {
-    let callIndex = 0
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
-      callIndex++
       // First call: list years
       if (url.endsWith('/contents/taxes')) {
         return new Response(JSON.stringify([{ name: '2024', type: 'dir' }]), { status: 200 })

@@ -172,7 +172,14 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
           ?
         </button>
 
-        <input ref={quickUploadRef} type="file" accept=".csv" data-testid="quick-upload-input" style={{ display: 'none' }} onChange={onQuickUpload} />
+        <input
+          ref={quickUploadRef}
+          type="file"
+          accept=".csv"
+          data-testid="quick-upload-input"
+          style={{ display: 'none' }}
+          onChange={onQuickUpload}
+        />
         <input
           ref={bulkUploadRef}
           type="file"

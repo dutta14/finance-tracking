@@ -3,15 +3,13 @@ import { render, screen, within, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BudgetTable from './BudgetTable'
 import { makeCategoryGroup, makeTransaction } from '../../../test/factories'
-import type { CategoryGroup, Transaction, TimePeriod } from '../types'
+import type { Transaction, TimePeriod } from '../types'
 
 /* ─── Helpers ─── */
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn()
 })
-
-const buildMonthKey = (year: number, monthIndex: number) => `${year}-${String(monthIndex + 1).padStart(2, '0')}`
 
 const defaultProps = () => ({
   year: 2025,
@@ -558,7 +556,6 @@ describe('BudgetTable', () => {
       const searchInput = screen.getByPlaceholderText('Search categories…')
       await user.type(searchInput, 'Groc')
       // Groceries should remain, Dining/Rent/Entertainment should be filtered
-      const checkboxes = screen.getAllByRole('checkbox')
       // Exact match: no "All Categories" checkbox when searching + Groceries
       const labels = screen.getAllByText(/Groceries/i)
       expect(labels).toHaveLength(3)
@@ -899,7 +896,7 @@ describe('BudgetTable', () => {
       await user.click(screen.getByText('Jan'))
       const catCells = screen.getAllByTitle('Double-click to edit category')
       await user.dblClick(catCells[0])
-      const input = screen.getByRole('textbox')
+      screen.getByRole('textbox')
       await user.keyboard('{Escape}')
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     })
@@ -911,7 +908,6 @@ describe('BudgetTable', () => {
       await user.click(screen.getByText('Jan'))
       const catCells = screen.getAllByTitle('Double-click to edit category')
       await user.dblClick(catCells[0])
-      const input = screen.getByRole('textbox')
       // blur without changing
       await user.tab()
       expect(props.onEditCategory).not.toHaveBeenCalled()

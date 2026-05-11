@@ -121,7 +121,11 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
     <div className="settings-section">
       <div className="settings-section-content ghsync-section-scroll">
         <div className="ghsync-tabs">
-          <button onClick={() => setGhTab('config')} className={`ghsync-tab-btn${ghTab === 'config' ? ' active' : ''}`} aria-current={ghTab === 'config' ? 'page' : undefined}>
+          <button
+            onClick={() => setGhTab('config')}
+            className={`ghsync-tab-btn${ghTab === 'config' ? ' active' : ''}`}
+            aria-current={ghTab === 'config' ? 'page' : undefined}
+          >
             Configuration
           </button>
           <button

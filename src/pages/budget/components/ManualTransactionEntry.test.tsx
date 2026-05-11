@@ -294,4 +294,176 @@ describe('ManualTransactionEntry', () => {
     const csvLine = onAdd.mock.calls[0][1]
     expect(csvLine).toContain('1234.56')
   })
+
+  it('closes category dropdown on outside click', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    fireEvent.focus(catInput)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    // Simulate a mousedown outside the category wrapper
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('closes category dropdown on Tab key', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    fireEvent.focus(catInput)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    fireEvent.keyDown(catInput, { key: 'Tab' })
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('opens dropdown and highlights first option on ArrowDown when closed', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    // Close dropdown first
+    fireEvent.focus(catInput)
+    fireEvent.keyDown(catInput, { key: 'Escape' })
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    // Press ArrowDown to reopen
+    fireEvent.keyDown(catInput, { key: 'ArrowDown' })
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+  })
+
+  it('navigates with ArrowUp and clamps at 0', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    fireEvent.focus(catInput)
+    fireEvent.keyDown(catInput, { key: 'ArrowDown' })
+    fireEvent.keyDown(catInput, { key: 'ArrowUp' })
+    // Should stay at index 0 (Groceries)
+    fireEvent.keyDown(catInput, { key: 'Enter' })
+    expect(catInput).toHaveValue('Groceries')
+  })
+
+  it('validates date is required', async () => {
+    const user = userEvent.setup()
+    const { onAdd } = renderEntry()
+    await openForm(user)
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '50' } })
+    selectFirstCategory(screen.getByLabelText('Category'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(screen.getByText('Date is required')).toBeInTheDocument()
+    expect(onAdd).not.toHaveBeenCalled()
+  })
+
+  it('clears category and query when clear button is clicked', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    selectFirstCategory(catInput)
+    expect(catInput).toHaveValue('Groceries')
+    // Clear button should appear
+    const clearBtn = screen.getByRole('button', { name: /clear category/i })
+    fireEvent.mouseDown(clearBtn)
+    expect(catInput).toHaveValue('')
+    // Dropdown should reopen
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+  })
+
+  it('selects a category by clicking on dropdown option', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    await user.click(catInput)
+    const listbox = screen.getByRole('listbox')
+    const option = within(listbox).getByText('Rent')
+    fireEvent.mouseDown(option)
+    expect(catInput).toHaveValue('Rent')
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('highlights option on mouse enter', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    await user.click(catInput)
+    const listbox = screen.getByRole('listbox')
+    const option = within(listbox).getByText('Utilities')
+    fireEvent.mouseEnter(option)
+    expect(option).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('collapses form on Escape key press when combobox is not open', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    expect(screen.getByLabelText('Date')).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByLabelText('Date')).not.toBeInTheDocument()
+  })
+
+  it('does not collapse form on Escape when combobox dropdown is open', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    const catInput = screen.getByLabelText('Category')
+    fireEvent.focus(catInput)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    // Escape should close dropdown but not the form
+    fireEvent.keyDown(catInput, { key: 'Escape' })
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Date')).toBeInTheDocument()
+  })
+
+  it('clears date error when date is changed', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '50' } })
+    selectFirstCategory(screen.getByLabelText('Category'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(screen.getByText('Date is required')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2025-01-15' } })
+    expect(screen.queryByText('Date is required')).not.toBeInTheDocument()
+  })
+
+  it('clears amount error when amount is changed', async () => {
+    const user = userEvent.setup()
+    renderEntry()
+    await openForm(user)
+    selectFirstCategory(screen.getByLabelText('Category'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(screen.getByText('Amount is required')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '25' } })
+    expect(screen.queryByText('Amount is required')).not.toBeInTheDocument()
+  })
+
+  it('handles negative amount values', async () => {
+    const user = userEvent.setup()
+    const { onAdd } = renderEntry()
+    await openForm(user)
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '-50.25' } })
+    selectFirstCategory(screen.getByLabelText('Category'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(onAdd).toHaveBeenCalledOnce()
+    const csvLine = onAdd.mock.calls[0][1]
+    expect(csvLine).toContain('-50.25')
+  })
+
+  it('accepts zero as a valid amount', async () => {
+    const user = userEvent.setup()
+    const { onAdd } = renderEntry()
+    await openForm(user)
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '0' } })
+    selectFirstCategory(screen.getByLabelText('Category'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(onAdd).toHaveBeenCalledOnce()
+    const csvLine = onAdd.mock.calls[0][1]
+    expect(csvLine).toContain('0')
+  })
 })

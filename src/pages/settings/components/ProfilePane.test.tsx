@@ -5,8 +5,6 @@ import ProfilePane from './ProfilePane'
 import { makeProfile } from '../../../test/factories'
 import type { Profile } from '../../../hooks/useProfile'
 
-const defaultProfile = makeProfile()
-
 const renderPane = (overrides: Partial<Profile> = {}, onUpdate = vi.fn()) => {
   const profile = makeProfile(overrides)
   const onUpdateProfile = onUpdate

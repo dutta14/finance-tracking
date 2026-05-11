@@ -408,4 +408,138 @@ describe('Data page integration', () => {
     const savedBalances = mockSetBalances.mock.calls[0][0] as BalanceEntry[]
     expect(savedBalances.every(b => b.month !== '2024-01')).toBe(true)
   })
+
+  // --- Empty state ---
+
+  it('shows empty state with add account CTA when there are no accounts', () => {
+    mockAccounts = []
+    mockBalances = []
+    renderData()
+
+    expect(screen.getByText('No accounts yet')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ Add Account' })).toBeInTheDocument()
+  })
+
+  it('opens AccountsModal when "+ Add Account" is clicked in empty state', async () => {
+    const user = userEvent.setup()
+    mockAccounts = []
+    mockBalances = []
+    renderData()
+
+    await user.click(screen.getByRole('button', { name: '+ Add Account' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('shows import CSV button in empty state when allowCsvImport is true', () => {
+    mockAllowCsvImport = true
+    mockAccounts = []
+    mockBalances = []
+    renderData()
+
+    expect(screen.getByText(/or import from a CSV/)).toBeInTheDocument()
+    const importButtons = screen.getAllByText('Import from CSV')
+    expect(importButtons.length).toBeGreaterThan(0)
+  })
+
+  // --- Data view toggle ---
+
+  it('switches to Spreadsheet view when Spreadsheet tab is clicked', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    const spreadsheetTab = screen.getByRole('tab', { name: /spreadsheet/i })
+    await user.click(spreadsheetTab)
+
+    expect(spreadsheetTab).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /charts/i })).toHaveAttribute('aria-selected', 'false')
+  })
+
+  // --- Show inactive toggle ---
+
+  it('shows "Show inactive" toggle in spreadsheet view', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
+    expect(screen.getByLabelText('Show inactive')).toBeInTheDocument()
+  })
+
+  // --- No balance entries empty state ---
+
+  it('shows empty state for balances when accounts exist but no balances', () => {
+    mockAccounts = [...twoAccounts]
+    mockBalances = []
+    renderData()
+
+    expect(screen.getByText('No balance entries yet')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ Add Entry' })).toBeInTheDocument()
+  })
+
+  // --- CSV import/export buttons ---
+
+  it('shows Import from CSV and Export CSV buttons in header when allowCsvImport is true', () => {
+    mockAllowCsvImport = true
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    expect(screen.getByText('Import from CSV')).toBeInTheDocument()
+    expect(screen.getByText('Export CSV')).toBeInTheDocument()
+  })
+
+  it('shows Reset Data button when allowCsvImport is true and data exists', () => {
+    mockAllowCsvImport = true
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    expect(screen.getByText('Reset Data')).toBeInTheDocument()
+  })
+
+  // --- Growth tab ---
+
+  it('renders the Growth tab when navigated to /net-worth/growth', async () => {
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData('/net-worth/growth')
+    await waitFor(() => {
+      expect(screen.getByTestId('growth-page')).toBeInTheDocument()
+    })
+  })
+
+  // --- Copy forward ---
+
+  it('shows Copy Last Month button in spreadsheet view when balances exist', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
+    expect(screen.getByRole('button', { name: 'Copy balances from last month' })).toBeInTheDocument()
+  })
+
+  // --- Nav tabs ---
+
+  it('renders all three navigation tabs', () => {
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    expect(screen.getByRole('link', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Allocation' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Growth' })).toBeInTheDocument()
+  })
+
+  // --- Page header ---
+
+  it('renders the page title and subtitle', () => {
+    renderData()
+    expect(screen.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeInTheDocument()
+    expect(screen.getByText('Track balances across your accounts over time')).toBeInTheDocument()
+  })
 })

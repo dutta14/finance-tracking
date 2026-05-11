@@ -43,9 +43,9 @@ describe('buildIndex', () => {
 
   it('includes FI goals from localStorage', () => {
     appStorage.setJSON('financialGoals', [
-        { id: 1, goalName: 'Retire Early', progress: 42 },
-        { id: 2, goalName: 'Coast FI', progress: 80 },
-      ])
+      { id: 1, goalName: 'Retire Early', progress: 42 },
+      { id: 2, goalName: 'Coast FI', progress: 80 },
+    ])
 
     const items = buildIndex()
     const goals = items.filter(i => i.category === 'goal')
@@ -76,9 +76,9 @@ describe('buildIndex', () => {
   it('includes GW goals with parent goal hints', () => {
     appStorage.setJSON('financialGoals', [{ id: 10, goalName: 'Main Plan', progress: 50 }])
     appStorage.setJSON('gw-goals', [
-        { id: 100, fiGoalId: 10, label: 'New Car Fund' },
-        { id: 101, fiGoalId: 999, label: 'Orphan GW' },
-      ])
+      { id: 100, fiGoalId: 10, label: 'New Car Fund' },
+      { id: 101, fiGoalId: 999, label: 'Orphan GW' },
+    ])
 
     const items = buildIndex()
     const gwItems = items.filter(i => i.id.startsWith('gw-'))
@@ -97,9 +97,9 @@ describe('buildIndex', () => {
 
   it('includes accounts', () => {
     appStorage.setJSON('data-accounts', [
-        { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
-        { id: 2, name: 'Chase Checking', institution: '', group: '', type: '' },
-      ])
+      { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
+      { id: 2, name: 'Chase Checking', institution: '', group: '', type: '' },
+    ])
 
     const items = buildIndex()
     const accounts = items.filter(i => i.category === 'account')
@@ -117,12 +117,12 @@ describe('buildIndex', () => {
 
   it('includes budget categories and groups', () => {
     appStorage.setJSON('budget-config', {
-        categoryGroups: [
-          { id: 'housing', name: 'Housing', categories: ['Rent', 'Utilities'] },
-          { id: 'food', name: 'Food', categories: ['Groceries'] },
-          { id: 'removed', name: 'Removed', categories: ['Deleted Stuff'] },
-        ],
-      })
+      categoryGroups: [
+        { id: 'housing', name: 'Housing', categories: ['Rent', 'Utilities'] },
+        { id: 'food', name: 'Food', categories: ['Groceries'] },
+        { id: 'removed', name: 'Removed', categories: ['Deleted Stuff'] },
+      ],
+    })
 
     const items = buildIndex()
     const budgetItems = items.filter(i => i.category === 'budget')
@@ -150,15 +150,15 @@ describe('buildIndex', () => {
 
   it('includes tax items and templates', () => {
     appStorage.setJSON('tax-store', {
-        years: {
-          '2025': {
-            items: [
-              { id: 'w2-main', label: 'W-2 from Employer', owner: 'primary' },
-              { id: '1099-div', label: '1099-DIV Dividends' },
-            ],
-          },
+      years: {
+        '2025': {
+          items: [
+            { id: 'w2-main', label: 'W-2 from Employer', owner: 'primary' },
+            { id: '1099-div', label: '1099-DIV Dividends' },
+          ],
         },
-      })
+      },
+    })
     appStorage.setJSON('tax-templates', [{ id: 'tpl-1', name: 'Basic Filing' }])
 
     const items = buildIndex()
@@ -185,9 +185,9 @@ describe('buildIndex', () => {
 
   it('includes allocation custom ratios', () => {
     appStorage.setJSON('allocation-custom-ratios', [
-        { id: 'r1', name: 'Aggressive Growth', scope: 'retirement' },
-        { id: 'r2', name: 'Conservative', scope: undefined },
-      ])
+      { id: 'r1', name: 'Aggressive Growth', scope: 'retirement' },
+      { id: 'r2', name: 'Conservative', scope: undefined },
+    ])
 
     const items = buildIndex()
     const allocs = items.filter(i => i.category === 'allocation')
@@ -242,12 +242,12 @@ describe('search', () => {
 
   beforeEach(() => {
     appStorage.setJSON('financialGoals', [
-        { id: 1, goalName: 'Retire Early', progress: 50 },
-        { id: 2, goalName: 'Coast FI', progress: 80 },
-      ])
+      { id: 1, goalName: 'Retire Early', progress: 50 },
+      { id: 2, goalName: 'Coast FI', progress: 80 },
+    ])
     appStorage.setJSON('data-accounts', [
-        { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
-      ])
+      { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
+    ])
     index = buildIndex()
   })
 

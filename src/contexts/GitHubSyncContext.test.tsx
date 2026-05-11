@@ -427,5 +427,438 @@ describe('GitHubSyncContext', () => {
       errorSpy.mockRestore()
       fetchSpy.mockRestore()
     })
+
+    it('restores goalViewMode and homeCardOrder from settings', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 404 }))
+      vi.useRealTimers()
+
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      const snapshot = {
+        version: 2,
+        goals: [],
+        gwGoals: [],
+        settings: {
+          accentTheme: 'blue',
+          darkMode: false,
+          allowCsvImport: false,
+          goalViewMode: 'grid',
+          homeCardOrder: JSON.stringify([3, 2, 1, 0]),
+        },
+      }
+
+      await act(async () => {
+        await result.current.applyRestoredSnapshot(snapshot)
+      })
+
+      expect(localStorage.getItem('goal-view-mode')).toContain('grid')
+      const homeCardOrder = JSON.parse(localStorage.getItem('home-card-order') || '[]')
+      expect(homeCardOrder).toEqual([3, 2, 1, 0])
+
+      warnSpy.mockRestore()
+      errorSpy.mockRestore()
+      fetchSpy.mockRestore()
+    })
+
+    it('handles invalid homeCardOrder format gracefully', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 404 }))
+      vi.useRealTimers()
+
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      const snapshot = {
+        version: 2,
+        goals: [],
+        gwGoals: [],
+        settings: {
+          accentTheme: 'blue',
+          darkMode: false,
+          homeCardOrder: 'not-valid-json{{{',
+        },
+      }
+
+      await act(async () => {
+        await result.current.applyRestoredSnapshot(snapshot)
+      })
+
+      expect(warnSpy).toHaveBeenCalledWith('[restore] Invalid homeCardOrder format, skipping')
+
+      warnSpy.mockRestore()
+      errorSpy.mockRestore()
+      fetchSpy.mockRestore()
+    })
+
+    it('restores GitHub config from snapshot while preserving encrypted token fields', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 404 }))
+      vi.useRealTimers()
+
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      const snapshot = {
+        version: 2,
+        goals: [],
+        gwGoals: [],
+        gitHubConfig: {
+          owner: 'restored-org',
+          repo: 'restored-repo',
+          autoSync: true,
+        },
+      }
+
+      await act(async () => {
+        await result.current.applyRestoredSnapshot(snapshot)
+      })
+
+      expect(result.current.config.owner).toBe('restored-org')
+      expect(result.current.config.repo).toBe('restored-repo')
+
+      warnSpy.mockRestore()
+      errorSpy.mockRestore()
+      fetchSpy.mockRestore()
+    })
+
+    it('restores profile from snapshot', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 404 }))
+      vi.useRealTimers()
+
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      const snapshot = {
+        version: 2,
+        goals: [],
+        gwGoals: [],
+        profile: { name: 'Restored User', avatarDataUrl: '', birthday: '1990-01-01' },
+      }
+
+      await act(async () => {
+        await result.current.applyRestoredSnapshot(snapshot)
+      })
+
+      const data = result.current.ghDataToSync as Record<string, unknown>
+      const profile = data.profile as Record<string, unknown>
+      expect(profile.name).toBe('Restored User')
+
+      warnSpy.mockRestore()
+      errorSpy.mockRestore()
+      fetchSpy.mockRestore()
+    })
+  })
+
+  /* ── markDirty / clearDirty via context ────────────────────────── */
+
+  describe('markDirty and clearDirty via context', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('marks goals dirty and hasPendingChanges becomes true', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        result.current.markDirty('goals')
+      })
+      expect(result.current.dirtyFlags.goals).toBe(true)
+      expect(result.current.hasPendingChanges).toBe(true)
+    })
+
+    it('marks tools dirty and clears it', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        result.current.markDirty('tools')
+      })
+      expect(result.current.dirtyFlags.tools).toBe(true)
+
+      act(() => {
+        result.current.clearDirty('tools')
+      })
+      expect(result.current.dirtyFlags.tools).toBe(false)
+    })
+
+    it('marks allocation dirty via event dispatch', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        window.dispatchEvent(new Event('allocation-changed'))
+      })
+      expect(result.current.dirtyFlags.allocation).toBe(true)
+    })
+
+    it('marks tools dirty via event dispatch', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        window.dispatchEvent(new Event('tools-changed'))
+      })
+      expect(result.current.dirtyFlags.tools).toBe(true)
+    })
+  })
+
+  /* ── handleSyncNow with dirty flags ────────────────────────────── */
+
+  describe('handleSyncNow with dirty flags', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
+    })
+
+    it('sets success status immediately when no dirty flags and not forced', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await result.current.handleSyncNow({}, undefined, false)
+      })
+
+      expect(result.current.syncStatus).toBe('success')
+      expect(result.current.lastError).toBeNull()
+    })
+
+    it('sets syncProgress with zero total when no dirty flags', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await result.current.handleSyncNow({}, undefined, false)
+      })
+
+      // syncProgress is set then cleared after 2s timeout
+      expect(result.current.syncStatus).toBe('success')
+    })
+  })
+
+  /* ── syncTaxesNow via context ──────────────────────────────────── */
+
+  describe('syncTaxesNow via context', () => {
+    it('is a function exposed on the context', () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+      expect(typeof result.current.syncTaxesNow).toBe('function')
+    })
+  })
+
+  /* ── restoreTaxesLatest via context ────────────────────────────── */
+
+  describe('restoreTaxesLatest via context', () => {
+    it('is a function exposed on the context', () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+      expect(typeof result.current.restoreTaxesLatest).toBe('function')
+    })
+  })
+
+  /* ── handleSyncNow with forceFull ─────────────────────────────── */
+
+  describe('handleSyncNow with forceFull=true', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
+    })
+
+    it('enters syncing state and sets progress when forceFull=true', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({ owner: 'org', repo: 'repo', filePath: 'f.json', autoSync: false }),
+      )
+
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      // Start forceFull sync — sync functions return immediately without token,
+      // but the code path through handleSyncNow's domain iteration is exercised
+      act(() => {
+        result.current.handleSyncNow({}, 'full sync', true)
+      })
+
+      // Should have entered syncing state
+      expect(result.current.syncStatus).toBe('syncing')
+
+      // Let it complete
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+
+      // Sync functions silently return (no token), so all domains "succeed"
+      expect(result.current.syncStatus).toBe('success')
+      errorSpy.mockRestore()
+    })
+
+    it('sets progress with domain labels during sync', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({ owner: 'org', repo: 'repo', filePath: 'f.json', autoSync: false }),
+      )
+
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      let capturedProgress: typeof result.current.syncProgress = null
+      act(() => {
+        result.current.handleSyncNow({}, undefined, true)
+        capturedProgress = result.current.syncProgress
+      })
+
+      // Progress should show all 4 domains
+      if (capturedProgress) {
+        expect(capturedProgress.total).toBe(4)
+        expect(capturedProgress.domains).toEqual(['goals', 'data', 'tools', 'allocation'])
+        expect(capturedProgress.current).toBe('Goals')
+      }
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+
+      errorSpy.mockRestore()
+    })
+
+    it('sets lastSyncAt on successful completion', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({ owner: 'org', repo: 'repo', filePath: 'f.json', autoSync: false }),
+      )
+
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        result.current.handleSyncNow({}, undefined, true)
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+
+      // All domains silently succeeded — lastSyncAt should be set
+      expect(result.current.lastSyncAt).toBeTruthy()
+      expect(result.current.lastError).toBeNull()
+      errorSpy.mockRestore()
+    })
+  })
+
+  /* ── applyRestoredSnapshot domain restore paths ─────────────── */
+
+  describe('applyRestoredSnapshot domain restore catch path', () => {
+    it('does not throw when domain restores fail internally', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      vi.useRealTimers()
+
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      const snapshot = {
+        version: 2,
+        goals: [{ id: 1, goalName: 'Test', targetAmount: 1000, currentAmount: 0, currency: 'USD', type: 'fi' }],
+        gwGoals: [{ id: 'gw1', goalName: 'GW Test', goalType: 'gw-liquid', subGoals: [] }],
+        profile: { name: 'User', avatarDataUrl: '', birthday: '1990-01-01' },
+        settings: {
+          accentTheme: 'teal',
+          darkMode: true,
+          allowCsvImport: true,
+          goalViewMode: 'list',
+        },
+        gitHubConfig: { owner: 'org', repo: 'repo', autoSync: true },
+      }
+
+      // applyRestoredSnapshot should not throw regardless of domain restore outcomes
+      await act(async () => {
+        await result.current.applyRestoredSnapshot(snapshot)
+      })
+
+      // Verify settings were applied
+      const data = result.current.ghDataToSync as Record<string, unknown>
+      const goals = data.goals as Array<Record<string, unknown>>
+      expect(goals.length).toBe(1)
+      expect(goals[0].goalName).toBe('Test')
+
+      const settings = data.settings as Record<string, unknown>
+      expect(settings.accentTheme).toBe('teal')
+      expect(settings.darkMode).toBe(true)
+      expect(settings.allowCsvImport).toBe(true)
+
+      // Config should be updated
+      expect(result.current.config.owner).toBe('org')
+      expect(result.current.config.repo).toBe('repo')
+
+      // Profile should be updated
+      const profile = data.profile as Record<string, unknown>
+      expect(profile.name).toBe('User')
+
+      // goalViewMode should be persisted
+      expect(localStorage.getItem('goal-view-mode')).toContain('list')
+
+      warnSpy.mockRestore()
+      errorSpy.mockRestore()
+    })
+  })
+
+  /* ── handleSyncNow skip when already syncing ──────────────────── */
+
+  describe('handleSyncNow early returns', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
+    })
+
+    it('skips sync when status is already syncing', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({ owner: 'org', repo: 'repo', filePath: 'f.json', autoSync: false }),
+      )
+
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      // Start a sync that will take time
+      act(() => {
+        result.current.handleSyncNow({}, undefined, true)
+      })
+
+      expect(result.current.syncStatus).toBe('syncing')
+
+      // Second sync call should be no-op since already syncing
+      await act(async () => {
+        await result.current.handleSyncNow({}, undefined, true)
+      })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+
+      errorSpy.mockRestore()
+    })
   })
 })

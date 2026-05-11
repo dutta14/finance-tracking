@@ -39,7 +39,7 @@ describe('adjustForInflation', () => {
   it('adjusts value at 3% over 30 years', () => {
     const result = adjustForInflation(60000, 3, 30)
     // 60000 * 1.03^30 ≈ 145636.20
-    expect(result).toBeCloseTo(145636.20, 0)
+    expect(result).toBeCloseTo(145636.2, 0)
   })
 
   it('returns same value when inflation is 0', () => {

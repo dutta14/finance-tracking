@@ -390,3 +390,142 @@ describe('GoalsPeek summary cards and progress', () => {
     expect(screen.getByText('Retire Early')).toBeInTheDocument()
   })
 })
+
+/* ═══════════════════════════════════════════════════════════════
+   GW goals rendering — progress bars and monthly saving
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek GW goals rendering', () => {
+  it('renders GW progress bar when gwGoals are present', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    const gwAcct = makeAccount(2, 'gw')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct, gwAcct],
+      balances: [makeBalance(1, '2025-01', 500_000), makeBalance(2, '2025-01', 50_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60, inflationRate: 6 })
+    const gwGoal: GwGoal = {
+      id: 1,
+      fiGoalId: 1,
+      label: 'College Fund',
+      createdAt: '2024-01-01',
+      disburseAge: 65,
+      disburseAmount: 200_000,
+      growthRate: 6,
+      currentSavings: 50_000,
+    }
+
+    renderPeek([goal], [gwGoal])
+
+    // GW progress bar should exist
+    const gwBar = screen.getByRole('progressbar', { name: /General wealth progress/i })
+    expect(gwBar).toBeInTheDocument()
+    // GW goal count in meta
+    expect(screen.getByText('1 GW goal')).toBeInTheDocument()
+  })
+
+  it('renders multiple GW goals count with plural', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    const gwAcct = makeAccount(2, 'gw')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct, gwAcct],
+      balances: [makeBalance(1, '2025-01', 500_000), makeBalance(2, '2025-01', 50_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    const goal = makeGoal({ id: 1 })
+    const gwGoals: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 1,
+        label: 'College Fund',
+        createdAt: '2024-01-01',
+        disburseAge: 65,
+        disburseAmount: 200_000,
+        growthRate: 6,
+        currentSavings: 50_000,
+      },
+      {
+        id: 2,
+        fiGoalId: 1,
+        label: 'Wedding',
+        createdAt: '2024-01-01',
+        disburseAge: 55,
+        disburseAmount: 100_000,
+        growthRate: 6,
+        currentSavings: 20_000,
+      },
+    ]
+
+    renderPeek([goal], gwGoals)
+    expect(screen.getByText('2 GW goals')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   FI monthly saving display
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek FI monthly saving', () => {
+  it('displays monthly saving amount when FI goal is not yet reached', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 100_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    renderPeek([makeGoal({ fiGoal: 10_000_000, retirementAge: 60 })])
+
+    // Should display a monthly saving amount (e.g. "$X/mo")
+    const monthlyText = screen.queryByText(/\/mo/)
+    expect(monthlyText).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   FI progress clamped at 100%
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek FI progress clamping', () => {
+  it('clamps FI progress at 100% when total exceeds goal', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 3_000_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+
+    const fiBar = screen.getByRole('progressbar', { name: /FI progress: 100%/i })
+    expect(fiBar).toHaveAttribute('aria-valuenow', '100')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Only first 3 goals rendered
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek max 3 goals rendered', () => {
+  it('renders only the first 3 goal cards', () => {
+    const goals = Array.from({ length: 5 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
+    renderPeek(goals)
+
+    expect(screen.getByText('Goal 1')).toBeInTheDocument()
+    expect(screen.getByText('Goal 2')).toBeInTheDocument()
+    expect(screen.getByText('Goal 3')).toBeInTheDocument()
+    expect(screen.queryByText('Goal 4')).not.toBeInTheDocument()
+    expect(screen.queryByText('Goal 5')).not.toBeInTheDocument()
+  })
+})

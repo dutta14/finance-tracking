@@ -1,12 +1,7 @@
 import { FC, useState, useCallback, useRef, useEffect } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { TextItem as PdfTextItem } from 'pdfjs-dist/types/src/display/api'
-import {
-  structureRows,
-  rowsToCsv,
-  parseDebitCreditNum,
-  mergeDebitCredit as mergeDebitCreditUtil,
-} from '../utils/pdfCsvUtils'
+import { structureRows, rowsToCsv, mergeDebitCredit as mergeDebitCreditUtil } from '../utils/pdfCsvUtils'
 import type { TextItem } from '../utils/pdfCsvUtils'
 import '../../../styles/PdfToCsv.css'
 

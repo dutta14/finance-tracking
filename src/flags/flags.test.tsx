@@ -189,7 +189,7 @@ describe('FlagContext resolution', () => {
     const wrapper: FC<{ children: ReactNode }> = ({ children }) => (
       <FlagContext.Provider
         value={{
-          resolveFlag: (flag) => {
+          resolveFlag: flag => {
             if (flag.type === 'boolean' && typeof percentage === 'number') {
               const clampedPct = Math.min(100, Math.max(0, percentage))
               const h = hashCode(flag.id + clientId) % 100
@@ -227,7 +227,7 @@ describe('FlagContext resolution', () => {
     const wrapper: FC<{ children: ReactNode }> = ({ children }) => (
       <FlagContext.Provider
         value={{
-          resolveFlag: (flag) => {
+          resolveFlag: flag => {
             if (flag.type === 'boolean' && typeof percentage === 'number') {
               const clampedPct = Math.min(100, Math.max(0, percentage))
               const h = hashCode(flag.id + clientId) % 100

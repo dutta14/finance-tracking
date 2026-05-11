@@ -56,9 +56,7 @@ describe('encryptString / decryptString', () => {
 
   it('produces unique ciphertext per call (random IV)', async () => {
     const key = await makeKey()
-    const envelopes = await Promise.all(
-      Array.from({ length: 10 }, () => encryptString('same', key)),
-    )
+    const envelopes = await Promise.all(Array.from({ length: 10 }, () => encryptString('same', key)))
     // Extract IVs and verify all are unique
     const ivs = envelopes.map(e => e.iv)
     const uniqueIvs = new Set(ivs)

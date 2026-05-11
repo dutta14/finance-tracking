@@ -118,4 +118,96 @@ describe('App', () => {
       expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
     })
   })
+
+  it('navigates to Drive on sidebar click', async () => {
+    renderApp()
+    await userEvent.click(screen.getByRole('button', { name: 'Drive' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('page-drive')).toBeInTheDocument()
+    })
+  })
+
+  it('redirects /data to /net-worth', async () => {
+    render(
+      <MemoryRouter initialEntries={['/data']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('page-data')).toBeInTheDocument()
+    })
+  })
+
+  it('redirects /tools to /budget', async () => {
+    render(
+      <MemoryRouter initialEntries={['/tools']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('page-budget')).toBeInTheDocument()
+    })
+  })
+
+  it('redirects /allocation to /net-worth/allocation', async () => {
+    render(
+      <MemoryRouter initialEntries={['/allocation']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('page-data')).toBeInTheDocument()
+    })
+  })
+
+  it('redirects unknown routes to home', async () => {
+    render(
+      <MemoryRouter initialEntries={['/nonexistent']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('page-home')).toBeInTheDocument()
+    })
+  })
+
+  it('renders all pages on their direct routes', async () => {
+    for (const [route, testId] of [
+      ['/', 'page-home'],
+      ['/goal', 'page-goal'],
+      ['/net-worth', 'page-data'],
+      ['/budget', 'page-budget'],
+      ['/drive', 'page-drive'],
+      ['/taxes', 'page-taxes'],
+    ] as const) {
+      const { unmount } = render(
+        <MemoryRouter initialEntries={[route]}>
+          <App />
+        </MemoryRouter>,
+      )
+      await waitFor(() => {
+        expect(screen.getByTestId(testId)).toBeInTheDocument()
+      })
+      unmount()
+    }
+  })
+
+  it('renders the main content area with correct class', async () => {
+    renderApp()
+    const main = screen.getByRole('main')
+    expect(main).toHaveClass('main-content')
+  })
+
+  it('expands sidebar when expand button is clicked', async () => {
+    renderApp()
+    const collapseBtn = screen.getByRole('button', { name: 'Collapse sidebar' })
+    await userEvent.click(collapseBtn)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }))
+    await waitFor(() => {
+      expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument()
+    })
+  })
 })

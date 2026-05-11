@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import AccountsModal from './AccountsModal'
 import { makeAccount, makeProfile } from '../../test/factories'
 import type { Account } from './types'
-import { GOAL_TYPE_LABELS, ACCOUNT_TYPE_LABELS, NATURE_LABELS, ALLOCATION_LABELS } from './types'
 
 let mockFormData = {
   name: 'New Acct',
@@ -656,5 +655,473 @@ describe('AccountsModal', () => {
     expect(within(ownerSelect).getByText('Bob')).toBeInTheDocument()
     expect(within(ownerSelect).getByText('Alice')).toBeInTheDocument()
     expect(within(ownerSelect).getByText('Joint')).toBeInTheDocument()
+  })
+
+  // --- Column filter toggle / remove ---
+
+  it('removes column filter when all values are unchecked', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Goal'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    const checkboxes = within(dropdown).getAllByRole('checkbox')
+    // Check first value then uncheck it
+    await user.click(checkboxes[0])
+    // Some accounts should be filtered
+    expect(screen.queryAllByRole('row').length).toBeLessThan(6)
+    // Open filter again and uncheck
+    await user.click(screen.getByTitle('Filter Goal'))
+    const dropdown2 = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    const checkboxes2 = within(dropdown2).getAllByRole('checkbox')
+    await user.click(checkboxes2[0])
+    // All accounts visible again
+    expect(screen.getByText('Checking')).toBeInTheDocument()
+    expect(screen.getByText('Mortgage')).toBeInTheDocument()
+  })
+
+  // --- Sorting by different columns ---
+
+  it('sorts by Goal column ascending', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /^Goal/ }))
+    const rows = screen.getAllByRole('row').slice(1)
+    const names = rows
+      .map(r => within(r).queryByText(/^(Checking|401k|Savings|Old 401k|Mortgage)$/))
+      .filter(Boolean)
+      .map(el => el!.textContent)
+    // FI accounts before GW accounts
+    expect(names[0]).toBe('401k')
+    expect(names[1]).toBe('Old 401k')
+  })
+
+  // --- getColValue and getColLabel through column filter dropdown ---
+
+  it('renders correct labels in filter dropdown for Type column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Type'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Liquid')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Retirement')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Illiquid')).toBeInTheDocument()
+  })
+
+  it('renders correct labels in filter dropdown for Owner column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Owner'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Alice')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Bob')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Joint')).toBeInTheDocument()
+  })
+
+  it('renders correct labels in filter dropdown for Status column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Status'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Active')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Inactive')).toBeInTheDocument()
+  })
+
+  it('renders correct labels in filter dropdown for Allocation column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Allocation'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Cash')).toBeInTheDocument()
+  })
+
+  it('renders correct labels in filter dropdown for A/L column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter A/L'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Asset')).toBeInTheDocument()
+    expect(within(dropdown).getByText('Liability')).toBeInTheDocument()
+  })
+
+  // --- Range select edge cases ---
+
+  it('range select falls back to toggle when Shift-clicking with no prior selection', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    // Shift-click without prior Ctrl+click should select just that row via toggle
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Savings'))
+    await user.keyboard('{/Meta}')
+    // Should have one checkbox checked (in multi-select mode)
+    const checkboxes = screen.getAllByRole('checkbox')
+    const checked = checkboxes.filter(cb => (cb as HTMLInputElement).checked)
+    expect(checked.length).toBe(1)
+  })
+
+  // --- Bulk edit: Type, Status, Nature, Allocation selects ---
+
+  it('calls onBulkUpdate with type when bulk Type changed', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const typeSelect = selects.find(s => within(s).queryByText('Type…'))!
+    await user.selectOptions(typeSelect, 'retirement')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), expect.objectContaining({ type: 'retirement' }))
+  })
+
+  it('calls onBulkUpdate with status when bulk Status changed', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const statusSelect = selects.find(s => within(s).queryByText('Status…'))!
+    await user.selectOptions(statusSelect, 'inactive')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { status: 'inactive' })
+  })
+
+  it('calls onBulkUpdate with nature when bulk A/L changed', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const natureSelect = selects.find(s => within(s).queryByText('A/L…'))!
+    await user.selectOptions(natureSelect, 'liability')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { nature: 'liability' })
+  })
+
+  it('calls onBulkUpdate with allocation when bulk Allocation changed', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const allocSelect = selects.find(s => within(s).queryByText('Allocation…'))!
+    await user.selectOptions(allocSelect, 'bonds')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { allocation: 'bonds' })
+  })
+
+  it('calls onBulkUpdate to remove group when No group selected', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__none__')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { group: undefined })
+  })
+
+  it('calls onBulkUpdate with existing group name when group selected', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, 'Banking')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { group: 'Banking' })
+  })
+
+  it('shows new group input when New group selected in bulk edit', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__new__')
+    expect(screen.getByPlaceholderText('Group name')).toBeInTheDocument()
+  })
+
+  it('applies new group name via Enter key in bulk edit', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__new__')
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'Investments{Enter}')
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { group: 'Investments' })
+  })
+
+  it('dismisses new group name input via Escape key', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__new__')
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'test')
+    await user.keyboard('{Escape}')
+    expect(screen.queryByPlaceholderText('Group name')).not.toBeInTheDocument()
+  })
+
+  it('applies new group via confirm button click', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__new__')
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'New Grp')
+    // Click the confirm (check mark) button
+    const confirmBtn = input.closest('.data-bulk-new-group')!.querySelector('.data-bulk-group-ok')! as HTMLElement
+    await user.click(confirmBtn)
+    expect(props.onBulkUpdate).toHaveBeenCalledWith(new Set([1, 2]), { group: 'New Grp' })
+  })
+
+  it('dismisses new group via cancel button click', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__new__')
+    const input = screen.getByPlaceholderText('Group name')
+    const cancelBtn = input.closest('.data-bulk-new-group')!.querySelector('.data-bulk-group-cancel')! as HTMLElement
+    await user.click(cancelBtn)
+    expect(screen.queryByPlaceholderText('Group name')).not.toBeInTheDocument()
+  })
+
+  // --- Edit mode ---
+
+  it('calls onUpdate and closes edit form when save is clicked in edit mode', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    const editButtons = screen.getAllByTitle('Edit')
+    await user.click(editButtons[0])
+    expect(screen.getByTestId('form-mode')).toHaveTextContent('edit')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(props.onUpdate).toHaveBeenCalledWith(1, mockFormData)
+    expect(screen.queryByTestId('account-form')).not.toBeInTheDocument()
+  })
+
+  it('closes edit form without calling onUpdate when cancel is clicked', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    const editButtons = screen.getAllByTitle('Edit')
+    await user.click(editButtons[0])
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(props.onUpdate).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('account-form')).not.toBeInTheDocument()
+  })
+
+  // --- Checkbox toggle directly ---
+
+  it('toggles row selection via checkbox click', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    // First select one to show checkboxes
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.keyboard('{/Meta}')
+    // One checked
+    const initialChecked = screen.getAllByRole('checkbox').filter(cb => (cb as HTMLInputElement).checked)
+    expect(initialChecked.length).toBe(1)
+    // Click the checkbox for '401k' row (row index 1, checkbox index 1 — index 0 is header)
+    const allCheckboxes = screen.getAllByRole('checkbox')
+    // Click the second row checkbox (first non-header, non-checked)
+    await user.click(allCheckboxes[2]) // 0=header, 1=Checking(checked), 2=401k
+    const afterChecked = screen.getAllByRole('checkbox').filter(cb => (cb as HTMLInputElement).checked)
+    // Now 2 rows + header might be checked, or header unchanged
+    expect(afterChecked.length).toBeGreaterThanOrEqual(2)
+  })
+
+  // --- Groups page: creating group with Enter ---
+
+  it('creates new group card when group name entered and Enter pressed', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('button', { name: /New Group/ }))
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'Investments{Enter}')
+    // Pending group card should appear with the name
+    expect(screen.getByText('Investments')).toBeInTheDocument()
+  })
+
+  it('dismisses new group creation on Escape', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('button', { name: /New Group/ }))
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'Test')
+    await user.keyboard('{Escape}')
+    // Input should be gone, no new group card
+    expect(screen.queryByPlaceholderText('Group name')).not.toBeInTheDocument()
+  })
+
+  // --- Groups page: rename blur ---
+
+  it('commits rename on blur with changed value', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    const renameButtons = screen.getAllByTitle('Rename group')
+    await user.click(renameButtons[0])
+    const input = screen.getByDisplayValue('Banking')
+    await user.clear(input)
+    await user.type(input, 'Banks')
+    // Blur by clicking elsewhere
+    await user.click(screen.getByText('Retirement'))
+    expect(props.onRenameGroup).toHaveBeenCalledWith('Banking', 'Banks')
+  })
+
+  // --- No partner hides partner option ---
+
+  it('does not show partner option in bulk Owner when no partner', async () => {
+    const user = userEvent.setup()
+    renderModal({ profile: makeProfile({ name: 'Alice', partner: null }) })
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const ownerSelect = selects.find(s => within(s).queryByText('Owner…'))!
+    expect(within(ownerSelect).queryByText('Bob')).not.toBeInTheDocument()
+  })
+
+  // --- Filter on active then use column filter ---
+
+  it('applies column filter only to the status-filtered subset', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    // Filter to Active
+    await user.click(screen.getByRole('button', { name: /Active \(4\)/ }))
+    // Now filter by Goal = FI
+    await user.click(screen.getByTitle('Filter Goal'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    const fiCheckbox = within(dropdown).getAllByRole('checkbox')[0]
+    await user.click(fiCheckbox)
+    // Only active + FI = just 401k
+    expect(screen.getByText('401k')).toBeInTheDocument()
+    expect(screen.queryByText('Old 401k')).not.toBeInTheDocument() // inactive
+    expect(screen.queryByText('Checking')).not.toBeInTheDocument() // GW
+  })
+
+  // ── Groups tab ──
+
+  describe('Groups tab', () => {
+    it('switches to groups view on Groups tab click', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      const groupsTab = screen.getByText(/Groups/)
+      await user.click(groupsTab)
+      expect(screen.getByRole('heading', { name: 'Groups' })).toBeInTheDocument()
+    })
+
+    it('renders existing groups on Groups tab', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      expect(screen.getByText('Banking')).toBeInTheDocument()
+      expect(screen.getByText('Retirement')).toBeInTheDocument()
+    })
+
+    it('shows + New Group button', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      expect(screen.getByText('+ New Group')).toBeInTheDocument()
+    })
+
+    it('shows new group input when + New Group is clicked', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      await user.click(screen.getByText('+ New Group'))
+      expect(screen.getByPlaceholderText('Group name')).toBeInTheDocument()
+    })
+
+    it('creates a pending group on Enter', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      await user.click(screen.getByText('+ New Group'))
+      const input = screen.getByPlaceholderText('Group name')
+      await user.type(input, 'New Group Name{enter}')
+      expect(screen.getByText('New Group Name')).toBeInTheDocument()
+      expect(screen.getByText('Drag accounts here')).toBeInTheDocument()
+    })
+
+    it('removes pending group on Remove button click', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      await user.click(screen.getByText('+ New Group'))
+      const input = screen.getByPlaceholderText('Group name')
+      await user.type(input, 'Temp Group{enter}')
+      expect(screen.getByText('Temp Group')).toBeInTheDocument()
+      // Click the Remove button (the X SVG button)
+      const removeBtn = screen.getByTitle('Remove')
+      await user.click(removeBtn)
+      expect(screen.queryByText('Temp Group')).not.toBeInTheDocument()
+    })
+
+    it('cancels group creation on Escape key', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      await user.click(screen.getByText('+ New Group'))
+      const input = screen.getByPlaceholderText('Group name')
+      await user.type(input, 'Cancel Me{escape}')
+      expect(screen.queryByPlaceholderText('Group name')).not.toBeInTheDocument()
+      // Should go back to + New Group button
+      expect(screen.getByText('+ New Group')).toBeInTheDocument()
+    })
+
+    it('shows ungrouped accounts section', async () => {
+      const accounts = buildAccounts()
+      // Make one account ungrouped
+      const ungroupedAccounts = accounts.map(a => (a.id === 3 ? { ...a, group: undefined } : a))
+      const user = userEvent.setup()
+      renderModal({ accounts: ungroupedAccounts })
+      await user.click(screen.getByText(/Groups/))
+      expect(screen.getByText('Ungrouped')).toBeInTheDocument()
+    })
+
+    it('renders group member names inside group cards', async () => {
+      const user = userEvent.setup()
+      renderModal()
+      await user.click(screen.getByText(/Groups/))
+      // Banking group should contain Checking
+      expect(screen.getByText('Checking')).toBeInTheDocument()
+      // Retirement group should contain 401k
+      expect(screen.getByText('401k')).toBeInTheDocument()
+    })
   })
 })

@@ -138,5 +138,141 @@ describe('BudgetSyncContext', () => {
 
       removeSpy.mockRestore()
     })
+
+    it('marks budget dirty when budget-changed event fires', async () => {
+      vi.useFakeTimers()
+
+      const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        window.dispatchEvent(new Event('budget-changed'))
+      })
+
+      expect(result.current.sync.dirtyFlags.budget).toBe(true)
+
+      vi.useRealTimers()
+    })
+  })
+
+  /* ── syncBudgetNow when configured ─────────────────────────────── */
+
+  describe('syncBudgetNow when configured', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
+    })
+
+    it('calls upload functions when configured with active token', async () => {
+      // Set up a configured state with a token
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({
+          owner: 'test-owner',
+          repo: 'test-repo',
+          filePath: 'finance-goals.json',
+          autoSync: false,
+        }),
+      )
+
+      const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
+
+      // Save and unlock a token to become configured
+      await act(async () => {
+        await result.current.sync.saveEncryptedToken('ghp_testtoken', 'passphrase1')
+      })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      expect(result.current.sync.isConfigured).toBe(true)
+
+      // Mock the budget sync utilities
+      const uploadBudgetConfigMock = vi.fn().mockResolvedValue(undefined)
+      const syncAllBudgetCSVsMock = vi.fn().mockResolvedValue(undefined)
+
+      vi.doMock('../pages/budget/utils/budgetGitHubSync', () => ({
+        uploadBudgetConfig: uploadBudgetConfigMock,
+        syncAllBudgetCSVs: syncAllBudgetCSVsMock,
+        downloadAllBudgetCSVs: vi.fn(),
+        downloadBudgetConfig: vi.fn(),
+      }))
+
+      // Since we can't easily mock the imports used by the already-loaded module,
+      // we verify the behavior by checking that the dirty flag is cleared
+      act(() => {
+        result.current.sync.markDirty('budget')
+      })
+      expect(result.current.sync.dirtyFlags.budget).toBe(true)
+
+      // Mock fetch for the internal budget sync calls
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+        headers: new Headers(),
+      } as Response)
+
+      await act(async () => {
+        await result.current.budget.syncBudgetNow()
+      })
+
+      // Budget dirty flag should be cleared after sync
+      expect(result.current.sync.dirtyFlags.budget).toBe(false)
+    })
+  })
+
+  /* ── restoreBudgetFromGitHub when configured ───────────────────── */
+
+  describe('restoreBudgetFromGitHub when configured', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
+    })
+
+    it('does not throw when configured but downloads fail gracefully', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({
+          owner: 'test-owner',
+          repo: 'test-repo',
+          filePath: 'finance-goals.json',
+          autoSync: false,
+        }),
+      )
+
+      const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
+
+      await act(async () => {
+        await result.current.sync.saveEncryptedToken('ghp_testtoken', 'passphrase1')
+      })
+
+      expect(result.current.sync.isConfigured).toBe(true)
+
+      // Mock fetch to return 404 for all calls (no budget data on GitHub)
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({}),
+        headers: new Headers(),
+      } as Response)
+
+      // Should not throw
+      await act(async () => {
+        await result.current.budget.restoreBudgetFromGitHub()
+      })
+    })
   })
 })

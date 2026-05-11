@@ -63,13 +63,6 @@ vi.mock('../utils/budgetStorage', () => ({
 
 const VALID_CSV =
   'Date,Category,Amount,Description\n2025-05-01,Salary,5000,Paycheck\n2025-05-02,Groceries,-120,Weekly groceries\n2025-05-03,Rent,-2000,Monthly rent'
-const INCOME_ONLY_CSV = 'Date,Category,Amount\n2025-01-01,Salary,5000\n2025-01-15,Bonus,1000'
-
-function makeCSVWithCategories(categories: string[]): string {
-  const header = 'Date,Category,Amount'
-  const lines = categories.map((c, i) => `2025-05-${String(i + 1).padStart(2, '0')},${c},-${(i + 1) * 10}`)
-  return [header, ...lines].join('\n')
-}
 
 beforeEach(() => {
   localStorage.clear()
@@ -671,5 +664,152 @@ describe('useBudget — header row detection', () => {
 
     expect(uploadResult!.ok).toBe(true)
     expect(uploadResult!.transactions).toHaveLength(1)
+  })
+})
+
+describe('useBudget — addTransaction', () => {
+  it('appends a CSV line to an existing month CSV', () => {
+    const csv = 'Date,Category,Amount\n2025-01-01,Salary,5000'
+    mockStore = {
+      csvs: { '2025-01': { month: '2025-01', csv, uploadedAt: '2025-01-01' } },
+      configs: {},
+      years: [2025],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+
+    const { result } = renderHook(() => useBudget())
+
+    let addResult: ReturnType<typeof result.current.addTransaction>
+    act(() => {
+      addResult = result.current.addTransaction('2025-01', '2025-01-15,Food,-50,Lunch')
+    })
+
+    expect(addResult!.ok).toBe(true)
+    expect(addResult!.transactions!.length).toBeGreaterThan(1)
+  })
+
+  it('creates a new CSV with headers when month has no existing data', () => {
+    const { result } = renderHook(() => useBudget())
+
+    let addResult: ReturnType<typeof result.current.addTransaction>
+    act(() => {
+      addResult = result.current.addTransaction('2025-03', '2025-03-01,Groceries,-80,Weekly')
+    })
+
+    expect(addResult!.ok).toBe(true)
+    expect(addResult!.transactions).toHaveLength(1)
+    expect(addResult!.transactions![0].category).toBe('Groceries')
+  })
+})
+
+describe('useBudget — deleteCategory', () => {
+  it('removes a category from all groups', () => {
+    mockStore = {
+      ...EMPTY_STORE,
+      categoryGroups: [
+        { id: 'food', name: 'Food', categories: ['Groceries', 'Dining'] },
+        { id: 'others', name: 'Others', categories: [] },
+        { id: 'removed', name: 'Remove from Budget', categories: [] },
+      ],
+    }
+
+    const { result } = renderHook(() => useBudget())
+
+    act(() => {
+      result.current.deleteCategory('Groceries')
+    })
+
+    const foodGroup = result.current.categoryGroups.find(g => g.id === 'food')
+    expect(foodGroup?.categories).not.toContain('Groceries')
+    expect(foodGroup?.categories).toContain('Dining')
+  })
+})
+
+describe('useBudget — setSelectedYear triggers year creation', () => {
+  it('auto-creates the year if it does not exist when setSelectedYear is called', () => {
+    mockStore = { ...EMPTY_STORE, years: [2024], categoryGroups: DEFAULT_GROUPS }
+    const { result } = renderHook(() => useBudget())
+
+    act(() => {
+      result.current.setSelectedYear(2026)
+    })
+
+    expect(result.current.years).toContain(2026)
+    expect(result.current.selectedYear).toBe(2026)
+  })
+})
+
+describe('useBudget — viewMode', () => {
+  it('defaults to aggregated view mode', () => {
+    const { result } = renderHook(() => useBudget())
+    expect(result.current.viewMode).toBe('aggregated')
+  })
+
+  it('switches view mode', () => {
+    const { result } = renderHook(() => useBudget())
+    act(() => {
+      result.current.setViewMode('monthly')
+    })
+    expect(result.current.viewMode).toBe('monthly')
+  })
+})
+
+describe('useBudget — monthsWithData', () => {
+  it('tracks which months have CSV data for the selected year', () => {
+    mockStore = {
+      csvs: {
+        '2025-01': { month: '2025-01', csv: 'Date,Category,Amount\n2025-01-01,X,-1', uploadedAt: '' },
+        '2025-06': { month: '2025-06', csv: 'Date,Category,Amount\n2025-06-01,Y,-2', uploadedAt: '' },
+      },
+      configs: {},
+      years: [2025],
+      categoryGroups: DEFAULT_GROUPS,
+    }
+
+    const { result } = renderHook(() => useBudget())
+    act(() => {
+      result.current.setSelectedYear(2025)
+    })
+
+    expect(result.current.monthsWithData.has('2025-01')).toBe(true)
+    expect(result.current.monthsWithData.has('2025-06')).toBe(true)
+    expect(result.current.monthsWithData.has('2025-03')).toBe(false)
+    expect(result.current.monthsWithData.size).toBe(2)
+  })
+})
+
+describe('useBudget — editCategory edge cases', () => {
+  it('does nothing when monthKey has no CSV data', () => {
+    const { result } = renderHook(() => useBudget())
+    const initialStore = result.current.store
+
+    act(() => {
+      result.current.editCategory('9999-01', 0, 'NewCat')
+    })
+
+    expect(result.current.store.csvs).toEqual(initialStore.csvs)
+  })
+
+  it('does nothing when transactionIdx is out of bounds', () => {
+    const csv = 'Date,Category,Amount\n2025-05-01,Food,-50'
+    mockStore = {
+      csvs: { '2025-05': { month: '2025-05', csv, uploadedAt: '' } },
+      configs: {},
+      years: [2025],
+      categoryGroups: [
+        { id: 'others', name: 'Others', categories: ['Food'] },
+        { id: 'removed', name: 'Remove from Budget', categories: [] },
+      ],
+    }
+
+    saveBudgetStore.mockClear()
+    const { result } = renderHook(() => useBudget())
+    const callsAfterMount = saveBudgetStore.mock.calls.length
+
+    act(() => {
+      result.current.editCategory('2025-05', 99, 'NewCat')
+    })
+
+    expect(saveBudgetStore.mock.calls.length).toBe(callsAfterMount)
   })
 })

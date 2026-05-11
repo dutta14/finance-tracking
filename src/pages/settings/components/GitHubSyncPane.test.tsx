@@ -536,4 +536,152 @@ describe('GitHubSyncPane', () => {
       expect(onApply).toHaveBeenCalledWith({})
     })
   })
+
+  // ── fetchHistory on initial render ──
+
+  it('calls onGhFetchHistory on mount when configured and unlocked', () => {
+    const onFetch = vi.fn().mockResolvedValue(undefined)
+    renderPane({ ghIsConfigured: true, ghTokenUnlocked: true, ghHistory: [], onGhFetchHistory: onFetch })
+    expect(onFetch).toHaveBeenCalledOnce()
+  })
+
+  it('calls onGhFetchHistory when clicking History tab with empty history', async () => {
+    const user = userEvent.setup()
+    const onFetch = vi.fn().mockResolvedValue(undefined)
+    renderPane({ ghIsConfigured: true, ghHistory: [], onGhFetchHistory: onFetch })
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    expect(onFetch).toHaveBeenCalled()
+  })
+
+  // ── Sync success timer ──
+
+  it('shows sync success banner after syncing', async () => {
+    const onSync = vi.fn().mockResolvedValue(undefined)
+    renderPane({
+      ghIsConfigured: true,
+      ghTokenUnlocked: true,
+      ghHasStoredToken: true,
+      ghConfig: { owner: 'me', repo: 'data', filePath: 'data.json', autoSync: false },
+      onGhSyncNow: onSync,
+    })
+
+    fireEvent.click(screen.getByTitle('Sync current goal data to GitHub'))
+
+    await waitFor(() => {
+      expect(onSync).toHaveBeenCalled()
+    })
+  })
+
+  // ── Unlock via Enter key ──
+
+  it('unlocks token when pressing Enter in passphrase field', () => {
+    const onUnlock = vi.fn().mockResolvedValue({ ok: true, message: 'Unlocked' })
+    renderPane({ ghHasStoredToken: true, ghTokenUnlocked: false, onGhUnlockToken: onUnlock })
+
+    const input = screen.getByPlaceholderText('Passphrase to unlock token')
+    fireEvent.change(input, { target: { value: 'mypass' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    expect(onUnlock).toHaveBeenCalledWith('mypass')
+  })
+
+  // ── Dismiss unlock status ──
+
+  it('dismisses token unlocked status banner', () => {
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghIsConfigured: true,
+      ghConfig: { owner: 'me', repo: 'data', filePath: 'data.json', autoSync: false },
+    })
+
+    expect(screen.getByText('Token unlocked for this session')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+    expect(screen.queryByText('Token unlocked for this session')).not.toBeInTheDocument()
+  })
+
+  // ── Cancel token form ──
+
+  it('cancels the change token form and clears inputs', async () => {
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghIsConfigured: true,
+      ghConfig: { owner: 'me', repo: 'data', filePath: 'data.json', autoSync: false },
+    })
+
+    // Click "Change token" to show the form
+    fireEvent.click(screen.getByText('Change token'))
+
+    // Token form should now be visible
+    expect(screen.getByPlaceholderText('github_pat_...')).toBeInTheDocument()
+
+    // Cancel the form
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    // Token form should be hidden
+    expect(screen.queryByPlaceholderText('github_pat_...')).not.toBeInTheDocument()
+  })
+
+  // ── Edit repo button ──
+
+  it('shows repo edit form when Edit button is clicked', () => {
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghIsConfigured: true,
+      ghConfig: { owner: 'me', repo: 'data', filePath: 'data.json', autoSync: false },
+    })
+
+    expect(screen.getByText('me/data')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(screen.getByPlaceholderText('your-github-username')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('finance-backups')).toBeInTheDocument()
+  })
+
+  // ── Cancel repo editing ──
+
+  it('cancels repo editing on Cancel button click', () => {
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghIsConfigured: true,
+      ghConfig: { owner: 'me', repo: 'data', filePath: 'data.json', autoSync: false },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByPlaceholderText('your-github-username')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    // Should be back to display mode
+    expect(screen.getByText('me/data')).toBeInTheDocument()
+  })
+
+  // ── Test connection button disabled without token ──
+
+  it('disables Test button when token is not unlocked', () => {
+    renderPane({
+      ghHasStoredToken: false,
+      ghTokenUnlocked: false,
+      ghConfig: { owner: 'me', repo: 'data', filePath: 'data.json', autoSync: false },
+    })
+
+    expect(screen.getByRole('button', { name: 'Test' })).toBeDisabled()
+  })
+
+  // ── Default prop values used when no props are passed ──
+
+  it('renders without errors when using minimal/default props', () => {
+    render(
+      <GitHubSyncPane
+        ghConfig={{ owner: '', repo: '', filePath: 'data.json', autoSync: false }}
+        ghSyncProgress={null}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Configuration' })).toBeInTheDocument()
+  })
 })

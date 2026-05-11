@@ -220,16 +220,7 @@ describe('projectFIDate', () => {
 
 describe('calculateGoalMetrics — negative inflation (deflation)', () => {
   it('reduces future expenses when inflation is negative', () => {
-    const result = calculateGoalMetrics(
-      60000,
-      '1990-06-15',
-      65,
-      '2025-01',
-      -2,
-      4,
-      getMonthsBetween,
-      parseDate,
-    )
+    const result = calculateGoalMetrics(60000, '1990-06-15', 65, '2025-01', -2, 4, getMonthsBetween, parseDate)
     expect(result.annualExpenseAtRetirement).toBeLessThan(60000)
     expect(result.fiGoal).toBeLessThan(60000 / 0.04)
   })

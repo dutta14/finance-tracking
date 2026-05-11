@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createRef } from 'react'
 import BudgetHeader from './BudgetHeader'
 import { BudgetViewMode, TimePeriod } from '../types'

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { FinancialGoal, GwGoal } from '../../types'
+import { FinancialGoal } from '../../types'
 import { makeGoal, makeGwGoal } from '../../test/factories'
 import Goal from './Goal'
 
@@ -296,5 +296,149 @@ describe('GoalDetail receives correct callbacks', () => {
     expect(capturedGoalDetailProps.goals).toEqual(goals)
     expect(capturedGoalDetailProps.profileBirthday).toBe('1990-01-15')
     expect(capturedGoalDetailProps.gwGoals).toEqual(gwGoals)
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   7. handleCreateGoal — create path
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('handleCreateGoal', () => {
+  it('calls createGoal when no editingGoalId is set', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
+
+    // Click the New Goal button to show the form
+    await user.click(screen.getByText('+ New Goal'))
+
+    // Trigger onSubmit via GoalFormModal props
+    const goal = makeGoal({ id: 99, goalName: 'New Plan' })
+    const onSubmit = capturedGoalFormModalProps.onSubmit as (g: FinancialGoal) => void
+    onSubmit(goal)
+
+    expect(mockCreateGoal).toHaveBeenCalledWith(goal)
+    expect(mockUpdateGoal).not.toHaveBeenCalled()
+  })
+
+  it('copies GW goals when creating from a copy', async () => {
+    const { act: rtlAct } = await import('@testing-library/react')
+    renderGoal('/goal')
+
+    // Trigger copy goal via GoalsSection — this sets showForm=true and copySourceGoalId
+    rtlAct(() => {
+      const onCopyGoal = capturedGoalsSectionProps.onCopyGoal as (goal: FinancialGoal) => void
+      onCopyGoal(goalA)
+    })
+
+    // Now the form should be shown
+    expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
+
+    // Submit the copied goal
+    const copiedGoal = makeGoal({ id: 100, goalName: 'Alpha - Duplicate' })
+    rtlAct(() => {
+      const onSubmit = capturedGoalFormModalProps.onSubmit as (g: FinancialGoal) => void
+      onSubmit(copiedGoal)
+    })
+
+    expect(mockCreateGoal).toHaveBeenCalledWith(copiedGoal)
+    expect(mockCopyGwGoals).toHaveBeenCalledWith(1, 100)
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   8. handleRenameGoal
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('handleRenameGoal', () => {
+  it('renames a goal via onRenameGoal callback', () => {
+    renderGoal('/goal')
+
+    const onRenameGoal = capturedGoalsSectionProps.onRenameGoal as (id: number, name: string) => void
+    onRenameGoal(1, 'Renamed Alpha')
+
+    expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Renamed Alpha' }))
+  })
+
+  it('does not call updateGoal when goal ID is not found', () => {
+    renderGoal('/goal')
+
+    const onRenameGoal = capturedGoalsSectionProps.onRenameGoal as (id: number, name: string) => void
+    onRenameGoal(999, 'Nonexistent')
+
+    expect(mockUpdateGoal).not.toHaveBeenCalled()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   9. GoalMixer toggle via Mix & Match button
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalMixer', () => {
+  it('opens mixer when Mix & Match button is clicked', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
+
+    const mixBtn = screen.getByTitle('Mix & Match goals')
+    await user.click(mixBtn)
+
+    expect(screen.getByTestId('goal-mixer')).toBeInTheDocument()
+  })
+
+  it('closes mixer via onClose callback', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
+
+    // Open mixer
+    const mixBtn = screen.getByTitle('Mix & Match goals')
+    await user.click(mixBtn)
+    expect(screen.getByTestId('goal-mixer')).toBeInTheDocument()
+
+    // Close via onClose — need act() since it triggers state change
+    const { act: rtlAct } = await import('@testing-library/react')
+    rtlAct(() => {
+      const onClose = capturedGoalMixerProps.onClose as () => void
+      onClose()
+    })
+
+    expect(screen.queryByTestId('goal-mixer')).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   10. handleCancelEdit
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('handleCancelEdit', () => {
+  it('hides form on cancel', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
+
+    // Open form
+    await user.click(screen.getByText('+ New Goal'))
+    expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
+
+    // Cancel via modal — need act() since it triggers state change
+    const { act: rtlAct } = await import('@testing-library/react')
+    rtlAct(() => {
+      const onCancel = capturedGoalFormModalProps.onCancel as () => void
+      onCancel()
+    })
+
+    expect(screen.queryByTestId('goal-form-modal')).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   11. GoalDetail onRenameGoal callback
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetail rename callback', () => {
+  it('passes handleRenameGoal to GoalDetail', () => {
+    renderGoal('/goal/1')
+
+    const onRenameGoal = capturedGoalDetailProps.onRenameGoal as (id: number, name: string) => void
+    onRenameGoal(1, 'Detail Renamed')
+
+    expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Detail Renamed' }))
   })
 })

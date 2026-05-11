@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GwSection from './GwSection'
-import { FinancialGoal, GwGoal } from '../../../types'
+import { GwGoal } from '../../../types'
 import { makeGoal, makeGwGoal } from '../../../test/factories'
 
 /* ─── Mocks ─── */

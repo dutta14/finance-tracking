@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BalanceSpreadsheet from './BalanceSpreadsheet'
 import { makeAccount, makeProfile } from '../../test/factories'
-import type { Account } from './types'
 
 const profile = makeProfile()
 
@@ -463,5 +462,123 @@ describe('BalanceSpreadsheet', () => {
 
     expect(screen.getByText('Mortgage')).toBeInTheDocument()
     expect(screen.queryByText('Checking')).not.toBeInTheDocument()
+  })
+
+  // ── Allocation filter ──
+
+  it('filters accounts by allocation when allocation filter is active', async () => {
+    const user = userEvent.setup()
+    const cashAcct = makeAccount({
+      id: 1,
+      name: 'Savings',
+      owner: 'primary',
+      goalType: 'gw',
+      type: 'liquid',
+      allocation: 'cash',
+    })
+    const stockAcct = makeAccount({
+      id: 2,
+      name: 'Brokerage',
+      owner: 'primary',
+      goalType: 'fi',
+      type: 'retirement',
+      allocation: 'us-stock',
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [cashAcct, stockAcct],
+          allAccounts: [cashAcct, stockAcct],
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /Allocation/ }))
+    await user.click(screen.getByRole('button', { name: 'Cash' }))
+
+    expect(screen.getByText('Savings')).toBeInTheDocument()
+    expect(screen.queryByText('Brokerage')).not.toBeInTheDocument()
+  })
+
+  // ── Single-member group rendered as standalone ──
+
+  it('renders single-member group as standalone column', () => {
+    const loneAcct = makeAccount({
+      id: 10,
+      name: 'Solo',
+      owner: 'primary',
+      goalType: 'gw',
+      type: 'liquid',
+      group: 'OnlyGroup',
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [loneAcct],
+          allAccounts: [loneAcct],
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+
+    // Account should render standalone (no group header)
+    expect(screen.getByText('Solo')).toBeInTheDocument()
+  })
+
+  // ── Custom date range ──
+
+  it('shows custom date range pickers when Custom date filter is selected', async () => {
+    const user = userEvent.setup()
+    render(<BalanceSpreadsheet {...makeProps()} />)
+
+    // First click "Date" L1 filter to expand date options
+    await user.click(screen.getByRole('button', { name: /Date/ }))
+    // Then click "Custom"
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    // Should show year/month select dropdowns for from and to
+    const selects = screen.getAllByRole('combobox')
+    expect(selects.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('filters months by custom from/to selects', async () => {
+    const user = userEvent.setup()
+    render(<BalanceSpreadsheet {...makeProps()} />)
+
+    await user.click(screen.getByRole('button', { name: /Date/ }))
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    // Select year in the first (from) year dropdown
+    const selects = screen.getAllByRole('combobox')
+    await user.selectOptions(selects[0], '2024')
+    await user.selectOptions(selects[1], '02')
+
+    // Should filter months — only Feb and Mar visible (from >= 2024-02)
+    expect(screen.queryByText('Jan 2024')).not.toBeInTheDocument()
+  })
+
+  // ── Delete month confirmation ──
+
+  it('shows delete confirmation dialog on month delete button', async () => {
+    const user = userEvent.setup()
+    const onDeleteMonth = vi.fn()
+    render(<BalanceSpreadsheet {...makeProps({ onDeleteMonth })} />)
+
+    // Find a delete button on a month header
+    const deleteBtn = screen.getByTitle('Delete Mar 2024')
+    await user.click(deleteBtn)
+
+    // Should show confirmation dialog, not call onDeleteMonth yet
+    expect(onDeleteMonth).not.toHaveBeenCalled()
+    expect(screen.getByText(/Delete all balance entries for/)).toBeInTheDocument()
+
+    // Confirm delete
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    expect(onDeleteMonth).toHaveBeenCalledWith('2024-03')
   })
 })

@@ -167,4 +167,123 @@ describe('BalanceCharts', () => {
     expect(screen.getByRole('button', { name: 'FI vs GW' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Net Worth' })).toBeInTheDocument()
   })
+
+  it('renders YTD date filter correctly', async () => {
+    const user = userEvent.setup()
+    // YTD filters to current year, so we need data in the current year
+    const yr = new Date().getFullYear().toString()
+    const ytdMonths = [`${yr}-03`, `${yr}-02`, `${yr}-01`]
+    const ytdEntries = [
+      { accountId: 1, month: `${yr}-01`, balance: 5000 },
+      { accountId: 1, month: `${yr}-02`, balance: 5500 },
+      { accountId: 1, month: `${yr}-03`, balance: 6000 },
+    ]
+    const ytdMap = buildBalanceMap(ytdEntries)
+    render(<BalanceCharts {...makeProps({ allMonths: ytdMonths, balanceMap: ytdMap })} />)
+
+    await user.click(screen.getByRole('button', { name: 'YTD' }))
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('renders Last 12 mo date filter correctly', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Last 12 mo' }))
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('shows custom range with year and month selectors', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    // Should show From and To selectors
+    expect(screen.getByText('to')).toBeInTheDocument()
+    // Year select options
+    const yearOptions = screen.getAllByRole('option', { name: '2024' })
+    expect(yearOptions.length).toBeGreaterThan(0)
+  })
+
+  it('filters data by custom from-year selection', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    // Select year in the first "From" year dropdown
+    const yearSelects = screen.getAllByRole('combobox')
+    await user.selectOptions(yearSelects[0], '2024')
+
+    // Chart should render with filtered data
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('filters data by custom from-month selection', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    // First set from year, then from month
+    const selects = screen.getAllByRole('combobox')
+    await user.selectOptions(selects[0], '2024')
+    await user.selectOptions(selects[1], '02')
+
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('filters data by custom to-year and to-month selection', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    const selects = screen.getAllByRole('combobox')
+    // To year (3rd select) and To month (4th select)
+    await user.selectOptions(selects[2], '2024')
+    await user.selectOptions(selects[3], '02')
+
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('shows empty message when custom range excludes all data', async () => {
+    const user = userEvent.setup()
+    // allMonths are 2024-01 to 2024-03, set custom range to 2025
+    const props = makeProps({ allMonths: ['2024-01'] })
+    render(<BalanceCharts {...props} />)
+
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    const selects = screen.getAllByRole('combobox')
+    // Set from year to later than any data
+    await user.selectOptions(selects[0], '2024')
+    await user.selectOptions(selects[1], '12')
+
+    // Depending on data, may show empty or chart
+    // With just 2024-01 data and from=2024-12, should be empty
+    expect(screen.getByText('No data for the selected range')).toBeInTheDocument()
+  })
+
+  it('marks the active chart type button as aria-pressed', () => {
+    render(<BalanceCharts {...makeProps()} />)
+    expect(screen.getByRole('button', { name: 'FI vs GW' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Net Worth' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Assets vs Liabilities' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('renders net worth chart with single line when Net Worth type is selected', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+    await user.click(screen.getByRole('button', { name: 'Net Worth' }))
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('renders bar chart when Assets vs Liabilities type is selected', async () => {
+    const user = userEvent.setup()
+    render(<BalanceCharts {...makeProps()} />)
+    await user.click(screen.getByRole('button', { name: 'Assets vs Liabilities' }))
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
 })

@@ -131,12 +131,7 @@ describe('structureRows', () => {
   })
 
   it('structures items into columns and rows', () => {
-    const items = [
-      item(10, 10, 'A'),
-      item(200, 10, 'B'),
-      item(10, 30, 'C'),
-      item(200, 30, 'D'),
-    ]
+    const items = [item(10, 10, 'A'), item(200, 10, 'B'), item(10, 30, 'C'), item(200, 30, 'D')]
     const rows = structureRows(items)
     expect(rows).toHaveLength(2)
     expect(rows[0]).toEqual(['A', 'B'])

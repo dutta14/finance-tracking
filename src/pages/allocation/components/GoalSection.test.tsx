@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GoalSection from './GoalSection'
-import type { CustomRatio, RatioGoal } from '../types'
+import type { CustomRatio } from '../types'
 import type { Profile } from '../../../hooks/useProfile'
 
 const makeRatio = (overrides: Partial<CustomRatio> = {}): CustomRatio => ({

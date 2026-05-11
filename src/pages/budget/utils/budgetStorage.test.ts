@@ -35,19 +35,19 @@ describe('loadBudgetStore', () => {
 
   it('loads CSVs from store and config from separate key', () => {
     appStorage.setJSON('budget-store', {
-        csvs: { '2025-01': { month: '2025-01', csv: 'a,b,c', uploadedAt: '2025-01-15' } },
-        configs: {},
-        years: [],
-      })
+      csvs: { '2025-01': { month: '2025-01', csv: 'a,b,c', uploadedAt: '2025-01-15' } },
+      configs: {},
+      years: [],
+    })
     appStorage.setJSON('budget-config', {
-        version: 1,
-        years: [2025],
-        categoryGroups: [
-          { id: 'food', name: 'Food', categories: ['Groceries'] },
-          { id: 'others', name: 'Others', categories: [] },
-          { id: 'removed', name: 'Remove from Budget', categories: [] },
-        ],
-      })
+      version: 1,
+      years: [2025],
+      categoryGroups: [
+        { id: 'food', name: 'Food', categories: ['Groceries'] },
+        { id: 'others', name: 'Others', categories: [] },
+        { id: 'removed', name: 'Remove from Budget', categories: [] },
+      ],
+    })
     const store = loadBudgetStore()
     expect(store.csvs['2025-01'].csv).toBe('a,b,c')
     expect(store.years).toEqual([2025])
@@ -292,28 +292,28 @@ describe('createYear', () => {
 describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
   it('merges per-year category groups into global groups', () => {
     appStorage.setJSON('budget-store', {
-        csvs: {},
-        configs: {
-          2024: {
-            year: 2024,
-            categoryGroups: [
-              { id: 'food', name: 'Food', categories: ['Groceries', 'Restaurants'] },
-              { id: 'others', name: 'Others', categories: ['Misc'] },
-              { id: 'removed', name: 'Remove from Budget', categories: [] },
-            ],
-          },
-          2025: {
-            year: 2025,
-            categoryGroups: [
-              { id: 'food', name: 'Food', categories: ['Groceries', 'Coffee'] },
-              { id: 'transport', name: 'Transport', categories: ['Gas'] },
-              { id: 'others', name: 'Others', categories: ['Misc', 'ATM'] },
-              { id: 'removed', name: 'Remove from Budget', categories: [] },
-            ],
-          },
+      csvs: {},
+      configs: {
+        2024: {
+          year: 2024,
+          categoryGroups: [
+            { id: 'food', name: 'Food', categories: ['Groceries', 'Restaurants'] },
+            { id: 'others', name: 'Others', categories: ['Misc'] },
+            { id: 'removed', name: 'Remove from Budget', categories: [] },
+          ],
         },
-        years: [2024, 2025],
-      })
+        2025: {
+          year: 2025,
+          categoryGroups: [
+            { id: 'food', name: 'Food', categories: ['Groceries', 'Coffee'] },
+            { id: 'transport', name: 'Transport', categories: ['Gas'] },
+            { id: 'others', name: 'Others', categories: ['Misc', 'ATM'] },
+            { id: 'removed', name: 'Remove from Budget', categories: [] },
+          ],
+        },
+      },
+      years: [2024, 2025],
+    })
     // No config key → migration will trigger
     const store = loadBudgetStore()
     const groups = store.categoryGroups!
@@ -333,19 +333,19 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
 
   it('deduplicates categories in Others that exist in custom groups', () => {
     appStorage.setJSON('budget-store', {
-        csvs: {},
-        configs: {
-          2024: {
-            year: 2024,
-            categoryGroups: [
-              { id: 'food', name: 'Food', categories: ['Groceries'] },
-              { id: 'others', name: 'Others', categories: ['Groceries', 'Misc'] },
-              { id: 'removed', name: 'Remove from Budget', categories: [] },
-            ],
-          },
+      csvs: {},
+      configs: {
+        2024: {
+          year: 2024,
+          categoryGroups: [
+            { id: 'food', name: 'Food', categories: ['Groceries'] },
+            { id: 'others', name: 'Others', categories: ['Groceries', 'Misc'] },
+            { id: 'removed', name: 'Remove from Budget', categories: [] },
+          ],
         },
-        years: [2024],
-      })
+      },
+      years: [2024],
+    })
     const store = loadBudgetStore()
     const others = store.categoryGroups!.find(g => g.id === 'others')!
     // Groceries is in the food group, so it should be removed from Others
@@ -362,7 +362,7 @@ describe('getBudgetSaveRate', () => {
   it('returns parsed summary when valid JSON is stored', () => {
     const summary = { annualSavings: 60000, saveRate: 40, monthsOfData: 12 }
     appStorage.setJSON('budget-summary', summary)
-    const result = getBudgetSaveRate()
+    getBudgetSaveRate()
   })
 
   it('returns null when budget-summary contains corrupt JSON', () => {

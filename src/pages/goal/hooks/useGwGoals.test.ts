@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { useGwGoals } from './useGwGoals'
 import { appStorage } from '../../../utils/appStorage'
 import type { GwGoal } from '../../../types'
