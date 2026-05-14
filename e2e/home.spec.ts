@@ -5,11 +5,7 @@ import {
   seedEmptyState,
   seedPartialState,
   MOBILE_VIEWPORT,
-  ACCOUNTS,
   BALANCES,
-  GOALS,
-  GW_GOALS,
-  BUDGET_STORE,
   PROFILE,
 } from './fixtures/home.fixtures'
 
@@ -177,27 +173,7 @@ test.describe('Home Dashboard E2E', () => {
     test('net worth card shows amount but no change arrow with single month', async ({ page }) => {
       // C5 Test 20: Seed only 1 month of balances (only 2025-05 entries)
       const singleMonthBalances = BALANCES.filter(b => b.month === '2025-05')
-      await page.addInitScript(
-        ({ accounts, balances, goals, gwGoals, budgetStore, profile }) => {
-          localStorage.clear()
-          localStorage.setItem('encryption-enabled', '0')
-          localStorage.setItem('data-accounts', JSON.stringify(accounts))
-          localStorage.setItem('data-balances', JSON.stringify(balances))
-          localStorage.setItem('financialGoals', JSON.stringify(goals))
-          localStorage.setItem('gw-goals', JSON.stringify(gwGoals))
-          localStorage.setItem('budget-store', JSON.stringify(budgetStore))
-          localStorage.setItem('user-profile', JSON.stringify(profile))
-          localStorage.setItem('onboarding-dismissed', '1')
-        },
-        {
-          accounts: ACCOUNTS,
-          balances: singleMonthBalances,
-          goals: GOALS,
-          gwGoals: GW_GOALS,
-          budgetStore: BUDGET_STORE,
-          profile: PROFILE,
-        },
-      )
+      await seedHomeData(page, { customBalances: singleMonthBalances })
       const home = new HomePage(page)
       await home.goto()
 
@@ -601,7 +577,7 @@ test.describe('Home Dashboard E2E', () => {
       await home.goto()
 
       // Section is labeled
-      const section = page.locator('section.setup-progress')
+      const section = home.setupProgress
       await expect(section).toHaveAttribute('aria-labelledby', 'setup-heading')
 
       // Progress bar has correct ARIA
@@ -647,15 +623,7 @@ test.describe('Home Dashboard E2E', () => {
       await expect(cardH2s).toHaveCount(0)
     })
 
-    test.skip('aria-live region announces data changes', async ({ page }) => {
-      // M1 Test 30: The app does not currently have an aria-live region that
-      // announces balance data changes dynamically. This would require a
-      // `data-changed` event listener wired to an aria-live element.
-      // TODO: Implement aria-live announcements for data updates in the app.
-      await seedHomeData(page)
-      const home = new HomePage(page)
-      await home.goto()
-    })
+
   })
 
   test.describe('Error Recovery', () => {

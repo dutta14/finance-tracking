@@ -18,6 +18,7 @@ export interface SeedOptions {
   cardOrder?: number[]
   onboardingDismissed?: boolean
   darkMode?: boolean
+  customBalances?: typeof BALANCES
 }
 
 export const ACCOUNTS = [
@@ -170,6 +171,7 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
     cardOrder,
     onboardingDismissed,
     darkMode,
+    customBalances,
   } = options
 
   await page.addInitScript(
@@ -214,7 +216,7 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
       darkMode,
       data: {
         accounts: ACCOUNTS,
-        balances: BALANCES,
+        balances: customBalances ?? BALANCES,
         goals: GOALS,
         gwGoals: GW_GOALS,
         budgetStore: BUDGET_STORE,
