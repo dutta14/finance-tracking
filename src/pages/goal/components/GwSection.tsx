@@ -341,7 +341,7 @@ const GwSection: FC<GwSectionProps> = ({
     const created = new Date(goal.goalCreatedIn)
     const totalNeeded = goalGoals.reduce((sum, gw) => {
       const disburseYear = by + gw.disburseAge
-      const months = Math.max(0, (disburseYear - created.getFullYear()) * 12 + (bm - (created.getMonth() + 1)))
+      const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
       const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
       const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
       const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
@@ -485,7 +485,7 @@ const GwSection: FC<GwSectionProps> = ({
               key={gw.id}
               gw={gw}
               currentAge={currentAge}
-              creationYear={new Date(goal.goalCreatedIn).getFullYear()}
+              creationYear={new Date(goal.goalCreatedIn).getUTCFullYear()}
               inflationRate={goal.inflationRate}
               retirementAge={goal.retirementAge}
               goalCreatedIn={goal.goalCreatedIn}
@@ -590,7 +590,7 @@ const GwSection: FC<GwSectionProps> = ({
             </div>
 
             <div className="gw-form-group">
-              <label className="gw-form-label">Target amount ({new Date(goal.goalCreatedIn).getFullYear()} $)</label>
+              <label className="gw-form-label">Target amount ({new Date(goal.goalCreatedIn).getUTCFullYear()} $)</label>
               <input
                 className="gw-form-input"
                 type="number"

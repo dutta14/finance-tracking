@@ -118,7 +118,10 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
             const created = new Date(goal.goalCreatedIn)
             const totalNeeded = goalGws.reduce((sum, gw) => {
               const disburseYear = by + gw.disburseAge
-              const months = Math.max(0, (disburseYear - created.getFullYear()) * 12 + (bm - (created.getMonth() + 1)))
+              const months = Math.max(
+                0,
+                (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)),
+              )
               const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
               const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
               const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget

@@ -533,7 +533,7 @@ describe('GwSection', () => {
     it('shows progress > 0% when gwTotal > 0', () => {
       mockGwTotal = 50000
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('41.7%')).toBeInTheDocument()
+      expect(screen.getByText('41.8%')).toBeInTheDocument()
     })
 
     it('caps progress at 100%', () => {

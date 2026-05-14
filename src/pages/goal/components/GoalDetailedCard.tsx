@@ -249,7 +249,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     }, 0)
   }, [onUpdateGoal, goal, profileBirthday])
 
-  const creationYear = goal.goalCreatedIn ? new Date(goal.goalCreatedIn).getFullYear() : '—'
+  const creationYear = goal.goalCreatedIn ? new Date(goal.goalCreatedIn).getUTCFullYear() : '—'
   const retirementYear = retirementDate.getFullYear()
   const inflationYears = Math.round(retirementYear - Number(creationYear))
 

@@ -11,7 +11,7 @@ function computeGwPv(gw: GwGoal, base: FinancialGoal, profileBirthday: string): 
   const disburseYear = birthYear + gw.disburseAge
   const monthsToDisburse = Math.max(
     0,
-    (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
+    (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
   )
   const disbursementTarget = gw.disburseAmount * Math.pow(1 + base.inflationRate / 100 / 12, monthsToDisburse)
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - base.retirementAge) * 12)

@@ -14,7 +14,7 @@ function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: st
     const disburseYear = birthYear + gw.disburseAge
     const monthsToDisburse = Math.max(
       0,
-      (disburseYear - created.getFullYear()) * 12 + (birthMonth - (created.getMonth() + 1)),
+      (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
     )
     const disbursementTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, monthsToDisburse)
     const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
