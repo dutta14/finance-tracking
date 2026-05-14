@@ -25,6 +25,8 @@ const cspPlugin = () => ({
   },
 })
 
+process.env.TZ = 'UTC'
+
 export default defineConfig({
   base: '/finance-tracking/', // Set to your repo name
   plugins: [react(), cspPlugin()],
