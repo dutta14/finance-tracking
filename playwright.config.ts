@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+process.env.TZ = 'UTC'
+
 export default defineConfig({
   testDir: './e2e',
   outputDir: './e2e-results',
