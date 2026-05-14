@@ -7,6 +7,8 @@ import { Page } from '@playwright/test'
  * localStorage. We seed plaintext JSON the same way demoMode.ts does.
  */
 
+export const MOBILE_VIEWPORT = { width: 375, height: 812 }
+
 export interface SeedOptions {
   accounts?: boolean
   balances?: boolean
@@ -18,7 +20,7 @@ export interface SeedOptions {
   darkMode?: boolean
 }
 
-const ACCOUNTS = [
+export const ACCOUNTS = [
   {
     id: 1,
     name: '401(k)',
@@ -69,7 +71,7 @@ const ACCOUNTS = [
   },
 ]
 
-const BALANCES = [
+export const BALANCES = [
   { id: 1, accountId: 1, month: '2025-05', balance: 180000 },
   { id: 2, accountId: 2, month: '2025-05', balance: 65000 },
   { id: 3, accountId: 3, month: '2025-05', balance: 95000 },
@@ -80,7 +82,7 @@ const BALANCES = [
   { id: 8, accountId: 4, month: '2025-04', balance: 41000 },
 ]
 
-const GOALS = [
+export const GOALS = [
   {
     id: 1,
     goalName: 'Early Retirement',
@@ -93,6 +95,9 @@ const GOALS = [
     expenseMonth: 1,
     expenseValue: 60000,
     monthlyExpenseValue: 5000,
+    expenseValueMar2026: 63600,
+    expenseValue2047: 109272,
+    monthlyExpense2047: 9106,
     inflationRate: 3,
     safeWithdrawalRate: 3.5,
     growth: 8,
@@ -112,6 +117,9 @@ const GOALS = [
     expenseMonth: 6,
     expenseValue: 48000,
     monthlyExpenseValue: 4000,
+    expenseValueMar2026: 50880,
+    expenseValue2047: 87418,
+    monthlyExpense2047: 7285,
     inflationRate: 3,
     safeWithdrawalRate: 4,
     growth: 7,
@@ -121,7 +129,7 @@ const GOALS = [
   },
 ]
 
-const GW_GOALS = [
+export const GW_GOALS = [
   {
     id: 101,
     fiGoalId: 1,
@@ -134,9 +142,9 @@ const GW_GOALS = [
   },
 ]
 
-const PROFILE = { name: 'Alex', avatarDataUrl: '', birthday: '1992-03-15' }
+export const PROFILE = { name: 'Alex', avatarDataUrl: '', birthday: '1992-03-15' }
 
-const BUDGET_STORE = {
+export const BUDGET_STORE = {
   csvs: {
     '2025-05': {
       month: '2025-05',
@@ -177,6 +185,7 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
       data,
     }) => {
       localStorage.clear()
+      localStorage.setItem('encryption-enabled', '0')
 
       if (accounts) localStorage.setItem('data-accounts', JSON.stringify(data.accounts))
       if (balances) localStorage.setItem('data-balances', JSON.stringify(data.balances))
@@ -221,11 +230,13 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
 export async function seedEmptyState(page: Page) {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('encryption-enabled', '0')
   })
 }
 
 /**
  * Seeds partial state for setup progress testing.
+ * Delegates to seedHomeData with the specified data flags.
  */
 export async function seedPartialState(
   page: Page,
