@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { appStorage } from '../utils/appStorage'
 
 export interface Profile {
@@ -25,6 +25,14 @@ const loadProfile = (): Profile => {
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<Profile>(loadProfile)
+
+  // Cross-tab sync: reload profile when another tab writes to storage
+  useEffect(() => {
+    const unsub = appStorage.subscribe(STORAGE_KEY, () => {
+      setProfile(loadProfile())
+    })
+    return unsub
+  }, [])
 
   const updateProfile = (updates: Partial<Profile>) => {
     setProfile(prev => {
