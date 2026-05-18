@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, FC, ReactNode, Dispatch, SetStateAction } from 'react'
 import { getStorageItem, setStorageItem } from '../utils/storage'
+import { appStorage } from '../utils/appStorage'
 
 export interface SettingsContextValue {
   darkMode: boolean
@@ -40,6 +41,23 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (typeof window === 'undefined') return false
     return getStorageItem('allowCsvImport', '0') === '1'
   })
+
+  // Cross-tab sync: react to settings changes from other tabs
+  useEffect(() => {
+    const unsubs = [
+      appStorage.subscribe('darkMode', val => {
+        if (val === '1') setDarkMode(true)
+        else if (val === '0') setDarkMode(false)
+      }),
+      appStorage.subscribe('accentTheme', val => {
+        if (val) setAccentTheme(val as string)
+      }),
+      appStorage.subscribe('allowCsvImport', val => {
+        setAllowCsvImport(val === '1')
+      }),
+    ]
+    return () => unsubs.forEach(fn => fn())
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
