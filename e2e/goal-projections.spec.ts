@@ -175,14 +175,13 @@ test.describe('Goal Projections E2E', () => {
 
       // Extract projected date from detail page and compare with home
       const detailDateText = await detail.fiCard.locator('.fi-card-row-value--projected, .fi-card-row-value--ahead').first().textContent()
-      if (detailDateText && homeProjectedText) {
-        // Both should contain the same year
-        const homeYear = homeProjectedText.match(/(\d{4})/)?.[1]
-        const detailYear = detailDateText.match(/(\d{4})/)?.[1]
-        expect(homeYear).toBeDefined()
-        expect(detailYear).toBeDefined()
-        expect(homeYear).toBe(detailYear)
-      }
+      expect(detailDateText).toBeTruthy()
+
+      const homeYear = homeProjectedText!.match(/(\d{4})/)?.[1]
+      const detailYear = detailDateText!.match(/(\d{4})/)?.[1]
+      expect(homeYear).toBeDefined()
+      expect(detailYear).toBeDefined()
+      expect(homeYear).toBe(detailYear)
     })
 
     test('savings rate on GoalsPeek is consistent with budget summary', async ({ page }) => {
