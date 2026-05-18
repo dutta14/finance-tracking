@@ -515,6 +515,57 @@ body.dark .goal-drag-item--long-press {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
+/* Keyboard grab handle — visible on hover/focus on desktop, hidden on mobile */
+.goal-grab-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: grab;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+  z-index: 1;
+}
+
+.goal-drag-item:hover .goal-grab-handle,
+.goal-grab-handle:focus-visible {
+  opacity: 1;
+}
+
+.goal-grab-handle[aria-pressed='true'] {
+  opacity: 1;
+  background: var(--accent-lighter, var(--color-surface-alt));
+  border-color: var(--accent, var(--color-border));
+  color: var(--accent, var(--color-text));
+  cursor: grabbing;
+}
+
+/* Grabbed card visual state */
+.goal-drag-item--grabbed {
+  outline: 2px solid var(--accent, #3b82f6);
+  outline-offset: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .goal-grab-handle {
+    display: none;
+  }
+}
+
 /* Toolbar: filters + count + view toggle */
 .goal-toolbar {
   display: flex;

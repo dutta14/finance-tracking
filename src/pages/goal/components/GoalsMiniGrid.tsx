@@ -43,10 +43,14 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   const [renamingId, setRenamingId] = useState<number | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [announcement, setAnnouncement] = useState('')
+  const [grabbedIndex, setGrabbedIndex] = useState<number | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const touchMovedFlag = useRef(false)
+  const preGrabOrderRef = useRef<number[]>([])
+  const grabbedGoalId = useRef<number | null>(null)
+  const grabHandleRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
 
   useEffect(() => {
     if (!contextMenu) return
@@ -60,6 +64,13 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   useEffect(() => {
     if (renamingId !== null) renameInputRef.current?.focus()
   }, [renamingId])
+
+  useEffect(() => {
+    if (grabbedGoalId.current !== null) {
+      const btn = grabHandleRefs.current.get(grabbedGoalId.current)
+      if (btn) btn.focus()
+    }
+  }, [grabbedIndex])
 
   const openContextMenu = (e: React.MouseEvent, goalId: number) => {
     if (touchMovedFlag.current) {
@@ -257,6 +268,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           let itemClass = 'goal-drag-item'
           if (draggedId === goal.id) itemClass += ' goal-drag-item--dragging'
           else if (dragOverId === goal.id) itemClass += ` goal-drag-item--drag-${dragOverSide}`
+          if (grabbedIndex === goalIdx) itemClass += ' goal-drag-item--grabbed'
           if (touchDrag.isDragging && touchDraggedId.current === goal.id) itemClass += ' goal-drag-item--touch-dragging'
           if (touchDrag.isLongPressing && touchDrag.dragIdx === goalIdx) itemClass += ' goal-drag-item--long-press'
           const canDrag = !!onReorderGoals && renamingId !== goal.id
@@ -275,6 +287,70 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
               onTouchMove={touchHandlers?.onTouchMove}
               onTouchEnd={touchHandlers?.onTouchEnd}
             >
+              {onReorderGoals && renamingId !== goal.id && (
+                <button
+                  className="goal-grab-handle"
+                  ref={el => {
+                    if (el) grabHandleRefs.current.set(goal.id, el)
+                    else grabHandleRefs.current.delete(goal.id)
+                  }}
+                  aria-label={
+                    grabbedIndex === goalIdx
+                      ? `${goal.goalName}, grabbed. Use arrow keys to move, Enter to drop, Escape to cancel`
+                      : `Reorder ${goal.goalName}`
+                  }
+                  aria-pressed={grabbedIndex === goalIdx}
+                  onClick={() => {
+                    if (grabbedIndex === goalIdx) {
+                      grabbedGoalId.current = null
+                      setGrabbedIndex(null)
+                      setAnnouncement(`${goal.goalName} dropped at position ${goalIdx + 1} of ${goals.length}`)
+                    } else {
+                      preGrabOrderRef.current = goals.map(g => g.id)
+                      grabbedGoalId.current = goal.id
+                      setGrabbedIndex(goalIdx)
+                      setAnnouncement(
+                        `${goal.goalName} grabbed. Position ${goalIdx + 1} of ${goals.length}. Use arrow keys to move.`,
+                      )
+                    }
+                  }}
+                  onKeyDown={e => {
+                    if (grabbedIndex !== goalIdx) return
+                    const isHoriz = viewMode === 'grid'
+                    const prevKey = isHoriz ? 'ArrowLeft' : 'ArrowUp'
+                    const nextKey = isHoriz ? 'ArrowRight' : 'ArrowDown'
+
+                    if (e.key === prevKey && goalIdx > 0) {
+                      e.preventDefault()
+                      moveGoal(goalIdx, -1)
+                      setGrabbedIndex(goalIdx - 1)
+                    } else if (e.key === nextKey && goalIdx < goals.length - 1) {
+                      e.preventDefault()
+                      moveGoal(goalIdx, 1)
+                      setGrabbedIndex(goalIdx + 1)
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault()
+                      const goalId = goal.id
+                      onReorderGoals?.(preGrabOrderRef.current)
+                      setGrabbedIndex(null)
+                      setAnnouncement(`Reorder cancelled. ${goal.goalName} returned to original position.`)
+                      // Defer clearing grabbedGoalId so focus effect restores focus after re-render
+                      requestAnimationFrame(() => {
+                        const btn = grabHandleRefs.current.get(goalId)
+                        if (btn) btn.focus()
+                        grabbedGoalId.current = null
+                      })
+                    } else if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      grabbedGoalId.current = null
+                      setGrabbedIndex(null)
+                      setAnnouncement(`${goal.goalName} dropped at position ${goalIdx + 1} of ${goals.length}`)
+                    }
+                  }}
+                >
+                  ⠿
+                </button>
+              )}
               {onReorderGoals && renamingId !== goal.id && (
                 <div className="reorder-touch-controls goal-reorder-touch-controls">
                   <button
