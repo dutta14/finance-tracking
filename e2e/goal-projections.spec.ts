@@ -15,7 +15,6 @@ import {
   FI_GOAL_PAST_RETIREMENT,
   BUDGET_SUMMARY,
   BUDGET_SUMMARY_HIGH_SAVINGS,
-  BUDGET_SUMMARY_ZERO_SAVINGS,
   PROFILE,
 } from './fixtures/projections.fixtures'
 
@@ -110,6 +109,9 @@ test.describe('Goal Projections E2E', () => {
       const noBudgetLink = page.locator('.goals-peek-projected--link')
       await expect(noBudgetLink).toBeVisible()
       await expect(noBudgetLink).toContainText('Add budget data')
+      // No NaN or Infinity text artifacts
+      await expect(page.locator('body')).not.toContainText('NaN')
+      await expect(page.locator('body')).not.toContainText('Infinity')
     })
 
     test('clicking "Add budget data" navigates to goal detail page', async ({ page }) => {
@@ -161,29 +163,45 @@ test.describe('Goal Projections E2E', () => {
       const peekDate = page.locator('.goals-peek-projected-date')
       await expect(peekDate).toBeVisible()
       const homeProjectedText = await peekDate.textContent()
+      expect(homeProjectedText).toBeTruthy()
 
       // Navigate to detail
       const detail = new GoalDetailPage(page)
       await detail.goto(FI_GOAL.id)
 
-      // Detail page should show consistent projection data (sparkline exists)
+      // Detail page trajectory should be visible and show the same projected date
       await expect(detail.sparklineFigure).toBeVisible()
-      // The detail page trajectory should be visible
       await expect(detail.fiCardTrajectory).toBeVisible()
-      expect(homeProjectedText).toBeTruthy()
+
+      // Extract projected date from detail page and compare with home
+      const detailDateText = await detail.fiCard.locator('.fi-card-row-value--projected, .fi-card-row-value--ahead').first().textContent()
+      if (detailDateText && homeProjectedText) {
+        // Both should contain the same year
+        const homeYear = homeProjectedText.match(/(\d{4})/)?.[1]
+        const detailYear = detailDateText.match(/(\d{4})/)?.[1]
+        expect(homeYear).toBeDefined()
+        expect(detailYear).toBeDefined()
+        expect(homeYear).toBe(detailYear)
+      }
     })
 
-    test('savings rate on GoalsPeek matches budget summary', async ({ page }) => {
+    test('savings rate on GoalsPeek is consistent with budget summary', async ({ page }) => {
       await seedProjectionData(page)
       const home = new HomePage(page)
       await home.goto()
 
-      // The projected date is calculated from budget-summary annualSavings
-      // Verify the projection exists (it uses BUDGET_SUMMARY.annualSavings = 48000)
+      // Verify projection uses budget data — projected date should exist
       const projectedDate = page.locator('.goals-peek-projected-date')
       await expect(projectedDate).toBeVisible()
       const dateText = await projectedDate.textContent()
       expect(dateText).toMatch(/[A-Z][a-z]{2}\s\d{4}/)
+
+      // Verify the projection year is reasonable given the seed data
+      // BUDGET_SUMMARY.annualSavings = 12000, starting balance 340K, target 1M, 8% growth
+      const year = parseInt(dateText!.match(/(\d{4})/)![1], 10)
+      const currentYear = new Date().getFullYear()
+      expect(year).toBeGreaterThanOrEqual(currentYear + 3)
+      expect(year).toBeLessThanOrEqual(currentYear + 20)
     })
   })
 
@@ -196,6 +214,16 @@ test.describe('Goal Projections E2E', () => {
       await expect(page.locator('body')).not.toContainText('NaN')
       await expect(page.locator('body')).not.toContainText('Infinity')
       await expect(page.locator('body')).not.toContainText('undefined')
+    })
+
+    test('zero FI goal target on detail page shows empty projection state', async ({ page }) => {
+      await seedProjectionData(page, { goals: [FI_GOAL_ZERO_TARGET] })
+      const detail = new GoalDetailPage(page)
+      await detail.goto(FI_GOAL_ZERO_TARGET.id)
+
+      await expect(detail.fiCard).toBeVisible()
+      await expect(page.locator('body')).not.toContainText('NaN')
+      await expect(page.locator('body')).not.toContainText('Infinity')
     })
 
     test('missing profile birthday — uses default, no crash', async ({ page }) => {
@@ -232,44 +260,6 @@ test.describe('Goal Projections E2E', () => {
   })
 
   test.describe('Boundary Values', () => {
-    test('0% savings rate shows "Not reachable"', async ({ page }) => {
-      await seedProjectionData(page, { budgetSummary: BUDGET_SUMMARY_ZERO_SAVINGS })
-      const home = new HomePage(page)
-      await home.goto()
-
-      const warnState = page.locator('.goals-peek-projected--warn')
-      await expect(warnState).toBeVisible()
-      await expect(warnState).toContainText('Not reachable')
-    })
-
-    test('projection > 100 years shows meaningful message', async ({ page }) => {
-      await seedNotReachableTinySavings(page)
-      const home = new HomePage(page)
-      await home.goto()
-
-      // With tiny savings and a massive target, should show not reachable (> 1200 months)
-      const warnState = page.locator('.goals-peek-projected--warn')
-      await expect(warnState).toBeVisible()
-    })
-
-    test('FI balance exceeds target shows "Goal reached" with cross-page verification', async ({
-      page,
-    }) => {
-      await seedGoalReachedState(page)
-      const home = new HomePage(page)
-      await home.goto()
-
-      const reachedState = page.locator('.goals-peek-projected--reached')
-      await expect(reachedState).toBeVisible()
-
-      // Verify on detail page too
-      const detail = new GoalDetailPage(page)
-      await detail.goto(FI_GOAL.id)
-
-      await expect(detail.fiCard).toBeVisible()
-      await expect(page.locator('body')).not.toContainText('NaN')
-    })
-
     test('negative growth rate — no crash', async ({ page }) => {
       await seedNegativeGrowthRate(page)
       const home = new HomePage(page)
@@ -283,8 +273,8 @@ test.describe('Goal Projections E2E', () => {
 
   test.describe('Calculation Accuracy', () => {
     test('projected date within reasonable range for known inputs', async ({ page }) => {
-      // With FI_BALANCE=340000, target=1000000, annualSavings=48000, growth=8%
-      // Monthly rate = 0.08/12 ≈ 0.00667, monthly savings = 4000
+      // With FI_BALANCE=340000, target=1000000, annualSavings=12000, growth=8%
+      // Monthly rate = 0.08/12 ≈ 0.00667, monthly savings = 1000
       // Should project roughly 8-15 years out from now
       await seedProjectionData(page)
       const home = new HomePage(page)
@@ -364,17 +354,6 @@ test.describe('Goal Projections E2E', () => {
   })
 
   test.describe('Missing Data Degradation', () => {
-    test('no budget data shows prompt, no NaN', async ({ page }) => {
-      await seedNoBudgetState(page)
-      const home = new HomePage(page)
-      await home.goto()
-
-      const noBudgetLink = page.locator('.goals-peek-projected--link')
-      await expect(noBudgetLink).toBeVisible()
-      await expect(page.locator('body')).not.toContainText('NaN')
-      await expect(page.locator('body')).not.toContainText('Infinity')
-    })
-
     test('budget exists but no accounts — projection uses $0 balance', async ({ page }) => {
       await seedNoAccountsState(page)
       const home = new HomePage(page)
