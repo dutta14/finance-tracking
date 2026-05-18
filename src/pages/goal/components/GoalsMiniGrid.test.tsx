@@ -788,4 +788,188 @@ describe('GoalsMiniGrid', () => {
     expect(grid).toBeInTheDocument()
     expect(grid).toHaveAttribute('aria-label', 'Select goals for comparison')
   })
+
+  /* ── Keyboard-based reorder (grab handle) #109 ─────────────────── */
+
+  describe('keyboard reorder via grab handle', () => {
+    it('renders a grab handle for each goal card', () => {
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} />)
+
+      expect(screen.getByRole('button', { name: /reorder alpha/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /reorder beta/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /reorder gamma/i })).toBeInTheDocument()
+    })
+
+    it('does not render grab handles when onReorderGoals is undefined', () => {
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} onReorderGoals={undefined} />)
+
+      expect(screen.queryByRole('button', { name: /reorder/i })).not.toBeInTheDocument()
+    })
+
+    it('enters grabbed mode on click with aria-pressed true and announcement', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      const { container } = render(<GoalsMiniGrid {...props} />)
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+
+      expect(handle).toHaveAttribute('aria-pressed', 'true')
+      const liveRegion = container.querySelector('[aria-live="polite"]')
+      expect(liveRegion?.textContent).toContain('grabbed')
+      expect(liveRegion?.textContent).toContain('Beta')
+    })
+
+    it('moves card right with ArrowRight in grid mode', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} viewMode="grid" />)
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      await user.keyboard('{ArrowRight}')
+
+      expect(props.onReorderGoals).toHaveBeenCalledWith([1, 3, 2])
+    })
+
+    it('moves card down with ArrowDown in list mode', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} viewMode="list" />)
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      await user.keyboard('{ArrowDown}')
+
+      expect(props.onReorderGoals).toHaveBeenCalledWith([1, 3, 2])
+    })
+
+    it('does not move first card when pressing ArrowLeft in grid mode', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} viewMode="grid" />)
+
+      const handle = screen.getByRole('button', { name: /reorder alpha/i })
+      await user.click(handle)
+      await user.keyboard('{ArrowLeft}')
+
+      expect(props.onReorderGoals).not.toHaveBeenCalled()
+    })
+
+    it('does not move last card when pressing ArrowRight in grid mode', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} viewMode="grid" />)
+
+      const handle = screen.getByRole('button', { name: /reorder gamma/i })
+      await user.click(handle)
+      await user.keyboard('{ArrowRight}')
+
+      expect(props.onReorderGoals).not.toHaveBeenCalled()
+    })
+
+    it('drops card on Enter and clears grabbed state', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      const { container } = render(<GoalsMiniGrid {...props} />)
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      expect(handle).toHaveAttribute('aria-pressed', 'true')
+
+      await user.keyboard('{Enter}')
+
+      expect(handle).toHaveAttribute('aria-pressed', 'false')
+      const liveRegion = container.querySelector('[aria-live="polite"]')
+      expect(liveRegion?.textContent).toContain('dropped')
+    })
+
+    it('drops card on Space and clears grabbed state', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      const { container } = render(<GoalsMiniGrid {...props} />)
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      await user.keyboard(' ')
+
+      expect(handle).toHaveAttribute('aria-pressed', 'false')
+      const liveRegion = container.querySelector('[aria-live="polite"]')
+      expect(liveRegion?.textContent).toContain('dropped')
+    })
+
+    it('cancels reorder on Escape and restores original order', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      const { container, rerender } = render(<GoalsMiniGrid {...props} />)
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      await user.keyboard('{ArrowRight}')
+
+      // Simulate parent re-rendering with new order after onReorderGoals
+      const reorderedGoals = [defaultGoals[0], defaultGoals[2], defaultGoals[1]]
+      rerender(<GoalsMiniGrid {...props} goals={reorderedGoals} />)
+
+      // Now press Escape to cancel — focus followed Beta to new position
+      screen.getByRole('button', { name: /grabbed/i })
+      await user.keyboard('{Escape}')
+
+      // Should restore original order [1,2,3]
+      const calls = props.onReorderGoals.mock.calls
+      const lastCall = calls[calls.length - 1][0]
+      expect(lastCall).toEqual([1, 2, 3])
+
+      const liveRegion = container.querySelector('[aria-live="polite"]')
+      expect(liveRegion?.textContent).toContain('cancelled')
+    })
+
+    it('announces correct text for grab, move, and drop', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      const { container } = render(<GoalsMiniGrid {...props} viewMode="grid" />)
+      const liveRegion = container.querySelector('[aria-live="polite"]')!
+
+      // Grab
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      expect(liveRegion.textContent).toContain('Beta grabbed')
+      expect(liveRegion.textContent).toContain('Position 2 of 3')
+
+      // Move
+      await user.keyboard('{ArrowRight}')
+      expect(liveRegion.textContent).toContain('Beta moved after Gamma')
+    })
+
+    it('announces dropped text on Enter without prior move', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      const { container } = render(<GoalsMiniGrid {...props} />)
+      const liveRegion = container.querySelector('[aria-live="polite"]')!
+
+      const handle = screen.getByRole('button', { name: /reorder beta/i })
+      await user.click(handle)
+      await user.keyboard('{Enter}')
+
+      expect(liveRegion.textContent).toContain('Beta dropped at position 2 of 3')
+    })
+
+    it('does not render grab handle during rename', async () => {
+      const user = userEvent.setup()
+      const props = defaultProps()
+      render(<GoalsMiniGrid {...props} />)
+
+      // Start rename via context menu
+      const alphaCard = screen.getByText('Alpha').closest('.goal-drag-item')!
+      fireEvent.contextMenu(alphaCard, { clientX: 100, clientY: 200 })
+      await user.click(screen.getByText('Rename'))
+
+      // Grab handle for Alpha should not be visible
+      expect(screen.queryByRole('button', { name: /reorder alpha/i })).not.toBeInTheDocument()
+      // Other grab handles still present
+      expect(screen.getByRole('button', { name: /reorder beta/i })).toBeInTheDocument()
+    })
+  })
 })

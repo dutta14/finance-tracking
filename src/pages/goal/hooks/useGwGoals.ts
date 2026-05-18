@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { GwGoal } from '../../../types'
 import { appStorage } from '../../../utils/appStorage'
 
@@ -44,7 +44,27 @@ const load = (): GwGoal[] => {
 export const useGwGoals = () => {
   const [gwGoals, setGwGoals] = useState<GwGoal[]>(load)
 
+  const fromSyncRef = useRef(false)
+
+  // Cross-tab sync: reload when another tab writes to storage
   useEffect(() => {
+    const unsub = appStorage.subscribe(STORAGE_KEY, () => {
+      try {
+        const loaded = load()
+        fromSyncRef.current = true
+        setGwGoals(loaded)
+      } catch {
+        /* load failed — don't set fromSyncRef so next local save proceeds normally */
+      }
+    })
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    if (fromSyncRef.current) {
+      fromSyncRef.current = false
+      return
+    }
     appStorage.setJSON(STORAGE_KEY, gwGoals)
   }, [gwGoals])
 

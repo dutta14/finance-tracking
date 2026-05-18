@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { Profile } from './useProfile'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useProfile, Profile } from './useProfile'
 import { appStorage } from '../utils/appStorage'
 
 const STORAGE_KEY = 'user-profile'
@@ -62,5 +63,56 @@ describe('Profile loading logic', () => {
     const profile = appStorage.getJSON<Profile>(STORAGE_KEY, { name: '', avatarDataUrl: '', birthday: '' })
     expect(profile.name).toBe('Solo')
     expect(profile.partner).toBeNull()
+  })
+})
+
+describe('useProfile cross-tab sync', () => {
+  let subscribeSpy: ReturnType<typeof vi.spyOn>
+  let capturedCallback: ((value: string | null) => void) | undefined
+  let unsub: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    localStorage.clear()
+    capturedCallback = undefined
+    unsub = vi.fn()
+    subscribeSpy = vi.spyOn(appStorage, 'subscribe').mockImplementation((key, cb) => {
+      if (key === 'user-profile') capturedCallback = cb
+      return unsub
+    })
+  })
+
+  afterEach(() => {
+    subscribeSpy.mockRestore()
+  })
+
+  it('subscribes to user-profile on mount', () => {
+    renderHook(() => useProfile())
+    expect(subscribeSpy).toHaveBeenCalledWith('user-profile', expect.any(Function))
+  })
+
+  it('reloads profile when subscriber callback fires', () => {
+    const { result } = renderHook(() => useProfile())
+    expect(result.current.profile.name).toBe('')
+
+    const updatedProfile: Profile = {
+      name: 'Updated Name',
+      avatarDataUrl: 'data:image/png;base64,xyz',
+      birthday: '1985-12-25',
+    }
+    appStorage.setJSON(STORAGE_KEY, updatedProfile)
+
+    act(() => {
+      capturedCallback!(null)
+    })
+
+    expect(result.current.profile.name).toBe('Updated Name')
+    expect(result.current.profile.birthday).toBe('1985-12-25')
+  })
+
+  it('unsubscribes on unmount', () => {
+    const { unmount } = renderHook(() => useProfile())
+    expect(unsub).not.toHaveBeenCalled()
+    unmount()
+    expect(unsub).toHaveBeenCalled()
   })
 })
