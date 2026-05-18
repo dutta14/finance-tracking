@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import { SettingsProvider, useSettings } from './SettingsContext'
+import { appStorage } from '../utils/appStorage'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
@@ -172,5 +173,111 @@ describe('SettingsContext', () => {
     expect(() => {
       renderHook(() => useSettings())
     }).toThrow('useSettings must be used within a <SettingsProvider>')
+  })
+})
+
+describe('SettingsContext cross-tab sync', () => {
+  let subscribeSpy: ReturnType<typeof vi.spyOn>
+  let capturedCallbacks: Map<string, (value: string | null) => void>
+  let unsubs: ReturnType<typeof vi.fn>[]
+
+  beforeEach(() => {
+    localStorage.clear()
+    document.body.classList.remove('dark')
+    capturedCallbacks = new Map()
+    unsubs = []
+    subscribeSpy = vi.spyOn(appStorage, 'subscribe').mockImplementation((key, cb) => {
+      capturedCallbacks.set(key, cb)
+      const unsub = vi.fn()
+      unsubs.push(unsub)
+      return unsub
+    })
+  })
+
+  afterEach(() => {
+    subscribeSpy.mockRestore()
+  })
+
+  it('subscribes to darkMode, accentTheme, and allowCsvImport on mount', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(subscribeSpy).toHaveBeenCalledWith('darkMode', expect.any(Function))
+    expect(subscribeSpy).toHaveBeenCalledWith('accentTheme', expect.any(Function))
+    expect(subscribeSpy).toHaveBeenCalledWith('allowCsvImport', expect.any(Function))
+  })
+
+  it('updates darkMode when subscriber fires with 1', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('darkMode').textContent).toBe('false')
+
+    act(() => {
+      capturedCallbacks.get('darkMode')!('1')
+    })
+
+    expect(screen.getByTestId('darkMode').textContent).toBe('true')
+  })
+
+  it('updates darkMode to false when subscriber fires with 0', () => {
+    localStorage.setItem('darkMode', '1')
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('darkMode').textContent).toBe('true')
+
+    act(() => {
+      capturedCallbacks.get('darkMode')!('0')
+    })
+
+    expect(screen.getByTestId('darkMode').textContent).toBe('false')
+  })
+
+  it('updates accentTheme when subscriber fires with new theme', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
+
+    act(() => {
+      capturedCallbacks.get('accentTheme')!('purple')
+    })
+
+    expect(screen.getByTestId('accentTheme').textContent).toBe('purple')
+  })
+
+  it('updates allowCsvImport when subscriber fires with 1', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('allowCsvImport').textContent).toBe('false')
+
+    act(() => {
+      capturedCallbacks.get('allowCsvImport')!('1')
+    })
+
+    expect(screen.getByTestId('allowCsvImport').textContent).toBe('true')
+  })
+
+  it('unsubscribes all on unmount', () => {
+    const { unmount } = render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    unsubs.forEach(fn => expect(fn).not.toHaveBeenCalled())
+    unmount()
+    unsubs.forEach(fn => expect(fn).toHaveBeenCalled())
   })
 })
