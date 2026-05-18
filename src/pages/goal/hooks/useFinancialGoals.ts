@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FinancialGoal } from '../../../types'
 import { loadGoalsFromStorage, saveGoalsToStorage, migrateGoals } from '../utils/localStorageService'
+import { appStorage } from '../../../utils/appStorage'
 
 export const useFinancialGoals = () => {
   const [goals, setGoals] = useState<FinancialGoal[]>(() => {
@@ -13,8 +14,28 @@ export const useFinancialGoals = () => {
     }
   })
 
+  const fromSyncRef = useRef(false)
+
+  // Cross-tab sync: reload goals when another tab writes to storage
+  useEffect(() => {
+    const unsub = appStorage.subscribe('financialGoals', () => {
+      try {
+        const loaded = loadGoalsFromStorage()
+        fromSyncRef.current = true
+        setGoals(migrateGoals(loaded))
+      } catch {
+        /* load failed — don't set fromSyncRef so next local save proceeds normally */
+      }
+    })
+    return unsub
+  }, [])
+
   // Save goals to localStorage whenever they change
   useEffect(() => {
+    if (fromSyncRef.current) {
+      fromSyncRef.current = false
+      return
+    }
     saveGoalsToStorage(goals)
   }, [goals])
 
