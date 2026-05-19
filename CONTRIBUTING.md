@@ -246,3 +246,24 @@ npm run deploy   # Runs tests, builds, then deploys via gh-pages
 - Use [Conventional Commits](https://www.conventionalcommits.org/) style: `feat:`, `fix:`, `docs:`, `chore:`, etc.
 - To auto-close a GitHub issue, include `Fixes #N` in the commit **body** (not just `(#N)` in the subject line).
 - The pre-commit hook enforces lint, format, and test passing — commits will fail if any check does not pass.
+
+## Regenerating Screenshots
+
+The `docs/screenshots/` directory contains 12 PNGs that are embedded in the user-facing README. They are committed to the repo and serve as the source of truth for documentation — even though the files are several hundred KB each, this is intentional.
+
+### When to regenerate
+
+- Any UI change that affects a captured screen (Home, Net Worth, Goals, Budget, Taxes, Settings → GitHub Sync, or the empty / unlock / add-account onboarding states)
+- Any change to the README that surfaces a different feature or flow
+- New release builds where the screenshots have drifted from the current visual design
+
+### How to regenerate
+
+```bash
+npm run dev          # in one terminal
+npm run screenshots  # in another terminal
+```
+
+`scripts/capture-screenshots.ts` seeds a fixed fake persona ("Avery Chen") into localStorage and uses Playwright to capture each screen at 1440×900 @ 2× device scale. The browser clock is pinned to June 1, 2025 so the seeded May-2025 data is "last month" regardless of when the script is run. All 12 PNGs land in `docs/screenshots/`.
+
+The script disables encryption (`encryption-enabled=0`) so the seed lands as plaintext. No real credentials are stored anywhere in the captured images.

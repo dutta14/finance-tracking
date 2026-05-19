@@ -126,6 +126,41 @@ describe('SidebarNavigation', () => {
     expect(buttons[1]).toHaveAttribute('aria-label', 'Settings')
   })
 
+  describe('User guide link', () => {
+    it('renders the User guide link in the sidebar footer', () => {
+      renderSidebar()
+
+      const group = screen.getByRole('group', { name: 'Utilities' })
+      const link = within(group).getByRole('link', { name: /user guide/i })
+      expect(link).toBeInTheDocument()
+    })
+
+    it('points to the GitHub README and opens in a new tab', () => {
+      renderSidebar()
+
+      const link = screen.getByRole('link', { name: /user guide/i })
+      expect(link).toHaveAttribute('href', 'https://github.com/dutta14/finance-tracking#readme')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+
+    it('exposes a "(opens in new tab)" affordance in its accessible name', () => {
+      renderSidebar()
+
+      const link = screen.getByRole('link', { name: /user guide.*opens in new tab/i })
+      expect(link).toBeInTheDocument()
+    })
+
+    it('is not rendered when the sidebar is collapsed', async () => {
+      const user = userEvent.setup()
+      renderSidebar()
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      expect(screen.queryByRole('link', { name: /user guide/i })).not.toBeInTheDocument()
+    })
+  })
+
   describe('Goals is a plain sidebar link (no accordion)', () => {
     it('renders Goals as a plain button with sidebar-link class', () => {
       renderSidebar()

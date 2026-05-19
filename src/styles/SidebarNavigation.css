@@ -205,6 +205,10 @@ body.dark .sidebar-link.active {
   opacity: 1;
 }
 
+.sidebar-footer-link {
+  text-decoration: none;
+}
+
 .sidebar-toggle svg {
   color: var(--sidebar-toggle-color);
   fill: var(--sidebar-toggle-color);
