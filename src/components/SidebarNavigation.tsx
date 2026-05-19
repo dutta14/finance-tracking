@@ -171,7 +171,7 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
               <path
-                d="M4 4.5A1.5 1.5 0 0 1 5.5 3H10v12H5.5A1.5 1.5 0 0 1 4 13.5v-9zM16 4.5A1.5 1.5 0 0 0 14.5 3H10v12h4.5a1.5 1.5 0 0 0 1.5-1.5v-9zM4 15.5A1.5 1.5 0 0 0 5.5 17H10v-2H5.5A1.5 1.5 0 0 0 4 16.5v-1zM16 15.5a1.5 1.5 0 0 1-1.5 1.5H10v-2h4.5a1.5 1.5 0 0 1 1.5 1.5v-1z"
+                d="M3.5 5A1.5 1.5 0 0 1 5 3.5h4.25a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75H5A1.5 1.5 0 0 1 3.5 15V5zM16.5 5A1.5 1.5 0 0 0 15 3.5h-4.25a.75.75 0 0 0-.75.75v11.5a.75.75 0 0 0 .75.75H15a1.5 1.5 0 0 0 1.5-1.5V5z"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"

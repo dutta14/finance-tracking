@@ -207,11 +207,6 @@ body.dark .sidebar-link.active {
 
 .sidebar-footer-link {
   text-decoration: none;
-  margin-top: 0.15rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--color-border);
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
 }
 
 .sidebar-toggle svg {
