@@ -230,6 +230,28 @@ function lock(): void {
   _pendingPersists.clear()
 }
 
+/**
+ * Same disposal as `lock()` but does NOT write `_encryption-lock-signal`.
+ * Used by the EncryptionContext cross-tab listener when another tab toggles
+ * `encryption-enabled`: this tab needs to clear its in-memory key, drop
+ * queued plaintext persists, and flip `_isReady` to false — but emitting
+ * the lock signal would loop back and lock the tab that just enabled (the
+ * one with the real cryptoKey), defeating the whole flow.
+ *
+ * Clears _memoryStore for sensitive keys, drops _pendingPersists (so no
+ * queued plaintext write from disabled-mode flushes after this point),
+ * nulls _cryptoKey, and sets _isReady = false.
+ */
+function disposeLocalState(): void {
+  for (const key of SENSITIVE_KEYS) {
+    _memoryStore.delete(key)
+    notifySubscribers(key, null)
+  }
+  _cryptoKey = null
+  _isReady = false
+  _pendingPersists.clear()
+}
+
 function setMode(mode: 'disabled' | 'enabled'): void {
   _mode = mode
   if (mode === 'disabled') {
@@ -265,6 +287,7 @@ export const appStorage = {
   subscribe,
   hydrate,
   lock,
+  disposeLocalState,
   isReady,
   setMode,
   setCryptoKey,
