@@ -163,6 +163,24 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
             externalSection={settingsOpenSection as SettingsSection | undefined}
             onExternalClose={() => setSettingsOpenSection(undefined)}
           />
+          <a
+            className="sidebar-footer-btn sidebar-footer-link"
+            href="https://github.com/dutta14/finance-tracking#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+              <path
+                d="M3.5 5A1.5 1.5 0 0 1 5 3.5h4.25a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75H5A1.5 1.5 0 0 1 3.5 15V5zM16.5 5A1.5 1.5 0 0 0 15 3.5h-4.25a.75.75 0 0 0-.75.75v11.5a.75.75 0 0 0 .75.75H15a1.5 1.5 0 0 0 1.5-1.5V5z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="sidebar-footer-label">User guide</span>
+            <span className="sr-only"> (opens in new tab)</span>
+          </a>
         </div>
       )}
     </nav>
