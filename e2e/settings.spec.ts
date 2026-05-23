@@ -216,7 +216,13 @@ test.describe('Settings — Non-Security E2E', () => {
       // app's context provider re-initialised it on cold load, holds an
       // empty container ([] / {} / null-serialized) — never the original
       // seeded payload. Per-key failure messages name the offender.
-      const EMPTY_REINIT_VALUES = new Set(['[]', '{}', 'null', ''])
+      // EMPTY_REINIT_VALUES — values that count as "cleared" because providers
+      // re-emit these as their default empty state on cold load (factory reset
+      // → reload). The empty string '' is intentionally NOT admitted: no
+      // current provider serialises cleared state as "" (verified by grep
+      // across src/), and excluding it makes the test fail loudly if a future
+      // regression introduces that shape.
+      const EMPTY_REINIT_VALUES = new Set(['[]', '{}', 'null'])
       for (const key of SENSITIVE_KEYS) {
         const value = await page.evaluate(k => localStorage.getItem(k), key)
         if (value === null) continue
@@ -369,6 +375,12 @@ test.describe('Settings — Non-Security E2E', () => {
       // Ensure the post-import reload has settled before we navigate.
       await page.waitForLoadState('domcontentloaded')
 
+      // Goals page renders the imported goal — guards against a regression
+      // where the validator accepts the payload but the Goals page filters
+      // it out (LS substring check alone would miss that).
+      await page.goto('/finance-tracking/#/goal')
+      await expect(page.getByText('FI Goal')).toBeVisible()
+
       // Net Worth, Budget, Taxes each render their empty states with no
       // console errors. We visit each route directly.
       await page.goto('/finance-tracking/#/net-worth')
@@ -419,6 +431,13 @@ test.describe('Settings — Non-Security E2E', () => {
       )
       expect(allValues).not.toContain('"unknownField"')
       expect(allValues).not.toContain('"futureFeature"')
+
+      // Goals page renders the imported known goal — guards against a
+      // regression where unknown-key stripping inadvertently drops the
+      // known payload too, or where the validator accepts it but the
+      // Goals page filters it out at render time.
+      await page.goto('/finance-tracking/#/goal')
+      await expect(page.getByText('V2 Imported Goal')).toBeVisible()
 
       expect(consoleErrors).toEqual([])
     })
@@ -482,7 +501,6 @@ test.describe('Settings — Non-Security E2E', () => {
       await page.goto('/finance-tracking/#/net-worth')
       const importBtn = page.getByRole('button', { name: 'Import from CSV' })
       await expect(importBtn.first()).toBeVisible()
-      expect(await importBtn.count()).toBeGreaterThan(0)
 
       // Flip OFF via settings.
       await settings.openInPlace()

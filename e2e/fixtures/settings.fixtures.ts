@@ -3,6 +3,14 @@ import { Page } from '@playwright/test'
 /**
  * Seed helpers for Settings E2E tests (#128).
  *
+ * Seeding strategy: each helper uses `page.addInitScript` to write
+ * localStorage BEFORE any app code runs, and guards with the
+ * `__settings_e2e_seeded` sessionStorage flag so that app-triggered
+ * reloads (factory reset, import) do not re-seed and clobber the
+ * post-action state we're trying to assert.
+ *
+ * Each helper is idempotent within a single Playwright page session.
+ *
  * The whole settings suite runs with encryption disabled (the default), so
  * sensitive keys can be seeded as plaintext JSON in localStorage and the
  * app reads them through appStorage's pass-through mode.
