@@ -263,7 +263,11 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
                   }}
                   required
                 />
-                {errors.date && <span className="budget-txn-error">{errors.date}</span>}
+                {errors.date && (
+                  <span className="budget-txn-error" role="alert">
+                    {errors.date}
+                  </span>
+                )}
               </div>
 
               <div className="budget-txn-field">
@@ -300,7 +304,11 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
                   }}
                   required
                 />
-                {errors.amount && <span className="budget-txn-error">{errors.amount}</span>}
+                {errors.amount && (
+                  <span className="budget-txn-error" role="alert">
+                    {errors.amount}
+                  </span>
+                )}
               </div>
 
               <div className="budget-txn-field" ref={catWrapperRef}>
@@ -371,7 +379,11 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
                     </ul>
                   )}
                 </div>
-                {errors.category && <span className="budget-txn-error">{errors.category}</span>}
+                {errors.category && (
+                  <span className="budget-txn-error" role="alert">
+                    {errors.category}
+                  </span>
+                )}
               </div>
             </div>
 
