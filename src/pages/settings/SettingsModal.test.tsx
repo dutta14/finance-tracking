@@ -128,6 +128,29 @@ describe('SettingsModal tab navigation', () => {
     expect(screen.getByTestId('appearance-pane')).toBeInTheDocument()
     expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
   })
+
+  // E2E load-bearing: e2e/settings.spec.ts asserts the active nav item via
+  // aria-current="page" rather than the brittle .active class. If this
+  // attribute disappears, settings test 12 will silently start passing on
+  // the wrong nav item.
+  it('marks only the active nav item with aria-current="page"', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    expect(screen.getByRole('button', { name: /profile/i })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('button', { name: /appearance/i })).not.toHaveAttribute('aria-current')
+    await user.click(screen.getByRole('button', { name: /appearance/i }))
+    expect(screen.getByRole('button', { name: /appearance/i })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('button', { name: /profile/i })).not.toHaveAttribute('aria-current')
+  })
+
+  // E2E load-bearing: dialog must be queryable by its accessible name
+  // ("Settings") via aria-labelledby pointing at the H2 title.
+  it('exposes the dialog with accessible name "Settings" via aria-labelledby', () => {
+    render(<SettingsModal {...defaultProps} />)
+    const dialog = screen.getByRole('dialog', { name: 'Settings' })
+    expect(dialog).toHaveAttribute('aria-labelledby', 'settings-modal-title')
+    expect(document.getElementById('settings-modal-title')).toHaveTextContent('Settings')
+  })
 })
 
 /* ── Close behavior ──────────────────────────────────────────── */
