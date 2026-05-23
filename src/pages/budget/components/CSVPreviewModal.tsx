@@ -60,9 +60,15 @@ const CSVPreviewModal: FC<CSVPreviewModalProps> = ({ csv, monthKey, onConfirm, o
 
   return (
     <div className="csv-preview-overlay" onClick={onCancel}>
-      <div className="csv-preview-modal" onClick={e => e.stopPropagation()}>
+      <div
+        className="csv-preview-modal"
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="csv-preview-heading"
+      >
         <div className="csv-preview-header">
-          <h3>Preview — {label}</h3>
+          <h3 id="csv-preview-heading">Preview — {label}</h3>
           <span className="csv-preview-meta">
             {totalRows} rows · {headers.length} columns
           </span>
