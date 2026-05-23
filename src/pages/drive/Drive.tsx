@@ -254,7 +254,19 @@ const Drive: FC = () => {
       {/* Folder listing */}
       <div className="drive-list">
         {!isRoot && (
-          <div className="drive-row drive-row--back" onClick={() => goTo(segments.slice(0, -1))}>
+          <div
+            className="drive-row drive-row--back"
+            onClick={() => goTo(segments.slice(0, -1))}
+            role="button"
+            aria-label="Back to parent folder"
+            tabIndex={0}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                goTo(segments.slice(0, -1))
+              }
+            }}
+          >
             <BackIcon />
             <span className="drive-row-name">..</span>
           </div>

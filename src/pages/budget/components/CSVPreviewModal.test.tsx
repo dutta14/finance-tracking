@@ -193,6 +193,14 @@ describe('CSVPreviewModal', () => {
     expect(screen.getByText('15 rows · 3 columns')).toBeInTheDocument()
   })
 
+  it('exposes dialog ARIA contract for accessibility and E2E selectors', () => {
+    renderModal()
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    expect(dialog).toHaveAttribute('aria-labelledby', 'csv-preview-heading')
+    expect(screen.getByRole('heading', { level: 3, name: /preview/i })).toHaveAttribute('id', 'csv-preview-heading')
+  })
+
   it('updates header title attribute when column is excluded', async () => {
     const user = userEvent.setup()
     renderModal()
