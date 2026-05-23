@@ -261,7 +261,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
       <h3 className="budget-table-title">{type === 'income' ? 'Income' : 'Expenses'}</h3>
 
       {csvError && (
-        <div className="budget-csv-error">
+        <div className="budget-csv-error" role="alert" aria-live="polite">
           <span>⚠ {csvError}</span>
           <button aria-label="Dismiss error" onClick={() => setCsvError(null)}>
             ×

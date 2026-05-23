@@ -128,9 +128,11 @@ test.describe('Budget Page E2E', () => {
 
       // budget-store should not contain the unconfirmed upload
       const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored)
-        expect(parsed.csvs[`${CURRENT_YEAR}-05`]).toBeUndefined()
+        expect(parsed.csvs?.[`${CURRENT_YEAR}-05`]).toBeUndefined()
+      } else {
+        expect(stored).toBeNull()
       }
     })
 
@@ -196,6 +198,21 @@ test.describe('Budget Page E2E', () => {
 
       // Income should reflect the additional $2,500 (10,000 + 2,500 = 12,500)
       await expect(budget.incomeValue).toContainText('$12,500')
+      // The Save button briefly flips to "Added ✓" on a successful submit —
+      // wait for that UI side-effect before reading storage so we don't race
+      // with the React commit + storage write.
+      await expect(budget.txnSave).toHaveText(/Added/)
+
+      // Poll storage for convergence (the persistence effect runs after the
+      // DOM update above).
+      await expect
+        .poll(async () => {
+          const raw = await page.evaluate(() => localStorage.getItem('budget-store'))
+          if (!raw) return null
+          const obj = JSON.parse(raw)
+          return obj.csvs?.[`${CURRENT_YEAR}-05`]?.csv ?? null
+        })
+        .toMatch(/Bonus paycheck/)
 
       const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
       const parsed = JSON.parse(stored!)
@@ -390,6 +407,12 @@ test.describe('Budget Page E2E', () => {
       await targetInput.fill('Food & Dining')
       await page.locator('.budget-merge-panel .budget-group-add-btn', { hasText: /^Merge$/ }).click()
 
+      // Wait for the merge panel to close and the merged name to appear in the
+      // group manager — this proves the React commit + storage write has run
+      // before we read localStorage.
+      await expect(page.locator('.budget-merge-panel')).toBeHidden()
+      await expect(budget.groupManager).toContainText('Food & Dining')
+
       // Both original categories are gone; merged category appears in CSV
       const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
       const parsed = JSON.parse(stored!)
@@ -441,6 +464,11 @@ test.describe('Budget Page E2E', () => {
       await newNameInput.fill('Food & Grocery')
       await page.locator('.budget-merge-panel .budget-group-add-btn', { hasText: /Merge.*Delete/i }).click()
 
+      // Wait for the merge panel to close and the renamed category to appear in
+      // the group manager before reading storage.
+      await expect(page.locator('.budget-merge-panel')).toBeHidden()
+      await expect(budget.groupManager).toContainText('Food & Grocery')
+
       // CSV now uses the new category name
       const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
       const parsed = JSON.parse(stored!)
@@ -479,6 +507,60 @@ test.describe('Budget Page E2E', () => {
       await expect(page.locator('.budget-merge-panel')).toBeVisible()
       await expect(page.locator('.budget-merge-panel')).toContainText('Groceries')
       await expect(page.locator('.budget-merge-panel')).toContainText(/merge them into/i)
+    })
+
+    test('completing the delete-with-merge flow reassigns transactions and removes the deleted category', async ({
+      page,
+    }) => {
+      const store = knownBudgetStore()
+      const month = `${CURRENT_YEAR}-05`
+      store.csvs[month] = monthCSV(
+        month,
+        buildCSV([
+          { date: `${CURRENT_YEAR}-05-01`, category: 'Salary', amount: 10000 },
+          { date: `${CURRENT_YEAR}-05-02`, category: 'Groceries', amount: -200 },
+          { date: `${CURRENT_YEAR}-05-03`, category: 'Rent', amount: -1000 },
+        ]),
+      )
+      store.categoryGroups = [
+        { id: 'fixed', name: 'Fixed', categories: ['Rent'] },
+        { id: 'food', name: 'Food', categories: ['Groceries'] },
+        { id: 'others', name: 'Others', categories: ['Salary'] },
+        { id: 'removed', name: 'Remove from Budget', categories: [] },
+      ]
+      await seedBudget(page, { store, config: configFromStore(store) })
+
+      const budget = new BudgetPage(page)
+      await budget.goto()
+      await budget.openGroupManager()
+
+      // Click delete (×) on Groceries to open the merge prompt
+      const groceriesItem = page.locator('.budget-group-cat').filter({ hasText: 'Groceries' })
+      await groceriesItem.locator('.budget-group-cat-delete').click()
+      await expect(page.locator('.budget-merge-panel')).toBeVisible()
+
+      // Pick "Rent" as the merge target (a category that already exists)
+      const targetInput = page.locator('.budget-merge-panel input.budget-group-input')
+      await targetInput.fill('Rent')
+      await page.locator('.budget-merge-panel .budget-group-add-btn', { hasText: /Merge.*Delete/i }).click()
+
+      // Merge panel closes, Groceries is gone from the group manager
+      await expect(page.locator('.budget-merge-panel')).toBeHidden()
+      await expect(budget.groupManager).not.toContainText('Groceries')
+      await expect(budget.groupManager).toContainText('Rent')
+
+      // CSV has transactions reassigned to Rent; Groceries is gone
+      const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
+      const parsed = JSON.parse(stored!)
+      const csv = parsed.csvs[`${CURRENT_YEAR}-05`].csv as string
+      expect(csv).not.toMatch(/,Groceries,/)
+      // Two Rent rows now: the original $1000 plus the reassigned $200
+      expect((csv.match(/,Rent,/g) ?? []).length).toBe(2)
+
+      // budget-config no longer lists Groceries in any group's categories
+      const config = await page.evaluate(() => JSON.parse(localStorage.getItem('budget-config') || '{}'))
+      const allCategories = (config.categoryGroups as Array<{ categories: string[] }>).flatMap(g => g.categories)
+      expect(allCategories).not.toContain('Groceries')
     })
   })
 
@@ -734,11 +816,17 @@ test.describe('Budget Page E2E', () => {
       await expect(yesBtn).toBeVisible()
       await yesBtn.click()
 
+      // Wait for the confirm prompt to close AND the drilldown row to reflect
+      // the renamed category before reading storage.
+      await expect(yesBtn).toBeHidden()
+      await expect(page.locator('.budget-drilldown-table tbody')).toContainText('Food')
+
       // CSV should now reflect "Food" instead of "Groceries"
       const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
       const parsed = JSON.parse(stored!)
       const csv = parsed.csvs[`${CURRENT_YEAR}-05`].csv as string
       expect(csv).toContain('Food')
+      expect(csv).not.toMatch(/,Groceries,/)
     })
 
     test('group manager: reorder a group with the move-up button', async ({ page }) => {
@@ -777,28 +865,35 @@ test.describe('Budget Page E2E', () => {
       expect(ids.indexOf('fixed')).toBeLessThan(ids.indexOf('food'))
     })
 
-    test('manual entry: fields are focusable in order and category autocomplete works', async ({ page }) => {
+    test('manual entry: keyboard Tab navigates fields in the documented order', async ({ page }) => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
 
       await budget.openManualEntry()
-      // Date field receives focus on open
+
+      // The form auto-focuses the Date input on open
       await expect(budget.txnDate).toBeFocused()
-
-      // Each form field is individually focusable (focus() reliably puts focus
-      // there even on date inputs that consume Tab for internal segments)
+      // Fill the date so the internal segment cursor lands on the last segment.
+      // On Chromium <input type="date"> still consumes Tab to cycle internal
+      // segments (mm/dd/yyyy), so we drive Tab in a loop and capture the
+      // sequence of focused form fields — that's the documented tab order.
       await budget.txnDate.fill(`${CURRENT_YEAR}-05-18`)
-      await budget.txnDesc.focus()
-      await expect(budget.txnDesc).toBeFocused()
-      await budget.txnDesc.fill('Test entry')
-      await budget.txnAmount.focus()
-      await expect(budget.txnAmount).toBeFocused()
-      await budget.txnAmount.fill('-99')
-      await budget.txnCategory.focus()
-      await expect(budget.txnCategory).toBeFocused()
 
-      // Type "G" — listbox shows matching options
+      const formFieldIds = ['txn-desc', 'txn-amount', 'txn-category']
+      const seen: string[] = []
+      for (let i = 0; i < 12 && seen[seen.length - 1] !== 'txn-category'; i++) {
+        await page.keyboard.press('Tab')
+        const id = await page.evaluate(() => document.activeElement?.id ?? '')
+        if (formFieldIds.includes(id) && seen[seen.length - 1] !== id) {
+          seen.push(id)
+        }
+      }
+      expect(seen).toEqual(formFieldIds)
+
+      // Focus has landed on the category combobox via Tab — fill via keyboard
+      // and pick the first option.
+      await expect(budget.txnCategory).toBeFocused()
       await page.keyboard.type('G')
       await expect(budget.txnCatListbox).toBeVisible()
       const options = budget.txnCatListbox.locator('li[role="option"]')
@@ -810,8 +905,22 @@ test.describe('Budget Page E2E', () => {
       await expect(budget.txnCategory).not.toHaveValue('')
       await expect(budget.txnCategory).not.toHaveValue('G')
 
-      // Submit and verify storage updates
+      // Fill amount (focus had passed through it during the Tab sweep above
+      // before being reset by the category selection).
+      await budget.txnAmount.fill('-99')
+      await budget.txnDesc.fill('Test entry')
+
+      // Submit and verify storage updates AFTER the success indicator flips
+      // (avoids racing the React commit + storage write).
       await budget.txnSave.click()
+      await expect(budget.txnSave).toHaveText(/Added/)
+      await expect
+        .poll(async () => {
+          const raw = await page.evaluate(() => localStorage.getItem('budget-store'))
+          if (!raw) return null
+          return JSON.parse(raw).csvs?.[`${CURRENT_YEAR}-05`]?.csv ?? null
+        })
+        .toMatch(/Test entry/)
       const stored = await page.evaluate(() => localStorage.getItem('budget-store'))
       const parsed = JSON.parse(stored!)
       expect(parsed.csvs[`${CURRENT_YEAR}-05`].csv).toContain('Test entry')
@@ -819,8 +928,67 @@ test.describe('Budget Page E2E', () => {
   })
 
   test.describe('Event Propagation', () => {
-    test('budget-summary key is updated after a CSV import (cross-page propagation)', async ({ page }) => {
-      await seedEmptyBudget(page)
+    test('budget data imported on Budget page is consumed by Home GoalsPeek FI projection', async ({ page }) => {
+      // Seed an FI goal + accounts + profile so the Home GoalsPeek card has
+      // something to render. Budget store is left empty — we'll import it
+      // through the real Budget UI to exercise the full propagation path.
+      await page.addInitScript(() => {
+        localStorage.clear()
+        localStorage.setItem('encryption-enabled', '0')
+        localStorage.setItem('onboarding-dismissed', '1')
+        localStorage.setItem('darkMode', '0')
+        localStorage.setItem(
+          'user-profile',
+          JSON.stringify({ name: 'Alex', avatarDataUrl: '', birthday: '1992-03-15' }),
+        )
+        localStorage.setItem(
+          'data-accounts',
+          JSON.stringify([
+            {
+              id: 1,
+              name: '401(k)',
+              type: 'retirement',
+              owner: 'primary',
+              status: 'active',
+              goalType: 'fi',
+              nature: 'asset',
+              allocation: 'us-stock',
+              institution: 'Fidelity',
+              group: 'Retirement',
+            },
+          ]),
+        )
+        localStorage.setItem(
+          'data-balances',
+          JSON.stringify([{ accountId: 1, month: '2025-01', balance: 50000 }]),
+        )
+        localStorage.setItem(
+          'financialGoals',
+          JSON.stringify([
+            {
+              id: 1,
+              goalName: 'Early Retirement',
+              createdAt: '2020-01-15T00:00:00.000Z',
+              birthday: '1992-03-15',
+              goalCreatedIn: '2020-01',
+              goalEndYear: '2050',
+              resetExpenseMonth: false,
+              retirementAge: 50,
+              expenseMonth: 1,
+              expenseValue: 60000,
+              monthlyExpenseValue: 5000,
+              inflationRate: 3,
+              safeWithdrawalRate: 3.5,
+              growth: 8,
+              retirement: '2042-03',
+              fiGoal: 3428571,
+              progress: 5,
+            },
+          ]),
+        )
+        localStorage.setItem('gw-goals', JSON.stringify([]))
+      })
+
       const budget = new BudgetPage(page)
       await budget.goto()
 
@@ -832,31 +1000,46 @@ test.describe('Budget Page E2E', () => {
       await budget.uploadCSV(`${CURRENT_YEAR}-05.csv`, csv)
       await budget.previewConfirm.click()
       await expect(budget.summaryIncome).toBeVisible()
+      await expect(budget.saveRateValue).toContainText(/37\.5%/)
 
-      // Wait for the summary to be persisted (set inside a useEffect after summary calc)
+      // Wait for budget-summary to be persisted with the expected shape — not
+      // just "any object". Assert specific numeric fields.
       await expect
         .poll(async () => {
           const raw = await page.evaluate(() => localStorage.getItem('budget-summary'))
-          if (!raw) return null
-          return JSON.parse(raw)
+          return raw ? JSON.parse(raw) : null
         })
-        .toMatchObject({})
+        .toMatchObject({
+          saveRate: expect.any(Number),
+          monthsOfData: 1,
+          annualSavings: expect.any(Number),
+        })
 
       const summary = await page.evaluate(() => JSON.parse(localStorage.getItem('budget-summary') || '{}'))
-      expect(summary.saveRate).toBeGreaterThan(0.3) // (8000-5000)/8000 = 37.5%
+      expect(summary.saveRate).toBeGreaterThan(0.3)
       expect(summary.saveRate).toBeLessThan(0.5)
       expect(summary.monthsOfData).toBe(1)
+      expect(summary.annualSavings).toBeGreaterThan(0)
 
-      // Navigate to Home and verify the budget-summary survives (cross-page read works)
+      // Navigate to Home — GoalsPeek must DOM-render the FI projection sourced
+      // from the just-saved budget data. Without budget data, it renders
+      // "Add budget data →". With non-positive savings it renders
+      // "Not reachable at current rate". With our $3000/mo savings the projection
+      // produces a date like "Jan 2058".
       await page.goto('/finance-tracking/#/')
       await page.waitForLoadState('domcontentloaded')
-      const summaryAfter = await page.evaluate(() => JSON.parse(localStorage.getItem('budget-summary') || '{}'))
-      expect(summaryAfter.saveRate).toBeCloseTo(summary.saveRate, 5)
+
+      const projected = page.locator('.goals-peek-projected').first()
+      await expect(projected).toBeVisible()
+      await expect(projected).not.toContainText('Add budget data')
+      await expect(projected).not.toContainText('Not reachable')
+      // The projection renders a "FI by <Mon YYYY>" string in its date span
+      await expect(page.locator('.goals-peek-projected-date').first()).toHaveText(/[A-Z][a-z]{2} \d{4}/)
     })
   })
 
   test.describe('Dark Mode', () => {
-    test('budget table renders correctly in dark mode', async ({ page }) => {
+    test('budget table renders with real text/background contrast in dark mode', async ({ page }) => {
       const store = knownBudgetStore()
       await seedBudget(page, { store, config: configFromStore(store), darkMode: true })
 
@@ -870,17 +1053,51 @@ test.describe('Budget Page E2E', () => {
       // Summary cards are visible and readable (non-empty values)
       await expect(budget.incomeValue).toContainText('$10,000')
 
-      // Compute contrast for a category cell: must have non-empty bg + text colors
-      const cellStyles = await page.evaluate(() => {
+      // Real contrast check: read the cell's text color, walk up to the first
+      // non-transparent ancestor background, and assert (a) they differ and
+      // (b) the WCAG contrast ratio is at least 4.5:1 (AA for normal text).
+      const contrast = await page.evaluate(() => {
+        const parseRgb = (s: string): [number, number, number, number] | null => {
+          const m = s.match(/rgba?\(([^)]+)\)/)
+          if (!m) return null
+          const parts = m[1].split(',').map(p => parseFloat(p.trim()))
+          if (parts.length < 3) return null
+          return [parts[0], parts[1], parts[2], parts[3] ?? 1]
+        }
+        const effectiveBg = (el: Element | null): [number, number, number] => {
+          let cur: Element | null = el
+          while (cur) {
+            const cs = getComputedStyle(cur as HTMLElement)
+            const rgb = parseRgb(cs.backgroundColor)
+            if (rgb && rgb[3] > 0) return [rgb[0], rgb[1], rgb[2]]
+            cur = cur.parentElement
+          }
+          return [0, 0, 0] // fallback to dark canvas
+        }
+        const relLum = (r: number, g: number, b: number) => {
+          const channel = (c: number) => {
+            const s = c / 255
+            return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+          }
+          return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+        }
         const cell = document.querySelector('.budget-td--category-name') as HTMLElement | null
         if (!cell) return null
         const cs = getComputedStyle(cell)
-        return { color: cs.color, backgroundColor: cs.backgroundColor }
+        const fg = parseRgb(cs.color)
+        if (!fg) return null
+        const bg = effectiveBg(cell)
+        const Lfg = relLum(fg[0], fg[1], fg[2])
+        const Lbg = relLum(bg[0], bg[1], bg[2])
+        const ratio = (Math.max(Lfg, Lbg) + 0.05) / (Math.min(Lfg, Lbg) + 0.05)
+        return { color: cs.color, backgroundColor: `rgb(${bg[0]}, ${bg[1]}, ${bg[2]})`, ratio }
       })
-      expect(cellStyles).not.toBeNull()
-      expect(cellStyles!.color).not.toBe('')
-      // Text color is not transparent
-      expect(cellStyles!.color).not.toBe('rgba(0, 0, 0, 0)')
+
+      expect(contrast).not.toBeNull()
+      // Text color must not equal the effective background (the test the brief calls out)
+      expect(contrast!.color).not.toBe(contrast!.backgroundColor)
+      // And the contrast ratio must clear WCAG AA for normal text
+      expect(contrast!.ratio).toBeGreaterThanOrEqual(4.5)
     })
   })
 
@@ -925,6 +1142,61 @@ test.describe('Budget Page E2E', () => {
       const itemCount = await items.count()
       expect(itemCount).toBeGreaterThanOrEqual(1)
       await expect(items.first()).toHaveText(/Bulk Upload/)
+    })
+
+    test('manual entry validation errors are announced via role="alert" (AC #35)', async ({ page }) => {
+      await seedKnownBudget(page)
+      const budget = new BudgetPage(page)
+      await budget.goto()
+      await budget.openManualEntry()
+
+      // Trigger validation: clear date, leave amount empty, leave category blank, submit
+      await budget.txnDate.fill('')
+      await budget.txnAmount.fill('')
+      await budget.txnCategory.fill('')
+      await budget.txnSave.click()
+
+      // Form stays open (validation blocked submit) and errors render with role=alert
+      await expect(budget.txnForm).toBeVisible()
+      const alerts = budget.txnForm.locator('.budget-txn-error[role="alert"]')
+      await expect(alerts.first()).toBeVisible()
+      const alertCount = await alerts.count()
+      expect(alertCount).toBeGreaterThanOrEqual(2)
+
+      // At least one alert carries the required-field copy assistive tech will announce
+      const alertTexts = await alerts.allTextContents()
+      expect(alertTexts.some(t => /required|valid/i.test(t))).toBe(true)
+    })
+
+    test('CSV upload errors render in an aria-live region (AC #36)', async ({ page }) => {
+      // Seed one month of valid data so the expense BudgetTable (which owns the
+      // error region) renders.
+      await seedKnownBudget(page)
+      const budget = new BudgetPage(page)
+      await budget.goto()
+      await budget.setViewMode('detailed')
+
+      // Right-click May (index 4) on the expense table and pick "Upload CSV for May".
+      // The menu item clicks the hidden <input type="file"> — Playwright intercepts
+      // the file chooser so we can supply a malformed CSV that the parser rejects.
+      await budget.openMonthContextMenu(4)
+      const [chooser] = await Promise.all([
+        page.waitForEvent('filechooser'),
+        page.locator('.budget-ctx-item', { hasText: /^Upload CSV for/ }).first().click(),
+      ])
+      await chooser.setFiles({
+        name: 'bad.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from('Date,Category,Amount\nnot-a-date,Bad,not-a-number\n'),
+      })
+
+      // The error renders inside a live region with role=alert + aria-live=polite
+      const errorRegion = page.locator('.budget-csv-error').first()
+      await expect(errorRegion).toBeVisible()
+      await expect(errorRegion).toHaveAttribute('role', 'alert')
+      await expect(errorRegion).toHaveAttribute('aria-live', 'polite')
+      // Text is the failure message the screen reader announces
+      await expect(errorRegion).toContainText(/No valid transactions/i)
     })
   })
 })

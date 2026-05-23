@@ -11,31 +11,20 @@ export class BudgetPage {
   readonly emptyImportBtn: Locator
 
   // Year nav
-  readonly yearNav: Locator
   readonly prevYearBtn: Locator
   readonly nextYearBtn: Locator
   readonly yearLabel: Locator
 
   // View mode + time period
-  readonly viewToggles: Locator
-  readonly aggregatedBtn: Locator
-  readonly detailedBtn: Locator
-  readonly cashflowBtn: Locator
-  readonly monthPeriodBtn: Locator
-  readonly quarterPeriodBtn: Locator
-  readonly halfPeriodBtn: Locator
   readonly groupsBtn: Locator
 
   // Upload
-  readonly uploadBtn: Locator
   readonly uploadDropDown: Locator
   readonly uploadMenu: Locator
   readonly quickUploadInput: Locator
   readonly bulkUploadInput: Locator
-  readonly toast: Locator
 
   // CSV Preview modal
-  readonly previewOverlay: Locator
   readonly previewModal: Locator
   readonly previewTable: Locator
   readonly previewCancel: Locator
@@ -50,7 +39,6 @@ export class BudgetPage {
   readonly txnCategory: Locator
   readonly txnCatListbox: Locator
   readonly txnSave: Locator
-  readonly txnCancel: Locator
 
   // Summary
   readonly summaryIncome: Locator
@@ -62,7 +50,6 @@ export class BudgetPage {
 
   // Category Group Manager
   readonly groupManager: Locator
-  readonly groupBlocks: Locator
 
   // Budget Tables
   readonly tableSections: Locator
@@ -78,28 +65,17 @@ export class BudgetPage {
     this.emptyStateDesc = page.locator('.budget-empty-year-desc')
     this.emptyImportBtn = page.locator('.budget-action-btn--accent')
 
-    this.yearNav = page.locator('.budget-year-nav')
     this.prevYearBtn = page.locator('.budget-year-btn[title="Previous year"]')
     this.nextYearBtn = page.locator('.budget-year-btn[title="Next year"]')
     this.yearLabel = page.locator('.budget-year-label')
 
-    this.viewToggles = page.locator('.budget-view-toggle')
-    this.aggregatedBtn = page.locator('.budget-view-btn', { hasText: 'Aggregated' })
-    this.detailedBtn = page.locator('.budget-view-btn', { hasText: 'Detailed' })
-    this.cashflowBtn = page.locator('.budget-view-btn', { hasText: 'Cashflow' })
-    this.monthPeriodBtn = page.locator('.budget-view-toggle').nth(1).locator('.budget-view-btn', { hasText: 'M' })
-    this.quarterPeriodBtn = page.locator('.budget-view-toggle').nth(1).locator('.budget-view-btn', { hasText: 'Q' })
-    this.halfPeriodBtn = page.locator('.budget-view-toggle').nth(1).locator('.budget-view-btn', { hasText: 'H' })
     this.groupsBtn = page.locator('.budget-action-btn', { hasText: /^(Groups|Hide Groups)$/ })
 
-    this.uploadBtn = page.locator('.budget-split-main')
     this.uploadDropDown = page.locator('.budget-split-drop')
     this.uploadMenu = page.locator('.budget-upload-menu')
     this.quickUploadInput = page.locator('input[data-testid="quick-upload-input"]')
     this.bulkUploadInput = page.locator('input[data-testid="bulk-upload-input"]')
-    this.toast = page.locator('.budget-sync-msg')
 
-    this.previewOverlay = page.locator('.csv-preview-overlay')
     this.previewModal = page.locator('.csv-preview-modal')
     this.previewTable = page.locator('.csv-preview-table')
     this.previewCancel = page.locator('.csv-preview-btn--cancel')
@@ -113,7 +89,6 @@ export class BudgetPage {
     this.txnCategory = page.locator('#txn-category')
     this.txnCatListbox = page.locator('#txn-cat-listbox')
     this.txnSave = page.locator('button.budget-txn-save')
-    this.txnCancel = page.locator('.budget-txn-cancel')
 
     this.summaryIncome = page.locator('.budget-summary-card--income')
     this.summaryExpense = page.locator('.budget-summary-card--expense')
@@ -123,7 +98,6 @@ export class BudgetPage {
     this.saveRateValue = this.summarySave.locator('.budget-summary-value')
 
     this.groupManager = page.locator('.budget-group-manager')
-    this.groupBlocks = page.locator('.budget-group-block')
 
     this.tableSections = page.locator('.budget-table-section')
     this.incomeTable = page.locator('.budget-table-section').filter({ has: page.locator('.budget-table-title', { hasText: /^Income/ }) })
@@ -181,7 +155,7 @@ export class BudgetPage {
 
   /** Open the manual transaction entry form. */
   async openManualEntry() {
-    if (await this.txnForm.isVisible().catch(() => false)) return
+    if (await this.txnForm.isVisible()) return
     await this.addTxnBtn.click()
     await this.txnForm.waitFor({ state: 'visible' })
   }
@@ -203,7 +177,7 @@ export class BudgetPage {
     // If the typed category matches an existing option, select it. Otherwise
     // press Enter to keep the free-text value (combobox stays open).
     const firstOption = this.txnCatListbox.locator('li[role="option"]').first()
-    if (await firstOption.isVisible().catch(() => false)) {
+    if (await firstOption.isVisible()) {
       await firstOption.click()
     }
   }
@@ -214,7 +188,7 @@ export class BudgetPage {
 
   /** Open the category group manager panel if not already open. */
   async openGroupManager() {
-    if (await this.groupManager.isVisible().catch(() => false)) return
+    if (await this.groupManager.isVisible()) return
     await this.groupsBtn.click()
     await this.groupManager.waitFor({ state: 'visible' })
   }
