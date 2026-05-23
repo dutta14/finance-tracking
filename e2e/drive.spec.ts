@@ -222,8 +222,7 @@ test.describe('Drive — File Manager E2E', () => {
 
   test.describe('Browser navigation', () => {
     test('9. Browser back and forward update both URL and visible folder contents', async ({ page }) => {
-      // Use seed that produces both a Budget and a Taxes branch so each step
-      // of the history has a distinguishable visible-content signature.
+      // Seed budget data so each navigation step has a distinguishable URL/content signature.
       await seedDrive(page, {
         store: {
           csvs: {

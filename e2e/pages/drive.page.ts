@@ -9,16 +9,13 @@ export class DrivePage {
   readonly backRow: Locator
   readonly dropZone: Locator
   readonly fileInput: Locator
-  readonly emptyState: Locator
 
   readonly previewModal: Locator
   readonly previewModalHeading: Locator
-  readonly previewCancelBtn: Locator
 
   readonly viewer: Locator
   readonly viewerTitle: Locator
   readonly viewerTable: Locator
-  readonly viewerBackBtn: Locator
 
   readonly sortByName: Locator
   readonly sortByOwner: Locator
@@ -32,16 +29,13 @@ export class DrivePage {
     this.backRow = page.getByRole('button', { name: 'Back to parent folder' })
     this.dropZone = page.locator('.drive-dropzone')
     this.fileInput = page.locator('.drive-dropzone input[type="file"]')
-    this.emptyState = page.locator('.drive-empty')
 
     this.previewModal = page.getByRole('dialog')
     this.previewModalHeading = this.previewModal.locator('#csv-preview-heading')
-    this.previewCancelBtn = this.previewModal.locator('.csv-preview-btn--cancel')
 
     this.viewer = page.locator('.drive-viewer')
     this.viewerTitle = page.locator('.drive-viewer-title')
     this.viewerTable = page.locator('.drive-viewer-table')
-    this.viewerBackBtn = page.locator('.drive-viewer-back')
 
     const sortGroup = page.locator('.drive-filter-group').filter({ hasText: 'Sort:' })
     this.sortByName = sortGroup.getByRole('button', { name: 'Name' })
