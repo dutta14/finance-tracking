@@ -118,7 +118,7 @@ test.describe('Taxes Page E2E', () => {
       expect(labels).toContain('W-2 from Employer')
     })
 
-    test('checklist item shows empty indicator and aria-checked=false when no files', async ({ page }) => {
+    test('checklist item shows empty indicator and aria-label=not started when no files', async ({ page }) => {
       await seedTaxes(page, { store: singleOwnerStore(), profile: singleProfile() })
       const taxes = new TaxesPage(page)
       await taxes.goto()
@@ -129,7 +129,8 @@ test.describe('Taxes Page E2E', () => {
       await expect(row.locator('.tax-item-empty')).toBeVisible()
       await expect(row.locator('.tax-item-tick')).toHaveCount(0)
       const check = row.locator('.tax-item-check')
-      await expect(check).toHaveAttribute('aria-checked', 'false')
+      await expect(check).toHaveAttribute('role', 'img')
+      await expect(check).toHaveAttribute('aria-label', /not started/i)
     })
 
     test('uploading a document marks item complete, persists metadata, blob lands in IndexedDB', async ({ page }) => {
@@ -139,14 +140,15 @@ test.describe('Taxes Page E2E', () => {
 
       await taxes.uploadFile('1099-INT', smallPdf('interest.pdf'))
 
+      // 1. DOM assertions first — prove React re-rendered to the complete state
       const row = taxes.item('1099-INT')
       await expect(row).toHaveAttribute('data-done', 'true')
       await expect(row.locator('.tax-item-tick')).toBeVisible()
-      await expect(row.locator('.tax-item-check')).toHaveAttribute('aria-checked', 'true')
+      await expect(row.locator('.tax-item-check')).toHaveAttribute('aria-label', /complete/i)
       // File chip rendered with the standardized display name (Owner_Label.ext)
       await expect(row.locator('.tax-file-chip .tax-file-name')).toContainText(/Alex_1099-INT\.pdf/)
 
-      // Metadata persisted; file content stripped (lives in IDB instead)
+      // 2. localStorage read — metadata persisted; file content stripped (lives in IDB instead)
       const stored = await page.evaluate(() => localStorage.getItem('tax-store'))
       expect(stored).not.toBeNull()
       expect(stored!).not.toContain('data:application/pdf;base64')
@@ -156,7 +158,8 @@ test.describe('Taxes Page E2E', () => {
       const item = parsed.years[String(CURRENT_YEAR)].items.find(i => i.id === 'pri-2')!
       expect(item.files.length).toBe(1)
       expect(item.files[0].content).toBeUndefined()
-      // Blob present in IndexedDB
+
+      // 3. IndexedDB poll — blob landed
       await expect.poll(() => countTaxIndexedDBFiles(page)).toBeGreaterThanOrEqual(1)
     })
 
@@ -191,7 +194,7 @@ test.describe('Taxes Page E2E', () => {
       await expect(row.locator('.tax-file-chip')).toHaveCount(0)
       await expect(row).toHaveAttribute('data-done', 'false')
       await expect(row.locator('.tax-item-tick')).toHaveCount(0)
-      await expect(row.locator('.tax-item-check')).toHaveAttribute('aria-checked', 'false')
+      await expect(row.locator('.tax-item-check')).toHaveAttribute('aria-label', /not started/i)
     })
   })
 
@@ -860,7 +863,7 @@ test.describe('Taxes Page E2E', () => {
         { id: 'file-cur-b', content: 'BBBB' },
         { id: 'file-last-c', content: 'CCCC' },
       ])
-      expect(await countTaxIndexedDBFiles(page)).toBe(3)
+      await expect.poll(() => countTaxIndexedDBFiles(page), { timeout: 2000 }).toBe(3)
 
       // Delete CURRENT_YEAR via the UI
       await taxes.openDeleteYear()
@@ -898,7 +901,7 @@ test.describe('Taxes Page E2E', () => {
   })
 
   test.describe('Accessibility', () => {
-    test('checklist items expose aria-checked reflecting completion; upload error region uses aria-live', async ({
+    test('checklist items expose status via role=img + aria-label reflecting completion; upload error region uses aria-live', async ({
       page,
     }) => {
       await seedTaxes(page, {
@@ -927,34 +930,36 @@ test.describe('Taxes Page E2E', () => {
       await taxes.goto()
       await seedTaxIndexedDBFiles(page, [{ id: 'fixed', content: 'data' }])
 
-      // Each item exposes role=checkbox with aria-checked matching state
+      // Each item exposes role=img with aria-label encoding completion state
       const done = taxes.item('Already Done').locator('.tax-item-check')
       const open1 = taxes.item('Still To Do').locator('.tax-item-check')
       const open2 = taxes.item('Another Open').locator('.tax-item-check')
 
-      await expect(done).toHaveAttribute('role', 'checkbox')
-      await expect(done).toHaveAttribute('aria-checked', 'true')
+      await expect(done).toHaveAttribute('role', 'img')
       await expect(done).toHaveAttribute('aria-label', /Already Done.*complete/)
 
-      await expect(open1).toHaveAttribute('role', 'checkbox')
-      await expect(open1).toHaveAttribute('aria-checked', 'false')
+      await expect(open1).toHaveAttribute('role', 'img')
       await expect(open1).toHaveAttribute('aria-label', /Still To Do.*not started/)
 
-      await expect(open2).toHaveAttribute('aria-checked', 'false')
-
-      // Upload error region exists with aria-live=polite from initial render
-      await expect(taxes.uploadErrorRegion).toHaveAttribute('role', 'alert')
-      await expect(taxes.uploadErrorRegion).toHaveAttribute('aria-live', 'polite')
+      await expect(open2).toHaveAttribute('role', 'img')
+      await expect(open2).toHaveAttribute('aria-label', /Another Open.*not started/)
 
       // When toggling an item from incomplete → complete by uploading,
-      // aria-checked flips to true (live state announcement).
+      // aria-label flips to "(complete)".
       await taxes.uploadFile('Still To Do', smallPdf('done-now.pdf'))
-      await expect(taxes.item('Still To Do').locator('.tax-item-check')).toHaveAttribute('aria-checked', 'true')
+      await expect(taxes.item('Still To Do').locator('.tax-item-check')).toHaveAttribute(
+        'aria-label',
+        /Still To Do.*complete/,
+      )
 
-      // The aria-live region announces the size error when an oversize file is uploaded
+      // The aria-live error region only mounts when there's an error. Trigger
+      // an oversize upload, then assert role=alert + aria-live=polite on the
+      // mounted element.
       const huge = makeFile('giant.pdf', 11 * 1024 * 1024)
       await taxes.uploadFile('Another Open', huge)
-      await expect(taxes.uploadErrorRegion).toContainText('giant.pdf')
+      await expect(taxes.uploadError).toHaveAttribute('role', 'alert')
+      await expect(taxes.uploadError).toHaveAttribute('aria-live', 'polite')
+      await expect(taxes.uploadError).toContainText('giant.pdf')
     })
   })
 })

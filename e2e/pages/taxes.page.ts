@@ -20,7 +20,6 @@ export class TaxesPage {
 
   readonly sections: Locator
   readonly items: Locator
-  readonly uploadErrorRegion: Locator
   readonly uploadError: Locator
 
   // Modals
@@ -50,7 +49,6 @@ export class TaxesPage {
 
     this.sections = page.locator('.tax-section')
     this.items = page.locator('.tax-item')
-    this.uploadErrorRegion = page.locator('.tax-upload-error-region')
     this.uploadError = page.locator('.tax-upload-error')
 
     this.modalOverlay = page.locator('.tax-modal-overlay')

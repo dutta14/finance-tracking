@@ -706,9 +706,8 @@ describe('Taxes', () => {
       render(<Taxes />)
       await user.click(screen.getByText('+ From Accounts'))
       expect(screen.getByText('Add from Accounts')).toBeInTheDocument()
-      // Select the account (the native input checkbox in the modal, not the
-      // status-indicator role=checkbox elements on checklist rows)
-      const checkbox = document.querySelector('.tax-suggest-row input[type="checkbox"]') as HTMLInputElement
+      // Select the account
+      const checkbox = screen.getByRole('checkbox')
       await user.click(checkbox)
       // Click Add button in modal
       const addBtn = screen.getByRole('button', { name: /Add 1 account/ })
@@ -1409,11 +1408,10 @@ describe('Taxes', () => {
       const user = userEvent.setup()
       render(<Taxes />)
       await user.click(screen.getByText('+ From Accounts'))
-      // Select both accounts (native input checkboxes in the suggest modal,
-      // not the status-indicator role=checkbox elements on checklist rows)
-      const checkboxes = document.querySelectorAll('.tax-suggest-row input[type="checkbox"]')
-      await user.click(checkboxes[0] as HTMLInputElement)
-      await user.click(checkboxes[1] as HTMLInputElement)
+      // Select both accounts
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+      await user.click(checkboxes[1])
       // Button should show count
       const addBtn = screen.getByRole('button', { name: /Add \(2 accounts\)/ })
       await user.click(addBtn)

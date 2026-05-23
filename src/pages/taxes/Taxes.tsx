@@ -115,8 +115,7 @@ const ChecklistRow: FC<{
     <div className={`tax-item${hasFiles ? ' tax-item--done' : ''}`} data-done={hasFiles ? 'true' : 'false'}>
       <div
         className="tax-item-check"
-        role="checkbox"
-        aria-checked={hasFiles}
+        role="img"
         aria-label={`${item.label}${hasFiles ? ' (complete)' : ' (not started)'}`}
       >
         {hasFiles ? <span className="tax-item-tick">✓</span> : <span className="tax-item-empty" />}
@@ -600,8 +599,7 @@ const TaxReturnSection: FC<{
         >
           <div
             className="tax-item-check"
-            role="checkbox"
-            aria-checked={item!.files.length > 0}
+            role="img"
             aria-label={`${item!.label}${item!.files.length > 0 ? ' (complete)' : ' (not started)'}`}
           >
             {item!.files.length > 0 ? <span className="tax-item-tick">✓</span> : <span className="tax-item-empty" />}
@@ -857,9 +855,11 @@ const Taxes: FC = () => {
         </div>
       </div>
 
-      <div className="tax-upload-error-region" role="alert" aria-live="polite">
-        {uploadError && <div className="tax-upload-error">{uploadError}</div>}
-      </div>
+      {uploadError && (
+        <div className="tax-upload-error" role="alert" aria-live="polite">
+          {uploadError}
+        </div>
+      )}
 
       {!exists ? (
         <div className="tax-empty-state">
