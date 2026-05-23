@@ -117,13 +117,24 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
     const handler = (e: StorageEvent) => {
       if (e.key !== LS_ENABLED) return
       if (e.newValue === '1') {
+        // Disposal first: disposeLocalState() clears _memoryStore, drops
+        // _pendingPersists (so any queued plaintext write from disabled
+        // mode cannot flush to LS after this point), and flips _isReady
+        // to false. This closes the stale-tab plaintext gap that motivated
+        // the listener — setCryptoKey(null) alone left _memoryStore and
+        // _pendingPersists intact. We use disposeLocalState rather than
+        // lock() because lock() emits `_encryption-lock-signal` to other
+        // tabs, which would loop back and lock the tab that just enabled.
+        appStorage.disposeLocalState()
         appStorage.setMode('enabled')
-        appStorage.setCryptoKey(null)
         setCryptoKey(null)
         setIsEncryptionEnabled(true)
       } else if (e.newValue === null || e.newValue === '0') {
+        // Same disposal for remote-disable: drop any queued persists tied
+        // to the old enabled-mode cryptoKey and clear stale memory before
+        // flipping to disabled mode.
+        appStorage.disposeLocalState()
         appStorage.setMode('disabled')
-        appStorage.setCryptoKey(null)
         setCryptoKey(null)
         setIsEncryptionEnabled(false)
       }

@@ -1,11 +1,15 @@
-import { Page, expect } from '@playwright/test'
+import { BrowserContext, Page, expect } from '@playwright/test'
+import { SENSITIVE_KEYS as SOURCE_KEYS } from '../../src/utils/encryptedStorage'
 
 /**
  * Encryption E2E fixtures.
  *
  * The 13 SENSITIVE_KEYS list is the single source of truth for envelope-shape
- * verification and roundtrip tests. It must stay in sync with
- * src/utils/encryptedStorage.ts.
+ * verification and roundtrip tests. The literal-tuple form below is required
+ * for the `SensitiveKey` union type, but it is drift-checked against the
+ * source-of-truth export from `src/utils/encryptedStorage.ts` at module load
+ * — if a 14th key is added in source without updating this file, the e2e
+ * suite refuses to load instead of silently passing over only 13 keys.
  *
  * When encryption is disabled, sensitive-key values in localStorage are
  * plaintext JSON. When encryption is enabled, each value is replaced with an
@@ -30,6 +34,19 @@ export const SENSITIVE_KEYS = [
 ] as const
 
 export type SensitiveKey = (typeof SENSITIVE_KEYS)[number]
+
+// Drift guard: if src/utils/encryptedStorage.ts gains or renames a key
+// without this fixture being updated, tests would silently pass over only
+// the keys this file knows about. Fail loudly at module load instead.
+if (
+  SOURCE_KEYS.length !== SENSITIVE_KEYS.length ||
+  SOURCE_KEYS.some(k => !(SENSITIVE_KEYS as readonly string[]).includes(k))
+) {
+  throw new Error(
+    `E2E SENSITIVE_KEYS drifted from src/utils/encryptedStorage.ts. ` +
+      `Source: [${SOURCE_KEYS.join(', ')}]. Fixture: [${SENSITIVE_KEYS.join(', ')}].`,
+  )
+}
 
 /**
  * Realistic plaintext content for each sensitive key. Shapes match what the
@@ -65,10 +82,14 @@ export function defaultPlaintextContent(): Record<SensitiveKey, unknown> {
  * values are present before EncryptionProvider mounts. Also clears the
  * encryption lifecycle keys so the app boots in the disabled state.
  *
+ * Attaches to the `BrowserContext` so every page created within the context
+ * (including tab B in cross-tab tests) inherits the seeded state regardless
+ * of which page is opened first.
+ *
  * Returns the snapshot so tests can use it for roundtrip verification.
  */
 export async function seedAllSensitiveKeys(
-  page: Page,
+  pageOrContext: Page | BrowserContext,
   content: Record<SensitiveKey, unknown> = defaultPlaintextContent(),
 ): Promise<Record<SensitiveKey, unknown>> {
   const serialized: Record<string, string> = {}
@@ -76,12 +97,20 @@ export async function seedAllSensitiveKeys(
     serialized[key] = JSON.stringify(content[key])
   }
 
-  await page.addInitScript(payload => {
-    localStorage.clear()
-    localStorage.setItem('encryption-enabled', '0')
+  await pageOrContext.addInitScript(payload => {
+    // Idempotent: runs on every new page in the context. Don't clear LS
+    // here — within a single test, multiple tabs share localStorage and
+    // clearing would wipe state set by another tab (e.g. tab A enabling
+    // encryption before tab B opens). Playwright gives each test a fresh
+    // browser context with empty localStorage by default, so no clear is
+    // needed.
     localStorage.setItem('onboarding-dismissed', '1')
     for (const [k, v] of Object.entries(payload)) {
-      localStorage.setItem(k, v)
+      // Only seed if not already set — preserves state written by other
+      // tabs in the same test.
+      if (localStorage.getItem(k) === null) {
+        localStorage.setItem(k, v)
+      }
     }
   }, serialized)
 
@@ -91,11 +120,16 @@ export async function seedAllSensitiveKeys(
 /**
  * Bare seed: clears localStorage and disables onboarding, with no sensitive
  * keys present. Use for lifecycle tests that don't care about data content.
+ *
+ * Accepts either a `Page` or a `BrowserContext`. For multi-tab tests, pass
+ * the context so every new page inherits the seeded state. For single-tab
+ * tests, passing the page is fine.
  */
-export async function seedEmptyEncryptionState(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    localStorage.clear()
-    localStorage.setItem('encryption-enabled', '0')
+export async function seedEmptyEncryptionState(pageOrContext: Page | BrowserContext): Promise<void> {
+  await pageOrContext.addInitScript(() => {
+    // Idempotent: runs on every new page in the context. See note in
+    // seedAllSensitiveKeys above — no localStorage.clear() so state written
+    // by tab A is visible to tab B when it opens.
     localStorage.setItem('onboarding-dismissed', '1')
   })
 }

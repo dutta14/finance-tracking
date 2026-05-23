@@ -5,6 +5,7 @@ vi.unmock('./EncryptionContext')
 import { render, screen, act } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import { EncryptionProvider, useEncryption } from './EncryptionContext'
+import { appStorage } from '../utils/appStorage'
 import type { ReactNode } from 'react'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
@@ -686,6 +687,88 @@ describe('EncryptionContext', () => {
       })
 
       expect(result.current.isEncryptionEnabled).toBe(beforeEnabled)
+    })
+
+    it('ignores malformed encryption-enabled values (e.g. "2", "true")', () => {
+      // The handler should only react to "1", null, or "0". Any other value
+      // is silently ignored so a future refactor doesn't accidentally flip
+      // state on garbage input.
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+      const beforeEnabled = result.current.isEncryptionEnabled
+      const beforeLocked = result.current.isLocked
+
+      for (const garbage of ['2', 'true', '', 'yes']) {
+        act(() => {
+          window.dispatchEvent(
+            new StorageEvent('storage', { key: 'encryption-enabled', newValue: garbage, oldValue: null }),
+          )
+        })
+        expect(result.current.isEncryptionEnabled).toBe(beforeEnabled)
+        expect(result.current.isLocked).toBe(beforeLocked)
+      }
+    })
+
+    it('calls appStorage.disposeLocalState() and setMode("enabled") on remote-enable', () => {
+      const disposeSpy = vi.spyOn(appStorage, 'disposeLocalState')
+      const setModeSpy = vi.spyOn(appStorage, 'setMode')
+      renderHook(() => useEncryption(), { wrapper })
+
+      // Mount calls setMode once with the initial mode — clear so we only
+      // assert on the listener's side effects.
+      disposeSpy.mockClear()
+      setModeSpy.mockClear()
+
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: '1', oldValue: null }))
+      })
+
+      // disposeLocalState() is what clears _memoryStore + _pendingPersists
+      // + _isReady. Without it, plaintext queued from disabled mode could
+      // leak. We use disposeLocalState rather than lock() to avoid emitting
+      // the cross-tab lock signal back to the tab that just enabled.
+      expect(disposeSpy).toHaveBeenCalledTimes(1)
+      expect(setModeSpy).toHaveBeenCalledWith('enabled')
+
+      disposeSpy.mockRestore()
+      setModeSpy.mockRestore()
+    })
+
+    it('calls appStorage.disposeLocalState() and setMode("disabled") on remote-disable', () => {
+      localStorage.setItem('encryption-enabled', '1')
+      const disposeSpy = vi.spyOn(appStorage, 'disposeLocalState')
+      const setModeSpy = vi.spyOn(appStorage, 'setMode')
+      renderHook(() => useEncryption(), { wrapper })
+
+      disposeSpy.mockClear()
+      setModeSpy.mockClear()
+
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: null, oldValue: '1' }))
+      })
+
+      expect(disposeSpy).toHaveBeenCalledTimes(1)
+      expect(setModeSpy).toHaveBeenCalledWith('disabled')
+
+      disposeSpy.mockRestore()
+      setModeSpy.mockRestore()
+    })
+
+    it('removes the storage listener on unmount (no handler fires after teardown)', () => {
+      const disposeSpy = vi.spyOn(appStorage, 'disposeLocalState')
+      const { unmount } = renderHook(() => useEncryption(), { wrapper })
+
+      unmount()
+      disposeSpy.mockClear()
+
+      // After unmount the listener must be gone — dispatching the event
+      // should not call appStorage.disposeLocalState(). If the cleanup ever
+      // breaks, this fires.
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: '1', oldValue: null }))
+      })
+
+      expect(disposeSpy).not.toHaveBeenCalled()
+      disposeSpy.mockRestore()
     })
   })
 

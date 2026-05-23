@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { SecurityPage } from './pages/security.page'
 import {
   SENSITIVE_KEYS,
+  type SensitiveKey,
   assertAllKeysAreEnvelopes,
   assertAllKeysMatchPlaintextSnapshot,
   dispatchRemoteLock,
@@ -146,7 +147,7 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       // writes the cross-tab lock signal: tab B's appStorage receives the
       // native `storage` event, dispatches `encryption-remote-lock`, and
       // EncryptionContext clears the in-memory key.
-      await seedEmptyEncryptionState(page)
+      await seedEmptyEncryptionState(context)
       const securityA = new SecurityPage(page)
       await securityA.open()
       await securityA.enable(PASSPHRASE)
@@ -177,7 +178,7 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       // (was #60 test 30) — enable propagates across tabs natively. No
       // synthetic event dispatch — we let the browser's native `storage`
       // event fire when tab A writes `encryption-enabled=1`.
-      await seedEmptyEncryptionState(page)
+      await seedEmptyEncryptionState(context)
 
       // Open tab A (the default `page`) and tab B in parallel, both on the
       // app root. Both start in the disabled, unlocked state.
@@ -246,7 +247,7 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       // app may normalize seeded values during boot (e.g. budget-config
       // gains default category groups), so the roundtrip must compare
       // against the POST-NAVIGATION plaintext, not the raw seed payload.
-      const snapshot: Record<string, unknown> = {}
+      const snapshot = {} as Record<SensitiveKey, unknown>
       for (const key of SENSITIVE_KEYS) {
         snapshot[key] = await readEnvelope(page, key)
       }
@@ -259,7 +260,7 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       // Every sensitive key now holds plaintext that matches the captured
       // snapshot exactly. Not toMatchObject, not toBeDefined — structural
       // equality with the original plaintext value.
-      await assertAllKeysMatchPlaintextSnapshot(page, snapshot as Parameters<typeof assertAllKeysMatchPlaintextSnapshot>[1])
+      await assertAllKeysMatchPlaintextSnapshot(page, snapshot)
 
       // Encryption lifecycle keys are gone.
       expect(await page.evaluate(() => localStorage.getItem('encryption-enabled'))).not.toBe('1')
