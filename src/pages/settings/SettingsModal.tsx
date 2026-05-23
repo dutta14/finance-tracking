@@ -44,9 +44,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
 
   return createPortal(
     <div className="settings-modal-backdrop" onClick={onClose}>
-      <div ref={modalRef} className="settings-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div
+        ref={modalRef}
+        className="settings-modal"
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
+      >
         <div className="settings-modal-header">
-          <h2 className="settings-modal-title">Settings</h2>
+          <h2 className="settings-modal-title" id="settings-modal-title">
+            Settings
+          </h2>
           <button className="settings-modal-close" onClick={onClose} aria-label="Close">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
               <path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
@@ -58,6 +67,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
           <nav className="settings-modal-nav">
             <button
               className={`settings-modal-nav-item${activeSection === 'profile' ? ' active' : ''}`}
+              aria-current={activeSection === 'profile' ? 'page' : undefined}
               onClick={() => setActiveSection('profile')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -68,6 +78,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'github' ? ' active' : ''}`}
+              aria-current={activeSection === 'github' ? 'page' : undefined}
               onClick={() => setActiveSection('github')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -78,6 +89,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'appearance' ? ' active' : ''}`}
+              aria-current={activeSection === 'appearance' ? 'page' : undefined}
               onClick={() => setActiveSection('appearance')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -100,6 +112,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'security' ? ' active' : ''}`}
+              aria-current={activeSection === 'security' ? 'page' : undefined}
               onClick={() => setActiveSection('security')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -109,6 +122,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'advanced' ? ' active' : ''}`}
+              aria-current={activeSection === 'advanced' ? 'page' : undefined}
               onClick={() => setActiveSection('advanced')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -118,6 +132,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'labs' ? ' active' : ''}`}
+              aria-current={activeSection === 'labs' ? 'page' : undefined}
               onClick={() => setActiveSection('labs')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -128,6 +143,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             {isAdmin && (
               <button
                 className={`settings-modal-nav-item${activeSection === 'flags' ? ' active' : ''}`}
+                aria-current={activeSection === 'flags' ? 'page' : undefined}
                 onClick={() => setActiveSection('flags')}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
