@@ -645,6 +645,50 @@ describe('EncryptionContext', () => {
     })
   })
 
+  describe('cross-tab encryption-enabled propagation', () => {
+    it('flips into locked state when another tab sets encryption-enabled to "1"', () => {
+      // This tab boots in disabled mode
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+      expect(result.current.isEncryptionEnabled).toBe(false)
+      expect(result.current.isLocked).toBe(false)
+
+      // Simulate another tab enabling encryption
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: '1', oldValue: null }))
+      })
+
+      expect(result.current.isEncryptionEnabled).toBe(true)
+      expect(result.current.cryptoKey).toBeNull()
+      expect(result.current.isLocked).toBe(true)
+    })
+
+    it('flips back to disabled when another tab clears encryption-enabled', async () => {
+      localStorage.setItem('encryption-enabled', '1')
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+      expect(result.current.isEncryptionEnabled).toBe(true)
+
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: null, oldValue: '1' }))
+      })
+
+      expect(result.current.isEncryptionEnabled).toBe(false)
+      expect(result.current.isLocked).toBe(false)
+    })
+
+    it('ignores storage events for unrelated keys', () => {
+      const { result } = renderHook(() => useEncryption(), { wrapper })
+      const beforeEnabled = result.current.isEncryptionEnabled
+
+      act(() => {
+        window.dispatchEvent(
+          new StorageEvent('storage', { key: 'unrelated-key', newValue: 'whatever', oldValue: null }),
+        )
+      })
+
+      expect(result.current.isEncryptionEnabled).toBe(beforeEnabled)
+    })
+  })
+
   describe('disableEncryption edge cases', () => {
     it('returns false when no salt is present', async () => {
       localStorage.setItem('encryption-enabled', '1')

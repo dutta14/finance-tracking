@@ -106,6 +106,32 @@ export const EncryptionProvider: FC<{ children: ReactNode }> = ({ children }) =>
     return () => window.removeEventListener('encryption-remote-lock', handler)
   }, [])
 
+  // Cross-tab `encryption-enabled` propagation. The existing
+  // `_encryption-lock-signal` mechanism propagates lock events, but a tab
+  // that was already mounted before another tab enabled encryption would
+  // otherwise keep operating in the unencrypted state — a stale-tab security
+  // gap. This listener fires on the native browser `storage` event when
+  // another tab toggles `encryption-enabled`, and forces this tab into the
+  // locked or disabled state to match.
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== LS_ENABLED) return
+      if (e.newValue === '1') {
+        appStorage.setMode('enabled')
+        appStorage.setCryptoKey(null)
+        setCryptoKey(null)
+        setIsEncryptionEnabled(true)
+      } else if (e.newValue === null || e.newValue === '0') {
+        appStorage.setMode('disabled')
+        appStorage.setCryptoKey(null)
+        setCryptoKey(null)
+        setIsEncryptionEnabled(false)
+      }
+    }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
+
   const isLocked = isEncryptionEnabled && cryptoKey === null
 
   const unlock = useCallback(async (passphrase: string): Promise<boolean> => {
