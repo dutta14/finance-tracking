@@ -112,8 +112,12 @@ const ChecklistRow: FC<{
   }
 
   return (
-    <div className={`tax-item${hasFiles ? ' tax-item--done' : ''}`}>
-      <div className="tax-item-check">
+    <div className={`tax-item${hasFiles ? ' tax-item--done' : ''}`} data-done={hasFiles ? 'true' : 'false'}>
+      <div
+        className="tax-item-check"
+        role="img"
+        aria-label={`${item.label}${hasFiles ? ' (complete)' : ' (not started)'}`}
+      >
         {hasFiles ? <span className="tax-item-tick">✓</span> : <span className="tax-item-empty" />}
       </div>
       <div className="tax-item-body">
@@ -588,8 +592,16 @@ const TaxReturnSection: FC<{
       {!jointReturn && !hasSingleReturns && <p className="tax-empty">No return uploaded yet. Use the menu to add.</p>}
 
       {[jointReturn, primaryReturn, partnerReturn].filter(Boolean).map(item => (
-        <div key={item!.id} className={`tax-item${item!.files.length > 0 ? ' tax-item--done' : ''}`}>
-          <div className="tax-item-check">
+        <div
+          key={item!.id}
+          className={`tax-item${item!.files.length > 0 ? ' tax-item--done' : ''}`}
+          data-done={item!.files.length > 0 ? 'true' : 'false'}
+        >
+          <div
+            className="tax-item-check"
+            role="img"
+            aria-label={`${item!.label}${item!.files.length > 0 ? ' (complete)' : ' (not started)'}`}
+          >
             {item!.files.length > 0 ? <span className="tax-item-tick">✓</span> : <span className="tax-item-empty" />}
           </div>
           <div className="tax-item-body">
@@ -843,7 +855,11 @@ const Taxes: FC = () => {
         </div>
       </div>
 
-      {uploadError && <div className="tax-upload-error">{uploadError}</div>}
+      {uploadError && (
+        <div className="tax-upload-error" role="alert" aria-live="polite">
+          {uploadError}
+        </div>
+      )}
 
       {!exists ? (
         <div className="tax-empty-state">
