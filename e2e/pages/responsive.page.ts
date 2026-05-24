@@ -21,8 +21,6 @@ export class ResponsivePage {
   readonly sidebar: Locator
   readonly overlay: Locator
   readonly hamburger: Locator
-  readonly collapseToggle: Locator
-  readonly mainContent: Locator
   readonly settingsButton: Locator
   readonly settingsDialog: Locator
   readonly darkThemeOption: Locator
@@ -35,8 +33,6 @@ export class ResponsivePage {
     // so a CSS-class locator is the only stable handle.
     this.overlay = page.locator('.sidebar-overlay')
     this.hamburger = page.getByRole('button', { name: 'Expand sidebar' })
-    this.collapseToggle = page.getByRole('button', { name: 'Collapse sidebar' })
-    this.mainContent = page.locator('main.main-content')
     this.settingsButton = page.getByRole('button', { name: 'Settings' })
     this.settingsDialog = page.getByRole('dialog', { name: 'Settings' })
     this.darkThemeOption = this.settingsDialog
@@ -93,9 +89,9 @@ export class ResponsivePage {
 
 /**
  * Routes covered by the no-horizontal-overflow sweep (test 17). The
- * Home route is `/` (sidebarOpen overlay makes verifying overflow
- * sensitive to the overlay backdrop, so we close it inside the test
- * before measuring).
+ * mobile overlay scrim is `position: fixed` (and so is the sidebar),
+ * so neither contributes to `document.documentElement.scrollWidth` —
+ * the sweep doesn't need to dismiss the overlay before measuring.
  */
 export const MAIN_PAGE_ROUTES: ReadonlyArray<{ path: string; heading: RegExp }> = [
   { path: '/', heading: /^Good (morning|afternoon|evening)/ },
