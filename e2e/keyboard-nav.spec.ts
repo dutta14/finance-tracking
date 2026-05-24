@@ -48,8 +48,11 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    // After each Tab, the next sidebar primary nav link in DOM order
-    // (Goals → Net Worth → Budget → Taxes) should hold focus.
+    // After each Tab, the next sidebar Tab-order link (Goals → Net
+    // Worth → Budget → Taxes → Drive → Settings) should hold focus.
+    // Drive and Settings live in the sidebar-footer group; their
+    // accessible name comes from aria-label but the visible span text
+    // also reads "Drive" / "Settings" so `info.text` matches either.
     for (let i = 1; i < SIDEBAR_NAV_ORDER.length; i++) {
       await page.keyboard.press('Tab')
       const info = await kb.getActiveElementInfo()
@@ -135,7 +138,11 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const onClickedLink =
       info.inSidebar && info.tag === 'BUTTON' && info.text === 'Goals' && info.ariaCurrent === 'page'
     const onHeading = info.tag === 'H1'
-    expect(onClickedLink || onHeading || info.inMain).toBe(true)
+    // Tighten: if focus is inside <main>, only accept it on an
+    // interactive element (button / link / input / heading). A random
+    // <p> or <div> would not satisfy the SPA-focus contract.
+    const onInteractiveInMain = info.inMain && ['BUTTON', 'A', 'INPUT', 'H1'].includes(info.tag)
+    expect(onClickedLink || onHeading || onInteractiveInMain).toBe(true)
   })
 
   /* ── 33. ErrorBoundary retry behavior ─────────────────────── */
@@ -180,17 +187,18 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
       const info = await kb.getActiveElementInfo()
       expect(info.tag).not.toBe('BODY')
     } else {
-      // Documented gap — see suite-level note.
+      // Documented gap — see suite-level note. Test 33 only has a
+      // focus contract when the ErrorBoundary actually renders. When
+      // it doesn't (because contexts catch JSON.parse internally),
+      // there is nothing to recover from and the SPA-focus-on-body
+      // is the same gap covered by test 31's adaptation. We log and
+      // verify the page itself mounted without crashing.
       // eslint-disable-next-line no-console
       console.log(
         '[#144 test 33] ErrorBoundary did not render under storage corruption; ' +
           'contexts catch JSON.parse internally. Documented as a known gap.',
       )
-      // Sanity: the Goals page itself rendered (no crash) and focus
-      // is not lost to body — these are the user-facing guarantees
-      // that the corruption was handled gracefully.
-      const info = await kb.getActiveElementInfo()
-      expect(info.tag).toBeTruthy()
+      await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
     }
   })
 

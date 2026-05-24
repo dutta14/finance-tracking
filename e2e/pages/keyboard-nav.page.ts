@@ -33,6 +33,8 @@ export class KeyboardNavPage {
   readonly netWorthLink: Locator
   readonly budgetLink: Locator
   readonly taxesLink: Locator
+  readonly driveLink: Locator
+  readonly settingsLink: Locator
 
   constructor(page: Page) {
     this.page = page
@@ -40,12 +42,17 @@ export class KeyboardNavPage {
     this.main = page.locator('main.main-content')
     // Sidebar primary nav links are `<button>` elements (not `<a>`).
     // Accessible-name selectors with `exact: true` keep "Net Worth"
-    // from matching the "Net Worth" footer / dashboard text.
+    // from matching the "Net Worth" footer / dashboard text. Drive
+    // and Settings live in the sidebar footer (role="group"
+    // aria-label="Utilities") and use aria-label for their accessible
+    // name; they are still in Tab order after Taxes.
     this.homeLink = this.sidebar.getByRole('button', { name: 'Home', exact: true })
     this.goalsLink = this.sidebar.getByRole('button', { name: 'Goals', exact: true })
     this.netWorthLink = this.sidebar.getByRole('button', { name: 'Net Worth', exact: true })
     this.budgetLink = this.sidebar.getByRole('button', { name: 'Budget', exact: true })
     this.taxesLink = this.sidebar.getByRole('button', { name: 'Taxes', exact: true })
+    this.driveLink = this.sidebar.getByRole('button', { name: 'Drive', exact: true })
+    this.settingsLink = this.sidebar.getByRole('button', { name: 'Settings', exact: true })
   }
 
   /**
@@ -119,8 +126,12 @@ export class KeyboardNavPage {
 }
 
 /**
- * Sidebar primary nav order, used by the Tab-sequence assertion in
- * tests 21 and 35. Matches DOM order in SidebarNavigation.tsx.
+ * Sidebar Tab order, used by the Tab-sequence assertion in test 21.
+ * Home → Goals → Net Worth → Budget → Taxes are primary nav buttons.
+ * Drive and Settings live in the sidebar footer group but are still
+ * in natural Tab order after Taxes. Matches DOM order in
+ * SidebarNavigation.tsx. The Settings menu trigger is a `<button>`
+ * (SettingsMenu.tsx:82) with aria-label="Settings".
  */
-export const SIDEBAR_NAV_ORDER = ['Home', 'Goals', 'Net Worth', 'Budget', 'Taxes'] as const
+export const SIDEBAR_NAV_ORDER = ['Home', 'Goals', 'Net Worth', 'Budget', 'Taxes', 'Drive', 'Settings'] as const
 export type SidebarNavName = (typeof SIDEBAR_NAV_ORDER)[number]
