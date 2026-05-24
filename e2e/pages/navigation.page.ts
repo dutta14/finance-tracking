@@ -54,8 +54,7 @@ export class NavigationPage {
 
   /**
    * Assert exactly one nav link has `aria-current="page"`, and it is the
-   * one named `name`. Empty string asserts no link is active (used after
-   * intentional invalid-route navigation).
+   * one named `name`.
    */
   async expectActive(name: NavName): Promise<void> {
     await expect(this.link(name)).toHaveAttribute('aria-current', 'page')

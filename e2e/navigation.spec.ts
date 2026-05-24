@@ -65,10 +65,11 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     await nav.navTo('Taxes')
     await nav.expectActive('Taxes')
 
-    // Spec 5 (enhanced): the sidebar toggle must expose an accessible name.
-    // Source: SidebarToggle.tsx renders aria-label="Collapse sidebar" while
-    // the sidebar is open.
-    await expect(nav.toggleCollapse).toHaveAttribute('aria-label', 'Collapse sidebar')
+    // Spec 5 (enhanced): the sidebar toggle's accessible name must flip
+    // when the sidebar collapses. Asserting toggleExpand becomes visible
+    // confirms the same physical toggle now reads "Expand sidebar".
+    await nav.collapseSidebar()
+    await expect(nav.toggleExpand).toBeVisible()
   })
 
   test('6. Drive button in footer navigates to /drive and marks it active', async ({ page }) => {
@@ -95,6 +96,7 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     for (const name of PRIMARY_NAV_LINKS) {
       await expect(nav.link(name)).toBeHidden()
     }
+    await expect(nav.link('Drive')).toBeHidden()
     await expect(nav.toggleExpand).toBeVisible()
   })
 
@@ -224,8 +226,6 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
   })
 
   test('38. a non-existent route falls back to Home with Home marked active', async ({ page }) => {
-    // Same wildcard fallback as test 15, asserted via the back-door entry
-    // (direct URL goto rather than in-app navigation).
     const nav = new NavigationPage(page)
     await nav.goto('/this-route-does-not-exist')
 
