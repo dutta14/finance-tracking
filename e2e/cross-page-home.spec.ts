@@ -477,25 +477,20 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
         buffer: Buffer.from(v2.content),
       })
 
-      // Await the counter increment (C4 poll pattern). ImportExportContext
-      // dispatches `data-changed` synchronously inside the reader.onload
-      // (ImportExportContext.tsx:127) before scheduling reload at +200ms.
-      await expect
-        .poll(
-          () =>
-            page.evaluate(() => Number(localStorage.getItem('__test_data_changed_count') || '0')),
-          { timeout: 5000 },
-        )
-        .toBeGreaterThanOrEqual(1)
-
-      // Wait for the post-import reload to settle by polling
-      // localStorage for the imported accounts.
-      await expect
-        .poll(() => page.evaluate(() => localStorage.getItem('data-accounts')), { timeout: 10_000 })
-        .toContain('401k')
-      // C5: explicitly wait for the reload to finish before any further
-      // localStorage assertions (Heading-visible proves DataContext mounted).
-      await page.waitForLoadState('domcontentloaded')
+      // C5 (revised after CI flake): ImportExportContext dispatches
+      // `data-changed` synchronously inside reader.onload
+      // (ImportExportContext.tsx:127) and then schedules
+      // window.location.reload() at +200ms. The counter increment and
+      // the data-accounts write are BOTH committed to localStorage
+      // before the reload fires, and localStorage survives the reload.
+      //
+      // Do not poll page.evaluate across the reload — the execution
+      // context is destroyed mid-navigation on slower CI runners,
+      // which manifests as "Execution context was destroyed, most
+      // likely because of a navigation". Instead, wait for the reload
+      // to fully settle (load + h1 visible), THEN read localStorage
+      // once. Both assertions are deterministic post-reload.
+      await page.waitForLoadState('load')
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
       const accounts = await page.evaluate(() => localStorage.getItem('data-accounts'))
