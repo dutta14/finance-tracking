@@ -20,15 +20,21 @@ import {
  * in GoalsPeek.tsx, `.mini-progress-pct` in GoalMiniCard.tsx).
  *
  * Adaptations from the spec (documented per-test):
- *  - Test 2 / 33: "Add budget data →" is a plain <span>, not a link.
+ *  - Test 2 / 33 (A): "Add budget data →" is a plain <span>, not a link.
  *    The Enhanced Assertion expecting a click→/budget navigation cannot
  *    pass — see follow-up issue.
- *  - Test 47: Home cards lack per-card ErrorBoundary; we verify the
+ *  - Test 47 (B): Home cards lack per-card ErrorBoundary; we verify the
  *    OBSERVABLE cross-page-isolation contract instead.
- *  - Test 41: AllocationBreakdown on Home reads accounts+balances from
- *    DataContext, not from `allocation-custom-ratios`. The card will
- *    not visually change on `allocation-changed`; we assert the event
- *    fires and Home re-renders cleanly.
+ *  - Test 17 (D): the default seed's 401k balance is below the FI goal;
+ *    we override `balances` to force an over-goal state.
+ *  - Test 39 (E): ImportExportContext schedules a reload ~200ms after
+ *    dispatching `data-changed`. We persist the counter in localStorage
+ *    so it survives the reload, and reset to 0 immediately before the
+ *    trigger so the baseline is unambiguous.
+ *  - Test 41 (F): AllocationBreakdown on Home reads accounts+balances
+ *    from DataContext, not from `allocation-custom-ratios`. The card
+ *    will not visually change on `allocation-changed`; we assert the
+ *    event fires and Home re-renders cleanly.
  */
 
 const HOME = '/finance-tracking/'
@@ -39,6 +45,26 @@ async function gotoHome(page: Page): Promise<void> {
 }
 
 test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
+  test.beforeEach(async ({ page, context }) => {
+    await context.clearCookies()
+    // Clear the one-shot sentinel so each test re-seeds fresh — but
+    // ONLY on the first navigation of the test. The sentinel must
+    // stay set across subsequent in-test navigations or tests that
+    // mutate localStorage mid-session (10, 16, 39, 44, 45) lose
+    // their changes when seedCrossPage's init script re-runs.
+    // sessionStorage is per-context (fresh per test in Playwright's
+    // default isolation), so the gate flag resets between tests.
+    await page.addInitScript(() => {
+      try {
+        if (sessionStorage.getItem('__cross_page_test_started') !== '1') {
+          sessionStorage.setItem('__cross_page_test_started', '1')
+          localStorage.removeItem('__cross_page_seeded')
+        }
+      } catch {
+        /* ignore */
+      }
+    })
+  })
   /* ────────────────────────────────────────────────────────────
    * Flow 1: Budget Savings Rate → Goals Page
    * ──────────────────────────────────────────────────────────── */
@@ -57,8 +83,10 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await expect(goalsCard).toBeVisible()
       const homeDate = goalsCard.locator('.goals-peek-projected-date')
       await expect(homeDate).toBeVisible()
-      const homeDateText = (await homeDate.textContent())?.trim() || ''
-      expect(homeDateText).toMatch(/^[A-Z][a-z]{2} \d{4}$/)
+      // Strict text-match BEFORE extraction kills the hydration race
+      // where textContent() returns '' before React commits.
+      await expect(homeDate).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
+      const homeDateText = (await homeDate.textContent())?.trim() ?? ''
 
       // Enhanced assertion: cross-page projection consistency.
       // GoalDetailedCard.tsx:721 renders the same projection via
@@ -68,7 +96,8 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await page.waitForLoadState('domcontentloaded')
       const detailDate = page.locator('.fi-card-row-value--projected').first()
       await expect(detailDate).toBeVisible()
-      const detailDateText = (await detailDate.textContent())?.trim() || ''
+      await expect(detailDate).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
+      const detailDateText = (await detailDate.textContent())?.trim() ?? ''
       expect(detailDateText).toBe(homeDateText)
     })
 
@@ -118,7 +147,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // vs. target retirement row uses --ahead or --behind class.
       const diff = page.locator('.fi-card-row-value--ahead, .fi-card-row-value--behind').first()
       await expect(diff).toBeVisible()
-      await expect(diff).toHaveText(/year(s)? (early|behind)|On track/)
+      await expect(diff).toHaveText(/(\d+\s+years?\s+(early|behind)|On\s+track)/)
     })
 
     test('5. Goal detailed card shows "no budget" state when budget-summary is absent', async ({ page }) => {
@@ -200,7 +229,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // Click to expand and ensure the leaf children render.
       await fiNode.click()
       const fiChildren = page.locator('.home-card--nw .nw-tree-children').first()
-      await expect(fiChildren).toBeVisible()
+      await expect(fiChildren).toBeVisible({ timeout: 2000 })
       await expect(fiChildren.locator('.nw-tree-label', { hasText: 'Retirement' })).toBeVisible()
     })
 
@@ -436,6 +465,11 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await page.getByRole('button', { name: 'Advanced', exact: true }).click()
       await expect(page.getByRole('heading', { level: 3, name: 'Advanced' })).toBeVisible()
 
+      // Reset counter to 0 immediately before the trigger action so the
+      // baseline is unambiguous (C4: listener was installed on first nav,
+      // counter could have been bumped by any prior remount dispatch).
+      await page.evaluate(() => localStorage.setItem('__test_data_changed_count', '0'))
+
       const v2 = buildV2Export()
       await page.locator('input[type="file"][accept=".json"]').setInputFiles({
         name: v2.name,
@@ -443,21 +477,40 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
         buffer: Buffer.from(v2.content),
       })
 
+      // Await the counter increment (C4 poll pattern). ImportExportContext
+      // dispatches `data-changed` synchronously inside the reader.onload
+      // (ImportExportContext.tsx:127) before scheduling reload at +200ms.
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() => Number(localStorage.getItem('__test_data_changed_count') || '0')),
+          { timeout: 5000 },
+        )
+        .toBeGreaterThanOrEqual(1)
+
       // Wait for the post-import reload to settle by polling
       // localStorage for the imported accounts.
       await expect
         .poll(() => page.evaluate(() => localStorage.getItem('data-accounts')), { timeout: 10_000 })
         .toContain('401k')
+      // C5: explicitly wait for the reload to finish before any further
+      // localStorage assertions (Heading-visible proves DataContext mounted).
       await page.waitForLoadState('domcontentloaded')
+      await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
-      // Counter persisted across reload — `data-changed` fired at least
-      // once during the import. (The post-reload page also re-installs
-      // the listener via addInitScript, so subsequent DataContext mount
-      // events may bump the count further; we only require >= 1.)
+      const accounts = await page.evaluate(() => localStorage.getItem('data-accounts'))
+      expect(accounts).toContain('401k')
+
+      // M6: source dispatches `data-changed` exactly once
+      // (ImportExportContext.tsx:127 — the only production dispatcher).
+      // Reload does NOT re-dispatch on mount (verified: no remount-
+      // dispatch in DataContext). Cap at 5 to catch runaway dispatches
+      // if a future refactor adds remount-on-mount behavior.
       const count = await page.evaluate(() =>
         Number(localStorage.getItem('__test_data_changed_count') || '0'),
       )
       expect(count).toBeGreaterThanOrEqual(1)
+      expect(count).toBeLessThanOrEqual(5)
 
       // Imported balances render in the Home Net Worth card.
       await page.goto(HOME)
@@ -486,8 +539,13 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await gotoHome(page)
       await expect(page.locator('.home-card--alloc')).toBeVisible()
 
+      // Reset counter to 0 immediately before the trigger action so the
+      // baseline is unambiguous (C4).
+      await page.evaluate(() => localStorage.setItem('__test_alloc_changed_count', '0'))
+
       // Mutate ratios and dispatch the event directly to mirror the
-      // production path (saveCustomRatios appStorage.setJSON + event).
+      // production path (saveCustomRatios appStorage.setJSON + event
+      // dispatched once: allocation/utils.ts:13).
       // Using page.evaluate is the reliable fallback called out in the
       // adaptation note — locating the allocation UI's specific
       // "save ratio" affordance is brittle and out of scope here.
@@ -507,10 +565,23 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
         window.dispatchEvent(new Event('allocation-changed'))
       })
 
+      // Await the counter increment (C4 poll pattern).
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() => Number(localStorage.getItem('__test_alloc_changed_count') || '0')),
+          { timeout: 5000 },
+        )
+        .toBeGreaterThanOrEqual(1)
+
+      // M6: we dispatch the event exactly once above, and saveCustomRatios
+      // (allocation/utils.ts:13) is the only production dispatcher and also
+      // fires once per save. No remount-dispatch occurs. We assert the
+      // strict exact-count contract.
       const count = await page.evaluate(() =>
         Number(localStorage.getItem('__test_alloc_changed_count') || '0'),
       )
-      expect(count).toBeGreaterThanOrEqual(1)
+      expect(count).toBe(1)
 
       // Home re-renders cleanly after navigating away and back.
       await page.goto(URLS.allocation)
@@ -608,6 +679,12 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // Branch A: route-level boundary tripped.
       // Branch B: corruption silently absorbed and Home rendered.
       const alertCount = await alert.count()
+      // M8: annotate which branch executed so failure investigation
+      // knows which path ran.
+      test.info().annotations.push({
+        type: 'execution-branch',
+        description: alertCount > 0 ? 'A: route-level boundary caught' : 'B: silent absorb',
+      })
       if (alertCount > 0) {
         await expect(alert.first()).toBeVisible()
       } else {
@@ -615,9 +692,15 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
         await expect(homeHeading).toBeVisible()
         const otherCards = page.locator('.home-card--nw, .home-card--alloc, .home-card--charts')
         expect(await otherCards.count()).toBeGreaterThan(0)
+        // M8: strengthen — assert at least the NetWorth card actually
+        // rendered (per-card isolation works in practice on branch B).
+        const nwCard = page.locator('.home-card--nw')
+        await expect(nwCard).toBeVisible()
         // GoalsPeek either renders an empty state or a goals list; we
         // accept either because per-card isolation is not enforced.
-        await expect(goalsCard).toHaveCount(await goalsCard.count())
+        // C2: replace tautological toHaveCount(count) with a real bound.
+        const goalCardCount = await goalsCard.count()
+        expect([0, 1]).toContain(goalCardCount)
       }
 
       // Cross-page isolation: Net Worth always renders normally.
