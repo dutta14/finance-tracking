@@ -38,12 +38,31 @@ export function hashUrl(path: string): string {
  * Seed minimal localStorage state so the app mounts without onboarding
  * or unlock screens. Uses `addInitScript` so it runs before app code on
  * every navigation (including reloads triggered inside the test).
+ *
+ * Also intercepts the public feature-flags fetch (`FlagContext` calls
+ * `https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json`
+ * on every mount). Without this mock the live GitHub API rate-limits
+ * anonymous requests and returns 403, producing a console error that
+ * leaks into console-error assertions (e.g., navigation.spec.ts test 13).
+ * Lifting this to a global Playwright before-each is tracked separately.
  */
 export async function seedNav(page: Page, options: NavSeedOptions = {}): Promise<void> {
   const { profileName, extra } = options
   const profile = profileName
     ? JSON.stringify({ name: profileName, birthday: '', avatarDataUrl: '', partner: null })
     : null
+  await page.route(
+    'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
+    async (route) => {
+      const emptyConfig = { flags: {} }
+      const content = Buffer.from(JSON.stringify(emptyConfig)).toString('base64')
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ content, encoding: 'base64' }),
+      })
+    },
+  )
   await page.addInitScript(
     ({ profile, extra }) => {
       localStorage.clear()
