@@ -1,4 +1,6 @@
 import { Page } from '@playwright/test'
+import { SecurityPage } from '../pages/security.page'
+import { assertAllKeysAreEnvelopes } from './encryption.fixtures'
 
 /**
  * Shared seed for the cross-page integration suites (#151 + future
@@ -364,6 +366,43 @@ export async function mutateProfile(
     }
     localStorage.setItem('user-profile', JSON.stringify(cur))
   }, patch)
+}
+
+/**
+ * Cross-page baseline + encryption-enabled. Plants the same plaintext
+ * seed as `seedCrossPage`, then drives the real Security pane to enable
+ * encryption with `passphrase`. This is the ONLY supported way to put
+ * the app into a "data + encryption-on" state — encryption enablement
+ * requires the PBKDF2 + envelope-migration path through
+ * EncryptionContext (see audit-153 adaptation B); seeding
+ * `encryption-enabled='1'` alone leaves the app in a broken half-state
+ * with plaintext envelopes that the unlock flow cannot decrypt.
+ *
+ * After this returns:
+ *   - `encryption-enabled` = '1' in localStorage
+ *   - all 13 SENSITIVE_KEYS hold `{ v, iv, ct }` envelopes
+ *   - the Settings modal is OPEN on the Security pane (callers usually
+ *     navigate away immediately, which closes the modal)
+ *
+ * PBKDF2 cost: ~1s per enable on a 2024-era laptop. Each test that uses
+ * this helper budgets ~1-2s overhead.
+ */
+export async function seedCrossPageEncrypted(
+  page: Page,
+  passphrase: string,
+  overrides: SeedOverrides = {},
+): Promise<SecurityPage> {
+  await seedCrossPage(page, overrides)
+  const security = new SecurityPage(page)
+  await security.open()
+  await security.enable(passphrase)
+  // Belt-and-braces: confirm every sensitive key is now an envelope
+  // before any test asserts page rendering after lock/unlock. If a
+  // future regression skips a key during migration, this fails here
+  // with the exact key name — not as a mysterious "page is empty"
+  // assertion failure later.
+  await assertAllKeysAreEnvelopes(page)
+  return security
 }
 
 /**
