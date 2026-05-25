@@ -470,6 +470,24 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // counter could have been bumped by any prior remount dispatch).
       await page.evaluate(() => localStorage.setItem('__test_data_changed_count', '0'))
 
+      // C6 (navigation-resilient gate): plant a sentinel on `window`
+      // BEFORE the trigger. ImportExportContext schedules
+      // window.location.reload() at +200ms (ImportExportContext.tsx:128),
+      // which destroys this window and creates a fresh one without the
+      // sentinel. page.waitForFunction is navigation-resilient: it
+      // re-evaluates the predicate in the new execution context after
+      // navigation and resolves only when the sentinel is absent.
+      //
+      // Why not waitForLoadState('load')? It returns immediately when
+      // the page is already in 'load' state (Playwright semantics) and
+      // does not wait for any FUTURE navigation, so it provides no
+      // protection against the +200ms reload — the subsequent
+      // page.evaluate then races the navigation and throws
+      // "Execution context was destroyed".
+      await page.evaluate(() => {
+        ;(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel = true
+      })
+
       const v2 = buildV2Export()
       await page.locator('input[type="file"][accept=".json"]').setInputFiles({
         name: v2.name,
@@ -477,20 +495,12 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
         buffer: Buffer.from(v2.content),
       })
 
-      // C5 (revised after CI flake): ImportExportContext dispatches
-      // `data-changed` synchronously inside reader.onload
-      // (ImportExportContext.tsx:127) and then schedules
-      // window.location.reload() at +200ms. The counter increment and
-      // the data-accounts write are BOTH committed to localStorage
-      // before the reload fires, and localStorage survives the reload.
-      //
-      // Do not poll page.evaluate across the reload — the execution
-      // context is destroyed mid-navigation on slower CI runners,
-      // which manifests as "Execution context was destroyed, most
-      // likely because of a navigation". Instead, wait for the reload
-      // to fully settle (load + h1 visible), THEN read localStorage
-      // once. Both assertions are deterministic post-reload.
-      await page.waitForLoadState('load')
+      // Wait for the reload to actually happen: sentinel will be missing
+      // in the new window object. waitForFunction handles the mid-flight
+      // execution-context destruction by retrying in the new context.
+      await page.waitForFunction(
+        () => !(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel,
+      )
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
       const accounts = await page.evaluate(() => localStorage.getItem('data-accounts'))
