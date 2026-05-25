@@ -75,3 +75,43 @@ describe('TemplatePicker', () => {
     }
   })
 })
+
+describe('TemplatePicker motion', () => {
+  it('TemplatePicker.css uses picker-reveal animation, not wizard-fade', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const cssPath = path.resolve(__dirname, '..', '..', '..', 'styles', 'TemplatePicker.css')
+    const source = fs.readFileSync(cssPath, 'utf-8')
+    expect(source).toMatch(/\.template-picker\s*\{[^}]*animation:\s*picker-reveal\s+0\.2s\s+ease/)
+    expect(source).not.toContain('wizard-fade')
+  })
+
+  it('Goal.css declares the picker-reveal keyframes with vertical translation', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const cssPath = path.resolve(__dirname, '..', '..', '..', 'styles', 'Goal.css')
+    const source = fs.readFileSync(cssPath, 'utf-8')
+    expect(source).toMatch(/@keyframes\s+picker-reveal\s*\{[\s\S]*translateY\(-4px\)[\s\S]*translateY\(0\)[\s\S]*\}/)
+  })
+
+  it('Goal.css disables the picker animation under prefers-reduced-motion', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const cssPath = path.resolve(__dirname, '..', '..', '..', 'styles', 'Goal.css')
+    const source = fs.readFileSync(cssPath, 'utf-8')
+    const reducedMotionBlock = source.match(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\n\}/)
+    expect(reducedMotionBlock).not.toBeNull()
+    const block = reducedMotionBlock![0]
+    const coversPicker =
+      /\*\s*\{[^}]*animation:\s*none/.test(block) || /\.template-picker[\s\S]*animation:\s*none/.test(block)
+    expect(coversPicker).toBe(true)
+  })
+
+  it('Goal.css preserves wizard-fade for wizard step transitions', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const cssPath = path.resolve(__dirname, '..', '..', '..', 'styles', 'Goal.css')
+    const source = fs.readFileSync(cssPath, 'utf-8')
+    expect(source).toMatch(/@keyframes\s+wizard-fade/)
+  })
+})

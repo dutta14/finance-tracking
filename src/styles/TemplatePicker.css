@@ -1,7 +1,7 @@
 /* Template Picker */
 .template-picker {
   margin-top: 1rem;
-  animation: wizard-fade 0.2s ease;
+  animation: picker-reveal 0.2s ease;
 }
 
 .template-picker-header {
