@@ -143,7 +143,13 @@ export const CROSS_PAGE_SEED: CrossPageSeed = {
   allocationCustomRatios: [],
   fiSimulations: [],
   sgtOverrides: {},
-  taxStore: {},
+  // #154: TaxStore must contain `years` (see src/pages/taxes/types.ts:33,
+  // `EMPTY_STORE = { years: {} }`). A bare `{}` makes Taxes.tsx throw on
+  // mount (`Cannot read properties of undefined (reading ...)`), which
+  // is fine for suites that never navigate to /taxes, but #154 sweeps
+  // all six pages after import. Seeding `{ years: {} }` matches the
+  // production empty-state shape exactly.
+  taxStore: { years: {} },
   taxTemplates: [],
 }
 
@@ -320,7 +326,7 @@ export function buildV2Export(
     fiSimulations: overrides.fiSimulations ?? [],
     sgtOverrides: overrides.sgtOverrides ?? {},
     allocationCustomRatios: overrides.allocationCustomRatios ?? [],
-    taxStore: overrides.taxStore ?? {},
+    taxStore: overrides.taxStore ?? { years: {} },
     taxTemplates: overrides.taxTemplates ?? [],
   }
   return { name: 'v2-cross-page.json', content: JSON.stringify(payload) }
