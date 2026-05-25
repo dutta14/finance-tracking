@@ -21,6 +21,7 @@ import {
  *  - B: GoalsPeek.tsx:40 does NOT listen for `budget-changed` —
  *       `getBudgetSaveRate()` is a synchronous read at render time only.
  *       Test 40 reloads after the dispatch before asserting the new date.
+ *       Follow-up: #164.
  *  - C: SavingsGrowthTracker exposes NO `.sgt-year-row` / `.sgt-net-worth`
  *       /  `.sgt-income` / `.sgt-expense` class names. We use accessible
  *       `getByRole('row' | 'cell')` queries instead. Follow-up: #165.
@@ -33,7 +34,7 @@ import {
  *  - G: Spec test 19 expects `defaultLastYear` = 2090, but FICalculator.tsx:
  *       174-179 takes `Math.max(...years)` where `years = [primary+100,
  *       partner+100]`. With primary=1990, partner=1992, the max is 2092
- *       (not 2090). We assert source-truth (2092). Follow-up: #164.
+ *       (not 2090). We assert source-truth (2092). Follow-up: #163.
  *  - H: Spec says navigate to `/tools` for FI Calculator and SGT, but
  *       App.tsx:196 redirects `/tools → /budget`. The actual mount
  *       points are `/goal/calculator` (FICalculator) and
