@@ -62,6 +62,6 @@
   .goal-form-modal {
     max-width: 100%;
     max-height: 92vh;
-    border-radius: var(--radius) 1rem 0 0;
+    border-radius: 1rem 1rem 0 0;
   }
 }
