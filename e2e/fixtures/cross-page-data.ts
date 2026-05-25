@@ -330,7 +330,80 @@ export const URLS = {
   home: '/finance-tracking/#/',
   goal: '/finance-tracking/#/goal',
   goalDetail: (id: number | string) => `/finance-tracking/#/goal/${id}`,
+  goalCalculator: '/finance-tracking/#/goal/calculator',
   netWorth: '/finance-tracking/#/net-worth',
+  netWorthGrowth: '/finance-tracking/#/net-worth/growth',
   allocation: '/finance-tracking/#/net-worth/allocation',
   budget: '/finance-tracking/#/budget',
 } as const
+
+/**
+ * Overwrite `user-profile` in-place and add (or remove) a partner with
+ * the given birthday. Mirrors what ProfilePane does on save EXCEPT it
+ * does NOT fire any event — there is no `profile-changed` channel in
+ * the app (useProfile only re-renders via cross-tab `storage` events
+ * or component remount). Callers MUST `await page.reload()` to see the
+ * update on Goals / GoalsPeek / FI Calculator.
+ */
+export async function mutateProfile(
+  page: Page,
+  patch: { birthday?: string; partner?: { birthday: string } | null },
+): Promise<void> {
+  await page.evaluate(patch => {
+    const raw = localStorage.getItem('user-profile')
+    const cur = raw ? JSON.parse(raw) : { name: '', birthday: '', avatarDataUrl: '' }
+    if (patch.birthday !== undefined) cur.birthday = patch.birthday
+    if (patch.partner === null) {
+      delete cur.partner
+    } else if (patch.partner) {
+      cur.partner = {
+        name: cur.partner?.name ?? 'Partner',
+        avatarDataUrl: cur.partner?.avatarDataUrl ?? '',
+        birthday: patch.partner.birthday,
+      }
+    }
+    localStorage.setItem('user-profile', JSON.stringify(cur))
+  }, patch)
+}
+
+/**
+ * Build a `budget-store` shape with 12 monthly CSVs for a given year.
+ * Each CSV has one income row (`Salary`, positive) and one expense row
+ * (`Rent`, negative). The classification rule used by SavingsGrowthTracker
+ * and FICalculator (category is "expense" if any monthly sum < 0) means
+ * Salary aggregates to `monthlyIncome * 12` of income and Rent aggregates
+ * to `monthlyExpense * 12` of expense.
+ *
+ * `extraYears` lets a single call seed multiple years at once.
+ */
+export function seedBudgetCsvsForYear(
+  year: number,
+  monthlyIncome: number,
+  monthlyExpense: number,
+  extraYears: { year: number; monthlyIncome: number; monthlyExpense: number }[] = [],
+): typeof CROSS_PAGE_BUDGET_STORE {
+  const csvs: Record<string, { month: string; csv: string; uploadedAt: string }> = {}
+  const years = [{ year, monthlyIncome, monthlyExpense }, ...extraYears]
+  const yearList: number[] = []
+  for (const y of years) {
+    yearList.push(y.year)
+    for (let m = 1; m <= 12; m++) {
+      const key = `${y.year}-${String(m).padStart(2, '0')}`
+      const day = `${key}-15`
+      csvs[key] = {
+        month: key,
+        csv: `Date,Category,Amount\n${day},Salary,${y.monthlyIncome}\n${day},Rent,-${y.monthlyExpense}`,
+        uploadedAt: `${key}-15T00:00:00.000Z`,
+      }
+    }
+  }
+  return {
+    csvs,
+    configs: {},
+    years: yearList,
+    categoryGroups: [
+      { id: 'others', name: 'Others', categories: [] },
+      { id: 'removed', name: 'Remove from Budget', categories: [] },
+    ],
+  }
+}
