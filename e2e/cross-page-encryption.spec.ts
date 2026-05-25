@@ -73,9 +73,23 @@ async function lockSameTab(page: Page): Promise<void> {
   })
 }
 
-async function unlockWith(page: Page, passphrase: string): Promise<void> {
+async function attemptUnlock(page: Page, passphrase: string): Promise<void> {
   await page.locator('#unlock-passphrase').fill(passphrase)
   await page.getByRole('button', { name: /^Unlock$|^Unlocking…$/ }).click()
+}
+
+async function unlockWith(page: Page, passphrase: string): Promise<void> {
+  await attemptUnlock(page, passphrase)
+  // EncryptionContext.unlock() (src/contexts/EncryptionContext.tsx:148–164)
+  // awaits appStorage.hydrate(key) BEFORE setCryptoKey(key). hydrate
+  // synchronously decrypts all 13 SENSITIVE_KEYS into the in-memory
+  // store, so when isLocked flips false (UnlockScreen heading hides),
+  // the memory store is fully populated and safe to read. The explicit
+  // 8s timeout accommodates worst-case PBKDF2 (~1.2s) + decrypt of all
+  // 13 envelopes (~0.5s) + React commit on slow CI runners.
+  await expect(page.getByRole('heading', { name: /unlock your data/i })).toBeHidden({
+    timeout: 8_000,
+  })
 }
 
 test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
@@ -242,7 +256,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       const unlockHeading = page.getByRole('heading', { name: /unlock your data/i })
       await expect(unlockHeading).toBeVisible()
 
-      await unlockWith(page, WRONG_PASSPHRASE)
+      await attemptUnlock(page, WRONG_PASSPHRASE)
 
       // Stays on UnlockScreen with the error.
       await expect(unlockHeading).toBeVisible()
