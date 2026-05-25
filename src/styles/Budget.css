@@ -792,6 +792,7 @@ body.dark .budget-confirm-newcat-btn--no {
   gap: 0.5rem;
   padding: 0.3rem 0.6rem;
   font-size: var(--fs-sm);
+  color: var(--color-text);
   cursor: pointer;
   transition: background 0.1s;
 }

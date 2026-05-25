@@ -953,3 +953,13 @@ describe('BudgetTable', () => {
     })
   })
 })
+
+describe('Budget.css dark mode', () => {
+  it('.budget-filter-item declares color: var(--color-text) so dropdown labels are readable in dark mode', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const cssPath = path.resolve(__dirname, '..', '..', '..', 'styles', 'Budget.css')
+    const source = fs.readFileSync(cssPath, 'utf-8')
+    expect(source).toMatch(/\.budget-filter-item\s*\{[^}]*color:\s*var\(--color-text\)\s*;[^}]*\}/)
+  })
+})
