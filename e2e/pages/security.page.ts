@@ -97,8 +97,13 @@ export class SecurityPage {
   async enable(passphrase: string, confirm: string = passphrase): Promise<void> {
     await this.enableTriggerBtn.click()
     await expect(this.setupForm).toBeVisible()
+    await expect(this.setupPassInput).toBeVisible()
+    await expect(this.setupConfirmInput).toBeVisible()
     await this.setupPassInput.fill(passphrase)
+    await expect(this.setupPassInput).toHaveValue(passphrase)
     await this.setupConfirmInput.fill(confirm)
+    await expect(this.setupConfirmInput).toHaveValue(confirm)
+    await expect(this.setupSubmitBtn).toBeEnabled()
     await this.setupSubmitBtn.click()
     await expect(this.setupForm).toBeHidden()
     await expect(this.status).toHaveText(/Encryption enabled/)
