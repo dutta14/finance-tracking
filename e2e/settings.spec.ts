@@ -379,7 +379,7 @@ test.describe('Settings — Non-Security E2E', () => {
       // where the validator accepts the payload but the Goals page filters
       // it out (LS substring check alone would miss that).
       await page.goto('/finance-tracking/#/goal')
-      await expect(page.getByText('FI Goal')).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'FI Goal' })).toBeVisible()
 
       // Net Worth, Budget, Taxes each render their empty states with no
       // console errors. We visit each route directly.
