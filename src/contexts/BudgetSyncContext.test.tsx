@@ -148,8 +148,10 @@ describe('BudgetSyncContext', () => {
         await vi.advanceTimersByTimeAsync(3100)
       })
 
-      act(() => {
+      await act(async () => {
         window.dispatchEvent(new Event('budget-changed'))
+        // Listener defers markDirty via queueMicrotask
+        await Promise.resolve()
       })
 
       expect(result.current.sync.dirtyFlags.budget).toBe(true)

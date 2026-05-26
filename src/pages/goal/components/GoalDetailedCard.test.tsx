@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, within, act } from '@testing-library/react'
 import { FinancialGoal } from '../../../types'
 import GoalDetailedCard from './GoalDetailedCard'
 
@@ -493,7 +493,7 @@ describe('GoalDetailedCard edit mode', () => {
   })
 
   it('validates goal creation date is required on save', () => {
-    renderCard({}, { onUpdateGoal, showActions: false })
+    renderCard({ goalCreatedIn: '2024-01-15' }, { onUpdateGoal, showActions: false })
     fireEvent.click(screen.getByRole('button', { name: /Edit/ }))
     fireEvent.change(getEditDateInput('Goal Creation Date'), { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
@@ -556,8 +556,10 @@ describe('GoalDetailedCard suggest SWR', () => {
     const btn = screen.getByRole('button', { name: 'Suggest SWR' })
     fireEvent.click(btn)
     expect(screen.getByText('Searching…')).toBeInTheDocument()
-    // Run the setTimeout macrotask
-    await vi.advanceTimersByTimeAsync(0)
+    // Run the setTimeout macrotask (React 19 requires act() to flush state from non-event timers)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
     // suggestSWR runs the internal simulation — may or may not find a valid SWR
     // Either way, the button should return to normal
     expect(screen.queryByText('Searching…')).not.toBeInTheDocument()

@@ -42,7 +42,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
   const catInputRef = useRef<HTMLInputElement>(null)
   const catListRef = useRef<HTMLUListElement>(null)
   const catWrapperRef = useRef<HTMLDivElement>(null)
-  const successTimer = useRef<ReturnType<typeof setTimeout>>()
+  const successTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const visibleGroups = categoryGroups.filter(g => g.id !== REMOVED_GROUP_ID && g.categories.length > 0)
 

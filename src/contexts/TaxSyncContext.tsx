@@ -48,7 +48,9 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
     const handler = () => {
-      markDirty('taxes')
+      // Defer to a microtask so listeners triggered during a render-time
+      // dispatchEvent don't cause a setState-in-render warning under React 19.
+      queueMicrotask(() => markDirty('taxes'))
       if (timer) clearTimeout(timer)
       timer = setTimeout(async () => {
         const taxStore = appStorage.getJSON('tax-store', {})
