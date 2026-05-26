@@ -29,7 +29,10 @@ export const BudgetSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
   const { config, activeToken, isConfigured, markDirty, clearDirty } = useGitHubSyncContext()
 
   useEffect(() => {
-    const onBudget = () => markDirty('budget')
+    // Defer to a microtask so listeners triggered during a render-time
+    // dispatchEvent (e.g. loadBudgetStore migrations) don't cause a
+    // setState-in-render warning under React 19.
+    const onBudget = () => queueMicrotask(() => markDirty('budget'))
     window.addEventListener('budget-changed', onBudget)
     return () => window.removeEventListener('budget-changed', onBudget)
   }, [markDirty])

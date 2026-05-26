@@ -42,7 +42,7 @@ const FlagAdminPane: FC = () => {
   const [rolloutDirty, setRolloutDirty] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveError, setSaveError] = useState('')
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const flagList = getFlagList()
 
