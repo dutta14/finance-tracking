@@ -21,8 +21,9 @@ Dev server runs at `http://localhost:5173` with hot reload.
 ```bash
 npm run build      # Production build to dist/
 npm run preview    # Preview production build locally
-npm run deploy     # Build + deploy to GitHub Pages
 ```
+
+Deployment is automated: every push to `main` runs `.github/workflows/ci.yml`, which builds and deploys to GitHub Pages via `actions/deploy-pages` after CI + E2E pass.
 
 ## Project Structure
 
@@ -155,7 +156,6 @@ Custom DOM events for cross-component communication:
 | `npm run dev`           | Start dev server                           |
 | `npm run build`         | Production build                           |
 | `npm run preview`       | Preview production build                   |
-| `npm run deploy`        | Run tests + build + deploy to GitHub Pages |
 | `npm test`              | Vitest in watch mode                       |
 | `npm run test:run`      | Single test run (used in CI)               |
 | `npm run test:coverage` | Test run with coverage report              |
@@ -235,11 +235,9 @@ Runs automatically before each commit:
 3. `npx eslint src/ --max-warnings=0`
 4. `npx vitest run`
 
-### Manual deploy
+### Deployment
 
-```bash
-npm run deploy   # Runs tests, builds, then deploys via gh-pages
-```
+Deployment is automated. Every push to `main` triggers `.github/workflows/ci.yml`, which runs lint + unit tests + build + E2E, then deploys to GitHub Pages via `actions/deploy-pages`. No manual deploy step is needed.
 
 ## Commit Conventions
 
