@@ -121,3 +121,12 @@ body.dark {
   --color-positive-border: #064e3b;
   --color-tooltip-bg: #1e2228;
 }
+
+/* Dark-mode native control overrides */
+body.dark input[type='date']::-webkit-calendar-picker-indicator,
+body.dark input[type='datetime-local']::-webkit-calendar-picker-indicator,
+body.dark input[type='month']::-webkit-calendar-picker-indicator,
+body.dark input[type='time']::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.2);
+  cursor: pointer;
+}
