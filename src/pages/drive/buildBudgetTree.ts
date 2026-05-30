@@ -26,15 +26,17 @@ export function buildDriveTree(): DriveFolder {
   }
   yearFolders.sort((a, b) => b.slug.localeCompare(a.slug))
 
-  const budgetFolder: DriveFolder = {
-    name: 'Budget',
-    slug: 'budget',
-    folders: yearFolders,
-    files: [],
+  const topFolders: DriveFolder[] = []
+  if (yearFolders.length > 0) {
+    topFolders.push({
+      name: 'Budget',
+      slug: 'budget',
+      folders: yearFolders,
+      files: [],
+    })
   }
 
   const taxFolder = buildTaxTree()
-  const topFolders: DriveFolder[] = [budgetFolder]
   if (taxFolder.folders.length > 0 || taxFolder.files.length > 0) {
     topFolders.push(taxFolder)
   }

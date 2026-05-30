@@ -6,15 +6,14 @@ beforeEach(() => {
 })
 
 describe('buildDriveTree', () => {
-  it('returns root Drive folder with Budget subfolder when no data', () => {
+  it('returns empty root Drive folder when no budget or tax data', () => {
     const tree = buildDriveTree()
     expect(tree.name).toBe('Drive')
     expect(tree.slug).toBe('')
     expect(tree.files).toEqual([])
-    // Should have at least Budget folder
-    const budget = tree.folders.find(f => f.slug === 'budget')
-    expect(budget).toBeTruthy()
-    expect(budget!.name).toBe('Budget')
+    // Budget folder is omitted when empty (parallel to Taxes)
+    expect(tree.folders.find(f => f.slug === 'budget')).toBeUndefined()
+    expect(tree.folders).toHaveLength(0)
   })
 
   it('builds year folders from budget CSVs', () => {
@@ -91,5 +90,37 @@ describe('buildDriveTree', () => {
     const taxes = tree.folders.find(f => f.slug === 'taxes')
     expect(taxes).toBeTruthy()
     expect(taxes!.folders).toHaveLength(1)
+  })
+
+  it('includes Budget folder only when budget files exist', () => {
+    // No budget data → Budget folder should be omitted
+    const tree = buildDriveTree()
+    expect(tree.folders.find(f => f.slug === 'budget')).toBeUndefined()
+
+    // Add a budget CSV → Budget folder should now appear
+    localStorage.setItem(
+      'budget-store',
+      JSON.stringify({
+        csvs: { '2025-01': { month: '2025-01', csv: 'date,amount\na,1', uploadedAt: '2025-01-15' } },
+        configs: {},
+        years: [2025],
+      }),
+    )
+    localStorage.setItem(
+      'budget-config',
+      JSON.stringify({
+        version: 1,
+        years: [2025],
+        categoryGroups: [
+          { id: 'others', name: 'Others', categories: [] },
+          { id: 'removed', name: 'Remove from Budget', categories: [] },
+        ],
+      }),
+    )
+
+    const tree2 = buildDriveTree()
+    const budget = tree2.folders.find(f => f.slug === 'budget')
+    expect(budget).toBeTruthy()
+    expect(budget!.folders).toHaveLength(1)
   })
 })

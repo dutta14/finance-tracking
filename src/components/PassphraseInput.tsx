@@ -121,7 +121,12 @@ const PassphraseInput: FC<PassphraseInputProps> = ({
           {visible ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </div>
-      <p id={errorId} className="unlock-error" role="alert" aria-live="assertive">
+      <p
+        id={errorId}
+        className="unlock-error"
+        role={hasError ? 'alert' : undefined}
+        aria-live={hasError ? 'assertive' : undefined}
+      >
         {error || ''}
       </p>
     </div>
