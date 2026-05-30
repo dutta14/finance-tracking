@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-
 import { PageType } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
 import SidebarToggle from './components/SidebarToggle'
+import SkipLink from './components/SkipLink'
 
 const Home = lazy(() => import('./pages/home/Home'))
 const Goal = lazy(() => import('./pages/goal/Goal'))
@@ -127,6 +128,7 @@ const AppShell: FC = () => {
   )
   return (
     <div className="app-layout">
+      <SkipLink />
       <ModernDesignToggle />
       {sidebarOpen && (
         <SidebarNavigation
@@ -139,6 +141,8 @@ const AppShell: FC = () => {
       )}
       {isMobile && sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="sidebar-overlay" />}
       <main
+        id="main-content"
+        tabIndex={-1}
         className={`main-content${!sidebarOpen ? ' sidebar-closed' : ''}${!isMobile && sidebarOpen ? ' sidebar-open' : ''}`}
       >
         {!sidebarOpen && (

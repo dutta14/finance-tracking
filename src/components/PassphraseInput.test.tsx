@@ -94,10 +94,20 @@ describe('PassphraseInput', () => {
   })
 
   it('reserves space for error message even when no error', () => {
-    render(<PassphraseInput {...defaultProps} />)
-    const errorEl = screen.getByRole('alert')
+    const { container } = render(<PassphraseInput {...defaultProps} />)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    const errorEl = container.querySelector('.unlock-error')
     expect(errorEl).toBeInTheDocument()
     expect(errorEl).toHaveTextContent('')
+    expect(errorEl).not.toHaveAttribute('role')
+    expect(errorEl).not.toHaveAttribute('aria-live')
+  })
+
+  it('exposes role="alert" only when error becomes non-empty', () => {
+    const { rerender } = render(<PassphraseInput {...defaultProps} />)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    rerender(<PassphraseInput {...defaultProps} error="Wrong passphrase" />)
+    expect(screen.getByRole('alert')).toHaveTextContent('Wrong passphrase')
   })
 
   it('links aria-describedby to error and external description', () => {

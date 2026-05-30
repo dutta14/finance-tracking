@@ -99,8 +99,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   renderCardFallback(): React.ReactNode {
     return (
-      <div className="error-boundary-card" role="alert">
-        <p>Something went wrong on this page.</p>
+      <div className="error-boundary-card" role="alert" tabIndex={0}>
+        <p>This card couldn&apos;t load.</p>
         <button className="error-boundary-card-btn" onClick={this.resetErrorBoundary}>
           Retry
         </button>
