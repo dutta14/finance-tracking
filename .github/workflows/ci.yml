@@ -32,6 +32,7 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npx prettier --check 'src/**/*.{ts,tsx,css}'
       - run: npx eslint src/ --max-warnings=0
+      - run: npx tsc --noEmit
       - run: npx vitest run
       - run: npm run build
       - name: Configure Pages
