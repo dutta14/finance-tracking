@@ -73,7 +73,12 @@ describe('formatCurrency', () => {
 
 describe('getOwnerLabels', () => {
   it('uses profile names when available', () => {
-    const profile = { name: 'Alice', avatarDataUrl: '', birthday: '1990-01-01', partner: { name: 'Bob', avatarDataUrl: '', birthday: '1991-02-02' } }
+    const profile = {
+      name: 'Alice',
+      avatarDataUrl: '',
+      birthday: '1990-01-01',
+      partner: { name: 'Bob', avatarDataUrl: '', birthday: '1991-02-02' },
+    }
     const labels = getOwnerLabels(profile)
     expect(labels.primary).toBe('Alice')
     expect(labels.partner).toBe('Bob')

@@ -32,7 +32,10 @@ vi.mock('./AccountForm', () => ({
   ),
 }))
 
-const defaultProfile = makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '1991-05-20' } })
+const defaultProfile = makeProfile({
+  name: 'Alice',
+  partner: { name: 'Bob', avatarDataUrl: '', birthday: '1991-05-20' },
+})
 
 const buildAccounts = (): Account[] => [
   makeAccount({

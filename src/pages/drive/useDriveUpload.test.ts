@@ -4,7 +4,10 @@ import { useDriveUpload } from './useDriveUpload'
 
 /* ─── Mock dependencies ─── */
 
-const mockUploadCSV = vi.fn((): { ok: boolean; newCategories: string[]; error?: string } => ({ ok: true, newCategories: [] }))
+const mockUploadCSV = vi.fn((): { ok: boolean; newCategories: string[]; error?: string } => ({
+  ok: true,
+  newCategories: [],
+}))
 
 vi.mock('../budget/hooks/useBudget', () => ({
   useBudget: () => ({ uploadCSV: mockUploadCSV }),

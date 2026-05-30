@@ -336,7 +336,17 @@ describe('search', () => {
     const categories = groups.map(g => g.category)
 
     // Verify order matches CATEGORY_ORDER: page, command, goal, account, ...tool, settings
-    const ORDER: SearchCategory[] = ['page', 'command', 'goal', 'account', 'budget', 'tax', 'allocation', 'tool', 'settings']
+    const ORDER: SearchCategory[] = [
+      'page',
+      'command',
+      'goal',
+      'account',
+      'budget',
+      'tax',
+      'allocation',
+      'tool',
+      'settings',
+    ]
     const filtered = ORDER.filter(c => categories.includes(c))
     expect(categories).toEqual(filtered)
   })

@@ -343,7 +343,12 @@ describe('Home setup guide link', () => {
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: { '2024': { csv: 'data', month: '2024', uploadedAt: '' } }, configs: {}, years: [], categoryGroups: [] })
+    vi.mocked(loadBudgetStore).mockReturnValue({
+      csvs: { '2024': { csv: 'data', month: '2024', uploadedAt: '' } },
+      configs: {},
+      years: [],
+      categoryGroups: [],
+    })
 
     renderHome()
 
