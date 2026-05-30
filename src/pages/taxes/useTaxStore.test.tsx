@@ -37,6 +37,45 @@ describe('useTaxStore', () => {
       expect(result.current.allYears).toEqual([2024])
       expect(result.current.getYear(2024).items).toHaveLength(1)
     })
+
+    it('normalizes empty object to EMPTY_STORE without crashing the mount effect', () => {
+      // Regression #176: `appStorage.getJSON` only returns the fallback
+      // when the key is ABSENT, so a stored `{}` flowed through and
+      // crashed the mount effect at `Object.values(initial.years).some
+      // (...)`. Reachable via prior `buildV2Export` revisions that wrote
+      // `taxStore: {}` and via importValidator accepting any object.
+      localStorage.setItem('tax-store', '{}')
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
+      expect(result.current.allYears).toEqual([])
+      expect(result.current.store.years).toEqual({})
+    })
+
+    it('normalizes missing years field to EMPTY_STORE', () => {
+      localStorage.setItem('tax-store', JSON.stringify({ somethingElse: true }))
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
+      expect(result.current.store.years).toEqual({})
+    })
+
+    it('normalizes non-object years field to EMPTY_STORE', () => {
+      localStorage.setItem('tax-store', JSON.stringify({ years: 'oops' }))
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
+      expect(result.current.store.years).toEqual({})
+    })
+
+    it('normalizes array years field to EMPTY_STORE (typeof [] === object)', () => {
+      // Arrays pass `typeof === 'object'`. Without an explicit
+      // Array.isArray guard, `{years: []}` would slip past load() and
+      // let numeric array indices masquerade as year keys.
+      localStorage.setItem('tax-store', JSON.stringify({ years: [] }))
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
+      expect(result.current.store.years).toEqual({})
+    })
+
+    it('normalizes top-level array to EMPTY_STORE', () => {
+      localStorage.setItem('tax-store', JSON.stringify([]))
+      const { result } = renderHook(() => useTaxStore(), { wrapper })
+      expect(result.current.store.years).toEqual({})
+    })
   })
 
   describe('getYear', () => {

@@ -17,7 +17,26 @@ import { appStorage } from '../../utils/appStorage'
 const STORAGE_KEY = 'tax-store'
 
 function load(): TaxStore {
-  return appStorage.getJSON<TaxStore>(STORAGE_KEY, EMPTY_STORE)
+  // Guard against malformed shapes. `appStorage.getJSON` only returns
+  // the fallback when the key is ABSENT, so a stored `{}` (or any
+  // object missing `years`) flows through and crashes the mount
+  // effect at `Object.values(initial.years).some(...)` below. Reachable
+  // from real users via prior `buildV2Export()` revisions that wrote
+  // `taxStore: {}` and via hand-edited / partial-migration storage —
+  // `importValidator` only checks `isRecord(parsed.taxStore)` and
+  // accepts any object. Normalize here so consumers always see a
+  // well-formed store. Arrays are explicitly rejected: `typeof [] ===
+  // 'object'`, so `{years: []}` would otherwise pass and let numeric
+  // array indices masquerade as year keys downstream. (#176)
+  const s = appStorage.getJSON<TaxStore>(STORAGE_KEY, EMPTY_STORE)
+  return s &&
+    typeof s === 'object' &&
+    !Array.isArray(s) &&
+    s.years &&
+    typeof s.years === 'object' &&
+    !Array.isArray(s.years)
+    ? s
+    : EMPTY_STORE
 }
 
 function save(store: TaxStore) {
