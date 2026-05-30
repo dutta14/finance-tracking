@@ -21,7 +21,7 @@ import {
  *  - B: GoalsPeek.tsx:40 does NOT listen for `budget-changed` —
  *       `getBudgetSaveRate()` is a synchronous read at render time only.
  *       Test 40 reloads after the dispatch before asserting the new date.
- *       Follow-up: #164.
+ *       Reload no longer required after #164; reload kept for stability — Quinn to revisit.
  *  - C: SavingsGrowthTracker exposes NO `.sgt-year-row` / `.sgt-net-worth`
  *       /  `.sgt-income` / `.sgt-expense` class names. We use accessible
  *       `getByRole('row' | 'cell')` queries instead. Follow-up: #165.
