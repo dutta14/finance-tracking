@@ -159,6 +159,54 @@ describe('GoalsPeek projection — no budget data', () => {
     renderPeek()
     expect(screen.getByText('Add budget data →')).toBeInTheDocument()
   })
+
+  it('renders the "Add budget data →" fallback as a focusable link to /budget', async () => {
+    const user = userEvent.setup()
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    mockedGetSaveRate.mockReturnValue(null)
+    renderPeek()
+
+    const link = screen.getByRole('link', { name: 'Add budget data →' })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('tabindex', '0')
+
+    await user.click(link)
+    expect(mockNavigate).toHaveBeenCalledWith('/budget')
+    // Parent goal-item button should NOT also navigate to /goal/1
+    expect(mockNavigate).toHaveBeenCalledTimes(1)
+  })
+
+  it('activates the "Add budget data →" link with Enter and Space keys', async () => {
+    const user = userEvent.setup()
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    mockedGetSaveRate.mockReturnValue(null)
+    renderPeek()
+
+    const link = screen.getByRole('link', { name: 'Add budget data →' })
+    link.focus()
+    expect(link).toHaveFocus()
+
+    await user.keyboard('{Enter}')
+    expect(mockNavigate).toHaveBeenCalledWith('/budget')
+
+    mockNavigate.mockClear()
+    await user.keyboard(' ')
+    expect(mockNavigate).toHaveBeenCalledWith('/budget')
+  })
 })
 
 /* ═══════════════════════════════════════════════════════════════
