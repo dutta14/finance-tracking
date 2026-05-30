@@ -171,6 +171,9 @@ const FICalculator: FC = () => {
   const { accounts, balances } = useData()
 
   // Derived defaults
+  // defaultLastYear = max(primary+100, partner+100) — plan horizon runs
+  // until the older partner reaches age 100. With a partner younger than
+  // primary, this is partner+100, NOT primary+100. Intentional. See #163.
   const defaultLastYear = useMemo(() => {
     const years = [profile.primaryBirthYear, profile.partnerBirthYear]
       .filter((y): y is number => y !== null)

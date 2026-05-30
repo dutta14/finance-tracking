@@ -634,6 +634,65 @@ describe('FICalculator', () => {
     }
   })
 
+  /* ── defaultLastYear (regression: #163) ───────────────────────── */
+
+  /**
+   * Pin the documented `defaultLastYear` rule (FICalculator.tsx lines 173-182):
+   *   defaultLastYear = max(primary+100, partner+100), or thisYear+60 if neither.
+   * The Plan-until stepper value at first render IS defaultLastYear, so we
+   * read the `.fi-calc-step-val` inside the "Plan until" row to assert it.
+   * A future refactor that breaks the rule must make these tests fail.
+   */
+  describe('defaultLastYear (regression: #163)', () => {
+    function readPlanUntilYear(): number {
+      const row = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
+      const text = row.querySelector('.fi-calc-step-val')!.textContent!
+      return parseInt(text, 10)
+    }
+
+    it('falls back to thisYear+60 when neither birth year is present', () => {
+      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
+        if (key === 'user-profile') return {}
+        if (key === 'fi-simulations') return []
+        return fallback ?? {}
+      })
+      renderCalc()
+      const thisYear = new Date().getFullYear()
+      expect(readPlanUntilYear()).toBe(thisYear + 60)
+    })
+
+    it('uses primary+100 when only primary birthday is set', () => {
+      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
+        if (key === 'user-profile') return { birthday: '1990-05-15' }
+        if (key === 'fi-simulations') return []
+        return fallback ?? {}
+      })
+      renderCalc()
+      expect(readPlanUntilYear()).toBe(2090)
+    })
+
+    it('uses partner+100 (NOT primary+100) when partner is younger — the #163 case', () => {
+      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
+        if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1995-06-15' } }
+        if (key === 'fi-simulations') return []
+        return fallback ?? {}
+      })
+      renderCalc()
+      expect(readPlanUntilYear()).toBe(2095)
+      expect(readPlanUntilYear()).not.toBe(2090)
+    })
+
+    it('uses primary+100 when partner is older than primary', () => {
+      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
+        if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1985-06-15' } }
+        if (key === 'fi-simulations') return []
+        return fallback ?? {}
+      })
+      renderCalc()
+      expect(readPlanUntilYear()).toBe(2090)
+    })
+  })
+
   /* ── Partner 401k stepper decrement ───────────────────────────── */
 
   it('increments partner 401k year when plus stepper is clicked', async () => {
