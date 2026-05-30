@@ -15,7 +15,7 @@ const mockUseData = vi.fn(() => ({
 }))
 
 vi.mock('../../../contexts/DataContext', () => ({
-  useData: (...args: unknown[]) => mockUseData(...args),
+  useData: () => mockUseData(),
 }))
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
@@ -148,7 +148,7 @@ describe('FICalculator', () => {
           status: 'active',
           goalType: 'fi',
           nature: 'asset',
-          allocation: 'stocks',
+          allocation: 'us-stock',
         },
       ],
       balances: [{ id: 1, accountId: 1, month: '2025-01', balance: 50_000_000 }],
@@ -184,7 +184,7 @@ describe('FICalculator', () => {
   it('increments inflation rate when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')!
+    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
     const plusBtn = within(inflationRow)
       .getAllByRole('button')
       .find(b => b.textContent === '+')!
@@ -195,7 +195,7 @@ describe('FICalculator', () => {
   it('decrements inflation rate when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')!
+    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
     const minusBtn = within(inflationRow)
       .getAllByRole('button')
       .find(b => b.textContent === '−')!
@@ -206,7 +206,7 @@ describe('FICalculator', () => {
   it('increments growth rate when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')!
+    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')! as HTMLElement
     const plusBtn = within(growthRow)
       .getAllByRole('button')
       .find(b => b.textContent === '+')!
@@ -217,7 +217,7 @@ describe('FICalculator', () => {
   it('decrements growth rate when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')!
+    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')! as HTMLElement
     const minusBtn = within(growthRow)
       .getAllByRole('button')
       .find(b => b.textContent === '−')!
@@ -228,7 +228,7 @@ describe('FICalculator', () => {
   it('increments retire year when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const retireRow = screen.getByText('Retire in').closest('.fi-calc-stepper-item')!
+    const retireRow = screen.getByText('Retire in').closest('.fi-calc-stepper-item')! as HTMLElement
     const plusBtn = within(retireRow)
       .getAllByRole('button')
       .find(b => b.textContent === '+')!
@@ -240,7 +240,7 @@ describe('FICalculator', () => {
   it('decrements plan-until year when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')!
+    const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
     const minusBtn = within(planRow)
       .getAllByRole('button')
       .find(b => b.textContent === '−')!
@@ -299,7 +299,7 @@ describe('FICalculator', () => {
     expect(screen.getByText('To Delete')).toBeInTheDocument()
 
     // Delete it via the × span
-    const chip = screen.getByText('To Delete').closest('button')!
+    const chip = screen.getByText('To Delete').closest('button')! as HTMLElement
     const deleteBtn = chip.querySelector('.fi-sim-chip-x')!
     await user.click(deleteBtn)
     expect(screen.queryByText('To Delete')).not.toBeInTheDocument()
@@ -430,7 +430,7 @@ describe('FICalculator', () => {
   it('increments primary 401k year when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const row401k = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')!
+    const row401k = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
     const initial = row401k.querySelector('.fi-calc-step-val')!.textContent!
     const plusBtn = within(row401k)
       .getAllByRole('button')
@@ -484,7 +484,7 @@ describe('FICalculator', () => {
           status: 'active',
           goalType: 'fi',
           nature: 'asset',
-          allocation: { usEquity: 100, intlEquity: 0, usBond: 0, intlBond: 0, cash: 0, other: 0 },
+          allocation: 'us-stock',
         },
       ],
       balances: [{ id: 1, accountId: 1, month: '2025-01', balance: 100000 }],
@@ -513,7 +513,7 @@ describe('FICalculator', () => {
           status: 'active',
           goalType: 'fi',
           nature: 'asset',
-          allocation: { usEquity: 100, intlEquity: 0, usBond: 0, intlBond: 0, cash: 0, other: 0 },
+          allocation: 'us-stock',
         },
       ],
       balances: [{ id: 2, accountId: 2, month: '2025-01', balance: 80000 }],
@@ -612,10 +612,10 @@ describe('FICalculator', () => {
     const { parseCSV } = await import('../../budget/utils/csvParser')
 
     const lastYear = new Date().getFullYear() - 1
-    const csvs: Record<string, { csv: string }> = {}
+    const csvs: Record<string, { csv: string; month: string; uploadedAt: string }> = {}
     for (let m = 1; m <= 12; m++) {
       const key = `${lastYear}-${String(m).padStart(2, '0')}`
-      csvs[key] = { csv: 'test' }
+      csvs[key] = { csv: 'test', month: key, uploadedAt: '' }
     }
 
     vi.mocked(loadBudgetStore).mockReturnValue({
@@ -645,7 +645,7 @@ describe('FICalculator', () => {
 
     const user = userEvent.setup()
     renderCalc()
-    const row = screen.getByText('Partner 401(k)').closest('.fi-calc-stepper-item')!
+    const row = screen.getByText('Partner 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
     const initial = row.querySelector('.fi-calc-step-val')!.textContent!
     const plusBtn = within(row)
       .getAllByRole('button')

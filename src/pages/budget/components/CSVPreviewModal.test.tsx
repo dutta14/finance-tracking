@@ -148,7 +148,7 @@ describe('CSVPreviewModal', () => {
     await user.click(screen.getByText('Import (3 of 4 columns)'))
 
     expect(props.onConfirm).toHaveBeenCalledOnce()
-    const result = props.onConfirm.mock.calls[0][0]
+    const result = (props.onConfirm as ReturnType<typeof vi.fn>).mock.calls[0][0]
     const lines = result.split('\n')
     expect(lines[0]).toBe('Date,Category,Amount')
     expect(lines[1]).toContain('Groceries')

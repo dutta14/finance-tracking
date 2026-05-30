@@ -30,12 +30,12 @@ export const bytesToB64 = (bytes: Uint8Array): string => {
   return btoa(binary)
 }
 
-export const b64ToBytes = (b64: string): Uint8Array => Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+export const b64ToBytes = (b64: string): Uint8Array<ArrayBuffer> => Uint8Array.from(atob(b64), c => c.charCodeAt(0))
 
 // ── Key derivation ─────────────────────────────────────────────
 
 /** Derive an AES-256-GCM CryptoKey from a passphrase + salt (PBKDF2, 310 000 iterations, SHA-256). */
-export async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
+export async function deriveKey(passphrase: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, [
     'deriveKey',
   ])

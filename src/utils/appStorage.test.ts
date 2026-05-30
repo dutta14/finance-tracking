@@ -168,7 +168,7 @@ describe('appStorage', () => {
     appStorage.setJSON('user-profile', { name: 'Secret' })
 
     // Flush the microtask queue
-    await new Promise(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
     await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(crypto.encryptString).toHaveBeenCalledWith(JSON.stringify({ name: 'Secret' }), mockCryptoKey)
@@ -191,7 +191,7 @@ describe('appStorage', () => {
     appStorage.setJSON('user-profile', { name: 'C' })
 
     // Flush microtask
-    await new Promise(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
     await new Promise(resolve => setTimeout(resolve, 0))
 
     // encryptString should only be called once (last value wins)
@@ -334,14 +334,14 @@ describe('appStorage', () => {
     await appStorage.hydrate(mockCryptoKey)
 
     appStorage.setString('user-profile', 'value-to-remove')
-    await new Promise(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
     await new Promise(resolve => setTimeout(resolve, 0))
 
     appStorage.remove('user-profile')
     expect(appStorage.getString('user-profile')).toBeNull()
 
     // Flush the microtask
-    await new Promise(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
     await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(localStorage.getItem('user-profile')).toBeNull()

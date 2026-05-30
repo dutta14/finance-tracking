@@ -32,7 +32,7 @@ let fetchMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   fetchMock = vi.fn()
-  global.fetch = fetchMock
+  global.fetch = fetchMock as unknown as typeof fetch
   vi.clearAllMocks()
 })
 

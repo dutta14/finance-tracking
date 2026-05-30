@@ -748,9 +748,9 @@ describe('useBudget — viewMode', () => {
   it('switches view mode', () => {
     const { result } = renderHook(() => useBudget())
     act(() => {
-      result.current.setViewMode('monthly')
+      result.current.setViewMode('detailed')
     })
-    expect(result.current.viewMode).toBe('monthly')
+    expect(result.current.viewMode).toBe('detailed')
   })
 })
 

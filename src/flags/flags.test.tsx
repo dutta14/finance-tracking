@@ -9,7 +9,7 @@ import { useFlag } from './useFlag'
 
 /* ── Mock GitHubSyncContext ───────────────────────────────────────── */
 
-const mockActiveToken = vi.fn(() => 'test-token')
+const mockActiveToken = vi.fn<() => string | null>(() => 'test-token')
 
 vi.mock('../contexts/GitHubSyncContext', () => ({
   useGitHubSyncContext: () => ({
@@ -97,7 +97,8 @@ describe('FlagContext resolution', () => {
   })
 
   it('returns default when no override or rollout config', () => {
-    const resolveFlag = (_flag: Parameters<FlagContextValue['resolveFlag']>[0]) => _flag.default
+    const resolveFlag = ((_flag: Parameters<FlagContextValue['resolveFlag']>[0]) =>
+      _flag.default) as FlagContextValue['resolveFlag']
 
     const wrapper: FC<{ children: ReactNode }> = ({ children }) => (
       <FlagContext.Provider
@@ -450,9 +451,17 @@ describe('FlagProvider integration', () => {
       <FlagContext.Provider
         value={{
           resolveFlag: resolveFlag as FlagContextValue['resolveFlag'],
+          overrides: {},
+          rolloutConfig: { version: 1, updatedAt: '', flags: {} },
           setOverride: () => {},
           resetAllOverrides: () => {},
+          saveRolloutConfig: async () => {},
+          refresh: async () => {},
           isAdmin: true,
+          isLoading: false,
+          error: null,
+          environment: 'staging' as const,
+          clientId: 'test',
         }}
       >
         {children}
@@ -481,9 +490,17 @@ describe('FlagProvider integration', () => {
       <FlagContext.Provider
         value={{
           resolveFlag: resolveFlag as FlagContextValue['resolveFlag'],
+          overrides: {},
+          rolloutConfig: { version: 1, updatedAt: '', flags: {} },
           setOverride: () => {},
           resetAllOverrides: () => {},
+          saveRolloutConfig: async () => {},
+          refresh: async () => {},
           isAdmin: true,
+          isLoading: false,
+          error: null,
+          environment: 'staging' as const,
+          clientId: 'test',
         }}
       >
         {children}
@@ -535,9 +552,17 @@ describe('FlagProvider integration', () => {
       <FlagContext.Provider
         value={{
           resolveFlag: resolveFlag as FlagContextValue['resolveFlag'],
+          overrides: {},
+          rolloutConfig: { version: 1, updatedAt: '', flags: {} },
           setOverride: () => {},
           resetAllOverrides: () => {},
+          saveRolloutConfig: async () => {},
+          refresh: async () => {},
           isAdmin: true,
+          isLoading: false,
+          error: null,
+          environment: 'staging' as const,
+          clientId: 'test',
         }}
       >
         {children}

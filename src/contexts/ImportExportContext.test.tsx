@@ -198,17 +198,18 @@ describe('ImportExportContext', () => {
       createElementSpy = vi.spyOn(document, 'createElement')
       createElementSpy.mockImplementation((tag: string) => {
         if (tag === 'a') {
-          return {
+          const anchor = {
             _href: '',
             download: '',
             click: vi.fn(),
             set href(v: string) {
-              this._href = v
+              anchor._href = v
             },
             get href() {
-              return this._href
+              return anchor._href
             },
-          } as unknown as HTMLAnchorElement
+          }
+          return anchor as unknown as HTMLAnchorElement
         }
         return origCreateElement(tag)
       })
@@ -275,24 +276,25 @@ describe('ImportExportContext', () => {
       createElementSpy = vi.spyOn(document, 'createElement')
       createElementSpy.mockImplementation((tag: string) => {
         if (tag === 'a') {
-          return {
+          const anchor = {
             _href: '',
             _download: '',
             click: vi.fn(),
             set href(v: string) {
-              this._href = v
+              anchor._href = v
             },
             get href() {
-              return this._href
+              return anchor._href
             },
             set download(v: string) {
-              this._download = v
+              anchor._download = v
               capturedDownload = v
             },
             get download() {
-              return this._download
+              return anchor._download
             },
-          } as unknown as HTMLAnchorElement
+          }
+          return anchor as unknown as HTMLAnchorElement
         }
         return origCreateElement(tag)
       })
@@ -606,17 +608,18 @@ describe('ImportExportContext', () => {
       const createElementSpy = vi.spyOn(document, 'createElement')
       createElementSpy.mockImplementation((tag: string) => {
         if (tag === 'a') {
-          return {
+          const anchor = {
             _href: '',
             download: '',
             click: vi.fn(),
             set href(v: string) {
-              this._href = v
+              anchor._href = v
             },
             get href() {
-              return this._href
+              return anchor._href
             },
-          } as unknown as HTMLAnchorElement
+          }
+          return anchor as unknown as HTMLAnchorElement
         }
         return origCreateElement(tag)
       })

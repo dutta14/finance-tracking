@@ -680,6 +680,7 @@ describe('GitHubSyncPane', () => {
       <GitHubSyncPane
         ghConfig={{ owner: '', repo: '', filePath: 'data.json', autoSync: false }}
         ghSyncProgress={null}
+        hasPendingChanges={false}
       />,
     )
     expect(screen.getByRole('button', { name: 'Configuration' })).toBeInTheDocument()

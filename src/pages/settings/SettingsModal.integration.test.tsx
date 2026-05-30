@@ -40,7 +40,7 @@ import SettingsModal from './SettingsModal'
 const defaultProps = {
   darkMode: false,
   onToggleDarkMode: vi.fn(),
-  profile: { name: 'Test User', email: 'test@example.com', currency: 'USD' },
+  profile: { name: 'Test User', avatarDataUrl: '', birthday: '' },
   onUpdateProfile: vi.fn(),
   hasPendingChanges: false,
   onClose: vi.fn(),

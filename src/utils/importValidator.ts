@@ -86,7 +86,7 @@ function validateGoal(g: unknown, index: number, warnings: string[]): FinancialG
     warnings.push(`goals[${index}]: missing or empty "goalName" — skipped`)
     return null
   }
-  return g as FinancialGoal
+  return g as unknown as FinancialGoal
 }
 
 function validateGwGoal(g: unknown, index: number, warnings: string[]): GwGoal | null {
@@ -106,7 +106,7 @@ function validateGwGoal(g: unknown, index: number, warnings: string[]): GwGoal |
     warnings.push(`gwGoals[${index}]: missing or empty "label" — skipped`)
     return null
   }
-  return g as GwGoal
+  return g as unknown as GwGoal
 }
 
 function validateAccount(a: unknown, index: number, warnings: string[]): Account | null {
@@ -122,7 +122,7 @@ function validateAccount(a: unknown, index: number, warnings: string[]): Account
     warnings.push(`dataAccounts[${index}]: missing or empty "name" — skipped`)
     return null
   }
-  return a as Account
+  return a as unknown as Account
 }
 
 function validateBalance(b: unknown, index: number, warnings: string[]): BalanceEntry | null {
@@ -146,7 +146,7 @@ function validateBalance(b: unknown, index: number, warnings: string[]): Balance
     warnings.push(`dataBalances[${index}]: missing or invalid "balance" — skipped`)
     return null
   }
-  return b as BalanceEntry
+  return b as unknown as BalanceEntry
 }
 
 function sanitizeProfile(raw: unknown, warnings: string[]): Partial<Profile> | undefined {
@@ -258,7 +258,7 @@ function validateTaxTemplate(t: unknown, index: number, warnings: string[]): Tax
     warnings.push(`taxTemplates[${index}]: missing or invalid "items" array — skipped`)
     return null
   }
-  return t as TaxTemplate
+  return t as unknown as TaxTemplate
 }
 
 // ── Main validator ─────────────────────────────────────────────

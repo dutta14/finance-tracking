@@ -13,7 +13,7 @@ beforeEach(() => {
 
 const defaultProps = () => ({
   year: 2025,
-  type: 'expense' as const,
+  type: 'expense' as 'income' | 'expense',
   categoryGroups: [
     makeCategoryGroup({ id: 'essentials', name: 'Essentials', categories: ['Groceries', 'Rent'] }),
     makeCategoryGroup({ id: 'lifestyle', name: 'Lifestyle', categories: ['Dining', 'Entertainment'] }),

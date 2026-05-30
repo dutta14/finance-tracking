@@ -163,6 +163,7 @@ Custom DOM events for cross-component communication:
 | `npm run lint:fix`      | ESLint auto-fix                            |
 | `npm run format`        | Prettier write                             |
 | `npm run format:check`  | Prettier check (used in CI)                |
+| `npm run typecheck`     | TypeScript check (used in CI and pre-push) |
 
 ## Contexts
 
@@ -233,7 +234,8 @@ Runs automatically before each commit:
 1. `npm audit --audit-level=high`
 2. `npx prettier --check src/`
 3. `npx eslint src/ --max-warnings=0`
-4. `npx vitest run`
+4. `npx tsc --noEmit`
+5. `npx vitest run`
 
 ### Deployment
 

@@ -2,6 +2,7 @@ import { createContext, useContext, useCallback, useEffect, useRef, useMemo, FC,
 import { useGitHubSyncContext } from './GitHubSyncContext'
 import { useEncryption } from './EncryptionContext'
 import { syncAllTaxFiles } from '../pages/taxes/taxGitHubSync'
+import { EMPTY_STORE, TaxStore } from '../pages/taxes/types'
 import { appStorage } from '../utils/appStorage'
 
 export interface TaxSyncContextValue {
@@ -53,7 +54,7 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
       queueMicrotask(() => markDirty('taxes'))
       if (timer) clearTimeout(timer)
       timer = setTimeout(async () => {
-        const taxStore = appStorage.getJSON('tax-store', {})
+        const taxStore = appStorage.getJSON<TaxStore>('tax-store', EMPTY_STORE)
         const taxesPayload = {
           version: 1,
           exportedAt: new Date().toISOString(),
@@ -85,7 +86,7 @@ export const TaxSyncProvider: FC<{ children: ReactNode }> = ({ children }) => {
       }
       await syncTaxesNow(taxesPayload, message ? `Taxes: ${message}` : undefined)
       if (isConfiguredRef.current && tokenRef.current) {
-        const taxStore = appStorage.getJSON('tax-store', {})
+        const taxStore = appStorage.getJSON<TaxStore>('tax-store', EMPTY_STORE)
         await syncAllTaxFiles(configRef.current, tokenRef.current, taxStore, cryptoKey).catch(e =>
           console.error('Tax file sync error:', e),
         )

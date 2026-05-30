@@ -17,7 +17,7 @@ const mockUseData = vi.fn(() => ({
 }))
 
 vi.mock('../../../contexts/DataContext', () => ({
-  useData: (...args: unknown[]) => mockUseData(...args),
+  useData: () => mockUseData(),
 }))
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
@@ -70,7 +70,7 @@ describe('SavingsGrowthTracker', () => {
           status: 'active',
           goalType: 'fi',
           nature: 'asset',
-          allocation: 'stocks',
+          allocation: 'us-stock',
         },
       ],
       balances: [{ id: 1, accountId: 1, month: '2023-12', balance: 100000 }],
@@ -100,7 +100,7 @@ describe('SavingsGrowthTracker', () => {
           status: 'active',
           goalType: 'fi',
           nature: 'asset',
-          allocation: 'stocks',
+          allocation: 'us-stock',
         },
       ],
       balances: [{ id: 1, accountId: 1, month: '2023-12', balance: 100000 }],

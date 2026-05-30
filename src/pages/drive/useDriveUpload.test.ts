@@ -4,7 +4,10 @@ import { useDriveUpload } from './useDriveUpload'
 
 /* ─── Mock dependencies ─── */
 
-const mockUploadCSV = vi.fn(() => ({ ok: true, newCategories: [] }))
+const mockUploadCSV = vi.fn((): { ok: boolean; newCategories: string[]; error?: string } => ({
+  ok: true,
+  newCategories: [],
+}))
 
 vi.mock('../budget/hooks/useBudget', () => ({
   useBudget: () => ({ uploadCSV: mockUploadCSV }),
@@ -137,7 +140,7 @@ describe('useDriveUpload — handlePreviewConfirm', () => {
 
   it('shows error toast when upload fails', async () => {
     vi.useFakeTimers()
-    mockUploadCSV.mockReturnValueOnce({ ok: false, error: 'Invalid format' })
+    mockUploadCSV.mockReturnValueOnce({ ok: false, newCategories: [], error: 'Invalid format' })
     setupFileReader('bad-data')
 
     const { result } = renderUploadHook()
@@ -436,12 +439,12 @@ describe('useDriveUpload — handleFileInputChange', () => {
     await act(async () => {
       const fakeFiles = [new File(['csv'], '2025-01.csv', { type: 'text/csv' })]
       const fileList = {
+        ...fakeFiles,
         length: fakeFiles.length,
         item: (i: number) => fakeFiles[i],
         [Symbol.iterator]: function* () {
           for (const f of fakeFiles) yield f
         },
-        ...fakeFiles,
       } as unknown as FileList
 
       await result.current.handleFileInputChange({

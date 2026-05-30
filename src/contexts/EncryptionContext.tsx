@@ -47,7 +47,7 @@ function readEnabled(): boolean {
   return localStorage.getItem(LS_ENABLED) === '1'
 }
 
-function readSalt(): Uint8Array | null {
+function readSalt(): Uint8Array<ArrayBuffer> | null {
   const raw = localStorage.getItem(LS_SALT)
   if (!raw) return null
   try {

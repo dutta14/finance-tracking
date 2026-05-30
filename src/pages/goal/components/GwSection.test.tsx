@@ -41,7 +41,7 @@ const defaultProps = {
   onDeleteGwGoal: noop as (id: number) => void,
 }
 
-function renderGwSection(overrides: Partial<typeof defaultProps> = {}) {
+function renderGwSection(overrides: Partial<typeof defaultProps> & { initialFormOpen?: boolean } = {}) {
   return render(<GwSection {...defaultProps} {...overrides} />)
 }
 
