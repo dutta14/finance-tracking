@@ -36,7 +36,7 @@ function itemFiles(item: TaxChecklistItem, accounts: Account[]): DriveFile[] {
     name: f.name,
     slug: f.id,
     ext: f.ext,
-    content: f.content,
+    content: f.content ?? '',
     uploadedAt: f.uploadedAt,
     meta: {
       owner: ownerLabel(item.owner),

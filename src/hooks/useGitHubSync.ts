@@ -545,20 +545,20 @@ export const useGitHubSync = () => {
     [activeToken, apiHeaders, config.owner, config.repo, taxesFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
-  const restoreTaxesLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
-    if (!isConfigured) return { ok: false }
+  const restoreTaxesLatest = useCallback(async (): Promise<RestoreResult> => {
+    if (!isConfigured) return { ok: false, message: '' }
     try {
       const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`, {
         headers: apiHeaders(activeToken),
       })
-      if (res.status === 404) return { ok: false }
-      if (!res.ok) return { ok: false }
+      if (res.status === 404) return { ok: false, message: '' }
+      if (!res.ok) return { ok: false, message: '' }
       const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false }
+      if (typeof json.content !== 'string') return { ok: false, message: '' }
       const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, data: parsed }
+      return { ok: true, message: '', data: parsed }
     } catch {
-      return { ok: false }
+      return { ok: false, message: '' }
     }
   }, [activeToken, apiHeaders, taxesFilePath, config.owner, config.repo, isConfigured])
 

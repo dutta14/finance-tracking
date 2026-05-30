@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { ComponentProps, FC, useMemo } from 'react'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid, Cell } from 'recharts'
 import { Transaction, TimePeriod } from '../types'
 
@@ -108,11 +108,15 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
             width={55}
           />
           <Tooltip
-            formatter={(value: number, name: string) => [
-              fmt(Math.abs(value)),
-              name === 'income' ? 'Income' : 'Expense',
-            ]}
-            labelFormatter={(label: string) => `${label} ${year}`}
+            formatter={
+              ((value: number, name: string) => [
+                fmt(Math.abs(value)),
+                name === 'income' ? 'Income' : 'Expense',
+              ]) as unknown as ComponentProps<typeof Tooltip>['formatter']
+            }
+            labelFormatter={
+              ((label: string) => `${label} ${year}`) as unknown as ComponentProps<typeof Tooltip>['labelFormatter']
+            }
             contentStyle={{ fontSize: '0.82rem', borderRadius: 8 }}
           />
           <ReferenceLine y={0} stroke="var(--cashflow-zero, #9ca3af)" strokeWidth={1} />

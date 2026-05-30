@@ -29,7 +29,7 @@ interface BalanceSpreadsheetProps {
   balanceMap: Map<string, number>
   profile: Profile
   inlineEntry: { month: string; values: Record<number, string>; _focused?: number } | null
-  onInlineEntryChange: (entry: { month: string; values: Record<number, string> }) => void
+  onInlineEntryChange: (entry: { month: string; values: Record<number, string>; _focused?: number }) => void
   onSaveInlineEntry: () => void
   onCancelInlineEntry: () => void
   onDeleteMonth: (month: string) => void

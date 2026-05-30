@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Scope, CustomRatio, RatioPreset, RatioGoal } from '../types'
+import { AssetAllocation } from '../../data/types'
 import { loadCustomRatios, saveCustomRatios, makeDefaultRatio, makeId } from '../utils'
 
 export function useCustomRatios() {

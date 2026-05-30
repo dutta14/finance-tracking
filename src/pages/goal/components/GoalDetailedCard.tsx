@@ -1,5 +1,5 @@
 import { FC, useState, useMemo, useCallback, useEffect, useId } from 'react'
-import { FinancialGoal } from '../types'
+import { FinancialGoal } from '../../../types'
 import GoalCardActions from './GoalCardActions'
 import { calculateGoalMetrics, projectFIDate, DEFAULT_PRE_FI_GROWTH_RATE } from '../utils/goalCalculations'
 import { parseDate as utilParseDate, getMonthsBetween } from '../utils/dateHelpers'

@@ -52,6 +52,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
       const timer = setTimeout(() => setGhSyncSuccess(false), 3000)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [ghSyncSuccess])
 
   const handleGhTest = async () => {
