@@ -74,8 +74,18 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent shouldThrow={true} />
       </ErrorBoundary>,
     )
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+
+  it('card variant fallback is focusable with role="alert"', () => {
+    render(
+      <ErrorBoundary variant="card">
+        <ThrowingComponent shouldThrow={true} />
+      </ErrorBoundary>,
+    )
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveAttribute('tabindex', '0')
   })
 
   it('resets error state when resetKey changes (card variant)', () => {
@@ -84,7 +94,7 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent shouldThrow={true} />
       </ErrorBoundary>,
     )
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
 
     // Change ONLY resetKey — child still throws, but error state should reset first
     // then re-catch the new error. This proves resetKey triggers state reset.
@@ -94,7 +104,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     )
     // Error boundary reset → child rendered → child threw → caught again
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
 
     // Now verify that changing resetKey with non-throwing child shows content
     rerender(
@@ -111,7 +121,7 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent shouldThrow={true} />
       </ErrorBoundary>,
     )
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
 
     // Rerender with same resetKey but non-throwing child — error should persist
     rerender(
@@ -119,7 +129,7 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent shouldThrow={false} />
       </ErrorBoundary>,
     )
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
   })
 
   it('logs to console.error via componentDidCatch', () => {
@@ -147,7 +157,7 @@ describe('ErrorBoundary', () => {
         <ThrowingComponent shouldThrow={true} />
       </ErrorBoundary>,
     )
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
     expect(screen.queryByText('Reload page')).not.toBeInTheDocument()
     expect(screen.queryByText(/clear data/i)).not.toBeInTheDocument()
     expect(screen.queryByText('Show details')).not.toBeInTheDocument()
@@ -206,7 +216,7 @@ describe('ErrorBoundary', () => {
         <Conditional />
       </ErrorBoundary>,
     )
-    expect(screen.getByText('This card couldn'"'"'t load.')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
 
     // Set shouldThrow = false so that when Retry resets the boundary and
     // re-renders children, the component succeeds
