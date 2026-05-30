@@ -108,7 +108,7 @@ describe('UnlockScreen', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('Wrong passphrase. Please try again.')
     })
     await user.type(screen.getByLabelText('Passphrase'), 'n')
-    expect(screen.getByRole('alert')).toHaveTextContent('')
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('shows unlock failed error on exception', async () => {
