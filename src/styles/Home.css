@@ -533,6 +533,17 @@
 .goals-peek-projected--link {
   color: var(--accent);
 }
+.goals-peek-projected--action {
+  cursor: pointer;
+  border-radius: var(--radius-sm, 0.25rem);
+}
+.goals-peek-projected--action:hover {
+  text-decoration: underline;
+}
+.goals-peek-projected--action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .goals-peek-projected--warn {
   color: var(--color-warning);
 }

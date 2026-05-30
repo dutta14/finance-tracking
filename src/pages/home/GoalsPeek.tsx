@@ -175,34 +175,52 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
             <button key={goal.id} className="goals-peek-item" onClick={() => navigate(`/goal/${goal.id}`)}>
               <div className="goals-peek-item-top">
                 <span className="goals-peek-name">{goal.goalName}</span>
-                {fiProjectedLabel && (
-                  <span
-                    className={`goals-peek-projected${
-                      fiProjectedType === 'reached'
-                        ? ' goals-peek-projected--reached'
-                        : fiProjectedType === 'no-budget'
-                          ? ' goals-peek-projected--link'
+                {fiProjectedLabel &&
+                  (fiProjectedType === 'no-budget' ? (
+                    <span
+                      role="link"
+                      tabIndex={0}
+                      className="goals-peek-projected goals-peek-projected--link goals-peek-projected--action"
+                      onClick={e => {
+                        e.stopPropagation()
+                        navigate('/budget')
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          navigate('/budget')
+                        }
+                      }}
+                    >
+                      {fiProjectedLabel}
+                    </span>
+                  ) : (
+                    <span
+                      className={`goals-peek-projected${
+                        fiProjectedType === 'reached'
+                          ? ' goals-peek-projected--reached'
                           : fiProjectedType === 'not-reachable'
                             ? ' goals-peek-projected--warn'
                             : ''
-                    }`}
-                  >
-                    {fiProjectedType === 'date' ? (
-                      <>
-                        FI by <span className="goals-peek-projected-date">{fiProjectedLabel}</span>
-                      </>
-                    ) : fiProjectedType === 'reached' ? (
-                      <>
-                        <span role="img" aria-label="celebration">
-                          🎉
-                        </span>{' '}
-                        Goal reached!
-                      </>
-                    ) : (
-                      fiProjectedLabel
-                    )}
-                  </span>
-                )}
+                      }`}
+                    >
+                      {fiProjectedType === 'date' ? (
+                        <>
+                          FI by <span className="goals-peek-projected-date">{fiProjectedLabel}</span>
+                        </>
+                      ) : fiProjectedType === 'reached' ? (
+                        <>
+                          <span role="img" aria-label="celebration">
+                            🎉
+                          </span>{' '}
+                          Goal reached!
+                        </>
+                      ) : (
+                        fiProjectedLabel
+                      )}
+                    </span>
+                  ))}
               </div>
               <div className="goals-peek-bars">
                 <div className="goals-peek-bar-row">

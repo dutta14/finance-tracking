@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useData } from '../../contexts/DataContext'
 import { useTouchDrag } from '../../hooks/useTouchDrag'
+import ErrorBoundary from '../../components/ErrorBoundary'
 import NetWorthSummary from './NetWorthSummary'
 import MiniCharts from './MiniCharts'
 import GoalsPeek from './GoalsPeek'
@@ -152,28 +153,33 @@ const Home: FC = () => {
   }, [])
 
   const cards: ReactNode[] = [
-    <NetWorthSummary
-      key="nw"
-      accounts={accounts}
-      balances={balances}
-      allMonths={allMonths}
-      onNavigate={() => navigate('/net-worth')}
-    />,
-    <MiniCharts
-      key="charts"
-      accounts={accounts}
-      balances={balances}
-      balanceMap={balanceMap}
-      allMonths={allMonths}
-      onNavigate={() => navigate('/net-worth')}
-    />,
-    <GoalsPeek key="goals" goals={goals} gwGoals={gwGoals} onNavigate={() => navigate('/goal')} />,
-    <AllocationBreakdown
-      key="alloc"
-      accounts={accounts}
-      balances={balances}
-      onNavigate={() => navigate('/net-worth/allocation')}
-    />,
+    <ErrorBoundary key="nw" variant="card">
+      <NetWorthSummary
+        accounts={accounts}
+        balances={balances}
+        allMonths={allMonths}
+        onNavigate={() => navigate('/net-worth')}
+      />
+    </ErrorBoundary>,
+    <ErrorBoundary key="charts" variant="card">
+      <MiniCharts
+        accounts={accounts}
+        balances={balances}
+        balanceMap={balanceMap}
+        allMonths={allMonths}
+        onNavigate={() => navigate('/net-worth')}
+      />
+    </ErrorBoundary>,
+    <ErrorBoundary key="goals" variant="card">
+      <GoalsPeek goals={goals} gwGoals={gwGoals} onNavigate={() => navigate('/goal')} />
+    </ErrorBoundary>,
+    <ErrorBoundary key="alloc" variant="card">
+      <AllocationBreakdown
+        accounts={accounts}
+        balances={balances}
+        onNavigate={() => navigate('/net-worth/allocation')}
+      />
+    </ErrorBoundary>,
   ]
 
   return (
