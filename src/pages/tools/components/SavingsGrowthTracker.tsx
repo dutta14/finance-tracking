@@ -431,30 +431,32 @@ const SavingsGrowthTracker: FC = () => {
             {rows.map((row, i) => {
               if (tab === 'savings') {
                 return (
-                  <tr key={row.year} className="sgt-row">
-                    <td className="sgt-td sgt-td--year">{row.year}</td>
-                    <td className="sgt-td sgt-td--num">
+                  <tr key={row.year} className="sgt-row" data-sgt-year={row.year}>
+                    <td className="sgt-td sgt-td--year" data-sgt-field="year">
+                      {row.year}
+                    </td>
+                    <td className="sgt-td sgt-td--num" data-sgt-field="netIncome">
                       {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
                     </td>
-                    <td className="sgt-td sgt-td--num">
+                    <td className="sgt-td sgt-td--num" data-sgt-field="expense">
                       {row.totalExpense !== null ? fmt(row.totalExpense) : <span className="sgt-na">N/A</span>}
                     </td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta">
+                    <td className="sgt-td sgt-td--num sgt-td--delta" data-sgt-field="expenseDelta">
                       {renderDeltaExpense(row.totalExpense, getPrev(i, 'totalExpense'))}
                     </td>
-                    <td className="sgt-td sgt-td--num sgt-td--highlight">
+                    <td className="sgt-td sgt-td--num sgt-td--highlight" data-sgt-field="savings">
                       {renderCell(row, 'savings', row.savings, canEdit(row, 'savings'))}
                     </td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta">
+                    <td className="sgt-td sgt-td--num sgt-td--delta" data-sgt-field="savingsDelta">
                       {renderDelta(row.savings, getPrev(i, 'savings'))}
                     </td>
-                    <td className="sgt-td sgt-td--num sgt-td--highlight">
+                    <td className="sgt-td sgt-td--num sgt-td--highlight" data-sgt-field="growth">
                       {row.growth !== null ? fmt(row.growth) : <span className="sgt-na">N/A</span>}
                     </td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta">
+                    <td className="sgt-td sgt-td--num sgt-td--delta" data-sgt-field="growthDelta">
                       {renderDelta(row.growth, getPrev(i, 'growth'))}
                     </td>
-                    <td className="sgt-td sgt-td--num sgt-td--nw">
+                    <td className="sgt-td sgt-td--num sgt-td--nw" data-sgt-field="netWorth">
                       {row.netWorth !== null ? fmt(row.netWorth) : <span className="sgt-na">N/A</span>}
                     </td>
                   </tr>
@@ -464,12 +466,20 @@ const SavingsGrowthTracker: FC = () => {
               const taxRate =
                 row.grossIncome && row.taxes != null ? ((row.taxes / row.grossIncome) * 100).toFixed(1) + '%' : null
               return (
-                <tr key={row.year} className="sgt-row">
-                  <td className="sgt-td sgt-td--year">{row.year}</td>
-                  <td className="sgt-td sgt-td--num">{renderCell(row, 'grossIncome', row.grossIncome, true)}</td>
-                  <td className="sgt-td sgt-td--num">{renderCell(row, 'taxes', row.taxes, true)}</td>
-                  <td className="sgt-td sgt-td--num">{taxRate ?? <span className="sgt-na">—</span>}</td>
-                  <td className="sgt-td sgt-td--num">
+                <tr key={row.year} className="sgt-row" data-sgt-year={row.year}>
+                  <td className="sgt-td sgt-td--year" data-sgt-field="year">
+                    {row.year}
+                  </td>
+                  <td className="sgt-td sgt-td--num" data-sgt-field="grossIncome">
+                    {renderCell(row, 'grossIncome', row.grossIncome, true)}
+                  </td>
+                  <td className="sgt-td sgt-td--num" data-sgt-field="taxes">
+                    {renderCell(row, 'taxes', row.taxes, true)}
+                  </td>
+                  <td className="sgt-td sgt-td--num" data-sgt-field="taxRate">
+                    {taxRate ?? <span className="sgt-na">—</span>}
+                  </td>
+                  <td className="sgt-td sgt-td--num" data-sgt-field="netIncome">
                     {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
                   </td>
                 </tr>

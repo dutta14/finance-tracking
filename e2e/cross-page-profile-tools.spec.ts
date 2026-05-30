@@ -238,9 +238,9 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // Row identified by its first cell (Year). The "$200,000" /
       // "$260,000" appears in the Net Worth column on each row.
       const row2023 = table.getByRole('row').filter({ has: page.getByRole('cell', { name: '2023', exact: true }) })
-      const row2024 = table.getByRole('row').filter({ has: page.getByRole('cell', { name: '2024', exact: true }) })
       await expect(row2023).toContainText('$200,000')
-      await expect(row2024).toContainText('$260,000')
+      // migrating per #165 — remaining selectors to follow
+      await expect(page.locator('tr[data-sgt-year="2024"] [data-sgt-field="netWorth"]')).toContainText('$260,000')
     })
 
     test('32. Savings Growth Tracker pulls budget income and expense for each year', async ({
