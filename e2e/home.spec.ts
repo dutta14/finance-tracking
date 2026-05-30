@@ -213,9 +213,7 @@ test.describe('Home Dashboard E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      await expect(home.nwCard).toContainText(
-        'Add accounts and record your first balance to see your net worth here.',
-      )
+      await expect(home.nwCard).toContainText('Add accounts and record your first balance to see your net worth here.')
       await expect(home.getNwCardCtaBtn()).toHaveText('Add your data →')
     })
 
@@ -253,9 +251,7 @@ test.describe('Home Dashboard E2E', () => {
       await expect(home.reorderAnnouncement).toHaveText('Net Worth moved to position 2')
 
       // M2 Test 14: Assert localStorage matches expected order
-      const storedOrder = await page.evaluate(() =>
-        JSON.parse(localStorage.getItem('home-card-order') || '[]'),
-      )
+      const storedOrder = await page.evaluate(() => JSON.parse(localStorage.getItem('home-card-order') || '[]'))
       expect(storedOrder).toEqual([1, 0, 2, 3])
 
       await context.close()
@@ -280,9 +276,7 @@ test.describe('Home Dashboard E2E', () => {
 
       // Reload — addInitScript will re-seed but home-card-order should persist
       // So instead, seed the card order AFTER the move and before reload via evaluate
-      const savedOrder = await page.evaluate(() =>
-        localStorage.getItem('home-card-order'),
-      )
+      const savedOrder = await page.evaluate(() => localStorage.getItem('home-card-order'))
 
       // Reload page. addInitScript will re-clear localStorage, so we need to
       // re-inject the card order after reload via a second addInitScript
@@ -358,9 +352,7 @@ test.describe('Home Dashboard E2E', () => {
   })
 
   test.describe('Edge Cases', () => {
-    test('handles corrupted home-card-order gracefully by falling back to default', async ({
-      page,
-    }) => {
+    test('handles corrupted home-card-order gracefully by falling back to default', async ({ page }) => {
       await page.addInitScript(() => {
         localStorage.clear()
         localStorage.setItem('encryption-enabled', '0')
@@ -398,9 +390,7 @@ test.describe('Home Dashboard E2E', () => {
   })
 
   test.describe('Data Corruption & Resilience', () => {
-    test('app renders home page when localStorage has malformed data-accounts', async ({
-      page,
-    }) => {
+    test('app renders home page when localStorage has malformed data-accounts', async ({ page }) => {
       // C5 Test 21: Corrupted data-accounts triggers error boundary or graceful fallback
       await page.addInitScript(() => {
         localStorage.clear()
@@ -497,17 +487,35 @@ test.describe('Home Dashboard E2E', () => {
       const options = home.searchResults.locator('[role="option"]')
       await expect(options.first()).toBeVisible()
 
-      // Verify active item exists
-      await expect(home.searchResultActive).toBeVisible()
+      // Stabilize the active item before capturing the baseline id.
+      // The search result reducer can briefly point to the first option
+      // before settling on the scored/recent preference; capturing
+      // firstId during that transient gave us flake #138. Poll until
+      // two consecutive reads return the same id.
+      let prevId: string | null = null
+      await expect
+        .poll(
+          async () => {
+            const id = await home.searchResultActive.getAttribute('id')
+            const stable = id !== null && id === prevId
+            prevId = id
+            return stable
+          },
+          { intervals: [50, 50, 100, 100, 200] },
+        )
+        .toBe(true)
       const firstId = await home.searchResultActive.getAttribute('id')
 
-      // Arrow down moves selection
+      // Arrow down moves selection. The keydown handler is attached on
+      // the modal root and may not be live on the very first paint, so
+      // poll the active id for change instead of doing a single read
+      // race (#138 root cause #2).
       await page.keyboard.press('ArrowDown')
-
-      // Active item should have changed
-      await expect(home.searchResultActive).toBeVisible()
-      const newId = await home.searchResultActive.getAttribute('id')
-      expect(newId).not.toBe(firstId)
+      await expect
+        .poll(() => home.searchResultActive.getAttribute('id'), {
+          intervals: [50, 50, 100, 100, 200],
+        })
+        .not.toBe(firstId)
     })
 
     test('Tab through dashboard cards reaches interactive elements', async ({ page }) => {
@@ -535,11 +543,7 @@ test.describe('Home Dashboard E2E', () => {
           const el = document.activeElement
           if (!el) return false
           const style = window.getComputedStyle(el)
-          return (
-            style.outlineStyle !== 'none' ||
-            style.boxShadow !== 'none' ||
-            el.matches(':focus-visible')
-          )
+          return style.outlineStyle !== 'none' || style.boxShadow !== 'none' || el.matches(':focus-visible')
         })
         expect(hasFocusStyle).toBe(true)
       }
@@ -622,8 +626,6 @@ test.describe('Home Dashboard E2E', () => {
       const cardH2s = home.cardGrid.locator('h2')
       await expect(cardH2s).toHaveCount(0)
     })
-
-
   })
 
   test.describe('Error Recovery', () => {
