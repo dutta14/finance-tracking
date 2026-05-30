@@ -11,6 +11,7 @@ import {
   seedProfile,
   V2_EXPORT_KEYS,
 } from './fixtures/settings.fixtures'
+import { waitForReload } from './fixtures/reload'
 
 test.describe('Settings — Non-Security E2E', () => {
   /* ── Settings — Profile ───────────────────────────────────────── */
@@ -358,22 +359,23 @@ test.describe('Settings — Non-Security E2E', () => {
       await settings.navTo('advanced')
 
       const v1 = buildV1Import()
-      // Note: ImportExportContext.handleImport schedules window.location.reload()
-      // 200ms after the FileReader resolves. We don't race with that — we
-      // poll for the imported value to surface in localStorage and let the
-      // reload happen in the background.
-      await settings.importFileInput.setInputFiles({
-        name: v1.name,
-        mimeType: 'application/json',
-        buffer: Buffer.from(v1.content),
+      // ImportExportContext.handleImport calls window.location.reload()
+      // after dispatching `data-changed`. waitForLoadState('load') is
+      // unusable here (resolves immediately when the page is already
+      // loaded; does not wait for any FUTURE navigation), letting the
+      // next page.evaluate race the reload. Use the sentinel helper
+      // extracted in #172 to gate on the actual reload landing.
+      await waitForReload(page, async () => {
+        await settings.importFileInput.setInputFiles({
+          name: v1.name,
+          mimeType: 'application/json',
+          buffer: Buffer.from(v1.content),
+        })
       })
 
       // Goal is in localStorage under financialGoals (survives reload).
-      await expect
-        .poll(() => page.evaluate(() => localStorage.getItem('financialGoals')), { timeout: 10_000 })
-        .toContain('FI Goal')
-      // Ensure the post-import reload has settled before we navigate.
-      await page.waitForLoadState('domcontentloaded')
+      const stored = await page.evaluate(() => localStorage.getItem('financialGoals'))
+      expect(stored).toContain('FI Goal')
 
       // Goals page renders the imported goal — guards against a regression
       // where the validator accepts the payload but the Goals page filters
@@ -406,17 +408,20 @@ test.describe('Settings — Non-Security E2E', () => {
       await settings.navTo('advanced')
 
       const v2 = buildV2ImportWithUnknown()
-      await settings.importFileInput.setInputFiles({
-        name: v2.name,
-        mimeType: 'application/json',
-        buffer: Buffer.from(v2.content),
+      // Sentinel-gated reload (see #172): waitForLoadState('load') is a
+      // no-op when the page is already loaded and does not wait for the
+      // FUTURE reload that handleImport triggers.
+      await waitForReload(page, async () => {
+        await settings.importFileInput.setInputFiles({
+          name: v2.name,
+          mimeType: 'application/json',
+          buffer: Buffer.from(v2.content),
+        })
       })
 
       // Known goal made it through.
-      await expect
-        .poll(() => page.evaluate(() => localStorage.getItem('financialGoals')), { timeout: 10_000 })
-        .toContain('V2 Imported Goal')
-      await page.waitForLoadState('domcontentloaded')
+      const stored = await page.evaluate(() => localStorage.getItem('financialGoals'))
+      expect(stored).toContain('V2 Imported Goal')
 
       // Anti-leak: neither unknown key name appears as a localStorage key.
       const keys = await page.evaluate(() => Object.keys(localStorage))
@@ -570,21 +575,13 @@ test.describe('Settings — Non-Security E2E', () => {
 
       // No horizontal scrollbar on <html> while modal is open.
       await expect
-        .poll(() =>
-          page.evaluate(
-            () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-          ),
-        )
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
         .toBe(true)
 
       // Close the modal and check Home greeting also doesn't overflow.
       await settings.closeButton.click()
       await expect
-        .poll(() =>
-          page.evaluate(
-            () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-          ),
-        )
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth))
         .toBe(true)
     })
 
@@ -598,10 +595,7 @@ test.describe('Settings — Non-Security E2E', () => {
       await settings.open()
       await settings.navTo('advanced')
 
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        settings.exportBtn.click(),
-      ])
+      const [download] = await Promise.all([page.waitForEvent('download'), settings.exportBtn.click()])
 
       // Read the streamed file body into a string and JSON.parse it.
       const stream = await download.createReadStream()
@@ -618,14 +612,8 @@ test.describe('Settings — Non-Security E2E', () => {
       // Per-key presence + non-null assertion (each gets its own failure message).
       for (const key of V2_EXPORT_KEYS) {
         expect(exported, `v2 export must contain top-level key "${key}"`).toHaveProperty(key)
-        expect(
-          exported[key],
-          `v2 export key "${key}" must not be null`,
-        ).not.toBeNull()
-        expect(
-          exported[key],
-          `v2 export key "${key}" must not be undefined`,
-        ).not.toBeUndefined()
+        expect(exported[key], `v2 export key "${key}" must not be null`).not.toBeNull()
+        expect(exported[key], `v2 export key "${key}" must not be undefined`).not.toBeUndefined()
       }
 
       // Spot-check seeded values flowed through (catches accidental

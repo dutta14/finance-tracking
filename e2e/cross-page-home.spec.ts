@@ -1,11 +1,6 @@
 import { test, expect, Page } from '@playwright/test'
-import {
-  buildV2Export,
-  CROSS_PAGE_GOAL,
-  mutateAccountBalance,
-  seedCrossPage,
-  URLS,
-} from './fixtures/cross-page-data'
+import { buildV2Export, CROSS_PAGE_GOAL, mutateAccountBalance, seedCrossPage, URLS } from './fixtures/cross-page-data'
+import { waitForReload } from './fixtures/reload'
 
 /**
  * Sub-issue #151 (62a of 4 under #62) — Home dashboard cross-page
@@ -470,37 +465,22 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // counter could have been bumped by any prior remount dispatch).
       await page.evaluate(() => localStorage.setItem('__test_data_changed_count', '0'))
 
-      // C6 (navigation-resilient gate): plant a sentinel on `window`
-      // BEFORE the trigger. ImportExportContext schedules
-      // window.location.reload() at +200ms (ImportExportContext.tsx:128),
-      // which destroys this window and creates a fresh one without the
-      // sentinel. page.waitForFunction is navigation-resilient: it
-      // re-evaluates the predicate in the new execution context after
-      // navigation and resolves only when the sentinel is absent.
-      //
-      // Why not waitForLoadState('load')? It returns immediately when
-      // the page is already in 'load' state (Playwright semantics) and
-      // does not wait for any FUTURE navigation, so it provides no
-      // protection against the +200ms reload — the subsequent
-      // page.evaluate then races the navigation and throws
-      // "Execution context was destroyed".
-      await page.evaluate(() => {
-        ;(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel = true
-      })
-
+      // Navigation-resilient gate for the post-import reload
+      // (ImportExportContext.handleImport calls window.location.reload()
+      // after dispatching `data-changed`). `waitForLoadState('load')`
+      // is unusable — it resolves immediately when the page is already
+      // loaded and does not wait for any FUTURE navigation, so the next
+      // page.evaluate races the reload and throws "Execution context
+      // was destroyed". See e2e/fixtures/reload.ts for the sentinel
+      // pattern (extracted in #172).
       const v2 = buildV2Export()
-      await page.locator('input[type="file"][accept=".json"]').setInputFiles({
-        name: v2.name,
-        mimeType: 'application/json',
-        buffer: Buffer.from(v2.content),
+      await waitForReload(page, async () => {
+        await page.locator('input[type="file"][accept=".json"]').setInputFiles({
+          name: v2.name,
+          mimeType: 'application/json',
+          buffer: Buffer.from(v2.content),
+        })
       })
-
-      // Wait for the reload to actually happen: sentinel will be missing
-      // in the new window object. waitForFunction handles the mid-flight
-      // execution-context destruction by retrying in the new context.
-      await page.waitForFunction(
-        () => !(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel,
-      )
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
       const accounts = await page.evaluate(() => localStorage.getItem('data-accounts'))
@@ -511,9 +491,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // Reload does NOT re-dispatch on mount (verified: no remount-
       // dispatch in DataContext). Cap at 5 to catch runaway dispatches
       // if a future refactor adds remount-on-mount behavior.
-      const count = await page.evaluate(() =>
-        Number(localStorage.getItem('__test_data_changed_count') || '0'),
-      )
+      const count = await page.evaluate(() => Number(localStorage.getItem('__test_data_changed_count') || '0'))
       expect(count).toBeGreaterThanOrEqual(1)
       expect(count).toBeLessThanOrEqual(5)
 
@@ -523,9 +501,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await expect(page.locator('.home-card--nw .nw-amount')).toContainText('$315,000')
     })
 
-    test('41. Allocation ratio update fires allocation-changed and Home stays consistent', async ({
-      page,
-    }) => {
+    test('41. Allocation ratio update fires allocation-changed and Home stays consistent', async ({ page }) => {
       // ADAPTATION (F): the Home AllocationBreakdown card consumes
       // accounts + balances from DataContext — it does NOT read
       // `allocation-custom-ratios`. So a ratios mutation will NOT
@@ -572,20 +548,16 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       // Await the counter increment (C4 poll pattern).
       await expect
-        .poll(
-          () =>
-            page.evaluate(() => Number(localStorage.getItem('__test_alloc_changed_count') || '0')),
-          { timeout: 5000 },
-        )
+        .poll(() => page.evaluate(() => Number(localStorage.getItem('__test_alloc_changed_count') || '0')), {
+          timeout: 5000,
+        })
         .toBeGreaterThanOrEqual(1)
 
       // M6: we dispatch the event exactly once above, and saveCustomRatios
       // (allocation/utils.ts:13) is the only production dispatcher and also
       // fires once per save. No remount-dispatch occurs. We assert the
       // strict exact-count contract.
-      const count = await page.evaluate(() =>
-        Number(localStorage.getItem('__test_alloc_changed_count') || '0'),
-      )
+      const count = await page.evaluate(() => Number(localStorage.getItem('__test_alloc_changed_count') || '0'))
       expect(count).toBe(1)
 
       // Home re-renders cleanly after navigating away and back.
