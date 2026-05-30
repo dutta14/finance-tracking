@@ -89,15 +89,15 @@ describe('GwGoal field migration logic', () => {
 describe('useGwGoals cross-tab sync', () => {
   let subscribeSpy: ReturnType<typeof vi.spyOn>
   let capturedCallback: ((value: string | null) => void) | undefined
-  let unsub: ReturnType<typeof vi.fn>
+  let unsub: ReturnType<typeof vi.fn<() => void>>
 
   beforeEach(() => {
     localStorage.clear()
     capturedCallback = undefined
-    unsub = vi.fn()
+    unsub = vi.fn(() => undefined)
     subscribeSpy = vi.spyOn(appStorage, 'subscribe').mockImplementation((key, cb) => {
       if (key === 'gw-goals') capturedCallback = cb
-      return unsub
+      return () => unsub()
     })
   })
 

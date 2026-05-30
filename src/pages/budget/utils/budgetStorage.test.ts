@@ -77,7 +77,7 @@ describe('saveBudgetStore', () => {
 
     // Main store should only have CSVs
     const mainStore = appStorage.getJSON<Record<string, unknown>>('budget-store', {})
-    expect(mainStore.csvs['2025-03']).toBeTruthy()
+    expect((mainStore.csvs as Record<string, unknown>)['2025-03']).toBeTruthy()
     expect(mainStore.years).toEqual([]) // years go to config
     expect(mainStore.configs).toEqual({})
 

@@ -3,13 +3,14 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Budget from './Budget'
+import type { BudgetViewMode } from './types'
 
 /* ─── Mocks ─── */
 
 const mockUseBudget = {
   selectedYear: 2025,
   setSelectedYear: vi.fn(),
-  viewMode: 'aggregated' as const,
+  viewMode: 'aggregated' as BudgetViewMode,
   setViewMode: vi.fn(),
   uploadCSV: vi.fn(),
   removeCSV: vi.fn(),

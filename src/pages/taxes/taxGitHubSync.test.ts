@@ -105,7 +105,7 @@ describe('syncAllTaxFiles', () => {
       },
     }
     const putBodies: Record<string, string>[] = []
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.method === 'PUT') {
         putBodies.push(JSON.parse(init.body as string))
         return new Response(JSON.stringify({ content: {} }), { status: 201 })

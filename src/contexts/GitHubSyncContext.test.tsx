@@ -296,7 +296,7 @@ describe('GitHubSyncContext', () => {
               status: 'active',
               goalType: 'fi',
               nature: 'asset',
-              allocation: { usEquity: 80, intlEquity: 20, usBond: 0, intlBond: 0, cash: 0, other: 0 },
+              allocation: 'us-stock',
             },
           ],
           [{ id: 1, accountId: 1, month: '2025-01', balance: 50000 }],
@@ -724,7 +724,7 @@ describe('GitHubSyncContext', () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
 
-      let capturedProgress: typeof result.current.syncProgress = null
+      let capturedProgress = null as typeof result.current.syncProgress
       act(() => {
         result.current.handleSyncNow({}, undefined, true)
         capturedProgress = result.current.syncProgress

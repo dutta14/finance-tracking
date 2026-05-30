@@ -30,6 +30,7 @@ vi.mock('../../../utils/appStorage', () => {
 import { appStorage } from '../../../utils/appStorage'
 import { STORAGE_KEY } from '../constants'
 import type { CustomRatio, RatioPreset } from '../types'
+import type { AssetAllocation } from '../../data/types'
 
 function getStored(): CustomRatio[] {
   return appStorage.getJSON<CustomRatio[]>(STORAGE_KEY, [])
@@ -448,7 +449,7 @@ describe('useCustomRatios', () => {
     })
 
     it('does not add a group when already at 6 groups', () => {
-      const groups = Array.from({ length: 6 }, (_, i) => ({ label: `G${i}`, classes: [] as string[] }))
+      const groups = Array.from({ length: 6 }, (_, i) => ({ label: `G${i}`, classes: [] as AssetAllocation[] }))
       seedStorage([{ id: 'r1', name: 'R', scope: 'total', groups }])
       const { result } = renderHook(() => useCustomRatios())
       act(() => result.current.addGroup())

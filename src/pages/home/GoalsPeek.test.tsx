@@ -72,12 +72,12 @@ function makeAccount(id: number, goalType: 'fi' | 'gw') {
   return {
     id,
     name: `Account ${id}`,
-    type: 'retirement',
-    owner: 'primary',
+    type: 'retirement' as const,
+    owner: 'primary' as const,
     status: 'active' as const,
     goalType,
-    nature: 'asset',
-    allocation: 'us-stock',
+    nature: 'asset' as const,
+    allocation: 'us-stock' as const,
   }
 }
 

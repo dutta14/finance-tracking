@@ -417,7 +417,7 @@ describe('Drive — rename flow', () => {
   it('shows warning when target month already has data', async () => {
     const { loadBudgetStore } = await import('../budget/utils/budgetStorage')
     vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: { '2025-02': 'existing' },
+      csvs: { '2025-02': { csv: 'existing', month: '2025-02', uploadedAt: '' } },
       configs: {},
       years: [],
       categoryGroups: [],

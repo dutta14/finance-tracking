@@ -123,7 +123,7 @@ describe('ProfilePane', () => {
     })
 
     it('uploads avatar via file input', async () => {
-      let capturedOnload: ((event: unknown) => void) | null = null
+      let capturedOnload = null as ((event: unknown) => void) | null
       const readAsDataURLMock = vi.fn()
 
       const OriginalFileReader = window.FileReader

@@ -1,6 +1,6 @@
 import { buildIndex, search, findMatchRange, getCategoryLabel } from './searchIndex'
 import { appStorage } from '../utils/appStorage'
-import type { SearchItem } from './searchIndex'
+import type { SearchItem, SearchCategory } from './searchIndex'
 
 beforeEach(() => {
   localStorage.clear()
@@ -336,7 +336,7 @@ describe('search', () => {
     const categories = groups.map(g => g.category)
 
     // Verify order matches CATEGORY_ORDER: page, command, goal, account, ...tool, settings
-    const ORDER = ['page', 'command', 'goal', 'account', 'budget', 'tax', 'allocation', 'tool', 'settings']
+    const ORDER: SearchCategory[] = ['page', 'command', 'goal', 'account', 'budget', 'tax', 'allocation', 'tool', 'settings']
     const filtered = ORDER.filter(c => categories.includes(c))
     expect(categories).toEqual(filtered)
   })

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { setStorageItem } from '../utils/storage'
 import { loadConfig, toBase64, fromBase64, useGitHubSync } from './useGitHubSync'
-import type { GitHubSyncConfig } from './useGitHubSync'
+import type { GitHubSyncConfig, RestoreResult } from './useGitHubSync'
 
 describe('toBase64 / fromBase64', () => {
   it('round-trips ASCII text', () => {
@@ -693,7 +693,7 @@ describe('useGitHubSync hook', () => {
         headers: new Headers(),
       } as Response)
 
-      let res = { ok: false, message: '', data: undefined as unknown }
+      let res: RestoreResult = { ok: false, message: '', data: undefined }
       await act(async () => {
         res = await result.current.restoreLatest()
       })
@@ -772,7 +772,7 @@ describe('useGitHubSync hook', () => {
         headers: new Headers(),
       } as Response)
 
-      let res = { ok: false, message: '', data: undefined as unknown }
+      let res: RestoreResult = { ok: false, message: '', data: undefined }
       await act(async () => {
         res = await result.current.restoreFromCommit('abc1234567890')
       })
@@ -875,7 +875,7 @@ describe('useGitHubSync hook', () => {
         headers: new Headers(),
       } as Response)
 
-      let res = { ok: false, data: undefined as unknown }
+      let res: RestoreResult = { ok: false, message: '', data: undefined }
       await act(async () => {
         res = await result.current.restoreDataLatest()
       })
@@ -911,7 +911,7 @@ describe('useGitHubSync hook', () => {
         headers: new Headers(),
       } as Response)
 
-      let res = { ok: false, data: undefined as unknown }
+      let res: { ok: boolean; data?: unknown } = { ok: false, data: undefined }
       await act(async () => {
         res = await result.current.restoreToolsLatest()
       })
@@ -960,7 +960,7 @@ describe('useGitHubSync hook', () => {
         headers: new Headers(),
       } as Response)
 
-      let res = { ok: false, data: undefined as unknown }
+      let res: RestoreResult = { ok: false, message: '', data: undefined }
       await act(async () => {
         res = await result.current.restoreTaxesLatest()
       })
@@ -1467,7 +1467,7 @@ describe('useGitHubSync hook', () => {
         json: () => Promise.resolve({ content }),
         headers: new Headers(),
       } as Response)
-      let res = { ok: false, data: undefined as unknown }
+      let res: { ok: boolean; data?: unknown } = { ok: false, data: undefined }
       await act(async () => {
         res = await result.current.restoreAllocationLatest()
       })
@@ -1639,7 +1639,7 @@ describe('useGitHubSync hook', () => {
         json: () => Promise.resolve({ content, encoding: 'base64' }),
         headers: new Headers(),
       } as Response)
-      let res = { ok: false, data: undefined as unknown, message: '' }
+      let res: RestoreResult = { ok: false, data: undefined, message: '' }
       await act(async () => {
         res = await result.current.restoreDataLatest()
       })

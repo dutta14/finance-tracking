@@ -122,7 +122,7 @@ describe('Home greeting', () => {
       visibleGoals: [],
       gwGoals: [],
       profile: { name: 'Anindya' },
-    } as ReturnType<typeof useGoals>)
+    } as unknown as ReturnType<typeof useGoals>)
     renderHome()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Good morning, Anindya')
   })
@@ -343,7 +343,7 @@ describe('Home setup guide link', () => {
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: { '2024': 'data' }, configs: {}, years: [], categoryGroups: [] })
+    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: { '2024': { csv: 'data', month: '2024', uploadedAt: '' } }, configs: {}, years: [], categoryGroups: [] })
 
     renderHome()
 
@@ -358,7 +358,7 @@ describe('Home setup guide link', () => {
       visibleGoals: [],
       gwGoals: [],
       profile: { name: '' },
-    } as ReturnType<typeof useGoals>)
+    } as unknown as ReturnType<typeof useGoals>)
     vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
     renderHome()
@@ -498,7 +498,7 @@ describe('Home hasBudgetData flag', () => {
       visibleGoals: [],
       gwGoals: [],
       profile: { name: '' },
-    } as ReturnType<typeof useGoals>)
+    } as unknown as ReturnType<typeof useGoals>)
     renderHome()
     expect(screen.getByText('Setup guide')).toBeInTheDocument()
   })

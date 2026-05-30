@@ -16,9 +16,9 @@ beforeEach(() => {
   clickCalled = false
   capturedBlob = null
 
-  vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob) => {
+  vi.spyOn(URL, 'createObjectURL').mockImplementation((obj: Blob | MediaSource) => {
     createdUrl = 'blob:mock-url'
-    capturedBlob = blob
+    capturedBlob = obj as Blob
     return createdUrl
   })
 

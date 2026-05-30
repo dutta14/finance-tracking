@@ -25,7 +25,7 @@ describe('useFinancialGoals hook', () => {
         monthlyInvestment: 5000,
         expectedReturn: 8,
         currentSavings: 100000,
-      } as FinancialGoal,
+      } as unknown as FinancialGoal,
     ]
     appStorage.setJSON('financialGoals', goals)
     const { result } = renderHook(() => useFinancialGoals())
@@ -37,15 +37,15 @@ describe('useFinancialGoals hook', () => {
 describe('useFinancialGoals cross-tab sync', () => {
   let subscribeSpy: ReturnType<typeof vi.spyOn>
   let capturedCallback: ((value: string | null) => void) | undefined
-  let unsub: ReturnType<typeof vi.fn>
+  let unsub: ReturnType<typeof vi.fn<() => void>>
 
   beforeEach(() => {
     localStorage.clear()
     capturedCallback = undefined
-    unsub = vi.fn()
+    unsub = vi.fn(() => undefined)
     subscribeSpy = vi.spyOn(appStorage, 'subscribe').mockImplementation((key, cb) => {
       if (key === 'financialGoals') capturedCallback = cb
-      return unsub
+      return () => unsub()
     })
   })
 
@@ -72,7 +72,7 @@ describe('useFinancialGoals cross-tab sync', () => {
         monthlyInvestment: 2000,
         expectedReturn: 7,
         currentSavings: 50000,
-      } as FinancialGoal,
+      } as unknown as FinancialGoal,
     ]
     appStorage.setJSON('financialGoals', updatedGoals)
 
@@ -97,7 +97,7 @@ describe('useFinancialGoals cross-tab sync', () => {
         monthlyInvestment: 1000,
         expectedReturn: 5,
         currentSavings: 5000,
-      } as FinancialGoal,
+      } as unknown as FinancialGoal,
     ]
     appStorage.setJSON('financialGoals', goals)
 
@@ -116,7 +116,7 @@ describe('useFinancialGoals cross-tab sync', () => {
         monthlyInvestment: 3000,
         expectedReturn: 6,
         currentSavings: 20000,
-      } as FinancialGoal,
+      } as unknown as FinancialGoal,
     ]
     appStorage.setJSON('financialGoals', newGoals)
 

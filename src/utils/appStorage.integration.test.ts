@@ -64,7 +64,7 @@ describe('appStorage integration', () => {
     })
 
     // 5. Flush persists
-    await new Promise(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
     await new Promise(resolve => setTimeout(resolve, 0))
 
     // Verify encrypted envelope was written to localStorage
@@ -190,7 +190,7 @@ describe('appStorage integration', () => {
     appStorage.setJSON('budget-store', { csvs: {} })
 
     // Flush
-    await new Promise(resolve => queueMicrotask(resolve))
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
     await new Promise(resolve => setTimeout(resolve, 0))
 
     // Each key should have been encrypted once
