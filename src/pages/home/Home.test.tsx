@@ -56,8 +56,15 @@ vi.mock('../../hooks/useTouchDrag', () => ({
 
 vi.mock('./NetWorthSummary', () => ({ default: () => <div data-testid="nw-card">Net Worth Card</div> }))
 vi.mock('./MiniCharts', () => ({ default: () => <div data-testid="charts-card">Charts Card</div> }))
-vi.mock('./GoalsPeek', () => ({ default: () => <div data-testid="goals-card">Goals Card</div> }))
+vi.mock('./GoalsPeek', () => ({
+  default: () => {
+    if (goalsPeekShouldThrow) throw new Error('GoalsPeek boom')
+    return <div data-testid="goals-card">Goals Card</div>
+  },
+}))
 vi.mock('./AllocationBreakdown', () => ({ default: () => <div data-testid="alloc-card">Allocation Card</div> }))
+
+let goalsPeekShouldThrow = false
 // Capture the SetupProgress mock so we can override it per-test
 let setupProgressImpl: FC<{ onDismiss: () => void }>
 vi.mock('./SetupProgress', () => ({
@@ -506,5 +513,32 @@ describe('Home hasBudgetData flag', () => {
     } as unknown as ReturnType<typeof useGoals>)
     renderHome()
     expect(screen.getByText('Setup guide')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Per-card ErrorBoundary isolation (#161)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home per-card error isolation', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    goalsPeekShouldThrow = false
+    vi.restoreAllMocks()
+  })
+
+  it('renders an inline error alert when one card throws but sibling cards still render', () => {
+    goalsPeekShouldThrow = true
+    renderHome()
+
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText("This card couldn't load.")).toBeInTheDocument()
+    expect(screen.queryByTestId('goals-card')).not.toBeInTheDocument()
+
+    expect(screen.getByTestId('nw-card')).toBeInTheDocument()
+    expect(screen.getByTestId('charts-card')).toBeInTheDocument()
+    expect(screen.getByTestId('alloc-card')).toBeInTheDocument()
   })
 })
