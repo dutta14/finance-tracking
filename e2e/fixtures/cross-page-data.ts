@@ -390,8 +390,9 @@ export async function mutateProfile(
  *   - the Settings modal is OPEN on the Security pane (callers usually
  *     navigate away immediately, which closes the modal)
  *
- * PBKDF2 cost: ~1s per enable on a 2024-era laptop. Each test that uses
- * this helper budgets ~1-2s overhead.
+ * PBKDF2 cost: ~PBKDF2_COST_MS per enable on a 2024-era laptop (see
+ * e2e/fixtures/encryption.fixtures.ts). Each test that uses this helper
+ * budgets ~1-2 * PBKDF2_COST_MS of overhead.
  */
 export async function seedCrossPageEncrypted(
   page: Page,
