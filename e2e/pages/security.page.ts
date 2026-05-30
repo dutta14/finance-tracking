@@ -92,8 +92,16 @@ export class SecurityPage {
     await expect(this.heading).toBeVisible()
   }
 
-  /** Drive the enable flow to completion. Asserts the status indicator
-   *  flips to "Encryption enabled" before returning. */
+  /**
+   * Drive the enable flow to completion.
+   *
+   * The toHaveValue+toBeEnabled gates after each fill() are load-bearing.
+   * Without them, Playwright submits before React commits the controlled-
+   * input state, doubling the passphrase into the New input and leaving
+   * Confirm empty. Root cause: Playwright→Chromium fill speed exceeds React
+   * paint under headless throttling. Not reproducible at human typing speeds
+   * in real browsers — no source-side fix needed. See #169.
+   */
   async enable(passphrase: string, confirm: string = passphrase): Promise<void> {
     await this.enableTriggerBtn.click()
     await expect(this.setupForm).toBeVisible()

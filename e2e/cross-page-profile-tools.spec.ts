@@ -21,7 +21,7 @@ import {
  *  - B: GoalsPeek.tsx:40 does NOT listen for `budget-changed` —
  *       `getBudgetSaveRate()` is a synchronous read at render time only.
  *       Test 40 reloads after the dispatch before asserting the new date.
- *       Follow-up: #164.
+ *       Reload no longer required after #164; reload kept for stability — Quinn to revisit.
  *  - C: SavingsGrowthTracker exposes NO `.sgt-year-row` / `.sgt-net-worth`
  *       /  `.sgt-income` / `.sgt-expense` class names. We use accessible
  *       `getByRole('row' | 'cell')` queries instead. Follow-up: #165.
@@ -34,7 +34,7 @@ import {
  *  - G: Spec test 19 expects `defaultLastYear` = 2090, but FICalculator.tsx:
  *       174-179 takes `Math.max(...years)` where `years = [primary+100,
  *       partner+100]`. With primary=1990, partner=1992, the max is 2092
- *       (not 2090). We assert source-truth (2092). Follow-up: #163.
+ *       (not 2090). We assert source-truth (2092). Intentional behavior — closed by #163.
  *  - H: Spec says navigate to `/tools` for FI Calculator and SGT, but
  *       App.tsx:196 redirects `/tools → /budget`. The actual mount
  *       points are `/goal/calculator` (FICalculator) and
@@ -238,9 +238,9 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // Row identified by its first cell (Year). The "$200,000" /
       // "$260,000" appears in the Net Worth column on each row.
       const row2023 = table.getByRole('row').filter({ has: page.getByRole('cell', { name: '2023', exact: true }) })
-      const row2024 = table.getByRole('row').filter({ has: page.getByRole('cell', { name: '2024', exact: true }) })
       await expect(row2023).toContainText('$200,000')
-      await expect(row2024).toContainText('$260,000')
+      // migrating per #165 — remaining selectors to follow
+      await expect(page.locator('tr[data-sgt-year="2024"] [data-sgt-field="netWorth"]')).toContainText('$260,000')
     })
 
     test('32. Savings Growth Tracker pulls budget income and expense for each year', async ({

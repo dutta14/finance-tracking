@@ -770,4 +770,103 @@ describe('SavingsGrowthTracker', () => {
     expect(editInput).toBeInTheDocument()
     expect(editInput.value).toBe('250000')
   })
+
+  /* ── data-sgt-* hooks (regression: #165) ────────────────────────
+     These hooks let E2E tests (and downstream tools) target specific
+     row+field cells deterministically. The set of field names is the
+     wire contract — any rename or omission must fail loudly here. */
+  describe('data-sgt-year / data-sgt-field hooks (#165)', () => {
+    const SAVINGS_FIELDS = [
+      'year',
+      'netIncome',
+      'expense',
+      'expenseDelta',
+      'savings',
+      'savingsDelta',
+      'growth',
+      'growthDelta',
+      'netWorth',
+    ] as const
+
+    const INCOME_FIELDS = ['year', 'grossIncome', 'taxes', 'taxRate', 'netIncome'] as const
+
+    function setupTwoYears() {
+      // Prior tests in this file mutate mock implementations
+      // (vi.clearAllMocks only clears call history, not implementations).
+      // Reset both appStorage.getJSON and loadBudgetStore so the row set
+      // comes ONLY from `balances`, giving a deterministic 2-year output.
+      vi.mocked(appStorage.getJSON).mockReset()
+      vi.mocked(appStorage.getJSON).mockImplementation(() => ({}))
+      vi.mocked(loadBudgetStore).mockReset()
+      vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
+      mockUseData.mockReturnValue({
+        accounts: [
+          {
+            id: 1,
+            name: 'Brokerage',
+            type: 'non-retirement',
+            owner: 'primary',
+            status: 'active',
+            goalType: 'fi',
+            nature: 'asset',
+            allocation: 'us-stock',
+          },
+        ],
+        balances: [
+          { id: 1, accountId: 1, month: '2022-12', balance: 50000 },
+          { id: 2, accountId: 1, month: '2023-12', balance: 75000 },
+        ],
+        allMonths: ['2022-12', '2023-12'],
+        setAccounts: vi.fn(),
+        setBalances: vi.fn(),
+      })
+    }
+
+    it('savings tab: every row exposes data-sgt-year matching its year column text', () => {
+      setupTwoYears()
+      renderTracker()
+      const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
+      expect(rows).toHaveLength(2)
+      const years = Array.from(rows).map(r => {
+        const attr = r.getAttribute('data-sgt-year')
+        const yearCell = r.querySelector('td[data-sgt-field="year"]')!.textContent
+        // The attribute MUST equal the rendered year text — that's the contract.
+        expect(attr).toBe(yearCell)
+        return attr
+      })
+      expect(years.sort()).toEqual(['2022', '2023'])
+    })
+
+    it('savings tab: every row has exactly the documented 9 data-sgt-field cells in order', () => {
+      setupTwoYears()
+      renderTracker()
+      const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
+      expect(rows).toHaveLength(2)
+      for (const row of rows) {
+        const fieldCells = Array.from(row.querySelectorAll('td[data-sgt-field]'))
+        const fields = fieldCells.map(td => td.getAttribute('data-sgt-field'))
+        expect(fields).toEqual([...SAVINGS_FIELDS])
+      }
+    })
+
+    it('income tab: every row has exactly the documented 5 data-sgt-field cells in order', async () => {
+      const user = userEvent.setup()
+      setupTwoYears()
+      renderTracker()
+      await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+
+      const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
+      expect(rows).toHaveLength(2)
+      for (const row of rows) {
+        const fields = Array.from(row.querySelectorAll('td[data-sgt-field]')).map(td =>
+          td.getAttribute('data-sgt-field'),
+        )
+        expect(fields).toEqual([...INCOME_FIELDS])
+      }
+      // And data-sgt-year still matches the year cell on the income tab.
+      for (const row of rows) {
+        expect(row.getAttribute('data-sgt-year')).toBe(row.querySelector('td[data-sgt-field="year"]')!.textContent)
+      }
+    })
+  })
 })

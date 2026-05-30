@@ -35,6 +35,13 @@ export const SENSITIVE_KEYS = [
 
 export type SensitiveKey = (typeof SENSITIVE_KEYS)[number]
 
+/**
+ * PBKDF2 deriveKey on a 2024-era laptop at 310k iterations.
+ * Used as the budget unit for test timeouts and the perf canary
+ * (see e2e/encryption.spec.ts "PBKDF2 deriveKey completes in <2s").
+ */
+export const PBKDF2_COST_MS = 1000
+
 // Drift guard: if src/utils/encryptedStorage.ts gains or renames a key
 // without this fixture being updated, tests would silently pass over only
 // the keys this file knows about. Fail loudly at module load instead.

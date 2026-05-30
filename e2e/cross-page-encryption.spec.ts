@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test'
 import { SecurityPage } from './pages/security.page'
-import { assertAllKeysAreEnvelopes, isEnvelope, readEnvelope, SENSITIVE_KEYS } from './fixtures/encryption.fixtures'
+import { assertAllKeysAreEnvelopes, isEnvelope, PBKDF2_COST_MS, readEnvelope, SENSITIVE_KEYS } from './fixtures/encryption.fixtures'
 import {
   seedBudgetCsvsForYear,
   seedCrossPageEncrypted,
@@ -24,8 +24,9 @@ import {
  *  - B: Encryption enablement requires the UI path (PBKDF2 + envelope
  *       migration). Use the `seedCrossPageEncrypted` helper, which
  *       seeds + opens Settings/Security + drives `SecurityPage.enable`.
- *  - C: PBKDF2 adds ~1s per enable/unlock. Suite test timeout bumped to
- *       60s to absorb 2 enables + 1 unlock + nav in the worst case.
+ *  - C: PBKDF2 adds ~PBKDF2_COST_MS per enable/unlock. Suite test timeout
+ *       budget uses PBKDF2_COST_MS multiples to absorb 2 enables + 1 unlock
+ *       + nav in the worst case.
  *  - D: After unlock, React context re-renders. No `page.reload()` is
  *       needed — just `page.goto(targetPage)`.
  *  - E: Wrong passphrase keeps UnlockScreen visible. The error message
@@ -84,19 +85,19 @@ async function unlockWith(page: Page, passphrase: string): Promise<void> {
   // awaits appStorage.hydrate(key) BEFORE setCryptoKey(key). hydrate
   // synchronously decrypts all 13 SENSITIVE_KEYS into the in-memory
   // store, so when isLocked flips false (UnlockScreen heading hides),
-  // the memory store is fully populated and safe to read. The explicit
-  // 8s timeout accommodates worst-case PBKDF2 (~1.2s) + decrypt of all
-  // 13 envelopes (~0.5s) + React commit on slow CI runners.
+  // the memory store is fully populated and safe to read. The timeout
+  // budget (2 * PBKDF2_COST_MS) accommodates worst-case PBKDF2 + decrypt
+  // of all 13 envelopes + React commit on slow CI runners.
   await expect(page.getByRole('heading', { name: /unlock your data/i })).toBeHidden({
-    timeout: 8_000,
+    timeout: 2 * PBKDF2_COST_MS,
   })
 }
 
 test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
-  // PBKDF2 + envelope migration costs ~1s per enable/unlock. Each test
-  // here runs 1-2 enables + 0-1 unlocks; the full-roundtrip test 38
-  // additionally exports, disables, factory-resets, and imports.
-  test.setTimeout(60_000)
+  // PBKDF2 + envelope migration costs ~PBKDF2_COST_MS per enable/unlock.
+  // Each test here runs 1-2 enables + 0-1 unlocks; the full-roundtrip
+  // test 38 additionally exports, disables, factory-resets, and imports.
+  test.setTimeout(6 * PBKDF2_COST_MS + 10_000)
 
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies()

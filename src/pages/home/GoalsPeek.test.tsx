@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { appStorage } from '../../utils/appStorage'
@@ -510,6 +510,77 @@ describe('GoalsPeek FI progress clamping', () => {
 
     const fiBar = screen.getByRole('progressbar', { name: /FI progress: 100%/i })
     expect(fiBar).toHaveAttribute('aria-valuenow', '100')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   budget-changed event subscription (regression: #164)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek budget-changed subscription (#164)', () => {
+  it('re-reads getBudgetSaveRate and re-renders when budget-changed fires', () => {
+    // First render: no budget data → "Add budget data →"
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    mockedGetSaveRate.mockReturnValue(null)
+    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    expect(screen.getByText('Add budget data →')).toBeInTheDocument()
+    expect(screen.queryByText('FI by')).not.toBeInTheDocument()
+
+    // Budget data appears (e.g. Budget page imported a CSV). Switch the mock
+    // to return a positive save rate, then dispatch the cross-component event.
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 60_000, saveRate: 40, monthsOfData: 12 })
+    act(() => {
+      window.dispatchEvent(new Event('budget-changed'))
+    })
+
+    // The component must have re-called getBudgetSaveRate AND re-rendered with
+    // the projected FI date. Both assertions matter: the call proves the listener
+    // fired; the DOM update proves the new value was committed to state.
+    expect(mockedGetSaveRate).toHaveBeenCalledTimes(2) // initial useState + listener
+    expect(screen.queryByText('Add budget data →')).not.toBeInTheDocument()
+    expect(screen.getByText('FI by')).toBeInTheDocument()
+  })
+
+  it('removes the budget-changed listener on unmount', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    mockedGetSaveRate.mockReturnValue(null)
+
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const { unmount } = renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    unmount()
+
+    // Verify removeEventListener was called for 'budget-changed' with the
+    // same handler that was registered. We don't compare to addEventListener
+    // directly because that would test the mock framework; instead we filter
+    // removeSpy's calls to the budget-changed event name.
+    const budgetRemovals = removeSpy.mock.calls.filter(([evt]) => evt === 'budget-changed')
+    expect(budgetRemovals).toHaveLength(1)
+    expect(typeof budgetRemovals[0][1]).toBe('function')
+
+    // Belt-and-suspenders: after unmount, dispatching the event must NOT
+    // call getBudgetSaveRate again. Reset the mock counter, fire the event,
+    // verify zero new calls.
+    mockedGetSaveRate.mockClear()
+    act(() => {
+      window.dispatchEvent(new Event('budget-changed'))
+    })
+    expect(mockedGetSaveRate).not.toHaveBeenCalled()
+
+    removeSpy.mockRestore()
   })
 })
 

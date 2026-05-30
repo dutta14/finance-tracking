@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
 import { useData } from '../../contexts/DataContext'
@@ -50,7 +50,12 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
   }, [accounts, balances, allMonths])
 
   // Lightweight budget read — called each render (cheap localStorage parse)
-  const budgetSaveRate = getBudgetSaveRate()
+  const [budgetSaveRate, setBudgetSaveRate] = useState(() => getBudgetSaveRate())
+  useEffect(() => {
+    const onBudgetChange = () => setBudgetSaveRate(getBudgetSaveRate())
+    window.addEventListener('budget-changed', onBudgetChange)
+    return () => window.removeEventListener('budget-changed', onBudgetChange)
+  }, [])
 
   if (goals.length === 0) {
     return (

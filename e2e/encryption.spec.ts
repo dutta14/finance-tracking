@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { SecurityPage } from './pages/security.page'
 import {
+  PBKDF2_COST_MS,
   SENSITIVE_KEYS,
   type SensitiveKey,
   assertAllKeysAreEnvelopes,
@@ -266,6 +267,54 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       expect(await page.evaluate(() => localStorage.getItem('encryption-enabled'))).not.toBe('1')
       expect(await page.evaluate(() => localStorage.getItem('encryption-salt'))).toBeNull()
       expect(await page.evaluate(() => localStorage.getItem('encryption-verify'))).toBeNull()
+    })
+  })
+
+  test.describe('Performance canary', () => {
+    test('PBKDF2 derivation completes under 3x budget (perf canary)', async ({ page }) => {
+      // Canary for #168: the PBKDF2_COST_MS fixture (1000ms on a 2024-era
+      // laptop at 310k iterations) drives every encryption test's timeout
+      // budget. If a future change to src/utils/crypto.ts bumps the
+      // iteration count or switches algorithm and the real cost blows past
+      // 3 * budget, every other suite will start flaking on CI — this test
+      // fails first and names the regression source instead.
+      await seedEmptyEncryptionState(page)
+      await page.goto('/')
+
+      // Run the SAME crypto.subtle.deriveKey call the app uses
+      // (src/utils/crypto.ts line 42-48: PBKDF2, 310k iterations, SHA-256,
+      // 16-byte random salt, derives AES-GCM 256). Measure with
+      // performance.now() inside the page so we're timing the browser's
+      // real WebCrypto implementation, not Playwright IPC.
+      const elapsedMs: number = await page.evaluate(async () => {
+        const salt = crypto.getRandomValues(new Uint8Array(16))
+        const baseKey = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode('TestPass123'),
+          'PBKDF2',
+          false,
+          ['deriveKey'],
+        )
+        const start = performance.now()
+        await crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt, iterations: 310_000, hash: 'SHA-256' },
+          baseKey,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt', 'decrypt'],
+        )
+        return performance.now() - start
+      })
+
+      // Sanity: a real derivation took measurable time. 0 or sub-ms means
+      // the algorithm short-circuited (e.g. iteration count was silently
+      // lowered) — that is itself a regression worth catching.
+      expect(elapsedMs).toBeGreaterThan(5)
+
+      // The canary itself: under 3x the fixture budget. A CI runner that's
+      // 2x slower than the reference laptop still passes; a 4x iteration
+      // bump in source does not.
+      expect(elapsedMs).toBeLessThan(3 * PBKDF2_COST_MS)
     })
   })
 })
