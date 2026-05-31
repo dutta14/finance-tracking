@@ -28,9 +28,9 @@ test.describe('Settings — Non-Security E2E', () => {
       await expect(settings.dialog).toBeVisible()
       await expect(settings.dialog).toHaveAttribute('aria-modal', 'true')
 
-      // Profile is active by default (aria-current set in source, not class).
-      await expect(settings.navProfile).toHaveAttribute('aria-current', 'page')
-      await expect(settings.navAppearance).not.toHaveAttribute('aria-current')
+      // Profile is active by default (aria-selected on tabs, not class).
+      await expect(settings.navProfile).toHaveAttribute('aria-selected', 'true')
+      await expect(settings.navAppearance).toHaveAttribute('aria-selected', 'false')
       await expect(settings.profileHeading).toBeVisible()
 
       // Name + birthday surfaces are reachable in view + edit modes.
@@ -299,19 +299,19 @@ test.describe('Settings — Non-Security E2E', () => {
     })
 
     test('12. Settings nav highlights active section', async ({ page }) => {
-      // (was #60 test 26) — aria-current="page" toggles on click; only one
-      // nav item carries it at a time. Pane content swaps in lockstep.
+      // (was #60 test 26) — aria-selected="true" toggles on click; only one
+      // tab carries it at a time. Pane content swaps in lockstep.
       await seedEmpty(page)
       const settings = new SettingsPage(page)
       await settings.open()
 
-      // Default: Profile is current, Appearance is not.
-      await expect(settings.navProfile).toHaveAttribute('aria-current', 'page')
-      await expect(settings.navAppearance).not.toHaveAttribute('aria-current')
+      // Default: Profile is selected, Appearance is not.
+      await expect(settings.navProfile).toHaveAttribute('aria-selected', 'true')
+      await expect(settings.navAppearance).toHaveAttribute('aria-selected', 'false')
 
       await settings.navAppearance.click()
-      await expect(settings.navAppearance).toHaveAttribute('aria-current', 'page')
-      await expect(settings.navProfile).not.toHaveAttribute('aria-current')
+      await expect(settings.navAppearance).toHaveAttribute('aria-selected', 'true')
+      await expect(settings.navProfile).toHaveAttribute('aria-selected', 'false')
       await expect(settings.appearanceHeading).toBeVisible()
       await expect(settings.profileHeading).toHaveCount(0)
     })
