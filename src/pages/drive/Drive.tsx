@@ -209,7 +209,7 @@ const Drive: FC = () => {
       {/* Filter / Sort bar (shown when files have metadata) */}
       {hasMetaFiles && folder.files.length > 0 && (
         <div className="drive-filter-bar">
-          <div className="drive-filter-group">
+          <div className="drive-filter-group" data-section="owner">
             <span className="drive-filter-label">Owner:</span>
             <button
               className={`drive-filter-btn${ownerFilter === null ? ' active' : ''}`}
@@ -227,7 +227,7 @@ const Drive: FC = () => {
               </button>
             ))}
           </div>
-          <div className="drive-filter-group">
+          <div className="drive-filter-group" data-section="sort">
             <span className="drive-filter-label">Sort:</span>
             <button
               className={`drive-filter-btn${sortField === 'name' ? ' active' : ''}`}
