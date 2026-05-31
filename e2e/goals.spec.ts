@@ -36,7 +36,7 @@ test.describe('Goals Page E2E', () => {
       await goals.completeWizardStep1('My New Goal')
 
       // Verify focus moved to timeline step (soft — app may not implement focus management)
-      await expect(goals.wizardEndYearInput).toBeFocused().catch(() => {})
+      await expect(goals.wizardEndYearInput).toBeFocused()
 
       // Step 1: Timeline — goalCreatedIn pre-filled with today, fill end year and age
       await goals.wizardEndYearInput.fill('2055-01-01')
@@ -44,24 +44,24 @@ test.describe('Goals Page E2E', () => {
       await goals.wizardNextBtn.click()
 
       // Verify focus moved to expenses step
-      await expect(goals.wizardExpenseInput).toBeFocused().catch(() => {})
+      await expect(goals.wizardExpenseInput).toBeFocused()
 
       // Step 2: Expenses
       await goals.wizardExpenseInput.fill('72000')
       await goals.wizardNextBtn.click()
 
       // Verify focus moved to parameters step
-      await expect(goals.wizardParamInputs.first()).toBeFocused().catch(() => {})
+      await expect(goals.wizardParamInputs.first()).toBeFocused()
 
       // Step 3: Parameters — use "Use Recommended" if available, else fill defaults
       const useRecommended = goals.useRecommendedBtn
-      if (await useRecommended.isVisible().catch(() => false)) {
+      if (await useRecommended.isVisible()) {
         await useRecommended.click()
       }
       await goals.wizardNextBtn.click()
 
       // Verify focus moved to review section
-      await expect(goals.wizardReview).toBeFocused().catch(() => {})
+      await expect(goals.wizardReview).toBeFocused()
 
       // Step 4: Review & Create
       await expect(goals.wizardReview).toBeVisible()
@@ -160,14 +160,14 @@ test.describe('Goals Page E2E', () => {
 
       // Save
       const saveBtn = goals.fiCardEditForm.locator('button', { hasText: /save/i })
-      if (await saveBtn.isVisible().catch(() => false)) {
+      if (await saveBtn.isVisible()) {
         await saveBtn.click()
       } else {
         await inflationInput.press('Enter')
       }
 
       // Verify the form closes and new value persists
-      await expect(goals.fiCardEditForm).not.toBeVisible({ timeout: 5000 }).catch(() => {})
+      await expect(goals.fiCardEditForm).not.toBeVisible({ timeout: 5000 })
 
       // Verify the changed value is displayed on the card
       await expect(goals.goalDetail).toContainText('4%')
@@ -185,8 +185,8 @@ test.describe('Goals Page E2E', () => {
 
       // After deleting goal 1, navigates to next goal (goal 2) or back to grid
       // Navigate back to grid to verify
-      await goals.detailBackLink.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
-      if (await goals.detailBackLink.isVisible().catch(() => false)) {
+      await goals.detailBackLink.waitFor({ state: 'visible', timeout: 5000 })
+      if (await goals.detailBackLink.isVisible()) {
         await goals.detailBackLink.click()
       }
       await expect(goals.miniCards).toHaveCount(2)
@@ -209,7 +209,7 @@ test.describe('Goals Page E2E', () => {
       await expect(goals.undoToast).toHaveAttribute('role', 'alert')
 
       // Click undo to restore
-      if (await goals.undoBtn.isVisible().catch(() => false)) {
+      if (await goals.undoBtn.isVisible()) {
         await goals.undoBtn.click()
         await expect(goals.miniCards).toHaveCount(3)
       }
@@ -281,10 +281,8 @@ test.describe('Goals Page E2E', () => {
 
       // Verify context menu is keyboard-accessible via Shift+F10
       await page.keyboard.press('Escape')
-      await goals.contextMenu.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {
-        // Escape didn't close — click outside to dismiss
-      })
-      if (await goals.contextMenu.isVisible().catch(() => false)) {
+      await goals.contextMenu.waitFor({ state: 'hidden', timeout: 3000 })
+      if (await goals.contextMenu.isVisible()) {
         await page.locator('body').click({ position: { x: 10, y: 10 } })
         await expect(goals.contextMenu).not.toBeVisible()
       }
@@ -292,9 +290,7 @@ test.describe('Goals Page E2E', () => {
       await goals.miniCards.first().focus()
       await page.keyboard.press('Shift+F10')
       // If app doesn't support Shift+F10, skip this assertion
-      await expect(goals.contextMenu).toBeVisible({ timeout: 3000 }).catch(() => {
-        // TODO: App does not support Shift+F10 keyboard shortcut for context menu
-      })
+      await expect(goals.contextMenu).toBeVisible({ timeout: 3000 })
     })
 
     test('rename via context menu allows inline editing', async ({ page }) => {
@@ -360,10 +356,10 @@ test.describe('Goals Page E2E', () => {
 
       // On mobile, sidebar may be open and overlay the main content.
       // Click the collapse button to close the sidebar.
-      if (await goals.sidebarCollapseBtn.isVisible().catch(() => false)) {
+      if (await goals.sidebarCollapseBtn.isVisible()) {
         await goals.sidebarCollapseBtn.click()
         // Wait for sidebar to fully collapse
-        await goals.sidebarOverlay.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {})
+        await goals.sidebarOverlay.waitFor({ state: 'hidden', timeout: 3000 })
         await expect(goals.miniCards.first()).toBeVisible()
       }
 
@@ -375,7 +371,7 @@ test.describe('Goals Page E2E', () => {
 
       // Verify aria-live region announces the reorder
       // TODO: App may not yet implement aria-live announcements for reorder
-      await expect(goals.reorderAnnouncement).toHaveText(/moved/i).catch(() => {})
+      await expect(goals.reorderAnnouncement).toHaveText(/moved/i)
 
       // Now second goal should be first
       await expect(goals.getMiniCardName(0)).toHaveText(secondName)
@@ -422,7 +418,7 @@ test.describe('Goals Page E2E', () => {
 
       // Verify GW section has aria-label indicating goal count
       // TODO: App may not yet implement aria-label with count on GW section
-      await expect(goals.gwSection).toHaveAttribute('aria-label', /2/).catch(() => {})
+      await expect(goals.gwSection).toHaveAttribute('aria-label', /2/)
     })
 
     test('creating a GW goal from detail page adds it to GW section', async ({ page }) => {
@@ -462,7 +458,7 @@ test.describe('Goals Page E2E', () => {
       await expect(page).toHaveURL(/#\/goal\/calculator/)
 
       // Wait for lazy loading to complete
-      if (await goals.calculatorLoading.isVisible().catch(() => false)) {
+      if (await goals.calculatorLoading.isVisible()) {
         await goals.calculatorLoading.waitFor({ state: 'hidden', timeout: 10000 })
       }
 
@@ -530,7 +526,7 @@ test.describe('Goals Page E2E', () => {
 
       // Step 3: Parameters — use recommended if available, else advance via Next
       const useRec = goals.useRecommendedBtn
-      if (await useRec.isVisible().catch(() => false)) {
+      if (await useRec.isVisible()) {
         // TODO: App bug — Enter on wizard buttons is intercepted by form's onKeyDown
         await useRec.click()
       }
@@ -599,7 +595,7 @@ test.describe('Goals Page E2E', () => {
       await expect(goals.goalSection).toBeVisible()
 
       // Should show either empty state or gracefully handle corruption
-      const hasEmptyState = await goals.emptyState.isVisible().catch(() => false)
+      const hasEmptyState = await goals.emptyState.isVisible()
       const hasGoalSection = await goals.goalSection.isVisible()
       expect(hasEmptyState || hasGoalSection).toBeTruthy()
     })
@@ -745,7 +741,7 @@ test.describe('Goals Page E2E', () => {
 
       // Step 3: Parameters — use recommended if available
       const useRec = goals.useRecommendedBtn
-      if (await useRec.isVisible().catch(() => false)) {
+      if (await useRec.isVisible()) {
         await useRec.click()
       }
       await goals.wizardNextBtn.click()

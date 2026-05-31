@@ -409,10 +409,14 @@ test.describe('Home Dashboard E2E', () => {
       const cardErrorBoundary = home.errorCard
 
       // Wait briefly for rendering to settle
-      await page.waitForTimeout(500)
+      await Promise.race([
+        pageErrorBoundary.waitFor({ state: 'visible', timeout: 5000 }),
+        cardErrorBoundary.waitFor({ state: 'visible', timeout: 5000 }),
+        home.greeting.waitFor({ state: 'visible', timeout: 5000 }),
+      ])
 
-      const pageError = await pageErrorBoundary.isVisible().catch(() => false)
-      const cardError = await cardErrorBoundary.isVisible().catch(() => false)
+      const pageError = await pageErrorBoundary.isVisible()
+      const cardError = await cardErrorBoundary.isVisible()
 
       if (pageError) {
         await expect(pageErrorBoundary).toHaveAttribute('role', 'alert')
