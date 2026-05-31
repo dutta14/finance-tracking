@@ -405,3 +405,104 @@ describe('saveBudgetSummary', () => {
     expect(getBudgetSaveRate()).toEqual(summary)
   })
 })
+
+describe('loadBudgetStore migration branches', () => {
+  it('migrates per-year configs to global categoryGroups', () => {
+    appStorage.setJSON('budget-store', {
+      csvs: {},
+      configs: {
+        '2025': {
+          categoryGroups: [
+            { id: 'food', name: 'Food', categories: ['Groceries', 'Restaurants'] },
+            { id: 'others', name: 'Others', categories: ['Misc'] },
+            { id: 'removed', name: 'Remove from Budget', categories: ['ATM'] },
+          ],
+        },
+      },
+      years: [2025],
+      categoryGroups: [],
+    })
+    appStorage.setJSON('budget-config', { version: 1, years: [], categoryGroups: [] })
+    const store = loadBudgetStore()
+    expect(store.categoryGroups!.find(g => g.id === 'food')).toBeDefined()
+  })
+
+  it('adds missing others and removed groups during migration', () => {
+    appStorage.setJSON('budget-store', {
+      csvs: {},
+      configs: {
+        '2025': {
+          categoryGroups: [{ id: 'custom', name: 'Custom', categories: ['A'] }],
+        },
+      },
+      years: [2025],
+      categoryGroups: [],
+    })
+    appStorage.setJSON('budget-config', { version: 1, years: [], categoryGroups: [] })
+    const store = loadBudgetStore()
+    expect(store.categoryGroups!.find(g => g.id === 'others')).toBeDefined()
+    expect(store.categoryGroups!.find(g => g.id === 'removed')).toBeDefined()
+  })
+
+  it('migrates categoryGroups from old store format when config has none', () => {
+    appStorage.setJSON('budget-store', {
+      csvs: {},
+      configs: {},
+      years: [2025],
+      categoryGroups: [
+        { id: 'food', name: 'Food', categories: ['Groceries'] },
+        { id: 'others', name: 'Others', categories: [] },
+        { id: 'removed', name: 'Remove from Budget', categories: [] },
+      ],
+    })
+    appStorage.setJSON('budget-config', { version: 1, years: [], categoryGroups: [] })
+    const store = loadBudgetStore()
+    expect(store.categoryGroups!.find(g => g.id === 'food')).toBeDefined()
+  })
+
+  it('returns EMPTY_STORE on corrupt/unparseable storage', () => {
+    localStorage.setItem('budget-store-encrypted', 'not-valid')
+    const store = loadBudgetStore()
+    expect(store.csvs).toEqual({})
+  })
+})
+
+describe('getGlobalCategoryGroups', () => {
+  it('appends removed group when missing from store groups', () => {
+    const store: BudgetStore = {
+      csvs: {},
+      configs: {},
+      years: [],
+      categoryGroups: [{ id: 'others', name: 'Others', categories: [] }],
+    }
+    const groups = getGlobalCategoryGroups(store)
+    expect(groups.find(g => g.id === 'removed')).toBeDefined()
+  })
+
+  it('returns DEFAULT_GROUPS when store has no categoryGroups', () => {
+    const store: BudgetStore = {
+      csvs: {},
+      configs: {},
+      years: [],
+      categoryGroups: [],
+    }
+    const groups = getGlobalCategoryGroups(store)
+    expect(groups).toHaveLength(2)
+    expect(groups[0].id).toBe('others')
+    expect(groups[1].id).toBe('removed')
+  })
+})
+
+describe('getBudgetConfigData', () => {
+  it('falls back to DEFAULT_GROUPS when store has no categoryGroups', () => {
+    const store: BudgetStore = {
+      csvs: {},
+      configs: {},
+      years: [2025],
+      categoryGroups: undefined as unknown as CategoryGroup[],
+    }
+    const config = getBudgetConfigData(store)
+    expect(config.categoryGroups).toHaveLength(2)
+    expect(config.years).toEqual([2025])
+  })
+})

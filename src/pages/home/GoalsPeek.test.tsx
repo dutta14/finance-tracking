@@ -301,6 +301,22 @@ describe('GoalsPeek projection — fiGoal is 0', () => {
   })
 })
 
+describe('GoalsPeek projection — not reachable via projectFIDate null', () => {
+  it('shows "Not reachable" when fiGoal is astronomically high', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 1000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1, saveRate: 0.01, monthsOfData: 12 })
+    renderPeek([makeGoal({ fiGoal: 999_999_999_999 })])
+    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+  })
+})
+
 /* ═══════════════════════════════════════════════════════════════
    +N more goals
    ═══════════════════════════════════════════════════════════════ */
@@ -646,5 +662,187 @@ describe('GoalsPeek max 3 goals rendered', () => {
     expect(screen.getByText('Goal 3')).toBeInTheDocument()
     expect(screen.queryByText('Goal 4')).not.toBeInTheDocument()
     expect(screen.queryByText('Goal 5')).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   calcMonthlySaving edge cases (lines 20, 22)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek calcMonthlySaving edge cases', () => {
+  it('returns 0 monthly saving when nMonths <= 0 (line 20)', () => {
+    // Set birthday so retirement month is in the past relative to latestMonth
+    setProfileBirthday('1960-01') // born 1960, retire at 60 → retirement 2020
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 100_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    renderPeek([makeGoal({ retirementAge: 60, fiGoal: 2_000_000 })])
+    // With nMonths <= 0, fiMonthly = 0, so no /mo text should show
+    const monthlyTexts = screen.queryAllByText(/\/mo/)
+    // The monthly display should be empty or not show a value
+    monthlyTexts.forEach(el => {
+      expect(el.textContent).not.toMatch(/\$[1-9]/)
+    })
+  })
+
+  it('renders monthly saving when growth rate produces non-zero fiMonthly (line 22 is unreachable via component)', () => {
+    // Note: r === 0 branch in calcMonthlySaving is unreachable because GROWTH_RATE is a constant > 0
+    // This test verifies the normal fiMonthly calculation path works
+    setProfileBirthday('1990-01')
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    renderPeek([makeGoal({ fiGoal: 2_000_000, retirementAge: 60 })])
+    // Should render without error; the /mo text shows when fiMonthly > 0
+    expect(screen.getByText(/Retire Early/)).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   getTotalForMonth filtering (line 37)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek getTotalForMonth filtering', () => {
+  it('only sums accounts matching goalType fi for FI totals', () => {
+    const fiAcct = makeAccount(1, 'fi')
+    const gwAcct = makeAccount(2, 'gw')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct, gwAcct],
+      balances: [makeBalance(1, '2025-01', 1_000_000), makeBalance(2, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    // FI progress should be 1M/2M = 50%, not (1M+500K)/2M = 75%
+    const fiBar = screen.getByRole('progressbar', { name: /FI progress: 50%/i })
+    expect(fiBar).toHaveAttribute('aria-valuenow', '50')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   GW monthly saving display (line 259)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek GW monthly saving display', () => {
+  it('shows GW monthly saving when gwMonthly > 0 (line 259)', () => {
+    setProfileBirthday('1990-01')
+    const fiAcct = makeAccount(1, 'fi')
+    const gwAcct = makeAccount(2, 'gw')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct, gwAcct],
+      balances: [makeBalance(1, '2025-01', 500_000), makeBalance(2, '2025-01', 10_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60, inflationRate: 6 })
+    const gwGoal: GwGoal = {
+      id: 1,
+      fiGoalId: 1,
+      label: 'College Fund',
+      createdAt: '2024-01-01',
+      disburseAge: 65,
+      disburseAmount: 500_000,
+      growthRate: 6,
+      currentSavings: 10_000,
+    }
+    renderPeek([goal], [gwGoal])
+
+    // Should show a /mo amount for GW
+    const monthlyTexts = screen.getAllByText(/\/mo/)
+    expect(monthlyTexts.length).toBeGreaterThanOrEqual(1)
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   fiGoal null check (line 264)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek fiGoal null display', () => {
+  it('shows dash when fiGoal is null or undefined (line 264)', () => {
+    renderPeek([makeGoal({ fiGoal: null as unknown as number })])
+    // Line 264: goal.fiGoal != null is false → renders '—'
+    expect(screen.getByText(/FI:.*—/)).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   +N more goals singular (line 277)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek overflow singular', () => {
+  it('shows "+1 more goal" (singular) when exactly 4 goals', () => {
+    const goals = Array.from({ length: 4 }, (_, i) => makeGoal({ id: i + 1, goalName: `Goal ${i + 1}` }))
+    renderPeek(goals)
+    expect(screen.getByText('+1 more goal')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   GW gwPct calculation when totalNeeded is 0 (line 135)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek GW progress with zero totalNeeded', () => {
+  it('shows 0% GW progress when disburseAmount is 0 (totalNeeded=0, line 135)', () => {
+    setProfileBirthday('1990-01')
+    const fiAcct = makeAccount(1, 'fi')
+    const gwAcct = makeAccount(2, 'gw')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct, gwAcct],
+      balances: [makeBalance(1, '2025-01', 500_000), makeBalance(2, '2025-01', 10_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+
+    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60 })
+    const gwGoal: GwGoal = {
+      id: 1,
+      fiGoalId: 1,
+      label: 'Empty Goal',
+      createdAt: '2024-01-01',
+      disburseAge: 65,
+      disburseAmount: 0, // totalNeeded will be 0
+      growthRate: 6,
+      currentSavings: 0,
+    }
+    renderPeek([goal], [gwGoal])
+
+    const gwBar = screen.getByRole('progressbar', { name: /General wealth progress: 0%/i })
+    expect(gwBar).toHaveAttribute('aria-valuenow', '0')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   projectFIDate returns months === 0 (line 161)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalsPeek projection FI date display', () => {
+  it('shows projected date when fiTotal < fiGoal and budget data exists (line 160-165)', () => {
+    setProfileBirthday('1990-01')
+    const fiAcct = makeAccount(1, 'fi')
+    mockedUseData.mockReturnValue({
+      accounts: [fiAcct],
+      balances: [makeBalance(1, '2025-01', 500_000)],
+      allMonths: ['2025-01'],
+      setAccounts: () => {},
+      setBalances: () => {},
+    })
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 50_000, saveRate: 30, monthsOfData: 12 })
+    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    // Should show a projected date (month year format)
+    expect(screen.getByText(/\w{3} \d{4}/)).toBeInTheDocument()
   })
 })

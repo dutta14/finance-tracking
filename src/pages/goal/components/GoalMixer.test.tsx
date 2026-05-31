@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GoalMixer from './GoalMixer'
 import { makeGoal, makeGwGoal } from '../../../test/factories'
@@ -166,5 +166,123 @@ describe('GoalMixer', () => {
     render(<GoalMixer {...defaultProps} />)
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveAttribute('aria-modal', 'true')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch Coverage — Additional GoalMixer branches
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalMixer — empty goals array (line 42, 84, 87, 104, 153, 191)', () => {
+  it('renders with empty goals array — no FI goals shown, Create button disabled', () => {
+    render(<GoalMixer {...defaultProps} goals={[]} />)
+    // selectedGoalId defaults to null when goals is empty (line 42: goals[0]?.id ?? null)
+    // Create button should be disabled (line 104: !selectedGoal guard)
+    const createBtn = screen.getByText('Create as New Goal →')
+    expect(createBtn).toBeDisabled()
+  })
+
+  it('shows "(select FI base first)" hint when no goal is selected (line 153)', () => {
+    render(<GoalMixer {...defaultProps} goals={[]} />)
+    expect(screen.getByText('(select FI base first)')).toBeInTheDocument()
+  })
+
+  it('shows "Select an FI base to see a preview" when no goals exist', () => {
+    render(<GoalMixer {...defaultProps} goals={[]} />)
+    expect(screen.getByText('Select an FI base to see a preview.')).toBeInTheDocument()
+  })
+
+  it('handleCreate does nothing when selectedGoal is null (line 104)', () => {
+    render(<GoalMixer {...defaultProps} goals={[]} />)
+    const createBtn = screen.getByText('Create as New Goal →')
+    // Even though disabled, force click to verify the guard
+    fireEvent.click(createBtn)
+    expect(defaultProps.onCreateGoal).not.toHaveBeenCalled()
+    expect(defaultProps.onClose).not.toHaveBeenCalled()
+  })
+
+  it('retirementYear is null when no selectedGoal (line 191)', () => {
+    render(<GoalMixer {...defaultProps} goals={[]} />)
+    // Preview heading should just say "Preview at retirement" without a year
+    const heading = screen.getByText('Preview at retirement')
+    expect(heading.textContent).toBe('Preview at retirement')
+  })
+})
+
+describe('GoalMixer — GW goal with empty label (line 173)', () => {
+  it('renders "Unnamed goal" for GW goals with empty label', () => {
+    const gwNoLabel = makeGwGoal({
+      id: 99,
+      fiGoalId: 1,
+      label: '',
+      disburseAge: 50,
+      disburseAmount: 50000,
+      growthRate: 5,
+    })
+    render(<GoalMixer {...defaultProps} gwGoals={[gwNoLabel]} />)
+    expect(screen.getByText('Unnamed goal')).toBeInTheDocument()
+  })
+})
+
+describe('GoalMixer — deselecting a GW goal (line 60-72 delete branch)', () => {
+  it('deselecting a previously selected GW goal removes it from preview', async () => {
+    const user = userEvent.setup()
+    render(<GoalMixer {...defaultProps} />)
+    const checkboxes = screen.getAllByRole('checkbox')
+    // Select
+    await user.click(checkboxes[0])
+    expect(screen.getByText('Total')).toBeInTheDocument()
+    // Deselect (line 60: next.has(id) → next.delete(id))
+    await user.click(checkboxes[0])
+    expect(screen.queryByText('Total')).not.toBeInTheDocument()
+  })
+})
+
+describe('GoalMixer — backdrop click (line 221)', () => {
+  it('backdrop click calls onClose', () => {
+    const { container } = render(<GoalMixer {...defaultProps} />)
+    // The backdrop is the outermost .mixer-backdrop div
+    const backdrop = container.querySelector('.mixer-backdrop')!
+    fireEvent.click(backdrop)
+    expect(defaultProps.onClose).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('GoalMixer — computeGwPv disburseAge <= retirementAge (line 20)', () => {
+  it('uses disbursementTarget directly when disburseAge <= retirementAge', async () => {
+    const user = userEvent.setup()
+    // gw disburseAge=40, goal retirementAge=45 → monthsRetToDisburse = max(0, (40-45)*12) = 0
+    // So PV = disbursementTarget (no discounting)
+    const earlyGw = makeGwGoal({
+      id: 20,
+      fiGoalId: 1,
+      label: 'Early Disburse',
+      disburseAge: 40, // less than goal1's retirementAge (45)
+      disburseAmount: 100000,
+      growthRate: 6,
+    })
+    render(<GoalMixer {...defaultProps} gwGoals={[earlyGw]} />)
+    const checkboxes = screen.getAllByRole('checkbox')
+    await user.click(checkboxes[0])
+    // Total row should appear with a computed value
+    expect(screen.getByText('Total')).toBeInTheDocument()
+  })
+})
+
+describe('GoalMixer — GW goal with fiGoalId not matching any goal (line 80)', () => {
+  it('filters out GW goals whose fiGoalId does not match any goal', () => {
+    const orphanGw = makeGwGoal({
+      id: 30,
+      fiGoalId: 999, // No goal with id 999
+      label: 'Orphan Goal',
+      disburseAge: 50,
+      disburseAmount: 50000,
+      growthRate: 5,
+    })
+    render(<GoalMixer {...defaultProps} gwGoals={[orphanGw]} />)
+    // Orphan GW goal should not appear since its fiGoalId doesn't match
+    // The "No GW goals found" message should show
+    expect(screen.getByText('No GW goals found across any goals.')).toBeInTheDocument()
+    expect(screen.queryByText('Orphan Goal')).not.toBeInTheDocument()
   })
 })

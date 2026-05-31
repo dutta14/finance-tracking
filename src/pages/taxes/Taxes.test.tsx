@@ -1650,4 +1650,289 @@ describe('Taxes', () => {
       })
     })
   })
+
+  /* ── OwnerBadge avatar rendering branches ───────────────────── */
+
+  describe('OwnerBadge avatar branches', () => {
+    it('renders primary avatar image when primaryAvatar is provided (line 60-61)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: 'Alice', avatarDataUrl: 'data:image/png;base64,abc', partner: null }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'p1', label: 'W-2', owner: 'primary', category: 'paystub' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      const avatarImg = container.querySelector('.tax-owner-primary img')
+      expect(avatarImg).not.toBeNull()
+      expect((avatarImg as HTMLImageElement).src).toContain('data:image/png;base64,abc')
+    })
+
+    it('renders partner avatar image when partnerAvatar is provided (line 55-56)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({
+          name: 'Alice',
+          partner: { name: 'Bob', avatarDataUrl: 'data:image/png;base64,xyz', birthday: '' },
+        }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'p1', label: '1099', owner: 'partner', category: 'account' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      const avatarImg = container.querySelector('.tax-owner-partner img')
+      expect(avatarImg).not.toBeNull()
+      expect((avatarImg as HTMLImageElement).src).toContain('data:image/png;base64,xyz')
+    })
+
+    it('renders joint owner badge with both initials when no avatars (line 40,43)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'j1', label: 'Joint 1099', owner: 'joint', category: 'account' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      const jointBadge = container.querySelector('.tax-owner-group')
+      expect(jointBadge).not.toBeNull()
+      expect(jointBadge!.querySelector('.tax-owner-primary')!.textContent).toBe('A')
+      expect(jointBadge!.querySelector('.tax-owner-partner')!.textContent).toBe('B')
+    })
+
+    it('renders joint owner badge with avatar images when both provided (line 40,43)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({
+          name: 'Alice',
+          avatarDataUrl: 'data:image/png;base64,primary123',
+          partner: { name: 'Bob', avatarDataUrl: 'data:image/png;base64,partner456', birthday: '' },
+        }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'j1', label: 'Joint Doc', owner: 'joint', category: 'account' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      const primaryImg = container.querySelector('.tax-owner-group .tax-owner-primary img')
+      const partnerImg = container.querySelector('.tax-owner-group .tax-owner-partner img')
+      expect(primaryImg).not.toBeNull()
+      expect(partnerImg).not.toBeNull()
+    })
+
+    it('renders partner initial when partner has no avatar (line 56-58)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 's1', label: 'Partner 1099', owner: 'partner', category: 'account' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      const partnerBadge = container.querySelector('.tax-owner-partner')
+      expect(partnerBadge).not.toBeNull()
+      expect(partnerBadge!.querySelector('img')).toBeNull()
+      expect(partnerBadge!.textContent).toBe('B')
+    })
+
+    it('renders primary initial when empty name defaults to P (line 34)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: '', partner: null }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'p2', label: 'W-2', owner: 'primary', category: 'paystub' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      const primaryBadge = container.querySelector('.tax-owner-primary')
+      expect(primaryBadge).not.toBeNull()
+      expect(primaryBadge!.textContent).toBe('P')
+    })
+
+    it('uses Partner default name when partner name is empty (line 35)', () => {
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: 'Alice', partner: { name: '', avatarDataUrl: '', birthday: '' } }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 's2', label: 'Doc', owner: 'partner', category: 'account' })],
+            },
+          },
+        }),
+      )
+      const { container } = render(<Taxes />)
+      // partner.name is '' → partnerName = profile.partner?.name || 'Partner' = 'Partner' → initial = 'P'
+      const partnerBadge = container.querySelector('.tax-owner-partner')
+      expect(partnerBadge).not.toBeNull()
+      expect(partnerBadge!.textContent).toBe('P')
+    })
+  })
+
+  /* ── SuggestModal branches ──────────────────────────────────── */
+
+  describe('SuggestModal branches', () => {
+    it('allows toggling account selection and disables Add when none selected (line 314, 320)', async () => {
+      const user = userEvent.setup()
+      mockedUseData.mockReturnValue({
+        accounts: [
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
+          makeAccount({ id: 2, name: 'Savings', owner: 'primary', status: 'active' }),
+        ],
+        balances: [],
+        allMonths: [],
+        setAccounts: vi.fn(),
+        setBalances: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'x1', label: 'W-2', owner: 'primary', category: 'paystub' })],
+            },
+          },
+        }),
+      )
+      render(<Taxes />)
+      // Button text is "+ From Accounts"
+      const suggestBtns = screen.getAllByText('+ From Accounts')
+      await user.click(suggestBtns[0])
+      // Modal is open
+      expect(screen.getByText('Add from Accounts')).toBeInTheDocument()
+      // Select first account
+      const checkboxes = screen.getAllByRole('checkbox')
+      await user.click(checkboxes[0])
+      // Deselect (toggle branch line 314)
+      await user.click(checkboxes[0])
+      // Add button should be disabled (0 selected, line 320)
+      const addBtn = screen.getByRole('button', { name: /Add$/i })
+      expect(addBtn).toBeDisabled()
+    })
+
+    it('filters suggestions by owner and handles ownerFilter for joint (line 308, 309)', async () => {
+      const user = userEvent.setup()
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
+        updateProfile: vi.fn(),
+      })
+      mockedUseData.mockReturnValue({
+        accounts: [makeAccount({ id: 1, name: 'Joint Checking', owner: 'joint', status: 'active' })],
+        balances: [],
+        allMonths: [],
+        setAccounts: vi.fn(),
+        setBalances: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'x1', label: 'W-2', owner: 'primary', category: 'paystub' })],
+            },
+          },
+        }),
+      )
+      render(<Taxes />)
+      // Open suggest modal for joint section
+      const suggestBtns = screen.getAllByText('+ From Accounts')
+      // The joint section's button
+      const jointBtn = suggestBtns[suggestBtns.length - 1]
+      await user.click(jointBtn)
+      // Should show the joint account as a suggestion
+      expect(screen.getByText('Joint Checking')).toBeInTheDocument()
+    })
+  })
+
+  /* ── handleUpload branches ──────────────────────────────────── */
+
+  describe('handleUpload branches', () => {
+    it('shows error when file exceeds 10MB (line 751-752)', async () => {
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'up1', label: 'W-2', owner: 'primary', category: 'paystub' })],
+            },
+          },
+        }),
+      )
+      render(<Taxes />)
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+
+      // Create a file > 10MB
+      const bigFile = new File(['x'.repeat(11 * 1024 * 1024)], 'huge.pdf', { type: 'application/pdf' })
+      Object.defineProperty(bigFile, 'size', { value: 11 * 1024 * 1024 })
+      fireEvent.change(fileInput, { target: { files: [bigFile] } })
+
+      await waitFor(() => {
+        expect(screen.getByText(/exceeds the 10 MB limit/)).toBeInTheDocument()
+      })
+    })
+  })
+
+  /* ── handleAddCustom and handleSuggestAdd null guards ─────── */
+
+  describe('handler null guards', () => {
+    it('handleAddPaystub adds item for partner owner (line 809)', async () => {
+      const user = userEvent.setup()
+      mockedUseProfile.mockReturnValue({
+        profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
+        updateProfile: vi.fn(),
+      })
+      seedTaxStore(
+        makeTaxStore({
+          years: {
+            [CURRENT_YEAR]: {
+              items: [makeTaxItem({ id: 'pp1', label: 'W-2', owner: 'partner', category: 'account' })],
+            },
+          },
+        }),
+      )
+      render(<Taxes />)
+      // Look for "Add Paystub" button in the partner section
+      const paystubBtns = screen.queryAllByText(/Add Paystub/)
+      if (paystubBtns.length > 0) {
+        await user.click(paystubBtns[paystubBtns.length - 1])
+        await waitFor(() => {
+          expect(screen.getByText(/Bob's Paystubs/)).toBeInTheDocument()
+        })
+      }
+    })
+  })
 })

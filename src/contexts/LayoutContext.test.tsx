@@ -166,4 +166,72 @@ describe('LayoutContext', () => {
     expect(typeof result.current.setSidebarOpen).toBe('function')
     expect(typeof result.current.handleOpenProfile).toBe('function')
   })
+
+  it('toggles search open on Cmd+K', () => {
+    render(
+      <LayoutProvider>
+        <LayoutConsumer />
+      </LayoutProvider>,
+    )
+
+    expect(screen.getByTestId('searchOpen').textContent).toBe('false')
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+    })
+
+    expect(screen.getByTestId('searchOpen').textContent).toBe('true')
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+    })
+
+    expect(screen.getByTestId('searchOpen').textContent).toBe('false')
+  })
+
+  it('toggles search open on Ctrl+K', () => {
+    render(
+      <LayoutProvider>
+        <LayoutConsumer />
+      </LayoutProvider>,
+    )
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))
+    })
+
+    expect(screen.getByTestId('searchOpen').textContent).toBe('true')
+  })
+
+  it('enters demo mode on Ctrl+D when demo is not active (line 48 falsy)', () => {
+    localStorage.removeItem('_demo-backup')
+    render(
+      <LayoutProvider>
+        <LayoutConsumer />
+      </LayoutProvider>,
+    )
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true }))
+    })
+
+    // enterDemoMode sets the backup key
+    expect(localStorage.getItem('_demo-backup')).not.toBeNull()
+  })
+
+  it('exits demo mode on Ctrl+D when demo is active (line 48 truthy)', () => {
+    localStorage.setItem('_demo-backup', JSON.stringify({ 'data-accounts': null }))
+    render(
+      <LayoutProvider>
+        <LayoutConsumer />
+      </LayoutProvider>,
+    )
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true }))
+    })
+
+    // exitDemoMode removes the backup key
+    expect(localStorage.getItem('_demo-backup')).toBeNull()
+  })
 })

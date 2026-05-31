@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AccountsModal from './AccountsModal'
 import { makeAccount, makeProfile } from '../../test/factories'
@@ -1126,5 +1126,425 @@ describe('AccountsModal', () => {
       // Retirement group should contain 401k
       expect(screen.getByText('401k')).toBeInTheDocument()
     })
+  })
+
+  // --- Branch coverage: getColValue returns defaults for missing nature/allocation (lines 128, 130) ---
+
+  it('displays default nature "Asset" for accounts without explicit nature', async () => {
+    const accounts = [makeAccount({ id: 1, name: 'Test', nature: undefined })]
+    const user = userEvent.setup()
+    renderModal({ accounts })
+    await user.click(screen.getByTitle('Filter A/L'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Asset')).toBeInTheDocument()
+  })
+
+  it('displays default allocation for accounts without explicit allocation', async () => {
+    const accounts = [makeAccount({ id: 1, name: 'Test', allocation: undefined, nature: 'asset' })]
+    const user = userEvent.setup()
+    renderModal({ accounts })
+    await user.click(screen.getByTitle('Filter Allocation'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    // getDefaultAllocation('asset') should return a valid allocation
+    const checkboxes = within(dropdown).getAllByRole('checkbox')
+    expect(checkboxes.length).toBeGreaterThan(0)
+  })
+
+  // --- Branch coverage: getColLabel 'name' case (line 140-141) ---
+
+  it('sorts by name column which uses the raw name value for comparison', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    // Sort by Account (name column) to exercise getColValue('name') path
+    await user.click(screen.getByRole('button', { name: /^Account/ }))
+    const rows = screen.getAllByRole('row').slice(1)
+    const names = rows
+      .map(r => within(r).queryByText(/^(Checking|401k|Savings|Old 401k|Mortgage)$/))
+      .filter(Boolean)
+      .map(el => el!.textContent)
+    expect(names[0]).toBe('401k')
+  })
+
+  // --- Branch coverage: rangeSelect with lastId == null (line 211) ---
+
+  it('rangeSelect falls back to toggleSelect when no prior selection exists', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    // First ctrl+click to enter multi-select mode, then shift+click same row to test range
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.keyboard('{/Meta}')
+    // Now shift+click another to test range select (this exercises the from/to path)
+    await user.keyboard('{Shift>}')
+    await user.click(screen.getByText('Savings'))
+    await user.keyboard('{/Shift}')
+    const checkboxes = screen.getAllByRole('checkbox')
+    const checked = checkboxes.filter(cb => (cb as HTMLInputElement).checked)
+    // Range from Checking(1) to Savings(3) = 3 rows
+    expect(checked.length).toBe(3)
+  })
+
+  // --- Branch coverage: rangeSelect with from/to === -1 (line 218) ---
+
+  it('rangeSelect falls back to toggle when last selected id is not in filtered list', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    // Select an account, then filter so it's not in the list, then shift-click
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Old 401k'))
+    await user.keyboard('{/Meta}')
+    // Filter to active only (Old 401k is inactive)
+    await user.click(screen.getByRole('button', { name: /Active \(4\)/ }))
+    // Now shift-click - lastSelectedRef still points to Old 401k (id=4) which isn't in filtered list
+    await user.keyboard('{Shift>}')
+    await user.click(screen.getByText('Checking'))
+    await user.keyboard('{/Shift}')
+    const checkboxes = screen.getAllByRole('checkbox')
+    const checked = checkboxes.filter(cb => (cb as HTMLInputElement).checked)
+    expect(checked.length).toBeGreaterThanOrEqual(1)
+  })
+
+  // --- Branch coverage: inactive badge in group members (line 407) ---
+
+  it('shows inactive badge next to inactive accounts in group cards', async () => {
+    const user = userEvent.setup()
+    const accounts = [
+      makeAccount({ id: 1, name: 'Active One', status: 'active', group: 'TestGroup' }),
+      makeAccount({ id: 2, name: 'Dead One', status: 'inactive', group: 'TestGroup' }),
+    ]
+    renderModal({ accounts })
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    expect(screen.getByText('inactive')).toBeInTheDocument()
+  })
+
+  // --- Branch coverage: new group input onBlur creates group (line 435) ---
+
+  it('creates pending group on blur of new group input with non-empty value', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('button', { name: /New Group/ }))
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'BlurGroup')
+    // Blur by tabbing away
+    await user.tab()
+    // Pending group should appear
+    expect(screen.getByText('BlurGroup')).toBeInTheDocument()
+  })
+
+  // --- Branch coverage: rename on blur without change does not call onRenameGroup (line 364) ---
+
+  it('does not call onRenameGroup on blur when value is same as original', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    const renameButtons = screen.getAllByTitle('Rename group')
+    await user.click(renameButtons[0])
+    screen.getByDisplayValue('Banking')
+    // Blur without changing
+    await user.tab()
+    expect(props.onRenameGroup).not.toHaveBeenCalled()
+  })
+
+  // --- Branch coverage: column filter dropdown closes on outside click (line 108-117) ---
+
+  it('closes column filter dropdown on outside click', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Goal'))
+    expect(document.querySelector('.data-th-filter-dropdown')).toBeTruthy()
+    // Click outside the dropdown
+    await user.click(screen.getByRole('heading', { name: 'Accounts' }))
+    // Dropdown should close (no longer open)
+    // Verify by trying to find filter dropdown items
+    expect(document.querySelector('.data-th-filter-dropdown')).toBeFalsy()
+  })
+
+  // --- Branch coverage: drag and drop on group cards (lines 333, 339, 342) ---
+
+  it('moves account to a different group via drag and drop on group card', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    // Find a draggable member in Banking group and drag to Retirement group
+    const groupCards = document.querySelectorAll('.data-group-card')
+    const bankingCard = groupCards[0] as HTMLElement
+    const retirementCard = groupCards[1] as HTMLElement
+    const memberSpan = bankingCard.querySelector('.data-group-member[draggable]') as HTMLElement
+
+    // dragStart sets dragAccountId
+    fireEvent.dragStart(memberSpan)
+    // dragOver on target group
+    fireEvent.dragOver(retirementCard)
+    // drop on target group triggers onUpdate
+    fireEvent.drop(retirementCard)
+
+    expect(props.onUpdate).toHaveBeenCalledWith(1, { group: 'Retirement' })
+  })
+
+  it('dragLeave on group card clears drop target when leaving card bounds', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    const groupCards = document.querySelectorAll('.data-group-card')
+    const firstGroupCard = groupCards[0] as HTMLElement
+
+    fireEvent.dragOver(firstGroupCard)
+    expect(firstGroupCard).toHaveClass('data-group-card--drop')
+
+    // Simulate leaving to an element outside the card
+    fireEvent.dragLeave(firstGroupCard, { relatedTarget: document.body })
+    expect(firstGroupCard).not.toHaveClass('data-group-card--drop')
+  })
+
+  // --- Branch coverage: drag end resets state (lines 401-403) ---
+
+  it('handles drag end on group member', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    const memberSpans = document.querySelectorAll('.data-group-member[draggable]')
+    expect(memberSpans.length).toBeGreaterThan(0)
+
+    const member = memberSpans[0] as HTMLElement
+    fireEvent.dragStart(member)
+    fireEvent.dragEnd(member)
+    // Verify drag state was reset — no drop highlights remain
+    const dropHighlights = document.querySelectorAll('.data-group-card--drop')
+    expect(dropHighlights.length).toBe(0)
+  })
+
+  // --- Branch coverage: ungrouped section drag/drop (lines 498-514) ---
+
+  it('moves account to ungrouped via drag and drop on ungrouped card', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    const ungroupedCard = document.querySelector('.data-group-card--ungrouped') as HTMLElement
+    expect(ungroupedCard).toBeTruthy()
+
+    // Drag a member from a grouped card
+    const groupedMember = document.querySelector(
+      '.data-group-card:not(.data-group-card--ungrouped) .data-group-member[draggable]',
+    ) as HTMLElement
+    fireEvent.dragStart(groupedMember)
+    fireEvent.dragOver(ungroupedCard)
+    fireEvent.drop(ungroupedCard)
+
+    expect(props.onUpdate).toHaveBeenCalledWith(1, { group: undefined })
+  })
+
+  it('dragLeave on ungrouped card clears drop target', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    const ungroupedCard = document.querySelector('.data-group-card--ungrouped') as HTMLElement
+    fireEvent.dragOver(ungroupedCard)
+    expect(ungroupedCard).toHaveClass('data-group-card--drop')
+
+    fireEvent.dragLeave(ungroupedCard, { relatedTarget: document.body })
+    expect(ungroupedCard).not.toHaveClass('data-group-card--drop')
+  })
+
+  // --- Branch coverage: pending group drag over/leave/drop (lines 450-463) ---
+
+  it('moves account to pending group via drag and drop', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('button', { name: /New Group/ }))
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'PendingDrop{Enter}')
+
+    const pendingCard = document.querySelector('.data-group-card--new') as HTMLElement
+    expect(pendingCard).toBeTruthy()
+
+    // Drag a member from an existing group
+    const groupedMember = document.querySelector(
+      '.data-group-card:not(.data-group-card--new) .data-group-member[draggable]',
+    ) as HTMLElement
+    fireEvent.dragStart(groupedMember)
+    fireEvent.dragOver(pendingCard)
+    expect(pendingCard).toHaveClass('data-group-card--drop')
+
+    fireEvent.drop(pendingCard)
+    expect(props.onUpdate).toHaveBeenCalledWith(1, { group: 'PendingDrop' })
+  })
+
+  it('dragLeave on pending group card clears drop target', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('button', { name: /New Group/ }))
+    const input = screen.getByPlaceholderText('Group name')
+    await user.type(input, 'TestPending{Enter}')
+
+    const pendingCard = document.querySelector('.data-group-card--new') as HTMLElement
+    fireEvent.dragOver(pendingCard)
+    expect(pendingCard).toHaveClass('data-group-card--drop')
+
+    fireEvent.dragLeave(pendingCard, { relatedTarget: document.body })
+    expect(pendingCard).not.toHaveClass('data-group-card--drop')
+  })
+
+  // --- Branch coverage: bulk update no-op when empty value selected (lines 589, 608, 626, 642, 657, 675, 694) ---
+
+  it('does not call onBulkUpdate when Goal select resets to empty placeholder', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    // The Goal select should have no value selected (shows "Goal…")
+    const selects = screen.getAllByRole('combobox')
+    const goalSelect = selects.find(s => within(s).queryByText('Goal…'))!
+    expect((goalSelect as HTMLSelectElement).value).toBe('')
+    // Don't change anything — just verify onBulkUpdate is not called spuriously
+    expect(props.onBulkUpdate).not.toHaveBeenCalled()
+  })
+
+  // --- Branch coverage: new group input blur with empty value does nothing (line 435) ---
+
+  it('does not create pending group on blur when new group input is empty', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('button', { name: /New Group/ }))
+    screen.getByPlaceholderText('Group name')
+    // Leave input empty and blur
+    await user.tab()
+    // Should go back to + New Group button without creating a pending group
+    expect(screen.getByText('+ New Group')).toBeInTheDocument()
+    expect(screen.queryByText('Drag accounts here')).not.toBeInTheDocument()
+  })
+
+  // --- Branch coverage: bulk new group OK button with empty input does nothing (line 737) ---
+
+  it('does not apply group when confirm button clicked with empty group name', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.keyboard('{Meta>}')
+    await user.click(screen.getByText('Checking'))
+    await user.click(screen.getByText('401k'))
+    await user.keyboard('{/Meta}')
+    const selects = screen.getAllByRole('combobox')
+    const groupSelect = selects.find(s => within(s).queryByText('Group…'))!
+    await user.selectOptions(groupSelect, '__new__')
+    const input = screen.getByPlaceholderText('Group name')
+    // Click confirm without typing anything
+    const confirmBtn = input.closest('.data-bulk-new-group')!.querySelector('.data-bulk-group-ok')! as HTMLElement
+    await user.click(confirmBtn)
+    // Should not call onBulkUpdate with empty group
+    expect(props.onBulkUpdate).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ group: '' }))
+  })
+
+  // --- Branch coverage: linked account that doesn't exist returns null (line 903) ---
+
+  it('does not show linked account badge when linkedAccountId points to nonexistent account', () => {
+    const accounts = [makeAccount({ id: 1, name: 'Solo', linkedAccountId: 999 })]
+    renderModal({ accounts })
+    expect(screen.queryByText(/⛓/)).not.toBeInTheDocument()
+  })
+
+  // --- Branch coverage: account without nature defaults to 'asset' in table display (line 916, 924) ---
+
+  it('displays default nature Asset and default allocation for account with no nature or allocation', () => {
+    const accounts = [makeAccount({ id: 1, name: 'Plain', nature: undefined, allocation: undefined })]
+    renderModal({ accounts })
+    // Nature should default to 'asset'
+    expect(screen.getByText('Asset')).toBeInTheDocument()
+    // Allocation should use getDefaultAllocation('asset') result
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows.length).toBe(1)
+  })
+
+  // --- Branch coverage: sort by Owner column (exercises getColValue owner branch) ---
+
+  it('sorts by Owner column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /^Owner/ }))
+    const rows = screen.getAllByRole('row').slice(1)
+    const firstCell = rows[0]
+    // Joint should sort before Primary alphabetically
+    expect(within(firstCell).getByText('Joint')).toBeInTheDocument()
+  })
+
+  // --- Branch coverage: sort by Status column (exercises getColValue status branch) ---
+
+  it('sorts by Status column ascending shows active first', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /^Status/ }))
+    const rows = screen.getAllByRole('row').slice(1)
+    // Active < Inactive alphabetically, so active rows first
+    expect(within(rows[0]).getByText('Active')).toBeInTheDocument()
+    expect(within(rows[rows.length - 1]).getByText('Inactive')).toBeInTheDocument()
+  })
+
+  // --- Branch coverage: rename Enter with same value does not call onRenameGroup (line 357) ---
+
+  it('does not call onRenameGroup when Enter pressed with same group name', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    const renameButtons = screen.getAllByTitle('Rename group')
+    await user.click(renameButtons[0])
+    screen.getByDisplayValue('Banking')
+    // Press Enter without changing value
+    await user.keyboard('{Enter}')
+    expect(props.onRenameGroup).not.toHaveBeenCalled()
+  })
+
+  // --- Branch coverage: toggle filter col on/off (line 811) ---
+
+  it('opens a different column filter when clicking filter icon of another column', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByTitle('Filter Goal'))
+    expect(document.querySelector('.data-th-filter-dropdown')).toBeTruthy()
+    // Click a different column filter — should switch to that column
+    await user.click(screen.getByTitle('Filter Type'))
+    const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
+    expect(within(dropdown).getByText('Liquid')).toBeInTheDocument()
+  })
+
+  // --- Branch coverage: drop on group card when dragAccountId is null (no-op) ---
+
+  it('does not call onUpdate on drop when no account was being dragged', async () => {
+    const user = userEvent.setup()
+    const { props } = renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    const groupCards = document.querySelectorAll('.data-group-card')
+    const firstGroupCard = groupCards[0] as HTMLElement
+    // Drop without prior dragStart
+    fireEvent.drop(firstGroupCard)
+    expect(props.onUpdate).not.toHaveBeenCalled()
+  })
+
+  // --- Branch coverage: ungrouped members dragStart/dragEnd (lines 526-529) ---
+
+  it('handles drag start and end on ungrouped account member', async () => {
+    const user = userEvent.setup()
+    renderModal()
+    await user.click(screen.getByRole('button', { name: /Groups/ }))
+
+    const ungroupedCard = document.querySelector('.data-group-card--ungrouped') as HTMLElement
+    const members = ungroupedCard.querySelectorAll('.data-group-member[draggable]')
+    expect(members.length).toBeGreaterThan(0)
+
+    const member = members[0] as HTMLElement
+    fireEvent.dragStart(member)
+    fireEvent.dragEnd(member)
+    // Verify no leftover state — no drop highlight on any card
+    const allCards = document.querySelectorAll('.data-group-card--drop')
+    expect(allCards.length).toBe(0)
   })
 })

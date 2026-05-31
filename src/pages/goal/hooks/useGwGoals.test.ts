@@ -86,6 +86,256 @@ describe('GwGoal field migration logic', () => {
   })
 })
 
+describe('useGwGoals CRUD operations', () => {
+  it('createGwGoal adds a new goal with generated id and createdAt', () => {
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toEqual([])
+
+    act(() => {
+      result.current.createGwGoal({
+        fiGoalId: 10,
+        label: 'New Car',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 5000,
+      })
+    })
+
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].label).toBe('New Car')
+    expect(result.current.gwGoals[0].fiGoalId).toBe(10)
+    expect(result.current.gwGoals[0].id).toBeGreaterThan(0)
+    expect(result.current.gwGoals[0].createdAt).toBeTruthy()
+  })
+
+  it('deleteGwGoal removes the goal with matching id', () => {
+    const goals: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 100,
+        label: 'A',
+        createdAt: '2025-01-01',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 10000,
+      },
+      {
+        id: 2,
+        fiGoalId: 100,
+        label: 'B',
+        createdAt: '2025-01-01',
+        disburseAge: 45,
+        disburseAmount: 30000,
+        growthRate: 6,
+        currentSavings: 5000,
+      },
+    ]
+    appStorage.setJSON('gw-goals', goals)
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toHaveLength(2)
+
+    act(() => {
+      result.current.deleteGwGoal(1)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].id).toBe(2)
+  })
+
+  it('deleteGwGoal for non-existent id leaves goals unchanged', () => {
+    const goals: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 100,
+        label: 'A',
+        createdAt: '2025-01-01',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 10000,
+      },
+    ]
+    appStorage.setJSON('gw-goals', goals)
+    const { result } = renderHook(() => useGwGoals())
+
+    act(() => {
+      result.current.deleteGwGoal(999)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].id).toBe(1)
+  })
+
+  it('deleteGwGoalsForFiGoal removes all goals linked to a fiGoalId', () => {
+    const goals: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 100,
+        label: 'A',
+        createdAt: '2025-01-01',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 10000,
+      },
+      {
+        id: 2,
+        fiGoalId: 100,
+        label: 'B',
+        createdAt: '2025-01-01',
+        disburseAge: 45,
+        disburseAmount: 30000,
+        growthRate: 6,
+        currentSavings: 5000,
+      },
+      {
+        id: 3,
+        fiGoalId: 200,
+        label: 'C',
+        createdAt: '2025-01-01',
+        disburseAge: 50,
+        disburseAmount: 80000,
+        growthRate: 8,
+        currentSavings: 20000,
+      },
+    ]
+    appStorage.setJSON('gw-goals', goals)
+    const { result } = renderHook(() => useGwGoals())
+
+    act(() => {
+      result.current.deleteGwGoalsForFiGoal(100)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].fiGoalId).toBe(200)
+  })
+
+  it('updateGwGoal updates fields of matching goal without changing id or createdAt', () => {
+    const goals: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 100,
+        label: 'Old Label',
+        createdAt: '2025-01-01',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 10000,
+      },
+    ]
+    appStorage.setJSON('gw-goals', goals)
+    const { result } = renderHook(() => useGwGoals())
+
+    act(() => {
+      result.current.updateGwGoal(1, { label: 'New Label', growthRate: 9 })
+    })
+
+    expect(result.current.gwGoals[0].label).toBe('New Label')
+    expect(result.current.gwGoals[0].growthRate).toBe(9)
+    expect(result.current.gwGoals[0].id).toBe(1)
+    expect(result.current.gwGoals[0].createdAt).toBe('2025-01-01')
+  })
+
+  it('importGwGoals replaces all goals with incoming array', () => {
+    const initial: GwGoal[] = [
+      {
+        id: 1,
+        fiGoalId: 100,
+        label: 'Old',
+        createdAt: '2025-01-01',
+        disburseAge: 40,
+        disburseAmount: 50000,
+        growthRate: 7,
+        currentSavings: 10000,
+      },
+    ]
+    appStorage.setJSON('gw-goals', initial)
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toHaveLength(1)
+
+    const imported: GwGoal[] = [
+      {
+        id: 10,
+        fiGoalId: 200,
+        label: 'Imported',
+        createdAt: '2025-06-01',
+        disburseAge: 50,
+        disburseAmount: 80000,
+        growthRate: 8,
+        currentSavings: 20000,
+      },
+      {
+        id: 11,
+        fiGoalId: 300,
+        label: 'Another',
+        createdAt: '2025-06-01',
+        disburseAge: 55,
+        disburseAmount: 90000,
+        growthRate: 9,
+        currentSavings: 30000,
+      },
+    ]
+
+    act(() => {
+      result.current.importGwGoals(imported)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(2)
+    expect(result.current.gwGoals[0].label).toBe('Imported')
+    expect(result.current.gwGoals[1].label).toBe('Another')
+  })
+})
+
+describe('useGwGoals load error handling', () => {
+  it('returns empty array when storage contains invalid JSON', () => {
+    localStorage.setItem('gw-goals', '{not valid json')
+    const { result } = renderHook(() => useGwGoals())
+    expect(result.current.gwGoals).toEqual([])
+  })
+})
+
+describe('useGwGoals legacy migration writes to new key', () => {
+  it('reads from gw-plans, writes to gw-goals key, removes legacy key', () => {
+    const setJSONSpy = vi.spyOn(appStorage, 'setJSON')
+    const legacy = [
+      {
+        id: 5,
+        fiPlanId: 50,
+        label: 'Legacy Goal',
+        createdAt: '2024-01-01',
+        disburseAge: 60,
+        disburseAmount: 100000,
+        growthRate: 6,
+        currentSavings: 20000,
+      },
+    ]
+    localStorage.setItem('gw-plans', JSON.stringify(legacy))
+
+    const { result } = renderHook(() => useGwGoals())
+
+    expect(result.current.gwGoals).toHaveLength(1)
+    expect(result.current.gwGoals[0].fiGoalId).toBe(50)
+    expect(localStorage.getItem('gw-plans')).toBeNull()
+    expect(setJSONSpy).toHaveBeenCalledWith(
+      'gw-goals',
+      expect.arrayContaining([expect.objectContaining({ fiGoalId: 50 })]),
+    )
+    setJSONSpy.mockRestore()
+  })
+
+  it('returns empty array when legacy key has empty array (line 31 falsy branch)', () => {
+    localStorage.setItem('gw-plans', JSON.stringify([]))
+
+    const { result } = renderHook(() => useGwGoals())
+
+    expect(result.current.gwGoals).toHaveLength(0)
+    // Legacy key is NOT removed because parsed was empty
+    expect(localStorage.getItem('gw-plans')).not.toBeNull()
+  })
+})
+
 describe('useGwGoals cross-tab sync', () => {
   let subscribeSpy: ReturnType<typeof vi.spyOn>
   let capturedCallback: ((value: string | null) => void) | undefined

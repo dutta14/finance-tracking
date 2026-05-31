@@ -536,4 +536,28 @@ describe('validateImportPayload', () => {
       expect(result.sanitized!.profile!.name).toBe('Alice')
     })
   })
+
+  describe('dataBalances edge cases', () => {
+    it('warns when dataBalances is not an array', () => {
+      const result = validateImportPayload(makePayload({ dataBalances: 'not-an-array' }))
+      expect(result.warnings.some(w => w.includes('dataBalances') && w.includes('not an array'))).toBe(true)
+    })
+
+    it('filters out invalid balance entries with missing accountId', () => {
+      const result = validateImportPayload(makePayload({ dataBalances: [{ id: 1, month: '2024-01', balance: 1000 }] }))
+      expect(result.warnings.some(w => w.includes('dataBalances[0]'))).toBe(true)
+    })
+  })
+
+  describe('profile edge cases', () => {
+    it('returns undefined profile when profile is not an object', () => {
+      const result = validateImportPayload(makePayload({ profile: 'not-an-object' }))
+      expect(result.sanitized!.profile).toBeUndefined()
+    })
+
+    it('returns undefined profile when profile is null', () => {
+      const result = validateImportPayload(makePayload({ profile: null }))
+      expect(result.sanitized!.profile).toBeUndefined()
+    })
+  })
 })

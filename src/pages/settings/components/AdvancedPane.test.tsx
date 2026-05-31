@@ -95,4 +95,29 @@ describe('AdvancedPane', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     expect(fileInput.accept).toBe('.json')
   })
+
+  it('does not call onImport when file input change event has no files (lines 17-19)', () => {
+    render(<AdvancedPane {...defaultProps} />)
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    // Fire change with empty files list
+    fireEvent.change(fileInput, { target: { files: [] } })
+    expect(defaultProps.onImport).not.toHaveBeenCalled()
+  })
+
+  it('does not call onImport when file input change event has null files', () => {
+    render(<AdvancedPane {...defaultProps} />)
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(fileInput, { target: { files: null } })
+    expect(defaultProps.onImport).not.toHaveBeenCalled()
+  })
+
+  it('resets file input value after successful import (line 19)', () => {
+    render(<AdvancedPane {...defaultProps} />)
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const testFile = new File(['{}'], 'data.json', { type: 'application/json' })
+    fireEvent.change(fileInput, { target: { files: [testFile] } })
+    expect(defaultProps.onImport).toHaveBeenCalledWith(testFile)
+    // After import, the file input value should be reset (line 19)
+    expect(fileInput.value).toBe('')
+  })
 })

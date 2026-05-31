@@ -262,4 +262,38 @@ describe('FlagAdminPane', () => {
 
     expect(screen.getByText('Override: true')).toBeInTheDocument()
   })
+
+  it('calls setOverride when typing in the number input', async () => {
+    const user = userEvent.setup()
+    render(<FlagAdminPane />)
+
+    const numberInput = screen.getByLabelText('Value for maxRetries')
+    await user.type(numberInput, '7')
+
+    expect(mockSetOverride).toHaveBeenCalledWith('maxRetries', 37)
+  })
+
+  it('calls setOverride when editing the JSON textarea', async () => {
+    const user = userEvent.setup()
+    render(<FlagAdminPane />)
+
+    const jsonInput = screen.getByLabelText('JSON value for featureConfig')
+    await user.type(jsonInput, 'x')
+
+    const calls = mockSetOverride.mock.calls.filter((c: unknown[]) => c[0] === 'featureConfig')
+    expect(calls.length).toBeGreaterThan(0)
+  })
+
+  it('calls setOverride when typing in the string input', async () => {
+    const user = userEvent.setup()
+    render(<FlagAdminPane />)
+
+    const stringInput = screen.getByLabelText('Value for apiUrl')
+    await user.type(stringInput, '!')
+
+    expect(mockSetOverride).toHaveBeenCalled()
+    const lastCall = mockSetOverride.mock.calls[mockSetOverride.mock.calls.length - 1]
+    expect(lastCall[0]).toBe('apiUrl')
+    expect(typeof lastCall[1]).toBe('string')
+  })
 })

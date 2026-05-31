@@ -713,6 +713,14 @@ describe('FlagProvider', () => {
     })
   })
 
+  describe('useFlagContext outside provider', () => {
+    it('returns default context values when used outside FlagProvider', () => {
+      const { result } = renderHook(() => useFlagContext())
+      expect(result.current.isAdmin).toBe(false)
+      expect(result.current.rolloutConfig).toEqual({ version: 1, updatedAt: '', flags: {} })
+    })
+  })
+
   describe('cached config with token in fresh cache', () => {
     it('sets isAdmin false and clears configSha when no token and cache is fresh', async () => {
       const cachedConfig = {
@@ -792,6 +800,128 @@ describe('FlagProvider', () => {
         expect(result.current.isLoading).toBe(false)
       })
       expect(result.current.error).toBe('Public also failed')
+    })
+  })
+
+  describe('cached config with token — auth fetch error branches', () => {
+    it('sets isAdmin true and empty config when fresh cache + token + auth fetch returns 404', async () => {
+      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+
+      const cachedConfig = {
+        version: 1,
+        updatedAt: '2024-01-01',
+        flags: { 'cached-flag': { percentage: 50 } },
+      }
+      localStorage.setItem('flag-rollout-cache', JSON.stringify({ config: cachedConfig, fetchedAt: Date.now() }))
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+
+      const { result } = renderHook(() => useFlagContext(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isAdmin).toBe(true)
+      })
+      expect(result.current.rolloutConfig).toEqual({ version: 1, updatedAt: '', flags: {} })
+    })
+
+    it('sets isAdmin false when fresh cache + token + auth fetch returns 403', async () => {
+      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+
+      const cachedConfig = {
+        version: 1,
+        updatedAt: '2024-01-01',
+        flags: { 'cached-flag': { percentage: 50 } },
+      }
+      localStorage.setItem('flag-rollout-cache', JSON.stringify({ config: cachedConfig, fetchedAt: Date.now() }))
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+      })
+
+      const { result } = renderHook(() => useFlagContext(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+      expect(result.current.isAdmin).toBe(false)
+    })
+
+    it('sets isAdmin false when fresh cache + token + auth fetch throws', async () => {
+      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+
+      const cachedConfig = {
+        version: 1,
+        updatedAt: '2024-01-01',
+        flags: { 'cached-flag': { percentage: 50 } },
+      }
+      localStorage.setItem('flag-rollout-cache', JSON.stringify({ config: cachedConfig, fetchedAt: Date.now() }))
+
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      const { result } = renderHook(() => useFlagContext(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+      expect(result.current.isAdmin).toBe(false)
+    })
+
+    it('handles invalid flags in auth response when cache is fresh', async () => {
+      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+
+      const cachedConfig = {
+        version: 1,
+        updatedAt: '2024-01-01',
+        flags: { 'cached-flag': { percentage: 50 } },
+      }
+      localStorage.setItem('flag-rollout-cache', JSON.stringify({ config: cachedConfig, fetchedAt: Date.now() }))
+
+      const badConfig = { version: 1, updatedAt: '2024-01-01', flags: ['not-an-object'] }
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          content: btoa(JSON.stringify(badConfig)),
+          sha: 'abc',
+        }),
+      })
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const { result } = renderHook(() => useFlagContext(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+      expect(result.current.rolloutConfig).toEqual({ version: 1, updatedAt: '', flags: {} })
+      expect(result.current.isAdmin).toBe(true)
+      warnSpy.mockRestore()
+    })
+  })
+
+  describe('public fetch invalid flags validation', () => {
+    it('resets to empty config when public fetch returns config with flags as array', async () => {
+      const badConfig = { version: 1, updatedAt: '2024-01-01', flags: [] }
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          content: btoa(JSON.stringify(badConfig)),
+          sha: null,
+        }),
+      })
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const { result } = renderHook(() => useFlagContext(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+      expect(result.current.rolloutConfig).toEqual({ version: 1, updatedAt: '', flags: {} })
+      warnSpy.mockRestore()
     })
   })
 })

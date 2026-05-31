@@ -583,4 +583,53 @@ describe('useCustomRatios', () => {
       expect(stored[0].id).toBe(id)
     })
   })
+
+  describe('guard branches', () => {
+    it('addGroup does nothing when already at 6 groups', () => {
+      seedStorage([
+        {
+          id: 'r1',
+          name: 'Full',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+            { label: 'C', classes: [] },
+            { label: 'D', classes: [] },
+            { label: 'E', classes: [] },
+            { label: 'F', classes: [] },
+          ],
+        },
+      ])
+      const { result } = renderHook(() => useCustomRatios())
+      expect(result.current.activeRatio!.groups).toHaveLength(6)
+      act(() => result.current.addGroup())
+      expect(result.current.activeRatio!.groups).toHaveLength(6)
+    })
+
+    it('removeGroup does nothing when only 2 groups remain', () => {
+      seedStorage([
+        {
+          id: 'r1',
+          name: 'Min',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
+      ])
+      const { result } = renderHook(() => useCustomRatios())
+      expect(result.current.activeRatio!.groups).toHaveLength(2)
+      act(() => result.current.removeGroup(0))
+      expect(result.current.activeRatio!.groups).toHaveLength(2)
+    })
+
+    it('updateActiveRatio does nothing when no activeRatioId', () => {
+      const { result } = renderHook(() => useCustomRatios())
+      expect(result.current.activeRatioId).toBeNull()
+      act(() => result.current.updateRatioName('Should not crash'))
+      expect(result.current.customRatios).toHaveLength(0)
+    })
+  })
 })

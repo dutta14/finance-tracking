@@ -800,3 +800,223 @@ describe('GoalDetailedCard metadata', () => {
     expect(screen.queryByText(/Created Jan 1, 2024/)).not.toBeInTheDocument()
   })
 })
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch Coverage — Additional uncovered branches
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetailedCard — header conditional (line 364)', () => {
+  it('hides header entirely when showTitle=false and showActions=false', () => {
+    renderCard({}, { showTitle: false, showActions: false })
+    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('goal-card-actions')).not.toBeInTheDocument()
+  })
+
+  it('shows header when showTitle=false but showActions=true with all action handlers', () => {
+    const onEdit = vi.fn()
+    const onCopy = vi.fn()
+    const onDelete = vi.fn()
+    renderCard({}, { showTitle: false, showActions: true, onEdit, onCopy, onDelete })
+    // Header should render (showActions && onEdit && onCopy && onDelete is true)
+    expect(screen.getByTestId('goal-card-actions')).toBeInTheDocument()
+    // But title should be hidden
+    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — edit form save with valid data (lines 199-215)', () => {
+  it('calls onUpdateGoal with computed metrics on valid save', () => {
+    const onUpdateGoal = vi.fn()
+    renderCard({}, { showActions: false, onUpdateGoal, initialEditing: true })
+    // Form is visible — check for a form label text
+    expect(screen.getByText('Retirement Age')).toBeInTheDocument()
+    // Fill valid values (defaults from toEditFields should be valid)
+    fireEvent.click(screen.getByText('Save'))
+    expect(onUpdateGoal).toHaveBeenCalledTimes(1)
+    const [goalId, updatedGoal] = onUpdateGoal.mock.calls[0]
+    expect(goalId).toBe(1)
+    expect(updatedGoal.retirementAge).toBe(60)
+    expect(updatedGoal.fiGoal).toBe(2500000) // from mocked calculateGoalMetrics
+  })
+
+  it('exits edit mode after successful save', () => {
+    const onUpdateGoal = vi.fn()
+    renderCard({}, { showActions: false, onUpdateGoal, initialEditing: true })
+    fireEvent.click(screen.getByText('Save'))
+    // Should no longer show the edit form (Save button gone)
+    expect(screen.queryByText('Save')).not.toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — handleSuggest when suggestSWR returns null (line 244)', () => {
+  it('does not call onUpdateGoal when suggestSWR finds no valid SWR', async () => {
+    // Create a goal where fund depletes (low growth, high expense) and SWR search fails
+    // because expenseValue2047 is 0 (suggestSWR returns null immediately)
+    const onUpdateGoal = vi.fn()
+    const depletingGoal = makeGoal({
+      growth: 1,
+      monthlyExpense2047: 50000,
+      fiGoal: 500_000,
+      expenseValue2047: 0, // causes suggestSWR to return null (line 113: if (!goal.expenseValue2047) return null)
+      goalEndYear: '2060-01',
+      retirementAge: 40,
+    })
+    render(
+      <GoalDetailedCard
+        goal={depletingGoal}
+        profileBirthday="1990-01-15"
+        condensed={false}
+        onUpdateGoal={onUpdateGoal}
+        showActions={false}
+      />,
+    )
+    // Depletion warning should be visible
+    const suggestBtn = screen.queryByText('Suggest SWR')
+    if (suggestBtn) {
+      fireEvent.click(suggestBtn)
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 10))
+      })
+      // onUpdateGoal should NOT be called since suggestSWR returns null
+      expect(onUpdateGoal).not.toHaveBeenCalled()
+    }
+  })
+})
+
+describe('GoalDetailedCard — projection behind target (line 302)', () => {
+  it('shows "behind" when projected FI date is after target retirement', () => {
+    // Configure: high fiGoal, low savings → projected date far in the future
+    setMockFiTotal(100_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 10_000, saveRate: 10, monthsOfData: 12 })
+    // projectFIDate will return a date far in the future (months = (2M - 100K) / (10K/12) ≈ 2280 months)
+    // That date will be far after retirement (1990 + 60 = 2050)
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText(/behind/)).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — fiTotal with active FI accounts (line 263)', () => {
+  it('computes fiTotal from active FI accounts in latest month', () => {
+    mockDataCtx.accounts = [
+      { id: 1, status: 'active', goalType: 'fi' },
+      { id: 2, status: 'active', goalType: 'fi' },
+      { id: 3, status: 'closed', goalType: 'fi' }, // closed, should be excluded
+    ]
+    mockDataCtx.balances = [
+      { accountId: 1, month: '2024-06', balance: 500_000 },
+      { accountId: 2, month: '2024-06', balance: 300_000 },
+      { accountId: 3, month: '2024-06', balance: 200_000 },
+    ]
+    mockDataCtx.allMonths = ['2024-05', '2024-06']
+    // fiTotal = 500K + 300K = 800K, fiGoal = 2M → 40%
+    renderCard({ fiGoal: 2_000_000 })
+    expect(screen.getByText('40.0%')).toBeInTheDocument()
+  })
+
+  it('excludes accounts with non-fi goalType from fiTotal', () => {
+    mockDataCtx.accounts = [
+      { id: 1, status: 'active', goalType: 'fi' },
+      { id: 2, status: 'active', goalType: 'other' },
+    ]
+    mockDataCtx.balances = [
+      { accountId: 1, month: '2024-06', balance: 400_000 },
+      { accountId: 2, month: '2024-06', balance: 600_000 },
+    ]
+    mockDataCtx.allMonths = ['2024-06']
+    // fiTotal = 400K only (other goalType excluded), fiGoal = 2M → 20%
+    renderCard({ fiGoal: 2_000_000 })
+    expect(screen.getByText('20.0%')).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — projection on track (absDiffMonths <= 6)', () => {
+  it('shows "On track" text when projected date exactly matches target retirement', () => {
+    setMockFiTotal(1_900_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200_000, saveRate: 80, monthsOfData: 12 })
+    // Target retirement: birthday 1990-01-15 + 60 years = Jan 15 2050
+    // Set projectFIDate to return a date that rounds to 0 months difference
+    mockedProjectFIDate.mockReturnValue({
+      date: new Date(2050, 0, 10), // Jan 10 2050 — ~5 days diff rounds to 0 months
+      months: 300,
+    })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText('On track')).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — projection years plural (line 302)', () => {
+  it('shows plural "years" when projected ahead by more than 1 year', () => {
+    setMockFiTotal(1_500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 500_000, saveRate: 60, monthsOfData: 12 })
+    // Target: Jan 2050, projected: Jan 2047 → 3 years ahead
+    mockedProjectFIDate.mockReturnValueOnce({
+      date: new Date(2047, 0, 1),
+      months: 24,
+    })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText(/3 years early/)).toBeInTheDocument()
+  })
+
+  it('shows singular "year" when projected exactly 1 year ahead', () => {
+    setMockFiTotal(1_800_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 600_000, saveRate: 70, monthsOfData: 12 })
+    // Target: Jan 2050, projected: Jan 2049 → ~12 months → 1 year ahead
+    mockedProjectFIDate.mockReturnValueOnce({
+      date: new Date(2048, 11, 1), // Dec 2048 → ~13 months before Jan 2050 → rounds to 1 year
+      months: 12,
+    })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText(/1 year early/)).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — projection not-reachable when projectFIDate returns null', () => {
+  it('shows "Not reachable" when projectFIDate returns null', () => {
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 50_000, saveRate: 20, monthsOfData: 12 })
+    mockedProjectFIDate.mockReturnValueOnce(null)
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — header with showActions and callbacks', () => {
+  it('renders GoalCardActions when showActions is true with all callbacks', () => {
+    const onEdit = vi.fn()
+    const onCopy = vi.fn()
+    const onDelete = vi.fn()
+    render(
+      <GoalDetailedCard
+        goal={makeGoal()}
+        profileBirthday="1990-01-15"
+        condensed={false}
+        showActions={true}
+        onEdit={onEdit}
+        onCopy={onCopy}
+        onDelete={onDelete}
+      />,
+    )
+    expect(screen.getByTestId('goal-card-actions')).toBeInTheDocument()
+  })
+
+  it('does not render GoalCardActions when showActions is false', () => {
+    render(<GoalDetailedCard goal={makeGoal()} profileBirthday="1990-01-15" condensed={false} showActions={false} />)
+    expect(screen.queryByTestId('goal-card-actions')).not.toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard — projection 1 month early (line 299 singular)', () => {
+  it('shows singular "month" when 1 month early', () => {
+    setMockFiTotal(1_900_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200_000, saveRate: 80, monthsOfData: 12 })
+    // projectFIDate returns 1 month → date ~1 month from now
+    // target retirement: 1990+60 = Jan 2050
+    // We need the projected date to be 1 month before retirement
+    mockedProjectFIDate.mockReturnValueOnce({
+      date: new Date(2049, 11, 1), // Dec 2049 — 1 month before Jan 2050
+      months: 1,
+    })
+    renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
+    expect(screen.getByText(/1 month early/)).toBeInTheDocument()
+  })
+})

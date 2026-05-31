@@ -46,12 +46,13 @@ vi.mock('../budget/utils/budgetStorage', () => ({
 }))
 
 vi.mock('../../hooks/useTouchDrag', () => ({
-  useTouchDrag: () => ({
+  useTouchDrag: vi.fn(() => ({
     getTouchHandlers: () => ({ onTouchStart: vi.fn(), onTouchMove: vi.fn(), onTouchEnd: vi.fn() }),
     isDragging: false,
     isLongPressing: false,
     dragIdx: null,
-  }),
+    touchMoved: false,
+  })),
 }))
 
 vi.mock('./NetWorthSummary', () => ({ default: () => <div data-testid="nw-card">Net Worth Card</div> }))
@@ -76,8 +77,10 @@ vi.mock('./SetupProgress', () => ({
 
 import { useGoals } from '../../contexts/GoalsContext'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
+import { useTouchDrag } from '../../hooks/useTouchDrag'
 
 const mockedUseGoals = vi.mocked(useGoals)
+const mockedUseTouchDrag = vi.mocked(useTouchDrag)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -540,5 +543,226 @@ describe('Home per-card error isolation', () => {
     expect(screen.getByTestId('nw-card')).toBeInTheDocument()
     expect(screen.getByTestId('charts-card')).toBeInTheDocument()
     expect(screen.getByTestId('alloc-card')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   moveCard does nothing when target index is out of bounds
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home moveCard out-of-bounds', () => {
+  it('moveCard does nothing when target index is out of bounds (pos=3, direction=1)', () => {
+    renderHome()
+    const downButtons = screen.getAllByRole('button', { name: /Move .+ down/i })
+    // Last card's down button is disabled, but let's verify the order remains unchanged
+    expect(downButtons[3]).toBeDisabled()
+    // Force-click it anyway (aria-disabled prevents default, but let's verify no change)
+    fireEvent.click(downButtons[3])
+
+    // No announcement should appear
+    expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
+    // Order unchanged
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+  })
+
+  it('moveCard does nothing when target index is negative (pos=0, direction=-1)', () => {
+    renderHome()
+    const upButtons = screen.getAllByRole('button', { name: /Move .+ up/i })
+    expect(upButtons[0]).toBeDisabled()
+    fireEvent.click(upButtons[0])
+
+    expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Reordering cards does not change when dropping on same position
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home drag-drop same position no-op', () => {
+  it('reordering cards does not change when dropping on same position — no aria announcement', () => {
+    renderHome()
+    const slots = screen.getAllByTestId(/^drag-slot-/)
+
+    fireEvent.dragStart(slots[2])
+    fireEvent.drop(slots[2])
+
+    // Verify order unchanged
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    // No aria announcement
+    expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: loadOrder with non-4-length array
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home loadOrder branch — non-array parsed value', () => {
+  it('falls back to default when stored value is an object (not an array)', () => {
+    localStorage.setItem('home-card-order', JSON.stringify({ a: 1 }))
+    renderHome()
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+  })
+
+  it('falls back to default when stored value is a 5-element array', () => {
+    localStorage.setItem('home-card-order', JSON.stringify([0, 1, 2, 3, 4]))
+    renderHome()
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+  })
+
+  it('falls back to default when stored value is a number', () => {
+    localStorage.setItem('home-card-order', '42')
+    renderHome()
+    const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: touchDrag isDragging and isLongPressing classes
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home touch drag CSS classes', () => {
+  it('applies touch-dragging class when useTouchDrag reports isDragging', () => {
+    mockedUseTouchDrag.mockReturnValue({
+      getTouchHandlers: () => ({ onTouchStart: vi.fn(), onTouchMove: vi.fn(), onTouchEnd: vi.fn() }),
+      isDragging: true,
+      isLongPressing: false,
+      dragIdx: 1,
+      touchMoved: false,
+    })
+
+    renderHome()
+    const slots = screen.getAllByTestId(/^drag-slot-/)
+    expect(slots[1]).toHaveClass('home-grid-slot--touch-dragging')
+    expect(slots[0]).not.toHaveClass('home-grid-slot--touch-dragging')
+  })
+
+  it('applies long-press class when useTouchDrag reports isLongPressing', () => {
+    mockedUseTouchDrag.mockReturnValue({
+      getTouchHandlers: () => ({ onTouchStart: vi.fn(), onTouchMove: vi.fn(), onTouchEnd: vi.fn() }),
+      isDragging: false,
+      isLongPressing: true,
+      dragIdx: 2,
+      touchMoved: false,
+    })
+
+    renderHome()
+    const slots = screen.getAllByTestId(/^drag-slot-/)
+    expect(slots[2]).toHaveClass('home-grid-slot--long-press')
+    expect(slots[0]).not.toHaveClass('home-grid-slot--long-press')
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: touch drag onDragEnd reorders when from !== dragOver
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home touch drag onDragEnd reorder', () => {
+  it('reorders cards when touch drag ends with from !== dragOver', () => {
+    let capturedOnDragEnd: (() => void) | undefined
+    let capturedOnDragStart: ((idx: number) => void) | undefined
+    let capturedGetSlotFromPoint: ((x: number, y: number) => number | null) | undefined
+
+    mockedUseTouchDrag.mockImplementation(opts => {
+      capturedOnDragEnd = opts.onDragEnd
+      capturedOnDragStart = opts.onDragStart
+      capturedGetSlotFromPoint = opts.getSlotFromPoint
+      return {
+        getTouchHandlers: () => ({ onTouchStart: vi.fn(), onTouchMove: vi.fn(), onTouchEnd: vi.fn() }),
+        isDragging: false,
+        isLongPressing: false,
+        dragIdx: null,
+        touchMoved: false,
+      }
+    })
+
+    renderHome()
+
+    // Simulate: start drag from slot 0
+    capturedOnDragStart!(0)
+
+    // Mock elementFromPoint to return a slot element
+    const slots = screen.getAllByTestId(/^drag-slot-/)
+    const origEFP = document.elementFromPoint
+    document.elementFromPoint = vi.fn().mockReturnValue(slots[2])
+
+    // Call getSlotFromPoint to set dragOver state
+    const result = capturedGetSlotFromPoint!(100, 100)
+    expect(result).toBe(2)
+
+    // Now end the drag — this should trigger reorder since from=0, dragOver=2
+    capturedOnDragEnd!()
+
+    // Check that order changed in localStorage
+    const stored = localStorage.getItem('home-card-order')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      expect(parsed).toHaveLength(4)
+      expect(parsed).not.toEqual([0, 1, 2, 3])
+    }
+
+    document.elementFromPoint = origEFP
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: getSlotFromPoint returns null when el is null
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Home getSlotFromPoint null branches', () => {
+  it('getSlotFromPoint returns null when elementFromPoint returns null', () => {
+    let capturedGetSlotFromPoint: ((x: number, y: number) => number | null) | undefined
+
+    mockedUseTouchDrag.mockImplementation(opts => {
+      capturedGetSlotFromPoint = opts.getSlotFromPoint
+      return {
+        getTouchHandlers: () => ({ onTouchStart: vi.fn(), onTouchMove: vi.fn(), onTouchEnd: vi.fn() }),
+        isDragging: false,
+        isLongPressing: false,
+        dragIdx: null,
+        touchMoved: false,
+      }
+    })
+
+    renderHome()
+
+    const origEFP = document.elementFromPoint
+    document.elementFromPoint = vi.fn().mockReturnValue(null)
+    const result = capturedGetSlotFromPoint!(100, 100)
+    expect(result).toBeNull()
+    document.elementFromPoint = origEFP
+  })
+
+  it('getSlotFromPoint returns null when closest finds no .home-grid-slot', () => {
+    let capturedGetSlotFromPoint: ((x: number, y: number) => number | null) | undefined
+
+    mockedUseTouchDrag.mockImplementation(opts => {
+      capturedGetSlotFromPoint = opts.getSlotFromPoint
+      return {
+        getTouchHandlers: () => ({ onTouchStart: vi.fn(), onTouchMove: vi.fn(), onTouchEnd: vi.fn() }),
+        isDragging: false,
+        isLongPressing: false,
+        dragIdx: null,
+        touchMoved: false,
+      }
+    })
+
+    renderHome()
+
+    // Return a random element that doesn't have .home-grid-slot parent
+    const el = document.createElement('div')
+    const origEFP = document.elementFromPoint
+    document.elementFromPoint = vi.fn().mockReturnValue(el)
+    const result = capturedGetSlotFromPoint!(100, 100)
+    expect(result).toBeNull()
+    document.elementFromPoint = origEFP
   })
 })

@@ -113,4 +113,25 @@ describe('exportCsv', () => {
     expect(csvContent).toContain('2025-01')
     expect(csvContent).toContain('100')
   })
+
+  it('escapes institution names containing commas with double quotes', async () => {
+    const accounts = [makeAccount(1, '401k', 'Vanguard, Inc.')]
+    const balances = [makeBalance(1, '2025-01', 5000)]
+    exportCsv(accounts, balances)
+
+    expect(capturedBlob).not.toBeNull()
+    const csv = await capturedBlob!.text()
+    expect(csv).toContain('"Vanguard, Inc."')
+  })
+
+  it('renders empty cell when a balance entry is missing for a month', async () => {
+    const accounts = [makeAccount(1, 'A'), makeAccount(2, 'B')]
+    const balances = [makeBalance(1, '2025-01', 1000)]
+    exportCsv(accounts, balances)
+
+    expect(capturedBlob).not.toBeNull()
+    const csv = await capturedBlob!.text()
+    const dataRow = csv.split('\n')[2]
+    expect(dataRow).toBe('2025-01,1000,')
+  })
 })

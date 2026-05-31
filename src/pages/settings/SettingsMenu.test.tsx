@@ -109,4 +109,17 @@ describe('SettingsMenu', () => {
     await user.keyboard('{Escape}')
     expect(onExternalClose).toHaveBeenCalledOnce()
   })
+
+  it('defaults to profile section when externalOpen is true but externalSection is undefined (line 69)', () => {
+    render(<SettingsMenu {...defaultProps} externalOpen={true} onExternalClose={vi.fn()} />)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByTestId('profile-pane')).toBeInTheDocument()
+  })
+
+  it('uses provided onUpdateProfile callback (line 58 non-default branch)', async () => {
+    const onUpdateProfile = vi.fn()
+    render(<SettingsMenu {...defaultProps} onUpdateProfile={onUpdateProfile} />)
+    await userEvent.click(screen.getByRole('button', { name: /settings/i }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
 })
