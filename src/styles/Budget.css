@@ -233,7 +233,7 @@ body.dark .budget-title {
   color: var(--color-text-heading);
 }
 .budget-table-wrapper {
-  overflow-x: hidden;
+  overflow-x: auto;
   max-width: 100%;
   border-radius: var(--radius);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
