@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getStorageItem, setStorageItem } from '../utils/storage'
-import { toBase64, fromBase64 } from './base64Utils'
+import { fromBase64 } from './base64Utils'
 import { encryptToken, decryptToken } from './tokenCrypto'
+import { syncFileToGitHub, restoreFileFromGitHub } from './githubSyncApi'
 
 export { toBase64, fromBase64 } from './base64Utils'
 
@@ -228,35 +229,17 @@ export const useGitHubSync = () => {
       if (!isConfigured) return
       setSyncStatus('syncing')
       setLastError(null)
-      let lastErr: Error | null = null // eslint-disable-line no-useless-assignment
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileSha()
-          const commitMessage =
-            message ||
-            `Auto-save: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
+      await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: config.filePath,
+        data,
+        message,
+        defaultMessagePrefix: 'Auto-save',
+        getFileSha,
+        apiHeaders,
+        onSuccess: () => {
           lastSyncedJsonRef.current = (() => {
             const { exportedAt: _, ...rest } = data as Record<string, unknown>
             return JSON.stringify(rest)
@@ -264,16 +247,12 @@ export const useGitHubSync = () => {
           setSyncStatus('success')
           setLastSyncAt(new Date().toISOString())
           clearDirty('goals')
-          return
-        } catch (e) {
-          lastErr = e instanceof Error ? e : new Error(String(e))
-          if (attempt === 2) {
-            setSyncStatus('error')
-            setLastError(lastErr.message)
-            throw lastErr
-          }
-        }
-      }
+        },
+        onError: error => {
+          setSyncStatus('error')
+          setLastError(error.message)
+        },
+      })
     },
     [activeToken, apiHeaders, config.owner, config.repo, config.filePath, getFileSha, isConfigured, clearDirty],
   )
@@ -281,48 +260,28 @@ export const useGitHubSync = () => {
   const syncDataNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
       if (!isConfigured) return
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileShaForPath(dataFilePath)
-          const commitMessage =
-            message ||
-            `Data sync: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${dataFilePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
+      await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: dataFilePath,
+        data,
+        message,
+        defaultMessagePrefix: 'Data sync',
+        getFileSha: () => getFileShaForPath(dataFilePath),
+        apiHeaders,
+        onSuccess: () => {
           lastSyncedDataJsonRef.current = (() => {
             const { exportedAt: _, ...rest } = data as Record<string, unknown>
             return JSON.stringify(rest)
           })()
           pendingDataFileRef.current = null
           clearDirty('data')
-          return
-        } catch (e) {
-          if (attempt === 2) {
-            console.error('Data file sync error:', e instanceof Error ? e.message : e)
-            throw e instanceof Error ? e : new Error(String(e))
-          }
-        }
-      }
+        },
+        onError: error => {
+          console.error('Data file sync error:', error.message)
+        },
+      })
     },
     [activeToken, apiHeaders, config.owner, config.repo, dataFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
@@ -330,104 +289,58 @@ export const useGitHubSync = () => {
   const syncToolsNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
       if (!isConfigured) return
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileShaForPath(toolsFilePath)
-          const commitMessage =
-            message ||
-            `Tools sync: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
+      await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: toolsFilePath,
+        data,
+        message,
+        defaultMessagePrefix: 'Tools sync',
+        getFileSha: () => getFileShaForPath(toolsFilePath),
+        apiHeaders,
+        onSuccess: () => {
           clearDirty('tools')
-          return
-        } catch (e) {
-          if (attempt === 2) {
-            console.error('Tools file sync error:', e instanceof Error ? e.message : e)
-            throw e instanceof Error ? e : new Error(String(e))
-          }
-        }
-      }
+        },
+        onError: error => {
+          console.error('Tools file sync error:', error.message)
+        },
+      })
     },
     [activeToken, apiHeaders, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const restoreToolsLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
     if (!isConfigured) return { ok: false }
-    try {
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`, {
-        headers: apiHeaders(activeToken),
-      })
-      if (res.status === 404) return { ok: false }
-      if (!res.ok) return { ok: false }
-      const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false }
-      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, data: parsed }
-    } catch {
-      return { ok: false }
-    }
+    return restoreFileFromGitHub({
+      token: activeToken,
+      owner: config.owner,
+      repo: config.repo,
+      filePath: toolsFilePath,
+      apiHeaders,
+    })
   }, [activeToken, apiHeaders, toolsFilePath, config.owner, config.repo, isConfigured])
 
   const syncAllocationNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
       if (!isConfigured) return
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileShaForPath(allocationFilePath)
-          const commitMessage =
-            message ||
-            `Allocation sync: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${allocationFilePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
+      await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: allocationFilePath,
+        data,
+        message,
+        defaultMessagePrefix: 'Allocation sync',
+        getFileSha: () => getFileShaForPath(allocationFilePath),
+        apiHeaders,
+        onSuccess: () => {
           clearDirty('allocation')
-          return
-        } catch (e) {
-          if (attempt === 2) {
-            console.error('Allocation file sync error:', e instanceof Error ? e.message : e)
-            throw e instanceof Error ? e : new Error(String(e))
-          }
-        }
-      }
+        },
+        onError: error => {
+          console.error('Allocation file sync error:', error.message)
+        },
+      })
     },
     [
       activeToken,
@@ -443,81 +356,49 @@ export const useGitHubSync = () => {
 
   const restoreAllocationLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
     if (!isConfigured) return { ok: false }
-    try {
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${allocationFilePath}`,
-        { headers: apiHeaders(activeToken) },
-      )
-      if (res.status === 404) return { ok: false }
-      if (!res.ok) return { ok: false }
-      const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false }
-      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, data: parsed }
-    } catch {
-      return { ok: false }
-    }
+    return restoreFileFromGitHub({
+      token: activeToken,
+      owner: config.owner,
+      repo: config.repo,
+      filePath: allocationFilePath,
+      apiHeaders,
+    })
   }, [activeToken, apiHeaders, allocationFilePath, config.owner, config.repo, isConfigured])
 
   const syncTaxesNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
       if (!isConfigured) return
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileShaForPath(taxesFilePath)
-          const commitMessage =
-            message ||
-            `Taxes sync: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
+      await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: taxesFilePath,
+        data,
+        message,
+        defaultMessagePrefix: 'Taxes sync',
+        getFileSha: () => getFileShaForPath(taxesFilePath),
+        apiHeaders,
+        onSuccess: () => {
           clearDirty('taxes')
-          return
-        } catch (e) {
-          if (attempt === 2) {
-            console.error('Taxes file sync error:', e instanceof Error ? e.message : e)
-            throw e instanceof Error ? e : new Error(String(e))
-          }
-        }
-      }
+        },
+        onError: error => {
+          console.error('Taxes file sync error:', error.message)
+        },
+      })
     },
     [activeToken, apiHeaders, config.owner, config.repo, taxesFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const restoreTaxesLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: '' }
-    try {
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`, {
-        headers: apiHeaders(activeToken),
-      })
-      if (res.status === 404) return { ok: false, message: '' }
-      if (!res.ok) return { ok: false, message: '' }
-      const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false, message: '' }
-      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, message: '', data: parsed }
-    } catch {
-      return { ok: false, message: '' }
-    }
+    const result = await restoreFileFromGitHub({
+      token: activeToken,
+      owner: config.owner,
+      repo: config.repo,
+      filePath: taxesFilePath,
+      apiHeaders,
+    })
+    return { ok: result.ok, message: '', data: result.data }
   }, [activeToken, apiHeaders, taxesFilePath, config.owner, config.repo, isConfigured])
 
   const fetchHistory = useCallback(async (): Promise<void> => {
