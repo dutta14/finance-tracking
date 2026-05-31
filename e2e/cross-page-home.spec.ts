@@ -458,7 +458,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // set files directly on the input.
       await page.getByRole('button', { name: 'Settings', exact: true }).click()
       await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
-      await page.getByRole('button', { name: 'Advanced', exact: true }).click()
+      await page.getByRole('tab', { name: 'Advanced', exact: true }).click()
       await expect(page.getByRole('heading', { level: 3, name: 'Advanced' })).toBeVisible()
 
       // Reset counter to 0 immediately before the trigger action so the

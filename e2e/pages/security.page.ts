@@ -52,7 +52,7 @@ export class SecurityPage {
 
     this.settingsButton = page.getByRole('button', { name: 'Settings' })
     this.settingsModal = page.getByRole('dialog')
-    this.securityNavBtn = this.settingsModal.getByRole('button', { name: 'Security', exact: true })
+    this.securityNavBtn = this.settingsModal.getByRole('tab', { name: 'Security', exact: true })
     this.heading = this.settingsModal.getByRole('heading', { name: 'Security', level: 3 })
 
     this.status = this.settingsModal.getByRole('status').first()
