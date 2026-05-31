@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test'
+import { test, expect } from './fixtures/base'
+import type { Page } from '@playwright/test'
 import { TaxesPage } from './pages/taxes.page'
 import {
   CURRENT_YEAR,

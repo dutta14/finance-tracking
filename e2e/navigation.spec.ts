@@ -1,4 +1,5 @@
-import { test, expect, ConsoleMessage } from '@playwright/test'
+import { test, expect } from './fixtures/base'
+import type { ConsoleMessage } from '@playwright/test'
 import { NavigationPage, routeRegex } from './pages/navigation.page'
 import { hashUrl, NAV_PATHS, PAGE_HEADINGS, PRIMARY_NAV_LINKS, seedNav } from './fixtures/nav-data'
 

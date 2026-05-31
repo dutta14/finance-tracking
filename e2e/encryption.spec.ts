@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { SecurityPage } from './pages/security.page'
 import {
   PBKDF2_COST_MS,

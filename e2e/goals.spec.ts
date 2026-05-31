@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { GoalsPage } from './pages/goals.page'
 import {
   seedGoalsData,

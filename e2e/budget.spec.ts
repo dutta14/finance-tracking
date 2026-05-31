@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { BudgetPage } from './pages/budget.page'
 import {
   CURRENT_YEAR,
