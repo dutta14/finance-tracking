@@ -148,31 +148,19 @@ test.describe('Drive — File Manager E2E', () => {
 
   test.describe('Empty state', () => {
     test('7. Drive shows no files and no year folders when nothing has been uploaded', async ({ page }) => {
-      // ADAPTATION: buildBudgetTree always pushes a top-level "Budget"
-      // folder, so the .drive-empty message in Drive.tsx is unreachable
-      // under realistic data. The empty state the user actually sees is:
-      // a single "Budget" folder at /drive with "0 items", and zero file
-      // rows anywhere in the tree. Filed follow-up to revisit the dead
-      // .drive-empty branch (see report).
+      // Issue #135: buildDriveTree now omits the empty Budget folder, so
+      // the .drive-empty message becomes reachable. At root the user sees
+      // no folders, no files, and the empty-state message.
       await seedDriveEmpty(page)
       const drive = new DrivePage(page)
       await drive.goto()
 
-      // Root shows only the empty Budget folder, with explicit "0 items" meta.
-      await expect(drive.folder('Budget')).toBeVisible()
-      await expect(drive.folder('Budget').locator('.drive-row-meta')).toHaveText('0 items')
-      // Zero CSV files anywhere on the page.
-      await expect(page.locator('.drive-row--file')).toHaveCount(0)
-
-      // Drilling into the empty Budget folder shows no folders, no files,
-      // just the .. back row and the drop zone prompt.
-      await drive.folder('Budget').click()
-      await expect(page).toHaveURL(/#\/drive\/budget$/)
-      await expect(drive.backRow).toBeVisible()
+      // Root shows zero folders and zero files.
       await expect(page.locator('.drive-row--folder')).toHaveCount(0)
       await expect(page.locator('.drive-row--file')).toHaveCount(0)
-      await expect(drive.dropZone).toBeVisible()
-      await expect(drive.dropZone).toContainText(/Drag & drop CSV files/)
+      // The empty-state message is visible.
+      await expect(page.locator('.drive-empty')).toBeVisible()
+      await expect(page.locator('.drive-empty')).toContainText(/No budget files yet/i)
     })
   })
 
