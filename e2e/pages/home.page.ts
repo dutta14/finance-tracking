@@ -152,13 +152,13 @@ export class HomePage {
 
   async dismissSidebarIfVisible() {
     const overlay = this.sidebarOverlay
-    if (await overlay.isVisible().catch(() => false)) {
+    if (await overlay.isVisible()) {
       // Use JS click because the sidebar nav intercepts Playwright's action click
       await this.page.evaluate(() => {
         const el = document.querySelector('.sidebar-overlay') as HTMLElement
         el?.click()
       })
-      await overlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+      await overlay.waitFor({ state: 'hidden', timeout: 5000 })
     }
   }
 
