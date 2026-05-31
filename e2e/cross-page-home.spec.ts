@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test'
+import { test, expect } from './fixtures/base'
+import type { Page } from '@playwright/test'
 import { buildV2Export, CROSS_PAGE_GOAL, mutateAccountBalance, seedCrossPage, URLS } from './fixtures/cross-page-data'
 import { waitForReload } from './fixtures/reload'
 

@@ -1,4 +1,5 @@
-import { test, expect, Page, BrowserContext } from '@playwright/test'
+import { test, expect } from './fixtures/base'
+import type { Page, BrowserContext } from '@playwright/test'
 import {
   buildV2Export,
   CROSS_PAGE_ACCOUNTS,
@@ -68,8 +69,8 @@ import { SettingsPage } from './pages/settings.page'
  *      `isConfigured=false` and sync never fires. Test #10 verifies the
  *      realistic default-user navigation path WITHOUT any sync mocking
  *      and asserts no console errors and no calls to api.github.com
- *      (other than the feature-flags fetch we already route-mock in
- *      `seedOnce`). This is more valuable than a contrived "sync in
+ *      (other than the feature-flags fetch handled by the global base
+ *      fixture). This is more valuable than a contrived "sync in
  *      flight" mock — the original spec angle ("sync during nav") is
  *      not reachable from the default user state.
  *
@@ -122,18 +123,6 @@ interface SeedOverrides {
  * has already populated; tab-B does NOT need its own init script.
  */
 async function seedOnce(page: Page, overrides: SeedOverrides = {}): Promise<void> {
-  await page.route(
-    'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
-    async route => {
-      const content = Buffer.from(JSON.stringify({ flags: {} })).toString('base64')
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ content, encoding: 'base64' }),
-      })
-    },
-  )
-
   const data = {
     profile: CROSS_PAGE_PROFILE,
     accounts: CROSS_PAGE_ACCOUNTS,
@@ -564,18 +553,21 @@ test.describe('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => 
     // verify the realistic contract: a user WITHOUT GitHub configured
     // can navigate every page without console errors and without any
     // call leaving the app to api.github.com beyond the feature-flags
-    // fetch we already route-mock in `seedOnce`.
+    // fetch handled by the global base fixture.
     const consoleErrors: string[] = []
     page.on('console', msg => {
       if (msg.type() === 'error') consoleErrors.push(msg.text())
     })
     const apiGitHubHits: string[] = []
     await page.route('https://api.github.com/**', async route => {
-      // Allow the seedOnce feature-flags route to win first; if anything
-      // else reaches api.github.com, record it and let it 404 so we
-      // don't accidentally hit the public rate limit during the suite.
+      // Let feature-flags requests fall through to the base fixture handler.
+      // Record and 404 everything else so we don't hit the public rate limit.
       const url = route.request().url()
-      if (!url.includes('feature-flags.json')) apiGitHubHits.push(url)
+      if (url.includes('feature-flags.json')) {
+        await route.fallback()
+        return
+      }
+      apiGitHubHits.push(url)
       await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
     })
 

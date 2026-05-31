@@ -4,9 +4,10 @@ import { assertAllKeysAreEnvelopes } from './encryption.fixtures'
 
 /**
  * Shared seed for the cross-page integration suites (#151 + future
- * 62b/c/d → #152/#153/#154). Centralizes the "all 13 sensitive keys
- * + feature-flags mock" baseline so each spec can layer overrides on
- * top without re-declaring 100 lines of localStorage seeding.
+ * 62b/c/d → #152/#153/#154). Centralizes the "all 13 sensitive keys"
+ * baseline so each spec can layer overrides on top without re-declaring
+ * 100 lines of localStorage seeding. The feature-flags mock is handled
+ * globally by the base fixture (`e2e/fixtures/base.ts`).
  *
  * Encryption is intentionally disabled (`encryption-enabled: '0'`),
  * which makes `appStorage.getJSON` read plaintext JSON directly out
@@ -175,26 +176,15 @@ export type SeedOverrides = Partial<{
 }>
 
 /**
- * Seed localStorage with the cross-page baseline. Mock the
- * feature-flags fetch (same pattern as seedNav) to keep test logs
- * free of GitHub anonymous-rate-limit 403s.
+ * Seed localStorage with the cross-page baseline.
+ *
+ * The feature-flags API mock is handled globally by the base fixture
+ * (`e2e/fixtures/base.ts`).
  *
  * Pass `null` for any field to OMIT that key from localStorage
  * (e.g. `{ budgetSummary: null }` → no `budget-summary` key written).
  */
 export async function seedCrossPage(page: Page, overrides: SeedOverrides = {}): Promise<void> {
-  await page.route(
-    'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
-    async route => {
-      const content = Buffer.from(JSON.stringify({ flags: {} })).toString('base64')
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ content, encoding: 'base64' }),
-      })
-    },
-  )
-
   const resolved = {
     accounts: 'accounts' in overrides ? overrides.accounts : CROSS_PAGE_SEED.accounts,
     balances: 'balances' in overrides ? overrides.balances : CROSS_PAGE_SEED.balances,

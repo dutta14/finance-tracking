@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { SettingsPage } from './pages/settings.page'
 import {
   ALL_DATA_BALANCE,

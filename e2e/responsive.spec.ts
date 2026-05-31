@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { ResponsivePage, MAIN_PAGE_ROUTES } from './pages/responsive.page'
 import { seedNav, hashUrl } from './fixtures/nav-data'
 import { seedGoalsData } from './fixtures/goals.fixtures'

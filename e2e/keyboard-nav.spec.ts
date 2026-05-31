@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { KeyboardNavPage, SIDEBAR_NAV_ORDER } from './pages/keyboard-nav.page'
 import { seedNav } from './fixtures/nav-data'
 

@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test'
+import { test, expect } from './fixtures/base'
+import type { Page } from '@playwright/test'
 import { SecurityPage } from './pages/security.page'
 import { assertAllKeysAreEnvelopes, isEnvelope, PBKDF2_COST_MS, readEnvelope, SENSITIVE_KEYS } from './fixtures/encryption.fixtures'
 import {

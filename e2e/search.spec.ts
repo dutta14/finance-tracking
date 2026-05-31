@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/base'
 import { SearchPage } from './pages/search.page'
 import { seedNav } from './fixtures/nav-data'
 
