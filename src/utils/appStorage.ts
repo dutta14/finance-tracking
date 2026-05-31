@@ -231,7 +231,7 @@ function lock(): void {
 }
 
 /**
- * Same disposal as `lock()` but does NOT write `_encryption-lock-signal`.
+ * Locks this tab locally without broadcasting the lock signal to other tabs.
  * Used by the EncryptionContext cross-tab listener when another tab toggles
  * `encryption-enabled`: this tab needs to clear its in-memory key, drop
  * queued plaintext persists, and flip `_isReady` to false — but emitting
@@ -242,7 +242,7 @@ function lock(): void {
  * queued plaintext write from disabled-mode flushes after this point),
  * nulls _cryptoKey, and sets _isReady = false.
  */
-function disposeLocalState(): void {
+function lockWithoutBroadcast(): void {
   for (const key of SENSITIVE_KEYS) {
     _memoryStore.delete(key)
     notifySubscribers(key, null)
@@ -287,7 +287,7 @@ export const appStorage = {
   subscribe,
   hydrate,
   lock,
-  disposeLocalState,
+  lockWithoutBroadcast,
   isReady,
   setMode,
   setCryptoKey,
