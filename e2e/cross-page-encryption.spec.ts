@@ -299,7 +299,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       const security = await seedCrossPageEncrypted(page, PASSPHRASE)
 
       // Step 1: Export while encrypted. The download is plaintext.
-      await page.getByRole('button', { name: 'Advanced', exact: true }).click()
+      await page.getByRole('tab', { name: 'Advanced', exact: true }).click()
       const exportBtn = page.getByRole('button', { name: /^Export$/ })
       await expect(exportBtn).toBeVisible()
       const [download] = await Promise.all([page.waitForEvent('download'), exportBtn.click()])
@@ -321,12 +321,12 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       }
 
       // Step 2: Disable encryption.
-      await page.getByRole('button', { name: 'Security', exact: true }).click()
+      await page.getByRole('tab', { name: 'Security', exact: true }).click()
       await security.disable(PASSPHRASE)
       await expect(security.status).toHaveText(/Encryption disabled/)
 
       // Step 3: Factory reset via the Advanced pane (two-step confirm).
-      await page.getByRole('button', { name: 'Advanced', exact: true }).click()
+      await page.getByRole('tab', { name: 'Advanced', exact: true }).click()
       await page.getByRole('button', { name: /^Factory Reset App$/ }).click()
       // Confirm dialog appears with "Yes, Reset Everything".
       await Promise.all([
@@ -354,7 +354,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       // complete before asserting on the post-import UI.
       await page.getByRole('button', { name: 'Settings' }).click()
       await page.getByRole('dialog').waitFor({ state: 'visible' })
-      await page.getByRole('button', { name: 'Advanced', exact: true }).click()
+      await page.getByRole('tab', { name: 'Advanced', exact: true }).click()
       // The Advanced pane renders a hidden <input type="file"> that the
       // "Import" button click-forwards to. setInputFiles works directly
       // on the hidden input.

@@ -31,7 +31,7 @@ export class DrivePage {
     this.fileInput = page.locator('.drive-dropzone input[type="file"]')
 
     this.previewModal = page.getByRole('dialog')
-    this.previewModalHeading = this.previewModal.locator('#csv-preview-heading')
+    this.previewModalHeading = this.previewModal.getByRole('heading', { level: 3 })
 
     this.viewer = page.locator('.drive-viewer')
     this.viewerTitle = page.locator('.drive-viewer-title')

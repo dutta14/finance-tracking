@@ -257,7 +257,7 @@ test.describe('Responsive / mobile viewport (#143)', () => {
 
     // Appearance is the second nav item; click it and wait for the
     // pane heading to confirm it mounted.
-    await resp.settingsDialog.getByRole('button', { name: 'Appearance', exact: true }).click()
+    await resp.settingsDialog.getByRole('tab', { name: 'Appearance', exact: true }).click()
     await expect(resp.settingsDialog.getByRole('heading', { level: 3, name: 'Appearance' })).toBeVisible()
 
     // The Dark option is visible and clickable inside the modal on a
