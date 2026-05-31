@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -21,6 +21,10 @@ vi.mock('./search/searchIndex', () => ({
 vi.mock('./hooks/useFocusTrap', () => ({
   useFocusTrap: vi.fn(),
 }))
+
+import { search, buildIndex } from './search/searchIndex'
+const mockedSearch = vi.mocked(search)
+const mockedBuildIndex = vi.mocked(buildIndex)
 
 const renderApp = () =>
   render(
@@ -208,6 +212,168 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }))
     await waitFor(() => {
       expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument()
+    })
+  })
+})
+
+describe('App handleSearchAction', () => {
+  function setupSearchAction(actionId: string) {
+    const item = {
+      id: 'test-action',
+      label: 'Test Action',
+      hint: '',
+      icon: '⚙',
+      keywords: ['test'],
+      route: '',
+      category: 'command' as const,
+      actionId,
+    }
+    mockedBuildIndex.mockReturnValue([item])
+    mockedSearch.mockReturnValue([{ category: 'command' as const, label: 'Commands', items: [item], total: 1 }])
+  }
+
+  afterEach(() => {
+    mockedBuildIndex.mockReturnValue([])
+    mockedSearch.mockReturnValue([])
+  })
+
+  it('open-settings opens advanced settings section', async () => {
+    setupSearchAction('open-settings')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /Advanced/, selected: true })).toBeInTheDocument()
+  })
+
+  it('open-settings-advanced opens advanced settings section', async () => {
+    setupSearchAction('open-settings-advanced')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /Advanced/, selected: true })).toBeInTheDocument()
+  })
+
+  it('open-settings-profile opens profile settings section', async () => {
+    setupSearchAction('open-settings-profile')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /Profile/, selected: true })).toBeInTheDocument()
+  })
+
+  it('open-settings-github opens github settings section', async () => {
+    setupSearchAction('open-settings-github')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /GitHub Sync/, selected: true })).toBeInTheDocument()
+  })
+
+  it('open-settings-appearance opens appearance settings section', async () => {
+    setupSearchAction('open-settings-appearance')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /Appearance/, selected: true })).toBeInTheDocument()
+  })
+
+  it('open-settings-labs opens labs settings section', async () => {
+    setupSearchAction('open-settings-labs')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /Labs/, selected: true })).toBeInTheDocument()
+  })
+
+  it('toggle-dark-mode toggles dark mode on body', async () => {
+    setupSearchAction('toggle-dark-mode')
+    renderApp()
+    const hadDark = document.body.classList.contains('dark')
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(document.body.classList.contains('dark')).toBe(!hadDark)
+    })
+  })
+
+  it('new-goal navigates to /goal', async () => {
+    setupSearchAction('new-goal')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    await waitFor(() => {
+      expect(screen.getByTestId('page-goal')).toBeInTheDocument()
+    })
+  })
+
+  it('toggle-demo activates demo mode', async () => {
+    setupSearchAction('toggle-demo')
+    renderApp()
+    expect(localStorage.getItem('_demo-backup')).toBeNull()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    // Verify demo mode was activated (backup key created)
+    await waitFor(() => {
+      expect(localStorage.getItem('_demo-backup')).not.toBeNull()
+    })
+  })
+
+  it('export-data triggers export', async () => {
+    setupSearchAction('export-data')
+    renderApp()
+    await userEvent.keyboard('{Meta>}k{/Meta}')
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByText('Test Action'))
+    // Verify search dialog closes (export was triggered)
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
     })
   })
 })

@@ -685,4 +685,456 @@ describe('GitHubSyncPane', () => {
     )
     expect(screen.getByRole('button', { name: 'Configuration' })).toBeInTheDocument()
   })
+
+  // ── Branch coverage: default parameter values (lines 16-25) ──
+
+  it('uses default prop values when props are omitted (covers default parameter branches)', () => {
+    render(
+      <GitHubSyncPane
+        hasPendingChanges={false}
+        ghConfig={{ owner: '', repo: '', filePath: 'data.json', autoSync: false }}
+      />,
+    )
+    // Default ghSyncStatus = 'idle', ghIsConfigured = false
+    expect(screen.getByRole('button', { name: 'Sync' })).toBeDisabled()
+    expect(screen.getByText('Missing configuration')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: handleGhSyncNow does NOT show success when progress total=0 (line 90) ──
+
+  it('does not show sync success banner when ghSyncProgress.total is 0', async () => {
+    const user = userEvent.setup()
+    const progress: SyncProgress = { total: 0, completed: 0, current: '', errors: [], domains: [] }
+    const onSync = vi.fn().mockResolvedValue(undefined)
+    renderPane({
+      ghIsConfigured: true,
+      ghHasStoredToken: false,
+      ghSyncProgress: progress,
+      onGhSyncNow: onSync,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sync' }))
+    await waitFor(() => expect(onSync).toHaveBeenCalled())
+
+    // "Sync successful" banner should NOT appear because total is 0
+    expect(screen.queryByText(/Sync successful/)).not.toBeInTheDocument()
+  })
+
+  // ── Branch coverage: handleGhRestoreLatest when result has no data (line 98) ──
+
+  it('shows restore failure message when restoreLatest returns ok=false', async () => {
+    const user = userEvent.setup()
+    const onRestore = vi.fn().mockResolvedValue({ ok: false, message: 'Failed to fetch' })
+    const onApply = vi.fn()
+    renderPane({
+      ghIsConfigured: true,
+      onGhRestoreLatest: onRestore,
+      onGhApplyRestore: onApply,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    await user.click(screen.getByRole('button', { name: 'Restore Latest' }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to fetch/)).toBeInTheDocument()
+    })
+    // onGhApplyRestore should NOT have been called since ok=false
+    expect(onApply).not.toHaveBeenCalled()
+  })
+
+  // ── Branch coverage: handleGhRestoreCommit failure path (line 107) ──
+
+  it('shows restore error when restoreFromCommit returns ok=false', async () => {
+    const user = userEvent.setup()
+    const onRestoreCommit = vi.fn().mockResolvedValue({ ok: false, message: 'Not found' })
+    const onApply = vi.fn()
+    renderPane({
+      ghIsConfigured: true,
+      ghHistory: [{ sha: 'xyz789', message: 'Old sync', date: '2024-01-10T08:00:00Z', url: 'https://example.com' }],
+      onGhRestoreFromCommit: onRestoreCommit,
+      onGhApplyRestore: onApply,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    await user.click(screen.getByRole('button', { name: 'Restore' }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Not found/)).toBeInTheDocument()
+    })
+    expect(onApply).not.toHaveBeenCalled()
+  })
+
+  // ── Branch coverage: ghSyncStatus idle + owner/repo + hasPendingChanges (line 384) ──
+
+  it('shows "Unsaved changes" when idle with repo configured and pending changes', () => {
+    renderPane({
+      ghSyncStatus: 'idle',
+      ghConfig: { owner: 'o', repo: 'r', filePath: 'f', autoSync: false },
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      hasPendingChanges: true,
+    })
+    expect(screen.getByText(/Unsaved changes/)).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: dirty dot visible when pending changes + not syncing (line 394) ──
+
+  it('shows dirty dot indicator when pending changes and not syncing', () => {
+    const { container } = renderPane({
+      ghSyncStatus: 'idle',
+      ghHasStoredToken: false,
+      hasPendingChanges: true,
+      ghConfig: { owner: 'o', repo: 'r', filePath: 'f', autoSync: false },
+    })
+    expect(container.querySelector('.ghsync-dirty-dot')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: ghSyncProgress with domains (line 411) ──
+
+  it('renders sync progress with domain-level error states', () => {
+    const progress: SyncProgress = {
+      total: 6,
+      completed: 4,
+      current: 'Allocation',
+      errors: ['Goals: push rejected'],
+      domains: ['goals', 'data', 'tools', 'allocation', 'taxes', 'budget'],
+    }
+    renderPane({ ghSyncProgress: progress, ghHasStoredToken: false })
+    // Error domain shown with error styling
+    expect(screen.getByText(/Goals: push rejected/)).toBeInTheDocument()
+    expect(screen.getByText('Allocation')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: restore result with ok=true renders success (lines 475-478) ──
+
+  it('renders restore success result with checkmark', async () => {
+    const user = userEvent.setup()
+    const onRestore = vi.fn().mockResolvedValue({ ok: true, message: 'Restored successfully', data: {} })
+    const onApply = vi.fn().mockResolvedValue(undefined)
+    renderPane({ ghIsConfigured: true, onGhRestoreLatest: onRestore, onGhApplyRestore: onApply })
+
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    await user.click(screen.getByRole('button', { name: 'Restore Latest' }))
+
+    await waitFor(() => {
+      const el = screen.getByRole('status')
+      expect(el).toHaveTextContent(/Restored successfully/)
+    })
+  })
+
+  // ── Branch coverage: save token failure path (line 98 handler, inputs remain) ──
+
+  it('does not clear inputs when save token fails', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue({ ok: false, message: 'Invalid token' })
+    renderPane({ ghHasStoredToken: false, onGhSaveEncryptedToken: onSave })
+
+    const tokenInput = screen.getByPlaceholderText('github_pat_...')
+    const passInput = screen.getByPlaceholderText('At least 8 characters')
+    await user.type(tokenInput, 'ghp_bad')
+    await user.type(passInput, 'pass123')
+    await user.click(screen.getByRole('button', { name: 'Save Token' }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid token/)).toBeInTheDocument()
+    })
+    // Inputs should NOT be cleared on failure
+    expect(tokenInput).toHaveValue('ghp_bad')
+    expect(passInput).toHaveValue('pass123')
+  })
+
+  // ── Branch coverage: ghTokenUnlocked=true && !ghHasStoredToken → null branch (line 283) ──
+
+  it('renders token form without Cancel button when unlocked but no stored token', () => {
+    renderPane({
+      ghHasStoredToken: false,
+      ghTokenUnlocked: true,
+    })
+    // Token form should render (no stored token → form always shown)
+    expect(screen.getByPlaceholderText('github_pat_...')).toBeInTheDocument()
+    // Cancel button should NOT be present because ghHasStoredToken is false
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+  })
+
+  // ── Branch coverage: repo editing sets ghEditingRepo in onChange (line 336) ──
+
+  it('sets editing mode implicitly when repo input changes', () => {
+    const onUpdate = vi.fn()
+    renderPane({
+      ghHasStoredToken: false,
+      ghConfig: undefined,
+      onGhUpdateConfig: onUpdate,
+    })
+    // Repo fields should be visible since no config
+    const repoInput = screen.getByPlaceholderText('finance-backups')
+    fireEvent.change(repoInput, { target: { value: 'my-repo' } })
+    expect(onUpdate).toHaveBeenCalledWith({ repo: 'my-repo' })
+  })
+
+  // ── Branch coverage: unlock token failure shows error (line 83) ──
+
+  it('shows error message when token unlock fails', async () => {
+    const user = userEvent.setup()
+    const onUnlock = vi.fn().mockResolvedValue({ ok: false, message: 'Wrong passphrase' })
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: false,
+      onGhUnlockToken: onUnlock,
+    })
+    const passInput = screen.getByPlaceholderText('Passphrase to unlock token')
+    await user.type(passInput, 'badpass')
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
+    await waitFor(() => {
+      expect(screen.getByText(/Wrong passphrase/)).toBeInTheDocument()
+    })
+  })
+
+  // ── Branch coverage: Enter key triggers unlock on passphrase input (line 163) ──
+
+  it('Enter key in unlock passphrase input triggers unlock', async () => {
+    const user = userEvent.setup()
+    const onUnlock = vi.fn().mockResolvedValue({ ok: true, message: 'Unlocked' })
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: false,
+      onGhUnlockToken: onUnlock,
+    })
+    const passInput = screen.getByPlaceholderText('Passphrase to unlock token')
+    await user.type(passInput, 'mypass{Enter}')
+    expect(onUnlock).toHaveBeenCalledWith('mypass')
+  })
+
+  // ── Branch coverage: dismiss unlock status banner (line 181) ──
+
+  it('dismisses the token unlocked status banner', async () => {
+    const user = userEvent.setup()
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+    })
+    expect(screen.getByText('Token unlocked for this session')).toBeInTheDocument()
+    await user.click(screen.getByLabelText('Dismiss'))
+    expect(screen.queryByText('Token unlocked for this session')).not.toBeInTheDocument()
+  })
+
+  // ── Branch coverage: "Change token" button shows form (line 199) ──
+
+  it('shows token form when Change token is clicked', async () => {
+    const user = userEvent.setup()
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+    })
+    await user.click(screen.getByRole('button', { name: 'Change token' }))
+    expect(screen.getByPlaceholderText('github_pat_...')).toBeInTheDocument()
+    expect(screen.getByText('Replace token')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: Cancel button on token form when has stored token (line 269-278) ──
+
+  it('shows Cancel button on token form and clicking it hides the form', async () => {
+    const user = userEvent.setup()
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+    })
+    await user.click(screen.getByRole('button', { name: 'Change token' }))
+    expect(screen.getByPlaceholderText('github_pat_...')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByPlaceholderText('github_pat_...')).not.toBeInTheDocument()
+  })
+
+  // ── Branch coverage: repo configured shows edit button, clicking opens editor (line 288-301) ──
+
+  it('shows repo info with Edit button when config has owner/repo', async () => {
+    const user = userEvent.setup()
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghConfig: { owner: 'myuser', repo: 'myrepo', filePath: 'data.json', autoSync: false },
+    })
+    expect(screen.getByText('myuser/myrepo')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    // Should show owner/repo inputs
+    expect(screen.getByPlaceholderText('your-github-username')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: Cancel button on repo editor (line 342) ──
+
+  it('hides repo editor when Cancel is clicked', async () => {
+    const user = userEvent.setup()
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghConfig: { owner: 'myuser', repo: 'myrepo', filePath: 'data.json', autoSync: false },
+    })
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    // Should go back to showing the repo info
+    expect(screen.getByText('myuser/myrepo')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: test connection error result (line 445-448) ──
+
+  it('shows test connection error message', async () => {
+    const user = userEvent.setup()
+    const onTest = vi.fn().mockResolvedValue({ ok: false, message: 'Not found', warnings: [] })
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghConfig: { owner: 'myuser', repo: 'myrepo', filePath: 'data.json', autoSync: false },
+      onGhTestConnection: onTest,
+    })
+    await user.click(screen.getByRole('button', { name: 'Test' }))
+    await waitFor(() => {
+      expect(screen.getByText(/Not found/)).toBeInTheDocument()
+    })
+  })
+
+  // ── Branch coverage: test connection with warnings (line 450-458) ──
+
+  it('shows warnings from test connection result', async () => {
+    const user = userEvent.setup()
+    const onTest = vi.fn().mockResolvedValue({ ok: true, message: 'OK', warnings: ['Repo is empty', 'No commits'] })
+    renderPane({
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghConfig: { owner: 'myuser', repo: 'myrepo', filePath: 'data.json', autoSync: false },
+      onGhTestConnection: onTest,
+    })
+    await user.click(screen.getByRole('button', { name: 'Test' }))
+    await waitFor(() => {
+      expect(screen.getByText(/Repo is empty/)).toBeInTheDocument()
+      expect(screen.getByText(/No commits/)).toBeInTheDocument()
+    })
+  })
+
+  // ── Branch coverage: idle status messages (lines 382-390) ──
+
+  it('shows "Unsaved changes" idle status when hasPendingChanges is true with config', () => {
+    renderPane({
+      hasPendingChanges: true,
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghSyncStatus: 'idle',
+      ghConfig: { owner: 'user', repo: 'repo', filePath: 'data.json', autoSync: false },
+    })
+    expect(screen.getByText(/Unsaved changes — sync when ready/)).toBeInTheDocument()
+  })
+
+  it('shows "Token not set up" idle status when no stored token', () => {
+    renderPane({
+      ghHasStoredToken: false,
+      ghTokenUnlocked: false,
+      ghSyncStatus: 'idle',
+      ghConfig: { owner: 'user', repo: 'repo', filePath: 'data.json', autoSync: false },
+    })
+    expect(screen.getByText(/Token not set up/)).toBeInTheDocument()
+  })
+
+  it('shows "Missing configuration" when no owner/repo configured', () => {
+    renderPane({
+      ghHasStoredToken: false,
+      ghSyncStatus: 'idle',
+      ghConfig: { owner: '', repo: '', filePath: 'data.json', autoSync: false },
+    })
+    expect(screen.getByText(/Missing configuration/)).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: sync progress "Already up to date" (line 405-406) ──
+
+  it('shows "Already up to date" when syncProgress has total=0', () => {
+    renderPane({
+      ghHasStoredToken: false,
+      ghSyncProgress: { total: 0, completed: 0, current: '', errors: [], domains: [] },
+    })
+    expect(screen.getByText(/Already up to date/)).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: sync progress "All synced" (line 427-428) ──
+
+  it('shows "All synced" when all domains complete without errors', () => {
+    const progress: SyncProgress = {
+      total: 2,
+      completed: 2,
+      current: '',
+      errors: [],
+      domains: ['goals', 'data'],
+    }
+    renderPane({
+      ghHasStoredToken: false,
+      ghSyncProgress: progress,
+    })
+    expect(screen.getByText(/All synced/)).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: hasPendingChanges dirty dot shown (line 394) ──
+
+  it('shows dirty dot indicator when hasPendingChanges and not syncing', () => {
+    const { container } = renderPane({
+      hasPendingChanges: true,
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghSyncStatus: 'idle',
+      ghConfig: { owner: 'user', repo: 'repo', filePath: 'data.json', autoSync: false },
+    })
+    expect(container.querySelector('.ghsync-dirty-dot')).toBeInTheDocument()
+  })
+
+  // ── Branch coverage: history tab with commit list and restore from specific commit ──
+
+  it('renders commit list and handles restore from specific commit', async () => {
+    const user = userEvent.setup()
+    const onRestoreCommit = vi.fn().mockResolvedValue({ ok: true, message: 'Restored from abc123', data: {} })
+    const onApply = vi.fn().mockResolvedValue(undefined)
+    renderPane({
+      ghIsConfigured: true,
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghHistory: [
+        {
+          sha: 'abc123',
+          message: 'First commit',
+          date: '2024-01-01T00:00:00Z',
+          url: 'https://github.com/commit/abc123',
+        },
+        {
+          sha: 'def456',
+          message: 'Second commit',
+          date: '2024-01-02T00:00:00Z',
+          url: 'https://github.com/commit/def456',
+        },
+      ],
+      onGhRestoreFromCommit: onRestoreCommit,
+      onGhApplyRestore: onApply,
+    })
+    await user.click(screen.getByRole('button', { name: 'History' }))
+    expect(screen.getByText('First commit')).toBeInTheDocument()
+    expect(screen.getByText('Second commit')).toBeInTheDocument()
+    // Click restore on first commit
+    const restoreButtons = screen.getAllByRole('button', { name: 'Restore' })
+    await user.click(restoreButtons[0])
+    await waitFor(() => {
+      expect(onRestoreCommit).toHaveBeenCalledWith('abc123')
+    })
+  })
+
+  // ── Branch coverage: sync success banner after handleGhSyncNow (line 441) ──
+
+  it('shows sync success banner after successful sync', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderPane({
+      ghIsConfigured: true,
+      ghHasStoredToken: true,
+      ghTokenUnlocked: true,
+      ghSyncProgress: null,
+      ghConfig: { owner: 'user', repo: 'repo', filePath: 'data.json', autoSync: false },
+    })
+    await user.click(screen.getByRole('button', { name: 'Sync' }))
+    await waitFor(() => {
+      expect(screen.getByText(/Sync successful/)).toBeInTheDocument()
+    })
+    vi.useRealTimers()
+  })
 })

@@ -86,4 +86,57 @@ describe('parseCsvImport', () => {
     expect(result.accounts[0].institution).toBe('Vanguard, Inc.')
     expect(result.balances[0].balance).toBe(1500)
   })
+
+  it('skips rows with unrecognized date formats', () => {
+    const csv = ',Inst\n,Acct\n2025-01,100\nxyz123,200'
+    const result = parseCsvImport(csv, [], [])
+    expect(result.balances).toHaveLength(1)
+    expect(result.balances[0].balance).toBe(100)
+  })
+
+  it('updates balance when the same account+month appears twice', () => {
+    const csv = ',Inst\n,Acct\n2025-01,100\n2025-01,250'
+    const result = parseCsvImport(csv, [], [])
+    expect(result.balances).toHaveLength(1)
+    expect(result.balances[0].balance).toBe(250)
+  })
+
+  it('skips columns with empty account name', () => {
+    const csv = ',Inst1,Inst2\n,Acct1,\n2025-01,100,200'
+    const result = parseCsvImport(csv, [], [])
+    expect(result.accounts).toHaveLength(1)
+    expect(result.accounts[0].name).toBe('Acct1')
+  })
+
+  it('returns existing data when no valid columns found', () => {
+    const existing = [
+      {
+        id: 1,
+        name: 'Old',
+        type: 'non-retirement' as const,
+        owner: 'primary' as const,
+        status: 'active' as const,
+        goalType: 'fi' as const,
+        nature: 'asset' as const,
+        allocation: 'cash' as const,
+      },
+    ]
+    const csv = ',\n,\n2025-01,100'
+    const result = parseCsvImport(csv, existing, [])
+    expect(result.accounts).toBe(existing)
+  })
+
+  it('skips balance cells that are NaN after parsing', () => {
+    const csv = ',Inst\n,Acct\n2025-01,abc\n2025-02,200'
+    const result = parseCsvImport(csv, [], [])
+    expect(result.balances).toHaveLength(1)
+    expect(result.balances[0].month).toBe('2025-02')
+  })
+
+  it('creates account without institution when institution cell is empty', () => {
+    const csv = ',\n,MyAccount\n2025-01,500'
+    const result = parseCsvImport(csv, [], [])
+    expect(result.accounts[0].name).toBe('MyAccount')
+    expect(result.accounts[0].institution).toBeUndefined()
+  })
 })

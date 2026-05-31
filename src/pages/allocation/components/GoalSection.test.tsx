@@ -113,4 +113,118 @@ describe('GoalSection', () => {
     await user.click(screen.getByText('Rebalance'))
     expect(screen.getByText('Close')).toBeInTheDocument()
   })
+
+  it('hides goal summary and shows editor when Set Goal is clicked', async () => {
+    const user = userEvent.setup()
+    render(
+      <GoalSection
+        activeRatio={makeRatio()}
+        profile={defaultProfile}
+        allocMap={emptyAllocMap}
+        computeGoalPcts={() => null}
+        onSetGoal={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByText('Set Goal'))
+    expect(screen.getByText('Constant')).toBeInTheDocument()
+    expect(screen.getByText('Save Goal')).toBeInTheDocument()
+  })
+
+  it('calls onSetGoal and closes editor when Save Goal is clicked', async () => {
+    const user = userEvent.setup()
+    const onSetGoal = vi.fn()
+    render(
+      <GoalSection
+        activeRatio={makeRatio()}
+        profile={defaultProfile}
+        allocMap={emptyAllocMap}
+        computeGoalPcts={() => null}
+        onSetGoal={onSetGoal}
+      />,
+    )
+    await user.click(screen.getByText('Set Goal'))
+    await user.click(screen.getByText('Save Goal'))
+    expect(onSetGoal).toHaveBeenCalledWith('total', expect.objectContaining({ type: 'constant' }))
+    expect(screen.queryByText('Save Goal')).not.toBeInTheDocument()
+  })
+
+  it('closes editor without saving when Cancel is clicked', async () => {
+    const user = userEvent.setup()
+    const onSetGoal = vi.fn()
+    render(
+      <GoalSection
+        activeRatio={makeRatio()}
+        profile={defaultProfile}
+        allocMap={emptyAllocMap}
+        computeGoalPcts={() => null}
+        onSetGoal={onSetGoal}
+      />,
+    )
+    await user.click(screen.getByText('Set Goal'))
+    await user.click(screen.getByText('Cancel'))
+    expect(onSetGoal).not.toHaveBeenCalled()
+    expect(screen.queryByText('Save Goal')).not.toBeInTheDocument()
+  })
+
+  it('toggles rebalance panel off when Rebalance is clicked again', async () => {
+    const user = userEvent.setup()
+    const ratio = makeRatio({ goals: { total: { type: 'constant', pcts: [60, 40] } } })
+    render(
+      <GoalSection
+        activeRatio={ratio}
+        profile={defaultProfile}
+        allocMap={emptyAllocMap}
+        computeGoalPcts={() => [60, 40]}
+        onSetGoal={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByText('Rebalance'))
+    expect(screen.getByText('Hide Rebalance')).toBeInTheDocument()
+    await user.click(screen.getByText('Hide Rebalance'))
+    expect(screen.getByText('Rebalance')).toBeInTheDocument()
+  })
+
+  it('displays gradual goal summary correctly', () => {
+    const ratio = makeRatio({
+      goals: {
+        total: {
+          type: 'gradual',
+          owner: 'primary',
+          startAge: 30,
+          endAge: 60,
+          startPcts: [80, 20],
+          endPcts: [40, 60],
+        },
+      },
+    })
+    render(
+      <GoalSection
+        activeRatio={ratio}
+        profile={defaultProfile}
+        allocMap={emptyAllocMap}
+        computeGoalPcts={() => [60, 40]}
+        onSetGoal={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/Age 30→60/)).toBeInTheDocument()
+  })
+
+  it('shows other-scope badges when goals exist on other scopes', () => {
+    const ratio = makeRatio({
+      goals: {
+        total: { type: 'constant', pcts: [60, 40] },
+        fi: { type: 'constant', pcts: [70, 30] },
+      },
+    })
+    render(
+      <GoalSection
+        activeRatio={ratio}
+        profile={defaultProfile}
+        allocMap={emptyAllocMap}
+        computeGoalPcts={() => [60, 40]}
+        onSetGoal={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('FI has goal')).toBeInTheDocument()
+  })
 })

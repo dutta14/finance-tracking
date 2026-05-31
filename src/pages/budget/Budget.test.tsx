@@ -315,6 +315,20 @@ describe('Budget with data', () => {
     renderBudget()
     expect(screen.queryByText(/No data for/)).not.toBeInTheDocument()
   })
+
+  it('shows CategoryGroupManager when Groups button is clicked', async () => {
+    const user = userEvent.setup()
+    renderBudget()
+    await user.click(screen.getByText('Groups'))
+    expect(screen.getByTestId('category-group-manager')).toBeInTheDocument()
+  })
+
+  it('shows format help panel when ? button is clicked', async () => {
+    const user = userEvent.setup()
+    renderBudget()
+    await user.click(screen.getByText('?'))
+    expect(document.querySelector('.budget-format-help')).toBeInTheDocument()
+  })
 })
 
 /* ─── Year navigation ─── */

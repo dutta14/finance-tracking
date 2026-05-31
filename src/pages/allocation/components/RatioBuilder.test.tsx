@@ -109,4 +109,92 @@ describe('RatioBuilder', () => {
     await user.click(cashPills[0])
     expect(onToggleClass).toHaveBeenCalledWith(0, 'cash')
   })
+
+  it('calls onUpdateName when the name input changes', async () => {
+    const user = userEvent.setup()
+    const onUpdateName = vi.fn()
+    render(
+      <RatioBuilder
+        activeRatio={makeRatio()}
+        onUpdateName={onUpdateName}
+        onUpdateScope={noop}
+        onUpdateGroupLabel={noop}
+        onToggleClass={noop}
+        onAddGroup={noop}
+        onRemoveGroup={noop}
+        goalSection={null}
+      />,
+    )
+    const input = screen.getByDisplayValue('My Ratio')
+    await user.clear(input)
+    await user.type(input, 'New Name')
+    expect(onUpdateName).toHaveBeenCalled()
+  })
+
+  it('calls onUpdateScope when a scope tab is clicked', async () => {
+    const user = userEvent.setup()
+    const onUpdateScope = vi.fn()
+    render(
+      <RatioBuilder
+        activeRatio={makeRatio()}
+        onUpdateName={noop}
+        onUpdateScope={onUpdateScope}
+        onUpdateGroupLabel={noop}
+        onToggleClass={noop}
+        onAddGroup={noop}
+        onRemoveGroup={noop}
+        goalSection={null}
+      />,
+    )
+    await user.click(screen.getByText('FI'))
+    expect(onUpdateScope).toHaveBeenCalledWith('fi')
+  })
+
+  it('calls onRemoveGroup when remove button is clicked on a group with more than 2 groups', async () => {
+    const user = userEvent.setup()
+    const onRemoveGroup = vi.fn()
+    const ratio = makeRatio({
+      groups: [
+        { label: 'A', classes: ['us-stock'] },
+        { label: 'B', classes: ['bonds'] },
+        { label: 'C', classes: ['cash'] },
+      ],
+    })
+    render(
+      <RatioBuilder
+        activeRatio={ratio}
+        onUpdateName={noop}
+        onUpdateScope={noop}
+        onUpdateGroupLabel={noop}
+        onToggleClass={noop}
+        onAddGroup={noop}
+        onRemoveGroup={onRemoveGroup}
+        goalSection={null}
+      />,
+    )
+    const removeButtons = screen.getAllByTitle('Remove group')
+    await user.click(removeButtons[0])
+    expect(onRemoveGroup).toHaveBeenCalledWith(0)
+  })
+
+  it('calls onUpdateGroupLabel when a group label input changes', async () => {
+    const user = userEvent.setup()
+    const onUpdateGroupLabel = vi.fn()
+    render(
+      <RatioBuilder
+        activeRatio={makeRatio()}
+        onUpdateName={noop}
+        onUpdateScope={noop}
+        onUpdateGroupLabel={onUpdateGroupLabel}
+        onToggleClass={noop}
+        onAddGroup={noop}
+        onRemoveGroup={noop}
+        goalSection={null}
+      />,
+    )
+    const groupInput = screen.getByDisplayValue('Group A')
+    await user.clear(groupInput)
+    await user.type(groupInput, 'Equities')
+    expect(onUpdateGroupLabel).toHaveBeenCalled()
+  })
 })

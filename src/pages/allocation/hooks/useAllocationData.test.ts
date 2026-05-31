@@ -301,4 +301,71 @@ describe('useAllocationData', () => {
       expect(ratio[1].color).toBe('#0ea5e9')
     })
   })
+
+  describe('liability accounts', () => {
+    it('includes liability accounts with non-zero balance in allocation map', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, nature: 'asset', allocation: 'us-stock' }),
+        makeAccount({ id: 2, nature: 'liability', allocation: 'bonds' }),
+      ]
+      mockData.balances = [makeBalance(1, 100000), makeBalance(2, -50000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      const allocMap = result.current.allocMap
+      const total = allocMap.get('total')
+      expect(total).toBeDefined()
+      expect(total!.get('bonds')).toBe(50000)
+    })
+
+    it('subtracts linked liability from linked asset allocation', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, nature: 'asset', allocation: 'real-estate' }),
+        makeAccount({ id: 2, nature: 'liability', allocation: 'bonds', linkedAccountId: 1 }),
+      ]
+      mockData.balances = [makeBalance(1, 500000), makeBalance(2, -200000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      const total = result.current.allocMap.get('total')
+      expect(total!.get('real-estate')).toBe(300000)
+    })
+
+    it('skips inactive accounts from allocation', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, nature: 'asset', status: 'inactive', allocation: 'us-stock' }),
+        makeAccount({ id: 2, nature: 'asset', allocation: 'bonds' }),
+      ]
+      mockData.balances = [makeBalance(1, 100000), makeBalance(2, 50000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      const total = result.current.allocMap.get('total')
+      expect(total!.has('us-stock')).toBe(false)
+      expect(total!.get('bonds')).toBe(50000)
+    })
+
+    it('skips accounts with zero balance', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, nature: 'asset', allocation: 'us-stock' }),
+        makeAccount({ id: 2, nature: 'liability', allocation: 'bonds' }),
+      ]
+      mockData.balances = [makeBalance(1, 100000), makeBalance(2, 0)]
+
+      const { result } = renderHook(() => useAllocationData())
+      const total = result.current.allocMap.get('total')
+      expect(total!.has('bonds')).toBe(false)
+    })
+
+    it('filters liability accounts by goalType in fi/gw maps', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, nature: 'asset', allocation: 'us-stock', goalType: 'fi' }),
+        makeAccount({ id: 2, nature: 'liability', allocation: 'bonds', goalType: 'gw' }),
+      ]
+      mockData.balances = [makeBalance(1, 100000), makeBalance(2, -30000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      const fi = result.current.allocMap.get('fi')
+      const gw = result.current.allocMap.get('gw')
+      expect(fi!.has('bonds')).toBe(false)
+      expect(gw!.get('bonds')).toBe(30000)
+    })
+  })
 })

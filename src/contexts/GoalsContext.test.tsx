@@ -218,4 +218,194 @@ describe('GoalsContext', () => {
     expect(typeof result.current.handleDeleteWithUndo).toBe('function')
     expect(typeof result.current.handleCopyGwGoals).toBe('function')
   })
+
+  it('handleDeleteWithUndo finalizes previous pending delete before starting new one', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    // Create two goals
+    const goal1: FinancialGoal = {
+      id: 1,
+      goalName: 'First',
+      createdAt: new Date().toISOString(),
+      birthday: '',
+      goalCreatedIn: '',
+      goalEndYear: '',
+      resetExpenseMonth: false,
+      retirementAge: 65,
+      expenseMonth: 0,
+      expenseValue: 0,
+      monthlyExpenseValue: 0,
+      expenseValueMar2026: 0,
+      expenseValue2047: 0,
+      monthlyExpense2047: 0,
+      inflationRate: 3,
+      safeWithdrawalRate: 4,
+      growth: 7,
+      retirement: '',
+      fiGoal: 0,
+      progress: 0,
+    } as FinancialGoal
+    const goal2: FinancialGoal = { ...goal1, id: 2, goalName: 'Second' }
+
+    act(() => {
+      result.current.createGoal(goal1)
+      result.current.createGoal(goal2)
+    })
+    expect(result.current.goals).toHaveLength(2)
+
+    // Start deleting first goal (pending)
+    act(() => {
+      result.current.handleDeleteWithUndo([1])
+    })
+    expect(result.current.pendingDelete).not.toBeNull()
+    expect(result.current.visibleGoals).toHaveLength(1)
+
+    // Start deleting second goal — should finalize first deletion
+    act(() => {
+      result.current.handleDeleteWithUndo([2])
+    })
+
+    // First goal should be actually deleted now (finalized)
+    expect(result.current.goals.find(g => g.id === 1)).toBeUndefined()
+    // Second goal still exists (pending undo period)
+    expect(result.current.goals.find(g => g.id === 2)).toBeDefined()
+    expect(result.current.visibleGoals).toHaveLength(0)
+  })
+
+  it('handleDeleteWithUndo uses "Goal" as fallback when goalName is undefined', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    const goal: FinancialGoal = {
+      id: 1,
+      createdAt: new Date().toISOString(),
+      birthday: '',
+      goalCreatedIn: '',
+      goalEndYear: '',
+      resetExpenseMonth: false,
+      retirementAge: 65,
+      expenseMonth: 0,
+      expenseValue: 0,
+      monthlyExpenseValue: 0,
+      expenseValueMar2026: 0,
+      expenseValue2047: 0,
+      monthlyExpense2047: 0,
+      inflationRate: 3,
+      safeWithdrawalRate: 4,
+      growth: 7,
+      retirement: '',
+      fiGoal: 0,
+      progress: 0,
+    } as FinancialGoal
+
+    act(() => {
+      result.current.createGoal(goal)
+    })
+    act(() => {
+      result.current.handleDeleteWithUndo([1])
+    })
+
+    expect(result.current.pendingDelete?.message).toBe('"Goal" deleted')
+  })
+
+  it('handleCopyGwGoals copies gw goals from source plan to new plan', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    // Create a gw goal linked to fiGoalId 100
+    act(() => {
+      result.current.createGwGoal({
+        fiGoalId: 100,
+        label: 'Sub Goal A',
+        disburseAge: 45,
+        disburseAmount: 60000,
+        growthRate: 7,
+        currentSavings: 15000,
+      })
+    })
+    expect(result.current.gwGoals).toHaveLength(1)
+
+    // Copy to new plan id 200
+    act(() => {
+      result.current.handleCopyGwGoals(100, 200)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(2)
+    const copied = result.current.gwGoals.find(g => g.fiGoalId === 200)
+    expect(copied).toBeDefined()
+    expect(copied!.label).toBe('Sub Goal A')
+    expect(copied!.currentSavings).toBe(0)
+  })
+
+  it('handleCopyGwGoals does nothing when source plan has no gw goals', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    act(() => {
+      result.current.handleCopyGwGoals(999, 200)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(0)
+  })
+
+  it('deleteGwGoal removes a gw goal by id', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    act(() => {
+      result.current.createGwGoal({
+        fiGoalId: 100,
+        label: 'To Delete',
+        disburseAge: 45,
+        disburseAmount: 60000,
+        growthRate: 7,
+        currentSavings: 15000,
+      })
+    })
+    const id = result.current.gwGoals[0].id
+
+    act(() => {
+      result.current.deleteGwGoal(id)
+    })
+
+    expect(result.current.gwGoals).toHaveLength(0)
+  })
+
+  it('handleDeleteWithUndo shows plural message for multiple goals', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    act(() => {
+      result.current.createGoal({ goalName: 'Plan A' } as Parameters<typeof result.current.createGoal>[0])
+    })
+    act(() => {
+      result.current.createGoal({ goalName: 'Plan B' } as Parameters<typeof result.current.createGoal>[0])
+    })
+
+    const ids = result.current.goals.map(g => g.id)
+    expect(ids).toHaveLength(2)
+
+    act(() => {
+      result.current.handleDeleteWithUndo(ids)
+    })
+
+    expect(result.current.pendingDelete).not.toBeNull()
+    expect(result.current.pendingDelete!.message).toBe('2 goals deleted')
+  })
+
+  it('handleUndoDelete is a no-op when no pending delete exists (line 79 early return)', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    expect(result.current.pendingDelete).toBeNull()
+    act(() => {
+      result.current.handleUndoDelete()
+    })
+    expect(result.current.pendingDelete).toBeNull()
+    expect(result.current.goals).toHaveLength(0)
+  })
+
+  it('dismissPendingDelete is a no-op when no pending delete exists (line 103 early return)', () => {
+    const { result } = renderHook(() => useGoals(), { wrapper })
+
+    expect(result.current.pendingDelete).toBeNull()
+    act(() => {
+      result.current.dismissPendingDelete()
+    })
+    expect(result.current.pendingDelete).toBeNull()
+  })
 })

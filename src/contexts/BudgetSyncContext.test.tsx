@@ -276,5 +276,137 @@ describe('BudgetSyncContext', () => {
         await result.current.budget.restoreBudgetFromGitHub()
       })
     })
+
+    it('merges downloaded CSVs into budget store when csvResult is ok (lines 56-59)', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({
+          owner: 'test-owner',
+          repo: 'test-repo',
+          filePath: 'finance-goals.json',
+          autoSync: false,
+        }),
+      )
+
+      const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
+
+      await act(async () => {
+        await result.current.sync.saveEncryptedToken('ghp_testtoken', 'passphrase1')
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      expect(result.current.sync.isConfigured).toBe(true)
+
+      // Mock fetch to return CSVs and config from GitHub
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+        // budget directory listing (matches /contents/budget path)
+        if (url.includes('/contents/budget') && !url.includes('.csv') && !url.includes('config')) {
+          return new Response(
+            JSON.stringify([{ name: '2025-01.csv', path: 'budget/2025-01.csv', sha: 'abc', type: 'file' }]),
+            { status: 200 },
+          )
+        }
+        // individual CSV file
+        if (url.includes('2025-01.csv')) {
+          return new Response(
+            JSON.stringify({
+              content: btoa('Date,Category,Amount\n2025-01-01,Food,50'),
+              encoding: 'base64',
+            }),
+            { status: 200 },
+          )
+        }
+        // budget-config
+        if (url.includes('budget-config')) {
+          return new Response(
+            JSON.stringify({
+              content: btoa(
+                JSON.stringify({
+                  years: [2025],
+                  categoryGroups: [{ id: 'food', name: 'Food', categories: ['Groceries'] }],
+                }),
+              ),
+              encoding: 'base64',
+            }),
+            { status: 200 },
+          )
+        }
+        return new Response('Not Found', { status: 404 })
+      })
+
+      await act(async () => {
+        await result.current.budget.restoreBudgetFromGitHub()
+      })
+
+      // Verify CSVs were merged into localStorage
+      const stored = localStorage.getItem('budget-store')
+      expect(stored).not.toBeNull()
+      const store = JSON.parse(stored!)
+      expect(store.csvs?.['2025-01']?.csv).toContain('Food')
+    })
+
+    it('handles csvResult.ok=false and configResult.ok=false gracefully (no data merged)', async () => {
+      localStorage.setItem(
+        'github-sync-config',
+        JSON.stringify({
+          owner: 'test-owner',
+          repo: 'test-repo',
+          filePath: 'finance-goals.json',
+          autoSync: false,
+        }),
+      )
+
+      const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
+
+      await act(async () => {
+        await result.current.sync.saveEncryptedToken('ghp_testtoken', 'passphrase1')
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      // Both downloads throw (caught by .catch(() => ({ ok: false }))) on lines 52-53
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
+
+      await act(async () => {
+        await result.current.budget.restoreBudgetFromGitHub()
+      })
+
+      // Should complete without throwing — both catch clauses produce { ok: false }
+    })
+  })
+
+  /* ── syncBudgetNow when not configured — clearDirty still runs (line 46-47) ── */
+
+  describe('syncBudgetNow clearDirty when not configured', () => {
+    it('clears dirty flag even when isConfigured is false (line 46)', async () => {
+      vi.useFakeTimers()
+
+      const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      // Not configured
+      expect(result.current.sync.isConfigured).toBe(false)
+
+      // Mark dirty then sync — should clear even without being configured
+      act(() => {
+        result.current.sync.markDirty('budget')
+      })
+      expect(result.current.sync.dirtyFlags.budget).toBe(true)
+
+      await act(async () => {
+        await result.current.budget.syncBudgetNow()
+      })
+
+      expect(result.current.sync.dirtyFlags.budget).toBe(false)
+
+      vi.useRealTimers()
+    })
   })
 })

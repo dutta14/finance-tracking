@@ -219,3 +219,66 @@ describe('SettingsModal structure', () => {
     expect(screen.getByRole('tab', { name: /labs/i })).toBeInTheDocument()
   })
 })
+
+/* ── Tab navigation (coverage for uncovered onClick callbacks) ─── */
+
+describe('SettingsModal tab navigation coverage', () => {
+  it('switches to Security pane when Security tab is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('tab', { name: /security/i }))
+    expect(screen.getByTestId('security-pane')).toBeInTheDocument()
+  })
+
+  it('switches back to Profile pane after navigating away', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('tab', { name: /appearance/i }))
+    expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /profile/i }))
+    expect(screen.getByTestId('profile-pane')).toBeInTheDocument()
+  })
+
+  it('switches to Feature Flags pane when admin clicks Feature Flags tab', async () => {
+    mockIsAdmin.value = true
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('tab', { name: /feature flags/i }))
+    expect(screen.getByTestId('flag-admin-pane')).toBeInTheDocument()
+    mockIsAdmin.value = false
+  })
+
+  it('calls onClose when Escape key is pressed', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.keyboard('{Escape}')
+    expect(defaultProps.onClose).toHaveBeenCalled()
+  })
+
+  it('renders dark mode sun icon when darkMode is true', () => {
+    render(<SettingsModal {...defaultProps} darkMode={true} />)
+    const tab = screen.getByRole('tab', { name: /appearance/i })
+    expect(tab).toBeInTheDocument()
+  })
+
+  it('switches to Advanced pane and renders it', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('tab', { name: /advanced/i }))
+    expect(screen.getByTestId('advanced-pane')).toBeInTheDocument()
+  })
+
+  it('switches to Security pane', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('tab', { name: /security/i }))
+    expect(screen.getByTestId('security-pane')).toBeInTheDocument()
+  })
+
+  it('switches to Labs pane', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+    await user.click(screen.getByRole('tab', { name: /labs/i }))
+    expect(screen.getByTestId('labs-pane')).toBeInTheDocument()
+  })
+})

@@ -316,6 +316,60 @@ describe('downloadAllTaxFiles', () => {
     expect(result.error).toBe('Network failure')
   })
 
+  it('skips year directories that return non-ok response (line 131)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (url.endsWith('/contents/taxes')) {
+        return new Response(JSON.stringify([{ name: '2024', type: 'dir' }]), { status: 200 })
+      }
+      // Year directory listing returns error
+      if (url.endsWith('/contents/taxes/2024')) {
+        return new Response('Forbidden', { status: 403 })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    const result = await downloadAllTaxFiles(config, token)
+    expect(result.ok).toBe(true)
+    expect(result.files!.size).toBe(0)
+  })
+
+  it('skips files with names that do not match the expected pattern (line 137)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (url.endsWith('/contents/taxes')) {
+        return new Response(JSON.stringify([{ name: '2024', type: 'dir' }]), { status: 200 })
+      }
+      if (url.endsWith('/contents/taxes/2024')) {
+        // File with no underscore-delimited ID before extension
+        return new Response(JSON.stringify([{ name: 'nopattern.pdf', type: 'file', sha: 'abc' }]), { status: 200 })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    const result = await downloadAllTaxFiles(config, token)
+    expect(result.ok).toBe(true)
+    expect(result.files!.size).toBe(0)
+  })
+
+  it('skips files where encoding is not base64 (line 146)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (url.endsWith('/contents/taxes')) {
+        return new Response(JSON.stringify([{ name: '2024', type: 'dir' }]), { status: 200 })
+      }
+      if (url.endsWith('/contents/taxes/2024')) {
+        return new Response(JSON.stringify([{ name: 'Alice_W-2_f1.pdf', type: 'file', sha: 'abc' }]), { status: 200 })
+      }
+      if (url.includes('Alice_W-2_f1.pdf')) {
+        // Content is present but encoding is not base64
+        return new Response(JSON.stringify({ content: 'rawtext', encoding: 'utf-8' }), { status: 200 })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    const result = await downloadAllTaxFiles(config, token)
+    expect(result.ok).toBe(true)
+    expect(result.files!.size).toBe(0)
+  })
+
   it('downloads successful files even when some file downloads fail', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
@@ -344,5 +398,215 @@ describe('downloadAllTaxFiles', () => {
     expect(result.files).toBeDefined()
     expect(result.files!.get('f1')).toBe('SGVsbG8=')
     expect(result.files!.has('f2')).toBe(false)
+  })
+})
+
+describe('syncAllTaxFiles — owner path variations', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('uses "Joint" in file path for joint owner items', async () => {
+    const store: TaxStore = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: 'item1',
+              label: 'Tax Return',
+              owner: 'joint',
+              category: 'paystub',
+              accountIds: [],
+              files: [
+                {
+                  id: 'f1',
+                  name: 'return.pdf',
+                  content: 'data:application/pdf;base64,SGVsbG8=',
+                  ext: 'pdf',
+                  uploadedAt: '2024-01-01',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    }
+    const putUrls: string[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      if (init?.method === 'PUT') {
+        putUrls.push(url)
+        return new Response(JSON.stringify({ content: {} }), { status: 201 })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test User' }))
+    const config = { owner: 'test-owner', repo: 'test-repo', filePath: 'finance-goals.json', autoSync: false }
+    const result = await syncAllTaxFiles(config, 'ghp_test', store)
+    expect(result.synced).toBe(1)
+    expect(putUrls[0]).toContain('Joint')
+  })
+
+  it('reports error for non-409 upload failures', async () => {
+    const store: TaxStore = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: 'item1',
+              label: 'W-2',
+              owner: 'primary',
+              category: 'paystub',
+              accountIds: [],
+              files: [
+                {
+                  id: 'f1',
+                  name: 'W2.pdf',
+                  content: 'data:application/pdf;base64,SGVsbG8=',
+                  ext: 'pdf',
+                  uploadedAt: '2024-01-01',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    }
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        return new Response(JSON.stringify({ message: 'Server Error' }), { status: 500 })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test' }))
+    const config = { owner: 'test-owner', repo: 'test-repo', filePath: 'finance-goals.json', autoSync: false }
+    const result = await syncAllTaxFiles(config, 'ghp_test', store)
+    expect(result.ok).toBe(false)
+    expect(result.errors.length).toBeGreaterThan(0)
+  })
+
+  it('returns error from json parse catch when response body is invalid JSON (line 60)', async () => {
+    const store: TaxStore = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: 'item1',
+              label: 'W-2',
+              owner: 'primary',
+              category: 'paystub',
+              accountIds: [],
+              files: [
+                {
+                  id: 'f1',
+                  name: 'W2.pdf',
+                  content: 'data:application/pdf;base64,SGVsbG8=',
+                  ext: 'pdf',
+                  uploadedAt: '2024-01-01',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    }
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        // Return non-ok response with body that fails json() parse
+        return new Response('not json at all', {
+          status: 422,
+          headers: { 'Content-Type': 'text/plain' },
+        })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test' }))
+    const config = { owner: 'test-owner', repo: 'test-repo', filePath: 'finance-goals.json', autoSync: false }
+    const result = await syncAllTaxFiles(config, 'ghp_test', store)
+    expect(result.ok).toBe(false)
+    // The error message should fall back to the status code (line 60-61)
+    expect(result.errors[0]).toContain('422')
+  })
+
+  it('returns error after all 3 retry attempts fail with network errors (lines 62-64)', async () => {
+    const store: TaxStore = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: 'item1',
+              label: 'W-2',
+              owner: 'primary',
+              category: 'paystub',
+              accountIds: [],
+              files: [
+                {
+                  id: 'f1',
+                  name: 'W2.pdf',
+                  content: 'data:application/pdf;base64,SGVsbG8=',
+                  ext: 'pdf',
+                  uploadedAt: '2024-01-01',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    }
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        throw new Error('Connection timeout')
+      }
+      // GET for SHA check — also throws to trigger the catch on all 3 attempts
+      throw new Error('Connection timeout')
+    })
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test' }))
+    const config = { owner: 'test-owner', repo: 'test-repo', filePath: 'finance-goals.json', autoSync: false }
+    const result = await syncAllTaxFiles(config, 'ghp_test', store)
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]).toContain('Connection timeout')
+  })
+
+  it('retries on 409 conflict up to max attempts then returns error (line 56 + 63-64)', async () => {
+    const store: TaxStore = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: 'item1',
+              label: 'W-2',
+              owner: 'primary',
+              category: 'paystub',
+              accountIds: [],
+              files: [
+                {
+                  id: 'f1',
+                  name: 'W2.pdf',
+                  content: 'data:application/pdf;base64,SGVsbG8=',
+                  ext: 'pdf',
+                  uploadedAt: '2024-01-01',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    }
+    let putAttempts = 0
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        putAttempts++
+        // All attempts return 409 — first two retry, third returns error via json parse
+        return new Response(JSON.stringify({ message: 'Conflict' }), { status: 409 })
+      }
+      return new Response('Not Found', { status: 404 })
+    })
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test' }))
+    const config = { owner: 'test-owner', repo: 'test-repo', filePath: 'finance-goals.json', autoSync: false }
+    const result = await syncAllTaxFiles(config, 'ghp_test', store)
+    expect(result.ok).toBe(false)
+    // Should have tried 3 times (attempt 0, 1, 2) — first two 409s retry, third returns error
+    expect(putAttempts).toBe(3)
+    expect(result.errors[0]).toContain('Conflict')
   })
 })

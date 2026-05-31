@@ -187,4 +187,28 @@ describe('SavingsPlan', () => {
     // Balance should be sum: $250,000
     expect(screen.getByText('$250,000')).toBeInTheDocument()
   })
+
+  it('shows diff when multiple months exist and balance increased', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
+    mockDataCtx.balances = [
+      makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 }),
+      makeBalanceEntry({ accountId: 1, month: '2024-06', balance: 200_000 }),
+    ]
+    mockDataCtx.allMonths = ['2024-01', '2024-06']
+
+    render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+    expect(screen.getByText(/On track/)).toBeInTheDocument()
+  })
+
+  it('shows upward diff when balance decreased over time', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
+    mockDataCtx.balances = [
+      makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 500_000 }),
+      makeBalanceEntry({ accountId: 1, month: '2024-06', balance: 200_000 }),
+    ]
+    mockDataCtx.allMonths = ['2024-01', '2024-06']
+
+    render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+    expect(screen.getByText(/Need to save more/)).toBeInTheDocument()
+  })
 })

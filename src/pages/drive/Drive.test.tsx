@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Drive from './Drive'
@@ -653,5 +653,122 @@ describe('Drive — file metadata tags', () => {
     expect(screen.getAllByText('Joint').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Paystub')).toBeInTheDocument()
     expect(screen.getByText('Fidelity 401k')).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: keyboard navigation on back row (line 264)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Drive — keyboard navigation', () => {
+  it('navigates up on Enter key on back row', () => {
+    renderDrive('/drive/budget')
+    const backRow = screen.getByRole('button', { name: 'Back to parent folder' })
+    fireEvent.keyDown(backRow, { key: 'Enter' })
+    expect(mockNavigate).toHaveBeenCalledWith('/drive')
+  })
+
+  it('navigates up on Space key on back row', () => {
+    renderDrive('/drive/budget')
+    const backRow = screen.getByRole('button', { name: 'Back to parent folder' })
+    fireEvent.keyDown(backRow, { key: ' ' })
+    expect(mockNavigate).toHaveBeenCalledWith('/drive')
+  })
+
+  it('does not navigate on other keys on back row', () => {
+    renderDrive('/drive/budget')
+    const backRow = screen.getByRole('button', { name: 'Back to parent folder' })
+    mockNavigate.mockClear()
+    fireEvent.keyDown(backRow, { key: 'Tab' })
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: rename same slug does nothing (line 87)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Drive — rename edge cases', () => {
+  it('cancels rename when new value equals original slug', async () => {
+    const { renameBudgetMonth } = await import('../budget/utils/budgetStorage')
+    const mockedRename = vi.mocked(renameBudgetMonth)
+    mockedRename.mockClear()
+
+    renderDrive('/drive/budget/2025')
+    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+
+    // Don't change the value (it defaults to the slug), just confirm
+    await userEvent.click(screen.getByRole('button', { name: 'Move' }))
+
+    // Should have closed the popover without calling rename
+    expect(mockedRename).not.toHaveBeenCalled()
+    expect(screen.queryByLabelText('Move to month:')).not.toBeInTheDocument()
+  })
+
+  it('proceeds with replace after warning confirmation', async () => {
+    const { loadBudgetStore, renameBudgetMonth, saveBudgetStore } = await import('../budget/utils/budgetStorage')
+    vi.mocked(loadBudgetStore).mockReturnValue({
+      csvs: { '2025-03': { csv: 'existing', month: '2025-03', uploadedAt: '' } },
+      configs: {},
+      years: [],
+      categoryGroups: [],
+    })
+    vi.mocked(renameBudgetMonth).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+
+    renderDrive('/drive/budget/2025')
+    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+
+    const input = screen.getByLabelText('Move to month:')
+    await userEvent.clear(input)
+    await userEvent.type(input, '2025-03')
+    await userEvent.click(screen.getByRole('button', { name: 'Move' }))
+
+    // First click shows warning
+    expect(screen.getByText(/already has data/)).toBeInTheDocument()
+
+    // Second click (Replace) confirms
+    await userEvent.click(screen.getByRole('button', { name: 'Replace' }))
+    expect(vi.mocked(renameBudgetMonth)).toHaveBeenCalled()
+    expect(vi.mocked(saveBudgetStore)).toHaveBeenCalled()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: sort by name (line 128 default sort)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Drive — sort by name (default)', () => {
+  it('sorts files alphabetically by name by default', () => {
+    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+    renderDrive('/drive/data')
+
+    // Default sort is 'name': File A, File B, File C
+    const fileNames = screen.getAllByText(/^File [ABC]$/).map(el => el.textContent)
+    expect(fileNames).toEqual(['File A', 'File B', 'File C'])
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: notfound path fallback → root (line 104)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Drive — invalid path fallback', () => {
+  it('falls back to root folder when path resolves to notfound', () => {
+    renderDrive('/drive/nonexistent/path')
+    // Should still render without crashing, showing root content
+    expect(screen.getByRole('heading', { level: 1, name: 'Drive' })).toBeInTheDocument()
+  })
+})
+
+/* ═══════════════════════════════════════════════════════════════
+   Branch coverage: breadcrumb label for non-folder nodes (line 181)
+   ═══════════════════════════════════════════════════════════════ */
+
+describe('Drive — breadcrumb for invalid segments', () => {
+  it('renders raw segment text in breadcrumb when segment resolves to notfound', () => {
+    renderDrive('/drive/budget/nonexistent')
+    const nav = screen.getByRole('navigation')
+    // "nonexistent" resolves to notfound → shows raw segment text
+    expect(within(nav).getByText('nonexistent')).toBeInTheDocument()
   })
 })

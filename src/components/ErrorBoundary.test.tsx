@@ -173,6 +173,21 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/GitHub Sync is configured/)).toBeInTheDocument()
   })
 
+  it('"Reload page" calls window.location.reload', async () => {
+    const user = userEvent.setup()
+    const reloadMock = vi.fn()
+    Object.defineProperty(window, 'location', { value: { reload: reloadMock }, writable: true })
+
+    render(
+      <ErrorBoundary variant="page">
+        <ThrowingComponent shouldThrow={true} />
+      </ErrorBoundary>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Reload page' }))
+
+    expect(reloadMock).toHaveBeenCalled()
+  })
+
   it('"Clear data & reload" calls localStorage.clear and indexedDB.deleteDatabase', async () => {
     const user = userEvent.setup()
     const clearSpy = vi.spyOn(Storage.prototype, 'clear').mockImplementation(() => {})

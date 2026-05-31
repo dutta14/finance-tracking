@@ -64,4 +64,27 @@ describe('Allocation', () => {
     await user.click(fiButtons[0])
     expect(screen.getByText('Breakdown')).toBeInTheDocument()
   })
+
+  it('selects a ratio tab when clicked', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation />)
+    // Create two ratios so we can switch between them
+    await user.click(screen.getByText('+ New Ratio'))
+    await user.click(screen.getByText('Blank'))
+    await user.click(screen.getByText('+ New Ratio'))
+    await user.click(screen.getByText('Blank'))
+    // Click the first ratio tab — the tabs render ratio names
+    const tabs = document.querySelectorAll('.alloc-ratio-tab')
+    await user.click(tabs[0] as HTMLElement)
+    expect(tabs[0]).toHaveClass('active')
+  })
+
+  it('creates a ratio from a preset when a preset option is selected', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation />)
+    await user.click(screen.getByText('+ New Ratio'))
+    await user.click(screen.getByText('Stock vs Bond'))
+    // A ratio was created and is active
+    expect(screen.queryByText(/No allocations yet/)).not.toBeInTheDocument()
+  })
 })

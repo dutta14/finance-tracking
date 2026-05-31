@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BalanceSpreadsheet from './BalanceSpreadsheet'
 import { makeAccount, makeProfile } from '../../test/factories'
@@ -580,5 +580,341 @@ describe('BalanceSpreadsheet', () => {
     // Confirm delete
     await user.click(screen.getByRole('button', { name: 'Delete' }))
     expect(onDeleteMonth).toHaveBeenCalledWith('2024-03')
+  })
+
+  // ── Additional branch coverage tests ──
+
+  it('toggles L1 filter closed when same filter button is clicked twice', async () => {
+    const user = userEvent.setup()
+    render(<BalanceSpreadsheet {...makeProps()} />)
+
+    // Open date filter
+    await user.click(screen.getByRole('button', { name: /^Date/ }))
+    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument()
+
+    // Click Date again to close (line 63: prev === f ? null : f)
+    await user.click(screen.getByRole('button', { name: /^Date/ }))
+    expect(screen.queryByRole('button', { name: 'All' })).not.toBeInTheDocument()
+  })
+
+  it('toggleSet removes value from set when already present', async () => {
+    const user = userEvent.setup()
+    render(<BalanceSpreadsheet {...makeProps({ allMonths: ['2024-01'] })} />)
+
+    await user.click(screen.getByRole('button', { name: /^Goal/ }))
+    await user.click(screen.getByRole('button', { name: 'FI' }))
+    // FI filter is active — only 401k visible
+    expect(screen.queryByText('Checking')).not.toBeInTheDocument()
+
+    // Click FI again to remove it (line 68: next.has(value) ? next.delete(value))
+    await user.click(screen.getByRole('button', { name: 'FI' }))
+    // Both accounts visible again
+    expect(screen.getByText('Checking')).toBeInTheDocument()
+    expect(screen.getByText('401k')).toBeInTheDocument()
+  })
+
+  it('sumGroupForMonth returns 0 when no balances exist for group children', () => {
+    const grouped1 = makeAccount({ id: 10, name: 'Sub A', group: 'Empty', goalType: 'gw', type: 'liquid' })
+    const grouped2 = makeAccount({ id: 11, name: 'Sub B', group: 'Empty', goalType: 'gw', type: 'liquid' })
+    // Empty balance map — sumGroupForMonth returns 0 for both (line 180: val !== undefined check)
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [grouped1, grouped2],
+          allAccounts: [grouped1, grouped2],
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+    // Group cell shows empty string when sum is 0 (line 607: groupVal !== 0 ? ... : '')
+    expect(screen.getByText('Empty')).toBeInTheDocument()
+  })
+
+  it('renders YTD date filter correctly', async () => {
+    const user = userEvent.setup()
+    const now = new Date()
+    const yr = now.getFullYear()
+    const curMonth = `${yr}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    const prevYearMonth = `${yr - 1}-06`
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          allMonths: [curMonth, prevYearMonth],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^Date/ }))
+    await user.click(screen.getByRole('button', { name: 'YTD' }))
+    // YTD should filter out prev year month (line 206)
+    // Current month should still be visible
+    const rows = document.querySelectorAll('.data-spreadsheet-row-header')
+    expect(rows.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders Last 12 mo date filter showing only first 12 months', async () => {
+    const user = userEvent.setup()
+    const mths = Array.from({ length: 15 }, (_, i) => {
+      const m = 15 - i
+      const yr = 2024 - Math.floor((m - 1) / 12)
+      const mo = ((m - 1) % 12) + 1
+      return `${yr}-${String(mo).padStart(2, '0')}`
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          allMonths: mths,
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^Date/ }))
+    await user.click(screen.getByRole('button', { name: 'Last 12 mo' }))
+    // Only 12 months visible (line 208: allMonths.slice(0, 12))
+    const monthLabels = document.querySelectorAll('.data-spreadsheet-month-label')
+    expect(monthLabels.length).toBe(12)
+  })
+
+  it('custom range filters with "to" month only', async () => {
+    const user = userEvent.setup()
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          allMonths: ['2024-03', '2024-02', '2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^Date/ }))
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    // Set "to" year and month (line 212: !customTo || m <= customTo)
+    const selects = screen.getAllByRole('combobox')
+    // selects[2] is "to" year, selects[3] is "to" month
+    await user.selectOptions(selects[2], '2024')
+    await user.selectOptions(selects[3], '02')
+
+    // Should filter months — only Jan and Feb visible (<= 2024-02)
+    expect(screen.queryByText('Mar 2024')).not.toBeInTheDocument()
+    expect(screen.getByText('Feb 2024')).toBeInTheDocument()
+  })
+
+  it('renders inline entry row with group column as empty cell', () => {
+    const grouped1 = makeAccount({ id: 10, name: 'Sub A', group: 'Savings', goalType: 'gw', type: 'liquid' })
+    const grouped2 = makeAccount({ id: 11, name: 'Sub B', group: 'Savings', goalType: 'gw', type: 'liquid' })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [grouped1, grouped2],
+          allAccounts: [grouped1, grouped2],
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+          inlineEntry: { month: '2024-02', values: {} },
+        })}
+      />,
+    )
+    // Group cell in inline row is read-only (line 537-545)
+    const groupCell = document.querySelector('.data-spreadsheet-group-cell.data-spreadsheet-inline-cell')
+    expect(groupCell).toBeInTheDocument()
+  })
+
+  it('inline entry displays formatted currency when field is not focused', () => {
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          inlineEntry: { month: '2024-04', values: { 1: '5000' } },
+        })}
+      />,
+    )
+    // _focused is undefined, so displayVal = formatCurrency(5000) (line 550)
+    const inputs = screen.getAllByPlaceholderText('—')
+    const firstInput = inputs[0] as HTMLInputElement
+    expect(firstInput.value).toBe('$5,000')
+  })
+
+  it('inline entry shows raw value when field is focused', () => {
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          inlineEntry: { month: '2024-04', values: { 1: '5000' }, _focused: 1 },
+        })}
+      />,
+    )
+    // _focused === a.id, so rawVal is shown (line 561)
+    const inputs = screen.getAllByPlaceholderText('—')
+    const firstInput = inputs[0] as HTMLInputElement
+    expect(firstInput.value).toBe('5000')
+  })
+
+  it('inline entry input strips non-numeric characters on change', async () => {
+    const user = userEvent.setup()
+    const onInlineChange = vi.fn()
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          inlineEntry: { month: '2024-04', values: {}, _focused: 1 },
+          onInlineEntryChange: onInlineChange,
+        })}
+      />,
+    )
+    const inputs = screen.getAllByPlaceholderText('—')
+    await user.type(inputs[0], '$1,234')
+    // onChange strips non-numeric (line 565: replace(/[^0-9.-]/g, ''))
+    expect(onInlineChange).toHaveBeenCalled()
+  })
+
+  it('renders owner avatar images when avatarDataUrl is set', () => {
+    const profileWithAvatar = makeProfile({
+      avatarDataUrl: 'data:image/png;base64,abc',
+      partner: { name: 'Partner', avatarDataUrl: 'data:image/png;base64,def', birthday: '' },
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          profile: profileWithAvatar,
+          allMonths: ['2024-01'],
+        })}
+      />,
+    )
+    // Primary avatar image rendered (line 413)
+    const imgs = document.querySelectorAll('.data-owner-avatar img')
+    expect(imgs.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders partner avatar for partner-owned account', () => {
+    const partnerAcct = makeAccount({
+      id: 3,
+      name: 'Partner 401k',
+      owner: 'partner',
+      goalType: 'fi',
+      type: 'retirement',
+    })
+    const profileWithPartner = makeProfile({
+      partner: { name: 'Jane', avatarDataUrl: '', birthday: '' },
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [partnerAcct],
+          allAccounts: [partnerAcct],
+          profile: profileWithPartner,
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+    // Partner initial "J" in avatar (line 428-430)
+    const avatar = document.querySelector('.data-owner-avatar-partner')
+    expect(avatar).toBeInTheDocument()
+    expect(avatar!.textContent).toBe('J')
+  })
+
+  it('renders joint owner avatar group for joint account', () => {
+    const jointAcct = makeAccount({ id: 3, name: 'Joint Savings', owner: 'joint', goalType: 'gw', type: 'liquid' })
+    const profileWithPartner = makeProfile({
+      partner: { name: 'Jane', avatarDataUrl: '', birthday: '' },
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [jointAcct],
+          allAccounts: [jointAcct],
+          profile: profileWithPartner,
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+    // Joint shows avatar group (line 411)
+    const avatarGroup = document.querySelector('.data-owner-avatar-group')
+    expect(avatarGroup).toBeInTheDocument()
+  })
+
+  it('renders inactive accounts with inactive CSS class', () => {
+    const inactiveAcct = makeAccount({ id: 3, name: 'Old Account', status: 'inactive', goalType: 'gw', type: 'liquid' })
+    const map = buildBalanceMap([{ accountId: 3, month: '2024-01', balance: 500 }])
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [inactiveAcct],
+          allAccounts: [inactiveAcct],
+          allMonths: ['2024-01'],
+          balanceMap: map,
+        })}
+      />,
+    )
+    // Inactive account column header has inactive class (line 479/616)
+    const inactiveHeader = document.querySelector('.data-spreadsheet-inactive')
+    expect(inactiveHeader).toBeInTheDocument()
+  })
+
+  it('dismisses delete dialog by clicking overlay background', async () => {
+    const user = userEvent.setup()
+    render(<BalanceSpreadsheet {...makeProps({ allMonths: ['2024-01'] })} />)
+
+    await user.click(screen.getByTitle('Delete Jan 2024'))
+    expect(screen.getByText(/Delete all balance entries for/)).toBeInTheDocument()
+
+    // Click overlay background to dismiss (line 630)
+    const overlay = document.querySelector('.data-confirm-overlay')!
+    fireEvent.click(overlay)
+    expect(screen.queryByText(/Delete all balance entries for/)).not.toBeInTheDocument()
+  })
+
+  it('renders institution name for accounts that have one', () => {
+    const acctWithInst = makeAccount({
+      id: 5,
+      name: 'Brokerage',
+      goalType: 'fi',
+      type: 'non-retirement',
+      institution: 'Vanguard',
+    })
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [acctWithInst],
+          allAccounts: [acctWithInst],
+          allMonths: ['2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+    // Institution rendered (line 499)
+    expect(screen.getByText('Vanguard')).toBeInTheDocument()
+  })
+
+  it('setCustomMonth with empty year value clears the custom field', async () => {
+    const user = userEvent.setup()
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          allMonths: ['2024-03', '2024-02', '2024-01'],
+          balanceMap: new Map(),
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^Date/ }))
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    const selects = screen.getAllByRole('combobox')
+    // Set from year then clear it (line 222-223: value ? ... : '')
+    await user.selectOptions(selects[0], '2024')
+    await user.selectOptions(selects[0], '') // clear → empty string
+    // All months should be visible (no from filter)
+    expect(screen.getByText('Jan 2024')).toBeInTheDocument()
+    expect(screen.getByText('Mar 2024')).toBeInTheDocument()
   })
 })

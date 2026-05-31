@@ -161,3 +161,99 @@ describe('applyFilters', () => {
     expect(result[0].goalName).toBe('Low FI')
   })
 })
+
+describe('GoalFilterBar — FI Goal filter interactions', () => {
+  it('calls onChange with selected FI bucket when a checkbox is toggled', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({ onChange })
+
+    await user.click(screen.getByRole('button', { name: /fi goal/i }))
+    await user.click(screen.getByRole('checkbox', { name: /< \$5M/i }))
+
+    expect(onChange).toHaveBeenCalledWith({
+      ...DEFAULT_FILTERS,
+      fiGoalBuckets: ['< $5M'],
+    })
+  })
+
+  it('removes FI bucket from filters when unchecking an active checkbox', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({
+      onChange,
+      filters: { ...DEFAULT_FILTERS, fiGoalBuckets: ['< $5M'] },
+    })
+
+    await user.click(screen.getByRole('button', { name: /fi goal/i }))
+    await user.click(screen.getByRole('checkbox', { name: /< \$5M/i }))
+
+    expect(onChange).toHaveBeenCalledWith({
+      ...DEFAULT_FILTERS,
+      fiGoalBuckets: [],
+    })
+  })
+})
+
+describe('GoalFilterBar — Expense filter interactions', () => {
+  it('calls onChange with selected expense bucket when a checkbox is toggled', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({ onChange })
+
+    await user.click(screen.getByRole('button', { name: /expense at creation/i }))
+    await user.click(screen.getByRole('checkbox', { name: /< \$50k/i }))
+
+    expect(onChange).toHaveBeenCalledWith({
+      ...DEFAULT_FILTERS,
+      expenseBuckets: ['< $50k'],
+    })
+  })
+
+  it('removes expense bucket from filters when unchecking an active checkbox', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({
+      onChange,
+      filters: { ...DEFAULT_FILTERS, expenseBuckets: ['< $50k'] },
+    })
+
+    await user.click(screen.getByRole('button', { name: /expense at creation/i }))
+    await user.click(screen.getByRole('checkbox', { name: /< \$50k/i }))
+
+    expect(onChange).toHaveBeenCalledWith({
+      ...DEFAULT_FILTERS,
+      expenseBuckets: [],
+    })
+  })
+})
+
+describe('GoalFilterBar — FilterDropdown outside click', () => {
+  it('closes the dropdown when clicking outside the panel and trigger', async () => {
+    const user = userEvent.setup()
+    renderFilterBar()
+
+    await user.click(screen.getByRole('button', { name: /retirement age/i }))
+    expect(screen.getByRole('checkbox', { name: /age 50/i })).toBeInTheDocument()
+
+    await user.click(document.body)
+    expect(screen.queryByRole('checkbox', { name: /age 50/i })).not.toBeInTheDocument()
+  })
+
+  it('removes retirement age from filters when unchecking an active checkbox', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({
+      onChange,
+      filters: { ...DEFAULT_FILTERS, retirementAges: [50] },
+    })
+
+    await user.click(screen.getByRole('button', { name: /retirement age/i }))
+    await user.click(screen.getByRole('checkbox', { name: /age 50/i }))
+
+    expect(onChange).toHaveBeenCalledWith({
+      ...DEFAULT_FILTERS,
+      retirementAges: [],
+    })
+  })
+})

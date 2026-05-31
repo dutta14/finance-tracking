@@ -280,4 +280,127 @@ describe('SettingsContext cross-tab sync', () => {
     unmount()
     unsubs.forEach(fn => expect(fn).toHaveBeenCalled())
   })
+
+  it('sets darkMode to false when subscriber fires with 0', () => {
+    localStorage.setItem('darkMode', '1')
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('darkMode').textContent).toBe('true')
+
+    act(() => {
+      capturedCallbacks.get('darkMode')!('0')
+    })
+
+    expect(screen.getByTestId('darkMode').textContent).toBe('false')
+  })
+
+  it('does not update accentTheme when subscriber fires with null', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
+
+    act(() => {
+      capturedCallbacks.get('accentTheme')!(null as unknown as string)
+    })
+
+    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
+  })
+
+  it('sets allowCsvImport to false when subscriber fires with 0', () => {
+    localStorage.setItem('allowCsvImport', '1')
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('allowCsvImport').textContent).toBe('true')
+
+    act(() => {
+      capturedCallbacks.get('allowCsvImport')!('0')
+    })
+
+    expect(screen.getByTestId('allowCsvImport').textContent).toBe('false')
+  })
+
+  it('does not update darkMode when subscriber fires with non-0/1 value', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(screen.getByTestId('darkMode').textContent).toBe('false')
+
+    act(() => {
+      capturedCallbacks.get('darkMode')!('invalid')
+    })
+
+    // Neither "1" nor "0" — neither branch executes, state unchanged
+    expect(screen.getByTestId('darkMode').textContent).toBe('false')
+  })
+})
+
+describe('SettingsContext accent theme body class', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    document.body.classList.remove('dark')
+    document.body.className = ''
+  })
+
+  it('adds accent class to body when accentTheme is not blue', () => {
+    localStorage.setItem('accentTheme', 'green')
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(document.body.classList.contains('accent-green')).toBe(true)
+  })
+
+  it('does not add accent class when theme is blue (default)', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    expect(document.body.classList.contains('accent-blue')).toBe(false)
+  })
+
+  it('removes previous accent class when theme changes', () => {
+    localStorage.setItem('accentTheme', 'purple')
+    render(
+      <SettingsProvider>
+        <ToggleConsumer />
+      </SettingsProvider>,
+    )
+    expect(document.body.classList.contains('accent-purple')).toBe(true)
+
+    act(() => {
+      screen.getByTestId('set-accent').click()
+    })
+
+    // Now theme is 'green' (from ToggleConsumer handler)
+    expect(document.body.classList.contains('accent-green')).toBe(true)
+    expect(document.body.classList.contains('accent-purple')).toBe(false)
+  })
+
+  it('falls back to matchMedia dark mode when localStorage has no stored value', () => {
+    // matchMedia returns true for dark mode
+    const matchMediaMock = vi.fn().mockReturnValue({ matches: true })
+    Object.defineProperty(window, 'matchMedia', { value: matchMediaMock, writable: true })
+
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+
+    expect(screen.getByTestId('darkMode').textContent).toBe('true')
+    expect(document.body.classList.contains('dark')).toBe(true)
+  })
 })

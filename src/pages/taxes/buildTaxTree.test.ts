@@ -225,4 +225,91 @@ describe('buildTaxTree', () => {
     const tree = buildTaxTree()
     expect(tree.folders[0].files[0].meta?.category).toBeUndefined()
   })
+
+  it('returns "Joint" for owner values that are neither primary nor partner', () => {
+    const store = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: '1',
+              label: 'Joint Doc',
+              owner: 'joint',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'joint.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
+          ],
+        },
+      },
+    }
+    localStorage.setItem('tax-store', JSON.stringify(store))
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test' }))
+
+    const tree = buildTaxTree()
+    expect(tree.folders[0].files[0].meta?.owner).toBe('Joint')
+  })
+
+  it('falls back to "Partner" when partner name is empty (line 17)', () => {
+    const store = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'partner',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'a.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
+          ],
+        },
+      },
+    }
+    localStorage.setItem('tax-store', JSON.stringify(store))
+    localStorage.setItem('user-profile', JSON.stringify({ partner: { name: '' } }))
+
+    const tree = buildTaxTree()
+    expect(tree.folders[0].files[0].meta?.owner).toBe('Partner')
+  })
+
+  it('defaults content to empty string when file.content is undefined (line 39)', () => {
+    const store = {
+      years: {
+        2024: {
+          items: [
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'primary',
+              category: 'paystub',
+              accountIds: [] as string[],
+              files: [
+                { id: 'f1', name: 'a.pdf', ext: 'pdf', uploadedAt: 't', content: undefined as unknown as string },
+              ],
+            },
+          ],
+        },
+      },
+    }
+    localStorage.setItem('tax-store', JSON.stringify(store))
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Me' }))
+
+    const tree = buildTaxTree()
+    expect(tree.folders[0].files[0].content).toBe('')
+  })
+
+  it('handles year with no items array (line 56 falsy branch)', () => {
+    const store = {
+      years: {
+        2024: {},
+      },
+    }
+    localStorage.setItem('tax-store', JSON.stringify(store))
+    localStorage.setItem('user-profile', JSON.stringify({ name: 'Me' }))
+
+    const tree = buildTaxTree()
+    expect(tree.folders).toHaveLength(0)
+  })
 })
