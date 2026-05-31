@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { deriveKey, bytesToB64, b64ToBytes } from '../utils/crypto'
 import { getStorageItem, setStorageItem } from '../utils/storage'
+import { toBase64, fromBase64 } from './base64Utils'
+
+export { toBase64, fromBase64 } from './base64Utils'
 
 export interface GitHubSyncConfig {
   owner: string
@@ -67,21 +70,6 @@ export const loadConfig = (): GitHubSyncConfig => {
   } catch {
     return DEFAULT_CONFIG
   }
-}
-
-export const toBase64 = (str: string): string => {
-  const bytes = new TextEncoder().encode(str)
-  let binary = ''
-  bytes.forEach(b => {
-    binary += String.fromCharCode(b)
-  })
-  return btoa(binary)
-}
-
-export const fromBase64 = (b64: string): string => {
-  const bin = atob(b64)
-  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0))
-  return new TextDecoder().decode(bytes)
 }
 
 const encryptToken = async (
