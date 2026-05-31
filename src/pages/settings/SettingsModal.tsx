@@ -10,6 +10,7 @@ import FlagAdminPane from './components/FlagAdminPane'
 import SecurityPane from './components/SecurityPane'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { useFlagContext } from '../../flags/FlagContext'
+import { useSettings } from '../../contexts/SettingsContext'
 import '../../styles/SettingsModal.css'
 
 const SettingsModal: FC<SettingsModalProps> = props => {
@@ -26,6 +27,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
   const modalRef = useRef<HTMLDivElement>(null)
   const { isAdmin } = useFlagContext()
+  const { accentTheme, setAccentTheme } = useSettings()
   useFocusTrap(modalRef, true)
 
   useEffect(() => {
@@ -64,10 +66,12 @@ const SettingsModal: FC<SettingsModalProps> = props => {
         </div>
 
         <div className="settings-modal-container">
-          <nav className="settings-modal-nav">
+          <div className="settings-modal-nav" role="tablist" aria-label="Settings sections">
             <button
               className={`settings-modal-nav-item${activeSection === 'profile' ? ' active' : ''}`}
-              aria-current={activeSection === 'profile' ? 'page' : undefined}
+              role="tab"
+              id="settings-tab-profile"
+              aria-selected={activeSection === 'profile'}
               onClick={() => setActiveSection('profile')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -78,7 +82,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'github' ? ' active' : ''}`}
-              aria-current={activeSection === 'github' ? 'page' : undefined}
+              role="tab"
+              id="settings-tab-github"
+              aria-selected={activeSection === 'github'}
               onClick={() => setActiveSection('github')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -89,7 +95,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'appearance' ? ' active' : ''}`}
-              aria-current={activeSection === 'appearance' ? 'page' : undefined}
+              role="tab"
+              id="settings-tab-appearance"
+              aria-selected={activeSection === 'appearance'}
               onClick={() => setActiveSection('appearance')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -112,7 +120,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'security' ? ' active' : ''}`}
-              aria-current={activeSection === 'security' ? 'page' : undefined}
+              role="tab"
+              id="settings-tab-security"
+              aria-selected={activeSection === 'security'}
               onClick={() => setActiveSection('security')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -122,7 +132,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'advanced' ? ' active' : ''}`}
-              aria-current={activeSection === 'advanced' ? 'page' : undefined}
+              role="tab"
+              id="settings-tab-advanced"
+              aria-selected={activeSection === 'advanced'}
               onClick={() => setActiveSection('advanced')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -132,7 +144,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'labs' ? ' active' : ''}`}
-              aria-current={activeSection === 'labs' ? 'page' : undefined}
+              role="tab"
+              id="settings-tab-labs"
+              aria-selected={activeSection === 'labs'}
               onClick={() => setActiveSection('labs')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -143,7 +157,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             {isAdmin && (
               <button
                 className={`settings-modal-nav-item${activeSection === 'flags' ? ' active' : ''}`}
-                aria-current={activeSection === 'flags' ? 'page' : undefined}
+                role="tab"
+                id="settings-tab-flags"
+                aria-selected={activeSection === 'flags'}
                 onClick={() => setActiveSection('flags')}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -152,9 +168,9 @@ const SettingsModal: FC<SettingsModalProps> = props => {
                 Feature Flags
               </button>
             )}
-          </nav>
+          </div>
 
-          <div className="settings-modal-detail">
+          <div className="settings-modal-detail" role="tabpanel" aria-labelledby={`settings-tab-${activeSection}`}>
             {activeSection === 'profile' && <ProfilePane profile={profile} onUpdateProfile={onUpdateProfile} />}
             {activeSection === 'github' && (
               <GitHubSyncPane
@@ -183,7 +199,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               />
             )}
             {activeSection === 'appearance' && (
-              <AppearancePane darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
+              <AppearancePane darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} accentTheme={accentTheme} onChangeAccent={setAccentTheme} />
             )}
             {activeSection === 'security' && <SecurityPane />}
             {activeSection === 'advanced' && (

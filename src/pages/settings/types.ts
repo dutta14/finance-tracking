@@ -81,6 +81,8 @@ export interface GitHubSyncPaneProps {
 export interface AppearancePaneProps {
   darkMode: boolean
   onToggleDarkMode: () => void
+  accentTheme: string
+  onChangeAccent: (theme: string) => void
 }
 
 export interface AdvancedPaneProps {
