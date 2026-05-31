@@ -16,7 +16,7 @@ export class SettingsPage {
   readonly backdrop: Locator
   readonly closeButton: Locator
 
-  // Side-nav (aria-current="page" on the active item)
+  // Tablist nav (aria-selected="true" on the active tab)
   readonly navProfile: Locator
   readonly navAppearance: Locator
   readonly navAdvanced: Locator
@@ -67,10 +67,10 @@ export class SettingsPage {
     this.backdrop = page.locator('.settings-modal-backdrop')
     this.closeButton = this.dialog.getByRole('button', { name: 'Close' })
 
-    this.navProfile = this.dialog.getByRole('button', { name: 'Profile', exact: true })
-    this.navAppearance = this.dialog.getByRole('button', { name: 'Appearance', exact: true })
-    this.navAdvanced = this.dialog.getByRole('button', { name: 'Advanced', exact: true })
-    this.navLabs = this.dialog.getByRole('button', { name: 'Labs', exact: true })
+    this.navProfile = this.dialog.getByRole('tab', { name: 'Profile', exact: true })
+    this.navAppearance = this.dialog.getByRole('tab', { name: 'Appearance', exact: true })
+    this.navAdvanced = this.dialog.getByRole('tab', { name: 'Advanced', exact: true })
+    this.navLabs = this.dialog.getByRole('tab', { name: 'Labs', exact: true })
 
     this.profileHeading = this.dialog.getByRole('heading', { name: 'Profile', level: 3 })
     this.appearanceHeading = this.dialog.getByRole('heading', { name: 'Appearance', level: 3 })
@@ -139,7 +139,7 @@ export class SettingsPage {
 
   /**
    * Click a nav item and wait for the matching pane heading to render.
-   * Uses aria-current="page" as the active-state contract.
+   * Uses aria-selected="true" as the active-state contract (tablist pattern).
    */
   async navTo(section: 'profile' | 'appearance' | 'advanced' | 'labs'): Promise<void> {
     const map = {
@@ -150,7 +150,7 @@ export class SettingsPage {
     }
     const { btn, heading } = map[section]
     await btn.click()
-    await expect(btn).toHaveAttribute('aria-current', 'page')
+    await expect(btn).toHaveAttribute('aria-selected', 'true')
     await expect(heading).toBeVisible()
   }
 }
