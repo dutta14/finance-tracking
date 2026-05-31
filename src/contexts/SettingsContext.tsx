@@ -69,6 +69,14 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     if (typeof window === 'undefined') return
     setStorageItem('accentTheme', accentTheme)
+    // Remove any existing accent class
+    document.body.classList.forEach(cls => {
+      if (cls.startsWith('accent-')) document.body.classList.remove(cls)
+    })
+    // Apply new accent class (blue is default, no class needed)
+    if (accentTheme && accentTheme !== 'blue') {
+      document.body.classList.add(`accent-${accentTheme}`)
+    }
   }, [accentTheme])
 
   useEffect(() => {

@@ -1483,3 +1483,31 @@ body.dark .ghsync-mini-btn {
 .settings-data-empty {
   padding: 2rem 1rem;
 }
+
+.settings-accent-picker {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.settings-accent-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: var(--swatch-color);
+  cursor: pointer;
+  transition: transform 0.15s ease-out, border-color 0.15s ease-out;
+  padding: 0;
+}
+
+.settings-accent-swatch:hover {
+  transform: scale(1.15);
+  border-color: var(--color-border-light);
+}
+
+.settings-accent-swatch.active {
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 2px var(--accent-focus-ring);
+  transform: scale(1.1);
+}
