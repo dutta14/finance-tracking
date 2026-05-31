@@ -199,7 +199,12 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               />
             )}
             {activeSection === 'appearance' && (
-              <AppearancePane darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} accentTheme={accentTheme} onChangeAccent={setAccentTheme} />
+              <AppearancePane
+                darkMode={darkMode}
+                onToggleDarkMode={onToggleDarkMode}
+                accentTheme={accentTheme}
+                onChangeAccent={setAccentTheme}
+              />
             )}
             {activeSection === 'security' && <SecurityPane />}
             {activeSection === 'advanced' && (

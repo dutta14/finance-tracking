@@ -197,8 +197,10 @@ describe('CSVPreviewModal', () => {
     renderModal()
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveAttribute('aria-modal', 'true')
-    expect(dialog).toHaveAttribute('aria-labelledby', 'csv-preview-heading')
-    expect(screen.getByRole('heading', { level: 3, name: /preview/i })).toHaveAttribute('id', 'csv-preview-heading')
+    const heading = screen.getByRole('heading', { level: 3, name: /preview/i })
+    const headingId = heading.getAttribute('id')
+    expect(headingId).toBeTruthy()
+    expect(dialog).toHaveAttribute('aria-labelledby', headingId)
   })
 
   it('updates header title attribute when column is excluded', async () => {

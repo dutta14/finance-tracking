@@ -44,6 +44,10 @@ vi.mock('./components/SecurityPane', () => ({
   default: () => <div data-testid="security-pane">Security</div>,
 }))
 
+vi.mock('../../contexts/SettingsContext', () => ({
+  useSettings: () => ({ accentTheme: 'blue', setAccentTheme: vi.fn() }),
+}))
+
 import SettingsMenu from './SettingsMenu'
 
 const defaultProps = {

@@ -3,10 +3,17 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AppearancePane from './AppearancePane'
 
-const renderPane = (darkMode = false, onToggle = vi.fn()) => {
+const renderPane = (darkMode = false, onToggle = vi.fn(), accentTheme = 'blue', onChangeAccent = vi.fn()) => {
   const onToggleDarkMode = onToggle
-  const utils = render(<AppearancePane darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />)
-  return { ...utils, onToggleDarkMode }
+  const utils = render(
+    <AppearancePane
+      darkMode={darkMode}
+      onToggleDarkMode={onToggleDarkMode}
+      accentTheme={accentTheme}
+      onChangeAccent={onChangeAccent}
+    />,
+  )
+  return { ...utils, onToggleDarkMode, onChangeAccent }
 }
 
 describe('AppearancePane', () => {

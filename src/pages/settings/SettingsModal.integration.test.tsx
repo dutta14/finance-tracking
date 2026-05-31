@@ -35,6 +35,10 @@ vi.mock('./components/FlagAdminPane', () => ({
   default: () => <div data-testid="flag-admin-pane">FlagAdmin</div>,
 }))
 
+vi.mock('../../contexts/SettingsContext', () => ({
+  useSettings: () => ({ accentTheme: 'blue', setAccentTheme: vi.fn() }),
+}))
+
 import SettingsModal from './SettingsModal'
 
 const defaultProps = {

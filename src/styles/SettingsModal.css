@@ -1497,7 +1497,9 @@ body.dark .ghsync-mini-btn {
   border: 2px solid var(--color-border);
   background: var(--swatch-color);
   cursor: pointer;
-  transition: transform 0.15s ease-out, border-color 0.15s ease-out;
+  transition:
+    transform 0.15s ease-out,
+    border-color 0.15s ease-out;
   padding: 0;
 }
 

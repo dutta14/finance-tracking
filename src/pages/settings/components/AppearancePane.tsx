@@ -50,7 +50,9 @@ const AppearancePane: FC<AppearancePaneProps> = ({ darkMode, onToggleDarkMode, a
           </button>
         </div>
 
-        <p className="settings-description" style={{ marginTop: '1.5rem' }}>Accent color</p>
+        <p className="settings-description" style={{ marginTop: '1.5rem' }}>
+          Accent color
+        </p>
         <div className="settings-accent-picker">
           {ACCENT_OPTIONS.map(opt => (
             <button
