@@ -42,6 +42,14 @@ vi.mock('./components/FlagAdminPane', () => ({
   default: () => <div data-testid="flag-admin-pane">FlagAdmin</div>,
 }))
 
+vi.mock('./components/SecurityPane', () => ({
+  default: () => <div data-testid="security-pane">Security</div>,
+}))
+
+vi.mock('../../contexts/SettingsContext', () => ({
+  useSettings: () => ({ accentTheme: 'blue', setAccentTheme: vi.fn() }),
+}))
+
 import SettingsModal from './SettingsModal'
 
 /* ── Setup ───────────────────────────────────────────────────────── */
@@ -65,13 +73,13 @@ beforeEach(() => {
 describe('SettingsModal Feature Flags tab gating', () => {
   it('hides Feature Flags tab when isAdmin is false', () => {
     render(<SettingsModal {...defaultProps} />)
-    expect(screen.queryByRole('button', { name: /feature flags/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /feature flags/i })).not.toBeInTheDocument()
   })
 
   it('shows Feature Flags tab when isAdmin is true', () => {
     mockIsAdmin.value = true
     render(<SettingsModal {...defaultProps} />)
-    expect(screen.getByRole('button', { name: /feature flags/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /feature flags/i })).toBeInTheDocument()
   })
 
   it('does not render FlagAdminPane when isAdmin is false even if section is flags', () => {
@@ -97,7 +105,7 @@ describe('SettingsModal tab navigation', () => {
   it('switches to GitHub Sync pane when tab is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('button', { name: /github sync/i }))
+    await user.click(screen.getByRole('tab', { name: /github sync/i }))
     expect(screen.getByTestId('github-pane')).toBeInTheDocument()
     expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
   })
@@ -105,21 +113,21 @@ describe('SettingsModal tab navigation', () => {
   it('switches to Appearance pane when tab is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('button', { name: /appearance/i }))
+    await user.click(screen.getByRole('tab', { name: /appearance/i }))
     expect(screen.getByTestId('appearance-pane')).toBeInTheDocument()
   })
 
   it('switches to Advanced pane when tab is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('button', { name: /advanced/i }))
+    await user.click(screen.getByRole('tab', { name: /advanced/i }))
     expect(screen.getByTestId('advanced-pane')).toBeInTheDocument()
   })
 
   it('switches to Labs pane when tab is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('button', { name: /labs/i }))
+    await user.click(screen.getByRole('tab', { name: /labs/i }))
     expect(screen.getByTestId('labs-pane')).toBeInTheDocument()
   })
 
@@ -133,14 +141,14 @@ describe('SettingsModal tab navigation', () => {
   // aria-current="page" rather than the brittle .active class. If this
   // attribute disappears, settings test 12 will silently start passing on
   // the wrong nav item.
-  it('marks only the active nav item with aria-current="page"', async () => {
+  it('marks only the active nav item with aria-selected="true"', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    expect(screen.getByRole('button', { name: /profile/i })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('button', { name: /appearance/i })).not.toHaveAttribute('aria-current')
-    await user.click(screen.getByRole('button', { name: /appearance/i }))
-    expect(screen.getByRole('button', { name: /appearance/i })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('button', { name: /profile/i })).not.toHaveAttribute('aria-current')
+    expect(screen.getByRole('tab', { name: /profile/i })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /appearance/i })).toHaveAttribute('aria-selected', 'false')
+    await user.click(screen.getByRole('tab', { name: /appearance/i }))
+    expect(screen.getByRole('tab', { name: /appearance/i })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /profile/i })).toHaveAttribute('aria-selected', 'false')
   })
 
   // E2E load-bearing: dialog must be queryable by its accessible name
@@ -203,11 +211,11 @@ describe('SettingsModal structure', () => {
 
   it('renders all 6 nav tabs when not admin', () => {
     render(<SettingsModal {...defaultProps} />)
-    expect(screen.getByRole('button', { name: /profile/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /github sync/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /appearance/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /security/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /advanced/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /labs/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /profile/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /github sync/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /appearance/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /advanced/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /labs/i })).toBeInTheDocument()
   })
 })
