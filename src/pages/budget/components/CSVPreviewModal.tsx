@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useId } from 'react'
 import { parseCSVLine, splitCSVRows } from '../utils/csvParser'
 
 interface CSVPreviewModalProps {
@@ -19,6 +19,7 @@ const CSVPreviewModal: FC<CSVPreviewModalProps> = ({ csv, monthKey, onConfirm, o
   }, [lines])
   const totalRows = lines.slice(1).filter(l => l.trim()).length
 
+  const headingId = useId()
   const [excludedCols, setExcludedCols] = useState<Set<number>>(new Set())
 
   const toggleCol = (idx: number) => {
@@ -65,10 +66,10 @@ const CSVPreviewModal: FC<CSVPreviewModalProps> = ({ csv, monthKey, onConfirm, o
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="csv-preview-heading"
+        aria-labelledby={headingId}
       >
         <div className="csv-preview-header">
-          <h3 id="csv-preview-heading">Preview — {label}</h3>
+          <h3 id={headingId}>Preview — {label}</h3>
           <span className="csv-preview-meta">
             {totalRows} rows · {headers.length} columns
           </span>
