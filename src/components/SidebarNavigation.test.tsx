@@ -113,6 +113,34 @@ describe('SidebarNavigation', () => {
     expect(driveBtn).not.toHaveAttribute('aria-current')
   })
 
+  it('applies aria-current to Home button when currentPage is "home"', () => {
+    renderSidebar({ currentPage: 'home' })
+
+    const homeBtn = screen.getByRole('button', { name: 'Home' })
+    expect(homeBtn).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('applies aria-current to Net Worth button when currentPage is "net-worth"', () => {
+    renderSidebar({ currentPage: 'net-worth' })
+
+    const netWorthBtn = screen.getByRole('button', { name: 'Net Worth' })
+    expect(netWorthBtn).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('applies aria-current to Budget button when currentPage is "budget"', () => {
+    renderSidebar({ currentPage: 'budget' })
+
+    const budgetBtn = screen.getByRole('button', { name: 'Budget' })
+    expect(budgetBtn).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('applies aria-current to Taxes button when currentPage is "taxes"', () => {
+    renderSidebar({ currentPage: 'taxes' })
+
+    const taxesBtn = screen.getByRole('button', { name: 'Taxes' })
+    expect(taxesBtn).toHaveAttribute('aria-current', 'page')
+  })
+
   it('renders the footer group with correct ARIA attributes', () => {
     renderSidebar()
 
