@@ -96,6 +96,7 @@ if (typeof window !== 'undefined') {
           }
         }
       } else if (_mode === 'disabled') {
+        if (e.newValue && isEncryptedEnvelope(e.newValue)) return
         _memoryStore.set(e.key, e.newValue)
         notifySubscribers(e.key, e.newValue)
       }
