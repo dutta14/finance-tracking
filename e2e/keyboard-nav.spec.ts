@@ -204,12 +204,10 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
 
   /* ── 34. Skip to main content link (DOCUMENTS GAP) ────────── */
 
-  test('34. Skip to main content link (if present) works on Tab from page load', async ({ page }) => {
-    // ADAPTATION: app has no skip link; this test documents the a11y
-    // gap rather than failing. We assert: (1) no DOM element matches
-    // /skip.*main/i, and (2) pressing Tab once from a fresh page load
-    // focuses the first natural element (which is the sidebar
-    // toggle button, accessible name "Collapse sidebar").
+  test('34. Skip to main content link works on Tab from page load', async ({ page }) => {
+    // Issue #155: the app now ships a skip link as the first focusable
+    // element. On Tab from a fresh load focus lands on it; activating it
+    // moves focus to <main id="main-content">.
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
@@ -219,15 +217,16 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
         .map(el => (el.textContent || '').trim())
         .filter(t => /skip.*main/i.test(t))
     })
-    expect(skipCandidates).toEqual([])
+    expect(skipCandidates).toEqual(['Skip to main content'])
 
     await page.keyboard.press('Tab')
     const info = await kb.getActiveElementInfo()
-    expect(info.tag).not.toBe('BODY')
-    // The first natural focusable element is the sidebar collapse
-    // toggle (button with aria-label "Collapse sidebar").
-    expect(info.ariaLabel).not.toMatch(/skip.*main/i)
-    expect(info.text).not.toMatch(/skip.*main/i)
+    expect(info.tag).toBe('A')
+    expect(info.text).toMatch(/skip.*main/i)
+
+    await page.keyboard.press('Enter')
+    const focusedId = await page.evaluate(() => document.activeElement?.id ?? null)
+    expect(focusedId).toBe('main-content')
   })
 
   /* ── 35. Sidebar Enter + aria-current ─────────────────────── */
