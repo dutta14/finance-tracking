@@ -708,8 +708,8 @@ describe('EncryptionContext', () => {
       }
     })
 
-    it('calls appStorage.disposeLocalState() and setMode("enabled") on remote-enable', () => {
-      const disposeSpy = vi.spyOn(appStorage, 'disposeLocalState')
+    it('calls appStorage.lockWithoutBroadcast() and setMode("enabled") on remote-enable', () => {
+      const disposeSpy = vi.spyOn(appStorage, 'lockWithoutBroadcast')
       const setModeSpy = vi.spyOn(appStorage, 'setMode')
       renderHook(() => useEncryption(), { wrapper })
 
@@ -722,9 +722,9 @@ describe('EncryptionContext', () => {
         window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: '1', oldValue: null }))
       })
 
-      // disposeLocalState() is what clears _memoryStore + _pendingPersists
+      // lockWithoutBroadcast() is what clears _memoryStore + _pendingPersists
       // + _isReady. Without it, plaintext queued from disabled mode could
-      // leak. We use disposeLocalState rather than lock() to avoid emitting
+      // leak. We use lockWithoutBroadcast rather than lock() to avoid emitting
       // the cross-tab lock signal back to the tab that just enabled.
       expect(disposeSpy).toHaveBeenCalledTimes(1)
       expect(setModeSpy).toHaveBeenCalledWith('enabled')
@@ -733,9 +733,9 @@ describe('EncryptionContext', () => {
       setModeSpy.mockRestore()
     })
 
-    it('calls appStorage.disposeLocalState() and setMode("disabled") on remote-disable', () => {
+    it('calls appStorage.lockWithoutBroadcast() and setMode("disabled") on remote-disable', () => {
       localStorage.setItem('encryption-enabled', '1')
-      const disposeSpy = vi.spyOn(appStorage, 'disposeLocalState')
+      const disposeSpy = vi.spyOn(appStorage, 'lockWithoutBroadcast')
       const setModeSpy = vi.spyOn(appStorage, 'setMode')
       renderHook(() => useEncryption(), { wrapper })
 
@@ -754,14 +754,14 @@ describe('EncryptionContext', () => {
     })
 
     it('removes the storage listener on unmount (no handler fires after teardown)', () => {
-      const disposeSpy = vi.spyOn(appStorage, 'disposeLocalState')
+      const disposeSpy = vi.spyOn(appStorage, 'lockWithoutBroadcast')
       const { unmount } = renderHook(() => useEncryption(), { wrapper })
 
       unmount()
       disposeSpy.mockClear()
 
       // After unmount the listener must be gone — dispatching the event
-      // should not call appStorage.disposeLocalState(). If the cleanup ever
+      // should not call appStorage.lockWithoutBroadcast(). If the cleanup ever
       // breaks, this fires.
       act(() => {
         window.dispatchEvent(new StorageEvent('storage', { key: 'encryption-enabled', newValue: '1', oldValue: null }))
