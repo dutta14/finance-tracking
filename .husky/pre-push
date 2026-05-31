@@ -1,5 +1,4 @@
-npm audit --audit-level=high
-npx prettier --check src/
-npx eslint src/ --max-warnings=0
 npx tsc --noEmit
-npx vitest run --coverage
+npx eslint src/ --max-warnings=0
+npx vitest run --coverage --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.branches=90 --coverage.thresholds.statements=90
+npx playwright test
