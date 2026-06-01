@@ -42,7 +42,7 @@ export const useGitHubSyncRestore = (params: RestoreHookParams) => {
     setLastError,
   } = params
 
-  const restoreLatest = useCallback(async (): Promise<RestoreResult> => {
+  const restoreGoalsLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
     try {
       const result = await restoreFileFromGitHub({
@@ -176,7 +176,7 @@ export const useGitHubSyncRestore = (params: RestoreHookParams) => {
   }, [activeToken, config.owner, config.repo])
 
   return {
-    restoreLatest,
+    restoreGoalsLatest,
     restoreDataLatest,
     restoreToolsLatest,
     restoreAllocationLatest,

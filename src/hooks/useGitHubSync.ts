@@ -143,12 +143,12 @@ export const useGitHubSync = () => {
   )
 
   const {
-    syncNow,
+    syncGoalsNow,
     syncDataNow,
     syncToolsNow,
     syncAllocationNow,
     syncTaxesNow,
-    lastSyncedJsonRef,
+    lastSyncedGoalsJsonRef,
     lastSyncedDataJsonRef,
     pendingDataRef,
     pendingDataFileRef,
@@ -168,7 +168,7 @@ export const useGitHubSync = () => {
   })
 
   const {
-    restoreLatest,
+    restoreGoalsLatest,
     restoreDataLatest,
     restoreToolsLatest,
     restoreAllocationLatest,
@@ -195,23 +195,23 @@ export const useGitHubSync = () => {
     markRestoredRaw(clearAllDirty)
   }, [markRestoredRaw, clearAllDirty])
 
-  const updateData = useCallback(
+  const updateGoals = useCallback(
     (data: object) => {
       const { exportedAt: _, ...rest } = data as Record<string, unknown>
       const json = JSON.stringify(rest)
-      if (json === lastSyncedJsonRef.current) return
+      if (json === lastSyncedGoalsJsonRef.current) return
       markDirty('goals')
       if (!config.autoSync || !isConfigured) return
       pendingDataRef.current = data
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
       debounceTimerRef.current = setTimeout(() => {
-        if (pendingDataRef.current) syncNow(pendingDataRef.current).catch(() => {})
+        if (pendingDataRef.current) syncGoalsNow(pendingDataRef.current).catch(() => {})
       }, DEBOUNCE_MS)
     },
-    [config.autoSync, isConfigured, syncNow, markDirty, lastSyncedJsonRef, pendingDataRef],
+    [config.autoSync, isConfigured, syncGoalsNow, markDirty, lastSyncedGoalsJsonRef, pendingDataRef],
   )
 
-  const updateDataFile = useCallback(
+  const updateData = useCallback(
     (data: object) => {
       const { exportedAt: _, ...rest } = data as Record<string, unknown>
       const json = JSON.stringify(rest)
@@ -248,13 +248,13 @@ export const useGitHubSync = () => {
           clearTimeout(dataDebounceTimerRef.current)
           dataDebounceTimerRef.current = null
         }
-        if (pendingDataRef.current) syncNow(pendingDataRef.current).catch(() => {})
+        if (pendingDataRef.current) syncGoalsNow(pendingDataRef.current).catch(() => {})
         if (pendingDataFileRef.current) syncDataNow(pendingDataFileRef.current).catch(() => {})
       }
     }
     document.addEventListener('visibilitychange', handleVisChange)
     return () => document.removeEventListener('visibilitychange', handleVisChange)
-  }, [isConfigured, activeToken, config, config.autoSync, syncNow, syncDataNow, pendingDataRef, pendingDataFileRef])
+  }, [isConfigured, activeToken, config, config.autoSync, syncGoalsNow, syncDataNow, pendingDataRef, pendingDataFileRef])
 
   return {
     config,
@@ -280,14 +280,14 @@ export const useGitHubSync = () => {
     saveEncryptedToken,
     unlockToken,
     lockToken,
-    syncNow,
+    syncNow: syncGoalsNow,
     fetchHistory,
     testConnection,
-    restoreLatest,
+    restoreLatest: restoreGoalsLatest,
     restoreFromCommit,
     markRestored,
-    updateData,
-    updateDataFile,
+    updateData: updateGoals,
+    updateDataFile: updateData,
     syncDataNow,
     syncToolsNow,
     syncAllocationNow,

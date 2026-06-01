@@ -34,12 +34,12 @@ export const useGitHubSyncUpload = (params: SyncHookParams) => {
     setLastError,
   } = params
 
-  const lastSyncedJsonRef = useRef<string | null>(null)
+  const lastSyncedGoalsJsonRef = useRef<string | null>(null)
   const lastSyncedDataJsonRef = useRef<string | null>(null)
   const pendingDataRef = useRef<object | null>(null)
   const pendingDataFileRef = useRef<object | null>(null)
 
-  const syncNow = useCallback(
+  const syncGoalsNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
       if (!isConfigured) return
       setSyncStatus('syncing')
@@ -55,7 +55,7 @@ export const useGitHubSyncUpload = (params: SyncHookParams) => {
         getFileSha: () => getFileShaForPath(config.filePath),
       })
       if (result.ok) {
-        lastSyncedJsonRef.current = (() => {
+        lastSyncedGoalsJsonRef.current = (() => {
           const { exportedAt: _, ...rest } = data as Record<string, unknown>
           return JSON.stringify(rest)
         })()
@@ -169,12 +169,12 @@ export const useGitHubSyncUpload = (params: SyncHookParams) => {
   )
 
   return {
-    syncNow,
+    syncGoalsNow,
     syncDataNow,
     syncToolsNow,
     syncAllocationNow,
     syncTaxesNow,
-    lastSyncedJsonRef,
+    lastSyncedGoalsJsonRef,
     lastSyncedDataJsonRef,
     pendingDataRef,
     pendingDataFileRef,
