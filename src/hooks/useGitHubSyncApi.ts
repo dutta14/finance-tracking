@@ -1,4 +1,5 @@
 import { fromBase64, toBase64 } from './base64Utils'
+import type { CommitEntry, ConnectionTestResult } from './githubSyncTypes'
 
 export interface SyncFileParams {
   token: string
@@ -36,10 +37,11 @@ export async function syncFileToGitHub(params: SyncFileParams): Promise<{ ok: bo
         })}`
       const body: Record<string, string> = { message: commitMessage, content }
       if (sha) body.sha = sha
-      const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
-        { method: 'PUT', headers: apiHeaders(token), body: JSON.stringify(body) },
-      )
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: apiHeaders(token),
+        body: JSON.stringify(body),
+      })
       if ((res.status === 409 || res.status === 422) && attempt < 2) {
         await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
         continue
@@ -64,6 +66,7 @@ export interface RestoreFileParams {
   repo: string
   filePath: string
   ref?: string
+  checkEncoding?: boolean
 }
 
 export interface RestoreFileResult {
@@ -73,7 +76,7 @@ export interface RestoreFileResult {
 }
 
 export async function restoreFileFromGitHub(params: RestoreFileParams): Promise<RestoreFileResult> {
-  const { token, owner, repo, filePath, ref } = params
+  const { token, owner, repo, filePath, ref, checkEncoding } = params
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}${ref ? `?ref=${ref}` : ''}`
   const res = await fetch(url, {
     headers: {
@@ -84,9 +87,96 @@ export async function restoreFileFromGitHub(params: RestoreFileParams): Promise<
   })
   if (!res.ok) return { ok: false, status: res.status }
   const json = await res.json()
-  const content = (json as { content?: string }).content
-  if (typeof content !== 'string') return { ok: false }
-  const decoded = fromBase64(content.replace(/\n/g, ''))
+  const file = json as { content?: string; encoding?: string }
+  if (checkEncoding && (!file.content || file.encoding !== 'base64')) return { ok: false }
+  if (!checkEncoding && typeof file.content !== 'string') return { ok: false }
+  const decoded = fromBase64(file.content!.replace(/\n/g, ''))
   const parsed = JSON.parse(decoded)
   return { ok: true, data: parsed }
+}
+
+export async function getFileShaForPathApi(
+  token: string,
+  owner: string,
+  repo: string,
+  path: string,
+): Promise<string | null> {
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    cache: 'no-store',
+  })
+  if (res.status === 404) return null
+  if (res.status === 401) throw new Error('Invalid token — check the token is correct and not expired.')
+  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
+  const data = await res.json()
+  return data.sha as string
+}
+
+export async function testConnectionApi(token: string, owner: string, repo: string): Promise<ConnectionTestResult> {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+      headers: apiHeaders(token),
+    })
+    if (res.status === 404)
+      return {
+        ok: false,
+        message:
+          'Repository not found — if it\'s private, ensure the token has access to private repositories (classic token needs "repo" scope; fine-grained token needs "Contents: Read & Write").',
+        warnings: [],
+      }
+    if (res.status === 401)
+      return { ok: false, message: 'Invalid token — check the token is correct and not expired.', warnings: [] }
+    if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}`, warnings: [] }
+
+    const warnings: string[] = []
+    const scopes = res.headers.get('x-oauth-scopes')
+    const repoData = (await res.json()) as {
+      full_name: string
+      private?: boolean
+      permissions?: { push?: boolean }
+    }
+
+    if (repoData.private === false) {
+      warnings.push('This repository is public. Backups may expose sensitive financial data.')
+    }
+    if (repoData.permissions && repoData.permissions.push === false) {
+      warnings.push('Token does not appear to have write access to this repository.')
+    }
+    if (scopes && scopes.includes('repo')) {
+      warnings.push('Token has broad repo scope. Prefer a fine-grained token limited to one backup repo.')
+    }
+    return { ok: true, message: `Connected to ${repoData.full_name}`, warnings }
+  } catch {
+    return { ok: false, message: 'Network error. Check your connection.', warnings: [] }
+  }
+}
+
+export async function fetchCommitHistory(
+  token: string,
+  owner: string,
+  repo: string,
+  filePath: string,
+): Promise<CommitEntry[]> {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(filePath)}&per_page=100`,
+      { headers: apiHeaders(token) },
+    )
+    if (!res.ok) return []
+    const commits = await res.json()
+    return (commits as { sha: string; commit: { message: string; author: { date: string } }; html_url: string }[]).map(
+      c => ({
+        sha: (c.sha as string).slice(0, 7),
+        message: c.commit.message as string,
+        date: c.commit.author.date as string,
+        url: c.html_url as string,
+      }),
+    )
+  } catch {
+    return []
+  }
 }

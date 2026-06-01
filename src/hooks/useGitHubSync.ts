@@ -1,77 +1,36 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-import { getStorageItem, setStorageItem } from '../utils/storage'
+import { setStorageItem } from '../utils/storage'
 import { toBase64, fromBase64 } from './base64Utils'
 import { encryptToken, decryptToken } from './tokenCrypto'
-import { syncFileToGitHub, restoreFileFromGitHub } from './useGitHubSyncApi'
+import {
+  syncFileToGitHub,
+  restoreFileFromGitHub,
+  getFileShaForPathApi,
+  testConnectionApi,
+  fetchCommitHistory,
+} from './useGitHubSyncApi'
+import { CONFIG_KEY, DEBOUNCE_MS, loadConfig } from './githubSyncConfig'
 export { toBase64, fromBase64 }
-
-export interface GitHubSyncConfig {
-  owner: string
-  repo: string
-  filePath: string
-  autoSync: boolean
-  encryptedToken?: string
-  tokenSalt?: string
-  tokenIv?: string
-}
-
-export interface CommitEntry {
-  sha: string
-  message: string
-  date: string
-  url: string
-}
-
-export interface ConnectionTestResult {
-  ok: boolean
-  message: string
-  warnings: string[]
-}
-
-export interface RestoreResult {
-  ok: boolean
-  message: string
-  data?: unknown
-}
-
-export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
-
-export type SyncDomain = 'goals' | 'data' | 'tools' | 'allocation' | 'taxes' | 'budget'
-
-export interface SyncProgress {
-  total: number
-  completed: number
-  current: string
-  errors: string[]
-  domains: SyncDomain[]
-}
-
-const CONFIG_KEY = 'github-sync-config'
-const DEFAULT_CONFIG: GitHubSyncConfig = {
-  owner: '',
-  repo: '',
-  filePath: 'finance-goals.json',
-  autoSync: false,
-}
-
-const DEBOUNCE_MS = 60_000
-
-export const loadConfig = (): GitHubSyncConfig => {
-  try {
-    const parsed = { ...DEFAULT_CONFIG, ...getStorageItem('github-sync-config', DEFAULT_CONFIG) }
-    // Always use canonical file path — older configs may have a custom value
-    parsed.filePath = DEFAULT_CONFIG.filePath
-    // Strip legacy plaintext token if present
-    if ('legacyToken' in parsed) {
-      delete (parsed as Record<string, unknown>).legacyToken
-      setStorageItem('github-sync-config', parsed)
-    }
-    return parsed
-  } catch {
-    return DEFAULT_CONFIG
-  }
-}
+export { loadConfig }
+export type {
+  GitHubSyncConfig,
+  CommitEntry,
+  ConnectionTestResult,
+  RestoreResult,
+  SyncStatus,
+  SyncDomain,
+  SyncProgress,
+} from './githubSyncTypes'
+import type {
+  GitHubSyncConfig,
+  CommitEntry,
+  SyncStatus,
+  SyncDomain,
+  SyncProgress,
+  RestoreResult,
+  ConnectionTestResult,
+} from './githubSyncTypes'
 
 export const useGitHubSync = () => {
   const [config, setConfigState] = useState<GitHubSyncConfig>(loadConfig)
@@ -132,27 +91,14 @@ export const useGitHubSync = () => {
       const next = { ...prev, ...updates }
       try {
         setStorageItem('github-sync-config', next)
-        // Verify it was written successfully by reading it back
         const verify = localStorage.getItem(CONFIG_KEY)
-        if (!verify) {
-          console.warn('Failed to persist GitHub config to localStorage')
-        }
+        if (!verify) console.warn('Failed to persist GitHub config to localStorage')
       } catch (e) {
         console.error('Error saving GitHub config:', e)
       }
       return next
     })
   }, [])
-
-  const apiHeaders = useCallback(
-    (token: string): Record<string, string> => ({
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'Content-Type': 'application/json',
-    }),
-    [],
-  )
 
   const lockToken = useCallback(() => {
     setSessionToken('')
@@ -167,10 +113,7 @@ export const useGitHubSync = () => {
       try {
         const encrypted = await encryptToken(token.trim(), passphrase)
         setConfigState(prev => {
-          const next: GitHubSyncConfig = {
-            ...prev,
-            ...encrypted,
-          }
+          const next: GitHubSyncConfig = { ...prev, ...encrypted }
           setStorageItem('github-sync-config', next)
           return next
         })
@@ -205,24 +148,9 @@ export const useGitHubSync = () => {
   const taxesFilePath = config.filePath.replace(/\.json$/, '-taxes.json')
 
   const getFileShaForPath = useCallback(
-    async (path: string): Promise<string | null> => {
-      if (!activeToken) throw new Error('Token is not unlocked.')
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
-        headers: apiHeaders(activeToken),
-        cache: 'no-store',
-      })
-      if (res.status === 404) return null
-      if (res.status === 401) throw new Error('Invalid token — check the token is correct and not expired.')
-      if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
-      const data = await res.json()
-      return data.sha as string
-    },
-    [activeToken, config.owner, config.repo, apiHeaders],
+    (path: string) => getFileShaForPathApi(activeToken, config.owner, config.repo, path),
+    [activeToken, config.owner, config.repo],
   )
-
-  const getFileSha = useCallback(async (): Promise<string | null> => {
-    return getFileShaForPath(config.filePath)
-  }, [getFileShaForPath, config.filePath])
 
   const syncNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
@@ -237,7 +165,7 @@ export const useGitHubSync = () => {
         data,
         message,
         messagePrefix: 'Auto-save',
-        getFileSha,
+        getFileSha: () => getFileShaForPath(config.filePath),
       })
       if (result.ok) {
         lastSyncedJsonRef.current = (() => {
@@ -253,7 +181,7 @@ export const useGitHubSync = () => {
         throw new Error(result.error || 'Sync failed')
       }
     },
-    [activeToken, config.owner, config.repo, config.filePath, getFileSha, isConfigured, clearDirty],
+    [activeToken, config.owner, config.repo, config.filePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const syncDataNow = useCallback(
@@ -311,10 +239,12 @@ export const useGitHubSync = () => {
     if (!isConfigured) return { ok: false }
     try {
       const result = await restoreFileFromGitHub({
-        token: activeToken, owner: config.owner, repo: config.repo, filePath: toolsFilePath,
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: toolsFilePath,
       })
-      if (!result.ok) return { ok: false }
-      return { ok: true, data: result.data }
+      return result.ok ? { ok: true, data: result.data } : { ok: false }
     } catch {
       return { ok: false }
     }
@@ -347,10 +277,12 @@ export const useGitHubSync = () => {
     if (!isConfigured) return { ok: false }
     try {
       const result = await restoreFileFromGitHub({
-        token: activeToken, owner: config.owner, repo: config.repo, filePath: allocationFilePath,
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: allocationFilePath,
       })
-      if (!result.ok) return { ok: false }
-      return { ok: true, data: result.data }
+      return result.ok ? { ok: true, data: result.data } : { ok: false }
     } catch {
       return { ok: false }
     }
@@ -383,10 +315,12 @@ export const useGitHubSync = () => {
     if (!isConfigured) return { ok: false, message: '' }
     try {
       const result = await restoreFileFromGitHub({
-        token: activeToken, owner: config.owner, repo: config.repo, filePath: taxesFilePath,
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: taxesFilePath,
       })
-      if (!result.ok) return { ok: false, message: '' }
-      return { ok: true, message: '', data: result.data }
+      return result.ok ? { ok: true, message: '', data: result.data } : { ok: false, message: '' }
     } catch {
       return { ok: false, message: '' }
     }
@@ -394,98 +328,50 @@ export const useGitHubSync = () => {
 
   const fetchHistory = useCallback(async (): Promise<void> => {
     if (!isConfigured) return
-    try {
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/commits?path=${encodeURIComponent(config.filePath)}&per_page=100`,
-        { headers: apiHeaders(activeToken) },
-      )
-      if (!res.ok) return
-      const commits = await res.json()
-      setHistory(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (commits as any[]).map(c => ({
-          sha: (c.sha as string).slice(0, 7),
-          message: c.commit.message as string,
-          date: c.commit.author.date as string,
-          url: c.html_url as string,
-        })),
-      )
-    } catch {
-      // no-op
-    }
-  }, [activeToken, apiHeaders, config.filePath, config.owner, config.repo, isConfigured])
+    const commits = await fetchCommitHistory(activeToken, config.owner, config.repo, config.filePath)
+    setHistory(commits)
+  }, [activeToken, config.filePath, config.owner, config.repo, isConfigured])
 
   const testConnection = useCallback(async (): Promise<ConnectionTestResult> => {
     if (!activeToken || !config.owner || !config.repo) {
       return { ok: false, message: 'Fill in token, owner, and repository first.', warnings: [] }
     }
-    try {
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}`, {
-        headers: apiHeaders(activeToken),
-      })
-      if (res.status === 404)
-        return {
-          ok: false,
-          message:
-            'Repository not found — if it\'s private, ensure the token has access to private repositories (classic token needs "repo" scope; fine-grained token needs "Contents: Read & Write").',
-          warnings: [],
-        }
-      if (res.status === 401)
-        return { ok: false, message: 'Invalid token — check the token is correct and not expired.', warnings: [] }
-      if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}`, warnings: [] }
-
-      const warnings: string[] = []
-      const scopes = res.headers.get('x-oauth-scopes')
-      const repoData = (await res.json()) as {
-        full_name: string
-        private?: boolean
-        permissions?: { push?: boolean }
-      }
-
-      if (repoData.private === false) {
-        warnings.push('This repository is public. Backups may expose sensitive financial data.')
-      }
-      if (repoData.permissions && repoData.permissions.push === false) {
-        warnings.push('Token does not appear to have write access to this repository.')
-      }
-      if (scopes && scopes.includes('repo')) {
-        warnings.push('Token has broad repo scope. Prefer a fine-grained token limited to one backup repo.')
-      }
-      return { ok: true, message: `Connected to ${repoData.full_name}`, warnings }
-    } catch {
-      return { ok: false, message: 'Network error. Check your connection.', warnings: [] }
-    }
-  }, [activeToken, apiHeaders, config.owner, config.repo])
+    return testConnectionApi(activeToken, config.owner, config.repo)
+  }, [activeToken, config.owner, config.repo])
 
   const restoreFromCommit = useCallback(
     async (commitSha: string): Promise<RestoreResult> => {
       if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
       try {
-        const res = await fetch(
-          `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}?ref=${commitSha}`,
-          { headers: apiHeaders(activeToken) },
-        )
-        if (res.status === 404) return { ok: false, message: 'Backup file not found in this commit.' }
-        if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}` }
-        const file = (await res.json()) as { content?: string; encoding?: string }
-        if (!file.content || file.encoding !== 'base64') {
+        const result = await restoreFileFromGitHub({
+          token: activeToken,
+          owner: config.owner,
+          repo: config.repo,
+          filePath: config.filePath,
+          ref: commitSha,
+          checkEncoding: true,
+        })
+        if (!result.ok) {
+          if (result.status === 404) return { ok: false, message: 'Backup file not found in this commit.' }
+          if (result.status) return { ok: false, message: `GitHub API error: ${result.status}` }
           return { ok: false, message: 'Backup file format is not supported.' }
         }
-        const decoded = fromBase64(file.content.replace(/\n/g, ''))
-        const parsed = JSON.parse(decoded)
-        return { ok: true, message: `Restored from commit ${commitSha.slice(0, 7)}.`, data: parsed }
+        return { ok: true, message: `Restored from commit ${commitSha.slice(0, 7)}.`, data: result.data }
       } catch {
         return { ok: false, message: 'Could not restore backup from GitHub.' }
       }
     },
-    [activeToken, apiHeaders, config.filePath, config.owner, config.repo, isConfigured],
+    [activeToken, config.filePath, config.owner, config.repo, isConfigured],
   )
 
   const restoreLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
     try {
       const result = await restoreFileFromGitHub({
-        token: activeToken, owner: config.owner, repo: config.repo, filePath: config.filePath,
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: config.filePath,
       })
       if (!result.ok) {
         if (result.status === 404) return { ok: false, message: 'Backup file not found in repository.' }
@@ -502,7 +388,10 @@ export const useGitHubSync = () => {
     if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
     try {
       const result = await restoreFileFromGitHub({
-        token: activeToken, owner: config.owner, repo: config.repo, filePath: dataFilePath,
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: dataFilePath,
       })
       if (!result.ok) {
         if (result.status === 404) return { ok: true, message: 'No data file found.', data: null }
@@ -519,9 +408,7 @@ export const useGitHubSync = () => {
     (data: object) => {
       const { exportedAt: _, ...rest } = data as Record<string, unknown>
       const json = JSON.stringify(rest)
-      if (json === lastSyncedJsonRef.current) {
-        return
-      }
+      if (json === lastSyncedJsonRef.current) return
       markDirty('goals')
       if (!config.autoSync || !isConfigured) return
       pendingDataRef.current = data
