@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getStorageItem, setStorageItem } from '../utils/storage'
 import { toBase64, fromBase64 } from './base64Utils'
 import { encryptToken, decryptToken } from './tokenCrypto'
-import { syncFileToGitHub } from './useGitHubSyncApi'
+import { syncFileToGitHub, restoreFileFromGitHub } from './useGitHubSyncApi'
 export { toBase64, fromBase64 }
 
 export interface GitHubSyncConfig {
@@ -310,19 +310,15 @@ export const useGitHubSync = () => {
   const restoreToolsLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
     if (!isConfigured) return { ok: false }
     try {
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`, {
-        headers: apiHeaders(activeToken),
+      const result = await restoreFileFromGitHub({
+        token: activeToken, owner: config.owner, repo: config.repo, filePath: toolsFilePath,
       })
-      if (res.status === 404) return { ok: false }
-      if (!res.ok) return { ok: false }
-      const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false }
-      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, data: parsed }
+      if (!result.ok) return { ok: false }
+      return { ok: true, data: result.data }
     } catch {
       return { ok: false }
     }
-  }, [activeToken, apiHeaders, toolsFilePath, config.owner, config.repo, isConfigured])
+  }, [activeToken, config.owner, config.repo, toolsFilePath, isConfigured])
 
   const syncAllocationNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
@@ -350,20 +346,15 @@ export const useGitHubSync = () => {
   const restoreAllocationLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
     if (!isConfigured) return { ok: false }
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${allocationFilePath}`,
-        { headers: apiHeaders(activeToken) },
-      )
-      if (res.status === 404) return { ok: false }
-      if (!res.ok) return { ok: false }
-      const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false }
-      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, data: parsed }
+      const result = await restoreFileFromGitHub({
+        token: activeToken, owner: config.owner, repo: config.repo, filePath: allocationFilePath,
+      })
+      if (!result.ok) return { ok: false }
+      return { ok: true, data: result.data }
     } catch {
       return { ok: false }
     }
-  }, [activeToken, apiHeaders, allocationFilePath, config.owner, config.repo, isConfigured])
+  }, [activeToken, config.owner, config.repo, allocationFilePath, isConfigured])
 
   const syncTaxesNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
@@ -391,19 +382,15 @@ export const useGitHubSync = () => {
   const restoreTaxesLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: '' }
     try {
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${taxesFilePath}`, {
-        headers: apiHeaders(activeToken),
+      const result = await restoreFileFromGitHub({
+        token: activeToken, owner: config.owner, repo: config.repo, filePath: taxesFilePath,
       })
-      if (res.status === 404) return { ok: false, message: '' }
-      if (!res.ok) return { ok: false, message: '' }
-      const json = await res.json()
-      if (typeof json.content !== 'string') return { ok: false, message: '' }
-      const parsed = JSON.parse(atob(json.content.replace(/\n/g, '')))
-      return { ok: true, message: '', data: parsed }
+      if (!result.ok) return { ok: false, message: '' }
+      return { ok: true, message: '', data: result.data }
     } catch {
       return { ok: false, message: '' }
     }
-  }, [activeToken, apiHeaders, taxesFilePath, config.owner, config.repo, isConfigured])
+  }, [activeToken, config.owner, config.repo, taxesFilePath, isConfigured])
 
   const fetchHistory = useCallback(async (): Promise<void> => {
     if (!isConfigured) return
@@ -497,43 +484,36 @@ export const useGitHubSync = () => {
   const restoreLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`,
-        { headers: apiHeaders(activeToken) },
-      )
-      if (res.status === 404) return { ok: false, message: 'Backup file not found in repository.' }
-      if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}` }
-      const file = (await res.json()) as { content?: string; encoding?: string }
-      if (!file.content || file.encoding !== 'base64') {
+      const result = await restoreFileFromGitHub({
+        token: activeToken, owner: config.owner, repo: config.repo, filePath: config.filePath,
+      })
+      if (!result.ok) {
+        if (result.status === 404) return { ok: false, message: 'Backup file not found in repository.' }
+        if (result.status) return { ok: false, message: `GitHub API error: ${result.status}` }
         return { ok: false, message: 'Backup file format is not supported.' }
       }
-      const decoded = fromBase64(file.content.replace(/\n/g, ''))
-      const parsed = JSON.parse(decoded)
-      return { ok: true, message: 'Latest backup restored from GitHub.', data: parsed }
+      return { ok: true, message: 'Latest backup restored from GitHub.', data: result.data }
     } catch {
       return { ok: false, message: 'Could not restore backup from GitHub.' }
     }
-  }, [activeToken, apiHeaders, config.filePath, config.owner, config.repo, isConfigured])
+  }, [activeToken, config.owner, config.repo, config.filePath, isConfigured])
 
   const restoreDataLatest = useCallback(async (): Promise<RestoreResult> => {
     if (!isConfigured) return { ok: false, message: 'Connect and unlock token first.' }
     try {
-      const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${dataFilePath}`, {
-        headers: apiHeaders(activeToken),
+      const result = await restoreFileFromGitHub({
+        token: activeToken, owner: config.owner, repo: config.repo, filePath: dataFilePath,
       })
-      if (res.status === 404) return { ok: true, message: 'No data file found.', data: null }
-      if (!res.ok) return { ok: false, message: `GitHub API error: ${res.status}` }
-      const file = (await res.json()) as { content?: string; encoding?: string }
-      if (!file.content || file.encoding !== 'base64') {
+      if (!result.ok) {
+        if (result.status === 404) return { ok: true, message: 'No data file found.', data: null }
+        if (result.status) return { ok: false, message: `GitHub API error: ${result.status}` }
         return { ok: false, message: 'Data file format is not supported.' }
       }
-      const decoded = fromBase64(file.content.replace(/\n/g, ''))
-      const parsed = JSON.parse(decoded)
-      return { ok: true, message: 'Data file restored.', data: parsed }
+      return { ok: true, message: 'Data file restored.', data: result.data }
     } catch {
       return { ok: false, message: 'Could not restore data file from GitHub.' }
     }
-  }, [activeToken, apiHeaders, dataFilePath, config.owner, config.repo, isConfigured])
+  }, [activeToken, config.owner, config.repo, dataFilePath, isConfigured])
 
   const updateData = useCallback(
     (data: object) => {
