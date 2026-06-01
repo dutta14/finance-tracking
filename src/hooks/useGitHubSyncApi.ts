@@ -1,4 +1,4 @@
-import { toBase64 } from './base64Utils'
+import { fromBase64, toBase64 } from './base64Utils'
 
 export interface SyncFileParams {
   token: string
@@ -56,4 +56,37 @@ export async function syncFileToGitHub(params: SyncFileParams): Promise<{ ok: bo
     }
   }
   return { ok: false, error: 'Unexpected: exhausted retries' }
+}
+
+export interface RestoreFileParams {
+  token: string
+  owner: string
+  repo: string
+  filePath: string
+  ref?: string
+}
+
+export interface RestoreFileResult {
+  ok: boolean
+  status?: number
+  data?: unknown
+}
+
+export async function restoreFileFromGitHub(params: RestoreFileParams): Promise<RestoreFileResult> {
+  const { token, owner, repo, filePath, ref } = params
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}${ref ? `?ref=${ref}` : ''}`
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  })
+  if (!res.ok) return { ok: false, status: res.status }
+  const json = await res.json()
+  const content = (json as { content?: string }).content
+  if (typeof content !== 'string') return { ok: false }
+  const decoded = fromBase64(content.replace(/\n/g, ''))
+  const parsed = JSON.parse(decoded)
+  return { ok: true, data: parsed }
 }
