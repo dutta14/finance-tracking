@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getStorageItem, setStorageItem } from '../utils/storage'
 import { toBase64, fromBase64 } from './base64Utils'
 import { encryptToken, decryptToken } from './tokenCrypto'
+import { syncFileToGitHub } from './useGitHubSyncApi'
 export { toBase64, fromBase64 }
 
 export interface GitHubSyncConfig {
@@ -228,54 +229,31 @@ export const useGitHubSync = () => {
       if (!isConfigured) return
       setSyncStatus('syncing')
       setLastError(null)
-      let lastErr: Error | null = null // eslint-disable-line no-useless-assignment
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileSha()
-          const commitMessage =
-            message ||
-            `Auto-save: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
-          lastSyncedJsonRef.current = (() => {
-            const { exportedAt: _, ...rest } = data as Record<string, unknown>
-            return JSON.stringify(rest)
-          })()
-          setSyncStatus('success')
-          setLastSyncAt(new Date().toISOString())
-          clearDirty('goals')
-          return
-        } catch (e) {
-          lastErr = e instanceof Error ? e : new Error(String(e))
-          if (attempt === 2) {
-            setSyncStatus('error')
-            setLastError(lastErr.message)
-            throw lastErr
-          }
-        }
+      const result = await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: config.filePath,
+        data,
+        message,
+        messagePrefix: 'Auto-save',
+        getFileSha,
+      })
+      if (result.ok) {
+        lastSyncedJsonRef.current = (() => {
+          const { exportedAt: _, ...rest } = data as Record<string, unknown>
+          return JSON.stringify(rest)
+        })()
+        setSyncStatus('success')
+        setLastSyncAt(new Date().toISOString())
+        clearDirty('goals')
+      } else {
+        setSyncStatus('error')
+        setLastError(result.error || 'Sync failed')
+        throw new Error(result.error || 'Sync failed')
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, config.filePath, getFileSha, isConfigured, clearDirty],
+    [activeToken, config.owner, config.repo, config.filePath, getFileSha, isConfigured, clearDirty],
   )
 
   const syncDataNow = useCallback(
