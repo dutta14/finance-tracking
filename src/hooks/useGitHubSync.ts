@@ -287,45 +287,24 @@ export const useGitHubSync = () => {
   const syncToolsNow = useCallback(
     async (data: object, message?: string): Promise<void> => {
       if (!isConfigured) return
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const prettyJson = JSON.stringify(data, null, 2)
-          const content = toBase64(prettyJson)
-          const sha = await getFileShaForPath(toolsFilePath)
-          const commitMessage =
-            message ||
-            `Tools sync: ${new Date().toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`
-          const body: Record<string, string> = { message: commitMessage, content }
-          if (sha) body.sha = sha
-          const res = await fetch(
-            `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${toolsFilePath}`,
-            { method: 'PUT', headers: apiHeaders(activeToken), body: JSON.stringify(body) },
-          )
-          if ((res.status === 409 || res.status === 422) && attempt < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-            continue
-          }
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error((err as { message?: string }).message || `GitHub API error: ${res.status}`)
-          }
-          clearDirty('tools')
-          return
-        } catch (e) {
-          if (attempt === 2) {
-            console.error('Tools file sync error:', e instanceof Error ? e.message : e)
-            throw e instanceof Error ? e : new Error(String(e))
-          }
-        }
+      const result = await syncFileToGitHub({
+        token: activeToken,
+        owner: config.owner,
+        repo: config.repo,
+        filePath: toolsFilePath,
+        data,
+        message,
+        messagePrefix: 'Tools sync',
+        getFileSha: () => getFileShaForPath(toolsFilePath),
+      })
+      if (result.ok) {
+        clearDirty('tools')
+      } else {
+        console.error('Tools file sync error:', result.error)
+        throw new Error(result.error || 'Tools sync failed')
       }
     },
-    [activeToken, apiHeaders, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured, clearDirty],
+    [activeToken, config.owner, config.repo, toolsFilePath, getFileShaForPath, isConfigured, clearDirty],
   )
 
   const restoreToolsLatest = useCallback(async (): Promise<{ ok: boolean; data?: unknown }> => {
