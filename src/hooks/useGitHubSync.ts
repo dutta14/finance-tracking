@@ -18,13 +18,7 @@ export type {
   SyncDomain,
   SyncProgress,
 } from './githubSyncTypes'
-import type {
-  GitHubSyncConfig,
-  CommitEntry,
-  SyncStatus,
-  SyncDomain,
-  SyncProgress,
-} from './githubSyncTypes'
+import type { GitHubSyncConfig, CommitEntry, SyncStatus, SyncDomain, SyncProgress } from './githubSyncTypes'
 
 export const useGitHubSync = () => {
   const [config, setConfigState] = useState<GitHubSyncConfig>(loadConfig)
@@ -254,7 +248,16 @@ export const useGitHubSync = () => {
     }
     document.addEventListener('visibilitychange', handleVisChange)
     return () => document.removeEventListener('visibilitychange', handleVisChange)
-  }, [isConfigured, activeToken, config, config.autoSync, syncGoalsNow, syncDataNow, pendingDataRef, pendingDataFileRef])
+  }, [
+    isConfigured,
+    activeToken,
+    config,
+    config.autoSync,
+    syncGoalsNow,
+    syncDataNow,
+    pendingDataRef,
+    pendingDataFileRef,
+  ])
 
   return {
     config,

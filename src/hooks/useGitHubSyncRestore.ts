@@ -1,17 +1,7 @@
 import { useCallback } from 'react'
 
-import {
-  restoreFileFromGitHub,
-  testConnectionApi,
-  fetchCommitHistory,
-} from './useGitHubSyncApi'
-import type {
-  GitHubSyncConfig,
-  CommitEntry,
-  ConnectionTestResult,
-  RestoreResult,
-  SyncStatus,
-} from './githubSyncTypes'
+import { restoreFileFromGitHub, testConnectionApi, fetchCommitHistory } from './useGitHubSyncApi'
+import type { GitHubSyncConfig, CommitEntry, ConnectionTestResult, RestoreResult, SyncStatus } from './githubSyncTypes'
 
 export interface RestoreHookParams {
   activeToken: string

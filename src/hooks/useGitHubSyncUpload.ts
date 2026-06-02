@@ -68,7 +68,18 @@ export const useGitHubSyncUpload = (params: SyncHookParams) => {
         throw new Error(result.error || 'Sync failed')
       }
     },
-    [activeToken, config.owner, config.repo, config.filePath, getFileShaForPath, isConfigured, clearDirty, setSyncStatus, setLastSyncAt, setLastError],
+    [
+      activeToken,
+      config.owner,
+      config.repo,
+      config.filePath,
+      getFileShaForPath,
+      isConfigured,
+      clearDirty,
+      setSyncStatus,
+      setLastSyncAt,
+      setLastError,
+    ],
   )
 
   const syncDataNow = useCallback(

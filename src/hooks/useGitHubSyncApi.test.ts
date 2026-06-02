@@ -157,9 +157,7 @@ describe('getFileShaForPathApi', () => {
   it('getFileShaForPathApi: throws on 401', async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 401 })
 
-    await expect(getFileShaForPathApi('ghp_test', 'owner', 'repo', 'path.json')).rejects.toThrow(
-      'Invalid token',
-    )
+    await expect(getFileShaForPathApi('ghp_test', 'owner', 'repo', 'path.json')).rejects.toThrow('Invalid token')
   })
 })
 
