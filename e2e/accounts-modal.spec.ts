@@ -23,7 +23,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(rows).toHaveCount(5)
 
     // Step 3: Filter by active → only 4 rows
-    await nw.modal.locator('button.data-filter-btn', { hasText: 'Active' }).click()
+    await nw.modal.locator('button.data-filter-btn', { hasText: /^Active/ }).click()
     await expect(rows).toHaveCount(4)
 
     // Filter by inactive → only 1 row (Old Savings)
@@ -54,10 +54,10 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     // Step 6: Switch to groups tab
     const groupsBtn = nw.modal.locator('button.data-groups-page-btn')
     await groupsBtn.click()
-    // Verify group cards render (Retirement, Taxable, Cash)
+    // Verify group cards render (Retirement, Taxable, Cash + Ungrouped)
     const groupCards = nw.modal.locator('.data-group-card')
     await expect(groupCards.first()).toBeVisible()
-    await expect(groupCards).toHaveCount(3)
+    await expect(groupCards).toHaveCount(4)
 
     // Step 7: Create a new group
     const newGroupBtn = nw.modal.locator('.data-group-add-btn')
@@ -68,17 +68,14 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(
       nw.modal.locator('.data-group-card-name', { hasText: 'New Test Group' }),
     ).toBeVisible()
-    // Now 4 groups total
-    await expect(groupCards).toHaveCount(4)
+    // Now 5 cards total (4 named groups + ungrouped)
+    await expect(groupCards).toHaveCount(5)
 
     // Step 8: Rename a group (rename "Retirement" to "Retirement Funds")
-    const retirementCard = nw.modal
-      .locator('.data-group-card')
-      .filter({ hasText: 'Retirement' })
-      .first()
-    const renameBtn = retirementCard.locator('.data-group-rename-btn')
+    const renameBtn = nw.modal.getByRole('button', { name: 'Rename group' }).first()
     await renameBtn.click()
-    const renameInput = retirementCard.locator('.data-group-rename-input')
+    const renameInput = nw.modal.locator('.data-group-rename-input')
+    await expect(renameInput).toBeVisible()
     await renameInput.clear()
     await renameInput.fill('Retirement Funds')
     await renameInput.press('Enter')
