@@ -2,13 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useAccountSelection } from './useAccountSelection'
 
-const mockFiltered = [
-  { id: 1 },
-  { id: 2 },
-  { id: 3 },
-  { id: 4 },
-  { id: 5 },
-]
+const mockFiltered = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]
 
 describe('useAccountSelection', () => {
   describe('initial state', () => {
@@ -113,13 +107,14 @@ describe('useAccountSelection', () => {
   })
 
   describe('handleRowClick', () => {
-    const createMouseEvent = (opts: Partial<React.MouseEvent> = {}): React.MouseEvent => ({
-      shiftKey: false,
-      metaKey: false,
-      ctrlKey: false,
-      preventDefault: () => {},
-      ...opts,
-    } as unknown as React.MouseEvent)
+    const createMouseEvent = (opts: Partial<React.MouseEvent> = {}): React.MouseEvent =>
+      ({
+        shiftKey: false,
+        metaKey: false,
+        ctrlKey: false,
+        preventDefault: () => {},
+        ...opts,
+      }) as unknown as React.MouseEvent
 
     it('does not select on plain click without modifiers', () => {
       const { result } = renderHook(() => useAccountSelection(mockFiltered))

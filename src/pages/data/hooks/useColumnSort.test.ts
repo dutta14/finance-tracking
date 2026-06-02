@@ -4,10 +4,48 @@ import { useColumnSort } from './useColumnSort'
 import { Account } from '../types'
 
 const mockAccounts: Account[] = [
-  { id: 1, name: 'Checking', goalType: 'fi', type: 'retirement', nature: 'asset', allocation: 'cash', owner: 'primary', status: 'active', group: 'Banking' },
-  { id: 2, name: '401k', goalType: 'fi', type: 'non-retirement', nature: 'asset', allocation: 'us-stock', owner: 'primary', status: 'active', group: 'Retirement' },
-  { id: 3, name: 'Old Savings', goalType: 'gw', type: 'liquid', nature: 'asset', allocation: 'cash', owner: 'joint', status: 'inactive' },
-  { id: 4, name: 'Mortgage', goalType: 'gw', type: 'illiquid', nature: 'liability', allocation: 'debt', owner: 'partner', status: 'active' },
+  {
+    id: 1,
+    name: 'Checking',
+    goalType: 'fi',
+    type: 'retirement',
+    nature: 'asset',
+    allocation: 'cash',
+    owner: 'primary',
+    status: 'active',
+    group: 'Banking',
+  },
+  {
+    id: 2,
+    name: '401k',
+    goalType: 'fi',
+    type: 'non-retirement',
+    nature: 'asset',
+    allocation: 'us-stock',
+    owner: 'primary',
+    status: 'active',
+    group: 'Retirement',
+  },
+  {
+    id: 3,
+    name: 'Old Savings',
+    goalType: 'gw',
+    type: 'liquid',
+    nature: 'asset',
+    allocation: 'cash',
+    owner: 'joint',
+    status: 'inactive',
+  },
+  {
+    id: 4,
+    name: 'Mortgage',
+    goalType: 'gw',
+    type: 'illiquid',
+    nature: 'liability',
+    allocation: 'debt',
+    owner: 'partner',
+    status: 'active',
+  },
 ]
 
 const ownerLabels: Record<string, string> = {

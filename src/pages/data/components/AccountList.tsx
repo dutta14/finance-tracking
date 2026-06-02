@@ -83,15 +83,17 @@ const AccountList: FC<AccountListProps> = ({
                 <input type="checkbox" checked={allFilteredSelected} onChange={onToggleSelectAll} />
               </th>
             )}
-            {([
-              ['name', 'Account'],
-              ['goalType', 'Goal'],
-              ['type', 'Type'],
-              ['nature', 'A/L'],
-              ['allocation', 'Allocation'],
-              ['owner', 'Owner'],
-              ['status', 'Status'],
-            ] as [SortCol, string][]).map(([col, label]) => {
+            {(
+              [
+                ['name', 'Account'],
+                ['goalType', 'Goal'],
+                ['type', 'Type'],
+                ['nature', 'A/L'],
+                ['allocation', 'Allocation'],
+                ['owner', 'Owner'],
+                ['status', 'Status'],
+              ] as [SortCol, string][]
+            ).map(([col, label]) => {
               const hasFilter = !!(columnFilters[col] && columnFilters[col]!.size > 0)
               return (
                 <th key={col} className="data-th-sortable">
@@ -105,29 +107,47 @@ const AccountList: FC<AccountListProps> = ({
                     {col !== 'name' && (
                       <button
                         className={`data-th-filter-btn${hasFilter ? ' active' : ''}`}
-                        onClick={e => { e.stopPropagation(); onSetOpenFilterCol(openFilterCol === col ? null : col) }}
+                        onClick={e => {
+                          e.stopPropagation()
+                          onSetOpenFilterCol(openFilterCol === col ? null : col)
+                        }}
                         title={`Filter ${label}`}
                       >
                         <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-                          <path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5L1 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                          <path
+                            d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5L1 2z"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </button>
                     )}
                     {openFilterCol === col && col !== 'name' && (
-                      <div className="data-th-filter-dropdown" ref={filterDropdownRef} onClick={e => e.stopPropagation()}>
+                      <div
+                        className="data-th-filter-dropdown"
+                        ref={filterDropdownRef}
+                        onClick={e => e.stopPropagation()}
+                      >
                         <div className="data-th-filter-options">
                           {colUniqueValues(col).map(val => {
                             const checked = columnFilters[col]?.has(val) ?? false
                             return (
                               <label key={val} className="data-th-filter-option">
-                                <input type="checkbox" checked={checked} onChange={() => onToggleColumnFilter(col, val)} />
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => onToggleColumnFilter(col, val)}
+                                />
                                 <span>{getColLabel(col, val)}</span>
                               </label>
                             )
                           })}
                         </div>
                         {hasFilter && (
-                          <button className="data-th-filter-clear" onClick={() => onClearColumnFilter(col)}>Clear filter</button>
+                          <button className="data-th-filter-clear" onClick={() => onClearColumnFilter(col)}>
+                            Clear filter
+                          </button>
                         )}
                       </div>
                     )}
@@ -148,7 +168,10 @@ const AccountList: FC<AccountListProps> = ({
                     existingGroups={existingGroups}
                     allAccounts={accounts}
                     initial={account}
-                    onSave={updates => { onUpdate(account.id, updates); onCancelEdit() }}
+                    onSave={updates => {
+                      onUpdate(account.id, updates)
+                      onCancelEdit()
+                    }}
                     onCancel={onCancelEdit}
                   />
                 </td>

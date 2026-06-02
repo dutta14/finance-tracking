@@ -38,19 +38,13 @@ const AccountRow: FC<AccountRowProps> = ({
     >
       {showMultiSelect && (
         <td className="data-td-checkbox">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onToggleSelect(account.id)}
-          />
+          <input type="checkbox" checked={isSelected} onChange={() => onToggleSelect(account.id)} />
         </td>
       )}
       <td>
         <div className="data-account-name">
           <span>{account.name}</span>
-          {account.institution && (
-            <span className="data-account-institution">{account.institution}</span>
-          )}
+          {account.institution && <span className="data-account-institution">{account.institution}</span>}
           {account.group && <span className="data-account-parent">↳ {account.group}</span>}
           {account.linkedAccountId != null &&
             (() => {
@@ -60,9 +54,7 @@ const AccountRow: FC<AccountRowProps> = ({
         </div>
       </td>
       <td>
-        <span className={`data-badge data-badge--goal-${account.goalType}`}>
-          {GOAL_TYPE_LABELS[account.goalType]}
-        </span>
+        <span className={`data-badge data-badge--goal-${account.goalType}`}>{GOAL_TYPE_LABELS[account.goalType]}</span>
       </td>
       <td>
         <span className="data-badge data-badge--type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
@@ -74,17 +66,11 @@ const AccountRow: FC<AccountRowProps> = ({
       </td>
       <td>
         <span className="data-badge data-badge--allocation">
-          {
-            ALLOCATION_LABELS[
-              account.allocation || getDefaultAllocation(account.nature || 'asset')
-            ]
-          }
+          {ALLOCATION_LABELS[account.allocation || getDefaultAllocation(account.nature || 'asset')]}
         </span>
       </td>
       <td>
-        <span className={`data-badge data-badge--owner-${account.owner}`}>
-          {ownerLabels[account.owner]}
-        </span>
+        <span className={`data-badge data-badge--owner-${account.owner}`}>{ownerLabels[account.owner]}</span>
       </td>
       <td>
         <span className={`data-badge data-badge--status-${account.status}`}>
@@ -93,11 +79,7 @@ const AccountRow: FC<AccountRowProps> = ({
       </td>
       <td>
         <div className="data-row-actions">
-          <button
-            className="data-action-btn"
-            onClick={() => onEdit(account.id)}
-            title="Edit"
-          >
+          <button className="data-action-btn" onClick={() => onEdit(account.id)} title="Edit">
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
               <path
                 d="M3 17h14M10 3l4 4-7 7H3v-4l7-7z"
