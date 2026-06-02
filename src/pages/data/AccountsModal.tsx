@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useMemo, useEffect, useCallback } from 'react'
+import { FC, useState, useRef, useEffect } from 'react'
 import { Profile } from '../../hooks/useProfile'
 import {
   Account,
@@ -17,6 +17,8 @@ import {
   getOwnerLabels,
 } from './types'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import { useColumnSort, SortCol } from './hooks/useColumnSort'
+import { useAccountSelection } from './hooks/useAccountSelection'
 import AccountForm from './AccountForm'
 
 interface AccountsModalProps {
@@ -48,8 +50,6 @@ const AccountsModal: FC<AccountsModalProps> = ({
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  const lastSelectedRef = useRef<number | null>(null)
   const [newGroupName, setNewGroupName] = useState<string | null>(null)
   const newGroupInputRef = useRef<HTMLInputElement>(null)
   const [page, setPage] = useState<'accounts' | 'groups'>('accounts')
@@ -63,205 +63,37 @@ const AccountsModal: FC<AccountsModalProps> = ({
   const [dragAccountId, setDragAccountId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
 
-  type SortCol = 'name' | 'goalType' | 'type' | 'nature' | 'allocation' | 'owner' | 'status'
-  type SortDir = 'asc' | 'desc'
-  const [sortCol, setSortCol] = useState<SortCol | null>(null)
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [columnFilters, setColumnFilters] = useState<Partial<Record<SortCol, Set<string>>>>({})
-  const [openFilterCol, setOpenFilterCol] = useState<SortCol | null>(null)
-  const filterDropdownRef = useRef<HTMLDivElement>(null)
-
-  const toggleSort = (col: SortCol) => {
-    if (sortCol === col) {
-      if (sortDir === 'asc') setSortDir('desc')
-      else {
-        setSortCol(null)
-        setSortDir('asc')
-      }
-    } else {
-      setSortCol(col)
-      setSortDir('asc')
-    }
-  }
-
-  const toggleColumnFilter = (col: SortCol, value: string) => {
-    setColumnFilters(prev => {
-      const next = { ...prev }
-      const set = new Set(prev[col] || [])
-      if (set.has(value)) set.delete(value)
-      else set.add(value)
-      if (set.size === 0) delete next[col]
-      else next[col] = set
-      return next
-    })
-  }
-
-  const clearColumnFilter = (col: SortCol) => {
-    setColumnFilters(prev => {
-      const next = { ...prev }
-      delete next[col]
-      return next
-    })
-  }
-
-  // Close filter dropdown on outside click
-  useEffect(() => {
-    if (!openFilterCol) return
-    const handler = (e: MouseEvent) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
-        setOpenFilterCol(null)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [openFilterCol])
-
-  const getColValue = useCallback((a: Account, col: SortCol): string => {
-    switch (col) {
-      case 'name':
-        return a.name
-      case 'goalType':
-        return a.goalType
-      case 'type':
-        return a.type
-      case 'nature':
-        return a.nature || 'asset'
-      case 'allocation':
-        return a.allocation || getDefaultAllocation(a.nature || 'asset')
-      case 'owner':
-        return a.owner
-      case 'status':
-        return a.status
-    }
-  }, [])
-
-  const getColLabel = useCallback(
-    (col: SortCol, val: string): string => {
-      switch (col) {
-        case 'name':
-          return val
-        case 'goalType':
-          return GOAL_TYPE_LABELS[val as AccountGoalType] || val
-        case 'type':
-          return ACCOUNT_TYPE_LABELS[val as AccountType] || val
-        case 'nature':
-          return NATURE_LABELS[val as AccountNature] || val
-        case 'allocation':
-          return ALLOCATION_LABELS[val as AssetAllocation] || val
-        case 'owner':
-          return ownerLabels[val as AccountOwner] || val
-        case 'status':
-          return val.charAt(0).toUpperCase() + val.slice(1)
-      }
-    },
-    [ownerLabels],
-  )
-
-  const displayAccounts = useMemo(() => {
-    let list = filter === 'all' ? accounts : accounts.filter(a => a.status === filter)
-
-    // Apply column filters
-    for (const [col, allowed] of Object.entries(columnFilters) as [SortCol, Set<string>][]) {
-      if (allowed && allowed.size > 0) {
-        list = list.filter(a => allowed.has(getColValue(a, col)))
-      }
-    }
-
-    // Apply sort
-    if (sortCol) {
-      const dir = sortDir === 'asc' ? 1 : -1
-      list = [...list].sort((a, b) => {
-        const va = getColValue(a, sortCol).toLowerCase()
-        const vb = getColValue(b, sortCol).toLowerCase()
-        return va < vb ? -dir : va > vb ? dir : 0
-      })
-    }
-
-    return list
-  }, [accounts, filter, columnFilters, sortCol, sortDir, getColValue])
-
-  // Unique values for filter dropdowns (from ALL accounts, not filtered)
-  const colUniqueValues = useCallback(
-    (col: SortCol): string[] => {
-      const baseList = filter === 'all' ? accounts : accounts.filter(a => a.status === filter)
-      const vals = new Set(baseList.map(a => getColValue(a, col)))
-      return [...vals].sort((a, b) =>
-        getColLabel(col, a).toLowerCase().localeCompare(getColLabel(col, b).toLowerCase()),
-      )
-    },
-    [accounts, filter, getColValue, getColLabel],
-  )
+  const {
+    sortCol,
+    sortDir,
+    columnFilters,
+    openFilterCol,
+    setOpenFilterCol,
+    filterDropdownRef,
+    toggleSort,
+    toggleColumnFilter,
+    clearColumnFilter,
+    getColLabel,
+    displayAccounts,
+    colUniqueValues,
+  } = useColumnSort(accounts, filter, ownerLabels)
 
   const filteredAccounts = displayAccounts
 
-  const allFilteredSelected = filteredAccounts.length > 0 && filteredAccounts.every(a => selectedIds.has(a.id))
-
-  const toggleSelect = (id: number) => {
-    lastSelectedRef.current = id
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const rangeSelect = (id: number) => {
-    const lastId = lastSelectedRef.current
-    if (lastId == null) {
-      toggleSelect(id)
-      return
-    }
-    const ids = filteredAccounts.map(a => a.id)
-    const from = ids.indexOf(lastId)
-    const to = ids.indexOf(id)
-    if (from === -1 || to === -1) {
-      toggleSelect(id)
-      return
-    }
-    const start = Math.min(from, to)
-    const end = Math.max(from, to)
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      for (let i = start; i <= end; i++) next.add(ids[i])
-      return next
-    })
-    lastSelectedRef.current = id
-  }
-
-  const toggleSelectAll = () => {
-    if (allFilteredSelected) {
-      setSelectedIds(prev => {
-        const next = new Set(prev)
-        for (const a of filteredAccounts) next.delete(a.id)
-        return next
-      })
-    } else {
-      setSelectedIds(prev => {
-        const next = new Set(prev)
-        for (const a of filteredAccounts) next.add(a.id)
-        return next
-      })
-    }
-  }
+  const {
+    selectedIds,
+    selectedCount,
+    allFilteredSelected,
+    showMultiSelect,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleRowClick,
+  } = useAccountSelection(filteredAccounts)
 
   const applyBulkUpdate = (updates: Partial<Account>) => {
     onBulkUpdate(selectedIds, updates)
   }
-
-  const selectedCount = filteredAccounts.filter(a => selectedIds.has(a.id)).length
-
-  const handleRowClick = (id: number, e: React.MouseEvent) => {
-    if (e.shiftKey && selectedIds.size > 0) {
-      e.preventDefault()
-      rangeSelect(id)
-    } else if (e.metaKey || e.ctrlKey) {
-      e.preventDefault()
-      toggleSelect(id)
-    }
-  }
-
-  const showMultiSelect = selectedCount >= 1
 
   const modalRef = useRef<HTMLDivElement>(null)
   useFocusTrap(modalRef, true)
@@ -757,7 +589,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
                       </button>
                     </div>
                   )}
-                  <button className="data-bulk-clear" onClick={() => setSelectedIds(new Set())}>
+                  <button className="data-bulk-clear" onClick={() => clearSelection()}>
                     Clear
                   </button>
                 </div>
