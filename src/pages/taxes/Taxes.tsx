@@ -8,122 +8,12 @@ import { fileToBase64, nextFileId } from './utils/fileHelpers'
 import OwnerBadge from './components/OwnerBadge'
 import OwnerSection from './components/OwnerSection'
 import SuggestModal from './components/SuggestModal'
+import AddItemModal from './components/AddItemModal'
+import SaveTemplateModal from './components/SaveTemplateModal'
 import '../../styles/Taxes.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-
-/* ── add custom item modal ─────────────────────────────────── */
-const AddItemModal: FC<{
-  owner: TaxDocOwner
-  onAdd: (label: string, category: ChecklistCategory) => void
-  onClose: () => void
-}> = ({ owner: _owner, onAdd, onClose }) => {
-  const [label, setLabel] = useState('')
-  return (
-    <div className="tax-modal-overlay" onClick={onClose}>
-      <div className="tax-modal tax-modal--sm" onClick={e => e.stopPropagation()}>
-        <h3>Add Checklist Item</h3>
-        <input
-          className="tax-input"
-          placeholder="Item name"
-          value={label}
-          onChange={e => setLabel(e.target.value)}
-          autoFocus
-          onKeyDown={e => {
-            if (e.key === 'Enter' && label.trim()) {
-              onAdd(label.trim(), 'custom')
-              onClose()
-            }
-          }}
-        />
-        <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            className="tax-btn tax-btn--primary"
-            disabled={!label.trim()}
-            onClick={() => {
-              onAdd(label.trim(), 'custom')
-              onClose()
-            }}
-          >
-            Add
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── save template modal ───────────────────────────────────── */
-const SaveTemplateModal: FC<{
-  templates: TaxTemplate[]
-  onSaveNew: (name: string) => void
-  onUpdate: (id: string) => void
-  onClose: () => void
-}> = ({ templates, onSaveNew, onUpdate, onClose }) => {
-  const [name, setName] = useState('')
-  const [mode, setMode] = useState<'new' | 'update'>(templates.length > 0 ? 'update' : 'new')
-  const [selectedId, setSelectedId] = useState(templates[0]?.id || '')
-
-  return (
-    <div className="tax-modal-overlay" onClick={onClose}>
-      <div className="tax-modal tax-modal--sm" onClick={e => e.stopPropagation()}>
-        <h3>Save as Template</h3>
-        <p className="tax-modal-hint">
-          Save the current checklist structure (without documents) as a reusable template.
-        </p>
-        {templates.length > 0 && (
-          <div className="tax-tpl-mode">
-            <label className={`tax-tpl-mode-opt${mode === 'update' ? ' active' : ''}`}>
-              <input type="radio" name="tpl-mode" checked={mode === 'update'} onChange={() => setMode('update')} />{' '}
-              Update existing
-            </label>
-            <label className={`tax-tpl-mode-opt${mode === 'new' ? ' active' : ''}`}>
-              <input type="radio" name="tpl-mode" checked={mode === 'new'} onChange={() => setMode('new')} /> Create new
-            </label>
-          </div>
-        )}
-        {mode === 'update' && templates.length > 0 ? (
-          <select className="tax-input" value={selectedId} onChange={e => setSelectedId(e.target.value)}>
-            {templates.map(t => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.items.length} items)
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            className="tax-input"
-            placeholder="Template name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            autoFocus
-            onKeyDown={e => {
-              if (e.key === 'Enter' && name.trim()) onSaveNew(name.trim())
-            }}
-          />
-        )}
-        <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>
-            Cancel
-          </button>
-          {mode === 'update' && templates.length > 0 ? (
-            <button className="tax-btn tax-btn--primary" disabled={!selectedId} onClick={() => onUpdate(selectedId)}>
-              Update Template
-            </button>
-          ) : (
-            <button className="tax-btn tax-btn--primary" disabled={!name.trim()} onClick={() => onSaveNew(name.trim())}>
-              Save New
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 /* ── import template modal ─────────────────────────────────── */
 const ImportTemplateModal: FC<{
