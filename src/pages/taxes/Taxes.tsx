@@ -2,7 +2,7 @@ import { FC, useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { useProfile } from '../../hooks/useProfile'
 import { useData } from '../../contexts/DataContext'
 import { useTaxStore } from './useTaxStore'
-import type { TaxChecklistItem, TaxDocFile, TaxDocOwner, ChecklistCategory, TaxTemplate } from './types'
+import type { TaxChecklistItem, TaxDocFile, TaxDocOwner, ChecklistCategory } from './types'
 import { getStorageEstimate } from '../../utils/taxFileDB'
 import { fileToBase64, nextFileId } from './utils/fileHelpers'
 import OwnerBadge from './components/OwnerBadge'
@@ -10,58 +10,11 @@ import OwnerSection from './components/OwnerSection'
 import SuggestModal from './components/SuggestModal'
 import AddItemModal from './components/AddItemModal'
 import SaveTemplateModal from './components/SaveTemplateModal'
+import ImportTemplateModal from './components/ImportTemplateModal'
 import '../../styles/Taxes.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-
-/* ── import template modal ─────────────────────────────────── */
-const ImportTemplateModal: FC<{
-  templates: TaxTemplate[]
-  onImport: (template: TaxTemplate) => void
-  onDelete: (id: string) => void
-  onClose: () => void
-}> = ({ templates, onImport, onDelete, onClose }) => {
-  return (
-    <div className="tax-modal-overlay" onClick={onClose}>
-      <div className="tax-modal" onClick={e => e.stopPropagation()}>
-        <h3>Import from Template</h3>
-        <p className="tax-modal-hint">Choose a template to create a checklist from.</p>
-        {templates.length === 0 ? (
-          <p className="tax-empty">No templates saved yet.</p>
-        ) : (
-          <div className="tax-tpl-list">
-            {templates.map(t => (
-              <div key={t.id} className="tax-tpl-row">
-                <div className="tax-tpl-info">
-                  <span className="tax-tpl-name">{t.name}</span>
-                  <span className="tax-tpl-count">{t.items.length} items</span>
-                </div>
-                <div className="tax-tpl-actions">
-                  <button className="tax-btn tax-btn--primary tax-btn--sm" onClick={() => onImport(t)}>
-                    Use
-                  </button>
-                  <button
-                    className="tax-btn tax-btn--sm tax-btn--muted"
-                    onClick={() => onDelete(t.id)}
-                    title="Delete template"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 /* ── tax return section ──────────────────────────────────── */
 const TaxReturnSection: FC<{
