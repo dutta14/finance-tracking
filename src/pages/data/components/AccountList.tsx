@@ -19,7 +19,7 @@ interface AccountListProps {
   sortDir: 'asc' | 'desc'
   columnFilters: Partial<Record<SortCol, Set<string>>>
   openFilterCol: SortCol | null
-  filterDropdownRef: React.RefObject<HTMLDivElement>
+  filterDropdownRef: React.RefObject<HTMLDivElement | null>
   onToggleSort: (col: SortCol) => void
   onToggleColumnFilter: (col: SortCol, value: string) => void
   onClearColumnFilter: (col: SortCol) => void
@@ -87,7 +87,7 @@ const AccountList: FC<AccountListProps> = ({
               ['name', 'Account'],
               ['goalType', 'Goal'],
               ['type', 'Type'],
-              ['nature', 'Nature'],
+              ['nature', 'A/L'],
               ['allocation', 'Allocation'],
               ['owner', 'Owner'],
               ['status', 'Status'],
