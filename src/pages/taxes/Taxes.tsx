@@ -7,103 +7,11 @@ import type { Account } from '../data/types'
 import { getStorageEstimate } from '../../utils/taxFileDB'
 import { fileToBase64, nextFileId } from './utils/fileHelpers'
 import OwnerBadge from './components/OwnerBadge'
-import ChecklistRow from './components/ChecklistRow'
+import OwnerSection from './components/OwnerSection'
 import '../../styles/Taxes.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-
-/* ── section for an owner ─────────────────────────────────── */
-const OwnerSection: FC<{
-  owner: TaxDocOwner
-  title: string
-  items: TaxChecklistItem[]
-  year: number
-  onUpload: (itemId: string, files: FileList) => void
-  onRemoveFile: (itemId: string, fileId: string) => void
-  onRemoveItem: (itemId: string) => void
-  onRename: (itemId: string, newLabel: string) => void
-  onAddItem: (owner: TaxDocOwner) => void
-  onAddPaystub: (owner: TaxDocOwner) => void
-  onSuggestAccounts: (owner: TaxDocOwner) => void
-  primaryName: string
-  partnerName: string
-  primaryAvatar?: string
-  partnerAvatar?: string
-  accounts: Account[]
-  hasSuggestions: boolean
-}> = ({
-  owner,
-  title,
-  items,
-  year,
-  onUpload,
-  onRemoveFile,
-  onRemoveItem,
-  onRename,
-  onAddItem,
-  onAddPaystub,
-  onSuggestAccounts,
-  primaryName,
-  partnerName,
-  primaryAvatar,
-  partnerAvatar,
-  accounts,
-  hasSuggestions,
-}) => {
-  const done = items.filter(i => i.files.length > 0).length
-  const hasPaystub = items.some(i => i.category === 'paystub')
-  const showPaystubBtn = owner !== 'joint' && !hasPaystub
-  return (
-    <div className="tax-section">
-      <div className="tax-section-header">
-        <OwnerBadge
-          owner={owner}
-          primaryName={primaryName}
-          partnerName={partnerName}
-          primaryAvatar={primaryAvatar}
-          partnerAvatar={partnerAvatar}
-        />
-        <h3 className="tax-section-title">{title}</h3>
-        <span className="tax-section-count">
-          {done}/{items.length}
-        </span>
-      </div>
-      {items.length === 0 && <p className="tax-empty">No items yet</p>}
-      {items.map(item => (
-        <ChecklistRow
-          key={item.id}
-          item={item}
-          year={year}
-          onUpload={onUpload}
-          onRemoveFile={onRemoveFile}
-          onRemoveItem={onRemoveItem}
-          onRename={onRename}
-          primaryName={primaryName}
-          partnerName={partnerName}
-          primaryAvatar={primaryAvatar}
-          partnerAvatar={partnerAvatar}
-          accounts={accounts}
-        />
-      ))}
-      <div className="tax-section-actions">
-        <button className="tax-btn tax-btn--outline" onClick={() => onAddItem(owner)}>
-          + Add Item
-        </button>
-        {showPaystubBtn && (
-          <button className="tax-btn tax-btn--outline" onClick={() => onAddPaystub(owner)}>
-            + Add Paystub
-          </button>
-        )}
-        {hasSuggestions && (
-          <button className="tax-btn tax-btn--outline" onClick={() => onSuggestAccounts(owner)}>
-            + From Accounts
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
 
 /* ── suggest modal ─────────────────────────────────────────── */
 const SuggestModal: FC<{
