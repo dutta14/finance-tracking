@@ -5,20 +5,8 @@ import { useTaxStore } from './useTaxStore'
 import type { TaxChecklistItem, TaxDocFile, TaxDocOwner, ChecklistCategory, TaxTemplate } from './types'
 import type { Account } from '../data/types'
 import { getStorageEstimate } from '../../utils/taxFileDB'
+import { fileToBase64, nextFileId } from './utils/fileHelpers'
 import '../../styles/Taxes.css'
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
-function nextFileId(): string {
-  return `f${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-}
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
