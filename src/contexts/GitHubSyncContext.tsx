@@ -99,8 +99,8 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
     restoreLatest,
     restoreFromCommit,
     markRestored,
-    updateData: ghUpdateData,
-    updateDataFile: ghUpdateDataFile,
+    updateData: ghUpdateGoals,
+    updateDataFile: ghUpdateData,
     syncDataNow: ghSyncDataNow,
     restoreDataLatest,
     syncToolsNow: ghSyncToolsNow,
@@ -121,7 +121,7 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
 
   // Auto-sync whenever goals, gwGoals, profile, or themes change
   useEffect(() => {
-    ghUpdateData({
+    ghUpdateGoals({
       version: 2,
       exportedAt: new Date().toISOString(),
       goals,
@@ -145,9 +145,9 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
 
   const handleDataChange = useCallback(
     (accounts: Account[], balances: BalanceEntry[]): void => {
-      ghUpdateDataFile({ version: 1, exportedAt: new Date().toISOString(), accounts, balances })
+      ghUpdateData({ version: 1, exportedAt: new Date().toISOString(), accounts, balances })
     },
-    [ghUpdateDataFile],
+    [ghUpdateData],
   )
 
   const handleSyncNow = useCallback(
