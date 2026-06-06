@@ -324,10 +324,8 @@ test.describe('Goals Page E2E', () => {
       await firstHandle.press('ArrowRight')
       await expect(goals.reorderAnnouncement).toContainText('moved')
 
-      // After ArrowRight, the grabbed card moved to index 1
-      // The grabbed handle is now at position 1
-      const movedHandle = goals.grabHandles.nth(1)
-      await movedHandle.press('Enter')
+      // Drop the card — focus stays on the grabbed handle after ArrowRight
+      await page.keyboard.press('Enter')
       await expect(goals.reorderAnnouncement).toContainText('dropped')
 
       // Verify the first card changed position
