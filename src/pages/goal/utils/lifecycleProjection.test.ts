@@ -60,18 +60,4 @@ describe('lifecycleProjection — buildLifecycle', () => {
     const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2300, fiDate)
     expect(result.length).toBeLessThanOrEqual(1200)
   })
-
-  it('respects corpusCapAtFI during accumulation', () => {
-    const fiDate = new Date(2030, 5, 1)
-    const corpusCap = 200000
-    const result = buildLifecycle(
-      190000, 5000, 8, 6, 3, 5000, 2035, fiDate, undefined, corpusCap,
-    )
-
-    const accRows = result.filter(r => r.phase === 'accumulation')
-    // Balance should never exceed corpus cap significantly during accumulation
-    accRows.forEach(r => {
-      expect(r.remaining).toBeLessThanOrEqual(corpusCap * 1.01) // allow tiny float tolerance
-    })
-  })
 })

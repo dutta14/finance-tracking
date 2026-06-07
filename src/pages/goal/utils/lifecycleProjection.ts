@@ -19,7 +19,6 @@ export function buildLifecycle(
   endYear: number,
   fiDate: Date,
   retirementDate?: Date,
-  corpusCapAtFI?: number,
   initialWithdrawal?: number,
 ): ProjectionRow[] {
   const monthlyAccGrowth = accumulationGrowthRate / 100 / 12
@@ -46,14 +45,12 @@ export function buildLifecycle(
       if (cursor >= fiDate) {
         fiReached = true
         balance = balance * (1 + growth) + monthlyContribution
-        if (corpusCapAtFI && balance > corpusCapAtFI) balance = corpusCapAtFI
         rows.push({ month: label, expense: 0, remaining: balance, phase: 'accumulation', growthRate: annualRate })
         expense = initialWithdrawal || monthlyExpenseAtFI
         lastExpenseYear = fiYear
       } else {
         rows.push({ month: label, expense: 0, remaining: balance, phase: 'accumulation', growthRate: annualRate })
         balance = balance * (1 + growth) + monthlyContribution
-        if (corpusCapAtFI && balance > corpusCapAtFI) balance = corpusCapAtFI
       }
     } else {
       const curYear = cursor.getFullYear()
@@ -125,7 +122,6 @@ export function buildPlannedProjection(
     endYear,
     retirementDate,
     retirementDate,
-    corpusCap,
   )
 }
 
@@ -163,7 +159,6 @@ export function buildProjectedLifecycle(
     retirementDate,
   )
   const fiDate = fiResult ? fiResult.date : endOfLife
-  const corpusCap = fiResult?.requiredCorpus
 
   const fiYear = fiDate.getFullYear()
   const monthlyExpenseAtFI = monthlyExpenseThisYear * Math.pow(1 + inflation / 100, fiYear - nowYear)
@@ -178,6 +173,5 @@ export function buildProjectedLifecycle(
     endYear,
     fiDate,
     retirementDate,
-    corpusCap,
   )
 }
