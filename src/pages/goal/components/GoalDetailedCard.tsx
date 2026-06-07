@@ -331,26 +331,22 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
         )
       : (goal.expenseValue || 0) / 12
 
-    let result: { date: Date; months: number } | null = null
     const [by, bm] = profileBirthday.split('-').map(Number)
     const retirementDate = new Date(by + goal.retirementAge, bm - 1, 1)
 
-    if (endOfLife && monthlyExpenseNow > 0) {
-      // Two-phase: find earliest retirement date that sustains drawdown
-      result = projectFIDateWithDrawdown(
-        fiTotal,
-        budgetAnnualSavings,
-        DEFAULT_PRE_FI_GROWTH_RATE,
-        goal.growth || 6,
-        monthlyExpenseNow,
-        goal.inflationRate || 3,
-        endOfLife,
-        retirementDate,
-      )
-    } else {
-      // Fallback: simple accumulation-only projection (legacy behavior)
-      result = projectFIDate(fiTotal, goal.fiGoal, budgetAnnualSavings, DEFAULT_PRE_FI_GROWTH_RATE)
-    }
+    const result: { date: Date; months: number } | null =
+      endOfLife && monthlyExpenseNow > 0
+        ? projectFIDateWithDrawdown(
+            fiTotal,
+            budgetAnnualSavings,
+            DEFAULT_PRE_FI_GROWTH_RATE,
+            goal.growth || 6,
+            monthlyExpenseNow,
+            goal.inflationRate || 3,
+            endOfLife,
+            retirementDate,
+          )
+        : projectFIDate(fiTotal, goal.fiGoal, budgetAnnualSavings, DEFAULT_PRE_FI_GROWTH_RATE)
 
     if (!result) return { state: 'not-reachable' as const }
 
