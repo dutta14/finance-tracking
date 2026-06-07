@@ -241,8 +241,9 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const gwMonthly = gwTarget > 0 ? calcMonthlySaving(gwBal, gwTarget, gwGrowth, n) : 0
 
     const totalNeeded = fiMonthly + gwMonthly
+    const hasGoals = goal.fiGoal > 0 || gwTarget > 0
 
-    return { totalNeeded, fiBal, currentMonth }
+    return { totalNeeded, fiBal, currentMonth, hasGoals }
   }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth])
 
   if (!goal) {
@@ -380,7 +381,9 @@ const GoalDetail: FC<GoalDetailProps> = ({
       {summaryData && (
         <div className="goal-summary-card">
           <p className="goal-summary-prose">
-            {summaryData.totalNeeded > 0 ? (
+            {!summaryData.hasGoals ? (
+              <>Set an FI target or add GW goals to see your savings plan.</>
+            ) : summaryData.totalNeeded > 0 ? (
               <>
                 To achieve all your goals, you need to save{' '}
                 <strong>{formatCurrency(summaryData.totalNeeded)}/mo</strong> total.
