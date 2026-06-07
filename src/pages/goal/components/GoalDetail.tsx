@@ -110,23 +110,30 @@ const GoalDetail: FC<GoalDetailProps> = ({
     } catch {}
     return null
   }, [growthKey])
-  const [fiGrowth, setFiGrowthRaw] = useState(savedGrowth?.fi ?? 8)
-  const [gwGrowth, setGwGrowthRaw] = useState(savedGrowth?.gw ?? 8)
+  const [growthRates, setGrowthRates] = useState({ fi: savedGrowth?.fi ?? 8, gw: savedGrowth?.gw ?? 8 })
+  const fiGrowth = growthRates.fi
+  const gwGrowth = growthRates.gw
 
   const setFiGrowth = useCallback(
     (v: number) => {
-      setFiGrowthRaw(v)
-      localStorage.setItem(growthKey, JSON.stringify({ fi: v, gw: gwGrowth }))
+      setGrowthRates(prev => {
+        const next = { ...prev, fi: v }
+        localStorage.setItem(growthKey, JSON.stringify(next))
+        return next
+      })
     },
-    [growthKey, gwGrowth],
+    [growthKey],
   )
 
   const setGwGrowth = useCallback(
     (v: number) => {
-      setGwGrowthRaw(v)
-      localStorage.setItem(growthKey, JSON.stringify({ fi: fiGrowth, gw: v }))
+      setGrowthRates(prev => {
+        const next = { ...prev, gw: v }
+        localStorage.setItem(growthKey, JSON.stringify(next))
+        return next
+      })
     },
-    [growthKey, fiGrowth],
+    [growthKey],
   )
 
   const currentIndex = goals.findIndex(g => g.id === goalId)
@@ -142,15 +149,12 @@ const GoalDetail: FC<GoalDetailProps> = ({
       const raw = localStorage.getItem(key)
       if (raw) {
         const parsed = JSON.parse(raw)
-        setFiGrowthRaw(parsed.fi ?? 8)
-        setGwGrowthRaw(parsed.gw ?? 8)
+        setGrowthRates({ fi: parsed.fi ?? 8, gw: parsed.gw ?? 8 })
       } else {
-        setFiGrowthRaw(8)
-        setGwGrowthRaw(8)
+        setGrowthRates({ fi: 8, gw: 8 })
       }
     } catch {
-      setFiGrowthRaw(8)
-      setGwGrowthRaw(8)
+      setGrowthRates({ fi: 8, gw: 8 })
     }
   }, [goalId])
 
