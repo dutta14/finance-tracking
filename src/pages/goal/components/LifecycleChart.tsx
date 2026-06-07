@@ -34,16 +34,15 @@ interface LifecycleChartProps {
 }
 
 const LifecycleChart: FC<LifecycleChartProps> = ({ rows }) => (
-  <div className="projection-chart-wrapper" role="img" aria-label="Lifecycle projection chart showing portfolio balance over time">
+  <div
+    className="projection-chart-wrapper"
+    role="img"
+    aria-label="Lifecycle projection chart showing portfolio balance over time"
+  >
     <ResponsiveContainer width="100%" height={320}>
       <LineChart data={rows} margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
-        <XAxis
-          dataKey="month"
-          tick={{ fontSize: 11 }}
-          interval="preserveStartEnd"
-          stroke="var(--projection-axis)"
-        />
+        <XAxis dataKey="month" tick={{ fontSize: 11 }} interval="preserveStartEnd" stroke="var(--projection-axis)" />
         <YAxis
           tickFormatter={v => {
             if (Math.abs(v) >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`

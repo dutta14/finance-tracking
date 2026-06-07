@@ -52,12 +52,7 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
           : '10-Year Expense'
 
   const renderRateShift = (prev: ProjectionRow | null, row: ProjectionRow) => {
-    if (
-      prev &&
-      prev.growthRate !== undefined &&
-      row.growthRate !== undefined &&
-      prev.growthRate !== row.growthRate
-    ) {
+    if (prev && prev.growthRate !== undefined && row.growthRate !== undefined && prev.growthRate !== row.growthRate) {
       return (
         <tr key={`rate-shift-${row.month}`} className="projection-rate-shift-row">
           <td colSpan={4}>
@@ -97,7 +92,11 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
           {interval === 'monthly' && groupedByYear && (
             <tr className="projection-expand-all-row">
               <td colSpan={4}>
-                <button className="projection-expand-all-btn" onClick={toggleAll} aria-label={allExpanded ? 'Collapse all years' : 'Expand all years'}>
+                <button
+                  className="projection-expand-all-btn"
+                  onClick={toggleAll}
+                  aria-label={allExpanded ? 'Collapse all years' : 'Expand all years'}
+                >
                   {allExpanded ? 'Collapse All' : 'Expand All'}
                 </button>
               </td>

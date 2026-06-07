@@ -1,6 +1,7 @@
 import { FC, useMemo, useState } from 'react'
 import { FinancialGoal } from '../../../types'
 import { ProjectionRow, buildPlannedProjection, buildProjectedLifecycle } from '../utils/lifecycleProjection'
+import { getFiTarget } from '../utils/goalCalculations'
 import LifecycleChart from './LifecycleChart'
 import LifecycleTable from './LifecycleTable'
 import '../../../styles/GoalDiveDeep.css'
@@ -40,9 +41,11 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [scenario, setScenario] = useState<DataMode>('projected')
 
+  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, growthRate), [goal, profileBirthday, growthRate])
+
   const plannedMonthly = useMemo(() => {
     const birthday = profileBirthday || goal.birthday
-    if (!birthday) return 0
+    if (!birthday || fiTarget <= 0) return 0
     const [by, bm] = birthday.split('-').map(Number)
     const retYear = by + goal.retirementAge
     const retMonth = `${retYear}-${String(bm).padStart(2, '0')}`
@@ -59,10 +62,10 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     if (months <= 0) return 0
     const r = growthRate / 100 / 12
     const factor = Math.pow(1 + r, months)
-    const needed = goal.fiGoal - currentBalance * factor
+    const needed = fiTarget - currentBalance * factor
     if (needed <= 0) return 0
     return (needed * r) / (factor - 1)
-  }, [goal, profileBirthday, currentBalance, currentMonth, growthRate])
+  }, [goal, profileBirthday, currentBalance, currentMonth, growthRate, fiTarget])
 
   const projection = useMemo(
     () =>

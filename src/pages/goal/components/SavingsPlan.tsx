@@ -4,6 +4,7 @@ import { useData } from '../../../contexts/DataContext'
 import { formatCurrency } from '../../data/types'
 import TermAbbr from '../../../components/TermAbbr'
 import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
+import { getFiTarget } from '../utils/goalCalculations'
 
 interface SavingsPlanProps {
   goal: FinancialGoal
@@ -141,13 +142,14 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
     [goal.birthday, profileBirthday, goal.retirementAge],
   )
 
-  const fiTarget = goal.fiGoal
   const gwTarget = useMemo(() => getGwTarget(goal, gwGoals, profileBirthday), [goal, gwGoals, profileBirthday])
 
   const initialMonth = months[0] || ''
   const currentMonth = months[months.length - 1] || ''
   const [fiGrowth, setFiGrowth] = useState(8)
   const [gwGrowth, setGwGrowth] = useState(8)
+
+  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, fiGrowth), [goal, profileBirthday, fiGrowth])
 
   const calcPlan = useCallback(
     (goalType: 'fi' | 'gw', startMonth: string, growthRate: number, target: number): PlanResult | null => {
@@ -241,9 +243,10 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({
     [goal.birthday, profileBirthday, goal.retirementAge],
   )
 
-  const fiTarget = goal.fiGoal
   const currentMonth = months[months.length - 1] || ''
   const fiGrowth = growthRate ?? 8
+
+  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, fiGrowth), [goal, profileBirthday, fiGrowth])
   const setFiGrowth = onGrowthChange ?? (() => {})
 
   const monthlySaving = useMemo(() => {

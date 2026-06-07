@@ -57,11 +57,6 @@ afterEach(() => {
 
 describe('GwSection', () => {
   describe('empty state', () => {
-    it('renders section title "Generational Wealth"', () => {
-      renderGwSection()
-      expect(screen.getByRole('heading', { name: /generational wealth/i })).toBeInTheDocument()
-    })
-
     it('renders empty state message when no GW goals exist', () => {
       renderGwSection()
       expect(screen.getByText('No generational wealth goals yet.')).toBeInTheDocument()
@@ -247,14 +242,14 @@ describe('GwSection', () => {
       expect(screen.getByText('Family Trust')).toBeInTheDocument()
     })
 
-    it('renders disbursement age', () => {
+    it('renders disbursement age in prose', () => {
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('50 yrs')).toBeInTheDocument()
+      expect(screen.getByText(/by age 50/)).toBeInTheDocument()
     })
 
-    it('renders growth rate', () => {
+    it('renders growth rate in prose', () => {
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('6% / yr')).toBeInTheDocument()
+      expect(screen.getByText(/growing at 6% per year/)).toBeInTheDocument()
     })
 
     it('renders "Unnamed goal" when label is empty', () => {
@@ -428,7 +423,7 @@ describe('GwSection', () => {
     })
   })
 
-  describe('dollar view toggle', () => {
+  describe('dollar view — prose format', () => {
     const gw1 = makeGwGoal({
       id: 1,
       fiGoalId: 1,
@@ -438,25 +433,10 @@ describe('GwSection', () => {
       growthRate: 6,
     })
 
-    it('shows Creation and Disbursement toggle buttons', () => {
+    it('displays disbursement target amount in prose', () => {
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('Creation')).toBeInTheDocument()
-      expect(screen.getByText('Disbursement')).toBeInTheDocument()
-    })
-
-    it('displays creation-year dollars by default', () => {
-      renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('$100,000')).toBeInTheDocument()
-    })
-
-    it('switches to disbursement-year dollars when Disbursement is clicked', async () => {
-      const user = userEvent.setup()
-      renderGwSection({ gwGoals: [gw1] })
-
-      await user.click(screen.getByText('Disbursement'))
-      // Disbursement value should be inflation-adjusted (>100k)
-      const target = screen.queryByText('$100,000')
-      expect(target).not.toBeInTheDocument()
+      // The prose shows the inflation-adjusted disbursement target
+      expect(screen.getByText(/To have/)).toBeInTheDocument()
     })
   })
 
@@ -544,7 +524,7 @@ describe('GwSection', () => {
   })
 
   describe('retirement milestone', () => {
-    it('shows GW goal by retirement label with retirement year', () => {
+    it('shows retirement year in prose', () => {
       const goal = makeGoal({
         id: 1,
         goalCreatedIn: '2024-01',
@@ -561,7 +541,7 @@ describe('GwSection', () => {
       })
       renderGwSection({ goal, gwGoals: [gw1] })
       // retirementYear = 1990 + 45 = 2035
-      expect(screen.getByText(/GW Goal by retirement \(2035\)/)).toBeInTheDocument()
+      expect(screen.getByText(/saved by 2035/)).toBeInTheDocument()
     })
 
     it('displays PV at retirement amount', () => {

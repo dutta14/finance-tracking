@@ -137,7 +137,12 @@ describe('GoalDiveDeep', () => {
   it('remaining balance decreases during drawdown with low growth', () => {
     const depletingGoal = makeGoal({ ...baseGoal, growth: 1, monthlyExpense2047: 15000, fiGoal: 1_000_000 })
     render(
-      <GoalDiveDeep goal={depletingGoal} profileBirthday={profileBirthday} currentBalance={1_500_000} monthlyContribution={1000} />,
+      <GoalDiveDeep
+        goal={depletingGoal}
+        profileBirthday={profileBirthday}
+        currentBalance={1_500_000}
+        monthlyContribution={1000}
+      />,
     )
     const table = screen.getByRole('table')
     const rows = within(table).getAllByRole('row')
@@ -200,7 +205,14 @@ describe('GoalDiveDeep', () => {
   })
 
   it('renders Projected and Planned scenario buttons', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} currentBalance={100000} monthlyContribution={2000} />)
+    render(
+      <GoalDiveDeep
+        goal={baseGoal}
+        profileBirthday={profileBirthday}
+        currentBalance={100000}
+        monthlyContribution={2000}
+      />,
+    )
     expect(screen.getByRole('button', { name: /Projected/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Planned/ })).toBeInTheDocument()
   })
@@ -213,7 +225,15 @@ describe('GoalDiveDeep', () => {
 
   it('passes growthRate prop to projections', () => {
     // Render with a custom growth rate — should not crash
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} growthRate={10} currentBalance={100000} monthlyContribution={2000} />)
+    render(
+      <GoalDiveDeep
+        goal={baseGoal}
+        profileBirthday={profileBirthday}
+        growthRate={10}
+        currentBalance={100000}
+        monthlyContribution={2000}
+      />,
+    )
     expect(screen.getByRole('table')).toBeInTheDocument()
   })
 })

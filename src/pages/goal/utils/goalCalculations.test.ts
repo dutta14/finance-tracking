@@ -73,8 +73,8 @@ describe('calculateGoalMetrics', () => {
       getMonthsBetween,
       parseDate,
     )
-    // After ~30 years of 3% inflation on $60k, 3% compounded over ~365 months ≈ $149k
-    expect(result.annualExpenseAtRetirement).toBeCloseTo(149262, -2)
+    // 30 years of 3% inflation on $60k, compounded annually: 60000 * 1.03^30 ≈ $145,636
+    expect(result.annualExpenseAtRetirement).toBeCloseTo(145636, -2)
   })
 
   it('calculates FI goal using safe withdrawal rate', () => {

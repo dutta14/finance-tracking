@@ -131,6 +131,43 @@ export function computeRequiredCorpus(
 }
 
 /**
+ * Convenience: compute finite-depletion FI target from a goal object.
+ * Falls back to goal.fiGoal (perpetuity) if birthday or goalEndYear is missing.
+ */
+export function getFiTarget(
+  goal: {
+    fiGoal: number
+    birthday?: string
+    goalEndYear?: string
+    retirementAge: number
+    monthlyExpense2047: number
+    inflationRate?: number
+    growth?: number
+  },
+  profileBirthday: string,
+  accumulationGrowthRate: number,
+): number {
+  if (goal.fiGoal <= 0) return 0
+  const birthday = profileBirthday || goal.birthday
+  if (!birthday || !goal.goalEndYear) return goal.fiGoal
+  const drawGrowth = goal.growth || 6
+  const inflation = goal.inflationRate || 3
+  const endYear = new Date(goal.goalEndYear).getFullYear()
+  const [by, bm] = birthday.split('-').map(Number)
+  const retirementDate = new Date(by + goal.retirementAge, bm - 1, 1)
+  const endOfLife = new Date(endYear, 11, 1)
+  return computeRequiredCorpus(
+    retirementDate,
+    endOfLife,
+    retirementDate,
+    goal.monthlyExpense2047,
+    inflation,
+    accumulationGrowthRate,
+    drawGrowth,
+  )
+}
+
+/**
  * Projects earliest FI date where accumulated savings >= required corpus (depletes to $0 at death).
  * Returns FI date, required corpus, and effective SWR.
  */

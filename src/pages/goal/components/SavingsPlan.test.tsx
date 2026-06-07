@@ -54,7 +54,7 @@ describe('SavingsPlan', () => {
 
     render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
     expect(screen.getByText('Savings Plan')).toBeInTheDocument()
-    expect(screen.getByText('$1,500,000')).toBeInTheDocument()
+    expect(screen.getByText('$1,389,194')).toBeInTheDocument()
   })
 
   it('renders GW plan block when GW goals exist', () => {
@@ -116,19 +116,18 @@ describe('SavingsPlan', () => {
     // Monthly Save label
     expect(screen.getByText('Monthly Save')).toBeInTheDocument()
     // The gap should show target - balance
-    expect(screen.getByText('$1,400,000')).toBeInTheDocument()
-    // #44: With balance=100k, target=1.5M, 132 months at default 8% growth, monthly save ≈ $5,982
-    const monthlySaveEl = screen.getByText('$5,982')
+    expect(screen.getByText('$1,289,194')).toBeInTheDocument()
+    // With balance=100k, fiTarget≈$1,389,194 (finite depletion), 132 months at 8% growth, monthly save ≈ $5,455
+    const monthlySaveEl = screen.getByText('$5,455')
     expect(monthlySaveEl).toBeInTheDocument()
   })
 
   it('shows zero monthly saving when balance already exceeds target', () => {
-    const smallGoal = makeGoal({ ...baseGoal, fiGoal: 50_000 })
     mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
-    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 2_000_000 })]
     mockDataCtx.allMonths = ['2024-01']
 
-    render(<SavingsPlan goal={smallGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+    render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
     expect(screen.getByText('Monthly Save')).toBeInTheDocument()
     // $0 appears for both monthly save and gap (since balance > target, gap is $0)
     expect(screen.getAllByText('$0').length).toBeGreaterThanOrEqual(1)

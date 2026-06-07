@@ -9,6 +9,7 @@ import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
 import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
+import { getFiTarget } from '../utils/goalCalculations'
 import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
@@ -136,14 +137,15 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const n = monthsBetween(currentMonth, retMonth)
 
     const fiBal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
-    const fiMonthly = goal.fiGoal > 0 ? calcMonthlySaving(fiBal, goal.fiGoal, fiGrowth, n) : 0
+    const fiTarget = getFiTarget(goal, profileBirthday, fiGrowth)
+    const fiMonthly = fiTarget > 0 ? calcMonthlySaving(fiBal, fiTarget, fiGrowth, n) : 0
 
     const gwTarget = getGwTarget(goal, gwGoals, profileBirthday)
     const gwBal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
     const gwMonthly = gwTarget > 0 ? calcMonthlySaving(gwBal, gwTarget, gwGrowth, n) : 0
 
     const totalNeeded = fiMonthly + gwMonthly
-    const hasGoals = goal.fiGoal > 0 || gwTarget > 0
+    const hasGoals = fiTarget > 0 || gwTarget > 0
 
     return { totalNeeded, fiBal, currentMonth, hasGoals }
   }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth])
