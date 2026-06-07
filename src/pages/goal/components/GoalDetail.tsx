@@ -3,14 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
 import { formatCurrency } from '../../data/types'
-import { loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
-import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
 import GoalDetailedCard from './GoalDetailedCard'
 import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
 import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
+import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
@@ -128,57 +127,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
   }, [prevGoal, nextGoal, navigate])
 
   const { accounts, balances, allMonths } = useData()
-
-  const currentYear = new Date().getFullYear()
-  const [summaryYear, setSummaryYear] = useState(currentYear)
-
-  const availableYears = useMemo(() => {
-    const store = loadBudgetStore()
-    return store.years.filter(y => y >= 2024).sort((a, b) => b - a)
-  }, [])
-
-  const yearMonthlySaving = useMemo(() => {
-    const store = loadBudgetStore()
-    const groups = getGlobalCategoryGroups(store)
-    const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
-
-    const categorySums: Record<string, number> = {}
-    let monthsWithData = 0
-    for (let m = 0; m < 12; m++) {
-      const key = buildMonthKey(summaryYear, m)
-      const csv = store.csvs[key]
-      if (!csv) continue
-      monthsWithData++
-      try {
-        const txs = parseCSV(csv.csv)
-        txs.forEach(t => {
-          if (removedCats.has(t.category)) return
-          categorySums[t.category] = (categorySums[t.category] || 0) + t.amount
-        })
-      } catch {
-        /* skip bad csv */
-      }
-    }
-
-    if (monthsWithData === 0) return null
-
-    const expenseCats = new Set<string>()
-    const incomeCats = new Set<string>()
-    Object.entries(categorySums).forEach(([cat, total]) => {
-      if (total < 0) expenseCats.add(cat)
-      else if (total > 0) incomeCats.add(cat)
-    })
-
-    let totalIncome = 0
-    let totalExpense = 0
-    Object.entries(categorySums).forEach(([cat, total]) => {
-      if (incomeCats.has(cat)) totalIncome += total
-      else if (expenseCats.has(cat)) totalExpense += Math.abs(total)
-    })
-
-    const annualSavings = (totalIncome - totalExpense) * (12 / monthsWithData)
-    return annualSavings / 12
-  }, [summaryYear])
+  const { summaryYear, setSummaryYear, availableYears, yearMonthlySaving } = useYearMonthlySaving()
 
   const summaryData = useMemo(() => {
     if (!goal || allMonths.length === 0) return null
