@@ -106,6 +106,28 @@
   text-overflow: ellipsis;
 }
 
+/* ── FI prose paragraph ── */
+.fi-goal-prose {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--color-text);
+  margin: 0 0 0.75rem;
+  font-feature-settings: 'tnum';
+}
+
+.fi-goal-prose strong {
+  font-weight: 600;
+  color: var(--color-text-strong, var(--color-text));
+}
+
+body.dark-mode .fi-goal-prose {
+  color: var(--color-text-muted, #b0b0b0);
+}
+
+body.dark-mode .fi-goal-prose strong {
+  color: var(--color-text, #e0e0e0);
+}
+
 /* ── Section sub-cards ── */
 .fi-card-section {
   border: 1px solid var(--accent-border);
@@ -204,6 +226,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  margin-bottom: 1.75rem;
 }
 
 .fi-card-progress-bar-track {

@@ -1,15 +1,68 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { FC, useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { useData } from '../../../contexts/DataContext'
+import { Account, BalanceEntry, formatCurrency } from '../../data/types'
+import { loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
+import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
 import GoalDetailedCard from './GoalDetailedCard'
 import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
-import SavingsPlan from './SavingsPlan'
+import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
+
+const getTotalForMonth = (
+  accounts: Account[],
+  balances: BalanceEntry[],
+  month: string,
+  goalType: 'fi' | 'gw',
+): number => {
+  const balMap = new Map<number, number>()
+  for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
+  return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
+}
+
+const getRetirementMonth = (birthday: string, retirementAge: number): string => {
+  const [by, bm] = birthday.split('-').map(Number)
+  const retYear = by + retirementAge
+  const mm = String(bm).padStart(2, '0')
+  return `${retYear}-${mm}`
+}
+
+const monthsBetween = (from: string, to: string): number => {
+  const [fy, fm] = from.split('-').map(Number)
+  const [ty, tm] = to.split('-').map(Number)
+  return (ty - fy) * 12 + (tm - fm)
+}
+
+const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: number): number => {
+  if (nMonths <= 0) return 0
+  const r = annualRate / 100 / 12
+  if (r === 0) return Math.max(0, (fv - pv) / nMonths)
+  const factor = Math.pow(1 + r, nMonths)
+  const needed = fv - pv * factor
+  if (needed <= 0) return 0
+  return (needed * r) / (factor - 1)
+}
+
+const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number => {
+  const goalGws = gwGoals.filter(g => g.fiGoalId === goal.id)
+  if (goalGws.length === 0) return 0
+  const [by, bm] = profileBirthday.split('-').map(Number)
+  const created = new Date(goal.goalCreatedIn)
+  return goalGws.reduce((sum, gw) => {
+    const disburseYear = by + gw.disburseAge
+    const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
+    const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
+    const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
+    const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
+    return sum + pv
+  }, 0)
+}
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
@@ -46,6 +99,33 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
+  const growthKey = `goal-growth-${goalId}`
+  const savedGrowth = useMemo(() => {
+    try {
+      const raw = localStorage.getItem(growthKey)
+      if (raw) return JSON.parse(raw) as { fi: number; gw: number }
+    } catch {}
+    return null
+  }, [growthKey])
+  const [fiGrowth, setFiGrowthRaw] = useState(savedGrowth?.fi ?? 8)
+  const [gwGrowth, setGwGrowthRaw] = useState(savedGrowth?.gw ?? 8)
+
+  const setFiGrowth = useCallback(
+    (v: number) => {
+      setFiGrowthRaw(v)
+      localStorage.setItem(growthKey, JSON.stringify({ fi: v, gw: gwGrowth }))
+    },
+    [growthKey, gwGrowth],
+  )
+
+  const setGwGrowth = useCallback(
+    (v: number) => {
+      setGwGrowthRaw(v)
+      localStorage.setItem(growthKey, JSON.stringify({ fi: fiGrowth, gw: v }))
+    },
+    [growthKey, fiGrowth],
+  )
+
   const currentIndex = goals.findIndex(g => g.id === goalId)
   const total = goals.length
   const prevGoal = currentIndex > 0 ? goals[currentIndex - 1] : null
@@ -54,6 +134,21 @@ const GoalDetail: FC<GoalDetailProps> = ({
   useEffect(() => {
     setRenameMode(false)
     setDiveDeepOpen(false)
+    const key = `goal-growth-${goalId}`
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setFiGrowthRaw(parsed.fi ?? 8)
+        setGwGrowthRaw(parsed.gw ?? 8)
+      } else {
+        setFiGrowthRaw(8)
+        setGwGrowthRaw(8)
+      }
+    } catch {
+      setFiGrowthRaw(8)
+      setGwGrowthRaw(8)
+    }
   }, [goalId])
 
   useEffect(() => {
@@ -75,6 +170,77 @@ const GoalDetail: FC<GoalDetailProps> = ({
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [prevGoal, nextGoal, navigate])
+
+  const { accounts, balances, allMonths } = useData()
+
+  const currentYear = new Date().getFullYear()
+  const [summaryYear, setSummaryYear] = useState(currentYear)
+
+  const availableYears = useMemo(() => {
+    const store = loadBudgetStore()
+    return store.years.filter(y => y >= 2024).sort((a, b) => b - a)
+  }, [])
+
+  const yearMonthlySaving = useMemo(() => {
+    const store = loadBudgetStore()
+    const groups = getGlobalCategoryGroups(store)
+    const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
+
+    const categorySums: Record<string, number> = {}
+    let monthsWithData = 0
+    for (let m = 0; m < 12; m++) {
+      const key = buildMonthKey(summaryYear, m)
+      const csv = store.csvs[key]
+      if (!csv) continue
+      monthsWithData++
+      try {
+        const txs = parseCSV(csv.csv)
+        txs.forEach(t => {
+          if (removedCats.has(t.category)) return
+          categorySums[t.category] = (categorySums[t.category] || 0) + t.amount
+        })
+      } catch {
+        /* skip bad csv */
+      }
+    }
+
+    if (monthsWithData === 0) return null
+
+    const expenseCats = new Set<string>()
+    const incomeCats = new Set<string>()
+    Object.entries(categorySums).forEach(([cat, total]) => {
+      if (total < 0) expenseCats.add(cat)
+      else if (total > 0) incomeCats.add(cat)
+    })
+
+    let totalIncome = 0
+    let totalExpense = 0
+    Object.entries(categorySums).forEach(([cat, total]) => {
+      if (incomeCats.has(cat)) totalIncome += total
+      else if (expenseCats.has(cat)) totalExpense += Math.abs(total)
+    })
+
+    const annualSavings = (totalIncome - totalExpense) * (12 / monthsWithData)
+    return annualSavings / 12
+  }, [summaryYear])
+
+  const summaryData = useMemo(() => {
+    if (!goal || allMonths.length === 0) return null
+    const currentMonth = allMonths[allMonths.length - 1]
+    const retMonth = getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge)
+    const n = monthsBetween(currentMonth, retMonth)
+
+    const fiBal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
+    const fiMonthly = goal.fiGoal > 0 ? calcMonthlySaving(fiBal, goal.fiGoal, fiGrowth, n) : 0
+
+    const gwTarget = getGwTarget(goal, gwGoals, profileBirthday)
+    const gwBal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
+    const gwMonthly = gwTarget > 0 ? calcMonthlySaving(gwBal, gwTarget, gwGrowth, n) : 0
+
+    const totalNeeded = fiMonthly + gwMonthly
+
+    return { totalNeeded, fiBal, currentMonth }
+  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth])
 
   if (!goal) {
     return (
@@ -208,8 +374,52 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </div>
       </div>
 
-      <div className="goal-detail-body">
-        <div className="goal-detail-main">
+      {summaryData && (
+        <div className="goal-summary-card">
+          <p className="goal-summary-prose">
+            {summaryData.totalNeeded > 0 ? (
+              <>
+                To achieve all your goals, you need to save{' '}
+                <strong>{formatCurrency(summaryData.totalNeeded)}/mo</strong> total.
+                {yearMonthlySaving !== null && (
+                  <>
+                    {' '}
+                    You&apos;re saving <strong>{formatCurrency(yearMonthlySaving)}/mo</strong> in{' '}
+                    <select
+                      className="goal-summary-year-select"
+                      value={summaryYear}
+                      onChange={e => setSummaryYear(Number(e.target.value))}
+                    >
+                      {availableYears.map(y => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                    .
+                  </>
+                )}
+              </>
+            ) : (
+              <>🎉 You&apos;ve already achieved all your goals at the current growth rate.</>
+            )}
+          </p>
+        </div>
+      )}
+
+      <div className="goal-detail-body goal-detail-body--columns">
+        <div className="goal-detail-column">
+          <h2 className="goal-detail-column-title">
+            <span className="goal-detail-column-badge goal-detail-column-badge--fi">FI</span>
+            Financial Independence
+          </h2>
+          <FiSavingsPlan
+            goal={goal}
+            gwGoals={gwGoals}
+            profileBirthday={profileBirthday}
+            growthRate={fiGrowth}
+            onGrowthChange={setFiGrowth}
+          />
           <GoalDetailedCard
             goal={goal}
             profileBirthday={profileBirthday}
@@ -217,40 +427,62 @@ const GoalDetail: FC<GoalDetailProps> = ({
             showActions={false}
             showTitle={false}
           />
-          <button className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`} onClick={() => setDiveDeepOpen(v => !v)}>
-            {diveDeepOpen ? 'Close Analysis' : 'Deep Analysis'}
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`goal-detail-chevron${diveDeepOpen ? ' goal-detail-chevron--open' : ''}`}
-              aria-hidden="true"
-            >
-              <path d="M4 6l4 4 4-4" />
-            </svg>
-          </button>
-          {diveDeepOpen && <GoalDiveDeep goal={goal} profileBirthday={profileBirthday} />}
-          {goal.fiGoal > 0 && (
-            <GwSection
-              goal={goal}
-              goals={goals}
-              profileBirthday={profileBirthday}
-              gwGoals={gwGoals}
-              onCreateGwGoal={onCreateGwGoal}
-              onUpdateGwGoal={onUpdateGwGoal}
-              onDeleteGwGoal={onDeleteGwGoal}
-            />
-          )}
         </div>
-        <div className="goal-detail-aside">
-          <SavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} />
+
+        <div className="goal-detail-column">
+          <h2 className="goal-detail-column-title">
+            <span className="goal-detail-column-badge goal-detail-column-badge--gw">GW</span>
+            Generational Wealth
+          </h2>
+          <GwSavingsPlan
+            goal={goal}
+            gwGoals={gwGoals}
+            profileBirthday={profileBirthday}
+            growthRate={gwGrowth}
+            onGrowthChange={setGwGrowth}
+          />
+          <div className="goal-detail-column-card">
+            {goal.fiGoal > 0 && (
+              <GwSection
+                goal={goal}
+                goals={goals}
+                profileBirthday={profileBirthday}
+                gwGoals={gwGoals}
+                onCreateGwGoal={onCreateGwGoal}
+                onUpdateGwGoal={onUpdateGwGoal}
+                onDeleteGwGoal={onDeleteGwGoal}
+              />
+            )}
+          </div>
         </div>
       </div>
+
+      <button className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`} onClick={() => setDiveDeepOpen(v => !v)}>
+        {diveDeepOpen ? 'Close Analysis' : 'Analysis'}
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`goal-detail-chevron${diveDeepOpen ? ' goal-detail-chevron--open' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="M4 6l4 4 4-4" />
+        </svg>
+      </button>
+      {diveDeepOpen && (
+        <GoalDiveDeep
+          goal={goal}
+          profileBirthday={profileBirthday}
+          currentBalance={summaryData?.fiBal || 0}
+          monthlyContribution={yearMonthlySaving && summaryYear === currentYear ? yearMonthlySaving : 0}
+          currentMonth={summaryData?.currentMonth}
+        />
+      )}
     </div>
   )
 }

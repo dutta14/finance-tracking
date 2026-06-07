@@ -1,7 +1,6 @@
 import { FC, useState, useEffect, useRef, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
-import TermAbbr from '../../../components/TermAbbr'
 import '../../../styles/GwSection.css'
 
 interface GwSectionProps {
@@ -60,7 +59,7 @@ const GwGoalCard: FC<{
   goalCreatedIn,
   profileBirthday,
   dollarView,
-  onSetDollarView,
+  onSetDollarView: _onSetDollarView,
   onEdit,
   onDelete,
   gwProgressPct,
@@ -264,49 +263,18 @@ const GwGoalCard: FC<{
         </div>
       ) : (
         <>
-          <div className="gw-goal-rows">
-            <div className="gw-goal-row">
-              <span className="gw-goal-row-label">Disbursement age</span>
-              <span className="gw-goal-row-value">{gw.disburseAge} yrs</span>
-            </div>
-            <div className="gw-goal-row">
-              <span className="gw-goal-row-label">Growth rate</span>
-              <span className="gw-goal-row-value">{gw.growthRate}% / yr</span>
-            </div>
-            <div className="gw-goal-row">
-              <span className="gw-goal-row-label">
-                <span className="gw-dollar-toggle">
-                  <button
-                    className={`gw-dollar-toggle-btn${dollarView === 'creation' ? ' active' : ''}`}
-                    onClick={() => onSetDollarView('creation')}
-                    title={`${creationYear} dollars (as entered)`}
-                  >
-                    Creation
-                  </button>
-                  <button
-                    className={`gw-dollar-toggle-btn${dollarView === 'disbursement' ? ' active' : ''}`}
-                    onClick={() => onSetDollarView('disbursement')}
-                    title={`Inflated to disbursement year`}
-                  >
-                    Disbursement
-                  </button>
-                </span>
-              </span>
-              <span className="gw-goal-row-value gw-goal-row-value--highlight">{dollars(displayTarget)}</span>
-            </div>
-          </div>
+          <p className="gw-goal-prose">
+            To have <strong>{dollars(disbursementTarget)}</strong> by age {gw.disburseAge} ({disburseYear}), you need{' '}
+            <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear}, growing at {gw.growthRate}% per year.
+          </p>
 
-          <div className="gw-goal-milestone">
-            <div className="gw-goal-milestone-top">
-              <span className="gw-goal-milestone-label">GW Goal by retirement ({retirementYear})</span>
-              <span className="gw-goal-milestone-amount">{dollars(pvAtRetirement)}</span>
+          <div className="gw-goal-progress-row">
+            <div className="gw-goal-progress-track">
+              <div className="gw-goal-progress-fill" style={{ width: `${progressPct}%` }} />
             </div>
-            <div className="gw-goal-progress-row">
-              <div className="gw-goal-progress-track">
-                <div className="gw-goal-progress-fill" style={{ width: `${progressPct}%` }} />
-              </div>
-              <span className="gw-goal-progress-pct">{progressPct.toFixed(1)}%</span>
-            </div>
+            <span className="gw-goal-progress-pct">
+              <strong>{progressPct.toFixed(1)}%</strong> saved toward that target
+            </span>
           </div>
         </>
       )}
@@ -408,19 +376,6 @@ const GwSection: FC<GwSectionProps> = ({
 
   return (
     <section className="gw-section">
-      <div className="gw-section-header">
-        <div className="gw-section-title-row">
-          <span className="gw-section-badge">
-            <TermAbbr term="GW" />
-          </span>
-          <h2 className="gw-section-title">Generational Wealth</h2>
-        </div>
-        <p className="gw-section-subtitle">
-          Beyond FI — define endowments for the people who come after you. Each goal shows exactly what to set aside
-          today at your chosen growth rate.
-        </p>
-      </div>
-
       {goalGoals.length === 0 && !formOpen && (
         <div className="gw-empty-state">
           <div className="gw-empty-icon" aria-hidden="true">

@@ -255,6 +255,28 @@ body.dark .projection-chart-wrapper {
 }
 
 /* Year group collapse */
+.projection-expand-all-row td {
+  padding: 0 !important;
+}
+
+.projection-expand-all-btn {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 1rem;
+  background: none;
+  border: none;
+  font-size: var(--fs-sm);
+  color: var(--accent);
+  cursor: pointer;
+  text-align: right;
+  font-weight: var(--fw-medium);
+  transition: color 0.15s;
+}
+
+.projection-expand-all-btn:hover {
+  color: var(--accent-hover);
+}
+
 .projection-year-header td {
   padding: 0 !important;
 }
@@ -288,6 +310,20 @@ body.dark .projection-chart-wrapper {
   margin-right: 0.25rem;
   flex-shrink: 0;
   transition: transform 0.2s;
+}
+
+.projection-rate-shift-row td {
+  padding: 0.375rem 0.75rem;
+  border-top: 2px dashed var(--accent);
+  border-bottom: none;
+  background: var(--color-surface-hover, var(--color-surface));
+}
+
+.projection-rate-shift-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
 }
 
 /* Dark mode */

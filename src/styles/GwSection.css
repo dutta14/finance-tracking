@@ -1,9 +1,9 @@
 /* ── GW Section — uses --gw-* CSS variables for theming ─────────────────────────────────────────── */
 
 .gw-section {
-  margin-top: 2.5rem;
-  border-top: 2px solid var(--accent-border);
-  padding-top: 2rem;
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
 }
 
 /* Header */
@@ -423,6 +423,19 @@ body.dark .gw-goal-undo-msg {
   background: var(--color-negative-light);
 }
 
+.gw-goal-prose {
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 0.75rem;
+}
+
+.gw-goal-prose strong {
+  color: var(--color-text);
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+}
+
 .gw-goal-rows {
   display: flex;
   flex-direction: column;
@@ -528,9 +541,9 @@ body.dark .gw-goal-undo-msg {
 }
 
 .gw-goal-progress-pct {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
 }

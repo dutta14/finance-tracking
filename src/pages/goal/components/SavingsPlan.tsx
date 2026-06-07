@@ -8,6 +8,8 @@ interface SavingsPlanProps {
   goal: FinancialGoal
   gwGoals: GwGoal[]
   profileBirthday: string
+  growthRate?: number
+  onGrowthChange?: (v: number) => void
 }
 
 interface PlanResult {
@@ -271,3 +273,102 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
 }
 
 export default SavingsPlan
+
+// Simplified plan components for column layout — just show monthly savings needed
+export const FiSavingsPlan: FC<SavingsPlanProps> = ({
+  goal,
+  gwGoals: _gwGoals,
+  profileBirthday,
+  growthRate,
+  onGrowthChange,
+}) => {
+  const { accounts, balances, allMonths: months } = useData()
+
+  const retirementMonth = useMemo(
+    () => getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge),
+    [goal.birthday, profileBirthday, goal.retirementAge],
+  )
+
+  const fiTarget = goal.fiGoal
+  const currentMonth = months[months.length - 1] || ''
+  const fiGrowth = growthRate ?? 8
+  const setFiGrowth = onGrowthChange ?? (() => {})
+
+  const monthlySaving = useMemo(() => {
+    if (!currentMonth || months.length === 0 || fiTarget <= 0) return null
+    const bal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
+    const n = monthsBetween(currentMonth, retirementMonth)
+    return calcMonthlySaving(bal, fiTarget, fiGrowth, n)
+  }, [accounts, balances, months, currentMonth, retirementMonth, fiTarget, fiGrowth])
+
+  if (months.length === 0 || fiTarget <= 0) return null
+
+  return (
+    <div className="splan splan--simple">
+      <p className="splan-simple-message">
+        At{' '}
+        <input
+          className="splan-simple-growth-inline"
+          type="number"
+          step="0.1"
+          value={fiGrowth}
+          onChange={e => setFiGrowth(parseFloat(e.target.value) || 0)}
+        />
+        % growth,{' '}
+        {monthlySaving === null || monthlySaving <= 0 ? (
+          <span className="splan-simple-amount">you've achieved this goal 🎉</span>
+        ) : (
+          <>
+            you need to save <span className="splan-simple-amount">{formatCurrency(monthlySaving)}</span> per month
+          </>
+        )}
+      </p>
+    </div>
+  )
+}
+
+export const GwSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday, growthRate, onGrowthChange }) => {
+  const { accounts, balances, allMonths: months } = useData()
+
+  const retirementMonth = useMemo(
+    () => getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge),
+    [goal.birthday, profileBirthday, goal.retirementAge],
+  )
+
+  const gwTarget = useMemo(() => getGwTarget(goal, gwGoals, profileBirthday), [goal, gwGoals, profileBirthday])
+  const currentMonth = months[months.length - 1] || ''
+  const gwGrowth = growthRate ?? 8
+  const setGwGrowth = onGrowthChange ?? (() => {})
+
+  const monthlySaving = useMemo(() => {
+    if (!currentMonth || months.length === 0 || gwTarget <= 0) return null
+    const bal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
+    const n = monthsBetween(currentMonth, retirementMonth)
+    return calcMonthlySaving(bal, gwTarget, gwGrowth, n)
+  }, [accounts, balances, months, currentMonth, retirementMonth, gwTarget, gwGrowth])
+
+  if (months.length === 0 || gwTarget <= 0) return null
+
+  return (
+    <div className="splan splan--simple">
+      <p className="splan-simple-message">
+        At{' '}
+        <input
+          className="splan-simple-growth-inline"
+          type="number"
+          step="0.1"
+          value={gwGrowth}
+          onChange={e => setGwGrowth(parseFloat(e.target.value) || 0)}
+        />
+        % growth,{' '}
+        {monthlySaving === null || monthlySaving <= 0 ? (
+          <span className="splan-simple-amount">you've achieved this goal 🎉</span>
+        ) : (
+          <>
+            you need to save <span className="splan-simple-amount">{formatCurrency(monthlySaving)}</span> per month
+          </>
+        )}
+      </p>
+    </div>
+  )
+}
