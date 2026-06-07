@@ -1,8 +1,9 @@
 import { FC, useMemo, useState, useCallback } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
-import { Account, BalanceEntry, formatCurrency } from '../../data/types'
+import { formatCurrency } from '../../data/types'
 import TermAbbr from '../../../components/TermAbbr'
+import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
 
 interface SavingsPlanProps {
   goal: FinancialGoal
@@ -19,55 +20,6 @@ interface PlanResult {
   monthsRemaining: number
   growthRate: number
   monthlySaving: number
-}
-
-const getTotalForMonth = (
-  accounts: Account[],
-  balances: BalanceEntry[],
-  month: string,
-  goalType: 'fi' | 'gw',
-): number => {
-  const balMap = new Map<number, number>()
-  for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
-  return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
-}
-
-const getRetirementMonth = (birthday: string, retirementAge: number): string => {
-  const [by, bm] = birthday.split('-').map(Number)
-  const retYear = by + retirementAge
-  const mm = String(bm).padStart(2, '0')
-  return `${retYear}-${mm}`
-}
-
-const monthsBetween = (from: string, to: string): number => {
-  const [fy, fm] = from.split('-').map(Number)
-  const [ty, tm] = to.split('-').map(Number)
-  return (ty - fy) * 12 + (tm - fm)
-}
-
-const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: number): number => {
-  if (nMonths <= 0) return 0
-  const r = annualRate / 100 / 12
-  if (r === 0) return Math.max(0, (fv - pv) / nMonths)
-  const factor = Math.pow(1 + r, nMonths)
-  const needed = fv - pv * factor
-  if (needed <= 0) return 0
-  return (needed * r) / (factor - 1)
-}
-
-const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number => {
-  const goalGws = gwGoals.filter(g => g.fiGoalId === goal.id)
-  if (goalGws.length === 0) return 0
-  const [by, bm] = profileBirthday.split('-').map(Number)
-  const created = new Date(goal.goalCreatedIn)
-  return goalGws.reduce((sum, gw) => {
-    const disburseYear = by + gw.disburseAge
-    const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
-    const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
-    const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-    const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
-    return sum + pv
-  }, 0)
 }
 
 const formatMonth = (ym: string) => {
