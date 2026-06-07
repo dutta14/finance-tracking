@@ -57,10 +57,22 @@ const goalB = makeGoal({ id: 2, goalName: 'Bravo' })
 const goalC = makeGoal({ id: 3, goalName: 'Charlie' })
 const threeGoals = [goalA, goalB, goalC]
 
+const mockGrowthSettings = {
+  settings: { preBoundaryGrowth: 8, postBoundaryGrowth: 6, ageBoundary: 60, gwGrowth: 8 },
+  updateSettings: vi.fn(),
+  getFiOverride: vi.fn().mockReturnValue(null),
+  setFiOverride: vi.fn(),
+  getGwOverride: vi.fn().mockReturnValue(null),
+  setGwOverride: vi.fn(),
+  getEffectiveFiRates: vi.fn().mockReturnValue({ pre: 8, post: 6, hasOverride: false }),
+  getEffectiveGwRate: vi.fn().mockReturnValue({ rate: 8, hasOverride: false }),
+}
+
 const defaultProps = {
   goals: threeGoals,
   profileBirthday: '1990-01-01',
   gwGoals: [],
+  growthSettings: mockGrowthSettings as ReturnType<typeof import('./hooks/useGrowthSettings').useGrowthSettings>,
   onUpdateGoal: noop as (goalId: number, g: FinancialGoal) => void,
   onCopyGoal: vi.fn(),
   onDeleteGoal: vi.fn(),

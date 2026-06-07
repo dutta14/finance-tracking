@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { FC, useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
@@ -8,18 +8,22 @@ import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
+import GrowthSettingsPanel from './GrowthSettingsPanel'
 import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
 import { getFiTarget } from '../utils/goalCalculations'
 import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
+import { useGrowthSettings } from '../hooks/useGrowthSettings'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
+import '../../../styles/GrowthSettings.css'
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
   profileBirthday: string
   gwGoals: GwGoal[]
+  growthSettings: ReturnType<typeof useGrowthSettings>
   onUpdateGoal: (goalId: number, goal: FinancialGoal) => void
   onCopyGoal: (goal: FinancialGoal) => void
   onDeleteGoal: (goalId: number) => void
@@ -33,6 +37,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
   goals,
   profileBirthday,
   gwGoals,
+  growthSettings: growthCtx,
   onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
@@ -51,39 +56,8 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const renameInputRef = useRef<HTMLInputElement>(null)
 
-  const growthKey = `goal-growth-${goalId}`
-  const savedGrowth = useMemo(() => {
-    try {
-      const raw = localStorage.getItem(growthKey)
-      if (raw) return JSON.parse(raw) as { fi: number; gw: number }
-    } catch {}
-    return null
-  }, [growthKey])
-  const [growthRates, setGrowthRates] = useState({ fi: savedGrowth?.fi ?? 8, gw: savedGrowth?.gw ?? 8 })
-  const fiGrowth = growthRates.fi
-  const gwGrowth = growthRates.gw
-
-  const setFiGrowth = useCallback(
-    (v: number) => {
-      setGrowthRates(prev => {
-        const next = { ...prev, fi: v }
-        localStorage.setItem(growthKey, JSON.stringify(next))
-        return next
-      })
-    },
-    [growthKey],
-  )
-
-  const setGwGrowth = useCallback(
-    (v: number) => {
-      setGrowthRates(prev => {
-        const next = { ...prev, gw: v }
-        localStorage.setItem(growthKey, JSON.stringify(next))
-        return next
-      })
-    },
-    [growthKey],
-  )
+  const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
+  const gwGrowth = growthCtx.settings.gwGrowth
 
   const currentIndex = goals.findIndex(g => g.id === goalId)
   const total = goals.length
@@ -93,18 +67,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
   useEffect(() => {
     setRenameMode(false)
     setDiveDeepOpen(false)
-    const key = `goal-growth-${goalId}`
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        setGrowthRates({ fi: parsed.fi ?? 8, gw: parsed.gw ?? 8 })
-      } else {
-        setGrowthRates({ fi: 8, gw: 8 })
-      }
-    } catch {
-      setGrowthRates({ fi: 8, gw: 8 })
-    }
   }, [goalId])
 
   useEffect(() => {
@@ -325,19 +287,15 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </div>
       )}
 
+      <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
+
       <div className="goal-detail-body goal-detail-body--columns">
         <div className="goal-detail-column">
           <h2 className="goal-detail-column-title">
             <span className="goal-detail-column-badge goal-detail-column-badge--fi">FI</span>
             Financial Independence
           </h2>
-          <FiSavingsPlan
-            goal={goal}
-            gwGoals={gwGoals}
-            profileBirthday={profileBirthday}
-            growthRate={fiGrowth}
-            onGrowthChange={setFiGrowth}
-          />
+          <FiSavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} growthRate={fiGrowth} />
           <GoalDetailedCard
             goal={goal}
             profileBirthday={profileBirthday}
@@ -352,13 +310,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
             <span className="goal-detail-column-badge goal-detail-column-badge--gw">GW</span>
             Generational Wealth
           </h2>
-          <GwSavingsPlan
-            goal={goal}
-            gwGoals={gwGoals}
-            profileBirthday={profileBirthday}
-            growthRate={gwGrowth}
-            onGrowthChange={setGwGrowth}
-          />
+          <GwSavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} growthRate={gwGrowth} />
           <div className="goal-detail-column-card">
             {goal.fiGoal > 0 && (
               <GwSection
