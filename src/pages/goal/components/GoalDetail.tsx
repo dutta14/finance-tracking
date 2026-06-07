@@ -304,7 +304,15 @@ const GoalDetail: FC<GoalDetailProps> = ({
                         </option>
                       ))}
                     </select>
-                    .
+                    {yearMonthlySaving >= summaryData.totalNeeded ? (
+                      ' \u2014 you\u2019re on track.'
+                    ) : (
+                      <>
+                        {' \u2014 you need '}
+                        <strong>{formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo</strong>
+                        {' more.'}
+                      </>
+                    )}
                   </>
                 )}
               </>
