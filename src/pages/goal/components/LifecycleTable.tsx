@@ -84,20 +84,20 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
 
   return (
     <div className="projection-table-wrapper">
-      <table className="projection-table">
+      <table className="projection-table" aria-label="Lifecycle projection data">
         <thead>
           <tr>
-            <th>Month</th>
-            <th>Phase</th>
-            <th>{expenseLabel}</th>
-            <th>Portfolio Balance</th>
+            <th scope="col">Month</th>
+            <th scope="col">Phase</th>
+            <th scope="col">{expenseLabel}</th>
+            <th scope="col">Portfolio Balance</th>
           </tr>
         </thead>
         <tbody>
           {interval === 'monthly' && groupedByYear && (
             <tr className="projection-expand-all-row">
               <td colSpan={4}>
-                <button className="projection-expand-all-btn" onClick={toggleAll}>
+                <button className="projection-expand-all-btn" onClick={toggleAll} aria-label={allExpanded ? 'Collapse all years' : 'Expand all years'}>
                   {allExpanded ? 'Collapse All' : 'Expand All'}
                 </button>
               </td>

@@ -99,27 +99,30 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
           <p className="dive-deep-placeholder">No projection available — check retirement date and goal end year.</p>
         ) : (
           <>
-            <div className="projection-controls">
-              <div className="projection-scenario-toggle">
+            <div className="projection-controls" role="toolbar" aria-label="Projection controls">
+              <div className="projection-scenario-toggle" role="group" aria-label="Scenario selection">
                 <button
                   className={`projection-interval-btn${scenario === 'projected' ? ' active' : ''}`}
                   onClick={() => setScenario('projected')}
+                  aria-pressed={scenario === 'projected'}
                 >
                   Projected ({dollars(monthlyContribution)}/mo)
                 </button>
                 <button
                   className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
                   onClick={() => setScenario('planned')}
+                  aria-pressed={scenario === 'planned'}
                 >
                   Planned ({dollars(plannedMonthly)}/mo)
                 </button>
               </div>
-              <div className="projection-interval-toggle">
+              <div className="projection-interval-toggle" role="group" aria-label="Time interval">
                 {INTERVAL_LABELS.map(opt => (
                   <button
                     key={opt.value}
                     className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
                     onClick={() => setInterval(opt.value)}
+                    aria-pressed={interval === opt.value}
                   >
                     {opt.label}
                   </button>
@@ -128,6 +131,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
               <button
                 className="projection-view-toggle"
                 onClick={() => setViewMode(v => (v === 'chart' ? 'table' : 'chart'))}
+                aria-label={viewMode === 'chart' ? 'Switch to table view' : 'Switch to chart view'}
               >
                 {viewMode === 'chart' ? 'View Table' : 'View Chart'}
               </button>

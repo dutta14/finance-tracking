@@ -34,7 +34,7 @@ interface LifecycleChartProps {
 }
 
 const LifecycleChart: FC<LifecycleChartProps> = ({ rows }) => (
-  <div className="projection-chart-wrapper">
+  <div className="projection-chart-wrapper" role="img" aria-label="Lifecycle projection chart showing portfolio balance over time">
     <ResponsiveContainer width="100%" height={320}>
       <LineChart data={rows} margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
