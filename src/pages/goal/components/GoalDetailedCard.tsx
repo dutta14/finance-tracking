@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback, useEffect, useId } from 'react'
+import { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { FinancialGoal } from '../../../types'
 import GoalCardActions from './GoalCardActions'
 import {
@@ -116,26 +116,6 @@ function suggestSWR(goal: FinancialGoal, profileBirthday: string): number | null
     if (rows.length > 0 && rows[rows.length - 1].remaining >= 0) return swr
   }
   return null
-}
-
-const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ tooltip, align = 'right' }) => {
-  const tooltipId = useId()
-  return (
-    <span className="fi-goal-info" tabIndex={0} aria-describedby={tooltipId}>
-      <svg className="fi-goal-info-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="7.25" y="7" width="1.5" height="5" rx="0.75" fill="currentColor" />
-        <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="currentColor" />
-      </svg>
-      <span
-        id={tooltipId}
-        role="tooltip"
-        className={`fi-goal-tooltip${align === 'left' ? ' fi-goal-tooltip--left' : ''}`}
-      >
-        {tooltip}
-      </span>
-    </span>
-  )
 }
 
 const GoalDetailedCard: FC<GoalDetailedCardProps> = ({

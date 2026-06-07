@@ -113,7 +113,7 @@ function buildPlannedProjection(
   goal: FinancialGoal,
   profileBirthday: string,
   currentBalance: number,
-  monthlyContribution: number,
+  _monthlyContribution: number,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []

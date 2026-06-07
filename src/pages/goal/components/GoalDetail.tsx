@@ -479,7 +479,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
           goal={goal}
           profileBirthday={profileBirthday}
           currentBalance={summaryData?.fiBal || 0}
-          monthlyContribution={yearMonthlySaving && summaryYear === currentYear ? yearMonthlySaving : 0}
+          monthlyContribution={yearMonthlySaving ?? 0}
           currentMonth={summaryData?.currentMonth}
         />
       )}
