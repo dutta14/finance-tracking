@@ -81,11 +81,12 @@ export function buildPlannedProjection(
   profileBirthday: string,
   currentBalance: number,
   _monthlyContribution?: number,
+  accGrowthOverride?: number,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []
 
-  const accGrowth = 8
+  const accGrowth = accGrowthOverride ?? 8
   const drawGrowth = goal.growth || 6
   const inflation = goal.inflationRate || 3
   const endYear = new Date(goal.goalEndYear).getFullYear()
@@ -133,11 +134,12 @@ export function buildProjectedLifecycle(
   profileBirthday: string,
   currentBalance: number,
   monthlyContribution: number,
+  accGrowthOverride?: number,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []
 
-  const accGrowth = 8
+  const accGrowth = accGrowthOverride ?? 8
   const drawGrowth = goal.growth || 6
   const inflation = goal.inflationRate || 3
   const endYear = new Date(goal.goalEndYear).getFullYear()

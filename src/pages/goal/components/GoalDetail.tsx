@@ -389,6 +389,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
           currentBalance={summaryData?.fiBal || 0}
           monthlyContribution={yearMonthlySaving ?? 0}
           currentMonth={summaryData?.currentMonth}
+          growthRate={fiGrowth}
         />
       )}
     </div>

@@ -10,6 +10,7 @@ interface GoalDiveDeepProps {
   currentBalance?: number
   monthlyContribution?: number
   currentMonth?: string
+  growthRate?: number
 }
 
 type DataMode = 'projected' | 'planned'
@@ -57,6 +58,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   currentBalance = 0,
   monthlyContribution = 0,
   currentMonth,
+  growthRate = 8,
 }) => {
   const [interval, setInterval] = useState<ViewInterval>('yearly')
   const [viewMode, setViewMode] = useState<ViewMode>('table')
@@ -83,20 +85,19 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
       months = (retDate.getFullYear() - now.getFullYear()) * 12 + (retDate.getMonth() - now.getMonth())
     }
     if (months <= 0) return 0
-    const accRate = 8 // same as accumulation growth
-    const r = accRate / 100 / 12
+    const r = growthRate / 100 / 12
     const factor = Math.pow(1 + r, months)
     const needed = goal.fiGoal - currentBalance * factor
     if (needed <= 0) return 0
     return (needed * r) / (factor - 1)
-  }, [goal, profileBirthday, currentBalance, currentMonth])
+  }, [goal, profileBirthday, currentBalance, currentMonth, growthRate])
 
   const projection = useMemo(
     () =>
       scenario === 'planned'
-        ? buildPlannedProjection(goal, profileBirthday, currentBalance, monthlyContribution)
-        : buildProjectedLifecycle(goal, profileBirthday, currentBalance, monthlyContribution),
-    [goal, profileBirthday, currentBalance, monthlyContribution, scenario],
+        ? buildPlannedProjection(goal, profileBirthday, currentBalance, monthlyContribution, growthRate)
+        : buildProjectedLifecycle(goal, profileBirthday, currentBalance, monthlyContribution, growthRate),
+    [goal, profileBirthday, currentBalance, monthlyContribution, scenario, growthRate],
   )
 
   const intervalMonths = INTERVAL_LABELS.find(i => i.value === interval)!.months
