@@ -65,17 +65,24 @@ function runProjection(goal: FinancialGoal, profileBirthday: string, fiGoal: num
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
   const endDate = new Date(goal.goalEndYear)
   if (retirementDate >= endDate) return []
-  const monthlyInflation = (goal.inflationRate || 0) / 100 / 12
+  const annualInflation = (goal.inflationRate || 0) / 100
   const monthlyGrowth = (goal.growth || 0) / 100 / 12
-  let expense = goal.monthlyExpense2047
+  const baseExpense = goal.monthlyExpense2047
+  const fiYear = retirementDate.getFullYear()
+  let expense = baseExpense
+  let lastExpenseYear = fiYear
   let remaining = fiGoal
   const rows: { remaining: number }[] = []
-  const cursor = new Date(retirementDate.getFullYear(), retirementDate.getMonth(), 1)
+  const cursor = new Date(fiYear, retirementDate.getMonth(), 1)
   const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
   while (cursor <= end) {
+    const curYear = cursor.getFullYear()
+    if (curYear > lastExpenseYear) {
+      expense = baseExpense * Math.pow(1 + annualInflation, curYear - fiYear)
+      lastExpenseYear = curYear
+    }
     rows.push({ remaining })
     remaining = remaining * (1 + monthlyGrowth) - expense
-    expense = expense * (1 + monthlyInflation)
     cursor.setMonth(cursor.getMonth() + 1)
   }
   return rows
@@ -87,18 +94,25 @@ const findDepletionMonth = (goal: FinancialGoal, profileBirthday: string): strin
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
   const endDate = new Date(goal.goalEndYear)
   if (retirementDate >= endDate) return null
-  const monthlyInflation = (goal.inflationRate || 0) / 100 / 12
+  const annualInflation = (goal.inflationRate || 0) / 100
   const monthlyGrowth = (goal.growth || 0) / 100 / 12
-  let expense = goal.monthlyExpense2047
+  const baseExpense = goal.monthlyExpense2047
+  const fiYear = retirementDate.getFullYear()
+  let expense = baseExpense
+  let lastExpenseYear = fiYear
   let remaining = goal.fiGoal
-  const cursor = new Date(retirementDate.getFullYear(), retirementDate.getMonth(), 1)
+  const cursor = new Date(fiYear, retirementDate.getMonth(), 1)
   const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
   while (cursor <= end) {
+    const curYear = cursor.getFullYear()
+    if (curYear > lastExpenseYear) {
+      expense = baseExpense * Math.pow(1 + annualInflation, curYear - fiYear)
+      lastExpenseYear = curYear
+    }
     if (remaining < 0) {
       return cursor.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     }
     remaining = remaining * (1 + monthlyGrowth) - expense
-    expense = expense * (1 + monthlyInflation)
     cursor.setMonth(cursor.getMonth() + 1)
   }
   return null
@@ -307,12 +321,12 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     const monthlyExpenseNow = goal.monthlyExpense2047
       ? goal.monthlyExpense2047 /
         Math.pow(
-          1 + (goal.inflationRate || 0) / 100 / 12,
+          1 + (goal.inflationRate || 0) / 100,
           (() => {
             const [by, bm] = profileBirthday.split('-').map(Number)
             const retDate = new Date(by + goal.retirementAge, bm - 1, 1)
             const now = new Date()
-            return (retDate.getFullYear() - now.getFullYear()) * 12 + (retDate.getMonth() - now.getMonth())
+            return retDate.getFullYear() - now.getFullYear()
           })(),
         )
       : (goal.expenseValue || 0) / 12
