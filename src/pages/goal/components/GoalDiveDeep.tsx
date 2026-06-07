@@ -91,19 +91,6 @@ function buildLifecycle(
     cursor.setMonth(cursor.getMonth() + 1)
   }
 
-  const lastRow = rows[rows.length - 1]
-  const firstNeg = rows.find(r => r.remaining < 0)
-  console.log(
-    '[BUILD-LIFECYCLE] total rows:',
-    rows.length,
-    'last row:',
-    lastRow?.month,
-    lastRow?.remaining.toFixed(0),
-    'first negative:',
-    firstNeg?.month,
-    firstNeg?.remaining.toFixed(0),
-  )
-
   return rows
 }
 
@@ -131,14 +118,6 @@ function buildPlannedProjection(
   const monthlyExpenseAtFI = goal.monthlyExpense2047
 
   // Compute corpus needed at retirement to deplete to $0 at death
-  console.log(
-    '[PLANNED] monthlyExpenseAtFI:',
-    monthlyExpenseAtFI,
-    'retirementDate:',
-    retirementDate.toISOString(),
-    'endOfLife:',
-    endOfLife.toISOString(),
-  )
   const corpusCap = computeRequiredCorpus(
     retirementDate,
     endOfLife,
@@ -148,7 +127,6 @@ function buildPlannedProjection(
     accGrowth,
     drawGrowth,
   )
-  console.log('[PLANNED] corpusCap:', corpusCap)
 
   // PMT: required monthly contribution to reach corpusCap by retirement (simple growth model)
   const now = new Date()
@@ -159,7 +137,6 @@ function buildPlannedProjection(
   const needed = corpusCap - fvOfCurrent
   const annuityFactor = monthsToRetirement + r * monthsToRetirement * (monthsToRetirement - 1) / 2
   const plannedContribution = needed > 0 && annuityFactor > 0 ? needed / annuityFactor : 0
-  console.log('[PLANNED] plannedContribution:', plannedContribution, 'monthsToRetirement:', monthsToRetirement)
 
   return buildLifecycle(
     currentBalance,
