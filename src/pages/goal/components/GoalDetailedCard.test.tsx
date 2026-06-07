@@ -20,6 +20,8 @@ vi.mock('../../../contexts/DataContext', () => ({
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
   getBudgetSaveRate: vi.fn(() => null),
+  loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [] })),
+  getGlobalCategoryGroups: vi.fn(() => []),
 }))
 
 vi.mock('../../../components/TermAbbr', () => ({

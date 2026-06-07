@@ -18,6 +18,8 @@ vi.mock('./components/GwSection', () => ({
 }))
 vi.mock('./components/SavingsPlan', () => ({
   default: () => <div data-testid="savings-plan">SavingsPlan</div>,
+  FiSavingsPlan: () => <div data-testid="fi-savings-plan">FiSavingsPlan</div>,
+  GwSavingsPlan: () => <div data-testid="gw-savings-plan">GwSavingsPlan</div>,
 }))
 
 /* ─── Helpers ─── */
@@ -101,12 +103,12 @@ describe('GoalDetail rendering', () => {
 
   it('renders the SavingsPlan aside', () => {
     renderDetail('/goal/1')
-    expect(screen.getByTestId('savings-plan')).toBeInTheDocument()
+    expect(screen.getByTestId('fi-savings-plan')).toBeInTheDocument()
   })
 
-  it('renders the Deep Analysis toggle button', () => {
+  it('renders the Analysis toggle button', () => {
     renderDetail('/goal/1')
-    expect(screen.getByRole('button', { name: /deep analysis/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^analysis$/i })).toBeInTheDocument()
   })
 
   it('renders GwSection when fiGoal > 0', () => {
@@ -270,7 +272,7 @@ describe('GoalDetail dive deep toggle', () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /deep analysis/i }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
 
     expect(screen.getByTestId('dive-deep')).toBeInTheDocument()
   })
@@ -279,7 +281,7 @@ describe('GoalDetail dive deep toggle', () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /deep analysis/i }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
 
     expect(screen.getByRole('button', { name: /close analysis/i })).toBeInTheDocument()
   })
@@ -288,7 +290,7 @@ describe('GoalDetail dive deep toggle', () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /deep analysis/i }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
     await user.click(screen.getByRole('button', { name: /close analysis/i }))
 
     expect(screen.queryByTestId('dive-deep')).not.toBeInTheDocument()
