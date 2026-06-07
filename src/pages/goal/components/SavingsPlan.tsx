@@ -49,10 +49,13 @@ const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: 
   if (nMonths <= 0) return 0
   const r = annualRate / 100 / 12
   if (r === 0) return Math.max(0, (fv - pv) / nMonths)
-  const factor = Math.pow(1 + r, nMonths)
-  const needed = fv - pv * factor
+  // Simple growth model: PV grows by r per month (linear), contributions grow similarly
+  const pvFuture = pv * (1 + r * nMonths)
+  const needed = fv - pvFuture
   if (needed <= 0) return 0
-  return (needed * r) / (factor - 1)
+  // FV of annuity with simple monthly growth: PMT × (n + r × n × (n-1) / 2)
+  const annuityFactor = nMonths + r * nMonths * (nMonths - 1) / 2
+  return needed / annuityFactor
 }
 
 const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number => {
