@@ -128,15 +128,14 @@ function buildPlannedProjection(
     drawGrowth,
   )
 
-  // PMT: required monthly contribution to reach corpusCap by retirement (simple growth model)
+  // PMT: required monthly contribution to reach corpusCap by retirement
   const now = new Date()
   const monthsToRetirement =
     (retirementDate.getFullYear() - now.getFullYear()) * 12 + (retirementDate.getMonth() - now.getMonth())
   const r = accGrowth / 100 / 12
-  const fvOfCurrent = currentBalance * (1 + r * monthsToRetirement)
+  const fvOfCurrent = currentBalance * Math.pow(1 + r, monthsToRetirement)
   const needed = corpusCap - fvOfCurrent
-  const annuityFactor = monthsToRetirement + r * monthsToRetirement * (monthsToRetirement - 1) / 2
-  const plannedContribution = needed > 0 && annuityFactor > 0 ? needed / annuityFactor : 0
+  const plannedContribution = needed > 0 ? (needed * r) / (Math.pow(1 + r, monthsToRetirement) - 1) : 0
 
   return buildLifecycle(
     currentBalance,
