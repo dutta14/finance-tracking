@@ -28,6 +28,11 @@ vi.mock('../../../components/TermAbbr', () => ({
   default: ({ term }: { term: string }) => <abbr>{term}</abbr>,
 }))
 
+vi.mock('../../budget/utils/csvParser', () => ({
+  parseCSV: vi.fn(),
+  buildMonthKey: vi.fn((year: number, month: number) => `${year}-${String(month + 1).padStart(2, '0')}`),
+}))
+
 vi.mock('../../../styles/GoalDetailedCard.css', () => ({}))
 
 vi.mock('./GoalCardActions', () => ({
@@ -94,10 +99,15 @@ vi.mock('../utils/goalCalculations', () => ({
   DEFAULT_PRE_FI_GROWTH_RATE: 8,
 }))
 
-import { getBudgetSaveRate } from '../../budget/utils/budgetStorage'
-import { projectFIDateWithDrawdown } from '../utils/goalCalculations'
+import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
+import { parseCSV } from '../../budget/utils/csvParser'
+import { projectFIDate, projectFIDateWithDrawdown } from '../utils/goalCalculations'
 
 const mockedGetSaveRate = vi.mocked(getBudgetSaveRate)
+const mockedLoadBudgetStore = vi.mocked(loadBudgetStore)
+const mockedGetGlobalCategoryGroups = vi.mocked(getGlobalCategoryGroups)
+const mockedParseCSV = vi.mocked(parseCSV)
+const mockedProjectFIDate = vi.mocked(projectFIDate)
 const mockedProjectFIDateWithDrawdown = vi.mocked(projectFIDateWithDrawdown)
 
 /** Helper: configure the DataContext mock so fiTotal resolves to the given value */
@@ -150,6 +160,9 @@ beforeEach(() => {
   vi.clearAllMocks()
   setMockFiTotal(0)
   mockedGetSaveRate.mockReturnValue(null)
+  mockedLoadBudgetStore.mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+  mockedGetGlobalCategoryGroups.mockReturnValue([])
+  mockedParseCSV.mockReset()
 })
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1048,14 +1061,412 @@ describe('GoalDetailedCard — projection 1 month early (line 299 singular)', ()
   it('shows singular "month" when 1 month early', () => {
     setMockFiTotal(1_900_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200_000, saveRate: 80, monthsOfData: 12 })
-    // target retirement: 1990+60 = Jan 2050
-    // We need the projected date to be 1 month before retirement
     mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
-      date: new Date(2049, 11, 1), // Dec 2049 — 1 month before Jan 2050
+      date: new Date(2049, 11, 1),
       months: 1,
       requiredCorpus: 2_000_000,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/1 month early/)).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard budget csv savings', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 1))
+    setMockFiTotal(500_000)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('uses selected-year csv savings over the stored budget summary and ignores removed or invalid rows', () => {
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200, saveRate: 1, monthsOfData: 12 })
+    mockedLoadBudgetStore.mockReturnValue({
+      csvs: {
+        '2026-01': { month: '2026-01', csv: 'jan', uploadedAt: '2026-01-01T00:00:00.000Z' },
+        '2026-02': { month: '2026-02', csv: 'feb', uploadedAt: '2026-02-01T00:00:00.000Z' },
+        '2026-03': { month: '2026-03', csv: 'bad', uploadedAt: '2026-03-01T00:00:00.000Z' },
+      },
+      configs: {},
+      years: [2026],
+      categoryGroups: [],
+    })
+    mockedGetGlobalCategoryGroups.mockReturnValue([{ id: 'removed', name: 'Removed', categories: ['Ignore me'] }])
+    mockedParseCSV.mockImplementation(csv => {
+      if (csv === 'bad') throw new Error('bad csv')
+      if (csv === 'jan') {
+        return [
+          { category: 'Salary', amount: 5000 },
+          { category: 'Rent', amount: -2000 },
+          { category: 'Ignore me', amount: 1000 },
+        ]
+      }
+      return [
+        { category: 'Salary', amount: 5000 },
+        { category: 'Rent', amount: -1000 },
+      ]
+    })
+
+    renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2026 })
+
+    expect(screen.getByText(/You're saving/)).toBeInTheDocument()
+    expect(screen.getByText('$2,333/mo')).toBeInTheDocument()
+    expect(screen.queryByText('$100/mo')).not.toBeInTheDocument()
+  })
+
+  it('uses past-tense copy when rendering a prior summary year', () => {
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200, saveRate: 1, monthsOfData: 12 })
+    mockedLoadBudgetStore.mockReturnValue({
+      csvs: {
+        '2025-01': { month: '2025-01', csv: '2025-jan', uploadedAt: '2025-01-01T00:00:00.000Z' },
+      },
+      configs: {},
+      years: [2025],
+      categoryGroups: [],
+    })
+    mockedParseCSV.mockReturnValue([
+      { category: 'Salary', amount: 6000 },
+      { category: 'Rent', amount: -2000 },
+    ])
+
+    renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2025 })
+
+    expect(screen.getByText(/You saved/)).toBeInTheDocument()
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('in 2025')
+  })
+})
+
+describe('GoalDetailedCard savings override edge cases', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ saveRate: 40, annualSavings: 60000, monthsOfData: 12 })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('falls back to projectFIDate when no end-of-life date is available', () => {
+    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpense2047: 0, expenseValue: 60000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(mockedProjectFIDate).toHaveBeenCalled()
+    expect(mockedProjectFIDate.mock.calls.at(-1)?.[2]).toBe(120000)
+  })
+
+  it('shows on-track what-if copy when the override hits the target retirement date', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2050, 0, 15), months: 288, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2038, 6, 1), months: 150, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('on track')
+  })
+
+  it('shows years-only what-if copy when the override reaches FI in whole years', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2050, 0, 1), months: 288, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('2 years')
+  })
+
+  it('shows months-only what-if copy when the override reaches FI within the same year', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2026, 5, 1), months: 5, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2038, 6, 1), months: 150, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('5 months')
+  })
+
+  it('clears the inline savings input when the entered value has no digits', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: 'abc' } })
+
+    expect(input).toHaveValue('')
+  })
+
+  it('exits inline edit mode on Enter and Escape', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    let input = screen.getByRole('textbox')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    input = screen.getByRole('textbox')
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('uses the controlled savings override prop and notifies the parent on changes and reset', () => {
+    const onSavingsOverrideChange = vi.fn()
+
+    renderCard(
+      { fiGoal: 2_000_000 },
+      { savingsOverride: 4000, onSavingsOverrideChange, onTogglePeriod: vi.fn(), showYearly: false },
+    )
+
+    expect(screen.getByText(/If you saved/)).toBeInTheDocument()
+    expect(screen.getByText('$4,000/mo')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('$4,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '6000' } })
+    expect(onSavingsOverrideChange).toHaveBeenCalledWith(6000)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(onSavingsOverrideChange).toHaveBeenCalledWith(null)
+  })
+})
+
+describe('GoalDetailedCard expense label toggles', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('cycles through creation current and retirement dollars when the expense label is clicked', () => {
+    renderCard({ expenseValue: 60000, goalCreatedIn: '2024-01-01', retirementAge: 60 })
+
+    const creationLabel = screen.getByText(/2024 dollars/)
+    expect(creationLabel).toHaveTextContent('$60,000/yr')
+
+    fireEvent.click(creationLabel)
+    expect(screen.getByText(/2026 dollars/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText(/2026 dollars/))
+    expect(screen.getByText(/2050 dollars/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText(/2050 dollars/))
+    expect(screen.getByText(/2024 dollars/)).toBeInTheDocument()
+  })
+
+  it('shows an em dash when the goal creation year is missing', () => {
+    renderCard({ goalCreatedIn: '', expenseValue: 60000 })
+
+    expect(screen.getByText(/— dollars/)).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard remaining branch coverage', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 60_000, saveRate: 40, monthsOfData: 12 })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('treats active FI accounts without balances as zero-value progress', () => {
+    mockDataCtx.accounts = [{ id: 1, status: 'active', goalType: 'fi' }]
+    mockDataCtx.balances = []
+    mockDataCtx.allMonths = ['2024-06']
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(screen.getByText('0.0%')).toBeInTheDocument()
+  })
+
+  it('classifies expense-only csv categories and falls back to the stored budget summary', () => {
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200, saveRate: 1, monthsOfData: 12 })
+    mockedLoadBudgetStore.mockReturnValue({
+      csvs: {
+        '2026-01': { month: '2026-01', csv: 'expense-only', uploadedAt: '2026-01-01T00:00:00.000Z' },
+      },
+      configs: {},
+      years: [2026],
+      categoryGroups: [],
+    })
+    mockedParseCSV.mockReturnValue([{ category: 'Rent', amount: -1000 }])
+
+    renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2026 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('$100/mo')
+  })
+
+  it('falls back to projectFIDate when current expenses are unavailable', () => {
+    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpense2047: 0, expenseValue: 0 })
+
+    expect(mockedProjectFIDate).toHaveBeenCalled()
+  })
+
+  it('shows years-only baseline pace copy for whole-year projections', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2028, 0, 1),
+      months: 24,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('2 years')
+  })
+
+  it('shows months-only baseline pace copy for near-term projections', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2026, 5, 1),
+      months: 5,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('5 months')
+  })
+
+  it('shows singular year-only baseline pace copy for one-year projections', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2027, 0, 1),
+      months: 12,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year')
+  })
+
+  it('shows mixed singular diff text in the baseline projection', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2026, 11, 1),
+      months: 11,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000, retirementAge: 38 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month early')
+  })
+
+  it('shows singular year and month labels in the baseline time-to-fi copy', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2027, 1, 1),
+      months: 13,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month')
+  })
+
+  it('shows mixed singular diff text in the what-if projection', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2026, 11, 1), months: 11, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000, retirementAge: 38 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month early')
+  })
+
+  it('shows singular year and month labels in the what-if time-to-fi copy', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2027, 1, 1), months: 13, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month')
+  })
+
+  it('shows singular month-only what-if pace copy for one-month projections', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2026, 1, 1), months: 1, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 month')
+  })
+
+  it('keeps inline edit mode open for keys other than Enter and Escape', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.keyDown(input, { key: 'Tab' })
+
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  it('renders a controlled yearly savings override amount', () => {
+    renderCard({ fiGoal: 2_000_000 }, { savingsOverride: 4000, showYearly: true })
+
+    expect(screen.getByText('$48,000/yr')).toBeInTheDocument()
   })
 })

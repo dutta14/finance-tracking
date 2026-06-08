@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import SavingsPlan from './SavingsPlan'
+import SavingsPlan, { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
 import { makeGoal, makeGwGoal, makeAccount, makeBalanceEntry } from '../../../test/factories'
 import type { Account, BalanceEntry } from '../../data/types'
 
@@ -32,6 +32,8 @@ const baseGoal = makeGoal({
   goalCreatedIn: '2024-01-01',
 })
 
+const matchingGwGoal = makeGwGoal({ id: 10, fiGoalId: 1, disburseAmount: 100000, disburseAge: 50, growthRate: 6 })
+
 describe('SavingsPlan', () => {
   // #45: No actual `new Date(2024)` pattern found in this test file.
   // Date strings use explicit format like '2024-01-01' which is TZ-safe.
@@ -59,7 +61,6 @@ describe('SavingsPlan', () => {
   })
 
   it('renders GW plan block when GW goals exist', () => {
-    const gwGoal = makeGwGoal({ id: 10, fiGoalId: 1, disburseAmount: 100000, disburseAge: 50, growthRate: 6 })
     mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' }), makeAccount({ id: 2, goalType: 'gw' })]
     mockDataCtx.balances = [
       makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 200_000 }),
@@ -67,7 +68,7 @@ describe('SavingsPlan', () => {
     ]
     mockDataCtx.allMonths = ['2024-01']
 
-    render(<SavingsPlan goal={baseGoal} gwGoals={[gwGoal]} profileBirthday={profileBirthday} />)
+    render(<SavingsPlan goal={baseGoal} gwGoals={[matchingGwGoal]} profileBirthday={profileBirthday} />)
     // Should have both FI and GW labels (rendered via TermAbbr mock as <abbr>)
     const abbrs = screen.getAllByText(/^(FI|GW)$/)
     expect(abbrs.length).toBe(2)
@@ -106,6 +107,16 @@ describe('SavingsPlan', () => {
     render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
     expect(screen.getByText('Balance (Jan 2024)')).toBeInTheDocument()
     expect(screen.getByText('Monthly Save')).toBeInTheDocument()
+  })
+
+  it('uses the profile birthday fallback in the full savings plan', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 200_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    render(<SavingsPlan goal={makeGoal({ ...baseGoal, birthday: '' })} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText('Savings Plan')).toBeInTheDocument()
   })
 
   // TODO: update expected values after growth logic stabilizes
@@ -208,5 +219,155 @@ describe('SavingsPlan', () => {
 
     render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
     expect(screen.getByText(/Need to save more/)).toBeInTheDocument()
+  })
+
+  it('shows no change when the initial and current monthly savings match', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 200_000 })]
+    mockDataCtx.allMonths = ['2024-01', '2024-01']
+
+    render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText('No change')).toBeInTheDocument()
+  })
+
+  it('omits the plan block when both the initial and current results are null', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
+    mockDataCtx.balances = []
+    mockDataCtx.allMonths = ['']
+
+    render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText('Savings Plan')).toBeInTheDocument()
+    expect(screen.queryByText('Monthly Save')).not.toBeInTheDocument()
+  })
+
+  it('renders the FI block even when only the current result is available', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-06', balance: 250_000 })]
+    mockDataCtx.allMonths = ['', '2024-06']
+
+    render(<SavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText('Savings Plan')).toBeInTheDocument()
+    expect(screen.getByText('Target')).toBeInTheDocument()
+    expect(screen.queryByText('Monthly Save')).not.toBeInTheDocument()
+  })
+})
+
+describe('FiSavingsPlan', () => {
+  beforeEach(() => {
+    mockDataCtx.accounts = []
+    mockDataCtx.balances = []
+    mockDataCtx.allMonths = []
+  })
+
+  it('renders savings message when FI target is positive and balance exists', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi', type: 'retirement' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    render(<FiSavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText(/At 8% growth/i)).toBeInTheDocument()
+    expect(screen.getByText(/you need to save/i)).toBeInTheDocument()
+    expect(screen.getByText(/\/mo$/)).toBeInTheDocument()
+  })
+
+  it("shows achieved this goal when monthlySaving is less than or equal to 0", () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi', type: 'retirement' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 50_000_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    render(<FiSavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText("you've achieved this goal 🎉")).toBeInTheDocument()
+  })
+
+  it('renders null when no months are available', () => {
+    const { container } = render(<FiSavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('renders null when fiTarget is less than or equal to 0', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi', type: 'retirement' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    const zeroTargetGoal = makeGoal({ ...baseGoal, fiGoal: 0 })
+    const { container } = render(<FiSavingsPlan goal={zeroTargetGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('uses the profile birthday fallback and yearly formatting when requested', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi', type: 'retirement' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    const goalWithoutBirthday = makeGoal({ ...baseGoal, birthday: '' })
+    render(<FiSavingsPlan goal={goalWithoutBirthday} gwGoals={[]} profileBirthday={profileBirthday} showYearly />)
+
+    expect(screen.getByText(/\/yr$/)).toBeInTheDocument()
+  })
+})
+
+describe('GwSavingsPlan', () => {
+  beforeEach(() => {
+    mockDataCtx.accounts = []
+    mockDataCtx.balances = []
+    mockDataCtx.allMonths = []
+  })
+
+  it('renders savings message when GW target is positive', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 2, month: '2024-01', balance: 10_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    render(<GwSavingsPlan goal={baseGoal} gwGoals={[matchingGwGoal]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText(/At 8% growth/i)).toBeInTheDocument()
+    expect(screen.getByText(/you need to save/i)).toBeInTheDocument()
+    expect(screen.getByText(/\/mo$/)).toBeInTheDocument()
+  })
+
+  it("shows achieved this goal when balance already exceeds the target", () => {
+    mockDataCtx.accounts = [makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 2, month: '2024-01', balance: 5_000_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    render(<GwSavingsPlan goal={baseGoal} gwGoals={[matchingGwGoal]} profileBirthday={profileBirthday} />)
+
+    expect(screen.getByText("you've achieved this goal 🎉")).toBeInTheDocument()
+  })
+
+  it('renders null when no months are available', () => {
+    const { container } = render(
+      <GwSavingsPlan goal={baseGoal} gwGoals={[matchingGwGoal]} profileBirthday={profileBirthday} />,
+    )
+
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('renders null when gwTarget is less than or equal to 0', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 2, month: '2024-01', balance: 10_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    const { container } = render(<GwSavingsPlan goal={baseGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
+
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('uses the profile birthday fallback and yearly formatting when requested', () => {
+    mockDataCtx.accounts = [makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
+    mockDataCtx.balances = [makeBalanceEntry({ accountId: 2, month: '2024-01', balance: 10_000 })]
+    mockDataCtx.allMonths = ['2024-01']
+
+    const goalWithoutBirthday = makeGoal({ ...baseGoal, birthday: '' })
+    render(<GwSavingsPlan goal={goalWithoutBirthday} gwGoals={[matchingGwGoal]} profileBirthday={profileBirthday} showYearly />)
+
+    expect(screen.getByText(/\/yr$/)).toBeInTheDocument()
   })
 })
