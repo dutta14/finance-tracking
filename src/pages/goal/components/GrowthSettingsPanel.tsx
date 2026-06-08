@@ -6,6 +6,44 @@ interface GrowthSettingsPanelProps {
   onUpdate: (partial: Partial<GrowthSettings>) => void
 }
 
+interface NumericInputProps {
+  value: number
+  step: string
+  min?: string
+  max?: string
+  onChange: (n: number) => void
+}
+
+const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange }) => {
+  const [local, setLocal] = useState(String(value))
+  const committed = useRef(value)
+
+  useEffect(() => {
+    if (value !== committed.current) {
+      setLocal(String(value))
+      committed.current = value
+    }
+  }, [value])
+
+  return (
+    <input
+      type="number"
+      step={step}
+      min={min}
+      max={max}
+      value={local}
+      onChange={e => setLocal(e.target.value)}
+      onBlur={() => {
+        const parsed = parseFloat(local)
+        const result = isNaN(parsed) ? 0 : parsed
+        committed.current = result
+        setLocal(String(result))
+        onChange(result)
+      }}
+    />
+  )
+}
+
 const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate }) => {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -66,11 +104,10 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
               <label className="growth-settings-label">
                 Pre-{settings.ageBoundary}
                 <div className="growth-settings-input-wrap">
-                  <input
-                    type="number"
-                    step="0.1"
+                  <NumericInput
                     value={settings.preBoundaryGrowth}
-                    onChange={e => onUpdate({ preBoundaryGrowth: parseFloat(e.target.value) || 0 })}
+                    step="0.1"
+                    onChange={v => onUpdate({ preBoundaryGrowth: v })}
                   />
                   <span className="growth-settings-unit">%</span>
                 </div>
@@ -79,11 +116,10 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
               <label className="growth-settings-label">
                 Post-{settings.ageBoundary}
                 <div className="growth-settings-input-wrap">
-                  <input
-                    type="number"
-                    step="0.1"
+                  <NumericInput
                     value={settings.postBoundaryGrowth}
-                    onChange={e => onUpdate({ postBoundaryGrowth: parseFloat(e.target.value) || 0 })}
+                    step="0.1"
+                    onChange={v => onUpdate({ postBoundaryGrowth: v })}
                   />
                   <span className="growth-settings-unit">%</span>
                 </div>
@@ -92,12 +128,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
               <label className="growth-settings-label">
                 GW
                 <div className="growth-settings-input-wrap">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={settings.gwGrowth}
-                    onChange={e => onUpdate({ gwGrowth: parseFloat(e.target.value) || 0 })}
-                  />
+                  <NumericInput value={settings.gwGrowth} step="0.1" onChange={v => onUpdate({ gwGrowth: v })} />
                   <span className="growth-settings-unit">%</span>
                 </div>
               </label>
@@ -105,12 +136,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
               <label className="growth-settings-label">
                 Inflation
                 <div className="growth-settings-input-wrap">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={settings.inflation}
-                    onChange={e => onUpdate({ inflation: parseFloat(e.target.value) || 0 })}
-                  />
+                  <NumericInput value={settings.inflation} step="0.1" onChange={v => onUpdate({ inflation: v })} />
                   <span className="growth-settings-unit">%</span>
                 </div>
               </label>
@@ -118,13 +144,12 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
               <label className="growth-settings-label">
                 Boundary
                 <div className="growth-settings-input-wrap growth-settings-input-wrap--age">
-                  <input
-                    type="number"
+                  <NumericInput
+                    value={settings.ageBoundary}
                     step="1"
                     min="40"
                     max="80"
-                    value={settings.ageBoundary}
-                    onChange={e => onUpdate({ ageBoundary: parseInt(e.target.value, 10) || 60 })}
+                    onChange={v => onUpdate({ ageBoundary: v || 60 })}
                   />
                   <span className="growth-settings-unit">yrs</span>
                 </div>
@@ -141,12 +166,11 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                 Retirement cap
                 <div className="growth-settings-input-wrap growth-settings-input-wrap--dollar">
                   <span className="growth-settings-unit">$</span>
-                  <input
-                    type="number"
+                  <NumericInput
+                    value={settings.retirementCap}
                     step="500"
                     min="0"
-                    value={settings.retirementCap}
-                    onChange={e => onUpdate({ retirementCap: parseInt(e.target.value, 10) || 0 })}
+                    onChange={v => onUpdate({ retirementCap: v })}
                   />
                   <span className="growth-settings-unit">/mo</span>
                 </div>
@@ -156,12 +180,11 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                 Non-retirement minimum
                 <div className="growth-settings-input-wrap growth-settings-input-wrap--dollar">
                   <span className="growth-settings-unit">$</span>
-                  <input
-                    type="number"
+                  <NumericInput
+                    value={settings.nonRetirementBase}
                     step="500"
                     min="0"
-                    value={settings.nonRetirementBase}
-                    onChange={e => onUpdate({ nonRetirementBase: parseInt(e.target.value, 10) || 0 })}
+                    onChange={v => onUpdate({ nonRetirementBase: v })}
                   />
                   <span className="growth-settings-unit">/mo</span>
                 </div>

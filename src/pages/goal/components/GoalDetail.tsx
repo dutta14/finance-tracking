@@ -434,6 +434,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
           growthRate={fiGrowth}
           postGrowthRate={growthCtx.settings.postBoundaryGrowth}
           ageBoundary={growthCtx.settings.ageBoundary}
+          inflation={growthCtx.settings.inflation}
           fiBreakdown={summaryData?.fiBreakdown}
           primaryRetirementAccessAge={growthCtx.settings.primaryRetirementAccessAge}
           partnerRetirementAccessAge={growthCtx.settings.partnerRetirementAccessAge}

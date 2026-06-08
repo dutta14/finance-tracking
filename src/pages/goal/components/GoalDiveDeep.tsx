@@ -22,6 +22,7 @@ interface GoalDiveDeepProps {
   growthRate?: number
   postGrowthRate?: number
   ageBoundary?: number
+  inflation?: number
   fiBreakdown?: FiBreakdown
   primaryRetirementAccessAge?: number
   partnerRetirementAccessAge?: number
@@ -53,6 +54,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   growthRate = 8,
   postGrowthRate = 6,
   ageBoundary = 60,
+  inflation = 3,
   fiBreakdown,
   primaryRetirementAccessAge = 59.5,
   partnerRetirementAccessAge = 59.5,
@@ -137,6 +139,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
             postGrowthRate,
             ageBoundary,
             breakdown,
+            inflation,
           )
         : buildProjectedLifecycle(
             goal,
@@ -149,6 +152,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
             postGrowthRate,
             ageBoundary,
             breakdown,
+            inflation,
           ),
     [
       goal,
@@ -160,6 +164,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
       growthRate,
       postGrowthRate,
       ageBoundary,
+      inflation,
       breakdown,
       retirementCap,
       nonRetirementBase,

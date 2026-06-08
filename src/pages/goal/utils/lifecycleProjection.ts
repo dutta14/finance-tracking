@@ -325,6 +325,7 @@ export function buildPlannedProjection(
   postGrowthOverride?: number,
   ageBoundary?: number,
   breakdown?: BalanceBreakdown,
+  inflationOverride?: number,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []
@@ -332,7 +333,7 @@ export function buildPlannedProjection(
   const preGrowth = accGrowthOverride ?? 8
   const postGrowth = postGrowthOverride ?? 6
   const boundary = ageBoundary ?? 60
-  const inflation = goal.inflationRate || 3
+  const inflation = inflationOverride ?? (goal.inflationRate || 3)
   const endYear = new Date(goal.goalEndYear).getFullYear()
 
   const [by, bm] = birthday.split('-').map(Number)
@@ -392,6 +393,7 @@ export function buildProjectedLifecycle(
   postGrowthOverride?: number,
   ageBoundary?: number,
   breakdown?: BalanceBreakdown,
+  inflationOverride?: number,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []
@@ -399,7 +401,7 @@ export function buildProjectedLifecycle(
   const preGrowth = accGrowthOverride ?? 8
   const postGrowth = postGrowthOverride ?? 6
   const boundary = ageBoundary ?? 60
-  const inflation = goal.inflationRate || 3
+  const inflation = inflationOverride ?? (goal.inflationRate || 3)
   const endYear = new Date(goal.goalEndYear).getFullYear()
 
   const now = new Date()

@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useId, useMemo } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from 'recharts'
 import { ProjectionRow } from '../utils/lifecycleProjection'
 
@@ -34,6 +34,7 @@ interface Milestone {
   label: string
   color: string
   dx: number
+  dy: number
 }
 
 interface LifecycleChartProps {
@@ -41,6 +42,8 @@ interface LifecycleChartProps {
 }
 
 const LifecycleChart: FC<LifecycleChartProps> = ({ rows }) => {
+  const descId = useId()
+
   const milestones = useMemo<Milestone[]>(() => {
     const result: Milestone[] = []
     for (let i = 1; i < rows.length; i++) {
@@ -52,27 +55,35 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows }) => {
           label: `${prev.growthRate}%→${row.growthRate}%`,
           color: 'var(--color-text, #374151)',
           dx: 10,
+          dy: 0,
         })
       }
       if (prev.primaryLocked && !row.primaryLocked) {
-        result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #16a34a)', dx: -10 })
+        result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
       }
       if (prev.phase === 'accumulation' && row.phase === 'drawdown') {
-        result.push({ month: row.month, label: 'F.I.R.E.', color: 'var(--accent, #0f766e)', dx: -10 })
+        result.push({ month: row.month, label: 'F.I.R.E.', color: 'var(--accent, #0f766e)', dx: -10, dy: 0 })
       }
       if (prev.partnerLocked && !row.partnerLocked) {
-        result.push({ month: row.month, label: 'Partner', color: 'var(--color-success, #16a34a)', dx: -10 })
+        result.push({ month: row.month, label: 'Partner', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
       }
+    }
+    // Separate labels that share the same month to avoid overlap
+    const byMonth = new Map<string, number>()
+    for (const m of result) {
+      const idx = byMonth.get(m.month) ?? 0
+      m.dy = idx * 14
+      byMonth.set(m.month, idx + 1)
     }
     return result
   }, [rows])
 
   return (
-    <div
-      className="projection-chart-wrapper"
-      role="img"
-      aria-label="Lifecycle projection chart showing portfolio balance over time"
-    >
+    <div className="projection-chart-wrapper" aria-describedby={descId}>
+      <div id={descId} className="sr-only">
+        Lifecycle projection chart showing portfolio balance over time.
+        {milestones.length > 0 && <> Milestones: {milestones.map(m => `${m.label} at ${m.month}`).join('; ')}.</>}
+      </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={rows} margin={{ top: 28, right: 24, left: 16, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
@@ -104,6 +115,7 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows }) => {
                 fontWeight: 600,
                 angle: -90,
                 dx: m.dx,
+                dy: m.dy,
               }}
             />
           ))}

@@ -146,28 +146,6 @@ describe('GwSection', () => {
       expect(screen.getByText('Enter a valid target amount.')).toBeInTheDocument()
     })
 
-    it('shows validation error when growth rate is out of range', async () => {
-      const user = userEvent.setup()
-      renderGwSection({ initialFormOpen: true })
-
-      const labelInput = screen.getByRole('textbox')
-      await user.type(labelInput, 'College Fund')
-
-      const ageInput = screen.getByPlaceholderText(/> \d+/)
-      await user.type(ageInput, '60')
-
-      const amountInput = screen.getByPlaceholderText('e.g. 500000')
-      await user.type(amountInput, '100000')
-
-      // Clear default growth rate and set to 0
-      const growthInput = screen.getByDisplayValue('7')
-      await user.clear(growthInput)
-      await user.type(growthInput, '0')
-
-      await user.click(screen.getByText('Add goal'))
-      expect(screen.getByText('Growth rate must be between 0 and 50%.')).toBeInTheDocument()
-    })
-
     it('calls onCreateGwGoal with correct data when form is valid', async () => {
       const onCreate = vi.fn()
       const user = userEvent.setup()
@@ -184,7 +162,7 @@ describe('GwSection', () => {
         label: 'College Fund',
         disburseAge: 60,
         disburseAmount: 100000,
-        growthRate: 7,
+        growthRate: 8,
         currentSavings: 0,
       })
     })
@@ -250,7 +228,7 @@ describe('GwSection', () => {
 
     it('renders growth rate in prose', () => {
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText(/growing at 6% per year/)).toBeInTheDocument()
+      expect(screen.getByText(/growing at 8% per year/)).toBeInTheDocument()
     })
 
     it('renders "Unnamed goal" when label is empty', () => {
@@ -295,7 +273,6 @@ describe('GwSection', () => {
       expect(screen.getByDisplayValue('College Fund')).toBeInTheDocument()
       expect(screen.getByDisplayValue('50')).toBeInTheDocument()
       expect(screen.getByDisplayValue('100000')).toBeInTheDocument()
-      expect(screen.getByDisplayValue('6')).toBeInTheDocument()
     })
 
     it('calls onUpdateGwGoal with updated data on save', async () => {
@@ -315,7 +292,6 @@ describe('GwSection', () => {
         label: 'Updated Fund',
         disburseAge: 50,
         disburseAmount: 100000,
-        growthRate: 6,
       })
     })
 
@@ -355,19 +331,6 @@ describe('GwSection', () => {
 
       await user.click(screen.getByText('Save'))
       expect(screen.getByText('Enter a valid target amount.')).toBeInTheDocument()
-    })
-
-    it('shows validation error in edit form when growth rate is out of range', async () => {
-      const user = userEvent.setup()
-      renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
-
-      const growthInput = screen.getByDisplayValue('6')
-      await user.clear(growthInput)
-      await user.type(growthInput, '51')
-
-      await user.click(screen.getByText('Save'))
-      expect(screen.getByText(/Growth rate must be 0\.1–50%/)).toBeInTheDocument()
     })
 
     it('cancels edit and restores original values', async () => {
@@ -474,7 +437,7 @@ describe('GwSection', () => {
         label: 'Trust Fund',
         disburseAge: 55,
         disburseAmount: 200000,
-        growthRate: 6,
+        growthRate: 8,
         currentSavings: 0,
       })
     })
@@ -514,7 +477,7 @@ describe('GwSection', () => {
     it('shows progress > 0% when gwTotal > 0', () => {
       mockGwTotal = 50000
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('41.8%')).toBeInTheDocument()
+      expect(screen.getByText(/46.1%/)).toBeInTheDocument()
     })
 
     it('caps progress at 100%', () => {
@@ -555,7 +518,7 @@ describe('GwSection', () => {
         growthRate: 6,
       })
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('$119,740')).toBeInTheDocument()
+      expect(screen.getByText('$108,408')).toBeInTheDocument()
     })
   })
 })

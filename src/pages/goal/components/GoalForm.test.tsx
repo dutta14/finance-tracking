@@ -435,14 +435,9 @@ describe('GoalForm step 3 validation', () => {
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the inflation rate')
   })
 
-  it('shows error when SWR is empty', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the safe withdrawal rate')
-  })
-
   it('shows error when growth rate is empty', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    await renderAtStep3(user, { inflationRate: '3', growth: '' })
     await user.click(screen.getByRole('button', { name: /Next/ }))
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the growth rate')
   })
@@ -544,7 +539,6 @@ describe('GoalForm UI features', () => {
     expect(screen.getByText('Goal Name')).toBeInTheDocument()
     expect(screen.getByText('Retirement Age')).toBeInTheDocument()
     expect(screen.getByText('Inflation')).toBeInTheDocument()
-    expect(screen.getByText('SWR')).toBeInTheDocument()
     expect(screen.getByText('Growth')).toBeInTheDocument()
   })
 
@@ -946,26 +940,6 @@ describe('GoalForm — step 3 validation branches', () => {
     // Now on step 3, try to advance
     await user.click(screen.getByRole('button', { name: /Next/ }))
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the growth rate')
-  })
-
-  it('shows error when SWR is empty on step 3', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const formData = {
-      ...defaultFormData,
-      goalName: 'Test',
-      goalCreatedIn: '2025-01-01',
-      goalEndYear: '2080-01-01',
-      retirementAge: '60',
-      expenseValue: '50000',
-      inflationRate: '3',
-      growth: '6',
-    }
-    render(<GoalForm {...defaultProps} formData={formData} />)
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the safe withdrawal rate')
   })
 
   it('shows error when inflation rate is empty on step 3', async () => {

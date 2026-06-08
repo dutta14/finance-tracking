@@ -63,7 +63,6 @@ describe('GoalCompareView', () => {
 
     expect(screen.getByText('FI Goal')).toBeInTheDocument()
     expect(screen.getByText('Inflation Rate')).toBeInTheDocument()
-    expect(screen.getByText('Safe Withdrawal Rate')).toBeInTheDocument()
     expect(screen.getByText('Growth Rate')).toBeInTheDocument()
   })
 

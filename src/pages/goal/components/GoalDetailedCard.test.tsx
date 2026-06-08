@@ -64,6 +64,7 @@ vi.mock('../utils/goalCalculations', () => ({
     annualExpenseAtRetirement: 100000,
     fiGoal: 2500000,
   })),
+  computeRequiredCorpus: vi.fn(() => 2_000_000),
   projectFIDate: vi.fn((current: number, target: number, annualSavings: number) => {
     if (annualSavings <= 0) return null
     const months = Math.ceil((target - current) / (annualSavings / 12))
@@ -158,11 +159,11 @@ beforeEach(() => {
 describe('GoalDetailedCard projection section', () => {
   it('renders the FI goal prose when not condensed', () => {
     renderCard()
-    expect(screen.getByText(/safe withdrawal rate/)).toBeInTheDocument()
+    expect(screen.getByText(/growth/)).toBeInTheDocument()
   })
 
   it('renders growth and inflation in prose', () => {
-    renderCard({ growth: 5, inflationRate: 6 })
+    renderCard({}, { preBoundaryGrowth: 5, postBoundaryGrowth: 4, inflation: 6 })
     const prose = document.querySelector('.fi-goal-prose')
     expect(prose?.textContent).toMatch(/5%/)
     expect(prose?.textContent).toMatch(/growth/)
@@ -173,7 +174,7 @@ describe('GoalDetailedCard projection section', () => {
 
 describe('GoalDetailedCard projection — no-goal state', () => {
   it('shows no pace prose when fiGoal is 0', () => {
-    renderCard({ fiGoal: 0 })
+    renderCard({ fiGoal: 0, expenseValue: 0, goalEndYear: '' })
     expect(screen.queryByText(/saving/)).not.toBeInTheDocument()
   })
 })
@@ -227,7 +228,7 @@ describe('GoalDetailedCard projection — projected state', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText(/hit FI by/)).toBeInTheDocument()
+    expect(screen.getByText(/hit FI in/)).toBeInTheDocument()
   })
 
   it('shows ahead/behind indicator in prose', () => {
@@ -321,17 +322,16 @@ describe('GoalDetailedCard parameters in prose', () => {
     expect(prose?.textContent).toContain('inflation')
   })
 
-  it('shows safe withdrawal rate in prose', () => {
-    renderCard({ safeWithdrawalRate: 3 })
+  it('shows inflation rate in prose', () => {
+    renderCard({ inflationRate: 3 })
     const prose = document.querySelector('.fi-goal-prose')
     expect(prose?.textContent).toContain('3%')
-    expect(prose?.textContent).toContain('safe withdrawal rate')
+    expect(prose?.textContent).toContain('inflation')
   })
 
   it('shows portfolio growth rate in prose', () => {
     renderCard({ growth: 5 })
     const prose = document.querySelector('.fi-goal-prose')
-    expect(prose?.textContent).toContain('5%')
     expect(prose?.textContent).toContain('growth')
   })
 
@@ -342,7 +342,7 @@ describe('GoalDetailedCard parameters in prose', () => {
 
   it('hides prose section when condensed is true', () => {
     renderCard({}, { condensed: true })
-    expect(screen.queryByText(/safe withdrawal rate/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/inflation/)).not.toBeInTheDocument()
   })
 })
 
@@ -353,12 +353,12 @@ describe('GoalDetailedCard parameters in prose', () => {
 describe('GoalDetailedCard expense in prose', () => {
   it('shows annual expense in prose', () => {
     renderCard({ expenseValue: 60000 })
-    expect(screen.getByText(/\$60,000\/year/)).toBeInTheDocument()
+    expect(screen.getByText(/\$60,000\/yr/)).toBeInTheDocument()
   })
 
   it('hides expense info when condensed is true', () => {
     renderCard({}, { condensed: true })
-    expect(screen.queryByText(/\$60,000\/year/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/\$60,000\/yr/)).not.toBeInTheDocument()
   })
 })
 
@@ -368,35 +368,32 @@ describe('GoalDetailedCard expense in prose', () => {
 
 describe('GoalDetailedCard depletion warning', () => {
   it('shows depletion warning when funds run out before goal end', () => {
-    renderCard({
-      fiGoal: 500_000,
-      expenseValue2047: 100000,
-      monthlyExpense2047: 8333,
-      safeWithdrawalRate: 20,
-      growth: 0,
-      inflationRate: 10,
-      retirementAge: 30,
-      goalEndYear: '2080-01-01',
-    })
+    renderCard(
+      {
+        fiGoal: 500_000,
+        expenseValue: 0,
+        monthlyExpense2047: 8333,
+        retirementAge: 30,
+        goalEndYear: '2080-01-01',
+      },
+      { inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
+    )
     expect(screen.getByText(/Not sustainable beyond/)).toBeInTheDocument()
   })
 
-  it('shows Suggest SWR button when onUpdateGoal is provided and depletion exists', () => {
+  it('shows depletion warning text when onUpdateGoal is provided and depletion exists', () => {
     const onUpdateGoal = vi.fn()
     renderCard(
       {
         fiGoal: 500_000,
-        expenseValue2047: 100000,
+        expenseValue: 0,
         monthlyExpense2047: 8333,
-        safeWithdrawalRate: 20,
-        growth: 0,
-        inflationRate: 10,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
-      { onUpdateGoal, showActions: false },
+      { onUpdateGoal, showActions: false, inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
     )
-    expect(screen.getByRole('button', { name: 'Suggest SWR' })).toBeInTheDocument()
+    expect(screen.getByText(/Not sustainable beyond/)).toBeInTheDocument()
   })
 })
 
@@ -430,9 +427,8 @@ describe('GoalDetailedCard edit mode', () => {
     fireEvent.click(screen.getByRole('button', { name: /Edit/ }))
     expect(screen.getByText('Retirement Age')).toBeInTheDocument()
     expect(screen.getByText('Annual Expense ($)')).toBeInTheDocument()
-    expect(screen.getByText('Inflation Rate (%)')).toBeInTheDocument()
-    expect(screen.getByText('Safe Withdrawal Rate (%)')).toBeInTheDocument()
-    expect(screen.getByText('Growth Rate (%)')).toBeInTheDocument()
+    expect(screen.getByText('Goal Creation Date')).toBeInTheDocument()
+    expect(screen.getByText('Goal End Year')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
   })
 
@@ -505,69 +501,27 @@ describe('GoalDetailedCard edit mode', () => {
    Depletion Warning — Suggest SWR interaction
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalDetailedCard suggest SWR', () => {
-  it('shows "Searching…" while suggesting and calls onUpdateGoal on success', async () => {
-    vi.useFakeTimers()
+describe('GoalDetailedCard suggest SWR (removed feature)', () => {
+  it('does not render Suggest SWR button (feature removed)', () => {
     const onUpdateGoal = vi.fn()
     renderCard(
       {
         fiGoal: 500_000,
-        expenseValue2047: 100000,
+        expenseValue: 0,
         monthlyExpense2047: 8333,
-        safeWithdrawalRate: 20,
-        growth: 0,
-        inflationRate: 10,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
-      { onUpdateGoal, showActions: false },
+      { onUpdateGoal, showActions: false, inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
     )
-    const btn = screen.getByRole('button', { name: 'Suggest SWR' })
-    fireEvent.click(btn)
-    expect(screen.getByText('Searching…')).toBeInTheDocument()
-    // Run the setTimeout macrotask (React 19 requires act() to flush state from non-event timers)
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0)
-    })
-    // suggestSWR runs the internal simulation — may or may not find a valid SWR
-    // Either way, the button should return to normal
-    expect(screen.queryByText('Searching…')).not.toBeInTheDocument()
-    vi.useRealTimers()
-  })
-
-  it('does not call onUpdateGoal when suggest finds no valid SWR', async () => {
-    vi.useFakeTimers()
-    const onUpdateGoal = vi.fn()
-    // monthlyExpense2047 is high enough to cause depletion, but expenseValue2047 = 0
-    // so suggestSWR returns null immediately
-    renderCard(
-      {
-        fiGoal: 500_000,
-        expenseValue2047: 0,
-        monthlyExpense2047: 8333,
-        safeWithdrawalRate: 20,
-        growth: 0,
-        inflationRate: 10,
-        retirementAge: 30,
-        goalEndYear: '2080-01-01',
-      },
-      { onUpdateGoal, showActions: false },
-    )
-    const btn = screen.getByRole('button', { name: 'Suggest SWR' })
-    fireEvent.click(btn)
-    await vi.advanceTimersByTimeAsync(0)
-    expect(onUpdateGoal).not.toHaveBeenCalled()
-    vi.useRealTimers()
+    expect(screen.queryByRole('button', { name: 'Suggest SWR' })).not.toBeInTheDocument()
   })
 
   it('does not render Suggest SWR when onUpdateGoal is not provided', () => {
     renderCard({
       fiGoal: 500_000,
-      expenseValue2047: 100000,
+      expenseValue: 0,
       monthlyExpense2047: 8333,
-      safeWithdrawalRate: 20,
-      growth: 0,
-      inflationRate: 10,
       retirementAge: 30,
       goalEndYear: '2080-01-01',
     })
@@ -638,7 +592,7 @@ describe('GoalDetailedCard projection diff text', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
-    expect(screen.getByText(/On track/)).toBeInTheDocument()
+    expect(screen.getByText(/on track/)).toBeInTheDocument()
   })
 
   it('shows months early when projected date is 1-11 months ahead', () => {
@@ -674,16 +628,16 @@ describe('GoalDetailedCard projection diff text', () => {
 
 describe('GoalDetailedCard expense — prose format', () => {
   it('shows annual expense in prose', () => {
-    renderCard({ expenseValue: 60000, safeWithdrawalRate: 3 })
+    renderCard({ expenseValue: 60000 })
     const prose = document.querySelector('.fi-goal-prose')
-    expect(prose?.textContent).toContain('$60,000/year')
+    expect(prose?.textContent).toContain('$60,000/yr')
   })
 
-  it('shows safe withdrawal rate in prose', () => {
-    renderCard({ safeWithdrawalRate: 3 })
+  it('shows inflation in prose', () => {
+    renderCard({ inflationRate: 3 })
     const prose = document.querySelector('.fi-goal-prose')
     expect(prose?.textContent).toContain('3%')
-    expect(prose?.textContent).toContain('safe withdrawal rate')
+    expect(prose?.textContent).toContain('inflation')
   })
 })
 
@@ -909,7 +863,7 @@ describe('GoalDetailedCard — projection on track (absDiffMonths <= 6)', () => 
       requiredCorpus: 2_000_000,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
-    expect(screen.getByText(/On track/)).toBeInTheDocument()
+    expect(screen.getByText(/on track/)).toBeInTheDocument()
   })
 })
 
@@ -930,9 +884,9 @@ describe('GoalDetailedCard — projection years plural (line 302)', () => {
   it('shows singular "year" when projected exactly 1 year ahead', () => {
     setMockFiTotal(1_800_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 600_000, saveRate: 70, monthsOfData: 12 })
-    // Target: Jan 2050, projected: Jan 2049 → ~12 months → 1 year ahead
+    // Target: Jan 15 2050, projected: Jan 15 2049 → exactly 12 months → 1 year ahead
     mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
-      date: new Date(2048, 11, 1), // Dec 2048 → ~13 months before Jan 2050 → rounds to 1 year
+      date: new Date(2049, 0, 15),
       months: 12,
       requiredCorpus: 2_000_000,
     })

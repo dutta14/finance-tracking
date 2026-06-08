@@ -36,6 +36,7 @@ describe('GrowthSettingsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
     const preInput = screen.getByLabelText(/pre-60/i)
     fireEvent.change(preInput, { target: { value: '10' } })
+    fireEvent.blur(preInput)
     expect(onUpdate).toHaveBeenCalledWith({ preBoundaryGrowth: 10 })
   })
 
