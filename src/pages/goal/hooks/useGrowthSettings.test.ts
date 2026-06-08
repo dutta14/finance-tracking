@@ -30,6 +30,25 @@ describe('useGrowthSettings', () => {
     expect(stored.preBoundaryGrowth).toBe(10)
   })
 
+  it('persists inflation retirement cap and non-retirement minimum when global settings are updated', () => {
+    const { result } = renderHook(() => useGrowthSettings())
+
+    act(() => result.current.updateSettings({ inflation: 5, retirementCap: 8000, nonRetirementBase: 4000 }))
+
+    expect(result.current.settings).toMatchObject({
+      inflation: 5,
+      retirementCap: 8000,
+      nonRetirementBase: 4000,
+    })
+
+    const stored = JSON.parse(localStorage.getItem('goal-growth-settings')!)
+    expect(stored).toMatchObject({
+      inflation: 5,
+      retirementCap: 8000,
+      nonRetirementBase: 4000,
+    })
+  })
+
   it('loads persisted settings on mount', () => {
     localStorage.setItem(
       'goal-growth-settings',

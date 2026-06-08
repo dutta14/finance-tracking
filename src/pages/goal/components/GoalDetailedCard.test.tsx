@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, within, act } from '@testing-library/react'
 import { FinancialGoal } from '../../../types'
 import GoalDetailedCard from './GoalDetailedCard'
@@ -237,6 +237,120 @@ describe('GoalDetailedCard projection — projected state', () => {
     renderCard({ fiGoal: 2_000_000 })
     const paceEl = document.querySelector('.fi-goal-pace')
     expect(paceEl?.textContent).toMatch(/early|behind|On track/)
+  })
+})
+
+describe('GoalDetailedCard savings override', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ saveRate: 40, annualSavings: 60000, monthsOfData: 12 })
+    mockedProjectFIDateWithDrawdown.mockImplementation(
+      (
+        current: number,
+        annualSavings: number,
+        _preGrowth: number,
+        _postGrowth: number,
+        _monthlyExp: number,
+        _inflation: number,
+        _endOfLife: Date,
+        _retDate?: Date,
+      ) => {
+        if (annualSavings <= 0) return null
+        const target = 2_000_000
+        const months = Math.ceil((target - current) / (annualSavings / 12))
+        const date = new Date()
+        date.setMonth(date.getMonth() + months)
+        return { date, months, requiredCorpus: target }
+      },
+    )
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('enters savings override edit mode with the current savings amount prefilled', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('fi-savings-inline-input')
+    expect(input).toHaveValue('5,000')
+  })
+
+  it('shows what-if FI copy after the user enters a savings override', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(screen.getByText(/If you saved/)).toBeInTheDocument()
+    expect(screen.getByText(/you'd hit FI in/i)).toBeInTheDocument()
+  })
+
+  it('uses the threaded inflation prop instead of goal inflation when computing the what-if projection', () => {
+    renderCard({ fiGoal: 2_000_000, inflationRate: 6 }, { inflation: 2 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    const lastCall = mockedProjectFIDateWithDrawdown.mock.calls.at(-1)
+    expect(lastCall?.[5]).toBe(2)
+  })
+
+  it('shows that FI is not reachable within 100 years when the savings override projection returns null', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation(
+      (current: number, annualSavings: number, _a?: number, _b?: number, _c?: number, _d?: number, _e?: Date, _f?: Date) => {
+        if (annualSavings === 1200) return null
+        const target = 2_000_000
+        const months = Math.ceil((target - current) / (annualSavings / 12))
+        const date = new Date()
+        date.setMonth(date.getMonth() + months)
+        return { date, months, requiredCorpus: target }
+      },
+    )
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '100' } })
+    fireEvent.blur(input)
+
+    expect(screen.getByText(/not reachable/i)).toBeInTheDocument()
+  })
+
+  it('resets the savings override and restores the baseline pace copy when Reset is clicked', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(screen.getByText(/If you saved/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(screen.getByText(/At this pace, you'll hit FI in/i)).toBeInTheDocument()
+  })
+
+  it('converts a yearly override entry back to monthly savings before storing it', () => {
+    renderCard({ fiGoal: 2_000_000 }, { showYearly: true })
+
+    fireEvent.click(screen.getByText('$60,000/yr'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '120000' } })
+    fireEvent.blur(input)
+
+    const lastCall = mockedProjectFIDateWithDrawdown.mock.calls.at(-1)
+    expect(lastCall?.[1]).toBe(120000)
   })
 })
 

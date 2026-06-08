@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GoalDiveDeep from './GoalDiveDeep'
 import { makeGoal } from '../../../test/factories'
+import * as lifecycleModule from '../utils/lifecycleProjection'
 
 vi.mock('recharts', async () => {
   const OrigModule = await vi.importActual<Record<string, unknown>>('recharts')
@@ -287,5 +288,57 @@ describe('GoalDiveDeep', () => {
       />,
     )
     expect(screen.getByRole('table')).toBeInTheDocument()
+  })
+
+  describe('inflation threading', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2026, 0, 1))
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+      vi.useRealTimers()
+    })
+
+    it('passes the threaded inflation setting to the projected lifecycle builder', () => {
+      const projectedSpy = vi.spyOn(lifecycleModule, 'buildProjectedLifecycle')
+
+      render(
+        <GoalDiveDeep
+          goal={baseGoal}
+          profileBirthday={profileBirthday}
+          inflation={5}
+          currentBalance={500000}
+          monthlyContribution={3000}
+          retirementCap={6000}
+          nonRetirementBase={6000}
+        />,
+      )
+
+      expect(projectedSpy).toHaveBeenCalled()
+      expect(projectedSpy.mock.calls.at(-1)?.[10]).toBe(5)
+    })
+
+    it('passes the threaded inflation setting to the planned lifecycle builder after switching scenarios', () => {
+      const plannedSpy = vi.spyOn(lifecycleModule, 'buildPlannedProjection')
+
+      render(
+        <GoalDiveDeep
+          goal={baseGoal}
+          profileBirthday={profileBirthday}
+          inflation={5}
+          currentBalance={500000}
+          monthlyContribution={3000}
+          retirementCap={6000}
+          nonRetirementBase={6000}
+        />,
+      )
+
+      fireEvent.click(screen.getByRole('button', { name: /Planned/ }))
+
+      expect(plannedSpy).toHaveBeenCalled()
+      expect(plannedSpy.mock.calls.at(-1)?.[10]).toBe(5)
+    })
   })
 })
