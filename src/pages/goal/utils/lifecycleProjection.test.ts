@@ -13,13 +13,13 @@ describe('lifecycleProjection — buildLifecycle', () => {
 
   it('returns empty array when endYear is in the past', () => {
     const fiDate = new Date(2030, 5, 1)
-    const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2020, fiDate)
+    const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2020, fiDate, 6000, 6000)
     expect(result).toHaveLength(0)
   })
 
   it('produces accumulation rows before fiDate and drawdown rows after', () => {
     const fiDate = new Date(2028, 5, 1) // FI in 2 years
-    const result = buildLifecycle(500000, 2000, 8, 6, 3, 8000, 2040, fiDate)
+    const result = buildLifecycle(500000, 2000, 8, 6, 3, 8000, 2040, fiDate, 6000, 6000)
 
     const accRows = result.filter(r => r.phase === 'accumulation')
     const drawRows = result.filter(r => r.phase === 'drawdown')
@@ -36,7 +36,7 @@ describe('lifecycleProjection — buildLifecycle', () => {
 
   it('accumulation rows show balance growing over time', () => {
     const fiDate = new Date(2030, 5, 1)
-    const result = buildLifecycle(100000, 3000, 8, 6, 3, 10000, 2035, fiDate)
+    const result = buildLifecycle(100000, 3000, 8, 6, 3, 10000, 2035, fiDate, 6000, 6000)
 
     const accRows = result.filter(r => r.phase === 'accumulation')
     // Balance should increase during accumulation
@@ -47,7 +47,7 @@ describe('lifecycleProjection — buildLifecycle', () => {
 
   it('includes growthRate on each row', () => {
     const fiDate = new Date(2028, 5, 1)
-    const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2032, fiDate)
+    const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2032, fiDate, 6000, 6000)
 
     result.forEach(row => {
       expect(row.growthRate).toBeDefined()
@@ -57,7 +57,7 @@ describe('lifecycleProjection — buildLifecycle', () => {
 
   it('caps total rows at 1200', () => {
     const fiDate = new Date(2200, 0, 1) // Very far future FI date
-    const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2300, fiDate)
+    const result = buildLifecycle(100000, 1000, 8, 6, 3, 5000, 2300, fiDate, 6000, 6000)
     expect(result.length).toBeLessThanOrEqual(1200)
   })
 })

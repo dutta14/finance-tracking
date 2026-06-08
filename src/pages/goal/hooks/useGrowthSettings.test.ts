@@ -14,6 +14,11 @@ describe('useGrowthSettings', () => {
       postBoundaryGrowth: 6,
       ageBoundary: 60,
       gwGrowth: 8,
+      inflation: 3,
+      retirementCap: 6000,
+      nonRetirementBase: 6000,
+      primaryRetirementAccessAge: 59.5,
+      partnerRetirementAccessAge: 59.5,
     })
   })
 
@@ -36,6 +41,11 @@ describe('useGrowthSettings', () => {
       postBoundaryGrowth: 5,
       ageBoundary: 55,
       gwGrowth: 7,
+      inflation: 3,
+      retirementCap: 6000,
+      nonRetirementBase: 6000,
+      primaryRetirementAccessAge: 59.5,
+      partnerRetirementAccessAge: 59.5,
     })
   })
 

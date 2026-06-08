@@ -229,8 +229,8 @@ export function buildLifecycle(
           contribPrimary: cPrimary,
           contribPartner: cPartner,
           contribNonRet: cNonRet,
-          primaryLocked: true,
-          partnerLocked: true,
+          primaryLocked: !!(primaryAccessDate && cursor < primaryAccessDate),
+          partnerLocked: !!(partnerAccessDate && cursor < partnerAccessDate),
         })
         expense = Math.round(monthlyExpenseAtFI)
         lastExpenseYear = fiYear
@@ -254,8 +254,8 @@ export function buildLifecycle(
           contribPrimary: cPrimary,
           contribPartner: cPartner,
           contribNonRet: cNonRet,
-          primaryLocked: true,
-          partnerLocked: true,
+          primaryLocked: !!(primaryAccessDate && cursor < primaryAccessDate),
+          partnerLocked: !!(partnerAccessDate && cursor < partnerAccessDate),
         })
       }
     } else {

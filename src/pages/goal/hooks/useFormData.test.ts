@@ -77,7 +77,6 @@ describe('useFormData', () => {
       expect(result.current.formData.goalCreatedIn).toBe('2025-01')
       expect(result.current.formData.retirementAge).toBe('55')
       expect(result.current.formData.inflationRate).toBe('3')
-      expect(result.current.formData.safeWithdrawalRate).toBe('4')
       expect(result.current.formData.growth).toBe('7')
     })
 

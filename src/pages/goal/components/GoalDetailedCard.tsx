@@ -211,15 +211,17 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   // Dynamically recompute fiGoal from current settings (inflation, growth rates)
   const fiGoal = useMemo(() => {
     if (!goal.goalEndYear || !goal.expenseValue || goal.expenseValue <= 0) return goal.fiGoal
+    const bd = parseDate(profileBirthday)
+    const rd = new Date(bd.getFullYear() + goal.retirementAge, bd.getMonth(), bd.getDate())
     const endYear = new Date(goal.goalEndYear).getFullYear()
     const endOfLife = new Date(endYear, 11, 1)
-    const ageBoundaryDate = new Date(birthDate.getFullYear() + ageBoundary, birthDate.getMonth(), 1)
+    const ageBoundaryDate = new Date(bd.getFullYear() + ageBoundary, bd.getMonth(), 1)
     const [gcYear] = (goal.goalCreatedIn || '').split('-').map(Number)
-    const yearsToRetirement = retirementDate.getFullYear() - (gcYear || new Date().getFullYear())
+    const yearsToRetirement = rd.getFullYear() - (gcYear || new Date().getFullYear())
     const annualExpenseAtRetirement = goal.expenseValue * Math.pow(1 + inflation / 100, yearsToRetirement)
     const monthlyExpenseAtRetirement = annualExpenseAtRetirement / 12
     return computeRequiredCorpus(
-      retirementDate,
+      rd,
       endOfLife,
       ageBoundaryDate,
       monthlyExpenseAtRetirement,
@@ -232,6 +234,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     goal.expenseValue,
     goal.goalCreatedIn,
     goal.retirementAge,
+    goal.fiGoal,
     profileBirthday,
     inflation,
     preBoundaryGrowth,

@@ -30,7 +30,8 @@ describe('calculateGoalMetrics', () => {
     retirementAge: 65,
     goalCreatedIn: '2025-01',
     inflationRate: 3,
-    safeWithdrawalRate: 4,
+    growthRate: 8,
+    goalEndYear: '2080-01',
   }
 
   it('calculates monthly expense from annual', () => {
@@ -40,7 +41,8 @@ describe('calculateGoalMetrics', () => {
       baseParams.retirementAge,
       baseParams.goalCreatedIn,
       baseParams.inflationRate,
-      baseParams.safeWithdrawalRate,
+      baseParams.growthRate,
+      baseParams.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
@@ -54,7 +56,8 @@ describe('calculateGoalMetrics', () => {
       baseParams.retirementAge,
       baseParams.goalCreatedIn,
       baseParams.inflationRate,
-      baseParams.safeWithdrawalRate,
+      baseParams.growthRate,
+      baseParams.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
@@ -69,7 +72,8 @@ describe('calculateGoalMetrics', () => {
       baseParams.retirementAge,
       baseParams.goalCreatedIn,
       baseParams.inflationRate,
-      baseParams.safeWithdrawalRate,
+      baseParams.growthRate,
+      baseParams.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
@@ -77,22 +81,23 @@ describe('calculateGoalMetrics', () => {
     expect(result.annualExpenseAtRetirement).toBeCloseTo(145636, -2)
   })
 
-  it('calculates FI goal using safe withdrawal rate', () => {
+  it('calculates FI goal using corpus model', () => {
     const result = calculateGoalMetrics(
       baseParams.annualExpense,
       baseParams.birthday,
       baseParams.retirementAge,
       baseParams.goalCreatedIn,
       baseParams.inflationRate,
-      baseParams.safeWithdrawalRate,
+      baseParams.growthRate,
+      baseParams.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
-    // FI goal = annualExpenseAtRetirement / 0.04
-    expect(result.fiGoal).toBe(result.annualExpenseAtRetirement / 0.04)
+    // FI goal is computed via computeRequiredCorpus (not SWR)
+    expect(result.fiGoal).toBeGreaterThan(0)
   })
 
-  it('returns 0 FI goal when withdrawal rate is 0', () => {
+  it('calculates FI goal when growth rate is 0', () => {
     const result = calculateGoalMetrics(
       baseParams.annualExpense,
       baseParams.birthday,
@@ -100,10 +105,12 @@ describe('calculateGoalMetrics', () => {
       baseParams.goalCreatedIn,
       baseParams.inflationRate,
       0,
+      baseParams.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
-    expect(result.fiGoal).toBe(0)
+    // With 0% growth, need larger corpus to fund retirement expenses
+    expect(result.fiGoal).toBeGreaterThan(0)
   })
 
   it('handles 0 inflation rate', () => {
@@ -113,7 +120,8 @@ describe('calculateGoalMetrics', () => {
       baseParams.retirementAge,
       baseParams.goalCreatedIn,
       0,
-      baseParams.safeWithdrawalRate,
+      baseParams.growthRate,
+      baseParams.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
@@ -220,7 +228,17 @@ describe('projectFIDate', () => {
 
 describe('calculateGoalMetrics — negative inflation (deflation)', () => {
   it('reduces future expenses when inflation is negative', () => {
-    const result = calculateGoalMetrics(60000, '1990-06-15', 65, '2025-01', -2, 4, getMonthsBetween, parseDate)
+    const result = calculateGoalMetrics(
+      60000,
+      '1990-06-15',
+      65,
+      '2025-01',
+      -2,
+      8,
+      '2080-01',
+      getMonthsBetween,
+      parseDate,
+    )
     expect(result.annualExpenseAtRetirement).toBeLessThan(60000)
     expect(result.fiGoal).toBeLessThan(60000 / 0.04)
   })

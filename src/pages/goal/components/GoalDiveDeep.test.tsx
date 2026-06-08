@@ -33,29 +33,37 @@ const baseGoal = makeGoal({
 
 describe('GoalDiveDeep', () => {
   it('renders title with goal name', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     expect(screen.getByText('Analysis — Retire Early')).toBeInTheDocument()
   })
 
   it('renders projection section heading', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     expect(screen.getByText('Full Lifecycle — Projected')).toBeInTheDocument()
   })
 
   it('shows placeholder when birthday is empty', () => {
     const noBirthdayGoal = makeGoal({ ...baseGoal, birthday: '' })
-    render(<GoalDiveDeep goal={noBirthdayGoal} profileBirthday="" />)
+    render(<GoalDiveDeep goal={noBirthdayGoal} profileBirthday="" retirementCap={6000} nonRetirementBase={6000} />)
     expect(screen.getByText(/No projection available/)).toBeInTheDocument()
   })
 
   it('shows placeholder when goalEndYear is empty', () => {
     const noEndGoal = makeGoal({ ...baseGoal, goalEndYear: '' })
-    render(<GoalDiveDeep goal={noEndGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={noEndGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     expect(screen.getByText(/No projection available/)).toBeInTheDocument()
   })
 
   it('renders interval toggle buttons', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     expect(screen.getByText('Monthly')).toBeInTheDocument()
     expect(screen.getByText('Yearly')).toBeInTheDocument()
     expect(screen.getByText('Every 5 Yrs')).toBeInTheDocument()
@@ -63,21 +71,27 @@ describe('GoalDiveDeep', () => {
   })
 
   it('defaults to table view and shows View Chart button', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     expect(screen.getByText('View Chart')).toBeInTheDocument()
     expect(screen.getByRole('table')).toBeInTheDocument()
   })
 
   it('switches to chart view when View Chart is clicked', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     await user.click(screen.getByText('View Chart'))
     expect(screen.getByText('View Table')).toBeInTheDocument()
     expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
   })
 
   it('renders table with data rows in yearly view', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     const table = screen.getByRole('table')
     const rows = within(table).getAllByRole('row')
     expect(rows.length).toBeGreaterThan(10)
@@ -85,7 +99,9 @@ describe('GoalDiveDeep', () => {
 
   it('shows collapsible year groups in monthly table view', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     await user.click(screen.getByText('Monthly'))
     const yearToggles = screen.getAllByRole('button', { expanded: false })
     expect(yearToggles.length).toBeGreaterThan(0)
@@ -93,7 +109,9 @@ describe('GoalDiveDeep', () => {
 
   it('expands a year group to show monthly rows', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     await user.click(screen.getByText('Monthly'))
     const yearToggles = screen.getAllByRole('button', { expanded: false })
     await user.click(yearToggles[0])
@@ -102,7 +120,9 @@ describe('GoalDiveDeep', () => {
 
   it('changes interval when interval buttons are clicked', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     await user.click(screen.getByText('Every 5 Yrs'))
     const table = screen.getByRole('table')
     const fiveYrRows = within(table).getAllByRole('row')
@@ -118,6 +138,8 @@ describe('GoalDiveDeep', () => {
         profileBirthday={profileBirthday}
         currentBalance={5_000_000}
         monthlyContribution={5000}
+        retirementCap={6000}
+        nonRetirementBase={6000}
       />,
     )
     const table = screen.getByRole('table')
@@ -142,6 +164,8 @@ describe('GoalDiveDeep', () => {
         profileBirthday={profileBirthday}
         currentBalance={1_500_000}
         monthlyContribution={1000}
+        retirementCap={6000}
+        nonRetirementBase={6000}
       />,
     )
     const table = screen.getByRole('table')
@@ -161,14 +185,23 @@ describe('GoalDiveDeep', () => {
 
   it('uses profileBirthday when goal.birthday is empty', () => {
     const goalNoBirthday = makeGoal({ ...baseGoal, birthday: '' })
-    render(<GoalDiveDeep goal={goalNoBirthday} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep
+        goal={goalNoBirthday}
+        profileBirthday={profileBirthday}
+        retirementCap={6000}
+        nonRetirementBase={6000}
+      />,
+    )
     expect(screen.queryByText(/No projection available/)).not.toBeInTheDocument()
     expect(screen.getByText('View Chart')).toBeInTheDocument()
   })
 
   it('collapses an expanded year group hiding its monthly rows', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     await user.click(screen.getByText('Monthly'))
     const yearToggles = screen.getAllByRole('button', { expanded: false })
     const firstYearToggle = yearToggles[0]
@@ -183,7 +216,9 @@ describe('GoalDiveDeep', () => {
 
   it('switches from table back to chart view', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     expect(screen.getByRole('table')).toBeInTheDocument()
     await user.click(screen.getByText('View Chart'))
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
@@ -192,7 +227,9 @@ describe('GoalDiveDeep', () => {
 
   it('expands multiple year groups simultaneously', async () => {
     const user = userEvent.setup()
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     await user.click(screen.getByText('Monthly'))
     const yearToggles = screen.getAllByRole('button', { expanded: false })
     await user.click(yearToggles[0])
@@ -211,6 +248,8 @@ describe('GoalDiveDeep', () => {
         profileBirthday={profileBirthday}
         currentBalance={100000}
         monthlyContribution={2000}
+        retirementCap={6000}
+        nonRetirementBase={6000}
       />,
     )
     expect(screen.getByRole('button', { name: /Projected/ })).toBeInTheDocument()
@@ -218,7 +257,9 @@ describe('GoalDiveDeep', () => {
   })
 
   it('applies aria-pressed to active scenario button', () => {
-    render(<GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} />)
+    render(
+      <GoalDiveDeep goal={baseGoal} profileBirthday={profileBirthday} retirementCap={6000} nonRetirementBase={6000} />,
+    )
     const projectedBtn = screen.getByRole('button', { name: /Projected/ })
     expect(projectedBtn).toHaveAttribute('aria-pressed', 'true')
   })
@@ -232,6 +273,8 @@ describe('GoalDiveDeep', () => {
         growthRate={10}
         currentBalance={100000}
         monthlyContribution={2000}
+        retirementCap={6000}
+        nonRetirementBase={6000}
       />,
     )
     expect(screen.getByRole('table')).toBeInTheDocument()

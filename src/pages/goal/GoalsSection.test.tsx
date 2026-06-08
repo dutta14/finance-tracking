@@ -96,7 +96,17 @@ const goalB = makeGoal({ id: 2, goalName: 'Bravo' })
 const goalC = makeGoal({ id: 3, goalName: 'Charlie' })
 
 const mockGrowthSettings = {
-  settings: { preBoundaryGrowth: 8, postBoundaryGrowth: 6, ageBoundary: 60, gwGrowth: 8 },
+  settings: {
+    preBoundaryGrowth: 8,
+    postBoundaryGrowth: 6,
+    ageBoundary: 60,
+    gwGrowth: 8,
+    inflation: 3,
+    retirementCap: 6000,
+    nonRetirementBase: 6000,
+    primaryRetirementAccessAge: 60,
+    partnerRetirementAccessAge: 60,
+  },
   updateSettings: vi.fn(),
   getFiOverride: vi.fn().mockReturnValue(null),
   setFiOverride: vi.fn(),

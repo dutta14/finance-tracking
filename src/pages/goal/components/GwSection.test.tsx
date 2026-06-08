@@ -39,6 +39,7 @@ const defaultProps = {
   onCreateGwGoal: noop as (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void,
   onUpdateGwGoal: noop as (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void,
   onDeleteGwGoal: noop as (id: number) => void,
+  gwGrowthRate: 8,
 }
 
 function renderGwSection(overrides: Partial<typeof defaultProps> & { initialFormOpen?: boolean } = {}) {

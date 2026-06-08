@@ -28,46 +28,56 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
   const hasBreakdown = rows.some(r => r.retirementPrimary !== undefined)
 
   const renderMilestoneRows = (prev: ProjectionRow | null, row: ProjectionRow) => {
-    const milestones: React.JSX.Element[] = []
+    const items: { key: string; date: Date | null; className: string; label: string }[] = []
     if (prev && prev.growthRate !== undefined && row.growthRate !== undefined && prev.growthRate !== row.growthRate) {
-      milestones.push(
-        <tr key={`rate-shift-${row.month}`} className="projection-rate-shift-row">
-          <td colSpan={hasBreakdown ? 7 : 4}>
-            <span className="projection-rate-shift-label">
-              Growth rate: {prev.growthRate}% → {row.growthRate}%
-            </span>
-          </td>
-        </tr>,
-      )
+      items.push({
+        key: `rate-shift-${row.month}`,
+        date: null,
+        className: 'projection-rate-shift-row',
+        label: `Growth rate: ${prev.growthRate}% → ${row.growthRate}%`,
+      })
     }
     if (prev && prev.primaryLocked && !row.primaryLocked) {
-      milestones.push(
-        <tr key={`unlock-primary-${row.month}`} className="projection-rate-shift-row projection-unlock-row">
-          <td colSpan={hasBreakdown ? 7 : 4}>
-            <span className="projection-rate-shift-label">🔓 Primary Retirement unlocked</span>
-          </td>
-        </tr>,
-      )
+      items.push({
+        key: `unlock-primary-${row.month}`,
+        date: primaryAccessDate || null,
+        className: 'projection-rate-shift-row projection-unlock-row',
+        label: 'Primary Retirement unlocked',
+      })
     }
     if (prev && prev.phase === 'accumulation' && row.phase === 'drawdown') {
-      milestones.push(
-        <tr key={`fire-start-${row.month}`} className="projection-rate-shift-row projection-fire-row">
-          <td colSpan={hasBreakdown ? 7 : 4}>
-            <span className="projection-rate-shift-label">🏖️ F.I.R.E.</span>
-          </td>
-        </tr>,
-      )
+      items.push({
+        key: `fire-start-${row.month}`,
+        date: null,
+        className: 'projection-rate-shift-row projection-fire-row',
+        label: 'F.I.R.E.',
+      })
     }
     if (prev && prev.partnerLocked && !row.partnerLocked) {
-      milestones.push(
-        <tr key={`unlock-partner-${row.month}`} className="projection-rate-shift-row projection-unlock-row">
-          <td colSpan={hasBreakdown ? 7 : 4}>
-            <span className="projection-rate-shift-label">🔓 Partner Retirement unlocked</span>
-          </td>
-        </tr>,
-      )
+      items.push({
+        key: `unlock-partner-${row.month}`,
+        date: partnerAccessDate || null,
+        className: 'projection-rate-shift-row projection-unlock-row',
+        label: 'Partner Retirement unlocked',
+      })
     }
-    return milestones.length > 0 ? milestones : null
+    if (items.length === 0) return null
+    // Sort: items with dates (retirement unlocks) come in date order;
+    // items without dates (rate shift, FIRE) keep their position relative to dated items
+    // FIRE always appears after any retirement unlock that triggers on the same row
+    items.sort((a, b) => {
+      if (a.date && b.date) return a.date.getTime() - b.date.getTime()
+      if (a.date && !b.date) return -1
+      if (!a.date && b.date) return 1
+      return 0
+    })
+    return items.map(item => (
+      <tr key={item.key} className={item.className}>
+        <td colSpan={hasBreakdown ? 7 : 4}>
+          <span className="projection-rate-shift-label">{item.label}</span>
+        </td>
+      </tr>
+    ))
   }
 
   const renderRow = (row: ProjectionRow) => (

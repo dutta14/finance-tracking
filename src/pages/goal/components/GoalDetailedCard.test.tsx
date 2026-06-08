@@ -634,7 +634,6 @@ describe('GoalDetailedCard projection diff text', () => {
       date: projected,
       months: 300,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
@@ -648,7 +647,6 @@ describe('GoalDetailedCard projection diff text', () => {
       date: projected,
       months: 293,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
@@ -662,7 +660,6 @@ describe('GoalDetailedCard projection diff text', () => {
       date: projected,
       months: 360,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
@@ -910,7 +907,6 @@ describe('GoalDetailedCard — projection on track (absDiffMonths <= 6)', () => 
       date: new Date(2050, 0, 10), // Jan 10 2050 — ~5 days diff rounds to 0 months
       months: 300,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/On track/)).toBeInTheDocument()
@@ -926,7 +922,6 @@ describe('GoalDetailedCard — projection years plural (line 302)', () => {
       date: new Date(2047, 0, 1),
       months: 24,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/3 years early/)).toBeInTheDocument()
@@ -940,7 +935,6 @@ describe('GoalDetailedCard — projection years plural (line 302)', () => {
       date: new Date(2048, 11, 1), // Dec 2048 → ~13 months before Jan 2050 → rounds to 1 year
       months: 12,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/1 year early/)).toBeInTheDocument()
@@ -992,7 +986,6 @@ describe('GoalDetailedCard — projection 1 month early (line 299 singular)', ()
       date: new Date(2049, 11, 1), // Dec 2049 — 1 month before Jan 2050
       months: 1,
       requiredCorpus: 2_000_000,
-      effectiveSWR: 4,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/1 month early/)).toBeInTheDocument()
