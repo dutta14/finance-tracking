@@ -140,7 +140,6 @@ const Goal: FC = () => {
             index
             element={
               <>
-                <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
                 <div className="goal-container">
                   <GoalsSection
                     goals={goals}
@@ -207,6 +206,7 @@ const Goal: FC = () => {
               <GoalDetail
                 goals={goals}
                 profileBirthday={profileBirthday}
+                partnerBirthday={profile.partner?.birthday || ''}
                 gwGoals={gwGoals}
                 growthSettings={growthCtx}
                 onUpdateGoal={updateGoal}

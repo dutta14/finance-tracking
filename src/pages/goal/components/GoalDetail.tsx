@@ -9,7 +9,14 @@ import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
 import GrowthSettingsPanel from './GrowthSettingsPanel'
-import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
+import {
+  getTotalForMonth,
+  getFiBreakdown,
+  getRetirementMonth,
+  monthsBetween,
+  calcMonthlySaving,
+  getGwTarget,
+} from '../utils/goalMath'
 import { getFiTarget } from '../utils/goalCalculations'
 import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
 import { useGrowthSettings } from '../hooks/useGrowthSettings'
@@ -22,6 +29,7 @@ import '../../../styles/GrowthSettings.css'
 interface GoalDetailProps {
   goals: FinancialGoal[]
   profileBirthday: string
+  partnerBirthday?: string
   gwGoals: GwGoal[]
   growthSettings: ReturnType<typeof useGrowthSettings>
   onUpdateGoal: (goalId: number, goal: FinancialGoal) => void
@@ -36,6 +44,7 @@ interface GoalDetailProps {
 const GoalDetail: FC<GoalDetailProps> = ({
   goals,
   profileBirthday,
+  partnerBirthday,
   gwGoals,
   growthSettings: growthCtx,
   onUpdateGoal,
@@ -54,7 +63,14 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [renameMode, setRenameMode] = useState(false)
   const [renameName, setRenameName] = useState('')
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
+  const [showYearly, setShowYearly] = useState(false)
   const renameInputRef = useRef<HTMLInputElement>(null)
+  const savingsOverride = goal?.savingsOverride ?? null
+
+  const setSavingsOverride = (v: number | null) => {
+    if (!goal) return
+    onUpdateGoal(goalId, { ...goal, savingsOverride: v })
+  }
 
   const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
   const gwGrowth = growthCtx.settings.gwGrowth
@@ -99,7 +115,13 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const n = monthsBetween(currentMonth, retMonth)
 
     const fiBal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
-    const fiTarget = getFiTarget(goal, profileBirthday, fiGrowth)
+    const fiTarget = getFiTarget(
+      goal,
+      profileBirthday,
+      fiGrowth,
+      growthCtx.settings.postBoundaryGrowth,
+      growthCtx.settings.ageBoundary,
+    )
     const fiMonthly = fiTarget > 0 ? calcMonthlySaving(fiBal, fiTarget, fiGrowth, n) : 0
 
     const gwTarget = getGwTarget(goal, gwGoals, profileBirthday)
@@ -109,8 +131,9 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const totalNeeded = fiMonthly + gwMonthly
     const hasGoals = fiTarget > 0 || gwTarget > 0
 
-    return { totalNeeded, fiBal, currentMonth, hasGoals }
-  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth])
+    const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
+    return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown }
+  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
 
   if (!goal) {
     return (
@@ -240,6 +263,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
               </button>
             </div>
           )}
+          <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
           <GoalActionsMenu onRename={enterRename} onDuplicate={() => onCopyGoal(goal)} onDelete={handleDelete} />
         </div>
       </div>
@@ -252,11 +276,30 @@ const GoalDetail: FC<GoalDetailProps> = ({
             ) : summaryData.totalNeeded > 0 ? (
               <>
                 To achieve all your goals, you need to save{' '}
-                <strong>{formatCurrency(summaryData.totalNeeded)}/mo</strong> total.
+                <strong
+                  className="goal-summary-toggleable"
+                  onClick={() => setShowYearly(v => !v)}
+                  title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                >
+                  {showYearly
+                    ? `${formatCurrency(summaryData.totalNeeded * 12)}/yr`
+                    : `${formatCurrency(summaryData.totalNeeded)}/mo`}
+                </strong>{' '}
+                total.
                 {yearMonthlySaving !== null && (
                   <>
                     {' '}
-                    You&apos;re saving <strong>{formatCurrency(yearMonthlySaving)}/mo</strong> in{' '}
+                    {summaryYear < new Date().getFullYear() ? 'You saved' : 'You\u0027re saving'}{' '}
+                    <strong
+                      className="goal-summary-toggleable"
+                      onClick={() => setShowYearly(v => !v)}
+                      title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                    >
+                      {showYearly
+                        ? `${formatCurrency(yearMonthlySaving * 12)}/yr`
+                        : `${formatCurrency(yearMonthlySaving)}/mo`}
+                    </strong>{' '}
+                    in{' '}
                     <select
                       className="goal-summary-year-select"
                       value={summaryYear}
@@ -269,11 +312,23 @@ const GoalDetail: FC<GoalDetailProps> = ({
                       ))}
                     </select>
                     {yearMonthlySaving >= summaryData.totalNeeded ? (
-                      ' \u2014 you\u2019re on track.'
+                      summaryYear < new Date().getFullYear() ? (
+                        ' \u2014 you were on track.'
+                      ) : (
+                        ' \u2014 you\u2019re on track.'
+                      )
                     ) : (
                       <>
-                        {' \u2014 you need '}
-                        <strong>{formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo</strong>
+                        {summaryYear < new Date().getFullYear() ? ' \u2014 you needed ' : ' \u2014 you need '}
+                        <strong
+                          className="goal-summary-toggleable"
+                          onClick={() => setShowYearly(v => !v)}
+                          title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                        >
+                          {showYearly
+                            ? `${formatCurrency((summaryData.totalNeeded - yearMonthlySaving) * 12)}/yr`
+                            : `${formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo`}
+                        </strong>
                         {' more.'}
                       </>
                     )}
@@ -287,21 +342,37 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </div>
       )}
 
-      <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
-
       <div className="goal-detail-body goal-detail-body--columns">
         <div className="goal-detail-column">
           <h2 className="goal-detail-column-title">
             <span className="goal-detail-column-badge goal-detail-column-badge--fi">FI</span>
             Financial Independence
           </h2>
-          <FiSavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} growthRate={fiGrowth} />
+          <FiSavingsPlan
+            goal={goal}
+            gwGoals={gwGoals}
+            profileBirthday={profileBirthday}
+            growthRate={fiGrowth}
+            postGrowthRate={growthCtx.settings.postBoundaryGrowth}
+            ageBoundary={growthCtx.settings.ageBoundary}
+            showYearly={showYearly}
+            onTogglePeriod={() => setShowYearly(v => !v)}
+          />
           <GoalDetailedCard
             goal={goal}
             profileBirthday={profileBirthday}
             onUpdateGoal={onUpdateGoal}
             showActions={false}
             showTitle={false}
+            preBoundaryGrowth={growthCtx.settings.preBoundaryGrowth}
+            postBoundaryGrowth={growthCtx.settings.postBoundaryGrowth}
+            ageBoundary={growthCtx.settings.ageBoundary}
+            inflation={growthCtx.settings.inflation}
+            showYearly={showYearly}
+            onTogglePeriod={() => setShowYearly(v => !v)}
+            summaryYear={summaryYear}
+            savingsOverride={savingsOverride}
+            onSavingsOverrideChange={setSavingsOverride}
           />
         </div>
 
@@ -310,7 +381,14 @@ const GoalDetail: FC<GoalDetailProps> = ({
             <span className="goal-detail-column-badge goal-detail-column-badge--gw">GW</span>
             Generational Wealth
           </h2>
-          <GwSavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} growthRate={gwGrowth} />
+          <GwSavingsPlan
+            goal={goal}
+            gwGoals={gwGoals}
+            profileBirthday={profileBirthday}
+            growthRate={gwGrowth}
+            showYearly={showYearly}
+            onTogglePeriod={() => setShowYearly(v => !v)}
+          />
           <div className="goal-detail-column-card">
             {goal.fiGoal > 0 && (
               <GwSection
@@ -318,6 +396,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
                 goals={goals}
                 profileBirthday={profileBirthday}
                 gwGoals={gwGoals}
+                gwGrowthRate={gwGrowth}
                 onCreateGwGoal={onCreateGwGoal}
                 onUpdateGwGoal={onUpdateGwGoal}
                 onDeleteGwGoal={onDeleteGwGoal}
@@ -348,10 +427,18 @@ const GoalDetail: FC<GoalDetailProps> = ({
         <GoalDiveDeep
           goal={goal}
           profileBirthday={profileBirthday}
+          partnerBirthday={partnerBirthday}
           currentBalance={summaryData?.fiBal || 0}
           monthlyContribution={yearMonthlySaving ?? 0}
           currentMonth={summaryData?.currentMonth}
           growthRate={fiGrowth}
+          postGrowthRate={growthCtx.settings.postBoundaryGrowth}
+          ageBoundary={growthCtx.settings.ageBoundary}
+          fiBreakdown={summaryData?.fiBreakdown}
+          primaryRetirementAccessAge={growthCtx.settings.primaryRetirementAccessAge}
+          partnerRetirementAccessAge={growthCtx.settings.partnerRetirementAccessAge}
+          retirementCap={growthCtx.settings.retirementCap}
+          nonRetirementBase={growthCtx.settings.nonRetirementBase}
         />
       )}
     </div>

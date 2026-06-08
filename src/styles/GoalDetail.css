@@ -168,6 +168,56 @@
   font-feature-settings: 'tnum';
 }
 
+.goal-summary-toggleable {
+  cursor: pointer;
+  text-decoration: underline dashed var(--accent, #0f766e);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease-out;
+}
+
+.goal-summary-toggleable:hover {
+  text-decoration-style: solid;
+  color: var(--accent, #0f766e);
+}
+
+.fi-savings-editable {
+  cursor: text;
+}
+
+.fi-savings-edit-inline {
+  display: inline;
+  font-weight: 700;
+}
+
+.fi-savings-inline-input {
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-bottom: 2px solid var(--accent, #0f766e);
+  background: transparent;
+  color: inherit;
+  width: auto;
+  min-width: 4ch;
+  padding: 0;
+  outline: none;
+}
+
+.fi-savings-reset-btn {
+  font-size: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #6b7280);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.fi-savings-reset-btn:hover {
+  color: var(--accent, #0f766e);
+}
+
 .goal-summary-year-select {
   appearance: none;
   -webkit-appearance: none;

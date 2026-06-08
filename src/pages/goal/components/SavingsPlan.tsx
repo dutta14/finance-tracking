@@ -11,6 +11,10 @@ interface SavingsPlanProps {
   gwGoals: GwGoal[]
   profileBirthday: string
   growthRate?: number
+  postGrowthRate?: number
+  ageBoundary?: number
+  showYearly?: boolean
+  onTogglePeriod?: () => void
 }
 
 interface PlanResult {
@@ -228,7 +232,16 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
 export default SavingsPlan
 
 // Simplified plan components for column layout — just show monthly savings needed
-export const FiSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals: _gwGoals, profileBirthday, growthRate }) => {
+export const FiSavingsPlan: FC<SavingsPlanProps> = ({
+  goal,
+  gwGoals: _gwGoals,
+  profileBirthday,
+  growthRate,
+  postGrowthRate,
+  ageBoundary,
+  showYearly,
+  onTogglePeriod,
+}) => {
   const { accounts, balances, allMonths: months } = useData()
 
   const retirementMonth = useMemo(
@@ -239,7 +252,10 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals: _gwGoals, p
   const currentMonth = months[months.length - 1] || ''
   const fiGrowth = growthRate ?? 8
 
-  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, fiGrowth), [goal, profileBirthday, fiGrowth])
+  const fiTarget = useMemo(
+    () => getFiTarget(goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary),
+    [goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary],
+  )
 
   const monthlySaving = useMemo(() => {
     if (!currentMonth || months.length === 0 || fiTarget <= 0) return null
@@ -258,7 +274,10 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals: _gwGoals, p
           <span className="splan-simple-amount">you've achieved this goal 🎉</span>
         ) : (
           <>
-            you need to save <span className="splan-simple-amount">{formatCurrency(monthlySaving)}</span> per month
+            you need to save{' '}
+            <span className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
+              {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
+            </span>
           </>
         )}
       </p>
@@ -266,7 +285,14 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals: _gwGoals, p
   )
 }
 
-export const GwSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday, growthRate }) => {
+export const GwSavingsPlan: FC<SavingsPlanProps> = ({
+  goal,
+  gwGoals,
+  profileBirthday,
+  growthRate,
+  showYearly,
+  onTogglePeriod,
+}) => {
   const { accounts, balances, allMonths: months } = useData()
 
   const retirementMonth = useMemo(
@@ -295,7 +321,10 @@ export const GwSavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirt
           <span className="splan-simple-amount">you've achieved this goal 🎉</span>
         ) : (
           <>
-            you need to save <span className="splan-simple-amount">{formatCurrency(monthlySaving)}</span> per month
+            you need to save{' '}
+            <span className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
+              {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
+            </span>
           </>
         )}
       </p>

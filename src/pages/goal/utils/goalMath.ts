@@ -12,6 +12,34 @@ export const getTotalForMonth = (
   return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
 }
 
+export interface FiBreakdown {
+  retirementPrimary: number
+  retirementPartner: number
+  nonRetirement: number
+  total: number
+}
+
+export const getFiBreakdown = (accounts: Account[], balances: BalanceEntry[], month: string): FiBreakdown => {
+  const balMap = new Map<number, number>()
+  for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
+  let retirementPrimary = 0
+  let retirementPartner = 0
+  let nonRetirement = 0
+  for (const a of accounts) {
+    if (a.goalType !== 'fi') continue
+    const bal = balMap.get(a.id) ?? 0
+    if (a.type === 'retirement' && a.owner === 'primary') retirementPrimary += bal
+    else if (a.type === 'retirement' && a.owner === 'partner') retirementPartner += bal
+    else if (a.type === 'non-retirement') nonRetirement += bal
+  }
+  return {
+    retirementPrimary,
+    retirementPartner,
+    nonRetirement,
+    total: retirementPrimary + retirementPartner + nonRetirement,
+  }
+}
+
 export const getRetirementMonth = (birthday: string, retirementAge: number): string => {
   const [by, bm] = birthday.split('-').map(Number)
   const retYear = by + retirementAge

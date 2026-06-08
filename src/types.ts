@@ -27,6 +27,9 @@ export interface FinancialGoal {
   safeWithdrawalRate: number
   growth: number
 
+  // User Overrides
+  savingsOverride?: number | null
+
   // Calculated Fields
   retirement: string
   fiGoal: number

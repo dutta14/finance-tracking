@@ -5,6 +5,11 @@ export interface GrowthSettings {
   postBoundaryGrowth: number
   ageBoundary: number
   gwGrowth: number
+  inflation: number
+  retirementCap: number
+  nonRetirementBase: number
+  primaryRetirementAccessAge: number
+  partnerRetirementAccessAge: number
 }
 
 export interface FiGrowthOverride {
@@ -20,6 +25,11 @@ const DEFAULTS: GrowthSettings = {
   postBoundaryGrowth: 6,
   ageBoundary: 60,
   gwGrowth: 8,
+  inflation: 3,
+  retirementCap: 6000,
+  nonRetirementBase: 6000,
+  primaryRetirementAccessAge: 59.5,
+  partnerRetirementAccessAge: 59.5,
 }
 
 function loadSettings(): GrowthSettings {

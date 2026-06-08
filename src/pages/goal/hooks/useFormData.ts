@@ -11,7 +11,6 @@ export interface FormData {
   expenseValue: string
   monthlyExpenseValue: string
   inflationRate: string
-  safeWithdrawalRate: string
   growth: string
 }
 
@@ -25,7 +24,6 @@ const defaultFormData: FormData = {
   expenseValue: '',
   monthlyExpenseValue: '',
   inflationRate: '',
-  safeWithdrawalRate: '',
   growth: '',
 }
 
@@ -65,7 +63,6 @@ export const useFormData = () => {
       expenseValue: goal.expenseValue.toString(),
       monthlyExpenseValue: '',
       inflationRate: goal.inflationRate.toString(),
-      safeWithdrawalRate: goal.safeWithdrawalRate.toString(),
       growth: goal.growth.toString(),
     })
   }

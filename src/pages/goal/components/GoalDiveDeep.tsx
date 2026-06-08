@@ -1,7 +1,13 @@
 import { FC, useMemo, useState } from 'react'
 import { FinancialGoal } from '../../../types'
-import { ProjectionRow, buildPlannedProjection, buildProjectedLifecycle } from '../utils/lifecycleProjection'
+import {
+  ProjectionRow,
+  BalanceBreakdown,
+  buildPlannedProjection,
+  buildProjectedLifecycle,
+} from '../utils/lifecycleProjection'
 import { getFiTarget } from '../utils/goalCalculations'
+import { FiBreakdown } from '../utils/goalMath'
 import LifecycleChart from './LifecycleChart'
 import LifecycleTable from './LifecycleTable'
 import '../../../styles/GoalDiveDeep.css'
@@ -9,10 +15,18 @@ import '../../../styles/GoalDiveDeep.css'
 interface GoalDiveDeepProps {
   goal: FinancialGoal
   profileBirthday: string
+  partnerBirthday?: string
   currentBalance?: number
   monthlyContribution?: number
   currentMonth?: string
   growthRate?: number
+  postGrowthRate?: number
+  ageBoundary?: number
+  fiBreakdown?: FiBreakdown
+  primaryRetirementAccessAge?: number
+  partnerRetirementAccessAge?: number
+  retirementCap: number
+  nonRetirementBase: number
 }
 
 type DataMode = 'projected' | 'planned'
@@ -32,16 +46,58 @@ const INTERVAL_LABELS: { value: ViewInterval; label: string; months: number }[] 
 const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   goal,
   profileBirthday,
+  partnerBirthday,
   currentBalance = 0,
   monthlyContribution = 0,
   currentMonth,
   growthRate = 8,
+  postGrowthRate = 6,
+  ageBoundary = 60,
+  fiBreakdown,
+  primaryRetirementAccessAge = 59.5,
+  partnerRetirementAccessAge = 59.5,
+  retirementCap,
+  nonRetirementBase,
 }) => {
   const [interval, setInterval] = useState<ViewInterval>('yearly')
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [scenario, setScenario] = useState<DataMode>('projected')
 
-  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, growthRate), [goal, profileBirthday, growthRate])
+  const accessDates = useMemo(() => {
+    const birthday = profileBirthday || goal.birthday
+    if (!birthday) return { primaryAccessDate: undefined, partnerAccessDate: undefined }
+    const [by, bm] = birthday.split('-').map(Number)
+    const primaryYears = Math.floor(primaryRetirementAccessAge)
+    const primaryMonths = Math.round((primaryRetirementAccessAge - primaryYears) * 12)
+    const primaryAccessDate = new Date(by + primaryYears, bm - 1 + primaryMonths, 1)
+
+    const pBday = partnerBirthday || birthday
+    const [pby, pbm] = pBday.split('-').map(Number)
+    const partnerYears = Math.floor(partnerRetirementAccessAge)
+    const partnerMonths = Math.round((partnerRetirementAccessAge - partnerYears) * 12)
+    const partnerAccessDate = new Date(pby + partnerYears, pbm - 1 + partnerMonths, 1)
+
+    return { primaryAccessDate, partnerAccessDate }
+  }, [profileBirthday, partnerBirthday, goal.birthday, primaryRetirementAccessAge, partnerRetirementAccessAge])
+
+  const { primaryAccessDate, partnerAccessDate } = accessDates
+
+  const breakdown = useMemo<BalanceBreakdown | undefined>(() => {
+    if (!fiBreakdown) return undefined
+    if (!primaryAccessDate) return undefined
+    return {
+      retirementPrimary: fiBreakdown.retirementPrimary,
+      retirementPartner: fiBreakdown.retirementPartner,
+      nonRetirement: fiBreakdown.nonRetirement,
+      primaryAccessDate,
+      partnerAccessDate,
+    }
+  }, [fiBreakdown, primaryAccessDate, partnerAccessDate])
+
+  const fiTarget = useMemo(
+    () => getFiTarget(goal, profileBirthday, growthRate, postGrowthRate, ageBoundary),
+    [goal, profileBirthday, growthRate, postGrowthRate, ageBoundary],
+  )
 
   const plannedMonthly = useMemo(() => {
     const birthday = profileBirthday || goal.birthday
@@ -70,9 +126,44 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   const projection = useMemo(
     () =>
       scenario === 'planned'
-        ? buildPlannedProjection(goal, profileBirthday, currentBalance, monthlyContribution, growthRate)
-        : buildProjectedLifecycle(goal, profileBirthday, currentBalance, monthlyContribution, growthRate),
-    [goal, profileBirthday, currentBalance, monthlyContribution, scenario, growthRate],
+        ? buildPlannedProjection(
+            goal,
+            profileBirthday,
+            currentBalance,
+            retirementCap,
+            nonRetirementBase,
+            plannedMonthly,
+            growthRate,
+            postGrowthRate,
+            ageBoundary,
+            breakdown,
+          )
+        : buildProjectedLifecycle(
+            goal,
+            profileBirthday,
+            currentBalance,
+            monthlyContribution,
+            retirementCap,
+            nonRetirementBase,
+            growthRate,
+            postGrowthRate,
+            ageBoundary,
+            breakdown,
+          ),
+    [
+      goal,
+      profileBirthday,
+      currentBalance,
+      monthlyContribution,
+      plannedMonthly,
+      scenario,
+      growthRate,
+      postGrowthRate,
+      ageBoundary,
+      breakdown,
+      retirementCap,
+      nonRetirementBase,
+    ],
   )
 
   const intervalMonths = INTERVAL_LABELS.find(i => i.value === interval)!.months
@@ -143,7 +234,12 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
             {viewMode === 'chart' ? (
               <LifecycleChart rows={filteredRows} />
             ) : (
-              <LifecycleTable rows={filteredRows} interval={interval} />
+              <LifecycleTable
+                rows={filteredRows}
+                interval={interval}
+                primaryAccessDate={primaryAccessDate}
+                partnerAccessDate={partnerAccessDate}
+              />
             )}
           </>
         )}

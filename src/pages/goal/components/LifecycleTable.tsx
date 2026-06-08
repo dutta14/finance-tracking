@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC } from 'react'
 import { ProjectionRow } from '../utils/lifecycleProjection'
 
 const dollars = (n: number) =>
@@ -9,39 +9,13 @@ type ViewInterval = 'monthly' | 'yearly' | '5year' | '10year'
 interface LifecycleTableProps {
   rows: ProjectionRow[]
   interval: ViewInterval
+  primaryAccessDate?: Date
+  partnerAccessDate?: Date
 }
 
-const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
-  const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set())
-
-  const groupedByYear = useMemo(() => {
-    if (interval !== 'monthly') return null
-    const groups = new Map<string, ProjectionRow[]>()
-    rows.forEach(row => {
-      const year = row.month.split(' ')[1]
-      if (!groups.has(year)) groups.set(year, [])
-      groups.get(year)!.push(row)
-    })
-    return groups
-  }, [rows, interval])
-
-  const toggleYearExpand = (year: string) => {
-    setExpandedYears(prev => {
-      const next = new Set(prev)
-      if (next.has(year)) next.delete(year)
-      else next.add(year)
-      return next
-    })
-  }
-
-  const allYears = groupedByYear ? Array.from(groupedByYear.keys()) : []
-  const allExpanded = allYears.length > 0 && allYears.every(y => expandedYears.has(y))
-
-  const toggleAll = () => {
-    if (allExpanded) setExpandedYears(new Set())
-    else setExpandedYears(new Set(allYears))
-  }
-
+const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccessDate, partnerAccessDate }) => {
+  // Order retirement columns by which unlocks first
+  const primaryFirst = !partnerAccessDate || (primaryAccessDate && primaryAccessDate <= partnerAccessDate)
   const expenseLabel =
     interval === 'monthly'
       ? 'Monthly Expense'
@@ -51,19 +25,49 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
           ? '5-Year Expense'
           : '10-Year Expense'
 
-  const renderRateShift = (prev: ProjectionRow | null, row: ProjectionRow) => {
+  const hasBreakdown = rows.some(r => r.retirementPrimary !== undefined)
+
+  const renderMilestoneRows = (prev: ProjectionRow | null, row: ProjectionRow) => {
+    const milestones: React.JSX.Element[] = []
     if (prev && prev.growthRate !== undefined && row.growthRate !== undefined && prev.growthRate !== row.growthRate) {
-      return (
+      milestones.push(
         <tr key={`rate-shift-${row.month}`} className="projection-rate-shift-row">
-          <td colSpan={4}>
+          <td colSpan={hasBreakdown ? 7 : 4}>
             <span className="projection-rate-shift-label">
               Growth rate: {prev.growthRate}% → {row.growthRate}%
             </span>
           </td>
-        </tr>
+        </tr>,
       )
     }
-    return null
+    if (prev && prev.primaryLocked && !row.primaryLocked) {
+      milestones.push(
+        <tr key={`unlock-primary-${row.month}`} className="projection-rate-shift-row projection-unlock-row">
+          <td colSpan={hasBreakdown ? 7 : 4}>
+            <span className="projection-rate-shift-label">🔓 Primary Retirement unlocked</span>
+          </td>
+        </tr>,
+      )
+    }
+    if (prev && prev.phase === 'accumulation' && row.phase === 'drawdown') {
+      milestones.push(
+        <tr key={`fire-start-${row.month}`} className="projection-rate-shift-row projection-fire-row">
+          <td colSpan={hasBreakdown ? 7 : 4}>
+            <span className="projection-rate-shift-label">🏖️ F.I.R.E.</span>
+          </td>
+        </tr>,
+      )
+    }
+    if (prev && prev.partnerLocked && !row.partnerLocked) {
+      milestones.push(
+        <tr key={`unlock-partner-${row.month}`} className="projection-rate-shift-row projection-unlock-row">
+          <td colSpan={hasBreakdown ? 7 : 4}>
+            <span className="projection-rate-shift-label">🔓 Partner Retirement unlocked</span>
+          </td>
+        </tr>,
+      )
+    }
+    return milestones.length > 0 ? milestones : null
   }
 
   const renderRow = (row: ProjectionRow) => (
@@ -72,8 +76,34 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
       <td className={`phase-badge phase-badge--${row.phase}`}>
         {row.phase === 'accumulation' ? 'Saving' : 'Spending'}
       </td>
-      <td>{row.phase === 'drawdown' ? dollars(row.expense) : '—'}</td>
-      <td>{dollars(row.remaining)}</td>
+      <td>{row.phase === 'drawdown' ? dollars(Math.round(row.expense)) : '—'}</td>
+      {hasBreakdown && (
+        <>
+          <td>
+            {dollars(Math.round(row.nonRetirement ?? 0))}
+            {row.phase === 'accumulation' && row.contribNonRet ? (
+              <span className="contrib-badge">+{dollars(Math.round(row.contribNonRet))}</span>
+            ) : null}
+          </td>
+          <td className={(primaryFirst ? row.primaryLocked : row.partnerLocked) ? 'bucket-locked' : ''}>
+            {dollars(Math.round((primaryFirst ? row.retirementPrimary : row.retirementPartner) ?? 0))}
+            {row.phase === 'accumulation' && (primaryFirst ? row.contribPrimary : row.contribPartner) ? (
+              <span className="contrib-badge">
+                +{dollars(Math.round((primaryFirst ? row.contribPrimary : row.contribPartner)!))}
+              </span>
+            ) : null}
+          </td>
+          <td className={(primaryFirst ? row.partnerLocked : row.primaryLocked) ? 'bucket-locked' : ''}>
+            {dollars(Math.round((primaryFirst ? row.retirementPartner : row.retirementPrimary) ?? 0))}
+            {row.phase === 'accumulation' && (primaryFirst ? row.contribPartner : row.contribPrimary) ? (
+              <span className="contrib-badge">
+                +{dollars(Math.round((primaryFirst ? row.contribPartner : row.contribPrimary)!))}
+              </span>
+            ) : null}
+          </td>
+        </>
+      )}
+      <td className="portfolio-total">{dollars(Math.round(row.remaining))}</td>
     </tr>
   )
 
@@ -85,86 +115,27 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval }) => {
             <th scope="col">Month</th>
             <th scope="col">Phase</th>
             <th scope="col">{expenseLabel}</th>
-            <th scope="col">Portfolio Balance</th>
+            {hasBreakdown && (
+              <>
+                <th scope="col">Non-Retirement</th>
+                <th scope="col">{primaryFirst ? 'Retirement (Primary)' : 'Retirement (Partner)'}</th>
+                <th scope="col">{primaryFirst ? 'Retirement (Partner)' : 'Retirement (Primary)'}</th>
+              </>
+            )}
+            <th scope="col" className="portfolio-total-header">
+              Portfolio Balance
+            </th>
           </tr>
         </thead>
         <tbody>
-          {interval === 'monthly' && groupedByYear && (
-            <tr className="projection-expand-all-row">
-              <td colSpan={4}>
-                <button
-                  className="projection-expand-all-btn"
-                  onClick={toggleAll}
-                  aria-label={allExpanded ? 'Collapse all years' : 'Expand all years'}
-                >
-                  {allExpanded ? 'Collapse All' : 'Expand All'}
-                </button>
-              </td>
-            </tr>
-          )}
-          {interval === 'monthly' && groupedByYear
-            ? Array.from(groupedByYear.entries()).flatMap(([year, yearRows], yearIdx, yearEntries) => {
-                const prevYearRows = yearIdx > 0 ? yearEntries[yearIdx - 1][1] : null
-                const lastRowOfPrevYear = prevYearRows ? prevYearRows[prevYearRows.length - 1] : null
-                return [
-                  <tr key={`year-${year}`} className="projection-year-header">
-                    <td colSpan={4}>
-                      <button
-                        className="projection-year-toggle"
-                        onClick={() => toggleYearExpand(year)}
-                        aria-expanded={expandedYears.has(year)}
-                      >
-                        <svg
-                          className="projection-year-chevron"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="currentColor"
-                        >
-                          {expandedYears.has(year) ? (
-                            <path
-                              d="M3.5 10.5L8 6l4.5 4.5"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          ) : (
-                            <path
-                              d="M12.5 5.5L8 10l-4.5-4.5"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          )}
-                        </svg>
-                        {year}
-                      </button>
-                    </td>
-                  </tr>,
-                  ...(expandedYears.has(year)
-                    ? yearRows.flatMap((row, idx) => {
-                        const prev = idx > 0 ? yearRows[idx - 1] : lastRowOfPrevYear
-                        const elements: React.JSX.Element[] = []
-                        const shift = renderRateShift(prev, row)
-                        if (shift) elements.push(shift)
-                        elements.push(renderRow(row))
-                        return elements
-                      })
-                    : []),
-                ]
-              })
-            : rows.flatMap((row, idx) => {
-                const prev = idx > 0 ? rows[idx - 1] : null
-                const elements: React.JSX.Element[] = []
-                const shift = renderRateShift(prev, row)
-                if (shift) elements.push(shift)
-                elements.push(renderRow(row))
-                return elements
-              })}
+          {rows.flatMap((row, idx) => {
+            const prev = idx > 0 ? rows[idx - 1] : null
+            const elements: React.JSX.Element[] = []
+            const milestones = renderMilestoneRows(prev, row)
+            if (milestones) elements.push(...milestones)
+            elements.push(renderRow(row))
+            return elements
+          })}
         </tbody>
       </table>
     </div>

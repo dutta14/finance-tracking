@@ -8,6 +8,7 @@ interface GwSectionProps {
   goals: FinancialGoal[]
   profileBirthday: string
   gwGoals: GwGoal[]
+  gwGrowthRate: number
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
   onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
   onDeleteGwGoal: (id: number) => void
@@ -30,10 +31,9 @@ interface GwFormFields {
   label: string
   disburseAge: string
   disburseAmount: string
-  growthRate: string
 }
 
-const EMPTY_FORM: GwFormFields = { label: '', disburseAge: '', disburseAmount: '', growthRate: '7' }
+const EMPTY_FORM: GwFormFields = { label: '', disburseAge: '', disburseAmount: '' }
 
 type GwDollarView = 'creation' | 'disbursement'
 
@@ -45,6 +45,7 @@ const GwGoalCard: FC<{
   retirementAge: number
   goalCreatedIn: string
   profileBirthday: string
+  gwGrowthRate: number
   dollarView: GwDollarView
   onSetDollarView: (v: GwDollarView) => void
   onEdit: (fields: GwFormFields) => void
@@ -58,6 +59,7 @@ const GwGoalCard: FC<{
   retirementAge,
   goalCreatedIn,
   profileBirthday,
+  gwGrowthRate,
   dollarView: _dollarView,
   onSetDollarView: _onSetDollarView,
   onEdit,
@@ -69,7 +71,6 @@ const GwGoalCard: FC<{
     label: gw.label,
     disburseAge: String(gw.disburseAge),
     disburseAmount: String(gw.disburseAmount),
-    growthRate: String(gw.growthRate),
   })
   const [editError, setEditError] = useState('')
   const [pendingDelete, setPendingDelete] = useState(false)
@@ -100,7 +101,6 @@ const GwGoalCard: FC<{
   const handleSave = () => {
     const disburseAge = Number(editFields.disburseAge)
     const disburseAmount = Number(editFields.disburseAmount)
-    const growthRate = Number(editFields.growthRate)
     if (!editFields.label.trim()) {
       setEditError('Label is required.')
       return
@@ -113,10 +113,6 @@ const GwGoalCard: FC<{
       setEditError('Enter a valid target amount.')
       return
     }
-    if (growthRate <= 0 || growthRate > 50) {
-      setEditError('Growth rate must be 0.1–50%.')
-      return
-    }
     onEdit(editFields)
     setEditing(false)
     setEditError('')
@@ -127,7 +123,6 @@ const GwGoalCard: FC<{
       label: gw.label,
       disburseAge: String(gw.disburseAge),
       disburseAmount: String(gw.disburseAmount),
-      growthRate: String(gw.growthRate),
     })
     setEditError('')
     setEditing(false)
@@ -148,7 +143,7 @@ const GwGoalCard: FC<{
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - retirementAge) * 12)
   const pvAtRetirement =
     monthsRetToDisburse > 0
-      ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
+      ? disbursementTarget / Math.pow(1 + gwGrowthRate / 100 / 12, monthsRetToDisburse)
       : disbursementTarget
   const progressPct = gwProgressPct
 
@@ -234,18 +229,6 @@ const GwGoalCard: FC<{
                 min="1"
               />
             </div>
-            <div className="gw-form-group">
-              <label className="gw-form-label">Growth rate (% / yr)</label>
-              <input
-                className="gw-form-input"
-                type="number"
-                value={editFields.growthRate}
-                onChange={setEF('growthRate')}
-                min="0.1"
-                max="50"
-                step="0.1"
-              />
-            </div>
           </div>
           <div className="gw-form-actions">
             <button className="gw-form-save" onClick={handleSave}>
@@ -260,7 +243,7 @@ const GwGoalCard: FC<{
         <>
           <p className="gw-goal-prose">
             To have <strong>{dollars(disbursementTarget)}</strong> by age {gw.disburseAge} ({disburseYear}), you need{' '}
-            <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear}, growing at {gw.growthRate}% per year.
+            <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear}, growing at {gwGrowthRate}% per year.
           </p>
 
           <div className="gw-goal-progress-row">
@@ -282,6 +265,7 @@ const GwSection: FC<GwSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
+  gwGrowthRate,
   onCreateGwGoal,
   onUpdateGwGoal,
   onDeleteGwGoal,
@@ -307,11 +291,11 @@ const GwSection: FC<GwSectionProps> = ({
       const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
       const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
       const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-      const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
+      const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gwGrowthRate / 100 / 12, mRetToDisb) : disbTarget
       return sum + pv
     }, 0)
     return totalNeeded > 0 ? Math.min(100, Math.max(0, (gwTotal / totalNeeded) * 100)) : 0
-  }, [goalGoals, profileBirthday, goal])
+  }, [goalGoals, profileBirthday, goal, gwGrowthRate])
 
   const handleImport = (gw: GwGoal) => {
     onCreateGwGoal({
@@ -319,7 +303,7 @@ const GwSection: FC<GwSectionProps> = ({
       label: gw.label,
       disburseAge: gw.disburseAge,
       disburseAmount: gw.disburseAmount,
-      growthRate: gw.growthRate,
+      growthRate: gwGrowthRate,
       currentSavings: 0,
     })
     setImportPickerOpen(false)
@@ -331,7 +315,6 @@ const GwSection: FC<GwSectionProps> = ({
   const handleAdd = () => {
     const disburseAge = Number(form.disburseAge)
     const disburseAmount = Number(form.disburseAmount)
-    const growthRate = Number(form.growthRate)
 
     if (!form.label.trim()) {
       setFormError('Please enter a label for this goal.')
@@ -345,17 +328,13 @@ const GwSection: FC<GwSectionProps> = ({
       setFormError('Enter a valid target amount.')
       return
     }
-    if (growthRate <= 0 || growthRate > 50) {
-      setFormError('Growth rate must be between 0 and 50%.')
-      return
-    }
 
     onCreateGwGoal({
       fiGoalId: goal.id,
       label: form.label.trim(),
       disburseAge,
       disburseAmount,
-      growthRate,
+      growthRate: gwGrowthRate,
       currentSavings: 0,
     })
     setForm(EMPTY_FORM)
@@ -440,6 +419,7 @@ const GwSection: FC<GwSectionProps> = ({
               retirementAge={goal.retirementAge}
               goalCreatedIn={goal.goalCreatedIn}
               profileBirthday={profileBirthday}
+              gwGrowthRate={gwGrowthRate}
               dollarView={dollarView}
               onSetDollarView={setDollarView}
               gwProgressPct={gwProgressPct}
@@ -448,7 +428,6 @@ const GwSection: FC<GwSectionProps> = ({
                   label: fields.label.trim(),
                   disburseAge: Number(fields.disburseAge),
                   disburseAmount: Number(fields.disburseAmount),
-                  growthRate: Number(fields.growthRate),
                 })
               }
               onDelete={() => onDeleteGwGoal(gw.id)}
@@ -549,20 +528,6 @@ const GwSection: FC<GwSectionProps> = ({
                 onChange={setField('disburseAmount')}
                 min="1"
               />
-            </div>
-
-            <div className="gw-form-group">
-              <label className="gw-form-label">Growth rate (% / yr)</label>
-              <input
-                className="gw-form-input"
-                type="number"
-                value={form.growthRate}
-                onChange={setField('growthRate')}
-                min="0.1"
-                max="50"
-                step="0.1"
-              />
-              <span className="gw-form-hint">Separate from your FI portfolio growth</span>
             </div>
           </div>
 
