@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { makeAccount, makeBalanceEntry, makeGoal, makeGwGoal } from '../../../test/factories'
-import { calcMonthlySaving, getFiBreakdown, getGwTarget, getRetirementMonth, getTotalForMonth, monthsBetween } from './goalMath'
+import {
+  calcMonthlySaving,
+  getFiBreakdown,
+  getGwTarget,
+  getRetirementMonth,
+  getTotalForMonth,
+  monthsBetween,
+} from './goalMath'
 
 describe('goalMath', () => {
   describe('monthsBetween', () => {

@@ -320,7 +320,16 @@ describe('GoalDetailedCard savings override', () => {
 
   it('shows that FI is not reachable within 100 years when the savings override projection returns null', () => {
     mockedProjectFIDateWithDrawdown.mockImplementation(
-      (current: number, annualSavings: number, _a?: number, _b?: number, _c?: number, _d?: number, _e?: Date, _f?: Date) => {
+      (
+        current: number,
+        annualSavings: number,
+        _a?: number,
+        _b?: number,
+        _c?: number,
+        _d?: number,
+        _e?: Date,
+        _f?: Date,
+      ) => {
         if (annualSavings === 1200) return null
         const target = 2_000_000
         const months = Math.ceil((target - current) / (annualSavings / 12))

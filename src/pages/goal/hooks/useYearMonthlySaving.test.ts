@@ -72,7 +72,7 @@ describe('useYearMonthlySaving', () => {
       return [
         { category: 'Salary', amount: 5000 },
         { category: 'Rent', amount: -2000 },
-          { category: 'Groceries', amount: -500 },
+        { category: 'Groceries', amount: -500 },
       ]
     })
 
@@ -100,7 +100,7 @@ describe('useYearMonthlySaving', () => {
     expect(result.current.yearMonthlySaving).toBe(60)
   })
 
-  it("excludes categories in the removed group", () => {
+  it('excludes categories in the removed group', () => {
     mockedLoadBudgetStore.mockReturnValue({
       years: [2026],
       csvs: {

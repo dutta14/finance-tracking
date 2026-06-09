@@ -162,7 +162,9 @@ describe('DEFAULT_PRE_FI_GROWTH_RATE', () => {
 
 describe('computeRequiredCorpus', () => {
   it('returns 0 when the end of life is not after the FI date', () => {
-    expect(computeRequiredCorpus(new Date(2050, 0, 1), new Date(2050, 0, 1), new Date(2060, 0, 1), 5000, 3, 8, 6)).toBe(0)
+    expect(computeRequiredCorpus(new Date(2050, 0, 1), new Date(2050, 0, 1), new Date(2060, 0, 1), 5000, 3, 8, 6)).toBe(
+      0,
+    )
   })
 })
 

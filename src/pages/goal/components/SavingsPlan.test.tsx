@@ -114,7 +114,9 @@ describe('SavingsPlan', () => {
     mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 200_000 })]
     mockDataCtx.allMonths = ['2024-01']
 
-    render(<SavingsPlan goal={makeGoal({ ...baseGoal, birthday: '' })} gwGoals={[]} profileBirthday={profileBirthday} />)
+    render(
+      <SavingsPlan goal={makeGoal({ ...baseGoal, birthday: '' })} gwGoals={[]} profileBirthday={profileBirthday} />,
+    )
 
     expect(screen.getByText('Savings Plan')).toBeInTheDocument()
   })
@@ -274,7 +276,7 @@ describe('FiSavingsPlan', () => {
     expect(screen.getByText(/\/mo$/)).toBeInTheDocument()
   })
 
-  it("shows achieved this goal when monthlySaving is less than or equal to 0", () => {
+  it('shows achieved this goal when monthlySaving is less than or equal to 0', () => {
     mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi', type: 'retirement' })]
     mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 50_000_000 })]
     mockDataCtx.allMonths = ['2024-01']
@@ -332,7 +334,7 @@ describe('GwSavingsPlan', () => {
     expect(screen.getByText(/\/mo$/)).toBeInTheDocument()
   })
 
-  it("shows achieved this goal when balance already exceeds the target", () => {
+  it('shows achieved this goal when balance already exceeds the target', () => {
     mockDataCtx.accounts = [makeAccount({ id: 2, goalType: 'gw', type: 'liquid' })]
     mockDataCtx.balances = [makeBalanceEntry({ accountId: 2, month: '2024-01', balance: 5_000_000 })]
     mockDataCtx.allMonths = ['2024-01']
@@ -366,7 +368,14 @@ describe('GwSavingsPlan', () => {
     mockDataCtx.allMonths = ['2024-01']
 
     const goalWithoutBirthday = makeGoal({ ...baseGoal, birthday: '' })
-    render(<GwSavingsPlan goal={goalWithoutBirthday} gwGoals={[matchingGwGoal]} profileBirthday={profileBirthday} showYearly />)
+    render(
+      <GwSavingsPlan
+        goal={goalWithoutBirthday}
+        gwGoals={[matchingGwGoal]}
+        profileBirthday={profileBirthday}
+        showYearly
+      />,
+    )
 
     expect(screen.getByText(/\/yr$/)).toBeInTheDocument()
   })
