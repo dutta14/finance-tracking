@@ -1108,14 +1108,14 @@ describe('GoalDetailedCard budget csv savings', () => {
       if (csv === 'bad') throw new Error('bad csv')
       if (csv === 'jan') {
         return [
-          { category: 'Salary', amount: 5000 },
-          { category: 'Rent', amount: -2000 },
-          { category: 'Ignore me', amount: 1000 },
+          { date: '2026-01-01', category: 'Salary', amount: 5000 },
+          { date: '2026-01-02', category: 'Rent', amount: -2000 },
+          { date: '2026-01-03', category: 'Ignore me', amount: 1000 },
         ]
       }
       return [
-        { category: 'Salary', amount: 5000 },
-        { category: 'Rent', amount: -1000 },
+        { date: '2026-02-01', category: 'Salary', amount: 5000 },
+        { date: '2026-02-02', category: 'Rent', amount: -1000 },
       ]
     })
 
@@ -1137,8 +1137,8 @@ describe('GoalDetailedCard budget csv savings', () => {
       categoryGroups: [],
     })
     mockedParseCSV.mockReturnValue([
-      { category: 'Salary', amount: 6000 },
-      { category: 'Rent', amount: -2000 },
+      { date: '2025-01-01', category: 'Salary', amount: 6000 },
+      { date: '2025-01-02', category: 'Rent', amount: -2000 },
     ])
 
     renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2025 })
@@ -1336,7 +1336,7 @@ describe('GoalDetailedCard remaining branch coverage', () => {
       years: [2026],
       categoryGroups: [],
     })
-    mockedParseCSV.mockReturnValue([{ category: 'Rent', amount: -1000 }])
+    mockedParseCSV.mockReturnValue([{ date: '2026-01-01', category: 'Rent', amount: -1000 }])
 
     renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2026 })
 

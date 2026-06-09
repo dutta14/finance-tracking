@@ -63,16 +63,16 @@ describe('useYearMonthlySaving', () => {
     mockedParseCSV.mockImplementation(csv => {
       if (csv === 'jan') {
         return [
-          { category: 'Salary', amount: 5000 },
-          { category: 'Rent', amount: -2000 },
-          { category: 'Groceries', amount: -500 },
+          { date: '2026-01-01', category: 'Salary', amount: 5000 },
+          { date: '2026-01-02', category: 'Rent', amount: -2000 },
+          { date: '2026-01-03', category: 'Groceries', amount: -500 },
         ]
       }
 
       return [
-        { category: 'Salary', amount: 5000 },
-        { category: 'Rent', amount: -2000 },
-        { category: 'Groceries', amount: -500 },
+        { date: '2026-02-01', category: 'Salary', amount: 5000 },
+        { date: '2026-02-02', category: 'Rent', amount: -2000 },
+        { date: '2026-02-03', category: 'Groceries', amount: -500 },
       ]
     })
 
@@ -91,8 +91,8 @@ describe('useYearMonthlySaving', () => {
       categoryGroups: [],
     })
     mockedParseCSV.mockReturnValue([
-      { category: 'Salary', amount: 100 },
-      { category: 'Bank Fee', amount: -40 },
+      { date: '2026-01-01', category: 'Salary', amount: 100 },
+      { date: '2026-01-02', category: 'Bank Fee', amount: -40 },
     ])
 
     const { result } = renderHook(() => useYearMonthlySaving())
@@ -109,11 +109,11 @@ describe('useYearMonthlySaving', () => {
       configs: {},
       categoryGroups: [],
     })
-    mockedGetGlobalCategoryGroups.mockReturnValue([{ id: 'removed', categories: ['Ignore me'] }])
+    mockedGetGlobalCategoryGroups.mockReturnValue([{ id: 'removed', name: 'Removed', categories: ['Ignore me'] }])
     mockedParseCSV.mockReturnValue([
-      { category: 'Salary', amount: 3000 },
-      { category: 'Rent', amount: -1000 },
-      { category: 'Ignore me', amount: 10000 },
+      { date: '2026-01-01', category: 'Salary', amount: 3000 },
+      { date: '2026-01-02', category: 'Rent', amount: -1000 },
+      { date: '2026-01-03', category: 'Ignore me', amount: 10000 },
     ])
 
     const { result } = renderHook(() => useYearMonthlySaving())
@@ -137,8 +137,8 @@ describe('useYearMonthlySaving', () => {
       }
 
       return [
-        { category: 'Salary', amount: 3000 },
-        { category: 'Rent', amount: -1500 },
+        { date: '2026-01-01', category: 'Salary', amount: 3000 },
+        { date: '2026-01-02', category: 'Rent', amount: -1500 },
       ]
     })
 
@@ -158,8 +158,8 @@ describe('useYearMonthlySaving', () => {
       categoryGroups: [],
     })
     mockedParseCSV.mockReturnValue([
-      { category: 'Transfer', amount: 100 },
-      { category: 'Transfer', amount: -100 },
+      { date: '2026-01-01', category: 'Transfer', amount: 100 },
+      { date: '2026-01-02', category: 'Transfer', amount: -100 },
     ])
 
     const { result } = renderHook(() => useYearMonthlySaving())
