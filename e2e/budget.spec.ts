@@ -977,7 +977,6 @@ test.describe('Budget Page E2E', () => {
               expenseMonth: 1,
               expenseValue: 60000,
               monthlyExpenseValue: 5000,
-              inflationRate: 3,
               safeWithdrawalRate: 3.5,
               growth: 8,
               retirement: '2042-03',

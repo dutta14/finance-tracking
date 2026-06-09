@@ -616,7 +616,6 @@ test.describe('Goals Page E2E', () => {
           retirementAge: 55,
           preReturnRate: 8,
           postReturnRate: 4,
-          inflationRate: 3,
           withdrawalRate: 4,
           monthlyContribution: 2000,
           currentSavings: 50000,

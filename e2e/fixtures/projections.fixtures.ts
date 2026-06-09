@@ -91,7 +91,6 @@ export const FI_GOAL = {
   expenseValueMar2026: 63600,
   expenseValue2047: 109272,
   monthlyExpense2047: 9106,
-  inflationRate: 3,
   safeWithdrawalRate: 3.5,
   growth: 8,
   retirement: '2042-03',
