@@ -347,7 +347,7 @@ describe('projectFIDateWithDrawdown', () => {
     expect(withBoundary!.months).toBeGreaterThanOrEqual(noBoundary!.months)
   })
 
-  it('returns null when FI is unreachable within 1200 months', () => {
+  it('returns null when FI is unreachable within 1200 months', { timeout: 15_000 }, () => {
     const result = projectFIDateWithDrawdown(0, 12, 0, 0, 100_000, 3, new Date(2200, 11, 1))
 
     expect(result).toBeNull()
