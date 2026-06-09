@@ -29,7 +29,6 @@ const defaultFormData: FormData = {
   expenseMonth: '',
   expenseValue: '',
   monthlyExpenseValue: '',
-  inflationRate: '',
   growth: '',
 }
 
@@ -44,6 +43,7 @@ const defaultProps = {
   onSubmit: vi.fn(),
   onCancel: vi.fn(),
   setError: vi.fn(),
+  inflation: 3,
 }
 
 describe('GoalForm', () => {
@@ -104,7 +104,6 @@ describe('GoalForm', () => {
       goalEndYear: endYear,
       retirementAge: String(coastFi.retirementAge),
       expenseValue: String(coastFi.annualExpense),
-      inflationRate: String(coastFi.inflationRate),
       growth: String(coastFi.growth),
     })
     expect(screen.getByText('Everything look good?')).toBeInTheDocument()
@@ -119,7 +118,6 @@ describe('GoalForm', () => {
       goalEndYear: '2090-06-15',
       retirementAge: '40',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '8',
     }
 
@@ -153,7 +151,6 @@ describe('GoalForm', () => {
       goalEndYear: '2090-06-15',
       retirementAge: '40',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '8',
     }
 
@@ -232,7 +229,6 @@ describe('GoalForm', () => {
       goalEndYear: '2090-06-15',
       retirementAge: '40',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '8',
     }
 
@@ -428,16 +424,9 @@ describe('GoalForm step 3 validation', () => {
     vi.clearAllMocks()
   }
 
-  it('shows error when inflation rate is empty', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    await renderAtStep3(user, { inflationRate: '' })
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the inflation rate')
-  })
-
   it('shows error when growth rate is empty', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    await renderAtStep3(user, { inflationRate: '3', growth: '' })
+    await renderAtStep3(user, { growth: '' })
     await user.click(screen.getByRole('button', { name: /Next/ }))
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the growth rate')
   })
@@ -508,7 +497,6 @@ describe('GoalForm UI features', () => {
     await user.click(screen.getByRole('button', { name: /Next/ }))
     await user.click(screen.getByRole('button', { name: 'Use Recommended' }))
     expect(defaultProps.onSetFormFields).toHaveBeenCalledWith({
-      inflationRate: '3',
       growth: '6',
     })
   })
@@ -528,7 +516,6 @@ describe('GoalForm UI features', () => {
       goalEndYear: '2080-06-01',
       retirementAge: '55',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={filledForm} />)
@@ -538,7 +525,6 @@ describe('GoalForm UI features', () => {
 
     expect(screen.getByText('Goal Name')).toBeInTheDocument()
     expect(screen.getByText('Retirement Age')).toBeInTheDocument()
-    expect(screen.getByText('Inflation')).toBeInTheDocument()
     expect(screen.getByText('Growth')).toBeInTheDocument()
   })
 
@@ -551,7 +537,6 @@ describe('GoalForm UI features', () => {
       goalEndYear: '2080-06-01',
       retirementAge: '55',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={filledForm} />)
@@ -577,7 +562,6 @@ describe('GoalForm UI features', () => {
       goalEndYear: '2080-06-01',
       retirementAge: '55',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={filledForm} editingGoalId={42} />)
@@ -691,26 +675,6 @@ describe('GoalForm — validation branches', () => {
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter a valid annual expense')
   })
 
-  it('step 3 validation: empty inflationRate sets error (line 181)', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const formData = {
-      ...defaultFormData,
-      goalName: 'Test',
-      goalCreatedIn: '2024-01-01',
-      goalEndYear: '2080-01-01',
-      retirementAge: '60',
-      expenseValue: '50000',
-      inflationRate: '',
-    }
-    render(<GoalForm {...defaultProps} formData={formData} />)
-    // Navigate to step 3
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the inflation rate')
-  })
-
   it('step 3 validation: empty growth sets error (line 189)', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const formData = {
@@ -720,7 +684,6 @@ describe('GoalForm — validation branches', () => {
       goalEndYear: '2080-01-01',
       retirementAge: '60',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '',
     }
     render(<GoalForm {...defaultProps} formData={formData} />)
@@ -738,38 +701,6 @@ describe('GoalForm — validation branches', () => {
     await user.click(screen.getByRole('button', { name: /Next/ }))
     expect(defaultProps.setError).toHaveBeenCalledWith('Please add your birthday in your profile first')
     expect(defaultProps.onOpenProfile).toHaveBeenCalled()
-  })
-})
-
-describe('GoalForm — review step with incomplete data (line 253-255 canCalc=false)', () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('review does not show calculated FI Goal when inflationRate is empty', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const formData: FormData = {
-      ...defaultFormData,
-      goalName: 'Test',
-      goalCreatedIn: '2024-06-01',
-      goalEndYear: '2080-06-01',
-      retirementAge: '55',
-      expenseValue: '50000',
-      inflationRate: '', // canCalc will be false
-      growth: '6',
-    }
-    render(<GoalForm {...defaultProps} formData={formData} />)
-    // Jump to review via template
-    await user.click(screen.getByRole('button', { name: 'Use Template' }))
-    await user.click(screen.getByText('Coast FI'))
-    // Review shows, but FI Goal computed row should NOT appear because canCalc is false
-    expect(screen.getByText('Goal Name')).toBeInTheDocument()
-    expect(screen.queryByText('FI Goal')).not.toBeInTheDocument()
   })
 })
 
@@ -929,7 +860,6 @@ describe('GoalForm — step 3 validation branches', () => {
       goalEndYear: '2080-01-01',
       retirementAge: '60',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '',
     }
     render(<GoalForm {...defaultProps} formData={formData} />)
@@ -940,26 +870,6 @@ describe('GoalForm — step 3 validation branches', () => {
     // Now on step 3, try to advance
     await user.click(screen.getByRole('button', { name: /Next/ }))
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the growth rate')
-  })
-
-  it('shows error when inflation rate is empty on step 3', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const formData = {
-      ...defaultFormData,
-      goalName: 'Test',
-      goalCreatedIn: '2025-01-01',
-      goalEndYear: '2080-01-01',
-      retirementAge: '60',
-      expenseValue: '50000',
-      inflationRate: '',
-      growth: '6',
-    }
-    render(<GoalForm {...defaultProps} formData={formData} />)
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the inflation rate')
   })
 })
 
@@ -982,7 +892,6 @@ describe('GoalForm — submit flow and review (lines 217-260)', () => {
       goalEndYear: '2080-06-15',
       retirementAge: '60',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '6',
       resetExpenseMonth: false,
     }
@@ -1012,7 +921,6 @@ describe('GoalForm — submit flow and review (lines 217-260)', () => {
       goalEndYear: '2080-06-15',
       retirementAge: '60',
       expenseValue: '50000',
-      inflationRate: '3',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={formData} editingGoalId={42} />)

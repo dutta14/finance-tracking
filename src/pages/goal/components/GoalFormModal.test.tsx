@@ -31,7 +31,6 @@ const defaultFormData: FormData = {
   expenseMonth: '',
   expenseValue: '',
   monthlyExpenseValue: '',
-  inflationRate: '',
   growth: '',
 }
 
@@ -46,6 +45,7 @@ const defaultProps = {
   onSubmit: vi.fn(),
   onCancel: vi.fn(),
   setError: vi.fn(),
+  inflation: 3,
 }
 
 describe('GoalFormModal', () => {

@@ -21,6 +21,7 @@ interface GoalsMiniGridProps {
   onDeleteGoal: (goalId: number) => void
   gwGoals: GwGoal[]
   profileBirthday: string
+  inflation?: number
 }
 
 const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
@@ -35,6 +36,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   onDeleteGoal,
   gwGoals,
   profileBirthday,
+  inflation = 3,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -395,6 +397,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                   compareMode={compareMode}
                   gwGoals={gwGoals}
                   profileBirthday={profileBirthday}
+                  inflation={inflation}
                 />
               )}
             </div>

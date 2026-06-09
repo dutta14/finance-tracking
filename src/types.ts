@@ -23,7 +23,6 @@ export interface FinancialGoal {
   monthlyExpense2047: number
 
   // Financial Parameters
-  inflationRate: number
   safeWithdrawalRate: number
   growth: number
 

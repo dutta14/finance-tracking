@@ -58,7 +58,6 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
     monthlyExpense2047: 8333,
-    inflationRate: 6,
     safeWithdrawalRate: 3,
     growth: 5,
     retirement: 'Jan 2050',
@@ -471,7 +470,7 @@ describe('GoalsPeek GW goals rendering', () => {
       setBalances: () => {},
     })
 
-    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60, inflationRate: 6 })
+    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60 })
     const gwGoal: GwGoal = {
       id: 1,
       fiGoalId: 1,
@@ -747,7 +746,7 @@ describe('GoalsPeek GW monthly saving display', () => {
       setBalances: () => {},
     })
 
-    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60, inflationRate: 6 })
+    const goal = makeGoal({ id: 1, fiGoal: 2_000_000, retirementAge: 60 })
     const gwGoal: GwGoal = {
       id: 1,
       fiGoalId: 1,

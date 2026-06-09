@@ -5,7 +5,7 @@ import '../../../styles/GoalMixer.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
-function computeGwPv(gw: GwGoal, base: FinancialGoal, profileBirthday: string): number {
+function computeGwPv(gw: GwGoal, base: FinancialGoal, profileBirthday: string, inflation: number): number {
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(base.goalCreatedIn)
   const disburseYear = birthYear + gw.disburseAge
@@ -13,7 +13,7 @@ function computeGwPv(gw: GwGoal, base: FinancialGoal, profileBirthday: string): 
     0,
     (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
   )
-  const disbursementTarget = gw.disburseAmount * Math.pow(1 + base.inflationRate / 100 / 12, monthsToDisburse)
+  const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - base.retirementAge) * 12)
   return monthsRetToDisburse > 0
     ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
@@ -24,6 +24,7 @@ interface GoalMixerProps {
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
   profileBirthday: string
+  inflation?: number
   onCreateGoal: (goal: FinancialGoal) => void
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
   onClose: () => void
@@ -34,6 +35,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
   goals,
   gwGoals,
   profileBirthday,
+  inflation = 3,
   onCreateGoal,
   onCreateGwGoal,
   onClose,
@@ -78,8 +80,8 @@ const GoalMixer: FC<GoalMixerProps> = ({
 
   const gwTotal = useMemo(() => {
     if (!selectedGoal) return 0
-    return selectedGwGoals.reduce((sum, gw) => sum + computeGwPv(gw, selectedGoal, profileBirthday), 0)
-  }, [selectedGwGoals, selectedGoal, profileBirthday])
+    return selectedGwGoals.reduce((sum, gw) => sum + computeGwPv(gw, selectedGoal, profileBirthday, inflation), 0)
+  }, [selectedGwGoals, selectedGoal, profileBirthday, inflation])
 
   const totalAtRetirement = (selectedGoal?.fiGoal ?? 0) + gwTotal
 
@@ -138,7 +140,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
                   </span>
                   <span className="mixer-goal-stat">
                     Retire {new Date(profileBirthday).getFullYear() + goal.retirementAge}
-                    &nbsp;·&nbsp;{goal.inflationRate}% infl
+                    &nbsp;·&nbsp;{inflation}% infl
                   </span>
                 </button>
               ))}
@@ -160,7 +162,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
                   <div key={goal.id} className="mixer-gw-group">
                     <div className="mixer-gw-group-label">from "{goal.goalName}"</div>
                     {goals.map(gw => {
-                      const pv = selectedGoal ? computeGwPv(gw, selectedGoal, profileBirthday) : 0
+                      const pv = selectedGoal ? computeGwPv(gw, selectedGoal, profileBirthday, inflation) : 0
                       const isChecked = selectedGwIds.has(gw.id)
                       return (
                         <label key={gw.id} className={`mixer-gw-item${isChecked ? ' checked' : ''}`}>
@@ -206,7 +208,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
                     {gw.label || 'Unnamed goal'}
                   </span>
                   <span className="mixer-preview-amount mixer-preview-amount--gw">
-                    {dollars(computeGwPv(gw, selectedGoal, profileBirthday))}
+                    {dollars(computeGwPv(gw, selectedGoal, profileBirthday, inflation))}
                   </span>
                 </div>
               ))}

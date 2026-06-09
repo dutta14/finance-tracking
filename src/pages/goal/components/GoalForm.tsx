@@ -19,6 +19,7 @@ interface GoalFormProps {
   onSubmit: (goal: FinancialGoal) => void
   onCancel: () => void
   setError: (error: string) => void
+  inflation: number
 }
 
 const STEPS = ['Name', 'Timeline', 'Expenses', 'Parameters', 'Review'] as const
@@ -61,6 +62,7 @@ const GoalForm: FC<GoalFormProps> = ({
   onSubmit,
   onCancel,
   setError,
+  inflation,
 }) => {
   const [step, setStep] = useState(0)
   const [showTemplates, setShowTemplates] = useState(false)
@@ -90,7 +92,6 @@ const GoalForm: FC<GoalFormProps> = ({
         goalEndYear,
         retirementAge: String(template.retirementAge),
         expenseValue: String(template.annualExpense),
-        inflationRate: String(template.inflationRate),
         growth: String(template.growth),
       })
       setShowTemplates(false)
@@ -175,10 +176,6 @@ const GoalForm: FC<GoalFormProps> = ({
         }
         return true
       case 3:
-        if (formData.inflationRate === '') {
-          setError('Please enter the inflation rate')
-          return false
-        }
         if (formData.growth === '') {
           setError('Please enter the growth rate')
           return false
@@ -224,7 +221,7 @@ const GoalForm: FC<GoalFormProps> = ({
       profileBirthday,
       retirementAge,
       formData.goalCreatedIn,
-      Number(formData.inflationRate) || 0,
+      inflation,
       Number(formData.growth) || 0,
       formData.goalEndYear,
       getMonthsBetween,
@@ -246,7 +243,6 @@ const GoalForm: FC<GoalFormProps> = ({
       expenseValueMar2026: 0,
       expenseValue2047: metrics.annualExpenseAtRetirement,
       monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
-      inflationRate: Number(formData.inflationRate) || 0,
       safeWithdrawalRate: 0,
       growth: Number(formData.growth) || 0,
       retirement: metrics.retirementDateFormatted,
@@ -260,8 +256,7 @@ const GoalForm: FC<GoalFormProps> = ({
   const renderReview = () => {
     const retAge = Number(formData.retirementAge)
     const expense = Number(formData.expenseValue)
-    const canCalc =
-      profileBirthday && formData.goalCreatedIn && retAge > 0 && expense > 0 && formData.inflationRate !== ''
+    const canCalc = profileBirthday && formData.goalCreatedIn && retAge > 0 && expense > 0
     let metrics: ReturnType<typeof calculateGoalMetrics> | null = null
     if (canCalc) {
       metrics = calculateGoalMetrics(
@@ -269,7 +264,7 @@ const GoalForm: FC<GoalFormProps> = ({
         profileBirthday,
         retAge,
         formData.goalCreatedIn,
-        Number(formData.inflationRate) || 0,
+        inflation,
         Number(formData.growth) || 0,
         formData.goalEndYear,
         getMonthsBetween,
@@ -293,10 +288,6 @@ const GoalForm: FC<GoalFormProps> = ({
         <div className="wizard-review-row">
           <span className="wizard-review-label">Annual Expense</span>
           <span className="wizard-review-value">{formatCurrency(formData.expenseValue)}</span>
-        </div>
-        <div className="wizard-review-row">
-          <span className="wizard-review-label">Inflation</span>
-          <span className="wizard-review-value">{formData.inflationRate}%</span>
         </div>
         <div className="wizard-review-row">
           <span className="wizard-review-label">Growth</span>
@@ -461,38 +452,11 @@ const GoalForm: FC<GoalFormProps> = ({
           <div className="wizard-step">
             <div className="wizard-field-header">
               <label className="wizard-field-label">Set your financial parameters</label>
-              <button
-                type="button"
-                className="btn-use-recommended"
-                onClick={() => onSetFormFields({ inflationRate: '3', growth: '6' })}
-              >
+              <button type="button" className="btn-use-recommended" onClick={() => onSetFormFields({ growth: '6' })}>
                 Use Recommended
               </button>
             </div>
             <div className="wizard-param-grid">
-              <div className="wizard-param-card">
-                <label className="wizard-param-icon" htmlFor="inflationRate">
-                  📈
-                </label>
-                <label className="wizard-param-name" htmlFor="inflationRate">
-                  Inflation
-                </label>
-                <div className="wizard-param-input-wrap">
-                  <input
-                    ref={inputRef}
-                    className="wizard-param-input"
-                    type="number"
-                    id="inflationRate"
-                    name="inflationRate"
-                    placeholder="3"
-                    value={formData.inflationRate}
-                    onChange={onInputChange}
-                    min="0"
-                    step="0.1"
-                  />
-                  <span className="wizard-param-unit">%</span>
-                </div>
-              </div>
               <div className="wizard-param-card">
                 <label className="wizard-param-icon" htmlFor="growth">
                   🚀

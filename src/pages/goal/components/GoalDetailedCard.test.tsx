@@ -141,7 +141,6 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
     monthlyExpense2047: 8333,
-    inflationRate: 6,
     safeWithdrawalRate: 3,
     growth: 5,
     retirement: 'Jan 2050',
@@ -307,7 +306,7 @@ describe('GoalDetailedCard savings override', () => {
   })
 
   it('uses the threaded inflation prop instead of goal inflation when computing the what-if projection', () => {
-    renderCard({ fiGoal: 2_000_000, inflationRate: 6 }, { inflation: 2 })
+    renderCard({ fiGoal: 2_000_000 }, { inflation: 2 })
 
     fireEvent.click(screen.getByText('$5,000/mo'))
     const input = screen.getByRole('textbox')
@@ -452,14 +451,14 @@ describe('GoalDetailedCard parameters in prose', () => {
   })
 
   it('shows inflation rate in prose', () => {
-    renderCard({ inflationRate: 6 })
+    renderCard({}, { inflation: 6 })
     const prose = document.querySelector('.fi-goal-prose')
     expect(prose?.textContent).toContain('6%')
     expect(prose?.textContent).toContain('inflation')
   })
 
   it('shows inflation rate in prose', () => {
-    renderCard({ inflationRate: 3 })
+    renderCard({}, { inflation: 3 })
     const prose = document.querySelector('.fi-goal-prose')
     expect(prose?.textContent).toContain('3%')
     expect(prose?.textContent).toContain('inflation')
@@ -604,8 +603,8 @@ describe('GoalDetailedCard edit mode', () => {
 
   it('calls onUpdateGoal with updated fields on successful save', () => {
     renderCard(
-      { retirementAge: 60, expenseValue: 60000, inflationRate: 6, safeWithdrawalRate: 3, growth: 5 },
-      { onUpdateGoal, showActions: false },
+      { retirementAge: 60, expenseValue: 60000, safeWithdrawalRate: 3, growth: 5 },
+      { onUpdateGoal, showActions: false, inflation: 6 },
     )
     fireEvent.click(screen.getByRole('button', { name: /Edit/ }))
     fireEvent.change(getEditInput('Retirement Age'), { target: { value: '55' } })
@@ -690,7 +689,6 @@ describe('GoalDetailedCard depletion edge cases', () => {
       monthlyExpense2047: 4166,
       safeWithdrawalRate: 4,
       growth: 7,
-      inflationRate: 3,
       retirementAge: 60,
       goalEndYear: '2080-01-01',
     })
@@ -770,7 +768,7 @@ describe('GoalDetailedCard expense — prose format', () => {
   })
 
   it('shows inflation in prose', () => {
-    renderCard({ inflationRate: 3 })
+    renderCard({}, { inflation: 3 })
     const prose = document.querySelector('.fi-goal-prose')
     expect(prose?.textContent).toContain('3%')
     expect(prose?.textContent).toContain('inflation')

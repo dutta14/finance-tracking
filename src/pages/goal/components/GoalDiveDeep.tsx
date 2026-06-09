@@ -97,8 +97,8 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   }, [fiBreakdown, primaryAccessDate, partnerAccessDate])
 
   const fiTarget = useMemo(
-    () => getFiTarget(goal, profileBirthday, growthRate, postGrowthRate, ageBoundary),
-    [goal, profileBirthday, growthRate, postGrowthRate, ageBoundary],
+    () => getFiTarget(goal, profileBirthday, growthRate, postGrowthRate, ageBoundary, inflation),
+    [goal, profileBirthday, growthRate, postGrowthRate, ageBoundary, inflation],
   )
 
   const plannedMonthly = useMemo(() => {

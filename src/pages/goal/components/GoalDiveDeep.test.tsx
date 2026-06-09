@@ -26,7 +26,6 @@ const baseGoal = makeGoal({
   goalCreatedIn: '2024-01-01',
   goalEndYear: '2080-01-01',
   retirementAge: 45,
-  inflationRate: 3,
   growth: 7,
   monthlyExpense2047: 10000,
   fiGoal: 3_000_000,

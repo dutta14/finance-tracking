@@ -4,7 +4,6 @@ export interface GoalTemplate {
   description: string
   retirementAge: number
   annualExpense: number
-  inflationRate: number
   growth: number
 }
 
@@ -15,7 +14,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     description: 'Retire at 45 on $40k/yr — lean and free',
     retirementAge: 45,
     annualExpense: 40000,
-    inflationRate: 3.0,
     growth: 8.0,
   },
   {
@@ -24,7 +22,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     description: 'The classic path — retire at 60 comfortably',
     retirementAge: 60,
     annualExpense: 60000,
-    inflationRate: 3.0,
     growth: 7.0,
   },
   {
@@ -33,7 +30,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     description: 'Front-load savings, then coast from 40',
     retirementAge: 40,
     annualExpense: 50000,
-    inflationRate: 3.0,
     growth: 8.0,
   },
   {
@@ -42,7 +38,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     description: 'Retire at 50 with $120k/yr for a premium lifestyle',
     retirementAge: 50,
     annualExpense: 120000,
-    inflationRate: 3.0,
     growth: 7.0,
   },
   {
@@ -51,7 +46,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     description: 'Part-time income + investments = freedom at 50',
     retirementAge: 50,
     annualExpense: 45000,
-    inflationRate: 3.0,
     growth: 8.0,
   },
 ]

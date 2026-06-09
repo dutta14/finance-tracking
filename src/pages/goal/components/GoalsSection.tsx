@@ -34,7 +34,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
-  growthSettings: _growthSettings,
+  growthSettings,
   onUpdateGoal: _onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
@@ -216,10 +216,16 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               onDeleteGoal={onDeleteGoal}
               gwGoals={gwGoals}
               profileBirthday={profileBirthday}
+              inflation={growthSettings.settings.inflation}
             />
           </div>
           {selectedGoals.length > 1 && (
-            <GoalCompareView goals={selectedGoals} gwGoals={gwGoals} profileBirthday={profileBirthday} />
+            <GoalCompareView
+              goals={selectedGoals}
+              gwGoals={gwGoals}
+              profileBirthday={profileBirthday}
+              inflation={growthSettings.settings.inflation}
+            />
           )}
         </>
       )}
