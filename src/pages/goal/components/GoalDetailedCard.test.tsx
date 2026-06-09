@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, within, act } from '@testing-library/react'
 import { FinancialGoal } from '../../../types'
 import GoalDetailedCard from './GoalDetailedCard'
@@ -20,10 +20,17 @@ vi.mock('../../../contexts/DataContext', () => ({
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
   getBudgetSaveRate: vi.fn(() => null),
+  loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [] })),
+  getGlobalCategoryGroups: vi.fn(() => []),
 }))
 
 vi.mock('../../../components/TermAbbr', () => ({
   default: ({ term }: { term: string }) => <abbr>{term}</abbr>,
+}))
+
+vi.mock('../../budget/utils/csvParser', () => ({
+  parseCSV: vi.fn(),
+  buildMonthKey: vi.fn((year: number, month: number) => `${year}-${String(month + 1).padStart(2, '0')}`),
 }))
 
 vi.mock('../../../styles/GoalDetailedCard.css', () => ({}))
@@ -48,10 +55,6 @@ vi.mock('./GoalCardActions', () => ({
   ),
 }))
 
-vi.mock('./TrajectorySparkline', () => ({
-  default: () => <figure role="figure" aria-label="savings trajectory projection" />,
-}))
-
 // #52: calculateGoalMetrics and projectFIDate are mocked because GoalDetailedCard
 // calls them with internal helpers (getMonthsBetween, parseDate) that are not exported.
 // Removing the mock would require restructuring the component. Instead, we use realistic
@@ -66,6 +69,7 @@ vi.mock('../utils/goalCalculations', () => ({
     annualExpenseAtRetirement: 100000,
     fiGoal: 2500000,
   })),
+  computeRequiredCorpus: vi.fn(() => 2_000_000),
   projectFIDate: vi.fn((current: number, target: number, annualSavings: number) => {
     if (annualSavings <= 0) return null
     const months = Math.ceil((target - current) / (annualSavings / 12))
@@ -73,14 +77,38 @@ vi.mock('../utils/goalCalculations', () => ({
     d.setMonth(d.getMonth() + months)
     return { date: d, months }
   }),
+  projectFIDateWithDrawdown: vi.fn(
+    (
+      current: number,
+      annualSavings: number,
+      _preGrowth: number,
+      _postGrowth: number,
+      _monthlyExp: number,
+      _inflation: number,
+      _endOfLife: Date,
+      _retDate: Date,
+    ) => {
+      if (annualSavings <= 0) return null
+      const target = 2_000_000
+      const months = Math.ceil((target - current) / (annualSavings / 12))
+      const d = new Date()
+      d.setMonth(d.getMonth() + months)
+      return { date: d, months }
+    },
+  ),
   DEFAULT_PRE_FI_GROWTH_RATE: 8,
 }))
 
-import { getBudgetSaveRate } from '../../budget/utils/budgetStorage'
-import { projectFIDate } from '../utils/goalCalculations'
+import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
+import { parseCSV } from '../../budget/utils/csvParser'
+import { projectFIDate, projectFIDateWithDrawdown } from '../utils/goalCalculations'
 
 const mockedGetSaveRate = vi.mocked(getBudgetSaveRate)
+const mockedLoadBudgetStore = vi.mocked(loadBudgetStore)
+const mockedGetGlobalCategoryGroups = vi.mocked(getGlobalCategoryGroups)
+const mockedParseCSV = vi.mocked(parseCSV)
 const mockedProjectFIDate = vi.mocked(projectFIDate)
+const mockedProjectFIDateWithDrawdown = vi.mocked(projectFIDateWithDrawdown)
 
 /** Helper: configure the DataContext mock so fiTotal resolves to the given value */
 function setMockFiTotal(fiTotal: number) {
@@ -132,31 +160,35 @@ beforeEach(() => {
   vi.clearAllMocks()
   setMockFiTotal(0)
   mockedGetSaveRate.mockReturnValue(null)
+  mockedLoadBudgetStore.mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+  mockedGetGlobalCategoryGroups.mockReturnValue([])
+  mockedParseCSV.mockReset()
 })
 
 /* ═══════════════════════════════════════════════════════════════
-   Projected Timeline Section
+   Savings Pace Prose (replaced old Projected Timeline section)
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalDetailedCard projection section', () => {
-  it('renders the "Projected Timeline" section header', () => {
+  it('renders the FI goal prose when not condensed', () => {
     renderCard()
-    expect(screen.getByText('Projected Timeline')).toBeInTheDocument()
+    expect(screen.getByText(/growth/)).toBeInTheDocument()
   })
 
-  it('renders an info tooltip for the projection section', () => {
-    renderCard()
-    expect(screen.getByText('Based on your current savings rate and growth assumptions')).toBeInTheDocument()
+  it('renders growth and inflation in prose', () => {
+    renderCard({}, { preBoundaryGrowth: 5, postBoundaryGrowth: 4, inflation: 6 })
+    const prose = document.querySelector('.fi-goal-prose')
+    expect(prose?.textContent).toMatch(/5%/)
+    expect(prose?.textContent).toMatch(/growth/)
+    expect(prose?.textContent).toMatch(/6%/)
+    expect(prose?.textContent).toMatch(/inflation/)
   })
 })
 
 describe('GoalDetailedCard projection — no-goal state', () => {
-  it('shows "—" when fiGoal is 0', () => {
-    renderCard({ fiGoal: 0 })
-    expect(screen.getByText('Projected completion')).toBeInTheDocument()
-    // #53: Scope the em-dash match to the specific row to avoid fragile unscoped matching
-    const projectedRow = screen.getByText('Projected completion').closest('.fi-card-row')!
-    expect(within(projectedRow as HTMLElement).getByText('—')).toBeInTheDocument()
+  it('shows no pace prose when fiGoal is 0', () => {
+    renderCard({ fiGoal: 0, expenseValue: 0, goalEndYear: '' })
+    expect(screen.queryByText(/saving/)).not.toBeInTheDocument()
   })
 })
 
@@ -173,7 +205,7 @@ describe('GoalDetailedCard projection — no-budget state', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue(null)
     renderCard({ fiGoal: 2_000_000 })
-    const link = screen.getByText('Add budget data to see projections')
+    const link = screen.getByText('Add budget data')
     expect(link).toBeInTheDocument()
     expect(link.tagName).toBe('A')
     expect(link).toHaveAttribute('href', '#/budget')
@@ -181,72 +213,173 @@ describe('GoalDetailedCard projection — no-budget state', () => {
 })
 
 describe('GoalDetailedCard projection — not-reachable state', () => {
-  it('shows "Not reachable at current rate" when savings are zero', () => {
+  it('does not show pace prose when savings are zero', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 0, saveRate: 0, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(screen.queryByText(/At this pace/)).not.toBeInTheDocument()
   })
 
-  it('shows "Not reachable at current rate" when savings are negative', () => {
+  it('does not show pace prose when savings are negative', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: -10000, saveRate: -5, monthsOfData: 6 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(screen.queryByText(/At this pace/)).not.toBeInTheDocument()
   })
 })
 
 describe('GoalDetailedCard projection — projected state', () => {
-  it('shows monthly savings when budget data is available', () => {
+  it('shows savings pace prose when budget data is available', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('Monthly savings')).toBeInTheDocument()
-    expect(screen.getByText('$5,000')).toBeInTheDocument()
+    expect(screen.getByText(/saving/)).toBeInTheDocument()
+    expect(screen.getByText(/\$5,000\/mo/)).toBeInTheDocument()
   })
 
-  it('shows "Projected completion" with a month-year date label', () => {
+  it('shows projected FI date in prose', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('Projected completion')).toBeInTheDocument()
-    // Should show a date like "Jan 2040" — any Mon YYYY pattern
-    const projectedRow = screen.getByText('Projected completion').closest('.fi-card-row')
-    expect(projectedRow).toBeInTheDocument()
-    const valueEl = projectedRow!.querySelector('.fi-card-row-value--projected')
-    expect(valueEl).toBeInTheDocument()
-    expect(valueEl!.textContent).toMatch(/[A-Z][a-z]{2} \d{4}/)
+    expect(screen.getByText(/hit FI in/)).toBeInTheDocument()
   })
 
-  it('shows "vs. target retirement" comparison text', () => {
+  it('shows ahead/behind indicator in prose', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('vs. target retirement')).toBeInTheDocument()
+    const paceEl = document.querySelector('.fi-goal-pace')
+    expect(paceEl?.textContent).toMatch(/early|behind|On track/)
+  })
+})
+
+describe('GoalDetailedCard savings override', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ saveRate: 40, annualSavings: 60000, monthsOfData: 12 })
+    mockedProjectFIDateWithDrawdown.mockImplementation(
+      (
+        current: number,
+        annualSavings: number,
+        _preGrowth: number,
+        _postGrowth: number,
+        _monthlyExp: number,
+        _inflation: number,
+        _endOfLife: Date,
+        _retDate?: Date,
+      ) => {
+        if (annualSavings <= 0) return null
+        const target = 2_000_000
+        const months = Math.ceil((target - current) / (annualSavings / 12))
+        const date = new Date()
+        date.setMonth(date.getMonth() + months)
+        return { date, months, requiredCorpus: target }
+      },
+    )
   })
 
-  it('shows ahead/behind indicator relative to retirement date', () => {
-    setMockFiTotal(500_000)
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
-    renderCard({ fiGoal: 2_000_000 })
-    const retirementRow = screen.getByText('vs. target retirement').closest('.fi-card-row')
-    const valueEl = retirementRow!.querySelector('.fi-card-row-value')
-    // Should show something like "X years early" or "X years behind" or "On track"
-    expect(valueEl!.textContent).toMatch(/early|behind|On track/)
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
-  it('renders the TrajectorySparkline SVG', () => {
-    setMockFiTotal(500_000)
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
+  it('enters savings override edit mode with the current savings amount prefilled', () => {
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByRole('figure', { name: /savings trajectory projection/i })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('fi-savings-inline-input')
+    expect(input).toHaveValue('5,000')
+  })
+
+  it('shows what-if FI copy after the user enters a savings override', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(screen.getByText(/If you saved/)).toBeInTheDocument()
+    expect(screen.getByText(/you'd hit FI in/i)).toBeInTheDocument()
+  })
+
+  it('uses the threaded inflation prop instead of goal inflation when computing the what-if projection', () => {
+    renderCard({ fiGoal: 2_000_000, inflationRate: 6 }, { inflation: 2 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    const lastCall = mockedProjectFIDateWithDrawdown.mock.calls.at(-1)
+    expect(lastCall?.[5]).toBe(2)
+  })
+
+  it('shows that FI is not reachable within 100 years when the savings override projection returns null', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation(
+      (
+        current: number,
+        annualSavings: number,
+        _a?: number,
+        _b?: number,
+        _c?: number,
+        _d?: number,
+        _e?: Date,
+        _f?: Date,
+      ) => {
+        if (annualSavings === 1200) return null
+        const target = 2_000_000
+        const months = Math.ceil((target - current) / (annualSavings / 12))
+        const date = new Date()
+        date.setMonth(date.getMonth() + months)
+        return { date, months, requiredCorpus: target }
+      },
+    )
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '100' } })
+    fireEvent.blur(input)
+
+    expect(screen.getByText(/not reachable/i)).toBeInTheDocument()
+  })
+
+  it('resets the savings override and restores the baseline pace copy when Reset is clicked', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(screen.getByText(/If you saved/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(screen.getByText(/At this pace, you'll hit FI in/i)).toBeInTheDocument()
+  })
+
+  it('converts a yearly override entry back to monthly savings before storing it', () => {
+    renderCard({ fiGoal: 2_000_000 }, { showYearly: true })
+
+    fireEvent.click(screen.getByText('$60,000/yr'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '120000' } })
+    fireEvent.blur(input)
+
+    const lastCall = mockedProjectFIDateWithDrawdown.mock.calls.at(-1)
+    expect(lastCall?.[1]).toBe(120000)
   })
 })
 
 describe('GoalDetailedCard projection — condensed mode', () => {
-  it('does not show projection section when condensed is true', () => {
+  it('does not show pace prose when condensed is true', () => {
     renderCard({}, { condensed: true })
-    expect(screen.queryByText('Projected Timeline')).not.toBeInTheDocument()
+    expect(screen.queryByText(/At this pace/)).not.toBeInTheDocument()
   })
 })
 
@@ -309,87 +442,59 @@ describe('GoalDetailedCard FI goal callout', () => {
 })
 
 /* ═══════════════════════════════════════════════════════════════
-   Parameters Section
+   Parameters — now shown in prose format
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalDetailedCard parameters section', () => {
-  it('renders retirement date computed from birthday + retirementAge', () => {
+describe('GoalDetailedCard parameters in prose', () => {
+  it('renders retirement date in prose', () => {
     renderCard({ retirementAge: 60 })
-    expect(screen.getByText('Retirement')).toBeInTheDocument()
-    expect(screen.getByText(/Jan 15, 2050/)).toBeInTheDocument()
+    expect(screen.getByText(/retire by/)).toBeInTheDocument()
   })
 
-  it('shows inflation rate', () => {
+  it('shows inflation rate in prose', () => {
     renderCard({ inflationRate: 6 })
-    expect(screen.getByText('Inflation')).toBeInTheDocument()
-    expect(screen.getByText('6%')).toBeInTheDocument()
+    const prose = document.querySelector('.fi-goal-prose')
+    expect(prose?.textContent).toContain('6%')
+    expect(prose?.textContent).toContain('inflation')
   })
 
-  it('shows safe withdrawal rate', () => {
-    renderCard({ safeWithdrawalRate: 3 })
-    expect(screen.getByText(/Safe Withdrawal Rate/)).toBeInTheDocument()
-    expect(screen.getByText('3%')).toBeInTheDocument()
+  it('shows inflation rate in prose', () => {
+    renderCard({ inflationRate: 3 })
+    const prose = document.querySelector('.fi-goal-prose')
+    expect(prose?.textContent).toContain('3%')
+    expect(prose?.textContent).toContain('inflation')
   })
 
-  it('shows portfolio growth rate', () => {
+  it('shows portfolio growth rate in prose', () => {
     renderCard({ growth: 5 })
-    expect(screen.getByText('Portfolio Growth')).toBeInTheDocument()
-    expect(screen.getByText('5%')).toBeInTheDocument()
+    const prose = document.querySelector('.fi-goal-prose')
+    expect(prose?.textContent).toContain('growth')
   })
 
-  it('shows goal created date formatted as month-year', () => {
-    renderCard({ goalCreatedIn: '2024-01-15' })
-    expect(screen.getByText('Goal Created')).toBeInTheDocument()
-    expect(screen.getByText('Jan 2024')).toBeInTheDocument()
+  it('shows goal created date', () => {
+    renderCard({ createdAt: '2024-01-01' })
+    expect(screen.getByText(/Created 2024-01-01/)).toBeInTheDocument()
   })
 
-  it('shows N/A when goalCreatedIn is empty', () => {
-    renderCard({ goalCreatedIn: '' })
-    expect(screen.getByText('N/A')).toBeInTheDocument()
-  })
-
-  it('hides parameters section when condensed is true', () => {
+  it('hides prose section when condensed is true', () => {
     renderCard({}, { condensed: true })
-    expect(screen.queryByText('Parameters')).not.toBeInTheDocument()
-    expect(screen.queryByText('Inflation')).not.toBeInTheDocument()
+    expect(screen.queryByText(/inflation/)).not.toBeInTheDocument()
   })
 })
 
 /* ═══════════════════════════════════════════════════════════════
-   Expense Toggles
+   Expense — shown in prose
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalDetailedCard expense toggles', () => {
-  it('defaults to annual expense at creation', () => {
-    renderCard({ expenseValue: 60000, monthlyExpenseValue: 5000 })
-    expect(screen.getByText('$60,000')).toBeInTheDocument()
+describe('GoalDetailedCard expense in prose', () => {
+  it('shows annual expense in prose', () => {
+    renderCard({ expenseValue: 60000 })
+    expect(screen.getByText(/\$60,000\/yr/)).toBeInTheDocument()
   })
 
-  it('toggles to monthly expense at creation', () => {
-    renderCard({ expenseValue: 60000, monthlyExpenseValue: 5000 })
-    const monthlyButtons = screen.getAllByText('Monthly')
-    fireEvent.click(monthlyButtons[0])
-    expect(screen.getByText('$5,000')).toBeInTheDocument()
-  })
-
-  it('switches to retirement view and shows inflated annual expense', () => {
-    renderCard({ expenseValue: 60000, expenseValue2047: 100000, monthlyExpense2047: 8333 })
-    fireEvent.click(screen.getByText('At Retirement'))
-    expect(screen.getByText('$100,000')).toBeInTheDocument()
-  })
-
-  it('switches to retirement view and shows inflated monthly expense', () => {
-    renderCard({ expenseValue: 60000, expenseValue2047: 100000, monthlyExpense2047: 8333 })
-    fireEvent.click(screen.getByText('At Retirement'))
-    const monthlyButtons = screen.getAllByText('Monthly')
-    fireEvent.click(monthlyButtons[0])
-    expect(screen.getByText('$8,333')).toBeInTheDocument()
-  })
-
-  it('hides expense section when condensed is true', () => {
+  it('hides expense info when condensed is true', () => {
     renderCard({}, { condensed: true })
-    expect(screen.queryByText('Expenses')).not.toBeInTheDocument()
-    expect(screen.queryByText('At Creation')).not.toBeInTheDocument()
+    expect(screen.queryByText(/\$60,000\/yr/)).not.toBeInTheDocument()
   })
 })
 
@@ -399,35 +504,32 @@ describe('GoalDetailedCard expense toggles', () => {
 
 describe('GoalDetailedCard depletion warning', () => {
   it('shows depletion warning when funds run out before goal end', () => {
-    renderCard({
-      fiGoal: 500_000,
-      expenseValue2047: 100000,
-      monthlyExpense2047: 8333,
-      safeWithdrawalRate: 20,
-      growth: 0,
-      inflationRate: 10,
-      retirementAge: 30,
-      goalEndYear: '2080-01-01',
-    })
+    renderCard(
+      {
+        fiGoal: 500_000,
+        expenseValue: 0,
+        monthlyExpense2047: 8333,
+        retirementAge: 30,
+        goalEndYear: '2080-01-01',
+      },
+      { inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
+    )
     expect(screen.getByText(/Not sustainable beyond/)).toBeInTheDocument()
   })
 
-  it('shows Suggest SWR button when onUpdateGoal is provided and depletion exists', () => {
+  it('shows depletion warning text when onUpdateGoal is provided and depletion exists', () => {
     const onUpdateGoal = vi.fn()
     renderCard(
       {
         fiGoal: 500_000,
-        expenseValue2047: 100000,
+        expenseValue: 0,
         monthlyExpense2047: 8333,
-        safeWithdrawalRate: 20,
-        growth: 0,
-        inflationRate: 10,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
-      { onUpdateGoal, showActions: false },
+      { onUpdateGoal, showActions: false, inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
     )
-    expect(screen.getByRole('button', { name: 'Suggest SWR' })).toBeInTheDocument()
+    expect(screen.getByText(/Not sustainable beyond/)).toBeInTheDocument()
   })
 })
 
@@ -461,9 +563,8 @@ describe('GoalDetailedCard edit mode', () => {
     fireEvent.click(screen.getByRole('button', { name: /Edit/ }))
     expect(screen.getByText('Retirement Age')).toBeInTheDocument()
     expect(screen.getByText('Annual Expense ($)')).toBeInTheDocument()
-    expect(screen.getByText('Inflation Rate (%)')).toBeInTheDocument()
-    expect(screen.getByText('Safe Withdrawal Rate (%)')).toBeInTheDocument()
-    expect(screen.getByText('Growth Rate (%)')).toBeInTheDocument()
+    expect(screen.getByText('Goal Creation Date')).toBeInTheDocument()
+    expect(screen.getByText('Goal End Year')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
   })
 
@@ -536,69 +637,27 @@ describe('GoalDetailedCard edit mode', () => {
    Depletion Warning — Suggest SWR interaction
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalDetailedCard suggest SWR', () => {
-  it('shows "Searching…" while suggesting and calls onUpdateGoal on success', async () => {
-    vi.useFakeTimers()
+describe('GoalDetailedCard suggest SWR (removed feature)', () => {
+  it('does not render Suggest SWR button (feature removed)', () => {
     const onUpdateGoal = vi.fn()
     renderCard(
       {
         fiGoal: 500_000,
-        expenseValue2047: 100000,
+        expenseValue: 0,
         monthlyExpense2047: 8333,
-        safeWithdrawalRate: 20,
-        growth: 0,
-        inflationRate: 10,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
-      { onUpdateGoal, showActions: false },
+      { onUpdateGoal, showActions: false, inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
     )
-    const btn = screen.getByRole('button', { name: 'Suggest SWR' })
-    fireEvent.click(btn)
-    expect(screen.getByText('Searching…')).toBeInTheDocument()
-    // Run the setTimeout macrotask (React 19 requires act() to flush state from non-event timers)
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0)
-    })
-    // suggestSWR runs the internal simulation — may or may not find a valid SWR
-    // Either way, the button should return to normal
-    expect(screen.queryByText('Searching…')).not.toBeInTheDocument()
-    vi.useRealTimers()
-  })
-
-  it('does not call onUpdateGoal when suggest finds no valid SWR', async () => {
-    vi.useFakeTimers()
-    const onUpdateGoal = vi.fn()
-    // monthlyExpense2047 is high enough to cause depletion, but expenseValue2047 = 0
-    // so suggestSWR returns null immediately
-    renderCard(
-      {
-        fiGoal: 500_000,
-        expenseValue2047: 0,
-        monthlyExpense2047: 8333,
-        safeWithdrawalRate: 20,
-        growth: 0,
-        inflationRate: 10,
-        retirementAge: 30,
-        goalEndYear: '2080-01-01',
-      },
-      { onUpdateGoal, showActions: false },
-    )
-    const btn = screen.getByRole('button', { name: 'Suggest SWR' })
-    fireEvent.click(btn)
-    await vi.advanceTimersByTimeAsync(0)
-    expect(onUpdateGoal).not.toHaveBeenCalled()
-    vi.useRealTimers()
+    expect(screen.queryByRole('button', { name: 'Suggest SWR' })).not.toBeInTheDocument()
   })
 
   it('does not render Suggest SWR when onUpdateGoal is not provided', () => {
     renderCard({
       fiGoal: 500_000,
-      expenseValue2047: 100000,
+      expenseValue: 0,
       monthlyExpense2047: 8333,
-      safeWithdrawalRate: 20,
-      growth: 0,
-      inflationRate: 10,
       retirementAge: 30,
       goalEndYear: '2080-01-01',
     })
@@ -644,12 +703,12 @@ describe('GoalDetailedCard depletion edge cases', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalDetailedCard projection — projectFIDate returns null', () => {
-  it('shows not-reachable when projectFIDate returns null', () => {
-    mockedProjectFIDate.mockReturnValueOnce(null)
+  it('shows no pace prose when projectFIDateWithDrawdown returns null', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce(null)
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 100, saveRate: 0.01, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(screen.queryByText(/At this pace/)).not.toBeInTheDocument()
   })
 })
 
@@ -661,16 +720,24 @@ describe('GoalDetailedCard projection diff text', () => {
   it('shows "On track" when projected date matches target retirement date', () => {
     // birthday 1990-01-15, retirementAge 60 → target = Jan 15 2050
     const projected = new Date(2050, 0, 15) // Exact match
-    mockedProjectFIDate.mockReturnValue({ date: projected, months: 300 })
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: projected,
+      months: 300,
+      requiredCorpus: 2_000_000,
+    })
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
-    expect(screen.getByText('On track')).toBeInTheDocument()
+    expect(screen.getByText(/on track/)).toBeInTheDocument()
   })
 
   it('shows months early when projected date is 1-11 months ahead', () => {
     const projected = new Date(2049, 2, 15) // Mar 2049, ~10 months early
-    mockedProjectFIDate.mockReturnValue({ date: projected, months: 293 })
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: projected,
+      months: 293,
+      requiredCorpus: 2_000_000,
+    })
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
@@ -679,7 +746,11 @@ describe('GoalDetailedCard projection diff text', () => {
 
   it('shows years behind when projected date is far after target', () => {
     const projected = new Date(2055, 0, 15) // Jan 2055, ~5 years behind
-    mockedProjectFIDate.mockReturnValue({ date: projected, months: 360 })
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: projected,
+      months: 360,
+      requiredCorpus: 2_000_000,
+    })
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
@@ -691,30 +762,18 @@ describe('GoalDetailedCard projection diff text', () => {
    Expense toggle — Monthly at retirement
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalDetailedCard expense toggles — retirement monthly', () => {
-  it('shows monthly inflated expense when both At Retirement and Monthly are selected', () => {
-    renderCard({
-      expenseValue: 60000,
-      monthlyExpenseValue: 5000,
-      expenseValue2047: 100000,
-      monthlyExpense2047: 8333,
-    })
-    fireEvent.click(screen.getByText('At Retirement'))
-    // There are multiple Monthly buttons (creation + retirement) — click the first one visible
-    const monthlyButtons = screen.getAllByText('Monthly')
-    fireEvent.click(monthlyButtons[0])
-    expect(screen.getByText('$8,333')).toBeInTheDocument()
+describe('GoalDetailedCard expense — prose format', () => {
+  it('shows annual expense in prose', () => {
+    renderCard({ expenseValue: 60000 })
+    const prose = document.querySelector('.fi-goal-prose')
+    expect(prose?.textContent).toContain('$60,000/yr')
   })
 
-  it('shows annual inflated expense when At Retirement and Annual are selected', () => {
-    renderCard({
-      expenseValue: 60000,
-      monthlyExpenseValue: 5000,
-      expenseValue2047: 100000,
-      monthlyExpense2047: 8333,
-    })
-    fireEvent.click(screen.getByText('At Retirement'))
-    expect(screen.getByText('$100,000')).toBeInTheDocument()
+  it('shows inflation in prose', () => {
+    renderCard({ inflationRate: 3 })
+    const prose = document.querySelector('.fi-goal-prose')
+    expect(prose?.textContent).toContain('3%')
+    expect(prose?.textContent).toContain('inflation')
   })
 })
 
@@ -934,13 +993,13 @@ describe('GoalDetailedCard — projection on track (absDiffMonths <= 6)', () => 
     setMockFiTotal(1_900_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200_000, saveRate: 80, monthsOfData: 12 })
     // Target retirement: birthday 1990-01-15 + 60 years = Jan 15 2050
-    // Set projectFIDate to return a date that rounds to 0 months difference
-    mockedProjectFIDate.mockReturnValue({
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
       date: new Date(2050, 0, 10), // Jan 10 2050 — ~5 days diff rounds to 0 months
       months: 300,
+      requiredCorpus: 2_000_000,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
-    expect(screen.getByText('On track')).toBeInTheDocument()
+    expect(screen.getByText(/on track/)).toBeInTheDocument()
   })
 })
 
@@ -949,9 +1008,10 @@ describe('GoalDetailedCard — projection years plural (line 302)', () => {
     setMockFiTotal(1_500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 500_000, saveRate: 60, monthsOfData: 12 })
     // Target: Jan 2050, projected: Jan 2047 → 3 years ahead
-    mockedProjectFIDate.mockReturnValueOnce({
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
       date: new Date(2047, 0, 1),
       months: 24,
+      requiredCorpus: 2_000_000,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/3 years early/)).toBeInTheDocument()
@@ -960,23 +1020,24 @@ describe('GoalDetailedCard — projection years plural (line 302)', () => {
   it('shows singular "year" when projected exactly 1 year ahead', () => {
     setMockFiTotal(1_800_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 600_000, saveRate: 70, monthsOfData: 12 })
-    // Target: Jan 2050, projected: Jan 2049 → ~12 months → 1 year ahead
-    mockedProjectFIDate.mockReturnValueOnce({
-      date: new Date(2048, 11, 1), // Dec 2048 → ~13 months before Jan 2050 → rounds to 1 year
+    // Target: Jan 15 2050, projected: Jan 15 2049 → exactly 12 months → 1 year ahead
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2049, 0, 15),
       months: 12,
+      requiredCorpus: 2_000_000,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/1 year early/)).toBeInTheDocument()
   })
 })
 
-describe('GoalDetailedCard — projection not-reachable when projectFIDate returns null', () => {
-  it('shows "Not reachable" when projectFIDate returns null', () => {
+describe('GoalDetailedCard — projection not-reachable when projectFIDateWithDrawdown returns null', () => {
+  it('does not show pace prose when projection returns null', () => {
     setMockFiTotal(500_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 50_000, saveRate: 20, monthsOfData: 12 })
-    mockedProjectFIDate.mockReturnValueOnce(null)
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce(null)
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(screen.queryByText(/At this pace/)).not.toBeInTheDocument()
   })
 })
 
@@ -1009,14 +1070,412 @@ describe('GoalDetailedCard — projection 1 month early (line 299 singular)', ()
   it('shows singular "month" when 1 month early', () => {
     setMockFiTotal(1_900_000)
     mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200_000, saveRate: 80, monthsOfData: 12 })
-    // projectFIDate returns 1 month → date ~1 month from now
-    // target retirement: 1990+60 = Jan 2050
-    // We need the projected date to be 1 month before retirement
-    mockedProjectFIDate.mockReturnValueOnce({
-      date: new Date(2049, 11, 1), // Dec 2049 — 1 month before Jan 2050
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2049, 11, 1),
       months: 1,
+      requiredCorpus: 2_000_000,
     })
     renderCard({ fiGoal: 2_000_000, retirementAge: 60 })
     expect(screen.getByText(/1 month early/)).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard budget csv savings', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 1))
+    setMockFiTotal(500_000)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('uses selected-year csv savings over the stored budget summary and ignores removed or invalid rows', () => {
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200, saveRate: 1, monthsOfData: 12 })
+    mockedLoadBudgetStore.mockReturnValue({
+      csvs: {
+        '2026-01': { month: '2026-01', csv: 'jan', uploadedAt: '2026-01-01T00:00:00.000Z' },
+        '2026-02': { month: '2026-02', csv: 'feb', uploadedAt: '2026-02-01T00:00:00.000Z' },
+        '2026-03': { month: '2026-03', csv: 'bad', uploadedAt: '2026-03-01T00:00:00.000Z' },
+      },
+      configs: {},
+      years: [2026],
+      categoryGroups: [],
+    })
+    mockedGetGlobalCategoryGroups.mockReturnValue([{ id: 'removed', name: 'Removed', categories: ['Ignore me'] }])
+    mockedParseCSV.mockImplementation(csv => {
+      if (csv === 'bad') throw new Error('bad csv')
+      if (csv === 'jan') {
+        return [
+          { date: '2026-01-01', category: 'Salary', amount: 5000 },
+          { date: '2026-01-02', category: 'Rent', amount: -2000 },
+          { date: '2026-01-03', category: 'Ignore me', amount: 1000 },
+        ]
+      }
+      return [
+        { date: '2026-02-01', category: 'Salary', amount: 5000 },
+        { date: '2026-02-02', category: 'Rent', amount: -1000 },
+      ]
+    })
+
+    renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2026 })
+
+    expect(screen.getByText(/You're saving/)).toBeInTheDocument()
+    expect(screen.getByText('$2,333/mo')).toBeInTheDocument()
+    expect(screen.queryByText('$100/mo')).not.toBeInTheDocument()
+  })
+
+  it('uses past-tense copy when rendering a prior summary year', () => {
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200, saveRate: 1, monthsOfData: 12 })
+    mockedLoadBudgetStore.mockReturnValue({
+      csvs: {
+        '2025-01': { month: '2025-01', csv: '2025-jan', uploadedAt: '2025-01-01T00:00:00.000Z' },
+      },
+      configs: {},
+      years: [2025],
+      categoryGroups: [],
+    })
+    mockedParseCSV.mockReturnValue([
+      { date: '2025-01-01', category: 'Salary', amount: 6000 },
+      { date: '2025-01-02', category: 'Rent', amount: -2000 },
+    ])
+
+    renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2025 })
+
+    expect(screen.getByText(/You saved/)).toBeInTheDocument()
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('in 2025')
+  })
+})
+
+describe('GoalDetailedCard savings override edge cases', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ saveRate: 40, annualSavings: 60000, monthsOfData: 12 })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('falls back to projectFIDate when no end-of-life date is available', () => {
+    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpense2047: 0, expenseValue: 60000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(mockedProjectFIDate).toHaveBeenCalled()
+    expect(mockedProjectFIDate.mock.calls.at(-1)?.[2]).toBe(120000)
+  })
+
+  it('shows on-track what-if copy when the override hits the target retirement date', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2050, 0, 15), months: 288, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2038, 6, 1), months: 150, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('on track')
+  })
+
+  it('shows years-only what-if copy when the override reaches FI in whole years', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2050, 0, 1), months: 288, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('2 years')
+  })
+
+  it('shows months-only what-if copy when the override reaches FI within the same year', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2026, 5, 1), months: 5, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2038, 6, 1), months: 150, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('5 months')
+  })
+
+  it('clears the inline savings input when the entered value has no digits', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: 'abc' } })
+
+    expect(input).toHaveValue('')
+  })
+
+  it('exits inline edit mode on Enter and Escape', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    let input = screen.getByRole('textbox')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    input = screen.getByRole('textbox')
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('uses the controlled savings override prop and notifies the parent on changes and reset', () => {
+    const onSavingsOverrideChange = vi.fn()
+
+    renderCard(
+      { fiGoal: 2_000_000 },
+      { savingsOverride: 4000, onSavingsOverrideChange, onTogglePeriod: vi.fn(), showYearly: false },
+    )
+
+    expect(screen.getByText(/If you saved/)).toBeInTheDocument()
+    expect(screen.getByText('$4,000/mo')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('$4,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '6000' } })
+    expect(onSavingsOverrideChange).toHaveBeenCalledWith(6000)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(onSavingsOverrideChange).toHaveBeenCalledWith(null)
+  })
+})
+
+describe('GoalDetailedCard expense label toggles', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('cycles through creation current and retirement dollars when the expense label is clicked', () => {
+    renderCard({ expenseValue: 60000, goalCreatedIn: '2024-01-01', retirementAge: 60 })
+
+    const creationLabel = screen.getByText(/2024 dollars/)
+    expect(creationLabel).toHaveTextContent('$60,000/yr')
+
+    fireEvent.click(creationLabel)
+    expect(screen.getByText(/2026 dollars/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText(/2026 dollars/))
+    expect(screen.getByText(/2050 dollars/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText(/2050 dollars/))
+    expect(screen.getByText(/2024 dollars/)).toBeInTheDocument()
+  })
+
+  it('shows an em dash when the goal creation year is missing', () => {
+    renderCard({ goalCreatedIn: '', expenseValue: 60000 })
+
+    expect(screen.getByText(/— dollars/)).toBeInTheDocument()
+  })
+})
+
+describe('GoalDetailedCard remaining branch coverage', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 0, 15))
+    setMockFiTotal(500_000)
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 60_000, saveRate: 40, monthsOfData: 12 })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('treats active FI accounts without balances as zero-value progress', () => {
+    mockDataCtx.accounts = [{ id: 1, status: 'active', goalType: 'fi' }]
+    mockDataCtx.balances = []
+    mockDataCtx.allMonths = ['2024-06']
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(screen.getByText('0.0%')).toBeInTheDocument()
+  })
+
+  it('classifies expense-only csv categories and falls back to the stored budget summary', () => {
+    mockedGetSaveRate.mockReturnValue({ annualSavings: 1_200, saveRate: 1, monthsOfData: 12 })
+    mockedLoadBudgetStore.mockReturnValue({
+      csvs: {
+        '2026-01': { month: '2026-01', csv: 'expense-only', uploadedAt: '2026-01-01T00:00:00.000Z' },
+      },
+      configs: {},
+      years: [2026],
+      categoryGroups: [],
+    })
+    mockedParseCSV.mockReturnValue([{ date: '2026-01-01', category: 'Rent', amount: -1000 }])
+
+    renderCard({ fiGoal: 2_000_000 }, { summaryYear: 2026 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('$100/mo')
+  })
+
+  it('falls back to projectFIDate when current expenses are unavailable', () => {
+    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpense2047: 0, expenseValue: 0 })
+
+    expect(mockedProjectFIDate).toHaveBeenCalled()
+  })
+
+  it('shows years-only baseline pace copy for whole-year projections', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2028, 0, 1),
+      months: 24,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('2 years')
+  })
+
+  it('shows months-only baseline pace copy for near-term projections', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2026, 5, 1),
+      months: 5,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('5 months')
+  })
+
+  it('shows singular year-only baseline pace copy for one-year projections', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2027, 0, 1),
+      months: 12,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year')
+  })
+
+  it('shows mixed singular diff text in the baseline projection', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2026, 11, 1),
+      months: 11,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000, retirementAge: 38 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month early')
+  })
+
+  it('shows singular year and month labels in the baseline time-to-fi copy', () => {
+    mockedProjectFIDateWithDrawdown.mockReturnValueOnce({
+      date: new Date(2027, 1, 1),
+      months: 13,
+      requiredCorpus: 2_000_000,
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month')
+  })
+
+  it('shows mixed singular diff text in the what-if projection', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2026, 11, 1), months: 11, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000, retirementAge: 38 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month early')
+  })
+
+  it('shows singular year and month labels in the what-if time-to-fi copy', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2027, 1, 1), months: 13, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 year 1 month')
+  })
+
+  it('shows singular month-only what-if pace copy for one-month projections', () => {
+    mockedProjectFIDateWithDrawdown.mockImplementation((_current, annualSavings) => {
+      if (annualSavings === 120000) {
+        return { date: new Date(2026, 1, 1), months: 1, requiredCorpus: 2_000_000 }
+      }
+      return { date: new Date(2028, 0, 1), months: 24, requiredCorpus: 2_000_000 }
+    })
+
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '10000' } })
+    fireEvent.blur(input)
+
+    expect(document.querySelector('.fi-goal-pace')?.textContent).toContain('1 month')
+  })
+
+  it('keeps inline edit mode open for keys other than Enter and Escape', () => {
+    renderCard({ fiGoal: 2_000_000 })
+
+    fireEvent.click(screen.getByText('$5,000/mo'))
+    const input = screen.getByRole('textbox')
+    fireEvent.keyDown(input, { key: 'Tab' })
+
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  it('renders a controlled yearly savings override amount', () => {
+    renderCard({ fiGoal: 2_000_000 }, { savingsOverride: 4000, showYearly: true })
+
+    expect(screen.getByText('$48,000/yr')).toBeInTheDocument()
   })
 })

@@ -1,13 +1,20 @@
 import { FC, useMemo, useState, useCallback } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
-import { Account, BalanceEntry, formatCurrency } from '../../data/types'
+import { formatCurrency } from '../../data/types'
 import TermAbbr from '../../../components/TermAbbr'
+import { getTotalForMonth, getRetirementMonth, monthsBetween, calcMonthlySaving, getGwTarget } from '../utils/goalMath'
+import { getFiTarget } from '../utils/goalCalculations'
 
 interface SavingsPlanProps {
   goal: FinancialGoal
   gwGoals: GwGoal[]
   profileBirthday: string
+  growthRate?: number
+  postGrowthRate?: number
+  ageBoundary?: number
+  showYearly?: boolean
+  onTogglePeriod?: () => void
 }
 
 interface PlanResult {
@@ -17,55 +24,6 @@ interface PlanResult {
   monthsRemaining: number
   growthRate: number
   monthlySaving: number
-}
-
-const getTotalForMonth = (
-  accounts: Account[],
-  balances: BalanceEntry[],
-  month: string,
-  goalType: 'fi' | 'gw',
-): number => {
-  const balMap = new Map<number, number>()
-  for (const b of balances) if (b.month === month) balMap.set(b.accountId, b.balance)
-  return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
-}
-
-const getRetirementMonth = (birthday: string, retirementAge: number): string => {
-  const [by, bm] = birthday.split('-').map(Number)
-  const retYear = by + retirementAge
-  const mm = String(bm).padStart(2, '0')
-  return `${retYear}-${mm}`
-}
-
-const monthsBetween = (from: string, to: string): number => {
-  const [fy, fm] = from.split('-').map(Number)
-  const [ty, tm] = to.split('-').map(Number)
-  return (ty - fy) * 12 + (tm - fm)
-}
-
-const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nMonths: number): number => {
-  if (nMonths <= 0) return 0
-  const r = annualRate / 100 / 12
-  if (r === 0) return Math.max(0, (fv - pv) / nMonths)
-  const factor = Math.pow(1 + r, nMonths)
-  const needed = fv - pv * factor
-  if (needed <= 0) return 0
-  return (needed * r) / (factor - 1)
-}
-
-const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number => {
-  const goalGws = gwGoals.filter(g => g.fiGoalId === goal.id)
-  if (goalGws.length === 0) return 0
-  const [by, bm] = profileBirthday.split('-').map(Number)
-  const created = new Date(goal.goalCreatedIn)
-  return goalGws.reduce((sum, gw) => {
-    const disburseYear = by + gw.disburseAge
-    const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
-    const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
-    const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-    const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
-    return sum + pv
-  }, 0)
 }
 
 const formatMonth = (ym: string) => {
@@ -187,13 +145,14 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
     [goal.birthday, profileBirthday, goal.retirementAge],
   )
 
-  const fiTarget = goal.fiGoal
   const gwTarget = useMemo(() => getGwTarget(goal, gwGoals, profileBirthday), [goal, gwGoals, profileBirthday])
 
   const initialMonth = months[0] || ''
   const currentMonth = months[months.length - 1] || ''
   const [fiGrowth, setFiGrowth] = useState(8)
   const [gwGrowth, setGwGrowth] = useState(8)
+
+  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, fiGrowth), [goal, profileBirthday, fiGrowth])
 
   const calcPlan = useCallback(
     (goalType: 'fi' | 'gw', startMonth: string, growthRate: number, target: number): PlanResult | null => {
@@ -271,3 +230,104 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
 }
 
 export default SavingsPlan
+
+// Simplified plan components for column layout — just show monthly savings needed
+export const FiSavingsPlan: FC<SavingsPlanProps> = ({
+  goal,
+  gwGoals: _gwGoals,
+  profileBirthday,
+  growthRate,
+  postGrowthRate,
+  ageBoundary,
+  showYearly,
+  onTogglePeriod,
+}) => {
+  const { accounts, balances, allMonths: months } = useData()
+
+  const retirementMonth = useMemo(
+    () => getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge),
+    [goal.birthday, profileBirthday, goal.retirementAge],
+  )
+
+  const currentMonth = months[months.length - 1] || ''
+  const fiGrowth = growthRate ?? 8
+
+  const fiTarget = useMemo(
+    () => getFiTarget(goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary),
+    [goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary],
+  )
+
+  const monthlySaving = useMemo(() => {
+    if (!currentMonth || months.length === 0 || fiTarget <= 0) return null
+    const bal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
+    const n = monthsBetween(currentMonth, retirementMonth)
+    return calcMonthlySaving(bal, fiTarget, fiGrowth, n)
+  }, [accounts, balances, months, currentMonth, retirementMonth, fiTarget, fiGrowth])
+
+  if (months.length === 0 || fiTarget <= 0) return null
+
+  return (
+    <div className="splan splan--simple">
+      <p className="splan-simple-message">
+        At {fiGrowth}% growth,{' '}
+        {monthlySaving === null || monthlySaving <= 0 ? (
+          <span className="splan-simple-amount">you've achieved this goal 🎉</span>
+        ) : (
+          <>
+            you need to save{' '}
+            <span className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
+              {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
+            </span>
+          </>
+        )}
+      </p>
+    </div>
+  )
+}
+
+export const GwSavingsPlan: FC<SavingsPlanProps> = ({
+  goal,
+  gwGoals,
+  profileBirthday,
+  growthRate,
+  showYearly,
+  onTogglePeriod,
+}) => {
+  const { accounts, balances, allMonths: months } = useData()
+
+  const retirementMonth = useMemo(
+    () => getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge),
+    [goal.birthday, profileBirthday, goal.retirementAge],
+  )
+
+  const gwTarget = useMemo(() => getGwTarget(goal, gwGoals, profileBirthday), [goal, gwGoals, profileBirthday])
+  const currentMonth = months[months.length - 1] || ''
+  const gwGrowth = growthRate ?? 8
+
+  const monthlySaving = useMemo(() => {
+    if (!currentMonth || months.length === 0 || gwTarget <= 0) return null
+    const bal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
+    const n = monthsBetween(currentMonth, retirementMonth)
+    return calcMonthlySaving(bal, gwTarget, gwGrowth, n)
+  }, [accounts, balances, months, currentMonth, retirementMonth, gwTarget, gwGrowth])
+
+  if (months.length === 0 || gwTarget <= 0) return null
+
+  return (
+    <div className="splan splan--simple">
+      <p className="splan-simple-message">
+        At {gwGrowth}% growth,{' '}
+        {monthlySaving === null || monthlySaving <= 0 ? (
+          <span className="splan-simple-amount">you've achieved this goal 🎉</span>
+        ) : (
+          <>
+            you need to save{' '}
+            <span className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
+              {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
+            </span>
+          </>
+        )}
+      </p>
+    </div>
+  )
+}

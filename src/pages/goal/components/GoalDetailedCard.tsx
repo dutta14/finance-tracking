@@ -1,13 +1,18 @@
-import { FC, useState, useMemo, useCallback, useEffect, useId } from 'react'
+import { FC, useState, useMemo, useEffect } from 'react'
 import { FinancialGoal } from '../../../types'
 import GoalCardActions from './GoalCardActions'
-import { calculateGoalMetrics, projectFIDate, DEFAULT_PRE_FI_GROWTH_RATE } from '../utils/goalCalculations'
+import {
+  calculateGoalMetrics,
+  computeRequiredCorpus,
+  projectFIDate,
+  projectFIDateWithDrawdown,
+} from '../utils/goalCalculations'
 import { parseDate as utilParseDate, getMonthsBetween } from '../utils/dateHelpers'
 import { useData } from '../../../contexts/DataContext'
-import { getBudgetSaveRate } from '../../budget/utils/budgetStorage'
+import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
+import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
 import TermAbbr from '../../../components/TermAbbr'
-import TrajectorySparkline from './TrajectorySparkline'
-import type { TrajectoryStatus } from './TrajectorySparkline'
+
 import '../../../styles/GoalDetailedCard.css'
 
 interface EditFields {
@@ -15,9 +20,6 @@ interface EditFields {
   goalEndYear: string
   retirementAge: string
   expenseValue: string
-  inflationRate: string
-  safeWithdrawalRate: string
-  growth: string
 }
 
 interface GoalDetailedCardProps {
@@ -31,6 +33,15 @@ interface GoalDetailedCardProps {
   condensed?: boolean
   showTitle?: boolean
   initialEditing?: boolean
+  preBoundaryGrowth?: number
+  postBoundaryGrowth?: number
+  ageBoundary?: number
+  inflation?: number
+  showYearly?: boolean
+  onTogglePeriod?: () => void
+  summaryYear?: number
+  savingsOverride?: number | null
+  onSavingsOverrideChange?: (value: number | null) => void
 }
 
 const toEditFields = (p: FinancialGoal): EditFields => ({
@@ -38,9 +49,6 @@ const toEditFields = (p: FinancialGoal): EditFields => ({
   goalEndYear: p.goalEndYear,
   retirementAge: String(p.retirementAge),
   expenseValue: String(p.expenseValue),
-  inflationRate: String(p.inflationRate),
-  safeWithdrawalRate: String(p.safeWithdrawalRate),
-  growth: String(p.growth),
 })
 
 // Helper functions
@@ -49,98 +57,49 @@ const parseDate = (dateString: string): Date => {
   return new Date(Number(year), Number(month) - 1, Number(day))
 }
 
-const formatMonthYear = (dateString: string): string => {
-  const date = parseDate(dateString)
-  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
-
-const formatFullDate = (dateString: string): string => {
-  const date = parseDate(dateString)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 const formatRetirementDate = (date: Date): string =>
   date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
-function runProjection(goal: FinancialGoal, profileBirthday: string, fiGoal: number): { remaining: number }[] {
-  if (!profileBirthday || !goal.goalEndYear || !fiGoal) return []
-  const [by, bm, bd] = profileBirthday.split('-').map(Number)
-  const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
-  const endDate = new Date(goal.goalEndYear)
-  if (retirementDate >= endDate) return []
-  const monthlyInflation = (goal.inflationRate || 0) / 100 / 12
-  const monthlyGrowth = (goal.growth || 0) / 100 / 12
-  let expense = goal.monthlyExpense2047
-  let remaining = fiGoal
-  const rows: { remaining: number }[] = []
-  const cursor = new Date(retirementDate.getFullYear(), retirementDate.getMonth(), 1)
-  const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
-  while (cursor <= end) {
-    rows.push({ remaining })
-    remaining = remaining * (1 + monthlyGrowth) - expense
-    expense = expense * (1 + monthlyInflation)
-    cursor.setMonth(cursor.getMonth() + 1)
-  }
-  return rows
-}
-
-const findDepletionMonth = (goal: FinancialGoal, profileBirthday: string): string | null => {
-  if (!profileBirthday || !goal.goalEndYear || !goal.fiGoal) return null
+const findDepletionMonth = (
+  goal: FinancialGoal,
+  profileBirthday: string,
+  inflationRate: number,
+  preBoundaryGrowth: number,
+  postBoundaryGrowth: number,
+  ageBoundary: number,
+  fiGoalOverride?: number,
+): string | null => {
+  const fiGoalVal = fiGoalOverride ?? goal.fiGoal
+  if (!profileBirthday || !goal.goalEndYear || !fiGoalVal) return null
   const [by, bm, bd] = profileBirthday.split('-').map(Number)
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
   const endDate = new Date(goal.goalEndYear)
   if (retirementDate >= endDate) return null
-  const monthlyInflation = (goal.inflationRate || 0) / 100 / 12
-  const monthlyGrowth = (goal.growth || 0) / 100 / 12
-  let expense = goal.monthlyExpense2047
-  let remaining = goal.fiGoal
-  const cursor = new Date(retirementDate.getFullYear(), retirementDate.getMonth(), 1)
+  const annualInflation = inflationRate / 100
+  const boundaryDate = new Date(by + ageBoundary, bm - 1, 1)
+  const baseExpense = goal.monthlyExpense2047
+  const fiYear = retirementDate.getFullYear()
+  let expense = baseExpense
+  let lastExpenseYear = fiYear
+  let remaining = fiGoalVal
+  const cursor = new Date(fiYear, retirementDate.getMonth(), 1)
   const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
   while (cursor <= end) {
+    const curYear = cursor.getFullYear()
+    if (curYear > lastExpenseYear) {
+      expense = baseExpense * Math.pow(1 + annualInflation, curYear - fiYear)
+      lastExpenseYear = curYear
+    }
     if (remaining < 0) {
       return cursor.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     }
-    remaining = remaining * (1 + monthlyGrowth) - expense
-    expense = expense * (1 + monthlyInflation)
+    const growthRate = cursor < boundaryDate ? preBoundaryGrowth : postBoundaryGrowth
+    remaining = remaining * (1 + growthRate / 100 / 12) - expense
     cursor.setMonth(cursor.getMonth() + 1)
   }
   return null
-}
-
-function suggestSWR(goal: FinancialGoal, profileBirthday: string): number | null {
-  if (!goal.expenseValue2047) return null
-  for (
-    let swr = Math.round((goal.safeWithdrawalRate - 0.1) * 10) / 10;
-    swr >= 0.1;
-    swr = Math.round((swr - 0.1) * 10) / 10
-  ) {
-    const newFiGoal = goal.expenseValue2047 / (swr / 100)
-    const rows = runProjection(goal, profileBirthday, newFiGoal)
-    if (rows.length > 0 && rows[rows.length - 1].remaining >= 0) return swr
-  }
-  return null
-}
-
-const InfoIcon: FC<{ tooltip: React.ReactNode; align?: 'right' | 'left' }> = ({ tooltip, align = 'right' }) => {
-  const tooltipId = useId()
-  return (
-    <span className="fi-goal-info" tabIndex={0} aria-describedby={tooltipId}>
-      <svg className="fi-goal-info-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="7.25" y="7" width="1.5" height="5" rx="0.75" fill="currentColor" />
-        <rect x="7.25" y="4" width="1.5" height="1.5" rx="0.75" fill="currentColor" />
-      </svg>
-      <span
-        id={tooltipId}
-        role="tooltip"
-        className={`fi-goal-tooltip${align === 'left' ? ' fi-goal-tooltip--left' : ''}`}
-      >
-        {tooltip}
-      </span>
-    </span>
-  )
 }
 
 const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
@@ -154,13 +113,28 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   condensed = false,
   showTitle = true,
   initialEditing = false,
+  preBoundaryGrowth = 8,
+  postBoundaryGrowth = 6,
+  ageBoundary = 60,
+  inflation = 3,
+  showYearly,
+  onTogglePeriod,
+  summaryYear,
+  savingsOverride: savingsOverrideProp,
+  onSavingsOverrideChange,
 }) => {
-  const [expenseView, setExpenseView] = useState<'creation' | 'retirement'>('creation')
-  const [amountView, setAmountView] = useState<'annual' | 'monthly'>('annual')
-  const [suggesting, setSuggesting] = useState(false)
   const [editing, setEditing] = useState(initialEditing)
   const [editFields, setEditFields] = useState<EditFields>(toEditFields(goal))
   const [editError, setEditError] = useState('')
+  const [expenseDollarMode, setExpenseDollarMode] = useState<'creation' | 'current' | 'retirement'>('creation')
+  const [savingsOverrideLocal, setSavingsOverrideLocal] = useState<number | null>(null)
+  const savingsOverride = savingsOverrideProp !== undefined ? savingsOverrideProp : savingsOverrideLocal
+  const setSavingsOverride = (v: number | null) => {
+    if (onSavingsOverrideChange) onSavingsOverrideChange(v)
+    else setSavingsOverrideLocal(v)
+  }
+  const [editingSavings, setEditingSavings] = useState(false)
+  const [savingsInputValue, setSavingsInputValue] = useState('')
 
   const { accounts, balances, allMonths } = useData()
 
@@ -168,7 +142,6 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     setEditFields(toEditFields(goal))
   }, [goal])
 
-  // Sync fields if goal values change externally while not editing (e.g. Suggest SWR)
   useEffect(() => {
     if (!editing) setEditFields(toEditFields(goal))
   }, [editing, goal])
@@ -196,8 +169,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       profileBirthday,
       retirementAge,
       editFields.goalCreatedIn,
-      Number(editFields.inflationRate) || 0,
-      Number(editFields.safeWithdrawalRate) || 0,
+      inflation,
+      preBoundaryGrowth,
+      editFields.goalEndYear,
       getMonthsBetween,
       utilParseDate,
     )
@@ -210,9 +184,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       monthlyExpenseValue: metrics.monthlyExpenseAtCreation,
       expenseValue2047: metrics.annualExpenseAtRetirement,
       monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
-      inflationRate: Number(editFields.inflationRate) || 0,
-      safeWithdrawalRate: Number(editFields.safeWithdrawalRate) || 0,
-      growth: Number(editFields.growth) || 0,
+      inflationRate: inflation,
+      safeWithdrawalRate: 0,
+      growth: preBoundaryGrowth,
       retirement: metrics.retirementDateFormatted,
       fiGoal: metrics.fiGoal,
     })
@@ -233,25 +207,69 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     birthDate.getDate(),
   )
   const retirementDateLabel = formatRetirementDate(retirementDate)
-  const depletionMonth = useMemo(() => findDepletionMonth(goal, profileBirthday), [goal, profileBirthday])
 
-  const handleSuggest = useCallback(() => {
-    if (!onUpdateGoal) return
-    setSuggesting(true)
-    // run in macrotask so the 'Searching…' label renders first
-    setTimeout(() => {
-      const swr = suggestSWR(goal, profileBirthday)
-      if (swr !== null) {
-        const newFiGoal = goal.expenseValue2047 / (swr / 100)
-        onUpdateGoal(goal.id, { ...goal, safeWithdrawalRate: swr, fiGoal: newFiGoal })
-      }
-      setSuggesting(false)
-    }, 0)
-  }, [onUpdateGoal, goal, profileBirthday])
+  // Dynamically recompute fiGoal from current settings (inflation, growth rates)
+  const fiGoal = useMemo(() => {
+    if (!goal.goalEndYear || !goal.expenseValue || goal.expenseValue <= 0) return goal.fiGoal
+    const bd = parseDate(profileBirthday)
+    const rd = new Date(bd.getFullYear() + goal.retirementAge, bd.getMonth(), bd.getDate())
+    const endYear = new Date(goal.goalEndYear).getFullYear()
+    const endOfLife = new Date(endYear, 11, 1)
+    const ageBoundaryDate = new Date(bd.getFullYear() + ageBoundary, bd.getMonth(), 1)
+    const [gcYear] = (goal.goalCreatedIn || '').split('-').map(Number)
+    const yearsToRetirement = rd.getFullYear() - (gcYear || new Date().getFullYear())
+    const annualExpenseAtRetirement = goal.expenseValue * Math.pow(1 + inflation / 100, yearsToRetirement)
+    const monthlyExpenseAtRetirement = annualExpenseAtRetirement / 12
+    return computeRequiredCorpus(
+      rd,
+      endOfLife,
+      ageBoundaryDate,
+      monthlyExpenseAtRetirement,
+      inflation,
+      preBoundaryGrowth,
+      postBoundaryGrowth,
+    )
+  }, [
+    goal.goalEndYear,
+    goal.expenseValue,
+    goal.goalCreatedIn,
+    goal.retirementAge,
+    goal.fiGoal,
+    profileBirthday,
+    inflation,
+    preBoundaryGrowth,
+    postBoundaryGrowth,
+    ageBoundary,
+  ])
+
+  const depletionMonth = useMemo(
+    () =>
+      findDepletionMonth(goal, profileBirthday, inflation, preBoundaryGrowth, postBoundaryGrowth, ageBoundary, fiGoal),
+    [goal, profileBirthday, inflation, preBoundaryGrowth, postBoundaryGrowth, ageBoundary, fiGoal],
+  )
 
   const creationYear = goal.goalCreatedIn ? new Date(goal.goalCreatedIn).getUTCFullYear() : '—'
+  const currentYear = new Date().getFullYear()
   const retirementYear = retirementDate.getFullYear()
-  const inflationYears = Math.round(retirementYear - Number(creationYear))
+  const gcYearNum = typeof creationYear === 'number' ? creationYear : currentYear
+
+  const expenseDisplay = useMemo(() => {
+    const base = goal.expenseValue || 0
+    const rate = inflation / 100
+    const toCurrentYear = base * Math.pow(1 + rate, currentYear - gcYearNum)
+    const toRetirementYear = base * Math.pow(1 + rate, retirementYear - gcYearNum)
+    return { creation: base, current: toCurrentYear, retirement: toRetirementYear }
+  }, [goal.expenseValue, inflation, currentYear, retirementYear, gcYearNum])
+
+  const cycleExpenseDollarMode = () =>
+    setExpenseDollarMode(m => (m === 'creation' ? 'current' : m === 'current' ? 'retirement' : 'creation'))
+
+  const expenseLabel =
+    expenseDollarMode === 'creation'
+      ? `${dollars(expenseDisplay.creation)}/yr (${creationYear} dollars)`
+      : expenseDollarMode === 'current'
+        ? `${dollars(expenseDisplay.current)}/yr (${currentYear} dollars)`
+        : `${dollars(expenseDisplay.retirement)}/yr (${retirementYear} dollars)`
 
   const fiTotal = useMemo(() => {
     const latest = allMonths[allMonths.length - 1]
@@ -264,45 +282,149 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   }, [accounts, balances, allMonths])
 
   const budgetData = getBudgetSaveRate()
-  const budgetAnnualSavings = budgetData?.annualSavings ?? 0
   const budgetSaveRateValue = budgetData?.saveRate ?? 0
   const hasBudgetData = budgetData !== null
 
+  // Compute selected-year monthly savings from CSV data (not the stored budget-summary which may be stale)
+  const selectedYear = summaryYear ?? new Date().getFullYear()
+  const currentYearSavings = useMemo(() => {
+    const store = loadBudgetStore()
+    const groups = getGlobalCategoryGroups(store)
+    const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
+    const year = selectedYear
+
+    const categorySums: Record<string, number> = {}
+    let monthsWithData = 0
+    for (let m = 0; m < 12; m++) {
+      const key = buildMonthKey(year, m)
+      const csv = store.csvs[key]
+      if (!csv) continue
+      monthsWithData++
+      try {
+        const txs = parseCSV(csv.csv)
+        txs.forEach(t => {
+          if (removedCats.has(t.category)) return
+          categorySums[t.category] = (categorySums[t.category] || 0) + t.amount
+        })
+      } catch {
+        /* skip bad csv */
+      }
+    }
+
+    if (monthsWithData === 0) return null
+
+    const incomeCats = new Set<string>()
+    const expenseCats = new Set<string>()
+    Object.entries(categorySums).forEach(([cat, total]) => {
+      if (total > 0) incomeCats.add(cat)
+      else if (total < 0) expenseCats.add(cat)
+    })
+
+    let totalIncome = 0
+    let totalExpense = 0
+    Object.entries(categorySums).forEach(([cat, total]) => {
+      if (incomeCats.has(cat)) totalIncome += total
+      else if (expenseCats.has(cat)) totalExpense += Math.abs(total)
+    })
+    return (totalIncome - totalExpense) / monthsWithData
+  }, [selectedYear])
+
+  const budgetAnnualSavings =
+    currentYearSavings !== null && currentYearSavings > 0
+      ? currentYearSavings * 12
+      : budgetData?.annualSavings && budgetData.annualSavings > 0
+        ? budgetData.annualSavings
+        : 0
+
   const fiProgress = useMemo(() => {
-    if (goal.fiGoal <= 0) return 0
-    return Math.min(100, Math.max(0, (fiTotal / goal.fiGoal) * 100))
-  }, [goal.fiGoal, fiTotal])
+    if (fiGoal <= 0) return 0
+    return Math.min(100, Math.max(0, (fiTotal / fiGoal) * 100))
+  }, [fiGoal, fiTotal])
   const progressClamped = fiProgress
 
-  // ── Savings → goal timeline projection ──
+  // ── Savings → goal timeline projection (two-phase: accumulation + drawdown) ──
   const projection = useMemo(() => {
-    if (goal.fiGoal <= 0) return { state: 'no-goal' as const }
-    if (fiTotal >= goal.fiGoal) return { state: 'reached' as const }
+    if (fiGoal <= 0) return { state: 'no-goal' as const }
+    if (fiTotal >= fiGoal) return { state: 'reached' as const }
     if (!hasBudgetData) return { state: 'no-budget' as const }
     if (budgetAnnualSavings <= 0) return { state: 'not-reachable' as const }
 
-    const result = projectFIDate(fiTotal, goal.fiGoal, budgetAnnualSavings, DEFAULT_PRE_FI_GROWTH_RATE)
+    // End of life from goalEndYear
+    const endOfLife = goal.goalEndYear ? new Date(goal.goalEndYear) : null
+    // Monthly expense today (from goal creation expenses, inflated to now)
+    const monthlyExpenseNow = goal.monthlyExpense2047
+      ? goal.monthlyExpense2047 /
+        Math.pow(
+          1 + inflation / 100,
+          (() => {
+            const [by, bm] = profileBirthday.split('-').map(Number)
+            const retDate = new Date(by + goal.retirementAge, bm - 1, 1)
+            const now = new Date()
+            return retDate.getFullYear() - now.getFullYear()
+          })(),
+        )
+      : (goal.expenseValue || 0) / 12
+
+    const [by, bm] = profileBirthday.split('-').map(Number)
+    const ageBoundaryDate = new Date(by + ageBoundary, bm - 1, 1)
+
+    const result: { date: Date; months: number } | null =
+      endOfLife && monthlyExpenseNow > 0
+        ? projectFIDateWithDrawdown(
+            fiTotal,
+            budgetAnnualSavings,
+            preBoundaryGrowth,
+            postBoundaryGrowth,
+            monthlyExpenseNow,
+            inflation,
+            endOfLife,
+            ageBoundaryDate,
+          )
+        : projectFIDate(fiTotal, fiGoal, budgetAnnualSavings, preBoundaryGrowth)
+
     if (!result) return { state: 'not-reachable' as const }
 
     // Compare projected FI date with target retirement date
-    const [by, bm, bd] = profileBirthday.split('-').map(Number)
+    const bd = profileBirthday.split('-').map(Number)[2]
     const targetRetirement = new Date(by + goal.retirementAge, bm - 1, bd)
     const diffMs = targetRetirement.getTime() - result.date.getTime()
     const diffMonthsRaw = Math.round(diffMs / (30.44 * 24 * 60 * 60 * 1000))
     const absDiffMonths = Math.abs(diffMonthsRaw)
     const ahead = diffMonthsRaw >= 0
 
+    const now = new Date()
+    const totalMonthsAway =
+      (result.date.getFullYear() - now.getFullYear()) * 12 + (result.date.getMonth() - now.getMonth())
+    const fiYears = Math.floor(Math.abs(totalMonthsAway) / 12)
+    const fiRemainingMonths = Math.abs(totalMonthsAway) % 12
+    let timeUntilFI: string
+    if (fiYears > 0 && fiRemainingMonths > 0) {
+      timeUntilFI = `${fiYears} year${fiYears !== 1 ? 's' : ''} ${fiRemainingMonths} month${fiRemainingMonths !== 1 ? 's' : ''}`
+    } else if (fiYears > 0) {
+      timeUntilFI = `${fiYears} year${fiYears !== 1 ? 's' : ''}`
+    } else {
+      timeUntilFI = `${fiRemainingMonths} month${fiRemainingMonths !== 1 ? 's' : ''}`
+    }
+
     let diffText: string
     if (absDiffMonths === 0) {
-      diffText = 'On track'
-    } else if (absDiffMonths < 12) {
-      diffText = `${absDiffMonths} month${absDiffMonths !== 1 ? 's' : ''} ${ahead ? 'early' : 'behind'}`
+      diffText = 'on track'
     } else {
-      const years = Math.round(absDiffMonths / 12)
-      diffText = `${years} year${years !== 1 ? 's' : ''} ${ahead ? 'early' : 'behind'}`
+      const diffYears = Math.floor(absDiffMonths / 12)
+      const diffRemMonths = absDiffMonths % 12
+      let diffParts: string
+      if (diffYears > 0 && diffRemMonths > 0) {
+        diffParts = `${diffYears} year${diffYears !== 1 ? 's' : ''} ${diffRemMonths} month${diffRemMonths !== 1 ? 's' : ''}`
+      } else if (diffYears > 0) {
+        diffParts = `${diffYears} year${diffYears !== 1 ? 's' : ''}`
+      } else {
+        diffParts = `${diffRemMonths} month${diffRemMonths !== 1 ? 's' : ''}`
+      }
+      diffText = `${diffParts} ${ahead ? 'early' : 'behind'}`
     }
 
     const shortDate = `${result.date.toLocaleDateString('en-US', { month: 'short' })} '${String(result.date.getFullYear()).slice(2)}`
+    const actualDate = result.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     const monthlySavings = budgetAnnualSavings / 12
     return {
       state: 'projected' as const,
@@ -310,22 +432,126 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       months: result.months,
       dateLabel: result.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
       shortDateLabel: shortDate,
+      actualDate,
+      timeUntilFI,
       monthlySavings,
       currentNetWorth: fiTotal,
-      fiGoal: goal.fiGoal,
+      fiGoal,
       saveRate: budgetSaveRateValue,
       ahead,
       absDiffMonths,
       diffText,
     }
   }, [
-    goal.fiGoal,
+    fiGoal,
     goal.retirementAge,
+    goal.goalEndYear,
+    goal.monthlyExpense2047,
+    goal.expenseValue,
+    inflation,
+    preBoundaryGrowth,
+    postBoundaryGrowth,
+    ageBoundary,
     profileBirthday,
     fiTotal,
     hasBudgetData,
     budgetAnnualSavings,
     budgetSaveRateValue,
+  ])
+
+  // ── What-if projection using savings override ──
+  const whatIfProjection = useMemo(() => {
+    if (savingsOverride === null || fiGoal <= 0 || fiTotal >= fiGoal) return null
+    const overrideAnnual = savingsOverride * 12
+
+    const [by, bm] = profileBirthday.split('-').map(Number)
+    const endOfLife = goal.goalEndYear ? new Date(goal.goalEndYear) : null
+    const monthlyExpenseNow = goal.monthlyExpense2047
+      ? goal.monthlyExpense2047 /
+        Math.pow(
+          1 + inflation / 100,
+          (() => {
+            const retDate = new Date(by + goal.retirementAge, bm - 1, 1)
+            return retDate.getFullYear() - new Date().getFullYear()
+          })(),
+        )
+      : (goal.expenseValue || 0) / 12
+    const ageBoundaryDate = new Date(by + ageBoundary, bm - 1, 1)
+
+    const result =
+      endOfLife && monthlyExpenseNow > 0
+        ? projectFIDateWithDrawdown(
+            fiTotal,
+            overrideAnnual,
+            preBoundaryGrowth,
+            postBoundaryGrowth,
+            monthlyExpenseNow,
+            inflation,
+            endOfLife,
+            ageBoundaryDate,
+          )
+        : projectFIDate(fiTotal, fiGoal, overrideAnnual, preBoundaryGrowth)
+
+    if (!result) return { reachable: false as const }
+
+    const bd = profileBirthday.split('-').map(Number)[2]
+    const targetRetirement = new Date(by + goal.retirementAge, bm - 1, bd)
+    const diffMs = targetRetirement.getTime() - result.date.getTime()
+    const diffMonthsRaw = Math.round(diffMs / (30.44 * 24 * 60 * 60 * 1000))
+    const absDiffMonths = Math.abs(diffMonthsRaw)
+    const ahead = diffMonthsRaw >= 0
+
+    const now = new Date()
+    const totalMonthsAway =
+      (result.date.getFullYear() - now.getFullYear()) * 12 + (result.date.getMonth() - now.getMonth())
+    const wiYears = Math.floor(Math.abs(totalMonthsAway) / 12)
+    const wiRemainingMonths = Math.abs(totalMonthsAway) % 12
+    let timeUntilFI: string
+    if (wiYears > 0 && wiRemainingMonths > 0) {
+      timeUntilFI = `${wiYears} year${wiYears !== 1 ? 's' : ''} ${wiRemainingMonths} month${wiRemainingMonths !== 1 ? 's' : ''}`
+    } else if (wiYears > 0) {
+      timeUntilFI = `${wiYears} year${wiYears !== 1 ? 's' : ''}`
+    } else {
+      timeUntilFI = `${wiRemainingMonths} month${wiRemainingMonths !== 1 ? 's' : ''}`
+    }
+
+    let diffText: string
+    if (absDiffMonths === 0) {
+      diffText = 'on track'
+    } else {
+      const diffYears = Math.floor(absDiffMonths / 12)
+      const diffRemMonths = absDiffMonths % 12
+      let diffParts: string
+      if (diffYears > 0 && diffRemMonths > 0) {
+        diffParts = `${diffYears} year${diffYears !== 1 ? 's' : ''} ${diffRemMonths} month${diffRemMonths !== 1 ? 's' : ''}`
+      } else if (diffYears > 0) {
+        diffParts = `${diffYears} year${diffYears !== 1 ? 's' : ''}`
+      } else {
+        diffParts = `${diffRemMonths} month${diffRemMonths !== 1 ? 's' : ''}`
+      }
+      diffText = `${diffParts} ${ahead ? 'early' : 'behind'}`
+    }
+
+    const actualDate = result.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+
+    return {
+      reachable: true as const,
+      dateLabel: result.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      actualDate,
+      timeUntilFI,
+      diffText,
+      ahead,
+    }
+  }, [
+    savingsOverride,
+    fiGoal,
+    fiTotal,
+    goal,
+    inflation,
+    preBoundaryGrowth,
+    postBoundaryGrowth,
+    ageBoundary,
+    profileBirthday,
   ])
 
   return (
@@ -352,11 +578,6 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
             <rect x="7.25" y="11.5" width="1.5" height="1.5" rx="0.75" fill="currentColor" />
           </svg>
           <span className="fi-card-warning-text">Not sustainable beyond {depletionMonth}</span>
-          {onUpdateGoal && (
-            <button className="fi-card-warning-suggest" onClick={handleSuggest} disabled={suggesting}>
-              {suggesting ? 'Searching…' : 'Suggest SWR'}
-            </button>
-          )}
         </div>
       )}
 
@@ -445,36 +666,6 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                 min="0"
               />
             </div>
-            <div className="fi-form-group">
-              <label className="fi-form-label">Inflation Rate (%)</label>
-              <input
-                className="fi-form-input"
-                type="number"
-                value={editFields.inflationRate}
-                onChange={setEF('inflationRate')}
-                step="0.1"
-              />
-            </div>
-            <div className="fi-form-group">
-              <label className="fi-form-label">Safe Withdrawal Rate (%)</label>
-              <input
-                className="fi-form-input"
-                type="number"
-                value={editFields.safeWithdrawalRate}
-                onChange={setEF('safeWithdrawalRate')}
-                step="0.1"
-              />
-            </div>
-            <div className="fi-form-group">
-              <label className="fi-form-label">Growth Rate (%)</label>
-              <input
-                className="fi-form-input"
-                type="number"
-                value={editFields.growth}
-                onChange={setEF('growth')}
-                step="0.1"
-              />
-            </div>
           </div>
           <div className="fi-form-actions">
             <button className="fi-form-save" onClick={handleEditSave}>
@@ -487,262 +678,141 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
         </div>
       ) : (
         <>
-          {/* ── Parameters ── */}
+          {/* ── FI Goal prose ── */}
           {!condensed && (
-            <div className="fi-card-section">
-              <h4 className="fi-card-section-title">Parameters</h4>
-              <div className="fi-card-rows">
-                <div className="fi-card-row">
-                  <span className="fi-card-row-label">Goal Created</span>
-                  <span className="fi-card-row-value">
-                    {goal.goalCreatedIn ? formatMonthYear(goal.goalCreatedIn) : 'N/A'}
-                  </span>
-                </div>
-                <div className="fi-card-row">
-                  <span className="fi-card-row-label">Retirement</span>
-                  <span className="fi-card-row-value">
-                    {retirementDateLabel}
-                    <InfoIcon
-                      tooltip={
-                        <>
-                          Birthday ({formatFullDate(profileBirthday)}) + retirement age ({goal.retirementAge})
-                        </>
-                      }
-                      align="left"
-                    />
-                  </span>
-                </div>
-                <div className="fi-card-row">
-                  <span className="fi-card-row-label">Inflation</span>
-                  <span className="fi-card-row-value">{goal.inflationRate}%</span>
-                </div>
-                <div className="fi-card-row">
-                  <span className="fi-card-row-label">
-                    Safe Withdrawal Rate
-                    <InfoIcon tooltip="The % of your portfolio you withdraw annually in retirement." />
-                  </span>
-                  <span className="fi-card-row-value">{goal.safeWithdrawalRate}%</span>
-                </div>
-                <div className="fi-card-row">
-                  <span className="fi-card-row-label">Portfolio Growth</span>
-                  <span className="fi-card-row-value">{goal.growth}%</span>
-                </div>
-              </div>
-            </div>
+            <p className="fi-goal-prose">
+              Based on spending{' '}
+              <strong className="goal-summary-toggleable" onClick={cycleExpenseDollarMode}>
+                {expenseLabel}
+              </strong>
+              , you need <strong>{dollars(fiGoal)}</strong> to retire by <strong>{retirementDateLabel}</strong>,
+              assuming <strong>{preBoundaryGrowth}%</strong> growth (pre-{ageBoundary}) and{' '}
+              <strong>{postBoundaryGrowth}%</strong> growth (post-{ageBoundary}), with <strong>{inflation}%</strong>{' '}
+              inflation (depletes to $0 at end of life).
+            </p>
           )}
-
-          {/* ── Expense Analysis ── */}
-          {!condensed && (
-            <div className="fi-card-section">
-              <div className="fi-card-section-header">
-                <h4 className="fi-card-section-title">Expenses</h4>
-                <div className="expense-toggle">
-                  <button
-                    className={`expense-toggle-btn${expenseView === 'creation' ? ' active' : ''}`}
-                    onClick={() => setExpenseView('creation')}
-                    title={`Values as of ${creationYear}`}
-                  >
-                    At Creation
-                  </button>
-                  <button
-                    className={`expense-toggle-btn${expenseView === 'retirement' ? ' active' : ''}`}
-                    onClick={() => setExpenseView('retirement')}
-                    title={`Values as of ${retirementYear}`}
-                  >
-                    At Retirement
-                  </button>
-                </div>
-              </div>
-              <div className="fi-card-rows">
-                {expenseView === 'creation' ? (
-                  <div className="fi-card-row">
-                    <span className="fi-card-row-label">
-                      <span className="expense-toggle">
-                        <button
-                          className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`}
-                          onClick={() => setAmountView('annual')}
-                        >
-                          Annual
-                        </button>
-                        <button
-                          className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`}
-                          onClick={() => setAmountView('monthly')}
-                        >
-                          Monthly
-                        </button>
-                      </span>
-                    </span>
-                    <span className="fi-card-row-value">
-                      {dollars(amountView === 'annual' ? goal.expenseValue : goal.monthlyExpenseValue)}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="fi-card-row">
-                    <span className="fi-card-row-label">
-                      <span className="expense-toggle">
-                        <button
-                          className={`expense-toggle-btn${amountView === 'annual' ? ' active' : ''}`}
-                          onClick={() => setAmountView('annual')}
-                        >
-                          Annual
-                        </button>
-                        <button
-                          className={`expense-toggle-btn${amountView === 'monthly' ? ' active' : ''}`}
-                          onClick={() => setAmountView('monthly')}
-                        >
-                          Monthly
-                        </button>
-                      </span>
-                      <InfoIcon
-                        tooltip={
-                          <>
-                            Inflated at {goal.inflationRate}% for {inflationYears} yrs.
-                            <br />
-                            {dollars(amountView === 'annual' ? goal.expenseValue : goal.monthlyExpenseValue)} →{' '}
-                            {dollars(amountView === 'annual' ? goal.expenseValue2047 : goal.monthlyExpense2047)}
-                          </>
-                        }
-                      />
-                    </span>
-                    <span className="fi-card-row-value">
-                      {dollars(amountView === 'annual' ? goal.expenseValue2047 : goal.monthlyExpense2047)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
+          {condensed && (
+            <p className="fi-goal-prose">
+              You need <strong>{dollars(fiGoal)}</strong> to retire by <strong>{retirementDateLabel}</strong>.
+            </p>
           )}
-
-          {/* ── FI Goal callout ── */}
-          <div className="fi-card-goal">
-            <div className="fi-card-goal-top">
-              <span className="fi-card-goal-label">
-                FI Goal
-                <InfoIcon
-                  tooltip={
-                    <>
-                      Annual expense at retirement ÷ SWR.
-                      <br />
-                      {dollars(goal.expenseValue2047)} ÷ {goal.safeWithdrawalRate}% = {dollars(goal.fiGoal)}
-                    </>
-                  }
-                />
-              </span>
-              <span className="fi-card-goal-amount">{dollars(goal.fiGoal)}</span>
+          <div className="fi-card-progress-row">
+            <div
+              className="fi-card-progress-bar-track"
+              role="progressbar"
+              aria-valuenow={Math.round(fiProgress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`FI goal progress: ${fiProgress.toFixed(1)}%`}
+            >
+              <div className="fi-card-progress-bar-fill" style={{ width: `${progressClamped}%` }} />
             </div>
-            <div className="fi-card-progress-row">
-              <div
-                className="fi-card-progress-bar-track"
-                role="progressbar"
-                aria-valuenow={Math.round(fiProgress)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`FI goal progress: ${fiProgress.toFixed(1)}%`}
-              >
-                <div className="fi-card-progress-bar-fill" style={{ width: `${progressClamped}%` }} />
-              </div>
-              <span className="fi-card-progress-pct">{fiProgress.toFixed(1)}%</span>
-            </div>
+            <span className="fi-card-progress-pct">
+              <strong>{fiProgress.toFixed(1)}%</strong> saved toward that target
+            </span>
           </div>
 
-          {/* ── Savings → Goal Timeline Projection ── */}
-          {!condensed && (
-            <div className="fi-card-section fi-card-projection">
-              <div className="fi-card-section-header">
-                <h4 className="fi-card-section-title">Projected Timeline</h4>
-                <InfoIcon tooltip="Based on your current savings rate and growth assumptions" align="left" />
-              </div>
-
-              {projection.state === 'no-goal' && (
-                <div className="fi-card-rows">
-                  <div className="fi-card-row">
-                    <span className="fi-card-row-label">Projected completion</span>
-                    <span className="fi-card-row-value">—</span>
-                  </div>
-                </div>
+          {/* ── Savings Pace Prose ── */}
+          {!condensed && projection.state === 'projected' && (
+            <p className="fi-goal-prose fi-goal-pace">
+              {savingsOverride !== null || editingSavings
+                ? 'If you saved'
+                : (summaryYear ?? new Date().getFullYear()) < new Date().getFullYear()
+                  ? 'You saved'
+                  : 'You\u0027re saving'}{' '}
+              {editingSavings ? (
+                <span className="fi-savings-edit-inline">
+                  $
+                  <input
+                    type="text"
+                    className="fi-savings-inline-input"
+                    value={savingsInputValue}
+                    size={Math.max(4, savingsInputValue.length)}
+                    autoFocus
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9]/g, '')
+                      setSavingsInputValue(raw ? Number(raw).toLocaleString() : '')
+                      const num = Number(raw)
+                      if (num > 0) setSavingsOverride(showYearly ? num / 12 : num)
+                    }}
+                    onBlur={() => setEditingSavings(false)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === 'Escape') setEditingSavings(false)
+                    }}
+                  />
+                  <span className="goal-summary-toggleable" onClick={onTogglePeriod}>
+                    /{showYearly ? 'yr' : 'mo'}
+                  </span>
+                </span>
+              ) : (
+                <strong
+                  className="goal-summary-toggleable fi-savings-editable"
+                  onClick={() => {
+                    const current = showYearly ? projection.monthlySavings * 12 : projection.monthlySavings
+                    const displayValue =
+                      savingsOverride !== null ? (showYearly ? savingsOverride * 12 : savingsOverride) : current
+                    setSavingsInputValue(Math.round(displayValue).toLocaleString())
+                    setEditingSavings(true)
+                  }}
+                >
+                  {dollars(
+                    savingsOverride !== null
+                      ? showYearly
+                        ? savingsOverride * 12
+                        : savingsOverride
+                      : showYearly
+                        ? projection.monthlySavings * 12
+                        : projection.monthlySavings,
+                  )}
+                  /{showYearly ? 'yr' : 'mo'}
+                </strong>
+              )}{' '}
+              in <strong>{summaryYear ?? new Date().getFullYear()}</strong>.{' '}
+              {savingsOverride !== null && whatIfProjection ? (
+                whatIfProjection.reachable ? (
+                  <>
+                    you&apos;d hit FI in <strong>{whatIfProjection.timeUntilFI}</strong> — {whatIfProjection.actualDate}
+                    , <strong>{whatIfProjection.diffText}</strong>.
+                  </>
+                ) : (
+                  <>
+                    FI would be <strong>not reachable</strong> within 100 years.
+                  </>
+                )
+              ) : (
+                <>
+                  At this pace, you&apos;ll hit FI in <strong>{projection.timeUntilFI}</strong> —{' '}
+                  {projection.actualDate}, <strong>{projection.diffText}</strong>.
+                </>
               )}
-
-              {projection.state === 'reached' && (
-                <div className="fi-card-rows">
-                  <div className="fi-card-row">
-                    <span className="fi-card-row-value fi-card-row-value--ahead fi-card-row-value--semibold">
-                      <span role="img" aria-label="celebration">
-                        🎉
-                      </span>{' '}
-                      Goal reached!
-                    </span>
-                  </div>
-                </div>
+              {savingsOverride !== null && (
+                <>
+                  {' '}
+                  <button
+                    className="fi-savings-reset-btn"
+                    onClick={() => {
+                      setSavingsOverride(null)
+                      setSavingsInputValue('')
+                    }}
+                  >
+                    Reset
+                  </button>
+                </>
               )}
-
-              {projection.state === 'no-budget' && (
-                <div className="fi-card-rows">
-                  <div className="fi-card-row">
-                    <a href="#/budget" className="fi-card-projection-link">
-                      Add budget data to see projections
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {projection.state === 'not-reachable' && (
-                <div className="fi-card-rows">
-                  <div className="fi-card-row">
-                    <span className="fi-card-row-value fi-card-row-value--behind">Not reachable at current rate</span>
-                  </div>
-                </div>
-              )}
-
-              {projection.state === 'projected' &&
-                (() => {
-                  const trajectoryStatus: TrajectoryStatus =
-                    projection.absDiffMonths <= 6 ? 'on-track' : projection.ahead ? 'ahead' : 'behind'
-
-                  const projectedDateFull = projection.date.toLocaleDateString('en-US', {
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                  const diffYears = Math.round(projection.absDiffMonths / 12)
-                  const diffDesc =
-                    projection.absDiffMonths <= 6
-                      ? `on track with your ${retirementDateLabel} target retirement`
-                      : `${diffYears} year${diffYears !== 1 ? 's' : ''} ${projection.ahead ? 'ahead of' : 'behind'} your ${retirementDateLabel} target retirement`
-                  const caption = `Projected to reach your FI goal of ${dollars(projection.fiGoal)} by ${projectedDateFull}, ${diffDesc}.`
-
-                  return (
-                    <>
-                      <div className="fi-card-rows">
-                        <div className="fi-card-row">
-                          <span className="fi-card-row-label">Monthly savings</span>
-                          <span className="fi-card-row-value">{dollars(projection.monthlySavings)}</span>
-                        </div>
-                        <div className="fi-card-row">
-                          <span className="fi-card-row-label">Projected completion</span>
-                          <span className="fi-card-row-value fi-card-row-value--projected">{projection.dateLabel}</span>
-                        </div>
-                        <div className="fi-card-row">
-                          <span className="fi-card-row-label">vs. target retirement</span>
-                          <span
-                            className={`fi-card-row-value fi-card-row-value--${projection.ahead ? 'ahead' : 'behind'}`}
-                          >
-                            {projection.diffText}
-                          </span>
-                        </div>
-                      </div>
-                      <TrajectorySparkline
-                        currentNetWorth={projection.currentNetWorth}
-                        fiGoal={projection.fiGoal}
-                        annualSavings={projection.monthlySavings * 12}
-                        growthRate={DEFAULT_PRE_FI_GROWTH_RATE}
-                        months={projection.months}
-                        dateLabel={projection.shortDateLabel}
-                        trajectoryStatus={trajectoryStatus}
-                        caption={caption}
-                      />
-                    </>
-                  )
-                })()}
-            </div>
+            </p>
+          )}
+          {!condensed && projection.state === 'reached' && (
+            <p className="fi-goal-prose fi-goal-pace">
+              <span role="img" aria-label="celebration">
+                🎉
+              </span>{' '}
+              Goal reached!
+            </p>
+          )}
+          {!condensed && projection.state === 'no-budget' && (
+            <p className="fi-goal-prose fi-goal-pace">
+              <a href="#/budget">Add budget data</a> to see your savings pace.
+            </p>
           )}
 
           {!condensed && (

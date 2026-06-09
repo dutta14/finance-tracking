@@ -5,7 +5,6 @@ export interface GoalTemplate {
   retirementAge: number
   annualExpense: number
   inflationRate: number
-  safeWithdrawalRate: number
   growth: number
 }
 
@@ -17,7 +16,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     retirementAge: 45,
     annualExpense: 40000,
     inflationRate: 3.0,
-    safeWithdrawalRate: 4.0,
     growth: 8.0,
   },
   {
@@ -27,7 +25,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     retirementAge: 60,
     annualExpense: 60000,
     inflationRate: 3.0,
-    safeWithdrawalRate: 4.0,
     growth: 7.0,
   },
   {
@@ -37,7 +34,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     retirementAge: 40,
     annualExpense: 50000,
     inflationRate: 3.0,
-    safeWithdrawalRate: 4.0,
     growth: 8.0,
   },
   {
@@ -47,7 +43,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     retirementAge: 50,
     annualExpense: 120000,
     inflationRate: 3.0,
-    safeWithdrawalRate: 3.5,
     growth: 7.0,
   },
   {
@@ -57,7 +52,6 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
     retirementAge: 50,
     annualExpense: 45000,
     inflationRate: 3.0,
-    safeWithdrawalRate: 4.0,
     growth: 8.0,
   },
 ]

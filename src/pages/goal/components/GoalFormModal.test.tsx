@@ -32,7 +32,6 @@ const defaultFormData: FormData = {
   expenseValue: '',
   monthlyExpenseValue: '',
   inflationRate: '',
-  safeWithdrawalRate: '',
   growth: '',
 }
 

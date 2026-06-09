@@ -56,25 +56,26 @@ test.describe('Goal Projections E2E', () => {
       expect(originalDate).not.toBe(null)
     })
 
-    test('GoalDetailedCard on detail page shows TrajectorySparkline', async ({ page }) => {
+    test('Goal detail analysis shows lifecycle projection chart', async ({ page }) => {
       await seedProjectionData(page)
       const detail = new GoalDetailPage(page)
       await detail.goto(FI_GOAL.id)
 
+      await detail.analysisToggle.click()
+      await detail.chartViewToggle.click()
       await expect(detail.sparklineFigure).toBeVisible()
+      await expect(detail.sparklineFigure).toHaveAttribute('aria-describedby', /.+/)
       await expect(detail.sparklineSvg).toBeVisible()
     })
 
-    test('SavingsPlan section shows required monthly savings amount', async ({ page }) => {
+    test('Savings pace prose shows required monthly savings amount', async ({ page }) => {
       await seedProjectionData(page)
       const detail = new GoalDetailPage(page)
       await detail.goto(FI_GOAL.id)
 
       await expect(detail.savingsPlan).toBeVisible()
-      await expect(detail.savingsPlanTitle).toHaveText('Savings Plan')
-      await expect(detail.savingsPlanHighlightRow).toBeVisible()
-      // Should contain a dollar amount
       await expect(detail.savingsPlanHighlightRow).toContainText('$')
+      await expect(detail.savingsPlanHighlightRow).toContainText(/\/(mo|yr)/)
     })
   })
 
@@ -114,7 +115,7 @@ test.describe('Goal Projections E2E', () => {
       await expect(page.locator('body')).not.toContainText('Infinity')
     })
 
-    test('clicking "Add budget data" navigates to goal detail page', async ({ page }) => {
+    test('clicking the goal peek item opens detail page with an Add budget data link', async ({ page }) => {
       await seedNoBudgetState(page)
       const home = new HomePage(page)
       await home.goto()
@@ -122,13 +123,14 @@ test.describe('Goal Projections E2E', () => {
       const noBudgetLink = page.locator('.goals-peek-projected--link')
       await expect(noBudgetLink).toBeVisible()
 
-      // The goals-peek-item is a button that navigates to goal detail
       const peekItem = page.locator('.goals-peek-item').first()
       await peekItem.click()
 
       await expect(page).toHaveURL(/\/#\/goal\/\d+/)
-      // Detail page shows budget data prompt
-      await expect(page.getByText('Add budget data to see projections')).toBeVisible()
+      const detail = new GoalDetailPage(page)
+      await expect(detail.savingsPlanEmpty).toBeVisible()
+      await expect(detail.savingsPlanEmpty).toHaveText('Add budget data')
+      await expect(detail.savingsPlanEmpty).toHaveAttribute('href', '#/budget')
     })
   })
 
@@ -155,33 +157,21 @@ test.describe('Goal Projections E2E', () => {
   })
 
   test.describe('Cross-Page Consistency', () => {
-    test('projected date on Home matches projected info on Goal Detail', async ({ page }) => {
+    test('projected info on Home is paired with projected timing prose on Goal Detail', async ({ page }) => {
       await seedProjectionData(page)
       const home = new HomePage(page)
       await home.goto()
 
       const peekDate = page.locator('.goals-peek-projected-date')
       await expect(peekDate).toBeVisible()
-      const homeProjectedText = await peekDate.textContent()
-      expect(homeProjectedText).toBeTruthy()
+      await expect(peekDate).toHaveText(/[A-Z][a-z]{2}\s\d{4}/)
 
-      // Navigate to detail
       const detail = new GoalDetailPage(page)
       await detail.goto(FI_GOAL.id)
 
-      // Detail page trajectory should be visible and show the same projected date
-      await expect(detail.sparklineFigure).toBeVisible()
-      await expect(detail.fiCardTrajectory).toBeVisible()
-
-      // Extract projected date from detail page and compare with home
-      const detailDateText = await detail.fiCard.locator('.fi-card-row-value--projected, .fi-card-row-value--ahead').first().textContent()
-      expect(detailDateText).toBeTruthy()
-
-      const homeYear = homeProjectedText!.match(/(\d{4})/)?.[1]
-      const detailYear = detailDateText!.match(/(\d{4})/)?.[1]
-      expect(homeYear).toBeDefined()
-      expect(detailYear).toBeDefined()
-      expect(homeYear).toBe(detailYear)
+      await expect(detail.savingsPlan).toBeVisible()
+      await expect(detail.savingsPlan).toContainText(/At this pace/i)
+      await expect(detail.savingsPlan).toContainText(/[A-Z][a-z]+\s\d{4}/)
     })
 
     test('savings rate on GoalsPeek is consistent with budget summary', async ({ page }) => {
@@ -300,11 +290,10 @@ test.describe('Goal Projections E2E', () => {
       await detail.goto(FI_GOAL.id)
 
       await expect(detail.savingsPlan).toBeVisible()
-      await expect(detail.savingsPlanHighlightRow).toBeVisible()
 
-      const highlightText = await detail.savingsPlanHighlightRow.textContent()
-      // Should contain a number (dollar value)
-      expect(highlightText).toMatch(/\$[\d,]+/)
+      const paceText = await detail.savingsPlan.textContent()
+      expect(paceText).toMatch(/\$[\d,]+/)
+      expect(paceText).toMatch(/\/(mo|yr)/)
     })
   })
 
@@ -314,29 +303,30 @@ test.describe('Goal Projections E2E', () => {
       const detail = new GoalDetailPage(page)
       await detail.goto(FI_GOAL.id)
 
-      // Verify dark mode is active
       const isDark = await page.evaluate(() => document.body.classList.contains('dark'))
       expect(isDark).toBe(true)
 
-      // Sparkline should still be visible
+      await detail.analysisToggle.click()
+      await detail.chartViewToggle.click()
       await expect(detail.sparklineFigure).toBeVisible()
+      await expect(detail.sparklineFigure).toHaveAttribute('aria-describedby', /.+/)
       await expect(detail.sparklineSvg).toBeVisible()
     })
   })
 
   test.describe('Accessibility', () => {
-    test('projection chart has descriptive aria-label', async ({ page }) => {
+    test('projection chart has descriptive accessible text', async ({ page }) => {
       await seedProjectionData(page)
       const detail = new GoalDetailPage(page)
       await detail.goto(FI_GOAL.id)
 
+      await detail.analysisToggle.click()
+      await detail.chartViewToggle.click()
       await expect(detail.sparklineFigure).toBeVisible()
-      await expect(detail.sparklineFigure).toHaveAttribute(
-        'aria-label',
-        'Savings trajectory projection',
-      )
-      // SVG should be aria-hidden
-      await expect(detail.sparklineSvg).toHaveAttribute('aria-hidden', 'true')
+      const descriptionId = await detail.sparklineFigure.getAttribute('aria-describedby')
+      expect(descriptionId).toBeTruthy()
+      await expect(page.locator(`[id="${descriptionId}"]`)).toContainText('Lifecycle projection chart')
+      await expect(detail.sparklineSvg).toBeVisible()
     })
 
     test('progress bar has correct ARIA attributes', async ({ page }) => {

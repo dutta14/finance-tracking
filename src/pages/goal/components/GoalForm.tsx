@@ -91,7 +91,6 @@ const GoalForm: FC<GoalFormProps> = ({
         retirementAge: String(template.retirementAge),
         expenseValue: String(template.annualExpense),
         inflationRate: String(template.inflationRate),
-        safeWithdrawalRate: String(template.safeWithdrawalRate),
         growth: String(template.growth),
       })
       setShowTemplates(false)
@@ -180,10 +179,6 @@ const GoalForm: FC<GoalFormProps> = ({
           setError('Please enter the inflation rate')
           return false
         }
-        if (formData.safeWithdrawalRate === '') {
-          setError('Please enter the safe withdrawal rate')
-          return false
-        }
         if (formData.growth === '') {
           setError('Please enter the growth rate')
           return false
@@ -230,7 +225,8 @@ const GoalForm: FC<GoalFormProps> = ({
       retirementAge,
       formData.goalCreatedIn,
       Number(formData.inflationRate) || 0,
-      Number(formData.safeWithdrawalRate) || 0,
+      Number(formData.growth) || 0,
+      formData.goalEndYear,
       getMonthsBetween,
       parseDate,
     )
@@ -251,7 +247,7 @@ const GoalForm: FC<GoalFormProps> = ({
       expenseValue2047: metrics.annualExpenseAtRetirement,
       monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
       inflationRate: Number(formData.inflationRate) || 0,
-      safeWithdrawalRate: Number(formData.safeWithdrawalRate) || 0,
+      safeWithdrawalRate: 0,
       growth: Number(formData.growth) || 0,
       retirement: metrics.retirementDateFormatted,
       fiGoal: metrics.fiGoal,
@@ -265,12 +261,7 @@ const GoalForm: FC<GoalFormProps> = ({
     const retAge = Number(formData.retirementAge)
     const expense = Number(formData.expenseValue)
     const canCalc =
-      profileBirthday &&
-      formData.goalCreatedIn &&
-      retAge > 0 &&
-      expense > 0 &&
-      formData.inflationRate !== '' &&
-      formData.safeWithdrawalRate !== ''
+      profileBirthday && formData.goalCreatedIn && retAge > 0 && expense > 0 && formData.inflationRate !== ''
     let metrics: ReturnType<typeof calculateGoalMetrics> | null = null
     if (canCalc) {
       metrics = calculateGoalMetrics(
@@ -279,7 +270,8 @@ const GoalForm: FC<GoalFormProps> = ({
         retAge,
         formData.goalCreatedIn,
         Number(formData.inflationRate) || 0,
-        Number(formData.safeWithdrawalRate) || 0,
+        Number(formData.growth) || 0,
+        formData.goalEndYear,
         getMonthsBetween,
         parseDate,
       )
@@ -305,10 +297,6 @@ const GoalForm: FC<GoalFormProps> = ({
         <div className="wizard-review-row">
           <span className="wizard-review-label">Inflation</span>
           <span className="wizard-review-value">{formData.inflationRate}%</span>
-        </div>
-        <div className="wizard-review-row">
-          <span className="wizard-review-label">SWR</span>
-          <span className="wizard-review-value">{formData.safeWithdrawalRate}%</span>
         </div>
         <div className="wizard-review-row">
           <span className="wizard-review-label">Growth</span>
@@ -476,7 +464,7 @@ const GoalForm: FC<GoalFormProps> = ({
               <button
                 type="button"
                 className="btn-use-recommended"
-                onClick={() => onSetFormFields({ inflationRate: '3', safeWithdrawalRate: '4', growth: '6' })}
+                onClick={() => onSetFormFields({ inflationRate: '3', growth: '6' })}
               >
                 Use Recommended
               </button>
@@ -501,38 +489,6 @@ const GoalForm: FC<GoalFormProps> = ({
                     onChange={onInputChange}
                     min="0"
                     step="0.1"
-                  />
-                  <span className="wizard-param-unit">%</span>
-                </div>
-              </div>
-              <div className="wizard-param-card">
-                <label className="wizard-param-icon" htmlFor="safeWithdrawalRate">
-                  🛡️
-                </label>
-                <span className="wizard-param-name-row">
-                  <label className="wizard-param-name" htmlFor="safeWithdrawalRate">
-                    SWR
-                  </label>
-                  <span className="wizard-param-info" id="swr-description">
-                    ⓘ
-                  </span>
-                  <span className="sr-only" id="swr-help-text">
-                    Safe Withdrawal Rate — the percentage of your portfolio you withdraw annually in retirement. 4% is a
-                    common benchmark (the "4% rule").
-                  </span>
-                </span>
-                <div className="wizard-param-input-wrap">
-                  <input
-                    className="wizard-param-input"
-                    type="number"
-                    id="safeWithdrawalRate"
-                    name="safeWithdrawalRate"
-                    placeholder="4"
-                    value={formData.safeWithdrawalRate}
-                    onChange={onInputChange}
-                    min="0"
-                    step="0.1"
-                    aria-describedby="swr-help-text"
                   />
                   <span className="wizard-param-unit">%</span>
                 </div>

@@ -52,7 +52,6 @@ const FI_ROWS: FiRow[] = [
   { label: 'Retirement Age', render: p => String(p.retirementAge) },
   { label: 'Retirement Date', render: p => p.retirement },
   { label: 'Inflation Rate', render: p => `${p.inflationRate}%` },
-  { label: 'Safe Withdrawal Rate', render: p => `${p.safeWithdrawalRate}%` },
   { label: 'Growth Rate', render: p => `${p.growth}%` },
   { label: 'Annual Expense (at creation)', render: p => dollars(p.expenseValue) },
   { label: 'Annual Expense (at retirement)', render: p => dollars(p.expenseValue2047) },

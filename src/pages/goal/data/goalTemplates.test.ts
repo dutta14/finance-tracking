@@ -21,7 +21,6 @@ describe('goalTemplates', () => {
     expect(typeof template.retirementAge).toBe('number')
     expect(typeof template.annualExpense).toBe('number')
     expect(typeof template.inflationRate).toBe('number')
-    expect(typeof template.safeWithdrawalRate).toBe('number')
     expect(typeof template.growth).toBe('number')
   })
 
@@ -31,8 +30,6 @@ describe('goalTemplates', () => {
     expect(template.annualExpense).toBeGreaterThan(0)
     expect(template.inflationRate).toBeGreaterThanOrEqual(0)
     expect(template.inflationRate).toBeLessThan(20)
-    expect(template.safeWithdrawalRate).toBeGreaterThan(0)
-    expect(template.safeWithdrawalRate).toBeLessThan(20)
     expect(template.growth).toBeGreaterThan(0)
     expect(template.growth).toBeLessThan(30)
   })

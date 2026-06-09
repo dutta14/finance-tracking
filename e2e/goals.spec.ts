@@ -136,29 +136,20 @@ test.describe('Goals Page E2E', () => {
       const goals = new GoalsPage(page)
       await goals.gotoDetail(1)
 
-      // Open inline edit
       await goals.fiCardEditBtn.click()
-
       await expect(goals.fiCardEditForm).toBeVisible()
 
-      // Change a numeric parameter (the form inputs: 0=date, 1=date, 2=retAge, 3=expense, 4=inflation, 5=SWR, 6=growth)
-      const inflationInput = goals.fiCardEditForm.locator('input[type="number"]').nth(2)
-      const originalValue = await inflationInput.inputValue()
-      await inflationInput.fill('4')
+      const annualExpenseInput = goals.fiCardEditForm
+        .locator('.fi-form-group', { hasText: 'Annual Expense ($)' })
+        .locator('input[type="number"]')
+      await expect(annualExpenseInput).toHaveValue(String(GOALS[0].expenseValue))
+      await annualExpenseInput.fill('65000')
 
-      // Save
       const saveBtn = goals.fiCardEditForm.locator('button', { hasText: /save/i })
-      if (await saveBtn.isVisible()) {
-        await saveBtn.click()
-      } else {
-        await inflationInput.press('Enter')
-      }
+      await saveBtn.click()
 
-      // Verify the form closes and new value persists
       await expect(goals.fiCardEditForm).not.toBeVisible({ timeout: 5000 })
-
-      // Verify the changed value is displayed on the card
-      await expect(goals.goalDetail).toContainText('4%')
+      await expect(goals.goalDetail).toContainText('$65,000')
     })
   })
 

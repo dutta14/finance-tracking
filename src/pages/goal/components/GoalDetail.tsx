@@ -1,20 +1,37 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { FC, useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { useData } from '../../../contexts/DataContext'
+import { formatCurrency } from '../../data/types'
 import GoalDetailedCard from './GoalDetailedCard'
 import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
-import SavingsPlan from './SavingsPlan'
+import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
+import GrowthSettingsPanel from './GrowthSettingsPanel'
+import {
+  getTotalForMonth,
+  getFiBreakdown,
+  getRetirementMonth,
+  monthsBetween,
+  calcMonthlySaving,
+  getGwTarget,
+} from '../utils/goalMath'
+import { getFiTarget } from '../utils/goalCalculations'
+import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
+import { useGrowthSettings } from '../hooks/useGrowthSettings'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
+import '../../../styles/GrowthSettings.css'
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
   profileBirthday: string
+  partnerBirthday?: string
   gwGoals: GwGoal[]
+  growthSettings: ReturnType<typeof useGrowthSettings>
   onUpdateGoal: (goalId: number, goal: FinancialGoal) => void
   onCopyGoal: (goal: FinancialGoal) => void
   onDeleteGoal: (goalId: number) => void
@@ -27,7 +44,9 @@ interface GoalDetailProps {
 const GoalDetail: FC<GoalDetailProps> = ({
   goals,
   profileBirthday,
+  partnerBirthday,
   gwGoals,
+  growthSettings: growthCtx,
   onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
@@ -44,7 +63,17 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [renameMode, setRenameMode] = useState(false)
   const [renameName, setRenameName] = useState('')
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
+  const [showYearly, setShowYearly] = useState(false)
   const renameInputRef = useRef<HTMLInputElement>(null)
+  const savingsOverride = goal?.savingsOverride ?? null
+
+  const setSavingsOverride = (v: number | null) => {
+    if (!goal) return
+    onUpdateGoal(goalId, { ...goal, savingsOverride: v })
+  }
+
+  const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
+  const gwGrowth = growthCtx.settings.gwGrowth
 
   const currentIndex = goals.findIndex(g => g.id === goalId)
   const total = goals.length
@@ -75,6 +104,36 @@ const GoalDetail: FC<GoalDetailProps> = ({
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [prevGoal, nextGoal, navigate])
+
+  const { accounts, balances, allMonths } = useData()
+  const { summaryYear, setSummaryYear, availableYears, yearMonthlySaving } = useYearMonthlySaving()
+
+  const summaryData = useMemo(() => {
+    if (!goal || allMonths.length === 0) return null
+    const currentMonth = allMonths[allMonths.length - 1]
+    const retMonth = getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge)
+    const n = monthsBetween(currentMonth, retMonth)
+
+    const fiBal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
+    const fiTarget = getFiTarget(
+      goal,
+      profileBirthday,
+      fiGrowth,
+      growthCtx.settings.postBoundaryGrowth,
+      growthCtx.settings.ageBoundary,
+    )
+    const fiMonthly = fiTarget > 0 ? calcMonthlySaving(fiBal, fiTarget, fiGrowth, n) : 0
+
+    const gwTarget = getGwTarget(goal, gwGoals, profileBirthday)
+    const gwBal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
+    const gwMonthly = gwTarget > 0 ? calcMonthlySaving(gwBal, gwTarget, gwGrowth, n) : 0
+
+    const totalNeeded = fiMonthly + gwMonthly
+    const hasGoals = fiTarget > 0 || gwTarget > 0
+
+    const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
+    return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown }
+  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
 
   if (!goal) {
     return (
@@ -204,53 +263,185 @@ const GoalDetail: FC<GoalDetailProps> = ({
               </button>
             </div>
           )}
+          <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
           <GoalActionsMenu onRename={enterRename} onDuplicate={() => onCopyGoal(goal)} onDelete={handleDelete} />
         </div>
       </div>
 
-      <div className="goal-detail-body">
-        <div className="goal-detail-main">
+      {summaryData && (
+        <div className="goal-summary-card">
+          <p className="goal-summary-prose">
+            {!summaryData.hasGoals ? (
+              <>Set an FI target or add GW goals to see your savings plan.</>
+            ) : summaryData.totalNeeded > 0 ? (
+              <>
+                To achieve all your goals, you need to save{' '}
+                <strong
+                  className="goal-summary-toggleable"
+                  onClick={() => setShowYearly(v => !v)}
+                  title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                >
+                  {showYearly
+                    ? `${formatCurrency(summaryData.totalNeeded * 12)}/yr`
+                    : `${formatCurrency(summaryData.totalNeeded)}/mo`}
+                </strong>{' '}
+                total.
+                {yearMonthlySaving !== null && (
+                  <>
+                    {' '}
+                    {summaryYear < new Date().getFullYear() ? 'You saved' : 'You\u0027re saving'}{' '}
+                    <strong
+                      className="goal-summary-toggleable"
+                      onClick={() => setShowYearly(v => !v)}
+                      title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                    >
+                      {showYearly
+                        ? `${formatCurrency(yearMonthlySaving * 12)}/yr`
+                        : `${formatCurrency(yearMonthlySaving)}/mo`}
+                    </strong>{' '}
+                    in{' '}
+                    <select
+                      className="goal-summary-year-select"
+                      value={summaryYear}
+                      onChange={e => setSummaryYear(Number(e.target.value))}
+                    >
+                      {availableYears.map(y => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                    {yearMonthlySaving >= summaryData.totalNeeded ? (
+                      summaryYear < new Date().getFullYear() ? (
+                        ' \u2014 you were on track.'
+                      ) : (
+                        ' \u2014 you\u2019re on track.'
+                      )
+                    ) : (
+                      <>
+                        {summaryYear < new Date().getFullYear() ? ' \u2014 you needed ' : ' \u2014 you need '}
+                        <strong
+                          className="goal-summary-toggleable"
+                          onClick={() => setShowYearly(v => !v)}
+                          title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                        >
+                          {showYearly
+                            ? `${formatCurrency((summaryData.totalNeeded - yearMonthlySaving) * 12)}/yr`
+                            : `${formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo`}
+                        </strong>
+                        {' more.'}
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              <>🎉 You&apos;ve already achieved all your goals at the current growth rate.</>
+            )}
+          </p>
+        </div>
+      )}
+
+      <div className="goal-detail-body goal-detail-body--columns">
+        <div className="goal-detail-column">
+          <h2 className="goal-detail-column-title">
+            <span className="goal-detail-column-badge goal-detail-column-badge--fi">FI</span>
+            Financial Independence
+          </h2>
+          <FiSavingsPlan
+            goal={goal}
+            gwGoals={gwGoals}
+            profileBirthday={profileBirthday}
+            growthRate={fiGrowth}
+            postGrowthRate={growthCtx.settings.postBoundaryGrowth}
+            ageBoundary={growthCtx.settings.ageBoundary}
+            showYearly={showYearly}
+            onTogglePeriod={() => setShowYearly(v => !v)}
+          />
           <GoalDetailedCard
             goal={goal}
             profileBirthday={profileBirthday}
             onUpdateGoal={onUpdateGoal}
             showActions={false}
             showTitle={false}
+            preBoundaryGrowth={growthCtx.settings.preBoundaryGrowth}
+            postBoundaryGrowth={growthCtx.settings.postBoundaryGrowth}
+            ageBoundary={growthCtx.settings.ageBoundary}
+            inflation={growthCtx.settings.inflation}
+            showYearly={showYearly}
+            onTogglePeriod={() => setShowYearly(v => !v)}
+            summaryYear={summaryYear}
+            savingsOverride={savingsOverride}
+            onSavingsOverrideChange={setSavingsOverride}
           />
-          <button className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`} onClick={() => setDiveDeepOpen(v => !v)}>
-            {diveDeepOpen ? 'Close Analysis' : 'Deep Analysis'}
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`goal-detail-chevron${diveDeepOpen ? ' goal-detail-chevron--open' : ''}`}
-              aria-hidden="true"
-            >
-              <path d="M4 6l4 4 4-4" />
-            </svg>
-          </button>
-          {diveDeepOpen && <GoalDiveDeep goal={goal} profileBirthday={profileBirthday} />}
-          {goal.fiGoal > 0 && (
-            <GwSection
-              goal={goal}
-              goals={goals}
-              profileBirthday={profileBirthday}
-              gwGoals={gwGoals}
-              onCreateGwGoal={onCreateGwGoal}
-              onUpdateGwGoal={onUpdateGwGoal}
-              onDeleteGwGoal={onDeleteGwGoal}
-            />
-          )}
         </div>
-        <div className="goal-detail-aside">
-          <SavingsPlan goal={goal} gwGoals={gwGoals} profileBirthday={profileBirthday} />
+
+        <div className="goal-detail-column">
+          <h2 className="goal-detail-column-title">
+            <span className="goal-detail-column-badge goal-detail-column-badge--gw">GW</span>
+            Generational Wealth
+          </h2>
+          <GwSavingsPlan
+            goal={goal}
+            gwGoals={gwGoals}
+            profileBirthday={profileBirthday}
+            growthRate={gwGrowth}
+            showYearly={showYearly}
+            onTogglePeriod={() => setShowYearly(v => !v)}
+          />
+          <div className="goal-detail-column-card">
+            {goal.fiGoal > 0 && (
+              <GwSection
+                goal={goal}
+                goals={goals}
+                profileBirthday={profileBirthday}
+                gwGoals={gwGoals}
+                gwGrowthRate={gwGrowth}
+                onCreateGwGoal={onCreateGwGoal}
+                onUpdateGwGoal={onUpdateGwGoal}
+                onDeleteGwGoal={onDeleteGwGoal}
+              />
+            )}
+          </div>
         </div>
       </div>
+
+      <button className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`} onClick={() => setDiveDeepOpen(v => !v)}>
+        {diveDeepOpen ? 'Close Analysis' : 'Analysis'}
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`goal-detail-chevron${diveDeepOpen ? ' goal-detail-chevron--open' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="M4 6l4 4 4-4" />
+        </svg>
+      </button>
+      {diveDeepOpen && (
+        <GoalDiveDeep
+          goal={goal}
+          profileBirthday={profileBirthday}
+          partnerBirthday={partnerBirthday}
+          currentBalance={summaryData?.fiBal || 0}
+          monthlyContribution={savingsOverride ?? yearMonthlySaving ?? 0}
+          currentMonth={summaryData?.currentMonth}
+          growthRate={fiGrowth}
+          postGrowthRate={growthCtx.settings.postBoundaryGrowth}
+          ageBoundary={growthCtx.settings.ageBoundary}
+          inflation={growthCtx.settings.inflation}
+          fiBreakdown={summaryData?.fiBreakdown}
+          primaryRetirementAccessAge={growthCtx.settings.primaryRetirementAccessAge}
+          partnerRetirementAccessAge={growthCtx.settings.partnerRetirementAccessAge}
+          retirementCap={growthCtx.settings.retirementCap}
+          nonRetirementBase={growthCtx.settings.nonRetirementBase}
+        />
+      )}
     </div>
   )
 }
