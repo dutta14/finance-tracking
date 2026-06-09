@@ -27,7 +27,6 @@ const defaultGoal = makeGoal({
   goalCreatedIn: '2024-01',
   birthday: '1990-01-15',
   retirementAge: 45,
-  inflationRate: 3,
   growth: 7,
 })
 

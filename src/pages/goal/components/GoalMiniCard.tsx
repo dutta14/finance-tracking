@@ -5,7 +5,7 @@ import '../../../styles/GoalMiniCard.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
-function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number {
+function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string, inflation: number): number {
   const goals = gwGoals.filter(g => g.fiGoalId === goal.id)
   if (!goals.length || !profileBirthday) return 0
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
@@ -16,7 +16,7 @@ function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: st
       0,
       (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
     )
-    const disbursementTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, monthsToDisburse)
+    const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
     const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
     const pv =
       monthsRetToDisburse > 0
@@ -39,6 +39,7 @@ interface GoalMiniCardProps {
   compareMode?: boolean
   gwGoals: GwGoal[]
   profileBirthday: string
+  inflation?: number
 }
 
 const GoalMiniCard: FC<GoalMiniCardProps> = ({
@@ -49,8 +50,9 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({
   compareMode = false,
   gwGoals,
   profileBirthday,
+  inflation = 3,
 }) => {
-  const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday)
+  const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday, inflation)
   const hasGw = gwTotal > 0
   const totalGoals = goal.fiGoal + gwTotal
   const birthday = goal.birthday || profileBirthday

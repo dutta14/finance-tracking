@@ -9,6 +9,7 @@ interface GwSectionProps {
   profileBirthday: string
   gwGoals: GwGoal[]
   gwGrowthRate: number
+  inflationRate?: number
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
   onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
   onDeleteGwGoal: (id: number) => void
@@ -266,6 +267,7 @@ const GwSection: FC<GwSectionProps> = ({
   profileBirthday,
   gwGoals,
   gwGrowthRate,
+  inflationRate = 3,
   onCreateGwGoal,
   onUpdateGwGoal,
   onDeleteGwGoal,
@@ -289,13 +291,13 @@ const GwSection: FC<GwSectionProps> = ({
     const totalNeeded = goalGoals.reduce((sum, gw) => {
       const disburseYear = by + gw.disburseAge
       const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
-      const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
+      const disbTarget = gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, months)
       const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
       const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gwGrowthRate / 100 / 12, mRetToDisb) : disbTarget
       return sum + pv
     }, 0)
     return totalNeeded > 0 ? Math.min(100, Math.max(0, (gwTotal / totalNeeded) * 100)) : 0
-  }, [goalGoals, profileBirthday, goal, gwGrowthRate])
+  }, [goalGoals, profileBirthday, goal, gwGrowthRate, inflationRate])
 
   const handleImport = (gw: GwGoal) => {
     onCreateGwGoal({
@@ -415,7 +417,7 @@ const GwSection: FC<GwSectionProps> = ({
               gw={gw}
               currentAge={currentAge}
               creationYear={new Date(goal.goalCreatedIn).getUTCFullYear()}
-              inflationRate={goal.inflationRate}
+              inflationRate={inflationRate}
               retirementAge={goal.retirementAge}
               goalCreatedIn={goal.goalCreatedIn}
               profileBirthday={profileBirthday}

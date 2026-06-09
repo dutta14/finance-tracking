@@ -307,7 +307,7 @@ test.describe('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => 
         monthlyExpenseValue: 4_000,
         expenseValue2047: 80_000,
         monthlyExpense2047: 6_500,
-        inflationRate: 3,
+        inflationRate: 3, // legacy field — tests v1 import compatibility
         safeWithdrawalRate: 4,
         growth: 6,
         birthday: '',
@@ -339,7 +339,7 @@ test.describe('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => 
           monthlyExpenseValue: 3_750,
           expenseValue2047: 70_000,
           monthlyExpense2047: 5_800,
-          inflationRate: 3,
+          inflationRate: 3, // legacy field — tests v1 import compatibility
           safeWithdrawalRate: 4,
           growth: 6,
           birthday: '',

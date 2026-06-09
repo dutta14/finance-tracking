@@ -19,7 +19,6 @@ const mockGoal: FinancialGoal = {
   expenseValueMar2026: 52000,
   expenseValue2047: 80000,
   monthlyExpense2047: 6667,
-  inflationRate: 3,
   safeWithdrawalRate: 4,
   growth: 7,
   retirement: '2045-01',
@@ -76,7 +75,6 @@ describe('useFormData', () => {
       expect(result.current.formData.goalName).toBe('Retire Early')
       expect(result.current.formData.goalCreatedIn).toBe('2025-01')
       expect(result.current.formData.retirementAge).toBe('55')
-      expect(result.current.formData.inflationRate).toBe('3')
       expect(result.current.formData.growth).toBe('7')
     })
 

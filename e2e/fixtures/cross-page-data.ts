@@ -78,7 +78,6 @@ export const CROSS_PAGE_GOAL = {
   monthlyExpenseValue: 5_000,
   expenseValue2047: 96_000,
   monthlyExpense2047: 8_000,
-  inflationRate: 3,
   safeWithdrawalRate: 4,
   growth: 6,
   birthday: '',

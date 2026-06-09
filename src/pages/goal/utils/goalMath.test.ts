@@ -136,14 +136,13 @@ describe('goalMath', () => {
       id: 42,
       goalCreatedIn: '2024-01-01',
       retirementAge: 45,
-      inflationRate: 3,
     })
     const profileBirthday = '1990-06-15'
 
     it('returns 0 when no GW goals match the FI goal', () => {
       const unrelatedGoal = makeGwGoal({ fiGoalId: 999 })
 
-      expect(getGwTarget(goal, [unrelatedGoal], profileBirthday)).toBe(0)
+      expect(getGwTarget(goal, [unrelatedGoal], profileBirthday, 3)).toBe(0)
     })
 
     it('computes a target from a single GW goal with inflation and growth adjustments', () => {
@@ -159,7 +158,7 @@ describe('goalMath', () => {
       const monthsFromRetirementToDisbursement = (50 - 45) * 12
       const expected = inflatedDisbursement / Math.pow(1 + 6 / 100 / 12, monthsFromRetirementToDisbursement)
 
-      expect(getGwTarget(goal, [gwGoal], profileBirthday)).toBeCloseTo(expected, 5)
+      expect(getGwTarget(goal, [gwGoal], profileBirthday, 3)).toBeCloseTo(expected, 5)
     })
 
     it('does not discount the target when disbursement happens at retirement age', () => {
@@ -173,7 +172,7 @@ describe('goalMath', () => {
       const monthsUntilDisbursement = (1990 + 45 - 2024) * 12 + (6 - 1)
       const expected = 50_000 * Math.pow(1 + 3 / 100 / 12, monthsUntilDisbursement)
 
-      expect(getGwTarget(goal, [sameAgeGoal], profileBirthday)).toBeCloseTo(expected, 5)
+      expect(getGwTarget(goal, [sameAgeGoal], profileBirthday, 3)).toBeCloseTo(expected, 5)
     })
   })
 

@@ -10,6 +10,7 @@ interface GoalFormModalProps {
   error: string
   editingGoalId: number | null
   profileBirthday: string
+  inflation: number
   onOpenProfile: () => void
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   onSetFormFields: (fields: Partial<FormData>) => void

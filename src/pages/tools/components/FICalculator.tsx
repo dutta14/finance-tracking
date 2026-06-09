@@ -5,6 +5,7 @@ import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
 import { appStorage } from '../../../utils/appStorage'
 import { calculateFI } from '../utils/fiCalculations'
+import { useGrowthSettings } from '../../goal/hooks/useGrowthSettings'
 import '../../../styles/FICalculator.css'
 
 const REMOVED_GROUP_ID = 'removed'
@@ -169,6 +170,7 @@ const FICalculator: FC = () => {
   const lastYearExpense = useMemo(() => getLastYearExpense(), [])
   const profile = useMemo(() => loadProfile(), [])
   const { accounts, balances } = useData()
+  const { settings } = useGrowthSettings()
 
   // Derived defaults
   // defaultLastYear = max(primary+100, partner+100) — plan horizon runs
@@ -187,7 +189,7 @@ const FICalculator: FC = () => {
   // Inputs
   const [annualExpense, setAnnualExpense] = useState<number>(lastYearExpense || 60000)
   const [expenseDisplay, setExpenseDisplay] = useState<string>(Math.round(lastYearExpense || 60000).toLocaleString())
-  const [inflationRate, setInflationRate] = useState<number>(3)
+  const [inflationRate, setInflationRate] = useState<number>(settings.inflation)
   const [growthRate, setGrowthRate] = useState<number>(8)
   const [lastYear, setLastYear] = useState<number>(defaultLastYear)
   const [retireYear, setRetireYear] = useState<number>(thisYear + 1)

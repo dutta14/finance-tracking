@@ -176,7 +176,6 @@ const GOALS = [
     expenseValueMar2026: 76_632,
     expenseValue2047: 142_500,
     monthlyExpense2047: 11_875,
-    inflationRate: 3,
     safeWithdrawalRate: 4,
     growth: 7,
     retirement: '2045-08',

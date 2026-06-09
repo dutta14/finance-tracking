@@ -13,6 +13,7 @@ interface SavingsPlanProps {
   growthRate?: number
   postGrowthRate?: number
   ageBoundary?: number
+  inflation?: number
   showYearly?: boolean
   onTogglePeriod?: () => void
 }
@@ -137,7 +138,7 @@ const PlanBlock: FC<PlanBlockProps> = ({ label, target, initialResult, currentRe
   )
 }
 
-const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) => {
+const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday, inflation = 3 }) => {
   const { accounts, balances, allMonths: months } = useData()
 
   const retirementMonth = useMemo(
@@ -145,14 +146,20 @@ const SavingsPlan: FC<SavingsPlanProps> = ({ goal, gwGoals, profileBirthday }) =
     [goal.birthday, profileBirthday, goal.retirementAge],
   )
 
-  const gwTarget = useMemo(() => getGwTarget(goal, gwGoals, profileBirthday), [goal, gwGoals, profileBirthday])
+  const gwTarget = useMemo(
+    () => getGwTarget(goal, gwGoals, profileBirthday, inflation),
+    [goal, gwGoals, profileBirthday, inflation],
+  )
 
   const initialMonth = months[0] || ''
   const currentMonth = months[months.length - 1] || ''
   const [fiGrowth, setFiGrowth] = useState(8)
   const [gwGrowth, setGwGrowth] = useState(8)
 
-  const fiTarget = useMemo(() => getFiTarget(goal, profileBirthday, fiGrowth), [goal, profileBirthday, fiGrowth])
+  const fiTarget = useMemo(
+    () => getFiTarget(goal, profileBirthday, fiGrowth, undefined, undefined, inflation),
+    [goal, profileBirthday, fiGrowth, inflation],
+  )
 
   const calcPlan = useCallback(
     (goalType: 'fi' | 'gw', startMonth: string, growthRate: number, target: number): PlanResult | null => {
@@ -241,6 +248,7 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({
   ageBoundary,
   showYearly,
   onTogglePeriod,
+  inflation = 3,
 }) => {
   const { accounts, balances, allMonths: months } = useData()
 
@@ -253,8 +261,8 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({
   const fiGrowth = growthRate ?? 8
 
   const fiTarget = useMemo(
-    () => getFiTarget(goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary),
-    [goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary],
+    () => getFiTarget(goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary, inflation),
+    [goal, profileBirthday, fiGrowth, postGrowthRate, ageBoundary, inflation],
   )
 
   const monthlySaving = useMemo(() => {
@@ -292,6 +300,7 @@ export const GwSavingsPlan: FC<SavingsPlanProps> = ({
   growthRate,
   showYearly,
   onTogglePeriod,
+  inflation = 3,
 }) => {
   const { accounts, balances, allMonths: months } = useData()
 
@@ -300,7 +309,10 @@ export const GwSavingsPlan: FC<SavingsPlanProps> = ({
     [goal.birthday, profileBirthday, goal.retirementAge],
   )
 
-  const gwTarget = useMemo(() => getGwTarget(goal, gwGoals, profileBirthday), [goal, gwGoals, profileBirthday])
+  const gwTarget = useMemo(
+    () => getGwTarget(goal, gwGoals, profileBirthday, inflation),
+    [goal, gwGoals, profileBirthday, inflation],
+  )
   const currentMonth = months[months.length - 1] || ''
   const gwGrowth = growthRate ?? 8
 
