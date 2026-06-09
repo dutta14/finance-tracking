@@ -18,7 +18,6 @@ const validGoal = {
   expenseValueMar2026: 62000,
   expenseValue2047: 100000,
   monthlyExpense2047: 8300,
-  inflationRate: 3,
   safeWithdrawalRate: 4,
   growth: 7,
   retirement: '2040-01-01',

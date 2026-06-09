@@ -11,6 +11,7 @@ import { appStorage } from '../../utils/appStorage'
 interface GoalsPeekProps {
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
+  inflation?: number
   onNavigate: () => void
 }
 
@@ -37,7 +38,7 @@ const getTotalForMonth = (
   return accounts.filter(a => a.goalType === goalType).reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
 }
 
-const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
+const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, inflation = 3, onNavigate }) => {
   const { accounts, balances, allMonths } = useData()
   const navigate = useNavigate()
 
@@ -127,7 +128,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
                 0,
                 (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)),
               )
-              const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
+              const disbTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, months)
               const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
               const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
               return sum + pv

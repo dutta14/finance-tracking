@@ -333,7 +333,7 @@ export function buildPlannedProjection(
   const preGrowth = accGrowthOverride ?? 8
   const postGrowth = postGrowthOverride ?? 6
   const boundary = ageBoundary ?? 60
-  const inflation = inflationOverride ?? (goal.inflationRate || 3)
+  const inflation = inflationOverride ?? 3
   const endYear = new Date(goal.goalEndYear).getFullYear()
 
   const [by, bm] = birthday.split('-').map(Number)
@@ -401,7 +401,7 @@ export function buildProjectedLifecycle(
   const preGrowth = accGrowthOverride ?? 8
   const postGrowth = postGrowthOverride ?? 6
   const boundary = ageBoundary ?? 60
-  const inflation = inflationOverride ?? (goal.inflationRate || 3)
+  const inflation = inflationOverride ?? 3
   const endYear = new Date(goal.goalEndYear).getFullYear()
 
   const now = new Date()

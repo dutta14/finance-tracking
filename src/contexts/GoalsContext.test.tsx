@@ -36,7 +36,6 @@ function GoalsConsumer() {
             expenseValueMar2026: 0,
             expenseValue2047: 0,
             monthlyExpense2047: 0,
-            inflationRate: 3,
             safeWithdrawalRate: 4,
             growth: 7,
             retirement: '',
@@ -238,7 +237,6 @@ describe('GoalsContext', () => {
       expenseValueMar2026: 0,
       expenseValue2047: 0,
       monthlyExpense2047: 0,
-      inflationRate: 3,
       safeWithdrawalRate: 4,
       growth: 7,
       retirement: '',
@@ -277,6 +275,7 @@ describe('GoalsContext', () => {
 
     const goal: FinancialGoal = {
       id: 1,
+      goalName: undefined as unknown as string,
       createdAt: new Date().toISOString(),
       birthday: '',
       goalCreatedIn: '',
@@ -289,7 +288,6 @@ describe('GoalsContext', () => {
       expenseValueMar2026: 0,
       expenseValue2047: 0,
       monthlyExpense2047: 0,
-      inflationRate: 3,
       safeWithdrawalRate: 4,
       growth: 7,
       retirement: '',

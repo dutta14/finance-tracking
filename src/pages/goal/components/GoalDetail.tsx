@@ -124,7 +124,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
     )
     const fiMonthly = fiTarget > 0 ? calcMonthlySaving(fiBal, fiTarget, fiGrowth, n) : 0
 
-    const gwTarget = getGwTarget(goal, gwGoals, profileBirthday)
+    const gwTarget = getGwTarget(goal, gwGoals, profileBirthday, growthCtx.settings.inflation)
     const gwBal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
     const gwMonthly = gwTarget > 0 ? calcMonthlySaving(gwBal, gwTarget, gwGrowth, n) : 0
 
@@ -357,6 +357,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
             ageBoundary={growthCtx.settings.ageBoundary}
             showYearly={showYearly}
             onTogglePeriod={() => setShowYearly(v => !v)}
+            inflation={growthCtx.settings.inflation}
           />
           <GoalDetailedCard
             goal={goal}
@@ -388,6 +389,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
             growthRate={gwGrowth}
             showYearly={showYearly}
             onTogglePeriod={() => setShowYearly(v => !v)}
+            inflation={growthCtx.settings.inflation}
           />
           <div className="goal-detail-column-card">
             {goal.fiGoal > 0 && (
@@ -397,6 +399,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
                 profileBirthday={profileBirthday}
                 gwGoals={gwGoals}
                 gwGrowthRate={gwGrowth}
+                inflationRate={growthCtx.settings.inflation}
                 onCreateGwGoal={onCreateGwGoal}
                 onUpdateGwGoal={onUpdateGwGoal}
                 onDeleteGwGoal={onDeleteGwGoal}

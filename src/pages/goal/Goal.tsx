@@ -169,6 +169,7 @@ const Goal: FC = () => {
                     onSubmit={handleCreateGoal}
                     onCancel={handleCancelEdit}
                     setError={setError}
+                    inflation={growthCtx.settings.inflation}
                   />
                 )}
                 {mixerOpen && (
@@ -176,6 +177,7 @@ const Goal: FC = () => {
                     goals={goals}
                     gwGoals={gwGoals}
                     profileBirthday={profileBirthday}
+                    inflation={growthCtx.settings.inflation}
                     onCreateGoal={createGoal}
                     onCreateGwGoal={onCreateGwGoal}
                     onClose={() => setMixerOpen(false)}

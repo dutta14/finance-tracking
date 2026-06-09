@@ -10,6 +10,7 @@ interface GoalCompareViewProps {
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
   profileBirthday: string
+  inflation?: number
 }
 
 const parseDate = (dateString: string): Date => {
@@ -25,7 +26,7 @@ const formatMonthYear = (dateString: string): string => {
 const dollars = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
-const computeGwPv = (gw: GwGoal, goal: FinancialGoal, profileBirthday: string): number => {
+const computeGwPv = (gw: GwGoal, goal: FinancialGoal, profileBirthday: string, inflation: number): number => {
   if (!profileBirthday) return gw.disburseAmount
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(goal.goalCreatedIn)
@@ -34,7 +35,7 @@ const computeGwPv = (gw: GwGoal, goal: FinancialGoal, profileBirthday: string): 
     0,
     (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
   )
-  const disbursementTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, monthsToDisburse)
+  const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
   return monthsRetToDisburse > 0
     ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
@@ -51,20 +52,20 @@ const FI_ROWS: FiRow[] = [
   { label: 'Goal End Year', render: p => (p.goalEndYear ? String(new Date(p.goalEndYear).getFullYear()) : '—') },
   { label: 'Retirement Age', render: p => String(p.retirementAge) },
   { label: 'Retirement Date', render: p => p.retirement },
-  { label: 'Inflation Rate', render: p => `${p.inflationRate}%` },
   { label: 'Growth Rate', render: p => `${p.growth}%` },
   { label: 'Annual Expense (at creation)', render: p => dollars(p.expenseValue) },
   { label: 'Annual Expense (at retirement)', render: p => dollars(p.expenseValue2047) },
   { label: 'FI Goal', render: p => dollars(p.fiGoal) },
 ]
 
-const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday }) => {
+const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday, inflation = 3 }) => {
   const colCount = goals.length + 1
   const { fiTotal } = useMemo(() => getLatestGoalTotals(), [])
 
   const fiRows: FiRow[] = useMemo(
     () => [
       ...FI_ROWS,
+      { label: 'Inflation Rate', render: () => `${inflation}%` },
       {
         label: 'Progress',
         render: p => {
@@ -73,7 +74,7 @@ const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirt
         },
       },
     ],
-    [fiTotal],
+    [fiTotal, inflation],
   )
 
   const gwByGoal = goals.map(goal => gwGoals.filter(g => g.fiGoalId === goal.id))
@@ -88,7 +89,7 @@ const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirt
   const gwPvMaps = goals.map((goal, i) => {
     const map: Record<string, number> = {}
     gwByGoal[i].forEach(g => {
-      map[g.label] = computeGwPv(g, goal, profileBirthday)
+      map[g.label] = computeGwPv(g, goal, profileBirthday, inflation)
     })
     return map
   })

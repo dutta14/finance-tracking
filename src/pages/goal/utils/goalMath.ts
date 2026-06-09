@@ -63,7 +63,12 @@ export const calcMonthlySaving = (pv: number, fv: number, annualRate: number, nM
   return (needed * r) / (factor - 1)
 }
 
-export const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string): number => {
+export const getGwTarget = (
+  goal: FinancialGoal,
+  gwGoals: GwGoal[],
+  profileBirthday: string,
+  inflation: number,
+): number => {
   const goalGws = gwGoals.filter(g => g.fiGoalId === goal.id)
   if (goalGws.length === 0) return 0
   const [by, bm] = profileBirthday.split('-').map(Number)
@@ -71,7 +76,7 @@ export const getGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirth
   return goalGws.reduce((sum, gw) => {
     const disburseYear = by + gw.disburseAge
     const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
-    const disbTarget = gw.disburseAmount * Math.pow(1 + goal.inflationRate / 100 / 12, months)
+    const disbTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, months)
     const mRetToDisb = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
     const pv = mRetToDisb > 0 ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, mRetToDisb) : disbTarget
     return sum + pv

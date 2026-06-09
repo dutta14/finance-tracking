@@ -184,7 +184,6 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       monthlyExpenseValue: metrics.monthlyExpenseAtCreation,
       expenseValue2047: metrics.annualExpenseAtRetirement,
       monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
-      inflationRate: inflation,
       safeWithdrawalRate: 0,
       growth: preBoundaryGrowth,
       retirement: metrics.retirementDateFormatted,

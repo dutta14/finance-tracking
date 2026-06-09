@@ -169,7 +169,7 @@ describe('computeRequiredCorpus', () => {
 })
 
 describe('getFiTarget', () => {
-  it('falls back to the default inflation rate when the goal inflation rate is 0', () => {
+  it('uses the default inflation rate when no explicit inflation override is provided', () => {
     const zeroInflationTarget = getFiTarget(
       {
         fiGoal: 1_000_000,
@@ -177,7 +177,6 @@ describe('getFiTarget', () => {
         goalEndYear: '2080-01',
         retirementAge: 60,
         monthlyExpense2047: 5000,
-        inflationRate: 0,
       },
       '1990-01-15',
       8,
@@ -189,10 +188,12 @@ describe('getFiTarget', () => {
         goalEndYear: '2080-01',
         retirementAge: 60,
         monthlyExpense2047: 5000,
-        inflationRate: 3,
       },
       '1990-01-15',
       8,
+      undefined,
+      undefined,
+      3,
     )
 
     expect(zeroInflationTarget).toBe(defaultInflationTarget)

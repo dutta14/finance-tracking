@@ -10,7 +10,6 @@ export interface FormData {
   expenseMonth: string
   expenseValue: string
   monthlyExpenseValue: string
-  inflationRate: string
   growth: string
 }
 
@@ -23,7 +22,6 @@ const defaultFormData: FormData = {
   expenseMonth: '',
   expenseValue: '',
   monthlyExpenseValue: '',
-  inflationRate: '',
   growth: '',
 }
 
@@ -62,7 +60,6 @@ export const useFormData = () => {
       expenseMonth: '',
       expenseValue: goal.expenseValue.toString(),
       monthlyExpenseValue: '',
-      inflationRate: goal.inflationRate.toString(),
       growth: goal.growth.toString(),
     })
   }

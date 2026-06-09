@@ -18,7 +18,6 @@ const mockGoal: FinancialGoal = {
   expenseValueMar2026: 52000,
   expenseValue2047: 80000,
   monthlyExpense2047: 6667,
-  inflationRate: 3,
   safeWithdrawalRate: 4,
   growth: 7,
   retirement: '2045-01',

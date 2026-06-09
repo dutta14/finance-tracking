@@ -78,7 +78,6 @@ describe('lifecycleProjection — projected and planned helpers', () => {
     expenseValueMar2026: 65000,
     expenseValue2047: 120000,
     monthlyExpense2047: 10000,
-    inflationRate: 6,
     safeWithdrawalRate: 3,
     growth: 7,
     retirement: 'Jun 2035',

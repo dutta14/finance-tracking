@@ -149,19 +149,19 @@ export function getFiTarget(
     goalEndYear?: string
     retirementAge: number
     monthlyExpense2047: number
-    inflationRate?: number
   },
   profileBirthday: string,
   preBoundaryGrowth: number,
   postBoundaryGrowth?: number,
   ageBoundary?: number,
+  inflationRate = 3,
 ): number {
   if (goal.fiGoal <= 0) return 0
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return goal.fiGoal
   const postGrowth = postBoundaryGrowth ?? 6
   const boundary = ageBoundary ?? 60
-  const inflation = goal.inflationRate || 3
+  const inflation = inflationRate
   const endYear = new Date(goal.goalEndYear).getFullYear()
   const [by, bm] = birthday.split('-').map(Number)
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, 1)
