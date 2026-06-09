@@ -5,22 +5,17 @@ export class GoalDetailPage {
 
   // FI Card
   readonly fiCard: Locator
-  readonly fiCardTrajectory: Locator
   readonly sparklineFigure: Locator
   readonly sparklineSvg: Locator
-  readonly sparklineCaption: Locator
 
-  // Savings Plan
+  // Savings Pace
   readonly savingsPlan: Locator
-  readonly savingsPlanTitle: Locator
   readonly savingsPlanHighlightRow: Locator
   readonly savingsPlanEmpty: Locator
 
-  // Projection states
-  readonly projectedDate: Locator
-  readonly trajectoryOnTrack: Locator
-  readonly trajectoryAhead: Locator
-  readonly trajectoryBehind: Locator
+  // Analysis
+  readonly analysisToggle: Locator
+  readonly chartViewToggle: Locator
 
   // Back link
   readonly backLink: Locator
@@ -30,21 +25,15 @@ export class GoalDetailPage {
     this.page = page
 
     this.fiCard = page.locator('.fi-card')
-    this.fiCardTrajectory = page.locator('.fi-card-trajectory')
-    this.sparklineFigure = page.locator('[aria-label="Savings trajectory projection"]')
+    this.sparklineFigure = page.locator('.projection-chart-wrapper')
     this.sparklineSvg = this.sparklineFigure.locator('svg')
-    this.sparklineCaption = this.sparklineFigure.locator('figcaption')
 
-    this.savingsPlan = page.locator('.splan')
-    this.savingsPlanTitle = page.locator('.splan-title')
-    this.savingsPlanHighlightRow = page.locator('.splan-compare-row--highlight')
-    this.savingsPlanEmpty = page.locator('.splan-empty')
+    this.savingsPlan = page.locator('.fi-goal-pace')
+    this.savingsPlanHighlightRow = this.savingsPlan
+    this.savingsPlanEmpty = this.savingsPlan.locator('a[href="#/budget"]')
 
-    this.projectedDate = page.locator('.goals-peek-projected-date')
-    this.trajectoryOnTrack = page.locator('.fi-card-trajectory[data-status="on-track"]')
-    this.trajectoryAhead = page.locator('.fi-card-trajectory[data-status="ahead"]')
-    this.trajectoryBehind = page.locator('.fi-card-trajectory[data-status="behind"]')
-
+    this.analysisToggle = page.getByRole('button', { name: /Analysis/ })
+    this.chartViewToggle = page.getByRole('button', { name: 'Switch to chart view' })
     this.backLink = page.locator('.goal-detail-back-link')
     this.detailTitle = page.locator('.goal-detail-title')
   }
@@ -57,9 +46,5 @@ export class GoalDetailPage {
   async gotoHome() {
     await this.page.goto('/finance-tracking/')
     await this.page.waitForLoadState('domcontentloaded')
-  }
-
-  getTrajectoryStatus(): Locator {
-    return this.fiCardTrajectory
   }
 }

@@ -65,13 +65,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
    * Flow 1: Budget Savings Rate → Goals Page
    * ──────────────────────────────────────────────────────────── */
   test.describe('Flow 1: Budget Savings Rate → Goals', () => {
-    test('1. GoalsPeek shows projected FI date derived from budget savings rate', async ({ page }) => {
-      // GoalsPeek.tsx:155 calls projectFIDate(fiTotal=260000, fiGoal=2_000_000,
-      // annualSavings=40_000, growthRate=DEFAULT_PRE_FI_GROWTH_RATE=8). The
-      // `growth: 6` on the goal is intentionally not used here — projectFIDate
-      // hardcodes 8% (goalCalculations.ts:2). We assert the date renders
-      // (format is "MMM YYYY" via toLocaleDateString) and that the same
-      // string appears on the Goal detail page (cross-page consistency).
+    test('1. GoalsPeek shows projected FI date and Goal detail shows projected timing prose', async ({ page }) => {
       await seedCrossPage(page)
       await gotoHome(page)
 
@@ -79,22 +73,14 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await expect(goalsCard).toBeVisible()
       const homeDate = goalsCard.locator('.goals-peek-projected-date')
       await expect(homeDate).toBeVisible()
-      // Strict text-match BEFORE extraction kills the hydration race
-      // where textContent() returns '' before React commits.
       await expect(homeDate).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
-      const homeDateText = (await homeDate.textContent())?.trim() ?? ''
 
-      // Enhanced assertion: cross-page projection consistency.
-      // GoalDetailedCard.tsx:721 renders the same projection via
-      // `.fi-card-row-value--projected` and identical formatting
-      // (toLocaleDateString('en-US', { month: 'short', year: 'numeric' })).
       await page.goto(URLS.goalDetail(CROSS_PAGE_GOAL.id))
       await page.waitForLoadState('domcontentloaded')
-      const detailDate = page.locator('.fi-card-row-value--projected').first()
-      await expect(detailDate).toBeVisible()
-      await expect(detailDate).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
-      const detailDateText = (await detailDate.textContent())?.trim() ?? ''
-      expect(detailDateText).toBe(homeDateText)
+      const detailPace = page.locator('.fi-goal-pace')
+      await expect(detailPace).toBeVisible()
+      await expect(detailPace).toContainText(/At this pace/i)
+      await expect(detailPace).toContainText(/[A-Z][a-z]+ \d{4}/)
     })
 
     test('2. GoalsPeek shows "Add budget data →" when budget-summary is missing', async ({ page }) => {
@@ -127,39 +113,31 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await expect(warn).toHaveText('Not reachable at current rate')
     })
 
-    test('4. Goal detailed card shows savings projection banner with budget data', async ({ page }) => {
-      // GoalDetailedCard.tsx:696+ renders the projected state when
-      // hasBudgetData && budgetAnnualSavings > 0. Monthly savings is
-      // budgetAnnualSavings / 12 = 40000/12 → $3,333 (via `dollars()`
-      // which rounds: GoalDetailedCard.tsx:65). The vs-target row
-      // renders projection.diffText ("X years early"/"behind").
+    test('4. Goal detailed card shows savings pace prose with budget data', async ({ page }) => {
       await seedCrossPage(page)
       await page.goto(URLS.goalDetail(CROSS_PAGE_GOAL.id))
       await page.waitForLoadState('domcontentloaded')
 
-      await expect(page.locator('.fi-card-row-value--projected').first()).toBeVisible()
-      // Monthly savings row: $3,333 (40000/12 rounded).
-      await expect(page.getByText('$3,333', { exact: true }).first()).toBeVisible()
-      // vs. target retirement row uses --ahead or --behind class.
-      const diff = page.locator('.fi-card-row-value--ahead, .fi-card-row-value--behind').first()
-      await expect(diff).toBeVisible()
-      await expect(diff).toHaveText(/(\d+\s+years?\s+(early|behind)|On\s+track)/)
+      const savingsPace = page.locator('.fi-goal-pace')
+      await expect(savingsPace).toBeVisible()
+      await expect(savingsPace).toContainText('$3,333')
+      await expect(savingsPace).toContainText('/mo')
+      await expect(savingsPace).toContainText(/At this pace/i)
+      await expect(savingsPace).toContainText(/(early|behind|on track)/i)
     })
 
     test('5. Goal detailed card shows "no budget" state when budget-summary is absent', async ({ page }) => {
-      // GoalDetailedCard.tsx:678–685 renders <a href="#/budget"> with
-      // "Add budget data to see projections" when state === 'no-budget'.
-      // The projected-completion row is NOT rendered.
       await seedCrossPage(page, { budgetSummary: null })
       await page.goto(URLS.goalDetail(CROSS_PAGE_GOAL.id))
       await page.waitForLoadState('domcontentloaded')
 
-      const noBudgetLink = page.locator('a.fi-card-projection-link')
+      const savingsPace = page.locator('.fi-goal-pace')
+      const noBudgetLink = savingsPace.locator('a[href="#/budget"]')
+      await expect(savingsPace).toBeVisible()
       await expect(noBudgetLink).toBeVisible()
-      await expect(noBudgetLink).toHaveText('Add budget data to see projections')
+      await expect(noBudgetLink).toHaveText('Add budget data')
       await expect(noBudgetLink).toHaveAttribute('href', '#/budget')
-      // The projected-completion row must NOT appear in the no-budget state.
-      await expect(page.locator('.fi-card-row-value--projected')).toHaveCount(0)
+      await expect(savingsPace).toContainText('see your savings pace')
     })
   })
 

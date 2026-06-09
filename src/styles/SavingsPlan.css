@@ -163,3 +163,86 @@
 }
 
 /* ── Dark Mode ── */
+
+/* ── Simplified savings plan (column layout) ── */
+.splan--simple {
+  padding: 1.25rem 1.5rem;
+  overflow: visible;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.splan-simple-message {
+  font-size: var(--fs-md);
+  color: var(--color-text);
+  line-height: 2;
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+body.modern-design .splan--simple input.splan-simple-growth-inline {
+  display: inline-block;
+  width: 5.5ch;
+  min-width: 3ch;
+  max-width: 7ch;
+  padding: 0 3px;
+  margin: 0 0.1rem;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: var(--fw-bold);
+  color: var(--accent);
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1.5px solid var(--color-border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-align: center;
+  transition:
+    border-color 0.15s ease-out,
+    border-bottom-width 0.1s ease-out;
+}
+
+body.modern-design .splan--simple input.splan-simple-growth-inline:hover {
+  border-bottom-color: var(--accent) !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  outline: none;
+}
+
+body.modern-design .splan--simple input.splan-simple-growth-inline:focus {
+  border-bottom: 2px solid var(--accent) !important;
+  outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  outline-offset: 2px;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.splan-simple-amount {
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+  letter-spacing: -0.01em;
+}
+
+/* Dark mode — lighter teal for contrast */
+body.dark-mode .splan--simple input.splan-simple-growth-inline {
+  color: #5eead4;
+}
+
+body.dark-mode .splan--simple input.splan-simple-growth-inline:focus {
+  border-bottom-color: #5eead4 !important;
+  outline-color: color-mix(in srgb, #5eead4 25%, transparent);
+}
+
+/* Keep native spinner small, visible on hover/focus */
+.splan-simple-growth-inline::-webkit-inner-spin-button {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.splan-simple-growth-inline:hover::-webkit-inner-spin-button,
+.splan-simple-growth-inline:focus::-webkit-inner-spin-button {
+  opacity: 1;
+}

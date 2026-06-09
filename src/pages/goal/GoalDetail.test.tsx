@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,16 +9,37 @@ import GoalDetail from './components/GoalDetail'
 /* ─── Mock heavy child components ─── */
 
 vi.mock('./components/GoalDetailedCard', () => ({
-  default: ({ goal }: { goal: FinancialGoal }) => <div data-testid="detailed-card">{goal.goalName}</div>,
+  default: ({
+    goal,
+    inflation,
+    savingsOverride,
+    onSavingsOverrideChange,
+  }: {
+    goal: FinancialGoal
+    inflation?: number
+    savingsOverride?: number | null
+    onSavingsOverrideChange?: (value: number | null) => void
+  }) => (
+    <div data-testid="detailed-card" data-inflation={inflation} data-savings-override={savingsOverride ?? ''}>
+      <div>{goal.goalName}</div>
+      <button onClick={() => onSavingsOverrideChange?.(4321)}>Set savings override</button>
+    </div>
+  ),
 }))
 vi.mock('./components/GoalDiveDeep', () => ({
-  default: () => <div data-testid="dive-deep">DiveDeep</div>,
+  default: ({ inflation, monthlyContribution }: { inflation?: number; monthlyContribution?: number }) => (
+    <div data-testid="dive-deep" data-inflation={inflation} data-monthly-contribution={monthlyContribution}>
+      DiveDeep
+    </div>
+  ),
 }))
 vi.mock('./components/GwSection', () => ({
   default: () => <div data-testid="gw-section">GwSection</div>,
 }))
 vi.mock('./components/SavingsPlan', () => ({
   default: () => <div data-testid="savings-plan">SavingsPlan</div>,
+  FiSavingsPlan: () => <div data-testid="fi-savings-plan">FiSavingsPlan</div>,
+  GwSavingsPlan: () => <div data-testid="gw-savings-plan">GwSavingsPlan</div>,
 }))
 
 /* ─── Helpers ─── */
@@ -55,10 +77,32 @@ const goalB = makeGoal({ id: 2, goalName: 'Bravo' })
 const goalC = makeGoal({ id: 3, goalName: 'Charlie' })
 const threeGoals = [goalA, goalB, goalC]
 
+const mockGrowthSettings = {
+  settings: {
+    preBoundaryGrowth: 8,
+    postBoundaryGrowth: 6,
+    ageBoundary: 60,
+    gwGrowth: 8,
+    inflation: 3,
+    retirementCap: 6000,
+    nonRetirementBase: 6000,
+    primaryRetirementAccessAge: 60,
+    partnerRetirementAccessAge: 60,
+  },
+  updateSettings: vi.fn(),
+  getFiOverride: vi.fn().mockReturnValue(null),
+  setFiOverride: vi.fn(),
+  getGwOverride: vi.fn().mockReturnValue(null),
+  setGwOverride: vi.fn(),
+  getEffectiveFiRates: vi.fn().mockReturnValue({ pre: 8, post: 6, hasOverride: false }),
+  getEffectiveGwRate: vi.fn().mockReturnValue({ rate: 8, hasOverride: false }),
+}
+
 const defaultProps = {
   goals: threeGoals,
   profileBirthday: '1990-01-01',
   gwGoals: [],
+  growthSettings: mockGrowthSettings as ReturnType<typeof import('./hooks/useGrowthSettings').useGrowthSettings>,
   onUpdateGoal: noop as (goalId: number, g: FinancialGoal) => void,
   onCopyGoal: vi.fn(),
   onDeleteGoal: vi.fn(),
@@ -84,6 +128,40 @@ function renderDetail(route: string, overrides: Partial<typeof defaultProps> = {
   )
 }
 
+function renderStatefulDetail(route: string, initialGoals: FinancialGoal[], onUpdateGoal = vi.fn()) {
+  const StatefulGoalDetail = () => {
+    const [goals, setGoals] = useState(initialGoals)
+
+    return (
+      <Routes>
+        <Route
+          path="/goal/:id"
+          element={
+            <GoalDetail
+              {...defaultProps}
+              goals={goals}
+              onUpdateGoal={(goalId, goal) => {
+                onUpdateGoal(goalId, goal)
+                setGoals(prevGoals => prevGoals.map(existingGoal => (existingGoal.id === goalId ? goal : existingGoal)))
+              }}
+            />
+          }
+        />
+        <Route path="/goal" element={<div data-testid="goals-list">Goals List</div>} />
+      </Routes>
+    )
+  }
+
+  return {
+    onUpdateGoal,
+    ...render(
+      <MemoryRouter initialEntries={[route]}>
+        <StatefulGoalDetail />
+      </MemoryRouter>,
+    ),
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    1. Renders correctly for a matching goal
    ═══════════════════════════════════════════════════════════════ */
@@ -101,12 +179,12 @@ describe('GoalDetail rendering', () => {
 
   it('renders the SavingsPlan aside', () => {
     renderDetail('/goal/1')
-    expect(screen.getByTestId('savings-plan')).toBeInTheDocument()
+    expect(screen.getByTestId('fi-savings-plan')).toBeInTheDocument()
   })
 
-  it('renders the Deep Analysis toggle button', () => {
+  it('renders the Analysis toggle button', () => {
     renderDetail('/goal/1')
-    expect(screen.getByRole('button', { name: /deep analysis/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^analysis$/i })).toBeInTheDocument()
   })
 
   it('renders GwSection when fiGoal > 0', () => {
@@ -270,7 +348,7 @@ describe('GoalDetail dive deep toggle', () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /deep analysis/i }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
 
     expect(screen.getByTestId('dive-deep')).toBeInTheDocument()
   })
@@ -279,7 +357,7 @@ describe('GoalDetail dive deep toggle', () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /deep analysis/i }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
 
     expect(screen.getByRole('button', { name: /close analysis/i })).toBeInTheDocument()
   })
@@ -288,7 +366,7 @@ describe('GoalDetail dive deep toggle', () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /deep analysis/i }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
     await user.click(screen.getByRole('button', { name: /close analysis/i }))
 
     expect(screen.queryByTestId('dive-deep')).not.toBeInTheDocument()
@@ -298,6 +376,28 @@ describe('GoalDetail dive deep toggle', () => {
 /* ═══════════════════════════════════════════════════════════════
    7. Actions menu — rename, duplicate, delete
    ═══════════════════════════════════════════════════════════════ */
+
+describe('GoalDetail savings override threading', () => {
+  it('persists the savings override on the goal when GoalDetailedCard changes it', async () => {
+    const user = userEvent.setup()
+    const { onUpdateGoal } = renderStatefulDetail('/goal/1', [goalA])
+
+    await user.click(screen.getByRole('button', { name: 'Set savings override' }))
+
+    expect(onUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ id: 1, savingsOverride: 4321 }))
+    expect(screen.getByTestId('detailed-card')).toHaveAttribute('data-savings-override', '4321')
+  })
+
+  it('threads the persisted savings override into GoalDiveDeep as the monthly contribution', async () => {
+    const user = userEvent.setup()
+    renderStatefulDetail('/goal/1', [goalA])
+
+    await user.click(screen.getByRole('button', { name: 'Set savings override' }))
+    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
+
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-monthly-contribution', '4321')
+  })
+})
 
 describe('GoalDetail actions menu', () => {
   it('renders the actions menu trigger button', () => {

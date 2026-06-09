@@ -9,7 +9,9 @@ import GoalMixer from './components/GoalMixer'
 import GoalDetail from './components/GoalDetail'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
+import { useGrowthSettings } from './hooks/useGrowthSettings'
 import NewGoalButton from './components/NewGoalButton'
+import '../../styles/GrowthSettings.css'
 
 const FICalculator = lazy(() => import('../tools/components/FICalculator'))
 
@@ -32,6 +34,7 @@ const Goal: FC = () => {
   const profileBirthday = profile.birthday
   const location = useLocation()
   const navigate = useNavigate()
+  const growthCtx = useGrowthSettings()
   const subPath = location.pathname.replace('/goal', '').replace(/^\//, '') || 'plans'
   const isDetailView = /^\d+$/.test(subPath)
   const activeTab = isDetailView ? 'plans' : subPath
@@ -141,6 +144,7 @@ const Goal: FC = () => {
                     goals={goals}
                     profileBirthday={profileBirthday}
                     gwGoals={gwGoals}
+                    growthSettings={growthCtx}
                     onUpdateGoal={updateGoal}
                     onCopyGoal={handleCopyGoal}
                     onDeleteGoal={deleteGoal}
@@ -201,7 +205,9 @@ const Goal: FC = () => {
               <GoalDetail
                 goals={goals}
                 profileBirthday={profileBirthday}
+                partnerBirthday={profile.partner?.birthday || ''}
                 gwGoals={gwGoals}
+                growthSettings={growthCtx}
                 onUpdateGoal={updateGoal}
                 onCopyGoal={handleCopyGoal}
                 onDeleteGoal={deleteGoal}

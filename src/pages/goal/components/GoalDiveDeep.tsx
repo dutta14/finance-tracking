@@ -1,55 +1,41 @@
 import { FC, useMemo, useState } from 'react'
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from 'recharts'
 import { FinancialGoal } from '../../../types'
+import {
+  ProjectionRow,
+  BalanceBreakdown,
+  buildPlannedProjection,
+  buildProjectedLifecycle,
+} from '../utils/lifecycleProjection'
+import { getFiTarget } from '../utils/goalCalculations'
+import { FiBreakdown } from '../utils/goalMath'
+import LifecycleChart from './LifecycleChart'
+import LifecycleTable from './LifecycleTable'
 import '../../../styles/GoalDiveDeep.css'
 
 interface GoalDiveDeepProps {
   goal: FinancialGoal
   profileBirthday: string
+  partnerBirthday?: string
+  currentBalance?: number
+  monthlyContribution?: number
+  currentMonth?: string
+  growthRate?: number
+  postGrowthRate?: number
+  ageBoundary?: number
+  inflation?: number
+  fiBreakdown?: FiBreakdown
+  primaryRetirementAccessAge?: number
+  partnerRetirementAccessAge?: number
+  retirementCap: number
+  nonRetirementBase: number
 }
 
-interface ProjectionRow {
-  month: string // "MMM YYYY"
-  expense: number
-  remaining: number
-}
+type DataMode = 'projected' | 'planned'
+type ViewInterval = 'monthly' | 'yearly' | '5year' | '10year'
+type ViewMode = 'chart' | 'table'
 
 const dollars = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-
-function buildProjection(goal: FinancialGoal, profileBirthday: string): ProjectionRow[] {
-  const birthday = profileBirthday || goal.birthday
-  if (!birthday || !goal.goalEndYear) return []
-
-  const [by, bm, bd] = birthday.split('-').map(Number)
-  const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
-  const endDate = new Date(goal.goalEndYear)
-
-  if (retirementDate >= endDate) return []
-
-  const monthlyInflation = (goal.inflationRate || 0) / 100 / 12
-  const monthlyGrowth = (goal.growth || 0) / 100 / 12
-
-  const rows: ProjectionRow[] = []
-  let expense = goal.monthlyExpense2047
-  let remaining = goal.fiGoal
-  const cursor = new Date(retirementDate.getFullYear(), retirementDate.getMonth(), 1)
-  const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
-
-  while (cursor <= end) {
-    const label = cursor.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    rows.push({ month: label, expense, remaining })
-    // next month
-    remaining = remaining * (1 + monthlyGrowth) - expense
-    expense = expense * (1 + monthlyInflation)
-    cursor.setMonth(cursor.getMonth() + 1)
-  }
-
-  return rows
-}
-
-type ViewInterval = 'monthly' | 'yearly' | '5year' | '10year'
-type ViewMode = 'chart' | 'table'
 
 const INTERVAL_LABELS: { value: ViewInterval; label: string; months: number }[] = [
   { value: 'monthly', label: 'Monthly', months: 1 },
@@ -58,81 +44,184 @@ const INTERVAL_LABELS: { value: ViewInterval; label: string; months: number }[] 
   { value: '10year', label: 'Every 10 Yrs', months: 120 },
 ]
 
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: { value: number; payload: ProjectionRow }[]
-  label?: string
-}
-
-const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null
-  const { expense, remaining } = payload[0].payload
-  return (
-    <div className="projection-tooltip">
-      <div className="projection-tooltip-month">{label}</div>
-      <div className="projection-tooltip-row">
-        <span>Monthly Expense</span>
-        <span>{dollars(expense)}</span>
-      </div>
-      <div className={`projection-tooltip-row${remaining < 0 ? ' negative' : ''}`}>
-        <span>Remaining</span>
-        <span>{dollars(remaining)}</span>
-      </div>
-    </div>
-  )
-}
-
-const GoalDiveDeep: FC<GoalDiveDeepProps> = ({ goal, profileBirthday }) => {
+const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
+  goal,
+  profileBirthday,
+  partnerBirthday,
+  currentBalance = 0,
+  monthlyContribution = 0,
+  currentMonth,
+  growthRate = 8,
+  postGrowthRate = 6,
+  ageBoundary = 60,
+  inflation = 3,
+  fiBreakdown,
+  primaryRetirementAccessAge = 59.5,
+  partnerRetirementAccessAge = 59.5,
+  retirementCap,
+  nonRetirementBase,
+}) => {
   const [interval, setInterval] = useState<ViewInterval>('yearly')
-  const [viewMode, setViewMode] = useState<ViewMode>('chart')
-  const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set())
-  const projection = useMemo(() => buildProjection(goal, profileBirthday), [goal, profileBirthday])
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [scenario, setScenario] = useState<DataMode>('projected')
+
+  const accessDates = useMemo(() => {
+    const birthday = profileBirthday || goal.birthday
+    if (!birthday) return { primaryAccessDate: undefined, partnerAccessDate: undefined }
+    const [by, bm] = birthday.split('-').map(Number)
+    const primaryYears = Math.floor(primaryRetirementAccessAge)
+    const primaryMonths = Math.round((primaryRetirementAccessAge - primaryYears) * 12)
+    const primaryAccessDate = new Date(by + primaryYears, bm - 1 + primaryMonths, 1)
+
+    const pBday = partnerBirthday || birthday
+    const [pby, pbm] = pBday.split('-').map(Number)
+    const partnerYears = Math.floor(partnerRetirementAccessAge)
+    const partnerMonths = Math.round((partnerRetirementAccessAge - partnerYears) * 12)
+    const partnerAccessDate = new Date(pby + partnerYears, pbm - 1 + partnerMonths, 1)
+
+    return { primaryAccessDate, partnerAccessDate }
+  }, [profileBirthday, partnerBirthday, goal.birthday, primaryRetirementAccessAge, partnerRetirementAccessAge])
+
+  const { primaryAccessDate, partnerAccessDate } = accessDates
+
+  const breakdown = useMemo<BalanceBreakdown | undefined>(() => {
+    if (!fiBreakdown) return undefined
+    if (!primaryAccessDate) return undefined
+    return {
+      retirementPrimary: fiBreakdown.retirementPrimary,
+      retirementPartner: fiBreakdown.retirementPartner,
+      nonRetirement: fiBreakdown.nonRetirement,
+      primaryAccessDate,
+      partnerAccessDate,
+    }
+  }, [fiBreakdown, primaryAccessDate, partnerAccessDate])
+
+  const fiTarget = useMemo(
+    () => getFiTarget(goal, profileBirthday, growthRate, postGrowthRate, ageBoundary),
+    [goal, profileBirthday, growthRate, postGrowthRate, ageBoundary],
+  )
+
+  const plannedMonthly = useMemo(() => {
+    const birthday = profileBirthday || goal.birthday
+    if (!birthday || fiTarget <= 0) return 0
+    const [by, bm] = birthday.split('-').map(Number)
+    const retYear = by + goal.retirementAge
+    const retMonth = `${retYear}-${String(bm).padStart(2, '0')}`
+    let months: number
+    if (currentMonth) {
+      const [fy, fm] = currentMonth.split('-').map(Number)
+      const [ty, tm] = retMonth.split('-').map(Number)
+      months = (ty - fy) * 12 + (tm - fm)
+    } else {
+      const now = new Date()
+      const retDate = new Date(retYear, bm - 1, 1)
+      months = (retDate.getFullYear() - now.getFullYear()) * 12 + (retDate.getMonth() - now.getMonth())
+    }
+    if (months <= 0) return 0
+    const r = growthRate / 100 / 12
+    const factor = Math.pow(1 + r, months)
+    const needed = fiTarget - currentBalance * factor
+    if (needed <= 0) return 0
+    return (needed * r) / (factor - 1)
+  }, [goal, profileBirthday, currentBalance, currentMonth, growthRate, fiTarget])
+
+  const projection = useMemo(
+    () =>
+      scenario === 'planned'
+        ? buildPlannedProjection(
+            goal,
+            profileBirthday,
+            currentBalance,
+            retirementCap,
+            nonRetirementBase,
+            plannedMonthly,
+            growthRate,
+            postGrowthRate,
+            ageBoundary,
+            breakdown,
+            inflation,
+          )
+        : buildProjectedLifecycle(
+            goal,
+            profileBirthday,
+            currentBalance,
+            monthlyContribution,
+            retirementCap,
+            nonRetirementBase,
+            growthRate,
+            postGrowthRate,
+            ageBoundary,
+            breakdown,
+            inflation,
+          ),
+    [
+      goal,
+      profileBirthday,
+      currentBalance,
+      monthlyContribution,
+      plannedMonthly,
+      scenario,
+      growthRate,
+      postGrowthRate,
+      ageBoundary,
+      inflation,
+      breakdown,
+      retirementCap,
+      nonRetirementBase,
+    ],
+  )
 
   const intervalMonths = INTERVAL_LABELS.find(i => i.value === interval)!.months
   const filteredRows = useMemo(() => {
     if (projection.length === 0) return []
-    const last = projection.length - 1
-    return projection.filter((_, idx) => idx === 0 || idx === last || idx % intervalMonths === 0)
+    if (intervalMonths === 1) return projection
+    const result: ProjectionRow[] = []
+    for (let i = 0; i < projection.length; i += intervalMonths) {
+      const bucketEnd = Math.min(i + intervalMonths, projection.length)
+      const endRow = projection[bucketEnd - 1]
+      let bucketExpense = 0
+      for (let j = i; j < bucketEnd; j++) {
+        bucketExpense += projection[j].expense
+      }
+      result.push({ ...endRow, expense: bucketExpense })
+    }
+    return result
   }, [projection, intervalMonths])
-
-  // Group rows by year for monthly collapse view
-  const groupedByYear = useMemo(() => {
-    if (interval !== 'monthly') return null
-    const groups = new Map<string, ProjectionRow[]>()
-    filteredRows.forEach(row => {
-      const year = row.month.split(' ')[1] // Extract year from "MMM YYYY"
-      if (!groups.has(year)) groups.set(year, [])
-      groups.get(year)!.push(row)
-    })
-    return groups
-  }, [filteredRows, interval])
-
-  const toggleYearExpand = (year: string) => {
-    setExpandedYears(prev => {
-      const next = new Set(prev)
-      if (next.has(year)) next.delete(year)
-      else next.add(year)
-      return next
-    })
-  }
 
   return (
     <div className="dive-deep-container">
-      <h3 className="dive-deep-title">Deep Analysis — {goal.goalName}</h3>
+      <h3 className="dive-deep-title">Analysis — {goal.goalName}</h3>
 
       <div className="dive-deep-section">
-        <h4>Year-by-Year Projection</h4>
+        <h4>Full Lifecycle — {scenario === 'projected' ? 'Projected' : 'Planned'}</h4>
         {projection.length === 0 ? (
           <p className="dive-deep-placeholder">No projection available — check retirement date and goal end year.</p>
         ) : (
           <>
-            <div className="projection-controls">
-              <div className="projection-interval-toggle">
+            <div className="projection-controls" role="toolbar" aria-label="Projection controls">
+              <div className="projection-scenario-toggle" role="group" aria-label="Scenario selection">
+                <button
+                  className={`projection-interval-btn${scenario === 'projected' ? ' active' : ''}`}
+                  onClick={() => setScenario('projected')}
+                  aria-pressed={scenario === 'projected'}
+                >
+                  Projected ({dollars(monthlyContribution)}/mo)
+                </button>
+                <button
+                  className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
+                  onClick={() => setScenario('planned')}
+                  aria-pressed={scenario === 'planned'}
+                >
+                  Planned ({dollars(plannedMonthly)}/mo)
+                </button>
+              </div>
+              <div className="projection-interval-toggle" role="group" aria-label="Time interval">
                 {INTERVAL_LABELS.map(opt => (
                   <button
                     key={opt.value}
                     className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
                     onClick={() => setInterval(opt.value)}
+                    aria-pressed={interval === opt.value}
                   >
                     {opt.label}
                   </button>
@@ -141,116 +230,21 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({ goal, profileBirthday }) => {
               <button
                 className="projection-view-toggle"
                 onClick={() => setViewMode(v => (v === 'chart' ? 'table' : 'chart'))}
+                aria-label={viewMode === 'chart' ? 'Switch to table view' : 'Switch to chart view'}
               >
                 {viewMode === 'chart' ? 'View Table' : 'View Chart'}
               </button>
             </div>
 
             {viewMode === 'chart' ? (
-              <div className="projection-chart-wrapper">
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={filteredRows} margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 11 }}
-                      interval="preserveStartEnd"
-                      stroke="var(--projection-axis)"
-                    />
-                    <YAxis
-                      tickFormatter={v => {
-                        if (Math.abs(v) >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`
-                        if (Math.abs(v) >= 1_000) return `$${(v / 1_000).toFixed(0)}K`
-                        return `$${v}`
-                      }}
-                      tick={{ fontSize: 11 }}
-                      stroke="var(--projection-axis)"
-                      width={72}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
-                    <Line
-                      type="monotone"
-                      dataKey="remaining"
-                      stroke="var(--accent-hover)"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 5 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <LifecycleChart rows={filteredRows} />
             ) : (
-              <div className="projection-table-wrapper">
-                <table className="projection-table">
-                  <thead>
-                    <tr>
-                      <th>Month</th>
-                      <th>Est. Monthly Expense</th>
-                      <th>Est. Remaining Money</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {interval === 'monthly' && groupedByYear
-                      ? Array.from(groupedByYear.entries()).flatMap(([year, rows]) => [
-                          <tr key={`year-${year}`} className="projection-year-header">
-                            <td colSpan={3}>
-                              <button
-                                className="projection-year-toggle"
-                                onClick={() => toggleYearExpand(year)}
-                                aria-expanded={expandedYears.has(year)}
-                              >
-                                <svg
-                                  className="projection-year-chevron"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 16 16"
-                                  fill="currentColor"
-                                >
-                                  {expandedYears.has(year) ? (
-                                    <path
-                                      d="M3.5 10.5L8 6l4.5 4.5"
-                                      stroke="currentColor"
-                                      strokeWidth="1.5"
-                                      fill="none"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  ) : (
-                                    <path
-                                      d="M12.5 5.5L8 10l-4.5-4.5"
-                                      stroke="currentColor"
-                                      strokeWidth="1.5"
-                                      fill="none"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  )}
-                                </svg>
-                                {year}
-                              </button>
-                            </td>
-                          </tr>,
-                          ...(expandedYears.has(year)
-                            ? rows.map(row => (
-                                <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
-                                  <td>{row.month}</td>
-                                  <td>{dollars(row.expense)}</td>
-                                  <td>{dollars(row.remaining)}</td>
-                                </tr>
-                              ))
-                            : []),
-                        ])
-                      : filteredRows.map(row => (
-                          <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
-                            <td>{row.month}</td>
-                            <td>{dollars(row.expense)}</td>
-                            <td>{dollars(row.remaining)}</td>
-                          </tr>
-                        ))}
-                  </tbody>
-                </table>
-              </div>
+              <LifecycleTable
+                rows={filteredRows}
+                interval={interval}
+                primaryAccessDate={primaryAccessDate}
+                partnerAccessDate={partnerAccessDate}
+              />
             )}
           </>
         )}

@@ -254,40 +254,55 @@ body.dark .projection-chart-wrapper {
   color: var(--color-negative);
 }
 
-/* Year group collapse */
-.projection-year-header td {
-  padding: 0 !important;
+.projection-rate-shift-row td {
+  padding: 0.375rem 0.75rem;
+  border-top: 2px dashed var(--accent);
+  border-bottom: none;
+  background: var(--color-surface-hover, var(--color-surface));
 }
 
-.projection-year-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  background: var(--color-surface-hover);
-  border: none;
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-  text-align: left;
-  color: var(--color-text);
-  font-size: var(--fs-md);
-  transition: background 0.15s;
+.projection-rate-shift-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
 }
 
-.projection-year-toggle:hover {
-  background: var(--color-border);
+.contrib-badge {
+  display: inline-block;
+  margin-left: 0.375rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted, #999);
+  opacity: 0.7;
 }
 
-.projection-year-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.25rem;
-  flex-shrink: 0;
-  transition: transform 0.2s;
+.bucket-locked {
+  color: var(--color-text-muted, #999);
+  opacity: 0.45;
+}
+
+.portfolio-total,
+.portfolio-total-header {
+  color: var(--color-text-muted, #999);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.projection-unlock-row td {
+  border-top: 2px dashed var(--color-success, #16a34a);
+}
+
+.projection-unlock-row .projection-rate-shift-label {
+  color: var(--color-success, #16a34a);
+}
+
+.projection-fire-row td {
+  border-top: 2px dashed var(--accent, #0f766e);
+}
+
+.projection-fire-row .projection-rate-shift-label {
+  color: var(--accent, #0f766e);
+  font-weight: 600;
 }
 
 /* Dark mode */

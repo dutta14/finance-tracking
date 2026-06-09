@@ -12,10 +12,13 @@ import { getStorageItem, setStorageItem } from '../../../utils/storage'
 const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
 const modKey = isMac ? '⌘' : 'Ctrl'
 
+import { useGrowthSettings } from '../hooks/useGrowthSettings'
+
 interface GoalsSectionProps {
   goals: FinancialGoal[]
   profileBirthday: string
   gwGoals: GwGoal[]
+  growthSettings: ReturnType<typeof useGrowthSettings>
   onUpdateGoal: (goalId: number, goal: FinancialGoal) => void
   onCopyGoal: (goal: FinancialGoal) => void
   onDeleteGoal: (goalId: number) => void
@@ -31,6 +34,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
+  growthSettings: _growthSettings,
   onUpdateGoal: _onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,

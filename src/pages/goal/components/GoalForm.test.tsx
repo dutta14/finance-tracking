@@ -30,7 +30,6 @@ const defaultFormData: FormData = {
   expenseValue: '',
   monthlyExpenseValue: '',
   inflationRate: '',
-  safeWithdrawalRate: '',
   growth: '',
 }
 
@@ -106,7 +105,6 @@ describe('GoalForm', () => {
       retirementAge: String(coastFi.retirementAge),
       expenseValue: String(coastFi.annualExpense),
       inflationRate: String(coastFi.inflationRate),
-      safeWithdrawalRate: String(coastFi.safeWithdrawalRate),
       growth: String(coastFi.growth),
     })
     expect(screen.getByText('Everything look good?')).toBeInTheDocument()
@@ -122,7 +120,6 @@ describe('GoalForm', () => {
       retirementAge: '40',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '8',
     }
 
@@ -157,7 +154,6 @@ describe('GoalForm', () => {
       retirementAge: '40',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '8',
     }
 
@@ -237,7 +233,6 @@ describe('GoalForm', () => {
       retirementAge: '40',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '8',
     }
 
@@ -440,16 +435,9 @@ describe('GoalForm step 3 validation', () => {
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the inflation rate')
   })
 
-  it('shows error when SWR is empty', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    await renderAtStep3(user, { inflationRate: '3', safeWithdrawalRate: '' })
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the safe withdrawal rate')
-  })
-
   it('shows error when growth rate is empty', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    await renderAtStep3(user, { inflationRate: '3', safeWithdrawalRate: '4', growth: '' })
+    await renderAtStep3(user, { inflationRate: '3', growth: '' })
     await user.click(screen.getByRole('button', { name: /Next/ }))
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the growth rate')
   })
@@ -521,7 +509,6 @@ describe('GoalForm UI features', () => {
     await user.click(screen.getByRole('button', { name: 'Use Recommended' }))
     expect(defaultProps.onSetFormFields).toHaveBeenCalledWith({
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '6',
     })
   })
@@ -542,7 +529,6 @@ describe('GoalForm UI features', () => {
       retirementAge: '55',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={filledForm} />)
@@ -553,7 +539,6 @@ describe('GoalForm UI features', () => {
     expect(screen.getByText('Goal Name')).toBeInTheDocument()
     expect(screen.getByText('Retirement Age')).toBeInTheDocument()
     expect(screen.getByText('Inflation')).toBeInTheDocument()
-    expect(screen.getByText('SWR')).toBeInTheDocument()
     expect(screen.getByText('Growth')).toBeInTheDocument()
   })
 
@@ -567,7 +552,6 @@ describe('GoalForm UI features', () => {
       retirementAge: '55',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={filledForm} />)
@@ -594,7 +578,6 @@ describe('GoalForm UI features', () => {
       retirementAge: '55',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={filledForm} editingGoalId={42} />)
@@ -728,26 +711,6 @@ describe('GoalForm — validation branches', () => {
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the inflation rate')
   })
 
-  it('step 3 validation: empty safeWithdrawalRate sets error (line 185)', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const formData = {
-      ...defaultFormData,
-      goalName: 'Test',
-      goalCreatedIn: '2024-01-01',
-      goalEndYear: '2080-01-01',
-      retirementAge: '60',
-      expenseValue: '50000',
-      inflationRate: '3',
-      safeWithdrawalRate: '',
-    }
-    render(<GoalForm {...defaultProps} formData={formData} />)
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the safe withdrawal rate')
-  })
-
   it('step 3 validation: empty growth sets error (line 189)', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const formData = {
@@ -758,7 +721,6 @@ describe('GoalForm — validation branches', () => {
       retirementAge: '60',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '',
     }
     render(<GoalForm {...defaultProps} formData={formData} />)
@@ -799,7 +761,6 @@ describe('GoalForm — review step with incomplete data (line 253-255 canCalc=fa
       retirementAge: '55',
       expenseValue: '50000',
       inflationRate: '', // canCalc will be false
-      safeWithdrawalRate: '4',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={formData} />)
@@ -969,7 +930,6 @@ describe('GoalForm — step 3 validation branches', () => {
       retirementAge: '60',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '',
     }
     render(<GoalForm {...defaultProps} formData={formData} />)
@@ -982,27 +942,6 @@ describe('GoalForm — step 3 validation branches', () => {
     expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the growth rate')
   })
 
-  it('shows error when SWR is empty on step 3', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    const formData = {
-      ...defaultFormData,
-      goalName: 'Test',
-      goalCreatedIn: '2025-01-01',
-      goalEndYear: '2080-01-01',
-      retirementAge: '60',
-      expenseValue: '50000',
-      inflationRate: '3',
-      safeWithdrawalRate: '',
-      growth: '6',
-    }
-    render(<GoalForm {...defaultProps} formData={formData} />)
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    await user.click(screen.getByRole('button', { name: /Next/ }))
-    expect(defaultProps.setError).toHaveBeenCalledWith('Please enter the safe withdrawal rate')
-  })
-
   it('shows error when inflation rate is empty on step 3', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const formData = {
@@ -1013,7 +952,6 @@ describe('GoalForm — step 3 validation branches', () => {
       retirementAge: '60',
       expenseValue: '50000',
       inflationRate: '',
-      safeWithdrawalRate: '4',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={formData} />)
@@ -1045,7 +983,6 @@ describe('GoalForm — submit flow and review (lines 217-260)', () => {
       retirementAge: '60',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '6',
       resetExpenseMonth: false,
     }
@@ -1076,7 +1013,6 @@ describe('GoalForm — submit flow and review (lines 217-260)', () => {
       retirementAge: '60',
       expenseValue: '50000',
       inflationRate: '3',
-      safeWithdrawalRate: '4',
       growth: '6',
     }
     render(<GoalForm {...defaultProps} formData={formData} editingGoalId={42} />)
