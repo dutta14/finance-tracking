@@ -50,9 +50,7 @@ describe('BudgetSyncContext', () => {
       vi.useRealTimers()
     })
 
-    it('clears budget dirty flag when not configured (skips upload, clears flag)', async () => {
-      // When isConfigured is false, syncBudgetNow skips upload and still calls
-      // clearDirty('budget'). This is by design: nothing to sync = clear the flag.
+    it('keeps budget dirty flag when not configured', async () => {
       const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
 
       // Advance past the 3-second dirty-ready gate in useGitHubSync
@@ -60,7 +58,7 @@ describe('BudgetSyncContext', () => {
         await vi.advanceTimersByTimeAsync(3100)
       })
 
-      // Mark budget dirty so we can verify it gets cleared
+      // Mark budget dirty so we can verify it remains dirty
       act(() => {
         result.current.sync.markDirty('budget')
       })
@@ -71,7 +69,7 @@ describe('BudgetSyncContext', () => {
         await result.current.budget.syncBudgetNow()
       })
 
-      expect(result.current.sync.dirtyFlags.budget).toBe(false)
+      expect(result.current.sync.dirtyFlags.budget).toBe(true)
     })
   })
 
@@ -379,10 +377,10 @@ describe('BudgetSyncContext', () => {
     })
   })
 
-  /* ── syncBudgetNow when not configured — clearDirty still runs (line 46-47) ── */
+  /* ── syncBudgetNow when not configured — clearDirty is skipped ── */
 
   describe('syncBudgetNow clearDirty when not configured', () => {
-    it('clears dirty flag even when isConfigured is false (line 46)', async () => {
+    it('does not clear dirty flag when isConfigured is false', async () => {
       vi.useFakeTimers()
 
       const { result } = renderHook(() => ({ budget: useBudgetSync(), sync: useGitHubSyncContext() }), { wrapper })
@@ -394,7 +392,7 @@ describe('BudgetSyncContext', () => {
       // Not configured
       expect(result.current.sync.isConfigured).toBe(false)
 
-      // Mark dirty then sync — should clear even without being configured
+      // Mark dirty then sync — should remain dirty without a configured sync
       act(() => {
         result.current.sync.markDirty('budget')
       })
@@ -404,7 +402,7 @@ describe('BudgetSyncContext', () => {
         await result.current.budget.syncBudgetNow()
       })
 
-      expect(result.current.sync.dirtyFlags.budget).toBe(false)
+      expect(result.current.sync.dirtyFlags.budget).toBe(true)
 
       vi.useRealTimers()
     })
