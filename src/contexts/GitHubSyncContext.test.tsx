@@ -655,6 +655,25 @@ describe('GitHubSyncContext', () => {
       // syncProgress is set then cleared after 2s timeout
       expect(result.current.syncStatus).toBe('success')
     })
+
+    it('does not mark success when taxes are the only dirty domain', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        result.current.markDirty('taxes')
+      })
+
+      await act(async () => {
+        await result.current.handleSyncNow({}, undefined, false)
+      })
+
+      expect(result.current.syncStatus).toBe('idle')
+      expect(result.current.lastError).toBeNull()
+    })
   })
 
   /* ── syncTaxesNow via context ──────────────────────────────────── */

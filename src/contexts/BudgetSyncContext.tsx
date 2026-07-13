@@ -42,8 +42,8 @@ export const BudgetSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
       const budgetStore = loadBudgetStore()
       await uploadBudgetConfig(config, activeToken, getBudgetConfigData(budgetStore))
       await syncAllBudgetCSVs(config, activeToken, budgetStore.csvs)
+      clearDirty('budget')
     }
-    clearDirty('budget')
   }, [config, activeToken, isConfigured, clearDirty])
 
   const restoreBudgetFromGitHub = useCallback(async (): Promise<void> => {

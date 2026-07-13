@@ -13,6 +13,8 @@ import { useSettings } from './SettingsContext'
 import { useGoals } from './GoalsContext'
 import type { GwGoal } from '../types'
 import type { Account, BalanceEntry } from '../pages/data/types'
+import { loadBudgetStore, getBudgetConfigData } from '../pages/budget/utils/budgetStorage'
+import { syncAllBudgetCSVs, uploadBudgetConfig } from '../pages/budget/utils/budgetGitHubSync'
 import { appStorage } from '../utils/appStorage'
 import { getStorageItem, setStorageItem } from '../utils/storage'
 import { validateImportPayload } from '../utils/importValidator'
@@ -65,6 +67,8 @@ const DOMAIN_LABELS: Record<string, string> = {
   data: 'Balances',
   tools: 'Tools',
   allocation: 'Allocation',
+  budget: 'Budget',
+  taxes: 'Taxes',
 }
 
 const getDataSnapshot = (): { accounts: Account[]; balances: BalanceEntry[] } => {
@@ -154,14 +158,22 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
     async (_data: object, message?: string, forceFull?: boolean): Promise<void> => {
       if (syncStatus === 'syncing') return
 
-      const domains: Array<'goals' | 'data' | 'tools' | 'allocation'> = ['goals', 'data', 'tools', 'allocation']
+      const domains: Array<'goals' | 'data' | 'tools' | 'allocation' | 'budget'> = [
+        'goals',
+        'data',
+        'tools',
+        'allocation',
+        'budget',
+      ]
       const dirtySnapshot = { ...ghDirtyFlags }
       const toSync = forceFull ? domains : domains.filter(d => dirtySnapshot[d])
 
       if (toSync.length === 0) {
-        ghSetSyncStatus('success')
-        ghSetLastSyncAt(new Date().toISOString())
-        ghSetLastError(null)
+        if (!dirtySnapshot.taxes) {
+          ghSetSyncStatus('success')
+          ghSetLastSyncAt(new Date().toISOString())
+          ghSetLastError(null)
+        }
         ghSetSyncProgress({ total: 0, completed: 0, current: '', errors: [], domains: [] })
         setTimeout(() => ghSetSyncProgress(null), 2000)
         return
@@ -238,6 +250,15 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
               )
               ghClearDirty('allocation')
               break
+            case 'budget': {
+              if (ghIsConfigured && ghActiveToken) {
+                const budgetStore = loadBudgetStore()
+                await uploadBudgetConfig(ghConfig, ghActiveToken, getBudgetConfigData(budgetStore))
+                await syncAllBudgetCSVs(ghConfig, ghActiveToken, budgetStore.csvs)
+                ghClearDirty('budget')
+              }
+              break
+            }
           }
         } catch (e) {
           const errMsg = `${DOMAIN_LABELS[domain]}: ${e instanceof Error ? e.message : String(e)}`
@@ -262,6 +283,9 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
       darkMode,
       allowCsvImport,
       syncNow,
+      ghConfig,
+      ghActiveToken,
+      ghIsConfigured,
       ghSyncDataNow,
       ghSyncToolsNow,
       ghSyncAllocationNow,
