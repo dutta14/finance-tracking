@@ -3,6 +3,15 @@ import type { GitHubSyncPaneProps } from '../types'
 import type { ConnectionTestResult, SyncDomain } from '../../../hooks/useGitHubSync'
 import { formatDate, formatRelative } from '../utils'
 
+const DOMAIN_LABELS: Record<string, string> = {
+  goals: 'Goals',
+  data: 'Balances',
+  tools: 'Tools',
+  allocation: 'Allocation',
+  budget: 'Budget',
+  taxes: 'Taxes',
+}
+
 const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   hasPendingChanges,
   ghConfig,
@@ -25,6 +34,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
   onGhApplyRestore = async () => {},
   ghData = {},
   ghSyncProgress = null,
+  ghDirtyFlags,
 }) => {
   const [ghTab, setGhTab] = useState<'config' | 'history'>('config')
   const [ghShowToken, setGhShowToken] = useState(false)
@@ -83,10 +93,10 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
     } else setGhSaveResult(result)
   }
 
-  const handleGhSyncNow = async () => {
+  const handleGhSyncNow = async (e?: React.MouseEvent) => {
+    const forceFull = e ? e.metaKey || e.ctrlKey : false
     const msg = `Synced user data on ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`
-    await onGhSyncNow?.(ghData, msg)
-    // Only show success banner if sync actually ran (not "already up to date")
+    await onGhSyncNow?.(ghData, msg, forceFull)
     if (!ghSyncProgress || ghSyncProgress.total > 0) setGhSyncSuccess(true)
   }
 
@@ -108,14 +118,11 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
     setGhRestoringCommitSha(null)
   }
 
-  const DOMAIN_LABELS: Record<SyncDomain, string> = {
-    goals: 'Goals',
-    data: 'Balances',
-    tools: 'Tools',
-    allocation: 'Allocation',
-    taxes: 'Taxes',
-    budget: 'Budget',
-  }
+  const dirtyDomains = Object.entries(ghDirtyFlags || {})
+    .filter(([, dirty]) => dirty)
+    .map(([domain]) => DOMAIN_LABELS[domain] || domain)
+  const dirtyStatusText = dirtyDomains.length > 0 ? `${dirtyDomains.join(', ')} changed` : 'unsaved changes'
+  const syncShortcutKey = navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'
   const ALL_DOMAINS: SyncDomain[] = ['goals', 'data', 'tools', 'allocation', 'taxes', 'budget']
 
   return (
@@ -367,7 +374,9 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                       <>
                         <span className="ghsync-status-dot ghsync-status-dot--success">●</span>
                         Last synced {formatRelative(ghLastSyncAt)} · {formatDate(ghLastSyncAt)}
-                        {hasPendingChanges && <span className="ghsync-unsaved-label">unsaved changes</span>}
+                        {hasPendingChanges && ghDirtyFlags && (
+                          <span className="ghsync-unsaved-label">{dirtyStatusText}</span>
+                        )}
                       </>
                     )}
                     {ghSyncStatus === 'error' && (
@@ -381,7 +390,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                         <span className="ghsync-status-dot ghsync-status-dot--idle">●</span>
                         {ghConfig?.owner && ghConfig?.repo
                           ? hasPendingChanges
-                            ? 'Unsaved changes — sync when ready'
+                            ? `${dirtyStatusText} — sync when ready`
                             : ghHasStoredToken
                               ? ghTokenUnlocked
                                 ? 'Ready to sync'
@@ -396,7 +405,7 @@ const GitHubSyncPane: FC<GitHubSyncPaneProps> = ({
                     className="ghsync-mini-btn ghsync-sync-btn ghsync-sync-now-btn"
                     onClick={handleGhSyncNow}
                     disabled={!ghIsConfigured || ghSyncStatus === 'syncing'}
-                    title="Sync current goal data to GitHub"
+                    title={`Sync changed data to GitHub (hold ${syncShortcutKey} + click to force sync all)`}
                   >
                     {ghSyncStatus === 'syncing' ? 'Syncing…' : 'Sync'}
                   </button>

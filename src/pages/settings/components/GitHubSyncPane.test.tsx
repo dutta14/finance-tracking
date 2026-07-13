@@ -27,6 +27,7 @@ const baseProps: GitHubSyncPaneProps = {
   onGhApplyRestore: vi.fn().mockResolvedValue(undefined),
   ghData: { goals: [] },
   ghSyncProgress: null,
+  ghDirtyFlags: { goals: false, data: false, tools: false, allocation: false, taxes: false, budget: false },
 }
 
 function renderPane(overrides: Partial<GitHubSyncPaneProps> = {}) {
@@ -301,14 +302,15 @@ describe('GitHubSyncPane', () => {
     expect(screen.getByText(/Rate limit exceeded/)).toBeInTheDocument()
   })
 
-  it('shows unsaved changes label when success + pending changes', () => {
+  it('shows changed domain names when success + pending changes', () => {
     renderPane({
       ghSyncStatus: 'success',
       ghLastSyncAt: '2024-01-15T10:30:00Z',
       hasPendingChanges: true,
       ghHasStoredToken: false,
+      ghDirtyFlags: { ...baseProps.ghDirtyFlags!, goals: true, budget: true },
     })
-    expect(screen.getByText('unsaved changes')).toBeInTheDocument()
+    expect(screen.getByText('Goals, Budget changed')).toBeInTheDocument()
   })
 
   // ── Sync Now button ──
@@ -330,7 +332,19 @@ describe('GitHubSyncPane', () => {
 
     await user.click(screen.getByRole('button', { name: 'Sync' }))
     await waitFor(() => {
-      expect(onSync).toHaveBeenCalledWith({ goals: [] }, expect.stringContaining('Synced user data on'))
+      expect(onSync).toHaveBeenCalledWith({ goals: [] }, expect.stringContaining('Synced user data on'), false)
+    })
+  })
+
+  it('force syncs all domains when Cmd/Ctrl+click on Sync', async () => {
+    const onSync = vi.fn().mockResolvedValue(undefined)
+    renderPane({ ghIsConfigured: true, onGhSyncNow: onSync, ghHasStoredToken: false, ghData: { goals: [] } })
+
+    const syncBtn = screen.getByRole('button', { name: /Sync/ })
+    fireEvent.click(syncBtn, { metaKey: true })
+
+    await waitFor(() => {
+      expect(onSync).toHaveBeenCalledWith({ goals: [] }, expect.stringContaining('Synced user data on'), true)
     })
   })
 
@@ -565,7 +579,7 @@ describe('GitHubSyncPane', () => {
       onGhSyncNow: onSync,
     })
 
-    fireEvent.click(screen.getByTitle('Sync current goal data to GitHub'))
+    fireEvent.click(screen.getByRole('button', { name: 'Sync' }))
 
     await waitFor(() => {
       expect(onSync).toHaveBeenCalled()
@@ -766,15 +780,16 @@ describe('GitHubSyncPane', () => {
 
   // ── Branch coverage: ghSyncStatus idle + owner/repo + hasPendingChanges (line 384) ──
 
-  it('shows "Unsaved changes" when idle with repo configured and pending changes', () => {
+  it('shows changed domains when idle with repo configured and pending changes', () => {
     renderPane({
       ghSyncStatus: 'idle',
       ghConfig: { owner: 'o', repo: 'r', filePath: 'f', autoSync: false },
       ghHasStoredToken: true,
       ghTokenUnlocked: true,
       hasPendingChanges: true,
+      ghDirtyFlags: { ...baseProps.ghDirtyFlags!, budget: true },
     })
-    expect(screen.getByText(/Unsaved changes/)).toBeInTheDocument()
+    expect(screen.getByText(/Budget changed — sync when ready/)).toBeInTheDocument()
   })
 
   // ── Branch coverage: dirty dot visible when pending changes + not syncing (line 394) ──
@@ -1011,15 +1026,16 @@ describe('GitHubSyncPane', () => {
 
   // ── Branch coverage: idle status messages (lines 382-390) ──
 
-  it('shows "Unsaved changes" idle status when hasPendingChanges is true with config', () => {
+  it('shows changed domain names in idle status when hasPendingChanges is true with config', () => {
     renderPane({
       hasPendingChanges: true,
       ghHasStoredToken: true,
       ghTokenUnlocked: true,
       ghSyncStatus: 'idle',
       ghConfig: { owner: 'user', repo: 'repo', filePath: 'data.json', autoSync: false },
+      ghDirtyFlags: { ...baseProps.ghDirtyFlags!, goals: true, budget: true },
     })
-    expect(screen.getByText(/Unsaved changes — sync when ready/)).toBeInTheDocument()
+    expect(screen.getByText(/Goals, Budget changed — sync when ready/)).toBeInTheDocument()
   })
 
   it('shows "Token not set up" idle status when no stored token', () => {
