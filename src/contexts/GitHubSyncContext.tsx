@@ -13,7 +13,7 @@ import { useSettings } from './SettingsContext'
 import { useGoals } from './GoalsContext'
 import type { GwGoal } from '../types'
 import type { Account, BalanceEntry } from '../pages/data/types'
-import { loadBudgetStore, getBudgetConfigData } from '../pages/budget/utils/budgetStorage'
+import { loadBudgetConfig } from '../pages/budget/utils/budgetStorage'
 import { syncAllBudgetCSVs, uploadBudgetConfig } from '../pages/budget/utils/budgetGitHubSync'
 import { appStorage } from '../utils/appStorage'
 import { getStorageItem, setStorageItem } from '../utils/storage'
@@ -252,9 +252,13 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
               break
             case 'budget': {
               if (ghIsConfigured && ghActiveToken) {
-                const budgetStore = loadBudgetStore()
-                await uploadBudgetConfig(ghConfig, ghActiveToken, getBudgetConfigData(budgetStore))
-                await syncAllBudgetCSVs(ghConfig, ghActiveToken, budgetStore.csvs)
+                const configData = loadBudgetConfig()
+                const rawStore = appStorage.getJSON<{ csvs: Record<string, { csv: string }> } | null>(
+                  'budget-store',
+                  null,
+                )
+                await uploadBudgetConfig(ghConfig, ghActiveToken, configData)
+                await syncAllBudgetCSVs(ghConfig, ghActiveToken, rawStore?.csvs || {})
                 ghClearDirty('budget')
               }
               break
