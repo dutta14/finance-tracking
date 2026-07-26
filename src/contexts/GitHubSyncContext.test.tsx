@@ -655,6 +655,25 @@ describe('GitHubSyncContext', () => {
       // syncProgress is set then cleared after 2s timeout
       expect(result.current.syncStatus).toBe('success')
     })
+
+    it('does not mark success when taxes are the only dirty domain', async () => {
+      const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100)
+      })
+
+      act(() => {
+        result.current.markDirty('taxes')
+      })
+
+      await act(async () => {
+        await result.current.handleSyncNow({}, undefined, false)
+      })
+
+      expect(result.current.syncStatus).toBe('idle')
+      expect(result.current.lastError).toBeNull()
+    })
   })
 
   /* ── syncTaxesNow via context ──────────────────────────────────── */
@@ -730,10 +749,10 @@ describe('GitHubSyncContext', () => {
         capturedProgress = result.current.syncProgress
       })
 
-      // Progress should show all 4 domains
+      // Progress should show all 5 domains
       if (capturedProgress) {
-        expect(capturedProgress.total).toBe(4)
-        expect(capturedProgress.domains).toEqual(['goals', 'data', 'tools', 'allocation'])
+        expect(capturedProgress.total).toBe(5)
+        expect(capturedProgress.domains).toEqual(['goals', 'data', 'tools', 'allocation', 'budget'])
         expect(capturedProgress.current).toBe('Goals')
       }
 
@@ -1107,7 +1126,7 @@ describe('GitHubSyncContext', () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { result } = renderHook(() => useGitHubSyncContext(), { wrapper })
 
-      // forceFull=true triggers all 4 domains to sync (line 159)
+      // forceFull=true triggers all 5 domains to sync (line 159)
       // Even though the sync functions will silently succeed/fail due to no token,
       // the progress machinery still runs (lines 170-178, 183, 249)
       await act(async () => {

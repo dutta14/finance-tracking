@@ -30,7 +30,7 @@ interface SettingsMenuProps {
   onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
   onGhLockToken?: () => void
-  onGhSyncNow?: (data: object, message?: string) => Promise<void>
+  onGhSyncNow?: (data: object, message?: string, forceFull?: boolean) => Promise<void>
   onGhFetchHistory?: () => Promise<void>
   onGhTestConnection?: () => Promise<ConnectionTestResult>
   onGhRestoreLatest?: () => Promise<RestoreResult>

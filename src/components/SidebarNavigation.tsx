@@ -18,18 +18,17 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
   const ghContext = useGitHubSyncContext()
   const { handleSyncNow, dirtyFlags } = ghContext
   const gh = useMemo(() => ghContext, [ghContext])
-  const { budget: budgetDirty, taxes: taxesDirty } = dirtyFlags
+  const { taxes: taxesDirty } = dirtyFlags
   const budgetSync = useBudgetSync()
   const taxSync = useTaxSync()
   const combinedSyncNow = useCallback(
     async (data: object, message?: string, forceFull?: boolean) => {
       await Promise.allSettled([
         handleSyncNow(data, message, forceFull),
-        ...(forceFull || budgetDirty ? [budgetSync.syncBudgetNow()] : []),
         ...(forceFull || taxesDirty ? [taxSync.syncTaxNow(message)] : []),
       ])
     },
-    [handleSyncNow, budgetDirty, taxesDirty, budgetSync, taxSync],
+    [handleSyncNow, taxesDirty, taxSync],
   )
   const combinedRestore = useCallback(
     async (data: unknown) => {
