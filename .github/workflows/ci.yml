@@ -29,7 +29,18 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - name: Security audit (npm)
+        run: |
+          # Excluded advisories (React Router SSR/RSC — not applicable to this client-side SPA):
+          # GHSA-qwww-vcr4-c8h2: RSC CSRF bypass
+          # GHSA-h8fp-f39c-q6mh: RSCErrorHandler XSS
+          # GHSA-337j-9hxr-rhxg: SSR hydration constructor injection
+          npm audit --audit-level=high 2>&1 | tee audit.txt || true
+          REMAINING=$(grep -oE 'GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}' audit.txt | sort -u | grep -v -E 'GHSA-qwww-vcr4-c8h2|GHSA-h8fp-f39c-q6mh|GHSA-337j-9hxr-rhxg' || true)
+          if [ -n "$REMAINING" ]; then
+            echo "::error::Unexcluded high-severity advisories: $REMAINING"
+            exit 1
+          fi
       - run: npx prettier --check 'src/**/*.{ts,tsx,css}'
       - run: npx eslint src/ --max-warnings=0
       - run: npx tsc --noEmit
