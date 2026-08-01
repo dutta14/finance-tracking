@@ -269,20 +269,20 @@ const Data: FC = () => {
                           Charts
                         </button>
                         <button
-                          className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
-                          role="tab"
-                          aria-selected={dataView === 'spreadsheet'}
-                          onClick={() => setDataView('spreadsheet')}
-                        >
-                          Spreadsheet
-                        </button>
-                        <button
                           className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
                           role="tab"
                           aria-selected={dataView === 'details'}
                           onClick={() => setDataView('details')}
                         >
                           Details
+                        </button>
+                        <button
+                          className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
+                          role="tab"
+                          aria-selected={dataView === 'spreadsheet'}
+                          onClick={() => setDataView('spreadsheet')}
+                        >
+                          Spreadsheet
                         </button>
                       </div>
                       <div className="data-toolbar-actions">

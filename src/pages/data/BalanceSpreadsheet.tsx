@@ -180,6 +180,9 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
       return val !== undefined ? sum + val : sum
     }, 0)
 
+  const hasGroupBalanceForMonth = (children: Account[], month: string) =>
+    children.some(c => balanceMap.has(`${c.id}:${month}`))
+
   /* Date filtering */
   const availableYears = useMemo(() => {
     const years = new Set(allMonths.map(m => m.slice(0, 4)))
@@ -598,13 +601,14 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
                   {displayColumns.map(col => {
                     if (col.kind === 'group') {
                       const groupVal = sumGroupForMonth(col.children, month)
+                      const hasGroupBalance = hasGroupBalanceForMonth(col.children, month)
                       const allInactive = col.children.every(c => c.status === 'inactive')
                       return (
                         <td
                           key={`g-${col.groupName}`}
                           className={`data-spreadsheet-cell data-spreadsheet-group-cell${allInactive ? ' data-spreadsheet-inactive' : ''}`}
                         >
-                          {groupVal !== 0 ? formatCurrency(groupVal) : ''}
+                          {hasGroupBalance ? formatCurrency(groupVal) : ''}
                         </td>
                       )
                     }

@@ -1840,7 +1840,7 @@ body.dark .account-card {
 
 .data-spreadsheet-group-cell {
   background: var(--accent-lighter);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-normal);
 }
 
 .data-spreadsheet-child-header {
