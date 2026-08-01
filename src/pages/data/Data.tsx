@@ -10,6 +10,7 @@ import { exportCsv } from './csvExport'
 import AccountsModal from './AccountsModal'
 import BalanceSpreadsheet from './BalanceSpreadsheet'
 import BalanceCharts from './BalanceCharts'
+import BalanceDetails from './BalanceDetails'
 import '../../styles/Data.css'
 
 const Allocation = lazy(() => import('../allocation/Allocation'))
@@ -29,7 +30,7 @@ const Data: FC = () => {
   } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
   const [showInactive, setShowInactive] = useState(false)
-  const [dataView, setDataView] = useState<'charts' | 'spreadsheet'>('charts')
+  const [dataView, setDataView] = useState<'charts' | 'spreadsheet' | 'details'>('charts')
 
   const accountsRef = useRef(accounts)
   accountsRef.current = accounts
@@ -275,6 +276,14 @@ const Data: FC = () => {
                         >
                           Spreadsheet
                         </button>
+                        <button
+                          className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
+                          role="tab"
+                          aria-selected={dataView === 'details'}
+                          onClick={() => setDataView('details')}
+                        >
+                          Details
+                        </button>
                       </div>
                       <div className="data-toolbar-actions">
                         {dataView === 'spreadsheet' && (
@@ -320,7 +329,7 @@ const Data: FC = () => {
                       </div>
                     </div>
 
-                    {balances.length === 0 && !inlineEntry ? (
+                    {balances.length === 0 && !inlineEntry && dataView !== 'details' ? (
                       <div className="data-empty">
                         <div className="data-empty-icon">
                           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -342,6 +351,13 @@ const Data: FC = () => {
                       </div>
                     ) : dataView === 'charts' ? (
                       <BalanceCharts
+                        accounts={accounts}
+                        balances={balances}
+                        allMonths={allMonths}
+                        balanceMap={balanceMap}
+                      />
+                    ) : dataView === 'details' ? (
+                      <BalanceDetails
                         accounts={accounts}
                         balances={balances}
                         allMonths={allMonths}
