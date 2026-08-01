@@ -218,7 +218,8 @@ describe('Data page integration', () => {
     await user.click(detailsTab)
 
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getAllByText('Details')).toHaveLength(2)
+    expect(screen.getByText('Net worth')).toBeInTheDocument()
+    expect(screen.getByLabelText('Joint details')).toBeInTheDocument()
     expect(screen.queryByLabelText('Copy balances from last month')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Show inactive')).not.toBeInTheDocument()

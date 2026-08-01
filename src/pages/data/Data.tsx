@@ -362,6 +362,7 @@ const Data: FC = () => {
                         balances={balances}
                         allMonths={allMonths}
                         balanceMap={balanceMap}
+                        profile={profile}
                       />
                     ) : (
                       <BalanceSpreadsheet

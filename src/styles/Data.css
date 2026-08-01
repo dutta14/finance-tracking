@@ -180,6 +180,192 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
+/* Details */
+.data-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.data-details-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.data-details-summary-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.data-details-summary-value {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-feature-settings: 'tnum';
+}
+
+.data-details-owner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.data-details-owner-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04));
+}
+
+.data-details-owner-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.data-details-owner-name {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.data-details-owner-name-muted {
+  color: var(--color-text-muted);
+}
+
+.data-details-owner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.data-details-owner-section-label {
+  margin: 0;
+  padding: 8px 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.data-details-avatar-neutral {
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
+}
+
+.account-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+.account-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.account-card__name {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.account-card__type {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.account-card__value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-feature-settings: 'tnum';
+  flex-shrink: 0;
+}
+
+.account-card--inactive {
+  opacity: 0.6;
+}
+
+.account-group-card {
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04));
+}
+
+.account-group-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.account-group-card__name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.account-group-card__total {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-feature-settings: 'tnum';
+  flex-shrink: 0;
+}
+
+.account-group-card__children {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-group-card__children .account-card {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border-light);
+  border-radius: 0.625rem;
+  padding: 10px 12px;
+}
+
+body.dark .data-details-owner-card,
+body.dark .account-group-card {
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+body.dark .account-card {
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.owner-column__empty {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  padding: 24px 0;
+  text-align: center;
+}
+
 /* Charts */
 .data-charts {
   display: flex;
@@ -2023,4 +2209,10 @@ body.dark .data-inline-cancel {
 /* ── Inline style migrations ── */
 .data-group-rename-btn--visible {
   opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .data-details-owner-grid {
+    grid-template-columns: 1fr;
+  }
 }
