@@ -1,6 +1,7 @@
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
+import MonthPicker from '../../components/MonthPicker'
 import { Profile } from '../../hooks/useProfile'
-import { Account, AccountOwner, ACCOUNT_TYPE_LABELS, BalanceEntry, formatCurrency, getOwnerLabels } from './types'
+import { Account, AccountOwner, BalanceEntry, formatCurrency, getOwnerLabels } from './types'
 
 interface BalanceDetailsProps {
   accounts: Account[]
@@ -13,8 +14,8 @@ interface BalanceDetailsProps {
 
 type AccountSection = 'asset' | 'liability'
 
-type LatestBalanceLookup = {
-  latestMonth: string | undefined
+type BalanceLookup = {
+  month: string | undefined
   balanceMap: Map<string, number>
 }
 
@@ -64,27 +65,27 @@ const getStatusRank = (account: Account) => (account.status === 'active' ? 0 : 1
 
 const getAccountSection = (account: Account): AccountSection => account.nature || 'asset'
 
-const getLatestBalance = (account: Account, { latestMonth, balanceMap }: LatestBalanceLookup) => {
-  if (!latestMonth) return undefined
-  return balanceMap.get(`${account.id}:${latestMonth}`)
+const getBalanceForMonth = (account: Account, { month, balanceMap }: BalanceLookup) => {
+  if (!month) return undefined
+  return balanceMap.get(`${account.id}:${month}`)
 }
 
-const getTotalLatestBalance = (accounts: Account[], latestBalanceLookup: LatestBalanceLookup) =>
-  accounts.reduce((sum, account) => sum + (getLatestBalance(account, latestBalanceLookup) ?? 0), 0)
+const getTotalBalanceForMonth = (accounts: Account[], balanceLookup: BalanceLookup) =>
+  accounts.reduce((sum, account) => sum + (getBalanceForMonth(account, balanceLookup) ?? 0), 0)
 
-const sortAccountsByValue = (accounts: Account[], latestBalanceLookup: LatestBalanceLookup) =>
+const sortAccountsByValue = (accounts: Account[], selectedBalanceLookup: BalanceLookup) =>
   [...accounts].sort(
     (a, b) =>
-      (getLatestBalance(b, latestBalanceLookup) ?? 0) - (getLatestBalance(a, latestBalanceLookup) ?? 0) ||
+      (getBalanceForMonth(b, selectedBalanceLookup) ?? 0) - (getBalanceForMonth(a, selectedBalanceLookup) ?? 0) ||
       getStatusRank(a) - getStatusRank(b),
   )
 
-const getDisplayItemTotal = (item: OwnerDisplayItem, latestBalanceLookup: LatestBalanceLookup) =>
+const getDisplayItemTotal = (item: OwnerDisplayItem, selectedBalanceLookup: BalanceLookup) =>
   item.kind === 'group'
-    ? getTotalLatestBalance(item.accounts, latestBalanceLookup)
-    : (getLatestBalance(item.account, latestBalanceLookup) ?? 0)
+    ? getTotalBalanceForMonth(item.accounts, selectedBalanceLookup)
+    : (getBalanceForMonth(item.account, selectedBalanceLookup) ?? 0)
 
-const buildOwnerDisplayItems = (ownerAccounts: Account[], latestBalanceLookup: LatestBalanceLookup) => {
+const buildOwnerDisplayItems = (ownerAccounts: Account[], selectedBalanceLookup: BalanceLookup) => {
   const { groups, groupOrder, ungrouped } = groupAccounts(ownerAccounts)
   const displayItems: OwnerDisplayItem[] = []
   let order = 0
@@ -107,7 +108,7 @@ const buildOwnerDisplayItems = (ownerAccounts: Account[], latestBalanceLookup: L
       return
     }
 
-    const sortedAccounts = sortAccountsByValue(groupedAccounts, latestBalanceLookup)
+    const sortedAccounts = sortAccountsByValue(groupedAccounts, selectedBalanceLookup)
     const firstAccount = groupedAccounts[0]
     const firstSortedAccount = sortedAccounts[0]
 
@@ -137,7 +138,7 @@ const buildOwnerDisplayItems = (ownerAccounts: Account[], latestBalanceLookup: L
       .sort(
         (a, b) =>
           a.statusRank - b.statusRank ||
-          getDisplayItemTotal(b, latestBalanceLookup) - getDisplayItemTotal(a, latestBalanceLookup) ||
+          getDisplayItemTotal(b, selectedBalanceLookup) - getDisplayItemTotal(a, selectedBalanceLookup) ||
           a.order - b.order,
       ),
     liability: displayItems
@@ -145,7 +146,7 @@ const buildOwnerDisplayItems = (ownerAccounts: Account[], latestBalanceLookup: L
       .sort(
         (a, b) =>
           a.statusRank - b.statusRank ||
-          getDisplayItemTotal(b, latestBalanceLookup) - getDisplayItemTotal(a, latestBalanceLookup) ||
+          getDisplayItemTotal(b, selectedBalanceLookup) - getDisplayItemTotal(a, selectedBalanceLookup) ||
           a.order - b.order,
       ),
   } satisfies Record<AccountSection, OwnerDisplayItem[]>
@@ -160,16 +161,25 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
   showInactive,
 }) => {
   const ownerLabels = useMemo(() => getOwnerLabels(profile), [profile])
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0)
 
-  const latestMonth = allMonths[0]
+  useEffect(() => {
+    if (selectedMonthIndex > allMonths.length - 1) {
+      setSelectedMonthIndex(Math.max(allMonths.length - 1, 0))
+    }
+  }, [allMonths.length, selectedMonthIndex])
+
+  const selectedMonth = allMonths[selectedMonthIndex]
+  const previousMonth = allMonths[selectedMonthIndex + 1]
+
   const netWorthTotal = useMemo(() => {
-    if (!latestMonth) return 0
+    if (!selectedMonth) return 0
 
     return accounts.reduce((sum, account) => {
       if (account.status !== 'active') return sum
-      return sum + (balanceMap.get(`${account.id}:${latestMonth}`) ?? 0)
+      return sum + (balanceMap.get(`${account.id}:${selectedMonth}`) ?? 0)
     }, 0)
-  }, [accounts, balanceMap, latestMonth])
+  }, [accounts, balanceMap, selectedMonth])
 
   const visibleAccounts = useMemo(
     () => (showInactive ? accounts : accounts.filter(account => account.status !== 'inactive')),
@@ -198,7 +208,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
         (totals, account) => {
           if (account.status !== 'active') return totals
 
-          totals[account.owner] += balanceMap.get(`${account.id}:${latestMonth}`) ?? 0
+          totals[account.owner] += balanceMap.get(`${account.id}:${selectedMonth}`) ?? 0
           return totals
         },
         {
@@ -207,25 +217,26 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
           joint: 0,
         } as Record<AccountOwner, number>,
       ),
-    [accounts, balanceMap, latestMonth],
+    [accounts, balanceMap, selectedMonth],
   )
 
   const primaryInitial = (profile.name || ownerLabels.primary || 'P')[0].toUpperCase()
   const partnerInitial = (profile.partner?.name || ownerLabels.partner || 'P')[0].toUpperCase()
   const hasPartner = !!profile.partner
 
-  const latestBalanceLookup = useMemo(() => ({ latestMonth, balanceMap }), [latestMonth, balanceMap])
+  const selectedBalanceLookup = useMemo(() => ({ month: selectedMonth, balanceMap }), [selectedMonth, balanceMap])
+  const previousBalanceLookup = useMemo(() => ({ month: previousMonth, balanceMap }), [previousMonth, balanceMap])
 
-  const getLatestValue = (account: Account) => getLatestBalance(account, latestBalanceLookup)
+  const getSelectedValue = (account: Account) => getBalanceForMonth(account, selectedBalanceLookup)
 
-  const formatLatestValue = (value: number | undefined) => (value === undefined ? '—' : formatCurrency(value))
+  const formatSelectedValue = (value: number | undefined) => (value === undefined ? '—' : formatCurrency(value))
 
-  const getGroupTotal = (groupedAccounts: Account[]) => {
+  const getGroupTotal = (groupedAccounts: Account[], balanceLookup: BalanceLookup) => {
     let total = 0
     let hasValue = false
 
     groupedAccounts.forEach(account => {
-      const value = getLatestValue(account)
+      const value = getBalanceForMonth(account, balanceLookup)
 
       if (value === undefined) return
 
@@ -236,6 +247,35 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
     return hasValue ? total : undefined
   }
 
+  const getChangeDisplay = (currentBalance: number | undefined, previousBalance: number | undefined) => {
+    if (!previousMonth || previousBalance === undefined) return null
+
+    const change = (currentBalance ?? 0) - previousBalance
+
+    if (change === 0) {
+      return {
+        className: 'account-card__change account-card__change--flat',
+        text: 'No change since last month',
+      }
+    }
+
+    const percentChange =
+      previousBalance !== 0 ? (change / previousBalance) * 100 : change > 0 ? Number.POSITIVE_INFINITY : 0
+    const amountText = formatCurrency(Math.abs(change))
+    const percentText = Number.isFinite(percentChange) ? ` (${Math.abs(percentChange).toFixed(1)}%)` : ''
+
+    return {
+      className: `account-card__change account-card__change--${change > 0 ? 'up' : 'down'}`,
+      text: `${change > 0 ? '↑' : '↓'} ${amountText}${percentText}`,
+    }
+  }
+
+  const renderChangeLine = (currentBalance: number | undefined, previousBalance: number | undefined) => {
+    const changeDisplay = getChangeDisplay(currentBalance, previousBalance)
+
+    return changeDisplay ? <span className={changeDisplay.className}>{changeDisplay.text}</span> : null
+  }
+
   const renderAccountCard = (account: Account, key?: string) => (
     <article
       key={key ?? account.id}
@@ -243,9 +283,12 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
     >
       <div className="account-card__meta">
         <span className="account-card__name">{account.name}</span>
-        <span className="account-card__type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
+        {renderChangeLine(
+          getBalanceForMonth(account, selectedBalanceLookup),
+          getBalanceForMonth(account, previousBalanceLookup),
+        )}
       </div>
-      <span className="account-card__value">{formatLatestValue(getLatestValue(account))}</span>
+      <span className="account-card__value">{formatSelectedValue(getSelectedValue(account))}</span>
     </article>
   )
 
@@ -257,8 +300,16 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
     return (
       <article key={item.groupName} className="account-group-card">
         <div className="account-group-card__header">
-          <span className="account-group-card__name">{item.groupName}</span>
-          <span className="account-group-card__total">{formatLatestValue(getGroupTotal(item.accounts))}</span>
+          <div className="account-group-card__meta">
+            <span className="account-group-card__name">{item.groupName}</span>
+            {renderChangeLine(
+              getGroupTotal(item.accounts, selectedBalanceLookup),
+              getGroupTotal(item.accounts, previousBalanceLookup),
+            )}
+          </div>
+          <span className="account-group-card__total">
+            {formatSelectedValue(getGroupTotal(item.accounts, selectedBalanceLookup))}
+          </span>
         </div>
         <div className="account-group-card__children">
           {item.accounts.map(account => renderAccountCard(account, `group-${item.groupName}-${account.id}`))}
@@ -274,7 +325,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
       return <p className="owner-column__empty">No accounts</p>
     }
 
-    const sections = buildOwnerDisplayItems(ownerAccounts, latestBalanceLookup)
+    const sections = buildOwnerDisplayItems(ownerAccounts, selectedBalanceLookup)
 
     return (
       <>
@@ -297,8 +348,21 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
   return (
     <div className="data-details">
       <div className="data-details-summary" aria-label="Net worth summary">
-        <p className="data-details-summary-label">Net worth</p>
-        <p className="data-details-summary-value">{formatCurrency(netWorthTotal)}</p>
+        <div>
+          <p className="data-details-summary-label">Net worth</p>
+          <p className="data-details-summary-value">{formatCurrency(netWorthTotal)}</p>
+        </div>
+        <MonthPicker
+          allMonths={allMonths}
+          selectedMonth={selectedMonth ?? ''}
+          onMonthChange={month => {
+            const nextMonthIndex = allMonths.indexOf(month)
+
+            if (nextMonthIndex >= 0) {
+              setSelectedMonthIndex(nextMonthIndex)
+            }
+          }}
+        />
       </div>
 
       <div className="data-details-owner-grid">

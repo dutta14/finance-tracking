@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import BalanceDetails from './BalanceDetails'
 import { makeAccount, makeBalanceEntry } from '../../test/factories'
 import type { Profile } from '../../hooks/useProfile'
@@ -51,11 +52,279 @@ describe('BalanceDetails', () => {
 
     expect(screen.getByText('Net worth')).toBeVisible()
     expect(screen.getByText('$150,000')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Choose month, currently February 2024' })).toBeVisible()
     expect(screen.getByLabelText('Alex details')).toBeVisible()
     expect(screen.getByLabelText('Sam details')).toBeVisible()
     expect(screen.getByLabelText('Joint details')).toBeVisible()
     expect(screen.getAllByText('A')).toHaveLength(2)
     expect(screen.getAllByText('S')).toHaveLength(2)
+  })
+
+  it('updates the summary and account values when navigating to a different month', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary', goalType: 'fi' }),
+          makeAccount({ id: 2, name: 'Brokerage', owner: 'partner', goalType: 'gw' }),
+        ]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2024-01', balance: 90000 }),
+          makeBalanceEntry({ id: 2, accountId: 2, month: '2024-01', balance: 45000 }),
+          makeBalanceEntry({ id: 3, accountId: 1, month: '2024-02', balance: 100000 }),
+          makeBalanceEntry({ id: 4, accountId: 2, month: '2024-02', balance: 50000 }),
+        ]}
+        allMonths={['2024-02', '2024-01']}
+        balanceMap={
+          new Map([
+            ['1:2024-01', 90000],
+            ['2:2024-01', 45000],
+            ['1:2024-02', 100000],
+            ['2:2024-02', 50000],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    const monthTrigger = screen.getByRole('button', { name: 'Choose month, currently February 2024' })
+    const previousMonthButton = screen.getByRole('button', { name: 'Previous month' })
+    const nextMonthButton = screen.getByRole('button', { name: 'Next month' })
+    const primaryColumn = screen.getByLabelText('Alex details')
+    const partnerColumn = screen.getByLabelText('Sam details')
+
+    expect(previousMonthButton).toBeEnabled()
+    expect(nextMonthButton).toBeDisabled()
+    expect(monthTrigger).toHaveTextContent('February 2024')
+    expect(screen.getByText('$150,000')).toBeVisible()
+    expect(within(primaryColumn).getByText('$100,000', { selector: '.data-details-owner-subtotal' })).toBeVisible()
+    expect(within(partnerColumn).getByText('$50,000', { selector: '.data-details-owner-subtotal' })).toBeVisible()
+    expect(within(primaryColumn).getByText('$100,000', { selector: '.account-card__value' })).toBeVisible()
+    expect(within(partnerColumn).getByText('$50,000', { selector: '.account-card__value' })).toBeVisible()
+
+    await user.click(previousMonthButton)
+
+    expect(screen.getByRole('button', { name: 'Choose month, currently January 2024' })).toHaveTextContent(
+      'January 2024',
+    )
+    expect(screen.getByText('$135,000')).toBeVisible()
+    expect(within(primaryColumn).getByText('$90,000', { selector: '.data-details-owner-subtotal' })).toBeVisible()
+    expect(within(partnerColumn).getByText('$45,000', { selector: '.data-details-owner-subtotal' })).toBeVisible()
+    expect(within(primaryColumn).getByText('$90,000', { selector: '.account-card__value' })).toBeVisible()
+    expect(within(partnerColumn).getByText('$45,000', { selector: '.account-card__value' })).toBeVisible()
+    expect(previousMonthButton).toBeDisabled()
+    expect(nextMonthButton).toBeEnabled()
+
+    await user.click(screen.getByRole('button', { name: 'Choose month, currently January 2024' }))
+    await user.click(screen.getByRole('button', { name: 'February 2024' }))
+
+    expect(screen.queryByRole('dialog', { name: 'Select month' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose month, currently February 2024' })).toHaveTextContent(
+      'February 2024',
+    )
+    expect(screen.getByText('$150,000')).toBeVisible()
+    expect(within(primaryColumn).getByText('$100,000', { selector: '.data-details-owner-subtotal' })).toBeVisible()
+    expect(within(partnerColumn).getByText('$50,000', { selector: '.data-details-owner-subtotal' })).toBeVisible()
+    expect(within(primaryColumn).getByText('$100,000', { selector: '.account-card__value' })).toBeVisible()
+    expect(within(partnerColumn).getByText('$50,000', { selector: '.account-card__value' })).toBeVisible()
+    expect(previousMonthButton).toBeEnabled()
+    expect(nextMonthButton).toBeDisabled()
+  })
+
+  it('renders month-over-month change lines for account cards and group cards', () => {
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary' }),
+          makeAccount({ id: 2, name: 'Brokerage', owner: 'primary', group: 'Investments', type: 'non-retirement' }),
+          makeAccount({ id: 3, name: 'Roth IRA', owner: 'primary', group: 'Investments', type: 'retirement' }),
+          makeAccount({ id: 4, name: 'Credit Card', owner: 'partner', nature: 'liability' }),
+          makeAccount({ id: 5, name: 'Emergency Fund', owner: 'joint' }),
+          makeAccount({ id: 6, name: 'New Account', owner: 'joint' }),
+        ]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2024-01', balance: 1000 }),
+          makeBalanceEntry({ id: 2, accountId: 2, month: '2024-01', balance: 500 }),
+          makeBalanceEntry({ id: 3, accountId: 3, month: '2024-01', balance: 0 }),
+          makeBalanceEntry({ id: 4, accountId: 4, month: '2024-01', balance: -500 }),
+          makeBalanceEntry({ id: 5, accountId: 5, month: '2024-01', balance: 300 }),
+          makeBalanceEntry({ id: 6, accountId: 1, month: '2024-02', balance: 1200 }),
+          makeBalanceEntry({ id: 7, accountId: 2, month: '2024-02', balance: 700 }),
+          makeBalanceEntry({ id: 8, accountId: 3, month: '2024-02', balance: 300 }),
+          makeBalanceEntry({ id: 9, accountId: 4, month: '2024-02', balance: -600 }),
+          makeBalanceEntry({ id: 10, accountId: 5, month: '2024-02', balance: 300 }),
+          makeBalanceEntry({ id: 11, accountId: 6, month: '2024-02', balance: 200 }),
+        ]}
+        allMonths={['2024-02', '2024-01']}
+        balanceMap={
+          new Map([
+            ['1:2024-01', 1000],
+            ['2:2024-01', 500],
+            ['3:2024-01', 0],
+            ['4:2024-01', -500],
+            ['5:2024-01', 300],
+            ['1:2024-02', 1200],
+            ['2:2024-02', 700],
+            ['3:2024-02', 300],
+            ['4:2024-02', -600],
+            ['5:2024-02', 300],
+            ['6:2024-02', 200],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    const checkingCard = screen.getByText('Checking').closest('article')
+    const investmentsGroup = screen.getByText('Investments').closest('article')
+    const rothCard = screen.getByText('Roth IRA').closest('article')
+    const creditCard = screen.getByText('Credit Card').closest('article')
+    const emergencyFund = screen.getByText('Emergency Fund').closest('article')
+    const newAccount = screen.getByText('New Account').closest('article')
+
+    expect(checkingCard).not.toBeNull()
+    expect(investmentsGroup).not.toBeNull()
+    expect(rothCard).not.toBeNull()
+    expect(creditCard).not.toBeNull()
+    expect(emergencyFund).not.toBeNull()
+    expect(newAccount).not.toBeNull()
+
+    expect(within(checkingCard as HTMLElement).getByText('↑ $200 (20.0%)')).toBeVisible()
+    expect(within(investmentsGroup as HTMLElement).getByText('↑ $500 (100.0%)')).toBeVisible()
+    expect(within(rothCard as HTMLElement).getByText('↑ $300')).toBeVisible()
+    expect(within(creditCard as HTMLElement).getByText('↓ $100 (20.0%)')).toBeVisible()
+    expect(within(emergencyFund as HTMLElement).getByText('No change since last month')).toBeVisible()
+    expect((newAccount as HTMLElement).querySelector('.account-card__change')).toBeNull()
+  })
+
+  it('hides month-over-month change lines for the oldest month view', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary' }),
+          makeAccount({ id: 2, name: 'Brokerage', owner: 'primary', group: 'Investments' }),
+          makeAccount({ id: 3, name: 'Roth IRA', owner: 'primary', group: 'Investments' }),
+        ]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2024-01', balance: 1000 }),
+          makeBalanceEntry({ id: 2, accountId: 2, month: '2024-01', balance: 500 }),
+          makeBalanceEntry({ id: 3, accountId: 3, month: '2024-01', balance: 0 }),
+          makeBalanceEntry({ id: 4, accountId: 1, month: '2024-02', balance: 1200 }),
+          makeBalanceEntry({ id: 5, accountId: 2, month: '2024-02', balance: 700 }),
+          makeBalanceEntry({ id: 6, accountId: 3, month: '2024-02', balance: 300 }),
+        ]}
+        allMonths={['2024-02', '2024-01']}
+        balanceMap={
+          new Map([
+            ['1:2024-01', 1000],
+            ['2:2024-01', 500],
+            ['3:2024-01', 0],
+            ['1:2024-02', 1200],
+            ['2:2024-02', 700],
+            ['3:2024-02', 300],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Previous month' }))
+
+    expect(document.querySelector('.account-card__change')).toBeNull()
+  })
+
+  it('renders the month picker grid with disabled months and year navigation', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <BalanceDetails
+        accounts={[makeAccount({ id: 1, name: 'Checking', owner: 'primary' })]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2025-07', balance: 1000 }),
+          makeBalanceEntry({ id: 2, accountId: 1, month: '2025-05', balance: 900 }),
+          makeBalanceEntry({ id: 3, accountId: 1, month: '2024-12', balance: 800 }),
+        ]}
+        allMonths={['2025-07', '2025-05', '2024-12']}
+        balanceMap={
+          new Map([
+            ['1:2025-07', 1000],
+            ['1:2025-05', 900],
+            ['1:2024-12', 800],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Choose month, currently July 2025' }))
+
+    const picker = screen.getByRole('dialog', { name: 'Select month' })
+
+    expect(within(picker).getByText('2025')).toBeVisible()
+    expect(within(picker).getByRole('button', { name: 'July 2025' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(picker).getByRole('button', { name: 'January 2025' })).toBeDisabled()
+    expect(within(picker).getByRole('button', { name: 'Show previous year, 2024' })).toBeEnabled()
+    expect(within(picker).getByRole('button', { name: 'Show next year, 2026' })).toBeDisabled()
+
+    await user.click(within(picker).getByRole('button', { name: 'Show previous year, 2024' }))
+
+    expect(within(screen.getByRole('dialog', { name: 'Select month' })).getByText('2024')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'December 2024' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'November 2024' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'December 2024' }))
+
+    expect(screen.queryByRole('dialog', { name: 'Select month' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose month, currently December 2024' })).toHaveTextContent(
+      'December 2024',
+    )
+  })
+
+  it('supports keyboard navigation and closes the month picker on outside click and Escape', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <BalanceDetails
+        accounts={[makeAccount({ id: 1, name: 'Checking', owner: 'primary' })]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2025-07', balance: 1000 }),
+          makeBalanceEntry({ id: 2, accountId: 1, month: '2025-05', balance: 900 }),
+        ]}
+        allMonths={['2025-07', '2025-05']}
+        balanceMap={
+          new Map([
+            ['1:2025-07', 1000],
+            ['1:2025-05', 900],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Choose month, currently July 2025' })
+
+    await user.click(trigger)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'July 2025' })).toHaveFocus())
+
+    await user.keyboard('{ArrowLeft}')
+    expect(screen.getByRole('button', { name: 'May 2025' })).toHaveFocus()
+
+    await user.click(document.body)
+    expect(screen.queryByRole('dialog', { name: 'Select month' })).not.toBeInTheDocument()
+
+    await user.click(trigger)
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog', { name: 'Select month' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
   })
 
   it('shows a no partner fallback when the profile has no partner', () => {
@@ -167,7 +436,6 @@ describe('BalanceDetails', () => {
     expect(within(primaryColumn).queryByText('Liabilities')).not.toBeInTheDocument()
     expect(within(primaryColumn).getByText('$123,456')).toBeVisible()
     expect(within(primaryColumn).getByText('Chase Checking')).toBeVisible()
-    expect(within(primaryColumn).getByText('Liquid')).toBeVisible()
     expect(within(primaryColumn).getByText('$4,220')).toBeVisible()
 
     const inactiveCard = within(primaryColumn).getByText('Roth IRA').closest('article')
@@ -175,7 +443,6 @@ describe('BalanceDetails', () => {
 
     expect(within(partnerColumn).getByText('No accounts')).toBeVisible()
     expect(within(jointColumn).getByText('Joint Brokerage')).toBeVisible()
-    expect(within(jointColumn).getByText('Non-Retirement')).toBeVisible()
     expect(within(jointColumn).getByText('Assets')).toBeVisible()
     expect(within(jointColumn).queryByText('Liabilities')).not.toBeInTheDocument()
     expect(within(jointColumn).getByText('—')).toBeVisible()
