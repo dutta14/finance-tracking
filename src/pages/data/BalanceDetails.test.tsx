@@ -45,6 +45,7 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
+        showInactive={false}
       />,
     )
 
@@ -68,11 +69,55 @@ describe('BalanceDetails', () => {
           ...baseProfile,
           partner: null,
         }}
+        showInactive={false}
       />,
     )
 
     expect(screen.getByText('No partner')).toBeVisible()
     expect(screen.getByLabelText('Partner details')).toBeVisible()
+  })
+
+  it('renders owner subtotals in headers using only active accounts from the latest month', () => {
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
+          makeAccount({ id: 2, name: 'Old Savings', owner: 'primary', status: 'inactive' }),
+          makeAccount({ id: 3, name: 'Brokerage', owner: 'partner', status: 'active' }),
+          makeAccount({ id: 4, name: 'Joint Cash', owner: 'joint', status: 'active' }),
+        ]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 12345 }),
+          makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 999999 }),
+          makeBalanceEntry({ id: 3, accountId: 3, month: '2024-02', balance: 67890 }),
+          makeBalanceEntry({ id: 4, accountId: 4, month: '2024-02', balance: 22222 }),
+        ]}
+        allMonths={['2024-02']}
+        balanceMap={
+          new Map([
+            ['1:2024-02', 12345],
+            ['2:2024-02', 999999],
+            ['3:2024-02', 67890],
+            ['4:2024-02', 22222],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={true}
+      />,
+    )
+
+    expect(
+      within(screen.getByLabelText('Alex details')).getByText('$12,345', { selector: '.data-details-owner-subtotal' }),
+    ).toBeVisible()
+    expect(
+      within(screen.getByLabelText('Sam details')).getByText('$67,890', { selector: '.data-details-owner-subtotal' }),
+    ).toBeVisible()
+    expect(
+      within(screen.getByLabelText('Joint details')).getByText('$22,222', {
+        selector: '.data-details-owner-subtotal',
+      }),
+    ).toBeVisible()
+    expect(screen.getByText('$999,999')).toBeVisible()
   })
 
   it('renders grouped accounts, inactive states, and empty owner placeholders', () => {
@@ -105,6 +150,7 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
+        showInactive={true}
       />,
     )
 
@@ -191,6 +237,7 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
+        showInactive={true}
       />,
     )
 
@@ -227,6 +274,106 @@ describe('BalanceDetails', () => {
     expect(within(jointColumn).getByText('Mixed Group')).toBeVisible()
   })
 
+  it('sorts cards by latest value within each section and sorts group children by value descending', () => {
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Cash Reserve', owner: 'primary' }),
+          makeAccount({ id: 2, name: 'Brokerage', owner: 'primary', group: 'Investments', type: 'non-retirement' }),
+          makeAccount({ id: 3, name: '401k', owner: 'primary', group: 'Investments', type: 'retirement' }),
+          makeAccount({ id: 4, name: 'HSA', owner: 'primary', type: 'retirement' }),
+          makeAccount({ id: 5, name: 'Old Savings', owner: 'primary', status: 'inactive' }),
+          makeAccount({ id: 6, name: 'Credit Card', owner: 'primary', nature: 'liability' }),
+          makeAccount({
+            id: 7,
+            name: 'Car Loan',
+            owner: 'primary',
+            nature: 'liability',
+            allocation: 'debt',
+            group: 'Loans',
+            type: 'illiquid',
+          }),
+          makeAccount({
+            id: 8,
+            name: 'Student Loan',
+            owner: 'primary',
+            nature: 'liability',
+            allocation: 'debt',
+            group: 'Loans',
+            type: 'illiquid',
+          }),
+        ]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 200000 }),
+          makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 300000 }),
+          makeBalanceEntry({ id: 3, accountId: 3, month: '2024-02', balance: 200000 }),
+          makeBalanceEntry({ id: 4, accountId: 4, month: '2024-02', balance: 100000 }),
+          makeBalanceEntry({ id: 5, accountId: 5, month: '2024-02', balance: 900000 }),
+          makeBalanceEntry({ id: 6, accountId: 6, month: '2024-02', balance: -1000 }),
+          makeBalanceEntry({ id: 7, accountId: 7, month: '2024-02', balance: -3000 }),
+          makeBalanceEntry({ id: 8, accountId: 8, month: '2024-02', balance: -2000 }),
+        ]}
+        allMonths={['2024-02']}
+        balanceMap={
+          new Map([
+            ['1:2024-02', 200000],
+            ['2:2024-02', 300000],
+            ['3:2024-02', 200000],
+            ['4:2024-02', 100000],
+            ['5:2024-02', 900000],
+            ['6:2024-02', -1000],
+            ['7:2024-02', -3000],
+            ['8:2024-02', -2000],
+          ])
+        }
+        profile={baseProfile}
+        showInactive={true}
+      />,
+    )
+
+    const primaryColumn = screen.getByLabelText('Alex details')
+    const assetsHeader = within(primaryColumn).getByText('Assets')
+    const investmentsGroup = within(primaryColumn).getByText('Investments').closest('article')
+    const cashReserve = within(primaryColumn).getByText('Cash Reserve')
+    const hsa = within(primaryColumn).getByText('HSA')
+    const oldSavings = within(primaryColumn).getByText('Old Savings')
+    const liabilitiesHeader = within(primaryColumn).getByText('Liabilities')
+    const creditCard = within(primaryColumn).getByText('Credit Card')
+    const loansGroup = within(primaryColumn).getByText('Loans').closest('article')
+
+    expect(investmentsGroup).not.toBeNull()
+    expect(
+      assetsHeader.compareDocumentPosition(investmentsGroup as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      (investmentsGroup as HTMLElement).compareDocumentPosition(cashReserve) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(cashReserve.compareDocumentPosition(hsa) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(hsa.compareDocumentPosition(oldSavings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(oldSavings.compareDocumentPosition(liabilitiesHeader) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    expect(loansGroup).not.toBeNull()
+    expect(liabilitiesHeader.compareDocumentPosition(creditCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(
+      creditCard.compareDocumentPosition(loansGroup as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+
+    expect(
+      within(investmentsGroup as HTMLElement)
+        .getByText('Brokerage')
+        .compareDocumentPosition(within(investmentsGroup as HTMLElement).getByText('401k')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      within(loansGroup as HTMLElement)
+        .getByText('Student Loan')
+        .compareDocumentPosition(within(loansGroup as HTMLElement).getByText('Car Loan')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(within(investmentsGroup as HTMLElement).getByText('$500,000')).toBeVisible()
+    expect(within(loansGroup as HTMLElement).getByText('-$5,000')).toBeVisible()
+  })
+
   it('treats accounts without a nature as assets so all accounts still render', () => {
     const accounts = [
       { ...makeAccount({ id: 1, name: 'Fallback Checking', owner: 'primary' }), nature: undefined },
@@ -260,6 +407,7 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
+        showInactive={false}
       />,
     )
 
@@ -271,5 +419,35 @@ describe('BalanceDetails', () => {
     expect(within(primaryColumn).getByText('Fallback Group')).toBeVisible()
     expect(within(primaryColumn).getByText('Grouped Savings')).toBeVisible()
     expect(within(primaryColumn).getByText('Credit Card')).toBeVisible()
+  })
+
+  it('hides inactive accounts by default and shows them when toggled on', () => {
+    const props = {
+      accounts: [
+        makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
+        makeAccount({ id: 2, name: 'Old 401k', owner: 'primary', status: 'inactive' }),
+      ],
+      balances: [
+        makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 1000 }),
+        makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 2000 }),
+      ],
+      allMonths: ['2024-02'],
+      balanceMap: new Map([
+        ['1:2024-02', 1000],
+        ['2:2024-02', 2000],
+      ]),
+      profile: baseProfile,
+    }
+
+    const { rerender } = render(<BalanceDetails {...props} showInactive={false} />)
+
+    expect(screen.getByText('Checking')).toBeVisible()
+    expect(screen.queryByText('Old 401k')).not.toBeInTheDocument()
+
+    rerender(<BalanceDetails {...props} showInactive />)
+
+    const inactiveCard = screen.getByText('Old 401k').closest('article')
+    expect(screen.getByText('Old 401k')).toBeVisible()
+    expect(inactiveCard).toHaveClass('account-card--inactive')
   })
 })

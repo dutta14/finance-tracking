@@ -8,9 +8,15 @@ interface BalanceDetailsProps {
   allMonths: string[]
   balanceMap: Map<string, number>
   profile: Profile
+  showInactive: boolean
 }
 
 type AccountSection = 'asset' | 'liability'
+
+type LatestBalanceLookup = {
+  latestMonth: string | undefined
+  balanceMap: Map<string, number>
+}
 
 type OwnerDisplayItem =
   | {
@@ -58,9 +64,27 @@ const getStatusRank = (account: Account) => (account.status === 'active' ? 0 : 1
 
 const getAccountSection = (account: Account): AccountSection => account.nature || 'asset'
 
-const sortAccountsByStatus = (accounts: Account[]) => [...accounts].sort((a, b) => getStatusRank(a) - getStatusRank(b))
+const getLatestBalance = (account: Account, { latestMonth, balanceMap }: LatestBalanceLookup) => {
+  if (!latestMonth) return undefined
+  return balanceMap.get(`${account.id}:${latestMonth}`)
+}
 
-const buildOwnerDisplayItems = (ownerAccounts: Account[]) => {
+const getTotalLatestBalance = (accounts: Account[], latestBalanceLookup: LatestBalanceLookup) =>
+  accounts.reduce((sum, account) => sum + (getLatestBalance(account, latestBalanceLookup) ?? 0), 0)
+
+const sortAccountsByValue = (accounts: Account[], latestBalanceLookup: LatestBalanceLookup) =>
+  [...accounts].sort(
+    (a, b) =>
+      (getLatestBalance(b, latestBalanceLookup) ?? 0) - (getLatestBalance(a, latestBalanceLookup) ?? 0) ||
+      getStatusRank(a) - getStatusRank(b),
+  )
+
+const getDisplayItemTotal = (item: OwnerDisplayItem, latestBalanceLookup: LatestBalanceLookup) =>
+  item.kind === 'group'
+    ? getTotalLatestBalance(item.accounts, latestBalanceLookup)
+    : (getLatestBalance(item.account, latestBalanceLookup) ?? 0)
+
+const buildOwnerDisplayItems = (ownerAccounts: Account[], latestBalanceLookup: LatestBalanceLookup) => {
   const { groups, groupOrder, ungrouped } = groupAccounts(ownerAccounts)
   const displayItems: OwnerDisplayItem[] = []
   let order = 0
@@ -83,7 +107,7 @@ const buildOwnerDisplayItems = (ownerAccounts: Account[]) => {
       return
     }
 
-    const sortedAccounts = sortAccountsByStatus(groupedAccounts)
+    const sortedAccounts = sortAccountsByValue(groupedAccounts, latestBalanceLookup)
     const firstAccount = groupedAccounts[0]
     const firstSortedAccount = sortedAccounts[0]
 
@@ -110,14 +134,31 @@ const buildOwnerDisplayItems = (ownerAccounts: Account[]) => {
   return {
     asset: displayItems
       .filter(item => item.section === 'asset')
-      .sort((a, b) => a.statusRank - b.statusRank || a.order - b.order),
+      .sort(
+        (a, b) =>
+          a.statusRank - b.statusRank ||
+          getDisplayItemTotal(b, latestBalanceLookup) - getDisplayItemTotal(a, latestBalanceLookup) ||
+          a.order - b.order,
+      ),
     liability: displayItems
       .filter(item => item.section === 'liability')
-      .sort((a, b) => a.statusRank - b.statusRank || a.order - b.order),
+      .sort(
+        (a, b) =>
+          a.statusRank - b.statusRank ||
+          getDisplayItemTotal(b, latestBalanceLookup) - getDisplayItemTotal(a, latestBalanceLookup) ||
+          a.order - b.order,
+      ),
   } satisfies Record<AccountSection, OwnerDisplayItem[]>
 }
 
-const BalanceDetails: FC<BalanceDetailsProps> = ({ accounts, balances: _balances, allMonths, balanceMap, profile }) => {
+const BalanceDetails: FC<BalanceDetailsProps> = ({
+  accounts,
+  balances: _balances,
+  allMonths,
+  balanceMap,
+  profile,
+  showInactive,
+}) => {
   const ownerLabels = useMemo(() => getOwnerLabels(profile), [profile])
 
   const latestMonth = allMonths[0]
@@ -130,9 +171,14 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({ accounts, balances: _balances
     }, 0)
   }, [accounts, balanceMap, latestMonth])
 
+  const visibleAccounts = useMemo(
+    () => (showInactive ? accounts : accounts.filter(account => account.status !== 'inactive')),
+    [accounts, showInactive],
+  )
+
   const accountsByOwner = useMemo<Record<AccountOwner, Account[]>>(
     () =>
-      accounts.reduce(
+      visibleAccounts.reduce(
         (grouped, account) => {
           grouped[account.owner].push(account)
           return grouped
@@ -143,17 +189,34 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({ accounts, balances: _balances
           joint: [],
         } as Record<AccountOwner, Account[]>,
       ),
-    [accounts],
+    [visibleAccounts],
+  )
+
+  const ownerSubtotals = useMemo<Record<AccountOwner, number>>(
+    () =>
+      accounts.reduce(
+        (totals, account) => {
+          if (account.status !== 'active') return totals
+
+          totals[account.owner] += balanceMap.get(`${account.id}:${latestMonth}`) ?? 0
+          return totals
+        },
+        {
+          primary: 0,
+          partner: 0,
+          joint: 0,
+        } as Record<AccountOwner, number>,
+      ),
+    [accounts, balanceMap, latestMonth],
   )
 
   const primaryInitial = (profile.name || ownerLabels.primary || 'P')[0].toUpperCase()
   const partnerInitial = (profile.partner?.name || ownerLabels.partner || 'P')[0].toUpperCase()
   const hasPartner = !!profile.partner
 
-  const getLatestValue = (account: Account) => {
-    if (!latestMonth) return undefined
-    return balanceMap.get(`${account.id}:${latestMonth}`)
-  }
+  const latestBalanceLookup = useMemo(() => ({ latestMonth, balanceMap }), [latestMonth, balanceMap])
+
+  const getLatestValue = (account: Account) => getLatestBalance(account, latestBalanceLookup)
 
   const formatLatestValue = (value: number | undefined) => (value === undefined ? '—' : formatCurrency(value))
 
@@ -211,7 +274,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({ accounts, balances: _balances
       return <p className="owner-column__empty">No accounts</p>
     }
 
-    const sections = buildOwnerDisplayItems(ownerAccounts)
+    const sections = buildOwnerDisplayItems(ownerAccounts, latestBalanceLookup)
 
     return (
       <>
@@ -241,42 +304,22 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({ accounts, balances: _balances
       <div className="data-details-owner-grid">
         <section className="data-details-owner-card" aria-label={`${ownerLabels.primary} details`}>
           <div className="data-details-owner-header">
-            <div className="data-owner-avatar data-owner-avatar-primary">
-              {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" /> : primaryInitial}
+            <div className="data-details-owner-identity">
+              <div className="data-owner-avatar data-owner-avatar-primary">
+                {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" /> : primaryInitial}
+              </div>
+              <div className="data-details-owner-labels">
+                <span className="data-details-owner-name">{ownerLabels.primary}</span>
+              </div>
             </div>
-            <span className="data-details-owner-name">{ownerLabels.primary}</span>
+            <span className="data-details-owner-subtotal">{formatCurrency(ownerSubtotals.primary)}</span>
           </div>
           <div className="data-details-owner-body">{renderOwnerBody('primary')}</div>
         </section>
 
         <section className="data-details-owner-card" aria-label={`${ownerLabels.partner} details`}>
           <div className="data-details-owner-header">
-            <div
-              className={`data-owner-avatar ${hasPartner ? 'data-owner-avatar-partner' : 'data-details-avatar-neutral'}`}
-            >
-              {hasPartner ? (
-                profile.partner?.avatarDataUrl ? (
-                  <img src={profile.partner.avatarDataUrl} alt="" />
-                ) : (
-                  partnerInitial
-                )
-              ) : (
-                partnerInitial
-              )}
-            </div>
-            <span className={`data-details-owner-name${hasPartner ? '' : ' data-details-owner-name-muted'}`}>
-              {hasPartner ? ownerLabels.partner : 'No partner'}
-            </span>
-          </div>
-          <div className="data-details-owner-body">{renderOwnerBody('partner')}</div>
-        </section>
-
-        <section className="data-details-owner-card" aria-label="Joint details">
-          <div className="data-details-owner-header">
-            <div className="data-owner-avatar-group" aria-hidden="true">
-              <div className="data-owner-avatar data-owner-avatar-primary">
-                {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" /> : primaryInitial}
-              </div>
+            <div className="data-details-owner-identity">
               <div
                 className={`data-owner-avatar ${hasPartner ? 'data-owner-avatar-partner' : 'data-details-avatar-neutral'}`}
               >
@@ -290,8 +333,43 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({ accounts, balances: _balances
                   partnerInitial
                 )}
               </div>
+              <div className="data-details-owner-labels">
+                <span className={`data-details-owner-name${hasPartner ? '' : ' data-details-owner-name-muted'}`}>
+                  {hasPartner ? ownerLabels.partner : 'No partner'}
+                </span>
+              </div>
             </div>
-            <span className="data-details-owner-name">{ownerLabels.joint}</span>
+            <span className="data-details-owner-subtotal">{formatCurrency(ownerSubtotals.partner)}</span>
+          </div>
+          <div className="data-details-owner-body">{renderOwnerBody('partner')}</div>
+        </section>
+
+        <section className="data-details-owner-card" aria-label="Joint details">
+          <div className="data-details-owner-header">
+            <div className="data-details-owner-identity">
+              <div className="data-owner-avatar-group" aria-hidden="true">
+                <div className="data-owner-avatar data-owner-avatar-primary">
+                  {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" /> : primaryInitial}
+                </div>
+                <div
+                  className={`data-owner-avatar ${hasPartner ? 'data-owner-avatar-partner' : 'data-details-avatar-neutral'}`}
+                >
+                  {hasPartner ? (
+                    profile.partner?.avatarDataUrl ? (
+                      <img src={profile.partner.avatarDataUrl} alt="" />
+                    ) : (
+                      partnerInitial
+                    )
+                  ) : (
+                    partnerInitial
+                  )}
+                </div>
+              </div>
+              <div className="data-details-owner-labels">
+                <span className="data-details-owner-name">{ownerLabels.joint}</span>
+              </div>
+            </div>
+            <span className="data-details-owner-subtotal">{formatCurrency(ownerSubtotals.joint)}</span>
           </div>
           <div className="data-details-owner-body">{renderOwnerBody('joint')}</div>
         </section>

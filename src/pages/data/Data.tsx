@@ -286,7 +286,7 @@ const Data: FC = () => {
                         </button>
                       </div>
                       <div className="data-toolbar-actions">
-                        {dataView === 'spreadsheet' && (
+                        {(dataView === 'spreadsheet' || dataView === 'details') && (
                           <label className="data-filter-toggle">
                             <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
                             Show inactive
@@ -363,6 +363,7 @@ const Data: FC = () => {
                         allMonths={allMonths}
                         balanceMap={balanceMap}
                         profile={profile}
+                        showInactive={showInactive}
                       />
                     ) : (
                       <BalanceSpreadsheet

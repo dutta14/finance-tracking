@@ -206,7 +206,7 @@ describe('Data page integration', () => {
     expect(chartsTab).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('switches to the Details view and hides spreadsheet-only controls when the Details tab is selected', async () => {
+  it('switches to the Details view and shows the inactive toggle without spreadsheet-only actions', async () => {
     const user = userEvent.setup()
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
@@ -220,9 +220,9 @@ describe('Data page integration', () => {
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('Net worth')).toBeInTheDocument()
     expect(screen.getByLabelText('Joint details')).toBeInTheDocument()
+    expect(screen.getByLabelText('Show inactive')).toBeInTheDocument()
     expect(screen.queryByLabelText('Copy balances from last month')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Show inactive')).not.toBeInTheDocument()
   })
 
   it('renders the Allocation tab when navigated to /net-worth/allocation', async () => {

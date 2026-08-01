@@ -228,13 +228,35 @@
 .data-details-owner-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+}
+
+.data-details-owner-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.data-details-owner-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .data-details-owner-name {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   color: var(--color-text);
+}
+
+.data-details-owner-subtotal {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-feature-settings: 'tnum';
+  white-space: nowrap;
 }
 
 .data-details-owner-name-muted {
