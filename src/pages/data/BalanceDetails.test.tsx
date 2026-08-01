@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { useMemo, useState } from 'react'
+import { describe, it, expect, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BalanceDetails from './BalanceDetails'
 import { makeAccount, makeBalanceEntry } from '../../test/factories'
@@ -716,5 +717,141 @@ describe('BalanceDetails', () => {
     const inactiveCard = screen.getByText('Old 401k').closest('article')
     expect(screen.getByText('Old 401k')).toBeVisible()
     expect(inactiveCard).toHaveClass('account-card--inactive')
+  })
+
+  it('creates a new month in place with copied balances, live totals, and save selection', async () => {
+    const user = userEvent.setup()
+    const onSaveMonth = vi.fn()
+
+    const MonthCreationHarness = () => {
+      const accounts = [
+        makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
+        makeAccount({ id: 2, name: 'Brokerage', owner: 'partner', status: 'active' }),
+        makeAccount({ id: 3, name: 'Old Savings', owner: 'joint', status: 'inactive' }),
+      ]
+      const [balances, setBalances] = useState([
+        makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 100000 }),
+        makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 50000 }),
+        makeBalanceEntry({ id: 3, accountId: 3, month: '2024-02', balance: 25000 }),
+      ])
+
+      const allMonths = useMemo(
+        () => [...new Set(balances.map(balance => balance.month))].sort((a, b) => b.localeCompare(a)),
+        [balances],
+      )
+      const balanceMap = useMemo(
+        () => new Map(balances.map(balance => [`${balance.accountId}:${balance.month}`, balance.balance])),
+        [balances],
+      )
+
+      return (
+        <BalanceDetails
+          accounts={accounts}
+          balances={balances}
+          allMonths={allMonths}
+          balanceMap={balanceMap}
+          profile={baseProfile}
+          showInactive
+          onSaveMonth={(month, values) => {
+            onSaveMonth(month, values)
+
+            setBalances(current => {
+              let nextId = current.length > 0 ? Math.max(...current.map(balance => balance.id)) + 1 : 1
+              const nextBalances = [...current]
+
+              Object.entries(values).forEach(([accountId, balance]) => {
+                nextBalances.push({
+                  id: nextId++,
+                  accountId: Number(accountId),
+                  month,
+                  balance,
+                })
+              })
+
+              return nextBalances
+            })
+          }}
+        />
+      )
+    }
+
+    render(<MonthCreationHarness />)
+
+    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+
+    expect(screen.getByLabelText('Month')).toHaveValue('2024-03')
+    expect(screen.getByRole('radio', { name: 'Copy from last month' })).toBeChecked()
+
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(screen.getByText('Entering balances for March 2024')).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'Add Month' })).not.toBeInTheDocument()
+
+    const checkingInput = screen.getByRole('textbox', { name: 'Checking balance' })
+    const brokerageInput = screen.getByRole('textbox', { name: 'Brokerage balance' })
+
+    await waitFor(() => expect(checkingInput).toHaveFocus())
+    expect(checkingInput).toHaveValue('100000')
+    expect(brokerageInput).toHaveValue('50000')
+    expect(screen.queryByRole('textbox', { name: 'Old Savings balance' })).not.toBeInTheDocument()
+
+    await user.clear(checkingInput)
+    await user.type(checkingInput, '$110,000')
+    await user.clear(brokerageInput)
+    await user.type(brokerageInput, '55,000')
+
+    expect(screen.getByText('$165,000')).toBeVisible()
+    expect(
+      within(screen.getByLabelText('Alex details')).getByText('$110,000', { selector: '.data-details-owner-subtotal' }),
+    ).toBeVisible()
+    expect(
+      within(screen.getByLabelText('Sam details')).getByText('$55,000', { selector: '.data-details-owner-subtotal' }),
+    ).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(onSaveMonth).toHaveBeenCalledWith('2024-03', { '1': 110000, '2': 55000 })
+    expect(screen.queryByText('Entering balances for March 2024')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose month, currently March 2024' })).toBeVisible()
+    expect(screen.getByText('$165,000')).toBeVisible()
+    expect(screen.getByText('Old Savings')).toBeVisible()
+  })
+
+  it('validates duplicate months and cancels month creation from the popover and edit mode', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <BalanceDetails
+        accounts={[makeAccount({ id: 1, name: 'Checking', owner: 'primary' })]}
+        balances={[makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 1000 })]}
+        allMonths={['2024-02']}
+        balanceMap={new Map([['1:2024-02', 1000]])}
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('dialog', { name: 'Add month' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    fireEvent.change(screen.getByLabelText('Month'), { target: { value: '2024-02' } })
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(screen.getByText('That month already exists.')).toBeVisible()
+
+    fireEvent.change(screen.getByLabelText('Month'), { target: { value: '2024-04' } })
+    await user.click(screen.getByRole('radio', { name: 'Start blank' }))
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(screen.getByText('Entering balances for April 2024')).toBeVisible()
+    expect(screen.getByRole('textbox', { name: 'Checking balance' })).toHaveValue('')
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByText('Entering balances for April 2024')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add Month' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Choose month, currently February 2024' })).toBeVisible()
   })
 })

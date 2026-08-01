@@ -133,6 +133,29 @@ const Data: FC = () => {
     setInlineEntry(null)
   }
 
+  const handleSaveMonth = (month: string, values: Record<string, number>) => {
+    let updated = [...balances]
+    let nextId = updated.length > 0 ? Math.max(...updated.map(b => b.id)) + 1 : 1
+    const activeAccountIds = new Set(activeAccounts.map(account => account.id))
+
+    Object.entries(values).forEach(([accountId, balance]) => {
+      const parsedAccountId = Number(accountId)
+
+      if (!Number.isInteger(parsedAccountId) || !activeAccountIds.has(parsedAccountId)) return
+
+      const existing = updated.find(entry => entry.accountId === parsedAccountId && entry.month === month)
+
+      if (existing) {
+        updated = updated.map(entry => (entry.id === existing.id ? { ...entry, balance } : entry))
+        return
+      }
+
+      updated.push({ id: nextId++, accountId: parsedAccountId, month, balance })
+    })
+
+    saveBalances(updated)
+  }
+
   const handleDeleteMonth = (month: string) => {
     saveBalances(balances.filter(b => b.month !== month))
   }
@@ -364,6 +387,7 @@ const Data: FC = () => {
                         balanceMap={balanceMap}
                         profile={profile}
                         showInactive={showInactive}
+                        onSaveMonth={handleSaveMonth}
                       />
                     ) : (
                       <BalanceSpreadsheet
