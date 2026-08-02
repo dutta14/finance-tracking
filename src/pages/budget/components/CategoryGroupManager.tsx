@@ -42,8 +42,9 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     (cat: string): boolean => {
       const vals = Object.values(categorySums[cat] || {})
       if (vals.length === 0) return false
-      const total = vals.reduce((s, v) => s + v, 0)
-      return total > 0
+      const hasNegative = vals.some(v => v < 0)
+      if (hasNegative) return false
+      return vals.some(v => v > 0)
     },
     [categorySums],
   )

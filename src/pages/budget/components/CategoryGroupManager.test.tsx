@@ -33,9 +33,7 @@ describe('CategoryGroupManager', () => {
   it('renders the title and hint text', () => {
     render(<CategoryGroupManager {...defaultProps} />)
     expect(screen.getByText('Expense Category Groups')).toBeInTheDocument()
-    expect(
-      screen.getByText(/Drag categories between groups or drag group headers to reorder/),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Drag categories between groups or drag group headers to reorder/)).toBeInTheDocument()
   })
 
   it('renders all group names', () => {
