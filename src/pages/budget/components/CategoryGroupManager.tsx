@@ -96,6 +96,16 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
   // All expense categories across all groups for merge mode
   const allExpenseCats = displayGroups.flatMap(g => g.displayCategories).sort((a, b) => a.localeCompare(b))
 
+  const currencyFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+
+  const getCatStats = (cat: string) => {
+    const months = categorySums[cat] || {}
+    const entries = Object.values(months).filter(v => v !== 0)
+    const monthCount = entries.length
+    const total = entries.reduce((s, v) => s + v, 0)
+    return { monthCount, total }
+  }
+
   const toggleExpanded = (id: string) => {
     setExpandedGroups(prev => {
       const next = new Set(prev)
@@ -249,6 +259,49 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
         </div>
       </div>
 
+      {mergeMode && (
+        <div className="budget-merge-panel">
+          <h4 className="budget-merge-title">Merge Categories</h4>
+          <p className="budget-merge-step">1. Click categories below to select them
+            <span className="budget-merge-count">{mergeSelected.size} selected</span>
+          </p>
+          <p className="budget-merge-step">2. Choose the merged name:</p>
+          <div className="budget-merge-controls">
+            <select
+              className="budget-merge-select"
+              value={mergeTargetName}
+              onChange={e => setMergeTargetName(e.target.value)}
+            >
+              <option value="">Select target name…</option>
+              {[...mergeSelected]
+                .sort((a, b) => a.localeCompare(b))
+                .map(c => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+            </select>
+            <span className="budget-merge-or">or</span>
+            <input
+              className="budget-group-input"
+              value={mergeSelected.has(mergeTargetName) ? '' : mergeTargetName}
+              onChange={e => setMergeTargetName(e.target.value)}
+              placeholder="Type new name"
+            />
+            <button
+              className="budget-group-add-btn"
+              onClick={handleMerge}
+              disabled={mergeSelected.size < 2 || !mergeTargetName.trim()}
+            >
+              Merge
+            </button>
+            <button className="budget-group-add-btn" onClick={cancelMerge}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="budget-group-list">
         {displayGroups.map(g => {
           const isExpanded = expandedGroups.has(g.id)
@@ -356,7 +409,12 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                   ) : (
                     [...g.displayCategories]
                       .sort((a, b) => a.localeCompare(b))
-                      .map(cat => (
+                      .map(cat => {
+                        const { monthCount, total } = getCatStats(cat)
+                        const tooltip = monthCount > 0
+                          ? `${currencyFmt.format(Math.abs(total))} across ${monthCount} month${monthCount === 1 ? '' : 's'}`
+                          : undefined
+                        return (
                         <div
                           key={cat}
                           className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeMode && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}${mergeMode ? ' budget-group-cat--clickable' : ''}`}
@@ -364,9 +422,13 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                           onDragStart={e => !mergeMode && handleDragStart(e, cat, g.id)}
                           onDragEnd={handleDragEnd}
                           onClick={() => mergeMode && toggleMergeSelect(cat)}
+                          title={tooltip}
                         >
                           <span className="budget-group-cat-handle">⠿</span>
                           <span className="budget-group-cat-name">{displayCat(cat, g.name)}</span>
+                          {monthCount > 0 && (
+                            <span className="budget-group-cat-months">{monthCount}</span>
+                          )}
                           {!mergeMode && (
                             <button
                               className="budget-group-cat-delete"
@@ -380,7 +442,8 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                             </button>
                           )}
                         </div>
-                      ))
+                        )
+                      })
                   )}
                 </div>
               )}
@@ -388,44 +451,6 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
           )
         })}
       </div>
-
-      {mergeMode && (
-        <div className="budget-merge-panel">
-          <p className="budget-merge-hint">
-            Click categories above to select them ({mergeSelected.size} selected). Then choose the target name:
-          </p>
-          <div className="budget-merge-controls">
-            <select
-              className="budget-merge-select"
-              value={mergeTargetName}
-              onChange={e => setMergeTargetName(e.target.value)}
-            >
-              <option value="">Select target name…</option>
-              {[...mergeSelected]
-                .sort((a, b) => a.localeCompare(b))
-                .map(c => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-            </select>
-            <span className="budget-merge-or">or</span>
-            <input
-              className="budget-group-input"
-              value={mergeSelected.has(mergeTargetName) ? '' : mergeTargetName}
-              onChange={e => setMergeTargetName(e.target.value)}
-              placeholder="Type new name"
-            />
-            <button
-              className="budget-group-add-btn"
-              onClick={handleMerge}
-              disabled={mergeSelected.size < 2 || !mergeTargetName.trim()}
-            >
-              Merge
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Delete category merge prompt */}
       {deletingCat && (
