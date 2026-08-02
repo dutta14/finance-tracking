@@ -11,7 +11,7 @@ section.goal {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 /* Tab bar */
@@ -375,9 +375,17 @@ section.goal {
 
 .goals-mini-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  max-width: 100%;
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+@media (min-width: 700px) {
+  .goals-mini-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 }
 
 /* Drag and drop */
