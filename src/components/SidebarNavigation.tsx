@@ -50,15 +50,13 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
       </div>
       {sidebarOpen && (
         <>
-          <button className="sidebar-search-btn" onClick={() => setSearchOpen(true)}>
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            Search
-            <kbd className="sidebar-search-kbd">{navigator.platform?.includes('Mac') ? '⌘K' : 'Ctrl+K'}</kbd>
-          </button>
           <ul className="sidebar-menu">
+            <li className="sidebar-item">
+              <button className="sidebar-link" onClick={() => setSearchOpen(true)}>
+                Search
+                <kbd className="sidebar-search-kbd">{navigator.platform?.includes('Mac') ? '⌘K' : 'Ctrl+K'}</kbd>
+              </button>
+            </li>
             <li className="sidebar-item">
               <button
                 className={`sidebar-link${currentPage === 'home' ? ' active' : ''}`}
