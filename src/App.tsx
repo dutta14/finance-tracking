@@ -76,7 +76,7 @@ const AppShell: FC = () => {
       ? 'goal'
       : location.pathname.startsWith('/net-worth')
         ? 'net-worth'
-        : location.pathname === '/budget'
+        : location.pathname.startsWith('/budget')
           ? 'budget'
           : location.pathname.startsWith('/drive')
             ? 'drive'
@@ -190,14 +190,14 @@ const AppShell: FC = () => {
             />
             <Route path="/data" element={<Navigate to="/net-worth" replace />} />
             <Route
-              path="/budget"
+              path="/budget/*"
               element={
                 <ErrorBoundary variant="card" resetKey={location.pathname}>
                   <Budget />
                 </ErrorBoundary>
               }
             />
-            <Route path="/tools" element={<Navigate to="/budget" replace />} />
+            <Route path="/tools" element={<Navigate to="/budget/spreadsheet" replace />} />
             <Route
               path="/drive/*"
               element={

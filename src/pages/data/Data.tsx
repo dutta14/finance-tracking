@@ -1,5 +1,5 @@
 import { FC, useState, useRef, lazy, Suspense } from 'react'
-import { NavLink, useLocation, Routes, Route } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useSettings } from '../../contexts/SettingsContext'
 import { useGitHubSyncContext } from '../../contexts/GitHubSyncContext'
@@ -30,7 +30,6 @@ const Data: FC = () => {
   } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
   const [showInactive, setShowInactive] = useState(false)
-  const [dataView, setDataView] = useState<'charts' | 'spreadsheet' | 'details'>('charts')
 
   const accountsRef = useRef(accounts)
   accountsRef.current = accounts
@@ -183,7 +182,206 @@ const Data: FC = () => {
   for (const b of balances) balanceMap.set(`${b.accountId}:${b.month}`, b.balance)
 
   const location = useLocation()
-  const activeTab = location.pathname.replace('/net-worth', '').replace(/^\//, '') || 'accounts'
+  const navigate = useNavigate()
+  const activeTab = location.pathname.startsWith('/net-worth/allocation')
+    ? 'allocation'
+    : location.pathname.startsWith('/net-worth/growth')
+      ? 'growth'
+      : 'accounts'
+  const accountsPath = location.pathname.replace('/net-worth/accounts', '').replace('/net-worth', '').replace(/^\//, '')
+  const dataView = accountsPath === 'details' ? 'details' : accountsPath === 'spreadsheet' ? 'spreadsheet' : 'charts'
+  const accountsContent = (
+    <>
+      <div className="data-header-actions">
+        {allowCsvImport && (
+          <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
+            Import from CSV
+          </button>
+        )}
+        {allowCsvImport && hasAccounts && balances.length > 0 && (
+          <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
+            Export CSV
+          </button>
+        )}
+        {allowCsvImport && (hasAccounts || balances.length > 0) && (
+          <button
+            className="data-reset-btn"
+            onClick={() => {
+              if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
+                saveBoth([], [])
+              }
+            }}
+          >
+            Reset Data
+          </button>
+        )}
+        {hasAccounts && (
+          <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
+            View Accounts ({accounts.length})
+          </button>
+        )}
+      </div>
+
+      <div className="data-content">
+        {!hasAccounts ? (
+          <div className="data-empty">
+            <div className="data-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" strokeWidth="2" />
+                <path d="M6 18h36" stroke="currentColor" strokeWidth="2" />
+                <path d="M18 18v20" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </div>
+            <p className="data-empty-title">No accounts yet</p>
+            <p className="data-empty-subtitle">
+              Add your first account{allowCsvImport ? ' or import from a CSV' : ''} to get started
+            </p>
+            <div className="data-empty-actions">
+              <button className="data-add-btn" onClick={() => setShowAccountsModal(true)}>
+                + Add Account
+              </button>
+              {allowCsvImport && (
+                <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
+                  Import from CSV
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="data-toolbar">
+              <div className="data-view-tabs" role="tablist" aria-label="Data view">
+                <button
+                  className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`}
+                  role="tab"
+                  aria-selected={dataView === 'charts'}
+                  onClick={() => navigate('/net-worth/accounts')}
+                >
+                  Charts
+                </button>
+                <button
+                  className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
+                  role="tab"
+                  aria-selected={dataView === 'details'}
+                  onClick={() => navigate('/net-worth/accounts/details')}
+                >
+                  Details
+                </button>
+                <button
+                  className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
+                  role="tab"
+                  aria-selected={dataView === 'spreadsheet'}
+                  onClick={() => navigate('/net-worth/accounts/spreadsheet')}
+                >
+                  Spreadsheet
+                </button>
+              </div>
+              <div className="data-toolbar-actions">
+                {(dataView === 'spreadsheet' || dataView === 'details') && (
+                  <label className="data-filter-toggle">
+                    <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
+                    Show inactive
+                  </label>
+                )}
+                {dataView === 'spreadsheet' && (
+                  <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
+                    + Add Entry
+                  </button>
+                )}
+                {dataView === 'spreadsheet' && allMonths.length > 0 && (
+                  <button
+                    className="data-copy-forward-btn"
+                    onClick={handleCopyForwardEntry}
+                    disabled={!!inlineEntry}
+                    title={`Pre-fill with balances from ${allMonths[0]}`}
+                    aria-label="Copy balances from last month"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                    <span className="data-copy-forward-label">Copy Last Month</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {balances.length === 0 && !inlineEntry && dataView !== 'details' ? (
+              <div className="data-empty">
+                <div className="data-empty-icon">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 36V20m8 16V16m8 20V24m8 12V12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <p className="data-empty-title">No balance entries yet</p>
+                <p className="data-empty-subtitle">Record your first monthly balance or import from CSV</p>
+                <div className="data-empty-actions">
+                  <button className="data-add-entry-btn" onClick={handleStartInlineEntry}>
+                    + Add Entry
+                  </button>
+                </div>
+              </div>
+            ) : dataView === 'charts' ? (
+              <BalanceCharts accounts={accounts} balances={balances} allMonths={allMonths} balanceMap={balanceMap} />
+            ) : dataView === 'details' ? (
+              <BalanceDetails
+                accounts={accounts}
+                balances={balances}
+                allMonths={allMonths}
+                balanceMap={balanceMap}
+                profile={profile}
+                showInactive={showInactive}
+                onSaveMonth={handleSaveMonth}
+              />
+            ) : (
+              <BalanceSpreadsheet
+                spreadsheetAccounts={spreadsheetAccounts}
+                allAccounts={accounts}
+                balances={balances}
+                allMonths={allMonths}
+                balanceMap={balanceMap}
+                profile={profile}
+                inlineEntry={inlineEntry}
+                onInlineEntryChange={setInlineEntry}
+                onSaveInlineEntry={handleSaveInlineEntry}
+                onCancelInlineEntry={() => setInlineEntry(null)}
+                onDeleteMonth={handleDeleteMonth}
+              />
+            )}
+          </>
+        )}
+      </div>
+
+      {showAccountsModal && (
+        <AccountsModal
+          accounts={accounts}
+          profile={profile}
+          onAdd={handleAddAccount}
+          onUpdate={handleUpdateAccount}
+          onBulkUpdate={handleBulkUpdateAccounts}
+          onDelete={handleDeleteAccount}
+          onToggleStatus={handleToggleStatus}
+          onRenameGroup={handleRenameGroup}
+          onClose={() => setShowAccountsModal(false)}
+        />
+      )}
+    </>
+  )
 
   return (
     <div className="data-page">
@@ -204,11 +402,7 @@ const Data: FC = () => {
       </div>
 
       <nav className="nw-tab-bar" aria-label="Net Worth sections">
-        <NavLink
-          to="/net-worth"
-          end
-          className={({ isActive }) => `nw-tab${isActive || activeTab === 'accounts' ? ' active' : ''}`}
-        >
+        <NavLink to="/net-worth/accounts" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
           Accounts
         </NavLink>
         <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
@@ -220,210 +414,8 @@ const Data: FC = () => {
       </nav>
 
       <Routes>
-        <Route
-          index
-          element={
-            <>
-              <div className="data-header-actions">
-                {allowCsvImport && (
-                  <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
-                    Import from CSV
-                  </button>
-                )}
-                {allowCsvImport && hasAccounts && balances.length > 0 && (
-                  <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
-                    Export CSV
-                  </button>
-                )}
-                {allowCsvImport && (hasAccounts || balances.length > 0) && (
-                  <button
-                    className="data-reset-btn"
-                    onClick={() => {
-                      if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
-                        saveBoth([], [])
-                      }
-                    }}
-                  >
-                    Reset Data
-                  </button>
-                )}
-                {hasAccounts && (
-                  <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
-                    View Accounts ({accounts.length})
-                  </button>
-                )}
-              </div>
-
-              <div className="data-content">
-                {!hasAccounts ? (
-                  <div className="data-empty">
-                    <div className="data-empty-icon">
-                      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                        <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" strokeWidth="2" />
-                        <path d="M6 18h36" stroke="currentColor" strokeWidth="2" />
-                        <path d="M18 18v20" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                    </div>
-                    <p className="data-empty-title">No accounts yet</p>
-                    <p className="data-empty-subtitle">
-                      Add your first account{allowCsvImport ? ' or import from a CSV' : ''} to get started
-                    </p>
-                    <div className="data-empty-actions">
-                      <button className="data-add-btn" onClick={() => setShowAccountsModal(true)}>
-                        + Add Account
-                      </button>
-                      {allowCsvImport && (
-                        <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
-                          Import from CSV
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="data-toolbar">
-                      <div className="data-view-tabs" role="tablist" aria-label="Data view">
-                        <button
-                          className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`}
-                          role="tab"
-                          aria-selected={dataView === 'charts'}
-                          onClick={() => setDataView('charts')}
-                        >
-                          Charts
-                        </button>
-                        <button
-                          className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
-                          role="tab"
-                          aria-selected={dataView === 'details'}
-                          onClick={() => setDataView('details')}
-                        >
-                          Details
-                        </button>
-                        <button
-                          className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
-                          role="tab"
-                          aria-selected={dataView === 'spreadsheet'}
-                          onClick={() => setDataView('spreadsheet')}
-                        >
-                          Spreadsheet
-                        </button>
-                      </div>
-                      <div className="data-toolbar-actions">
-                        {(dataView === 'spreadsheet' || dataView === 'details') && (
-                          <label className="data-filter-toggle">
-                            <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
-                            Show inactive
-                          </label>
-                        )}
-                        {dataView === 'spreadsheet' && (
-                          <button
-                            className="data-add-entry-btn"
-                            onClick={handleStartInlineEntry}
-                            disabled={!!inlineEntry}
-                          >
-                            + Add Entry
-                          </button>
-                        )}
-                        {dataView === 'spreadsheet' && allMonths.length > 0 && (
-                          <button
-                            className="data-copy-forward-btn"
-                            onClick={handleCopyForwardEntry}
-                            disabled={!!inlineEntry}
-                            title={`Pre-fill with balances from ${allMonths[0]}`}
-                            aria-label="Copy balances from last month"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
-                            >
-                              <rect x="9" y="9" width="13" height="13" rx="2" />
-                              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                            </svg>
-                            <span className="data-copy-forward-label">Copy Last Month</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {balances.length === 0 && !inlineEntry && dataView !== 'details' ? (
-                      <div className="data-empty">
-                        <div className="data-empty-icon">
-                          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                            <path
-                              d="M12 36V20m8 16V16m8 20V24m8 12V12"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </div>
-                        <p className="data-empty-title">No balance entries yet</p>
-                        <p className="data-empty-subtitle">Record your first monthly balance or import from CSV</p>
-                        <div className="data-empty-actions">
-                          <button className="data-add-entry-btn" onClick={handleStartInlineEntry}>
-                            + Add Entry
-                          </button>
-                        </div>
-                      </div>
-                    ) : dataView === 'charts' ? (
-                      <BalanceCharts
-                        accounts={accounts}
-                        balances={balances}
-                        allMonths={allMonths}
-                        balanceMap={balanceMap}
-                      />
-                    ) : dataView === 'details' ? (
-                      <BalanceDetails
-                        accounts={accounts}
-                        balances={balances}
-                        allMonths={allMonths}
-                        balanceMap={balanceMap}
-                        profile={profile}
-                        showInactive={showInactive}
-                        onSaveMonth={handleSaveMonth}
-                      />
-                    ) : (
-                      <BalanceSpreadsheet
-                        spreadsheetAccounts={spreadsheetAccounts}
-                        allAccounts={accounts}
-                        balances={balances}
-                        allMonths={allMonths}
-                        balanceMap={balanceMap}
-                        profile={profile}
-                        inlineEntry={inlineEntry}
-                        onInlineEntryChange={setInlineEntry}
-                        onSaveInlineEntry={handleSaveInlineEntry}
-                        onCancelInlineEntry={() => setInlineEntry(null)}
-                        onDeleteMonth={handleDeleteMonth}
-                      />
-                    )}
-                  </>
-                )}
-              </div>
-
-              {showAccountsModal && (
-                <AccountsModal
-                  accounts={accounts}
-                  profile={profile}
-                  onAdd={handleAddAccount}
-                  onUpdate={handleUpdateAccount}
-                  onBulkUpdate={handleBulkUpdateAccounts}
-                  onDelete={handleDeleteAccount}
-                  onToggleStatus={handleToggleStatus}
-                  onRenameGroup={handleRenameGroup}
-                  onClose={() => setShowAccountsModal(false)}
-                />
-              )}
-            </>
-          }
-        />
+        <Route index element={<Navigate to="/net-worth/accounts" replace />} />
+        <Route path="accounts/*" element={accountsContent} />
         <Route
           path="allocation"
           element={
@@ -439,7 +431,7 @@ const Data: FC = () => {
           }
         />
         <Route
-          path="growth"
+          path="growth/*"
           element={
             <Suspense
               fallback={

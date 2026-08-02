@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SavingsGrowthTracker from './SavingsGrowthTracker'
+import { MemoryRouter } from 'react-router-dom'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { appStorage } from '../../../utils/appStorage'
@@ -49,8 +50,12 @@ beforeEach(() => {
   })
 })
 
-function renderTracker() {
-  return render(<SavingsGrowthTracker />)
+function renderTracker(initialRoute = '/net-worth/growth') {
+  return render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <SavingsGrowthTracker />
+    </MemoryRouter>,
+  )
 }
 
 describe('SavingsGrowthTracker', () => {

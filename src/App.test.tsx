@@ -142,7 +142,7 @@ describe('App', () => {
     })
   })
 
-  it('redirects /tools to /budget', async () => {
+  it('redirects /tools to /budget/spreadsheet', async () => {
     render(
       <MemoryRouter initialEntries={['/tools']}>
         <App />
@@ -180,7 +180,7 @@ describe('App', () => {
       ['/', 'page-home'],
       ['/goal', 'page-goal'],
       ['/net-worth', 'page-data'],
-      ['/budget', 'page-budget'],
+      ['/budget/spreadsheet', 'page-budget'],
       ['/drive', 'page-drive'],
       ['/taxes', 'page-taxes'],
     ] as const) {
@@ -194,6 +194,17 @@ describe('App', () => {
       })
       unmount()
     }
+  })
+
+  it('highlights Budget in the sidebar for nested budget routes', async () => {
+    render(
+      <MemoryRouter initialEntries={['/budget/cashflow']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Budget' })).toHaveAttribute('aria-current', 'page')
+    })
   })
 
   it('renders the main content area with correct class', async () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Data from './Data'
 
 vi.mock('../../contexts/GoalsContext', () => ({
@@ -30,10 +30,12 @@ vi.mock('../../contexts/DataContext', () => ({
   }),
 }))
 
-function renderData(initialRoute = '/net-worth') {
+function renderData(initialRoute = '/net-worth/accounts') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Data />
+      <Routes>
+        <Route path="/net-worth/*" element={<Data />} />
+      </Routes>
     </MemoryRouter>,
   )
 }
@@ -59,10 +61,10 @@ describe('Net Worth tab bar', () => {
     expect(accountsLink).toHaveTextContent('Accounts')
   })
 
-  it('the "Accounts" tab links to /net-worth', () => {
+  it('the "Accounts" tab links to /net-worth/accounts', () => {
     renderData()
     const link = screen.getByRole('link', { name: 'Accounts' })
-    expect(link).toHaveAttribute('href', '/net-worth')
+    expect(link).toHaveAttribute('href', '/net-worth/accounts')
   })
 
   it('renders an "Allocation" tab inside the nav', () => {
@@ -98,7 +100,7 @@ describe('Net Worth tab bar', () => {
 
 describe('Net Worth tab active state', () => {
   it('sets aria-current="page" on the active tab', () => {
-    renderData('/net-worth')
+    renderData('/net-worth/accounts')
     const link = screen.getByRole('link', { name: 'Accounts' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
@@ -116,7 +118,7 @@ describe('Net Worth tab active state', () => {
   })
 
   it('does not set aria-current on "Allocation" when on /net-worth', () => {
-    renderData('/net-worth')
+    renderData('/net-worth/accounts')
     const link = screen.getByRole('link', { name: 'Allocation' })
     expect(link).not.toHaveAttribute('aria-current')
   })
@@ -128,7 +130,7 @@ describe('Net Worth tab active state', () => {
   })
 
   it('does not set aria-current on "Growth" when on /net-worth', () => {
-    renderData('/net-worth')
+    renderData('/net-worth/accounts')
     const link = screen.getByRole('link', { name: 'Growth' })
     expect(link).not.toHaveAttribute('aria-current')
   })

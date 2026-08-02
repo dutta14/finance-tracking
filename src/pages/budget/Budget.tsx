@@ -1,7 +1,8 @@
 import { FC, useState, lazy, Suspense, useEffect, useRef, useCallback } from 'react'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useBudget } from './hooks/useBudget'
 import { useCSVUpload } from './hooks/useCSVUpload'
-import { TimePeriod } from './types'
+import { BudgetViewMode, TimePeriod } from './types'
 import BudgetHeader from './components/BudgetHeader'
 import ManualTransactionEntry from './components/ManualTransactionEntry'
 import BudgetSummary from './components/BudgetSummary'
@@ -22,8 +23,6 @@ const Budget: FC = () => {
     years,
     selectedYear,
     setSelectedYear,
-    viewMode,
-    setViewMode,
     spreadsheetMode,
     setSpreadsheetMode,
     uploadCSV,
@@ -59,6 +58,10 @@ const Budget: FC = () => {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
   const [showPdfToCsv, setShowPdfToCsv] = useState(false)
   const pdfToCsvEnabled = getStorageItem('lab-pdf-to-csv', '0') === '1'
+  const location = useLocation()
+  const navigate = useNavigate()
+  const budgetPath = location.pathname.replace(/\/+$/, '')
+  const viewMode: BudgetViewMode = budgetPath.endsWith('/cashflow') ? 'cashflow' : 'spreadsheet'
 
   const pdfModalRef = useRef<HTMLDivElement>(null)
   const pdfTriggerRef = useRef<HTMLElement | null>(null)
@@ -85,6 +88,10 @@ const Budget: FC = () => {
 
   const currentYear = new Date().getFullYear()
 
+  if (budgetPath === '/budget') {
+    return <Navigate to="/budget/spreadsheet" replace />
+  }
+
   return (
     <div className="budget-page">
       <BudgetHeader
@@ -98,7 +105,7 @@ const Budget: FC = () => {
         bulkUploadRef={bulkUploadRef}
         onPrevYear={() => setSelectedYear(y => y - 1)}
         onNextYear={() => setSelectedYear(y => y + 1)}
-        onSetViewMode={setViewMode}
+        onSetViewMode={mode => navigate(`/budget/${mode}`)}
         onSetTimePeriod={setTimePeriod}
         onToggleGroupMgr={() => setShowGroupMgr(v => !v)}
         onToggleFormatHelp={() => setShowFormatHelp(v => !v)}
