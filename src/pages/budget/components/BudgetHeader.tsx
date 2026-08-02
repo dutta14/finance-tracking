@@ -40,6 +40,12 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
           >
             Spreadsheet
           </button>
+          <button
+            className={`budget-view-btn${viewMode === 'groups' ? ' active' : ''}`}
+            onClick={() => onSetViewMode('groups')}
+          >
+            Groups
+          </button>
         </div>
       </div>
       <div className="budget-header-right">

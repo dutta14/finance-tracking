@@ -52,7 +52,6 @@ const Budget: FC = () => {
     handlePreviewCancel,
   } = useCSVUpload(uploadCSV)
 
-  const [showGroupMgr, setShowGroupMgr] = useState(false)
   const [showFormatHelp, setShowFormatHelp] = useState(false)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
@@ -61,7 +60,11 @@ const Budget: FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const budgetPath = location.pathname.replace(/\/+$/, '')
-  const viewMode: BudgetViewMode = budgetPath.endsWith('/spreadsheet') ? 'spreadsheet' : 'cashflow'
+  const viewMode: BudgetViewMode = budgetPath.endsWith('/groups')
+    ? 'groups'
+    : budgetPath.endsWith('/spreadsheet')
+      ? 'spreadsheet'
+      : 'cashflow'
 
   const pdfModalRef = useRef<HTMLDivElement>(null)
   const pdfTriggerRef = useRef<HTMLElement | null>(null)
@@ -105,13 +108,11 @@ const Budget: FC = () => {
         onSetTimePeriod={setTimePeriod}
       />
 
-      <div className="budget-action-bar">
-        <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
-        {viewMode === 'spreadsheet' && (
-          <div className="budget-spreadsheet-actions">
-            <button className="budget-action-btn" onClick={() => setShowGroupMgr(v => !v)}>
-              {showGroupMgr ? 'Hide Groups' : 'Groups'}
-            </button>
+      {viewMode !== 'groups' && (
+        <div className="budget-action-bar">
+          <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
+          {viewMode === 'spreadsheet' && (
+            <div className="budget-spreadsheet-actions">
             <div className="budget-upload-dropdown">
               <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
                 Upload CSV
@@ -184,8 +185,9 @@ const Budget: FC = () => {
               onChange={handleBulkUpload}
             />
           </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {csvPreview && (
         <CSVPreviewModal
@@ -237,7 +239,7 @@ const Budget: FC = () => {
             year={selectedYear}
           />
 
-          {showGroupMgr && (
+          {viewMode === 'groups' ? (
             <CategoryGroupManager
               groups={categoryGroups}
               onUpdate={groups => updateCategoryGroups(groups)}
@@ -246,9 +248,7 @@ const Budget: FC = () => {
               categoryHasTransactions={categoryHasTransactions}
               categorySums={categorySums}
             />
-          )}
-
-          {viewMode === 'spreadsheet' ? (
+          ) : viewMode === 'spreadsheet' ? (
             <>
               <div className="budget-spreadsheet-toolbar">
                 <div className="budget-view-toggle budget-view-toggle--secondary">
