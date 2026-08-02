@@ -215,11 +215,6 @@ const Data: FC = () => {
             Reset Data
           </button>
         )}
-        {hasAccounts && (
-          <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
-            View Accounts ({accounts.length})
-          </button>
-        )}
       </div>
 
       <div className="data-content">
@@ -395,23 +390,28 @@ const Data: FC = () => {
       />
 
       <div className="data-header">
-        <div>
+        <div className="data-header-left">
           <h1>Net Worth</h1>
-          <p className="data-subtitle">Track balances across your accounts over time</p>
+        </div>
+        <nav className="nw-tab-bar" aria-label="Net Worth sections">
+          <NavLink to="/net-worth/accounts" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
+            Accounts
+          </NavLink>
+          <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
+            Allocation
+          </NavLink>
+          <NavLink to="/net-worth/growth" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
+            Growth
+          </NavLink>
+        </nav>
+        <div className="data-header-right">
+          {activeTab === 'accounts' && hasAccounts && (
+            <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
+              View Accounts ({accounts.length})
+            </button>
+          )}
         </div>
       </div>
-
-      <nav className="nw-tab-bar" aria-label="Net Worth sections">
-        <NavLink to="/net-worth/accounts" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
-          Accounts
-        </NavLink>
-        <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
-          Allocation
-        </NavLink>
-        <NavLink to="/net-worth/growth" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
-          Growth
-        </NavLink>
-      </nav>
 
       <Routes>
         <Route index element={<Navigate to="/net-worth/accounts" replace />} />
