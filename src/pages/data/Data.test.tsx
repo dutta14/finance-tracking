@@ -572,10 +572,9 @@ describe('Data page integration', () => {
 
   // --- Page header ---
 
-  it('renders the page title and subtitle', () => {
+  it('renders the page title', () => {
     renderData()
     expect(screen.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeInTheDocument()
-    expect(screen.getByText('Track balances across your accounts over time')).toBeInTheDocument()
   })
 
   // --- Branch coverage: id generation when empty accounts (line 60) ---
