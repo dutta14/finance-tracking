@@ -45,11 +45,7 @@ const proportionalHeights = (items: { amount: number }[], totalAvailH: number, g
   return items.map(it => Math.max(minH, (it.amount / totalAmt) * drawH))
 }
 
-const CashflowSankey: FC<CashflowSankeyProps> = ({
-  categoryGroups,
-  removedCategories,
-  categorySums,
-}) => {
+const CashflowSankey: FC<CashflowSankeyProps> = ({ categoryGroups, removedCategories, categorySums }) => {
   const [mode, setMode] = useState<SankeyMode>('group')
 
   const { incomeCategories, expenseGroups, expenseCatArr, totalIncome, totalExpense } = useMemo(() => {

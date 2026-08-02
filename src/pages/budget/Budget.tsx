@@ -98,24 +98,94 @@ const Budget: FC = () => {
         selectedYear={selectedYear}
         viewMode={viewMode}
         timePeriod={timePeriod}
-        showGroupMgr={showGroupMgr}
         showFormatHelp={showFormatHelp}
-        showUploadMenu={showUploadMenu}
-        quickUploadRef={quickUploadRef}
-        bulkUploadRef={bulkUploadRef}
         onPrevYear={() => setSelectedYear(y => y - 1)}
         onNextYear={() => setSelectedYear(y => y + 1)}
         onSetViewMode={mode => navigate(`/budget/${mode}`)}
         onSetTimePeriod={setTimePeriod}
-        onToggleGroupMgr={() => setShowGroupMgr(v => !v)}
-        onToggleFormatHelp={() => setShowFormatHelp(v => !v)}
-        onToggleUploadMenu={() => setShowUploadMenu(v => !v)}
-        onQuickUpload={handleQuickUpload}
-        onBulkUpload={handleBulkUpload}
-        onOpenPdfToCsv={pdfToCsvEnabled ? openPdfModal : undefined}
       />
 
-      <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
+      <div className="budget-action-bar">
+        <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
+        {viewMode === 'spreadsheet' && (
+          <div className="budget-spreadsheet-actions">
+            <button className="budget-action-btn" onClick={() => setShowGroupMgr(v => !v)}>
+              {showGroupMgr ? 'Hide Groups' : 'Groups'}
+            </button>
+            <div className="budget-upload-dropdown">
+              <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
+                Upload CSV
+              </button>
+              <button
+                className="budget-action-btn budget-split-drop"
+                onClick={() => setShowUploadMenu(v => !v)}
+                aria-haspopup="true"
+                aria-expanded={showUploadMenu}
+                aria-label="Upload options"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path
+                    d="M2 3.5l3 3 3-3"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {showUploadMenu && (
+                <>
+                  <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
+                  <div className="budget-upload-menu" role="menu">
+                    <button
+                      className="budget-upload-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setShowUploadMenu(false)
+                        bulkUploadRef.current?.click()
+                      }}
+                    >
+                      Bulk Upload
+                    </button>
+                    {pdfToCsvEnabled && (
+                      <button
+                        className="budget-upload-menu-item"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowUploadMenu(false)
+                          openPdfModal()
+                        }}
+                      >
+                        PDF → CSV
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            <button className="budget-action-btn budget-action-btn--subtle" onClick={() => setShowFormatHelp(v => !v)}>
+              ?
+            </button>
+            <input
+              ref={quickUploadRef}
+              type="file"
+              accept=".csv"
+              data-testid="quick-upload-input"
+              style={{ display: 'none' }}
+              onChange={handleQuickUpload}
+            />
+            <input
+              ref={bulkUploadRef}
+              type="file"
+              accept=".csv"
+              multiple
+              data-testid="bulk-upload-input"
+              style={{ display: 'none' }}
+              onChange={handleBulkUpload}
+            />
+          </div>
+        )}
+      </div>
 
       {csvPreview && (
         <CSVPreviewModal

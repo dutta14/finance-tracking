@@ -334,6 +334,21 @@ describe('Budget with data', () => {
     await user.click(screen.getByText('?'))
     expect(document.querySelector('.budget-format-help')).toBeInTheDocument()
   })
+
+  it('shows Upload CSV button only on spreadsheet tab', () => {
+    renderBudget()
+    expect(screen.getByText('Upload CSV')).toBeInTheDocument()
+  })
+
+  it('hides Upload CSV button on cashflow tab', () => {
+    renderBudget('/budget/cashflow')
+    expect(screen.queryByText('Upload CSV')).not.toBeInTheDocument()
+  })
+
+  it('hides Groups button on cashflow tab', () => {
+    renderBudget('/budget/cashflow')
+    expect(screen.queryByText('Groups')).not.toBeInTheDocument()
+  })
 })
 
 /* ─── Year navigation ─── */
