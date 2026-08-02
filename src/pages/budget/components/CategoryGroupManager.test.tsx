@@ -34,7 +34,7 @@ describe('CategoryGroupManager', () => {
     render(<CategoryGroupManager {...defaultProps} />)
     expect(screen.getByText('Expense Category Groups')).toBeInTheDocument()
     expect(
-      screen.getByText('Drag expense categories between groups. Income categories are grouped automatically.'),
+      screen.getByText(/Drag categories between groups or drag group headers to reorder/),
     ).toBeInTheDocument()
   })
 
@@ -154,26 +154,23 @@ describe('CategoryGroupManager', () => {
     expect(screen.queryByDisplayValue('Removed')).not.toBeInTheDocument()
   })
 
-  it('does not show rename/delete/move buttons for protected groups', () => {
+  it('does not show rename or delete buttons for protected groups', () => {
     render(<CategoryGroupManager {...defaultProps} />)
 
     const othersGroup = screen.getByText('Others').closest('.budget-group-block')! as HTMLElement
     expect(within(othersGroup).queryByTitle('Rename group')).not.toBeInTheDocument()
     expect(within(othersGroup).queryByTitle('Delete group (categories move to Others)')).not.toBeInTheDocument()
-    expect(within(othersGroup).queryByTitle('Move group up')).not.toBeInTheDocument()
 
     const removedGroup = screen.getByText('Removed').closest('.budget-group-block')! as HTMLElement
     expect(within(removedGroup).queryByTitle('Rename group')).not.toBeInTheDocument()
   })
 
-  it('shows rename/delete/move buttons for non-protected groups', () => {
+  it('shows rename and delete buttons for non-protected groups', () => {
     render(<CategoryGroupManager {...defaultProps} />)
 
     const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')! as HTMLElement
     expect(within(essentialsGroup).getByTitle('Rename group')).toBeInTheDocument()
     expect(within(essentialsGroup).getByTitle('Delete group (categories move to Others)')).toBeInTheDocument()
-    expect(within(essentialsGroup).getByTitle('Move group up')).toBeInTheDocument()
-    expect(within(essentialsGroup).getByTitle('Move group down')).toBeInTheDocument()
   })
 
   it('deletes a group and moves its categories to Others', async () => {
@@ -380,60 +377,6 @@ describe('CategoryGroupManager', () => {
     expect(screen.getByDisplayValue('Essentials')).toBeInTheDocument()
   })
 
-  /* ── Move group up/down ── */
-
-  it('moves a group up when clicking move up button', async () => {
-    const onUpdate = vi.fn()
-    const user = userEvent.setup()
-    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
-
-    const lifestyleGroup = screen.getByText('Lifestyle').closest('.budget-group-block')! as HTMLElement
-    const moveUpBtn = within(lifestyleGroup).getByTitle('Move group up')
-    await user.click(moveUpBtn)
-
-    expect(onUpdate).toHaveBeenCalledTimes(1)
-    const updated = onUpdate.mock.calls[0][0]
-    expect(updated[0].id).toBe('lifestyle')
-    expect(updated[1].id).toBe('essentials')
-  })
-
-  it('moves a group down when clicking move down button', async () => {
-    const onUpdate = vi.fn()
-    const user = userEvent.setup()
-    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
-
-    const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')! as HTMLElement
-    const moveDownBtn = within(essentialsGroup).getByTitle('Move group down')
-    await user.click(moveDownBtn)
-
-    expect(onUpdate).toHaveBeenCalledTimes(1)
-    const updated = onUpdate.mock.calls[0][0]
-    expect(updated[0].id).toBe('lifestyle')
-    expect(updated[1].id).toBe('essentials')
-  })
-
-  it('does not move a group past the removed group', async () => {
-    const onUpdate = vi.fn()
-    const user = userEvent.setup()
-    // Others is right before Removed — moving it down should not swap with Removed
-    const groups: CategoryGroup[] = [
-      { id: 'essentials', name: 'Essentials', categories: ['Groceries'] },
-      { id: 'others', name: 'Others', categories: [] },
-      { id: 'removed', name: 'Removed', categories: [] },
-    ]
-    render(<CategoryGroupManager {...defaultProps} groups={groups} onUpdate={onUpdate} />)
-
-    const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')! as HTMLElement
-    const moveDownBtn = within(essentialsGroup).getByTitle('Move group down')
-    await user.click(moveDownBtn)
-
-    // Should swap with Others (not Removed)
-    expect(onUpdate).toHaveBeenCalledTimes(1)
-    const updated = onUpdate.mock.calls[0][0]
-    expect(updated[0].id).toBe('others')
-    expect(updated[1].id).toBe('essentials')
-  })
-
   /* ── Drag and drop categories between groups ── */
 
   it('moves a category to a different group via drag and drop', () => {
@@ -497,11 +440,11 @@ describe('CategoryGroupManager', () => {
     expect(lifestyleGroup).not.toHaveClass('budget-group-block--drop-target')
   })
 
-  it('shows "No categories" when an expanded group has no expense categories', () => {
+  it('shows the empty-state helper text when an expanded group has no expense categories', () => {
     render(<CategoryGroupManager {...defaultProps} />)
 
     // Others and Removed groups are both expanded and empty
-    const noCatLabels = screen.getAllByText('No categories')
+    const noCatLabels = screen.getAllByText('No categories yet - drag categories here from other groups')
     expect(noCatLabels.length).toBeGreaterThanOrEqual(1)
   })
 

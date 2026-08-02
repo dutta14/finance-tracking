@@ -895,15 +895,27 @@ body.dark .budget-confirm-newcat-btn--no {
 
 /* ── Category Group Manager ── */
 .budget-group-manager {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 1rem 1.2rem;
+  padding: 0;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .budget-group-manager-header {
-  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.budget-group-manager-header-left {
+  min-width: 0;
+}
+.budget-group-manager-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .budget-group-manager-title {
   margin: 0 0 0.25rem 0;
@@ -919,15 +931,17 @@ body.dark .budget-confirm-newcat-btn--no {
 .budget-group-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 /* Each group block */
 .budget-group-block {
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
@@ -951,8 +965,19 @@ body.dark .budget-confirm-newcat-btn--no {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.45rem 0.6rem;
-  background: var(--color-bg);
+  padding: 0.6rem 0.85rem;
+  background: var(--color-surface);
+  cursor: grab;
+}
+.budget-group-header:active {
+  cursor: grabbing;
+}
+.budget-group-block--dragging {
+  opacity: 0.4;
+}
+.budget-group-block--reorder-target {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 .budget-group-toggle {
   background: none;
@@ -980,18 +1005,16 @@ body.dark .budget-confirm-newcat-btn--no {
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius);
 }
-.budget-group-move {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  font-size: var(--fs-xs);
-  padding: 0 0.15rem;
-  flex-shrink: 0;
-  line-height: 1;
+.budget-group-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
-.budget-group-move:hover {
-  color: var(--accent);
+.budget-group-header:hover .budget-group-header-actions,
+.budget-group-header:focus-within .budget-group-header-actions {
+  opacity: 1;
 }
 .budget-group-rename {
   background: none;
@@ -1020,7 +1043,7 @@ body.dark .budget-confirm-newcat-btn--no {
 
 /* Category items inside a group */
 .budget-group-cats {
-  padding: 0.3rem 0.5rem 0.5rem 1.8rem;
+  padding: 0.5rem 0.85rem 0.75rem 2rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -1036,7 +1059,7 @@ body.dark .budget-confirm-newcat-btn--no {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 100px;
   cursor: grab;
   transition:
@@ -1119,9 +1142,14 @@ body.dark .budget-group-block--removed .budget-group-cat-name {
   background: var(--color-surface);
   color: var(--color-text-heading);
 }
-.budget-group-add-row {
-  display: flex;
-  gap: 0.5rem;
+.budget-group-manager-header-actions .budget-group-input {
+  width: 11.25rem;
+  flex: 0 0 11.25rem;
+  max-width: 100%;
+}
+.budget-group-manager-header-actions .budget-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .budget-group-add-btn {
   background: var(--accent);
@@ -1140,6 +1168,12 @@ body.dark .budget-group-block--removed .budget-group-cat-name {
 /* Merge mode */
 .budget-merge-active {
   background: var(--color-negative);
+  border-color: var(--color-negative);
+  color: var(--color-text-on-accent);
+}
+.budget-merge-active:hover {
+  background: var(--color-negative);
+  border-color: var(--color-negative);
 }
 .budget-group-cat--merge-selected {
   background: var(--accent) !important;
