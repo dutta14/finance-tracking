@@ -246,6 +246,22 @@ describe('Data page integration', () => {
     expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
   })
 
+  it('closes the accounts modal after opening it from the details view toolbar', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    await user.click(screen.getByRole('tab', { name: 'Details' }))
+    await user.click(screen.getByText(/View Accounts/i))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('adds a new account via AccountsModal and updates both accounts and balances state', async () => {
     const user = userEvent.setup()
     mockAccounts = [...twoAccounts]

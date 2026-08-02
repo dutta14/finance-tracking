@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MonthPicker from './MonthPicker'
 
@@ -13,10 +13,25 @@ const StatefulMonthPicker = ({ initialMonth = MONTHS[0] }: { initialMonth?: stri
 }
 
 describe('MonthPicker', () => {
+  it('disables navigation and shows no data when there are no available months', () => {
+    render(<MonthPicker allMonths={[]} selectedMonth="" onMonthChange={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Previous month' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Choose month' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Choose month' })).toHaveTextContent('No data')
+    expect(screen.getByRole('button', { name: 'Next month' })).toBeDisabled()
+  })
+
   it('renders the current month label', () => {
     render(<MonthPicker allMonths={MONTHS} selectedMonth="2025-07" onMonthChange={vi.fn()} />)
 
     expect(screen.getByRole('button', { name: 'Choose month, currently July 2025' })).toHaveTextContent('July 2025')
+  })
+
+  it('falls back to the raw selected month when the value cannot be formatted', () => {
+    render(<MonthPicker allMonths={MONTHS} selectedMonth="bad-month" onMonthChange={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Choose month, currently bad-month' })).toHaveTextContent('bad-month')
   })
 
   it('opens the popover on click and shows year navigation', async () => {
@@ -100,5 +115,66 @@ describe('MonthPicker', () => {
     await user.click(nextMonthButton)
 
     expect(screen.getByRole('button', { name: 'Choose month, currently May 2025' })).toHaveTextContent('May 2025')
+  })
+
+  it('moves focus with keyboard navigation keys, ignores unsupported keys, and returns to the next year', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <MonthPicker
+        allMonths={['2026-09', '2026-05', '2026-01', '2025-12']}
+        selectedMonth="2026-05"
+        onMonthChange={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Choose month, currently May 2026' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'May 2026' })).toHaveFocus())
+
+    await user.keyboard('{ArrowDown}')
+    expect(screen.getByRole('button', { name: 'September 2026' })).toHaveFocus()
+
+    await user.keyboard('{ArrowUp}')
+    expect(screen.getByRole('button', { name: 'May 2026' })).toHaveFocus()
+
+    await user.keyboard('{Home}')
+    expect(screen.getByRole('button', { name: 'January 2026' })).toHaveFocus()
+
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByRole('button', { name: 'May 2026' })).toHaveFocus()
+
+    await user.keyboard('{ArrowLeft}')
+    expect(screen.getByRole('button', { name: 'January 2026' })).toHaveFocus()
+
+    await user.keyboard('a')
+    expect(screen.getByRole('button', { name: 'January 2026' })).toHaveFocus()
+    expect(screen.getByRole('dialog', { name: 'Select month' })).toBeVisible()
+
+    await user.keyboard('{End}')
+    expect(screen.getByRole('button', { name: 'September 2026' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Show previous year, 2025' }))
+    expect(within(screen.getByRole('dialog', { name: 'Select month' })).getByText('2025')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Show next year, 2026' }))
+    expect(within(screen.getByRole('dialog', { name: 'Select month' })).getByText('2026')).toBeVisible()
+  })
+
+  it('keeps month grid keyboard navigation stable when the displayed year has no available months', async () => {
+    const user = userEvent.setup()
+
+    render(<MonthPicker allMonths={['2025-12']} selectedMonth="2026-05" onMonthChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Choose month, currently May 2026' }))
+
+    const mayButton = screen.getByRole('button', { name: 'May 2026' })
+
+    expect(mayButton).toBeDisabled()
+
+    fireEvent.keyDown(mayButton, { key: 'Home' })
+    fireEvent.keyDown(mayButton, { key: 'End' })
+
+    expect(screen.getByRole('dialog', { name: 'Select month' })).toBeVisible()
+    expect(mayButton).toBeDisabled()
   })
 })
