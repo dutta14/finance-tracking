@@ -80,9 +80,28 @@ export function parseCSV(csvText: string): Transaction[] {
   const dateIdx = headers.findIndex(h => h === 'date')
   const catIdx = headers.findIndex(h => h === 'category')
   const amtIdx = headers.findIndex(h => h === 'amount')
-  const descIdx = headers.findIndex(
-    h => h === 'description' || h === 'merchant name' || h === 'original statement' || h === 'notes' || h === 'note',
+  let descIdx = headers.findIndex(
+    h =>
+      h === 'description' ||
+      h === 'merchant' ||
+      h === 'merchant name' ||
+      h === 'original statement' ||
+      h === 'notes' ||
+      h === 'note' ||
+      h === 'memo' ||
+      h === 'payee' ||
+      h === 'narration' ||
+      h === 'details' ||
+      h === 'transaction description' ||
+      h === 'particulars' ||
+      h === 'reference',
   )
+
+  // Fallback: if no recognized description header but exactly one extra column, use it
+  if (descIdx === -1 && headers.length === 4) {
+    const knownIndices = new Set([dateIdx, catIdx, amtIdx])
+    descIdx = headers.findIndex((_h, i) => !knownIndices.has(i))
+  }
 
   if (dateIdx === -1 || catIdx === -1 || amtIdx === -1) {
     throw new Error(
@@ -259,7 +278,7 @@ export function getCSVFormatHelp(): string {
     '  • Date: any parseable date (e.g. 2025-05-01, 05/01/2025, May 1 2025)\n' +
     '  • Category: text label for the transaction type\n' +
     '  • Amount: positive for income, negative for expenses (e.g. 5000 or -120.50)\n' +
-    '  • Description: column named Description, Merchant Name, or Original Statement\n\n' +
+    '  • Description: column named Description, Merchant, Merchant Name, or Original Statement\n\n' +
     'Example:\n' +
     '  Date,Category,Amount,Description\n' +
     '  2025-05-01,Salary,5000,Monthly paycheck\n' +

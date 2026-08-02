@@ -224,6 +224,12 @@ describe('parseCSV – additional edge cases', () => {
     expect(txns[0].description).toBe('Subway')
   })
 
+  it('recognizes "Merchant" as description column', () => {
+    const csv = 'Date,Category,Amount,Merchant\n2025-01-15,Food,-25,Target'
+    const txns = parseCSV(csv)
+    expect(txns[0].description).toBe('Target')
+  })
+
   it('recognizes "Original Statement" as description column', () => {
     const csv = 'Date,Category,Amount,Original Statement\n2025-01-15,Food,-25,POS PURCHASE'
     const txns = parseCSV(csv)
