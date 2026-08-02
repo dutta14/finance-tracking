@@ -360,6 +360,34 @@ export function useBudget() {
     return getIncomeCategoryGroups(store)
   }, [store])
 
+  // Migrate: seed existing income categories into income-others if not already grouped
+  useEffect(() => {
+    const allIncomeCats = new Set<string>()
+    Object.values(yearTransactions).forEach(txs =>
+      txs.forEach(t => {
+        if (t.amount > 0) allIncomeCats.add(t.category)
+      }),
+    )
+    // Remove any that also appear as expense (has negative amounts)
+    Object.values(yearTransactions).forEach(txs =>
+      txs.forEach(t => {
+        if (t.amount < 0) allIncomeCats.delete(t.category)
+      }),
+    )
+
+    const alreadyGrouped = new Set(incomeCategoryGroups.flatMap(g => g.categories))
+    const missing = [...allIncomeCats].filter(c => !alreadyGrouped.has(c))
+
+    if (missing.length > 0) {
+      const updated = incomeCategoryGroups.map(g =>
+        g.id === INCOME_OTHERS_GROUP_ID ? { ...g, categories: [...g.categories, ...missing] } : g,
+      )
+      persist({ ...storeRef.current, incomeCategoryGroups: updated })
+    }
+    // Only run when yearTransactions changes (on year switch or CSV upload)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yearTransactions])
+
   // Categories in the "Remove from Budget" group
   const removedCategories = useMemo((): Set<string> => {
     const removedGroup = categoryGroups.find(g => g.id === REMOVED_GROUP_ID)
