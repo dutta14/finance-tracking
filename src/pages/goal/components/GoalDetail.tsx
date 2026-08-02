@@ -361,7 +361,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
               <>Set an FI target or add GW goals to see your savings plan.</>
             ) : summaryData.totalNeeded > 0 ? (
               <>
-                To achieve all your goals, you need to save{' '}
+                To achieve your goals, you need to save{' '}
                 <strong
                   className="goal-summary-toggleable"
                   onClick={() => setShowYearly(v => !v)}
@@ -370,61 +370,60 @@ const GoalDetail: FC<GoalDetailProps> = ({
                   {showYearly
                     ? `${formatCurrency(summaryData.totalNeeded * 12)}/yr`
                     : `${formatCurrency(summaryData.totalNeeded)}/mo`}
-                </strong>{' '}
-                total.
-                {yearMonthlySaving !== null && (
-                  <>
-                    {' '}
-                    {summaryYear < new Date().getFullYear() ? 'You saved' : 'You\u0027re saving'}{' '}
-                    <strong
-                      className="goal-summary-toggleable"
-                      onClick={() => setShowYearly(v => !v)}
-                      title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
-                    >
-                      {showYearly
-                        ? `${formatCurrency(yearMonthlySaving * 12)}/yr`
-                        : `${formatCurrency(yearMonthlySaving)}/mo`}
-                    </strong>{' '}
-                    in{' '}
-                    <select
-                      className="goal-summary-year-select"
-                      value={summaryYear}
-                      onChange={e => setSummaryYear(Number(e.target.value))}
-                    >
-                      {availableYears.map(y => (
-                        <option key={y} value={y}>
-                          {y}
-                        </option>
-                      ))}
-                    </select>
-                    {yearMonthlySaving >= summaryData.totalNeeded ? (
-                      summaryYear < new Date().getFullYear() ? (
-                        ' \u2014 you were on track.'
-                      ) : (
-                        ' \u2014 you\u2019re on track.'
-                      )
-                    ) : (
-                      <>
-                        {summaryYear < new Date().getFullYear() ? ' \u2014 you needed ' : ' \u2014 you need '}
-                        <strong
-                          className="goal-summary-toggleable"
-                          onClick={() => setShowYearly(v => !v)}
-                          title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
-                        >
-                          {showYearly
-                            ? `${formatCurrency((summaryData.totalNeeded - yearMonthlySaving) * 12)}/yr`
-                            : `${formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo`}
-                        </strong>
-                        {' more.'}
-                      </>
-                    )}
-                  </>
-                )}
+                </strong>
+                .
               </>
             ) : (
               <>🎉 You&apos;ve already achieved all your goals at the current growth rate.</>
             )}
           </p>
+          {summaryData.totalNeeded > 0 && yearMonthlySaving !== null && (
+            <p className="goal-summary-prose">
+              {summaryYear < new Date().getFullYear() ? 'You saved' : 'You\u0027re saving'}{' '}
+              <strong
+                className="goal-summary-toggleable"
+                onClick={() => setShowYearly(v => !v)}
+                title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+              >
+                {showYearly
+                  ? `${formatCurrency(yearMonthlySaving * 12)}/yr`
+                  : `${formatCurrency(yearMonthlySaving)}/mo`}
+              </strong>{' '}
+              in{' '}
+              <select
+                className="goal-summary-year-select"
+                value={summaryYear}
+                onChange={e => setSummaryYear(Number(e.target.value))}
+              >
+                {availableYears.map(y => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              {yearMonthlySaving >= summaryData.totalNeeded ? (
+                summaryYear < new Date().getFullYear() ? (
+                  ' \u2014 you were on track.'
+                ) : (
+                  ' \u2014 you\u2019re on track.'
+                )
+              ) : (
+                <>
+                  {summaryYear < new Date().getFullYear() ? ' \u2014 you needed ' : ' \u2014 you need '}
+                  <strong
+                    className="goal-summary-toggleable"
+                    onClick={() => setShowYearly(v => !v)}
+                    title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
+                  >
+                    {showYearly
+                      ? `${formatCurrency((summaryData.totalNeeded - yearMonthlySaving) * 12)}/yr`
+                      : `${formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo`}
+                  </strong>
+                  {' more.'}
+                </>
+              )}
+            </p>
+          )}
           {summaryData.totalNeeded > 0 && (
             <p className="goal-summary-prose">
               If you want to spend{' '}
@@ -435,7 +434,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
                 placeholder="$0"
                 ariaLabel="Annual spending"
               />
-              /yr, and your income tax is{' '}
+              /yr, and your tax rate is{' '}
               <InlineEditableValue
                 value={incomeTaxRate}
                 onChange={handleTaxRateChange}

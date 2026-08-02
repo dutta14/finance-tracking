@@ -8,8 +8,8 @@ export function useYearMonthlySaving() {
 
   const availableYears = useMemo(() => {
     const store = loadBudgetStore()
-    return store.years.filter((y: number) => y >= 2024).sort((a: number, b: number) => b - a)
-  }, [])
+    return store.years.filter((y: number) => y >= 2024 && y <= currentYear).sort((a: number, b: number) => b - a)
+  }, [currentYear])
 
   const yearMonthlySaving = useMemo(() => {
     const store = loadBudgetStore()
