@@ -231,7 +231,7 @@ describe('CategoryGroupManager', () => {
 
     await user.click(screen.getByText('Merge Categories'))
     expect(screen.getByText('Cancel Merge')).toBeInTheDocument()
-    expect(screen.getByText(/Click categories above to select them/)).toBeInTheDocument()
+    expect(screen.getByText(/Click categories below to select them/)).toBeInTheDocument()
   })
 
   it('cancels merge mode', async () => {
@@ -243,7 +243,7 @@ describe('CategoryGroupManager', () => {
 
     await user.click(screen.getByText('Cancel Merge'))
     expect(screen.getByText('Merge Categories')).toBeInTheDocument()
-    expect(screen.queryByText(/Click categories above to select them/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Click categories below to select them/)).not.toBeInTheDocument()
   })
 
   it('shows delete merge prompt for category with transactions', async () => {
