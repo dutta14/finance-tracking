@@ -3,15 +3,17 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Budget from './Budget'
-import type { BudgetViewMode } from './types'
+import type { BudgetViewMode, SpreadsheetMode } from './types'
 
 /* ─── Mocks ─── */
 
 const mockUseBudget = {
   selectedYear: 2025,
   setSelectedYear: vi.fn(),
-  viewMode: 'aggregated' as BudgetViewMode,
+  viewMode: 'spreadsheet' as BudgetViewMode,
   setViewMode: vi.fn(),
+  spreadsheetMode: 'aggregated' as SpreadsheetMode,
+  setSpreadsheetMode: vi.fn(),
   uploadCSV: vi.fn(),
   removeCSV: vi.fn(),
   createYear: vi.fn(),
@@ -276,13 +278,15 @@ describe('Budget with data', () => {
       '2025-01': [{ date: '2025-01-15', category: 'Salary', amount: 5000 }],
     }
     mockUseBudget.monthsWithData = new Set(['2025-01'])
-    mockUseBudget.viewMode = 'aggregated'
+    mockUseBudget.viewMode = 'spreadsheet'
+    mockUseBudget.spreadsheetMode = 'aggregated'
   })
 
   afterEach(() => {
     mockUseBudget.yearTransactions = {}
     mockUseBudget.monthsWithData = new Set<string>()
-    mockUseBudget.viewMode = 'aggregated'
+    mockUseBudget.viewMode = 'spreadsheet'
+    mockUseBudget.spreadsheetMode = 'aggregated'
   })
 
   it('renders BudgetSummary when transactions exist', () => {
@@ -290,14 +294,15 @@ describe('Budget with data', () => {
     expect(screen.getByTestId('budget-summary')).toBeInTheDocument()
   })
 
-  it('renders aggregated view by default', () => {
+  it('renders aggregated spreadsheet view', () => {
     renderBudget()
+    expect(document.querySelector('.budget-spreadsheet-toolbar')).toBeInTheDocument()
     expect(screen.getAllByTestId('budget-aggregated')).toHaveLength(2)
     expect(screen.queryByTestId('budget-table')).not.toBeInTheDocument()
   })
 
-  it('renders detailed view (BudgetTable) when viewMode is detailed', () => {
-    mockUseBudget.viewMode = 'detailed'
+  it('renders detailed spreadsheet view when spreadsheetMode is detailed', () => {
+    mockUseBudget.spreadsheetMode = 'detailed'
     renderBudget()
     expect(screen.getAllByTestId('budget-table')).toHaveLength(2)
     expect(screen.queryByTestId('budget-aggregated')).not.toBeInTheDocument()
@@ -306,6 +311,7 @@ describe('Budget with data', () => {
   it('renders cashflow charts when viewMode is cashflow', () => {
     mockUseBudget.viewMode = 'cashflow'
     renderBudget()
+    expect(document.querySelector('.budget-spreadsheet-toolbar')).not.toBeInTheDocument()
     expect(screen.getByTestId('cashflow-bar-chart')).toBeInTheDocument()
     expect(screen.getByTestId('cashflow-sankey')).toBeInTheDocument()
     expect(screen.queryByTestId('budget-table')).not.toBeInTheDocument()
@@ -365,12 +371,13 @@ describe('Budget year navigation', () => {
 /* ─── View mode toggle ─── */
 
 describe('Budget view mode toggle', () => {
-  it('calls setViewMode with "detailed" when clicking Detailed button', async () => {
+  it('calls setViewMode with "spreadsheet" when clicking Spreadsheet button', async () => {
     const user = userEvent.setup()
+    mockUseBudget.viewMode = 'cashflow'
     renderBudget()
 
-    await user.click(screen.getByRole('button', { name: 'Detailed' }))
-    expect(mockUseBudget.setViewMode).toHaveBeenCalledWith('detailed')
+    await user.click(screen.getByRole('button', { name: 'Spreadsheet' }))
+    expect(mockUseBudget.setViewMode).toHaveBeenCalledWith('spreadsheet')
   })
 
   it('calls setViewMode with "cashflow" when clicking Cashflow button', async () => {
@@ -381,11 +388,30 @@ describe('Budget view mode toggle', () => {
     expect(mockUseBudget.setViewMode).toHaveBeenCalledWith('cashflow')
   })
 
-  it('calls setViewMode with "aggregated" when clicking Aggregated button', async () => {
+  it('calls setSpreadsheetMode with "aggregated" when clicking Aggregated button', async () => {
     const user = userEvent.setup()
+    mockUseBudget.viewMode = 'spreadsheet'
+    mockUseBudget.yearTransactions = {
+      '2025-01': [{ date: '2025-01-15', category: 'Salary', amount: 5000 }],
+    }
+    mockUseBudget.monthsWithData = new Set(['2025-01'])
     renderBudget()
 
     await user.click(screen.getByRole('button', { name: 'Aggregated' }))
-    expect(mockUseBudget.setViewMode).toHaveBeenCalledWith('aggregated')
+    expect(mockUseBudget.setSpreadsheetMode).toHaveBeenCalledWith('aggregated')
+  })
+
+  it('calls setSpreadsheetMode with "detailed" when clicking Detailed button', async () => {
+    const user = userEvent.setup()
+    mockUseBudget.viewMode = 'spreadsheet'
+    mockUseBudget.spreadsheetMode = 'aggregated'
+    mockUseBudget.yearTransactions = {
+      '2025-01': [{ date: '2025-01-15', category: 'Salary', amount: 5000 }],
+    }
+    mockUseBudget.monthsWithData = new Set(['2025-01'])
+    renderBudget()
+
+    await user.click(screen.getByRole('button', { name: 'Detailed' }))
+    expect(mockUseBudget.setSpreadsheetMode).toHaveBeenCalledWith('detailed')
   })
 })

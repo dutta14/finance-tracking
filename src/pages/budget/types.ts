@@ -55,5 +55,6 @@ export interface BudgetStore {
   categoryGroups?: CategoryGroup[]
 }
 
-export type BudgetViewMode = 'detailed' | 'aggregated' | 'cashflow'
+export type BudgetViewMode = 'spreadsheet' | 'cashflow'
+export type SpreadsheetMode = 'aggregated' | 'detailed'
 export type TimePeriod = 'month' | 'quarter' | 'half'

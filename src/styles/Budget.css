@@ -92,6 +92,14 @@ body.dark .budget-title {
   border-radius: var(--radius);
   overflow: hidden;
 }
+.budget-view-toggle--secondary {
+  align-items: center;
+}
+.budget-spreadsheet-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
 .budget-view-btn {
   background: var(--color-surface);
   border: none;
@@ -107,6 +115,11 @@ body.dark .budget-title {
 }
 .budget-view-btn:not(.active):hover {
   background: var(--color-surface-hover);
+}
+.budget-view-btn--sm {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  min-height: 28px;
 }
 
 /* Action buttons */

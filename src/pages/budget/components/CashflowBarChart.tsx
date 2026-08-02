@@ -111,7 +111,7 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
             formatter={
               ((value: number, name: string) => [
                 fmt(Math.abs(value)),
-                name === 'income' ? 'Income' : 'Expense',
+                name === 'Income' ? 'Income' : 'Expense',
               ]) as unknown as ComponentProps<typeof Tooltip>['formatter']
             }
             labelFormatter={

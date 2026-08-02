@@ -73,7 +73,7 @@ describe('CashflowSankey', () => {
   it('renders SVG paths for income and expense data', () => {
     const yearTransactions = {
       '2024-01': [
-        makeTx({ category: 'Salary', amount: 5000 }),
+        makeTx({ category: 'Salary', amount: 3200 }),
         makeTx({ category: 'Groceries', amount: -1200 }),
         makeTx({ category: 'Rent', amount: -2000 }),
       ],
@@ -159,5 +159,22 @@ describe('CashflowSankey', () => {
     const textEls = container.querySelectorAll('text')
     const textContents = Array.from(textEls).map(t => t.textContent)
     expect(textContents.some(t => t?.includes('INCOME') && t?.includes('$5,000'))).toBe(true)
+  })
+
+  it('renders a savings node when income exceeds expenses', () => {
+    const yearTransactions = {
+      '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
+    }
+    const props = {
+      ...baseProps,
+      yearTransactions,
+      categorySums: deriveCategorySums(yearTransactions),
+    }
+    const { container } = render(<CashflowSankey {...props} />)
+    const textEls = container.querySelectorAll('text')
+    const textContents = Array.from(textEls).map(t => t.textContent)
+
+    expect(textContents.some(t => t?.includes('Savings'))).toBe(true)
+    expect(textContents.some(t => t?.includes('$3,800') && t?.includes('(76.0%)'))).toBe(true)
   })
 })

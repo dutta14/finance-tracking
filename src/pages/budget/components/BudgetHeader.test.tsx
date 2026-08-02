@@ -8,7 +8,7 @@ import { BudgetViewMode, TimePeriod } from '../types'
 function defaultProps(overrides: Partial<React.ComponentProps<typeof BudgetHeader>> = {}) {
   return {
     selectedYear: 2025,
-    viewMode: 'aggregated' as BudgetViewMode,
+    viewMode: 'spreadsheet' as BudgetViewMode,
     timePeriod: 'month' as TimePeriod,
     showGroupMgr: false,
     showFormatHelp: false,
@@ -61,10 +61,9 @@ describe('BudgetHeader', () => {
     expect(props.onNextYear).toHaveBeenCalledOnce()
   })
 
-  it('renders all three view mode buttons', () => {
+  it('renders the primary view mode buttons', () => {
     renderHeader()
-    expect(screen.getByText('Aggregated')).toBeInTheDocument()
-    expect(screen.getByText('Detailed')).toBeInTheDocument()
+    expect(screen.getByText('Spreadsheet')).toBeInTheDocument()
     expect(screen.getByText('Cashflow')).toBeInTheDocument()
   })
 
@@ -72,14 +71,17 @@ describe('BudgetHeader', () => {
     const user = userEvent.setup()
     const { props } = renderHeader()
 
-    await user.click(screen.getByText('Detailed'))
-    expect(props.onSetViewMode).toHaveBeenCalledWith('detailed')
+    await user.click(screen.getByText('Spreadsheet'))
+    expect(props.onSetViewMode).toHaveBeenCalledWith('spreadsheet')
 
     await user.click(screen.getByText('Cashflow'))
     expect(props.onSetViewMode).toHaveBeenCalledWith('cashflow')
+  })
 
-    await user.click(screen.getByText('Aggregated'))
-    expect(props.onSetViewMode).toHaveBeenCalledWith('aggregated')
+  it('does not render spreadsheet sub-view buttons in the header', () => {
+    renderHeader()
+    expect(screen.queryByRole('button', { name: 'Aggregated' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Detailed' })).not.toBeInTheDocument()
   })
 
   it('renders the time period selector buttons', () => {

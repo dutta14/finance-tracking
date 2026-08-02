@@ -76,16 +76,10 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
       <div className="budget-header-right">
         <div className="budget-view-toggle">
           <button
-            className={`budget-view-btn${viewMode === 'aggregated' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('aggregated')}
+            className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
+            onClick={() => onSetViewMode('spreadsheet')}
           >
-            Aggregated
-          </button>
-          <button
-            className={`budget-view-btn${viewMode === 'detailed' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('detailed')}
-          >
-            Detailed
+            Spreadsheet
           </button>
           <button
             className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
