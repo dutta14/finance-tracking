@@ -8,6 +8,7 @@ interface BudgetAggregatedViewProps {
   categoryGroups: CategoryGroup[]
   categorySums: Record<string, Record<string, number>>
   timePeriod: TimePeriod
+  incomeCategoryGroups?: CategoryGroup[]
 }
 
 const fmt = (n: number) =>
@@ -19,6 +20,7 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
   categoryGroups,
   categorySums,
   timePeriod,
+  incomeCategoryGroups,
 }) => {
   const months = Array.from({ length: 12 }, (_, i) => buildMonthKey(year, i))
 
@@ -50,10 +52,12 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
 
   const relevantGroups: { id: string; name: string; categories: string[] }[] =
     type === 'income'
-      ? (() => {
-          const allIncomeCats = Object.keys(categorySums).filter(c => isTypeCategory(c))
-          return allIncomeCats.length > 0 ? [{ id: '__income__', name: 'Income', categories: allIncomeCats }] : []
-        })()
+      ? (incomeCategoryGroups || [])
+          .map(g => ({
+            ...g,
+            categories: g.categories.filter(c => isTypeCategory(c)),
+          }))
+          .filter(g => g.categories.length > 0)
       : categoryGroups
           .map(g => ({
             ...g,

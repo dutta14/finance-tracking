@@ -90,7 +90,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
     .filter(g => g.id !== 'removed')
     .map(g => ({
       ...g,
-      categories: g.categories.filter(c => relevantCategories.has(c)),
+      categories: g.categories.filter(c =>
+        type === 'income' ? categorySums[c] !== undefined : relevantCategories.has(c),
+      ),
     }))
     .filter(g => g.categories.length > 0)
 
@@ -302,36 +304,8 @@ const BudgetTable: FC<BudgetTableProps> = ({
             </tr>
           </thead>
           <tbody>
-            {type === 'income' ? (
-              // Income: flat list of categories, no group structure
-              <>
-                {[...relevantCategories]
-                  .sort((a, b) => a.localeCompare(b))
-                  .map(cat => {
-                    const total = getCategoryTotal(cat)
-                    return (
-                      <tr key={cat} className="budget-tr--category">
-                        <td className="budget-td budget-td--category-name">{displayCat(cat)}</td>
-                        {periods.map(p => {
-                          const val = getPeriodValue(cat, p)
-                          return (
-                            <td key={p.label} className="budget-td budget-td--number">
-                              {val !== 0 ? fmt(Math.abs(val)) : ''}
-                            </td>
-                          )
-                        })}
-                        <td
-                          className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}
-                        >
-                          {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(Math.abs(total)) : ''}
-                        </td>
-                      </tr>
-                    )
-                  })}
-              </>
-            ) : (
-              // Expense: grouped rows
-              relevantGroups.map(group => (
+            {/* Both income and expense use grouped rows */}
+            {relevantGroups.map(group => (
                 <GroupRows
                   key={group.id}
                   group={group}
@@ -341,11 +315,10 @@ const BudgetTable: FC<BudgetTableProps> = ({
                   getGroupPeriodTotal={getGroupPeriodTotal}
                   getGroupYearTotal={getGroupYearTotal}
                   getCategoryPct={getCategoryPct}
-                  isExpense={true}
+                  isExpense={type === 'expense'}
                   showPct={showPct}
                 />
-              ))
-            )}
+              ))}
             {relevantCategories.size > 0 && (
               <tr className="budget-tr--grand-total">
                 <td className="budget-td budget-td--category">
