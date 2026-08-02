@@ -85,6 +85,18 @@ const Goal: FC = () => {
           <>
             <div className="goal-header">
               <h1>Goals</h1>
+              <nav className="goal-tab-bar" aria-label="Goals sections">
+                <NavLink
+                  to="/goal"
+                  end
+                  className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
+                >
+                  Plans
+                </NavLink>
+                <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
+                  Calculator
+                </NavLink>
+              </nav>
               {activeTab === 'plans' && (
                 <div className="goal-header-actions">
                   {goals.length > 0 && gwGoals.length > 0 && (
@@ -118,19 +130,6 @@ const Goal: FC = () => {
                 </div>
               )}
             </div>
-
-            <nav className="goal-tab-bar" aria-label="Goals sections">
-              <NavLink
-                to="/goal"
-                end
-                className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
-              >
-                Plans
-              </NavLink>
-              <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
-                Calculator
-              </NavLink>
-            </nav>
           </>
         )}
 
