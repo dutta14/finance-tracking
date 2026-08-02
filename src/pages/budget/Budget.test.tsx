@@ -321,11 +321,11 @@ describe('Budget with data', () => {
     expect(screen.queryByText(/No data for/)).not.toBeInTheDocument()
   })
 
-  it('shows CategoryGroupManager when Groups button is clicked', async () => {
-    const user = userEvent.setup()
-    renderBudget()
-    await user.click(screen.getByText('Groups'))
+  it('renders CategoryGroupManager on the groups route', () => {
+    renderBudget('/budget/groups')
     expect(screen.getByTestId('category-group-manager')).toBeInTheDocument()
+    expect(screen.queryByTestId('budget-aggregated')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('cashflow-bar-chart')).not.toBeInTheDocument()
   })
 
   it('shows format help panel when ? button is clicked', async () => {
@@ -345,10 +345,11 @@ describe('Budget with data', () => {
     expect(screen.queryByText('Upload CSV')).not.toBeInTheDocument()
   })
 
-  it('hides Groups button on cashflow tab', () => {
-    renderBudget('/budget/cashflow')
-    expect(screen.queryByText('Groups')).not.toBeInTheDocument()
+  it('hides Upload CSV button on groups tab', () => {
+    renderBudget('/budget/groups')
+    expect(screen.queryByText('Upload CSV')).not.toBeInTheDocument()
   })
+
 })
 
 /* ─── Year navigation ─── */
@@ -410,6 +411,20 @@ describe('Budget view mode toggle', () => {
     await user.click(screen.getByRole('button', { name: 'Cashflow' }))
     expect(await screen.findByTestId('cashflow-bar-chart')).toBeInTheDocument()
     expect(screen.getByTestId('cashflow-sankey')).toBeInTheDocument()
+    expect(screen.queryByTestId('budget-aggregated')).not.toBeInTheDocument()
+  })
+
+  it('navigates to the groups route when clicking Groups button', async () => {
+    const user = userEvent.setup()
+    mockUseBudget.yearTransactions = {
+      '2025-01': [{ date: '2025-01-15', category: 'Salary', amount: 5000 }],
+    }
+    mockUseBudget.monthsWithData = new Set(['2025-01'])
+    renderBudget('/budget/cashflow')
+
+    await user.click(screen.getByRole('button', { name: 'Groups' }))
+    expect(await screen.findByTestId('category-group-manager')).toBeInTheDocument()
+    expect(screen.queryByTestId('cashflow-bar-chart')).not.toBeInTheDocument()
     expect(screen.queryByTestId('budget-aggregated')).not.toBeInTheDocument()
   })
 

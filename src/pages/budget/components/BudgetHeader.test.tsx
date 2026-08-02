@@ -55,6 +55,7 @@ describe('BudgetHeader', () => {
     renderHeader()
     expect(screen.getByText('Spreadsheet')).toBeInTheDocument()
     expect(screen.getByText('Cashflow')).toBeInTheDocument()
+    expect(screen.getByText('Groups')).toBeInTheDocument()
   })
 
   it('calls onSetViewMode with the correct mode when clicking a view button', async () => {
@@ -66,6 +67,9 @@ describe('BudgetHeader', () => {
 
     await user.click(screen.getByText('Cashflow'))
     expect(props.onSetViewMode).toHaveBeenCalledWith('cashflow')
+
+    await user.click(screen.getByText('Groups'))
+    expect(props.onSetViewMode).toHaveBeenCalledWith('groups')
   })
 
   it('does not render spreadsheet sub-view buttons in the header', () => {
