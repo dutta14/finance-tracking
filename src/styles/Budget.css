@@ -394,6 +394,9 @@ body.dark .budget-title {
 }
 .budget-tr--group-header .budget-td {
   border-bottom: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-border);
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
 }
 .budget-td--group-name {
   font-weight: var(--fw-semibold);

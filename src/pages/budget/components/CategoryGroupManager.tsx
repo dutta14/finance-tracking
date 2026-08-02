@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { CategoryGroup, Transaction } from '../types'
 
 type GroupSection = 'expense' | 'income'
@@ -38,10 +38,15 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     return cat
   }
 
-  const isIncomeCategory = (cat: string): boolean => {
-    const vals = Object.values(categorySums[cat] || {})
-    return !vals.some(v => v < 0) && vals.some(v => v > 0)
-  }
+  const isIncomeCategory = useCallback(
+    (cat: string): boolean => {
+      const vals = Object.values(categorySums[cat] || {})
+      if (vals.length === 0) return false
+      const total = vals.reduce((s, v) => s + v, 0)
+      return total > 0
+    },
+    [categorySums],
+  )
 
   const resolvedIncomeGroups = useMemo(() => incomeCategoryGroups || [], [incomeCategoryGroups])
   const expenseDisplayGroups = useMemo(
@@ -50,7 +55,7 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
         ...g,
         displayCategories: g.categories.filter(c => !isIncomeCategory(c)),
       })),
-    [groups, categorySums],
+    [groups, isIncomeCategory],
   )
   const incomeDisplayGroups = useMemo(
     () =>
@@ -58,7 +63,7 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
         ...g,
         displayCategories: g.categories.filter(c => isIncomeCategory(c)),
       })),
-    [resolvedIncomeGroups, categorySums],
+    [resolvedIncomeGroups, isIncomeCategory],
   )
   const showIncomeSection = incomeCategoryGroups !== undefined || onUpdateIncomeGroups !== undefined
 
@@ -109,7 +114,8 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
   const getGroupsForSection = (section: GroupSection) => (section === 'expense' ? groups : resolvedIncomeGroups)
   const getDisplayGroupsForSection = (section: GroupSection) =>
     section === 'expense' ? expenseDisplayGroups : incomeDisplayGroups
-  const getFallbackGroupId = (section: GroupSection) => (section === 'expense' ? OTHERS_GROUP_ID : INCOME_OTHERS_GROUP_ID)
+  const getFallbackGroupId = (section: GroupSection) =>
+    section === 'expense' ? OTHERS_GROUP_ID : INCOME_OTHERS_GROUP_ID
   const isProtectedGroup = (section: GroupSection, id: string) =>
     id === getFallbackGroupId(section) || id === REMOVED_GROUP_ID
   const updateSectionGroups = (section: GroupSection, nextGroups: CategoryGroup[]) => {
@@ -220,7 +226,10 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
       return
     }
 
-    updateSectionGroups(section, [...filteredGroups, { id: fallbackGroupId, name: fallbackName, categories: group.categories }])
+    updateSectionGroups(section, [
+      ...filteredGroups,
+      { id: fallbackGroupId, name: fallbackName, categories: group.categories },
+    ])
   }
 
   const handleDragStart = (e: React.DragEvent, section: GroupSection, category: string, fromGroupId: string) => {
@@ -314,7 +323,9 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
         <div className="budget-group-manager-header">
           <div className="budget-group-manager-header-left">
             <h4 className="budget-group-manager-title">{title}</h4>
-            <p className="budget-group-manager-hint">Drag categories between groups or drag group headers to reorder.</p>
+            <p className="budget-group-manager-hint">
+              Drag categories between groups or drag group headers to reorder.
+            </p>
           </div>
           <div className="budget-group-manager-header-actions">
             <button className="budget-action-btn" onClick={() => addGroup(section)}>
@@ -487,7 +498,9 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                   <div className="budget-group-cats">
                     {group.displayCategories.length === 0 ? (
                       <div className="budget-group-cats-empty">
-                        {dragCat?.section === section ? 'Drop here' : 'No categories yet - drag categories here from other groups'}
+                        {dragCat?.section === section
+                          ? 'Drop here'
+                          : 'No categories yet - drag categories here from other groups'}
                       </div>
                     ) : (
                       [...group.displayCategories]
@@ -504,7 +517,9 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                               key={cat}
                               className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeModeSection === section && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}${mergeModeSection === section ? ' budget-group-cat--clickable' : ''}`}
                               draggable={mergeModeSection !== section}
-                              onDragStart={e => mergeModeSection !== section && handleDragStart(e, section, cat, group.id)}
+                              onDragStart={e =>
+                                mergeModeSection !== section && handleDragStart(e, section, cat, group.id)
+                              }
                               onDragEnd={handleDragEnd}
                               onClick={() => mergeModeSection === section && toggleMergeSelect(cat)}
                               title={tooltip}

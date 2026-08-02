@@ -386,7 +386,6 @@ section.goal {
     grid-template-columns: repeat(3, 1fr);
   }
 }
-}
 
 /* Drag and drop */
 .goal-drag-item {
