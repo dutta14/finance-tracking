@@ -28,6 +28,8 @@ export interface FinancialGoal {
 
   // User Overrides
   savingsOverride?: number | null
+  annualSpending?: number | null
+  incomeTaxRate?: number | null
 
   // Calculated Fields
   retirement: string

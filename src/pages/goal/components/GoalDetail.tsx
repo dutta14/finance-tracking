@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
 import { formatCurrency } from '../../data/types'
+import { appStorage } from '../../../utils/appStorage'
 import GoalDetailedCard from './GoalDetailedCard'
 import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
@@ -25,6 +26,49 @@ import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
 import '../../../styles/GrowthSettings.css'
+
+/** Inline value that shows formatted text, becomes an input on click */
+const InlineEditableValue: FC<{
+  value: string
+  onChange: (v: string) => void
+  displayValue: string
+  placeholder: string
+  ariaLabel: string
+  narrow?: boolean
+}> = ({ value, onChange, displayValue, placeholder, ariaLabel, narrow }) => {
+  const [editing, setEditing] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  if (!editing) {
+    return (
+      <strong
+        className="goal-summary-toggleable"
+        onClick={() => {
+          setEditing(true)
+          setTimeout(() => inputRef.current?.focus(), 0)
+        }}
+        aria-label={ariaLabel}
+      >
+        {value ? displayValue : placeholder}
+      </strong>
+    )
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      className={`goal-summary-inline-input${narrow ? ' goal-summary-inline-input--narrow' : ''}`}
+      type="text"
+      inputMode="numeric"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onBlur={() => setEditing(false)}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
+      autoFocus
+    />
+  )
+}
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
@@ -64,6 +108,8 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [renameName, setRenameName] = useState('')
   const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [showYearly, setShowYearly] = useState(false)
+  const [annualSpending, setAnnualSpending] = useState(() => (goal?.annualSpending ? String(goal.annualSpending) : ''))
+  const [incomeTaxRate, setIncomeTaxRate] = useState(() => (goal?.incomeTaxRate ? String(goal.incomeTaxRate) : ''))
   const renameInputRef = useRef<HTMLInputElement>(null)
   const savingsOverride = goal?.savingsOverride ?? null
 
@@ -71,6 +117,12 @@ const GoalDetail: FC<GoalDetailProps> = ({
     if (!goal) return
     onUpdateGoal(goalId, { ...goal, savingsOverride: v })
   }
+
+  // Sync state when navigating between goals
+  useEffect(() => {
+    setAnnualSpending(goal?.annualSpending ? String(goal.annualSpending) : '')
+    setIncomeTaxRate(goal?.incomeTaxRate ? String(goal.incomeTaxRate) : '')
+  }, [goal?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
   const gwGrowth = growthCtx.settings.gwGrowth
@@ -134,6 +186,40 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
     return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown }
   }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
+
+  const handleSpendingChange = (v: string) => {
+    setAnnualSpending(v)
+    const parsed = Number(v.replace(/[^0-9.]/g, '')) || 0
+    if (goal) onUpdateGoal(goalId, { ...goal, annualSpending: parsed || null })
+  }
+
+  const handleTaxRateChange = (v: string) => {
+    setIncomeTaxRate(v)
+    const parsed = Number(v) || 0
+    if (goal) onUpdateGoal(goalId, { ...goal, incomeTaxRate: parsed || null })
+  }
+
+  const parsedSpending = Number(annualSpending.replace(/[^0-9.]/g, '')) || 0
+  const parsedTaxRate = Number(incomeTaxRate) || 0
+  const annualSavingsNeeded = (summaryData?.totalNeeded ?? 0) * 12
+  const grossIncome = parsedTaxRate < 100 ? (annualSavingsNeeded + parsedSpending) / (1 - parsedTaxRate / 100) : 0
+
+  const lastYearGross = useMemo(() => {
+    const lastYear = new Date().getFullYear() - 1
+    try {
+      const overrides = appStorage.getJSON<Record<number, { grossIncome?: number; taxes?: number }>>(
+        'sgt-overrides',
+        {},
+      )
+      const entry = overrides[lastYear]
+      if (!entry?.grossIncome) return null
+      const taxRate =
+        entry.taxes != null && entry.grossIncome ? ((entry.taxes / entry.grossIncome) * 100).toFixed(1) : null
+      return { grossIncome: entry.grossIncome, taxRate }
+    } catch {
+      return null
+    }
+  }, [])
 
   if (!goal) {
     return (
@@ -339,6 +425,39 @@ const GoalDetail: FC<GoalDetailProps> = ({
               <>🎉 You&apos;ve already achieved all your goals at the current growth rate.</>
             )}
           </p>
+          {summaryData.totalNeeded > 0 && (
+            <p className="goal-summary-prose">
+              If you want to spend{' '}
+              <InlineEditableValue
+                value={annualSpending}
+                onChange={handleSpendingChange}
+                displayValue={parsedSpending ? `${formatCurrency(parsedSpending)}` : '$0'}
+                placeholder="$0"
+                ariaLabel="Annual spending"
+              />
+              /yr, and your income tax is{' '}
+              <InlineEditableValue
+                value={incomeTaxRate}
+                onChange={handleTaxRateChange}
+                displayValue={parsedTaxRate ? `${parsedTaxRate}` : '0'}
+                placeholder="0"
+                ariaLabel="Income tax rate"
+                narrow
+              />
+              %, then your gross income should at least be <strong>{formatCurrency(grossIncome)}/yr</strong>.
+            </p>
+          )}
+          {lastYearGross !== null && (
+            <p className="goal-summary-prose">
+              Your gross income last year was <strong>{formatCurrency(lastYearGross.grossIncome)}</strong>
+              {lastYearGross.taxRate !== null && (
+                <>
+                  , and your tax rate was <strong>{lastYearGross.taxRate}%</strong>
+                </>
+              )}
+              .
+            </p>
+          )}
         </div>
       )}
 

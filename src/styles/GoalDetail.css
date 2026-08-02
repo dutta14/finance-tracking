@@ -163,9 +163,38 @@
   color: var(--color-text);
 }
 
+.goal-summary-prose + .goal-summary-prose {
+  margin-top: 0.75rem;
+}
+
 .goal-summary-prose strong {
   font-weight: 600;
   font-feature-settings: 'tnum';
+}
+
+.goal-summary-inline-input {
+  display: inline-block;
+  width: 90px;
+  padding: 2px 6px;
+  margin: 0 2px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  background: var(--color-surface-alt);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.goal-summary-inline-input--narrow {
+  width: 50px;
+}
+
+.goal-summary-inline-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-focus-ring);
 }
 
 .goal-summary-toggleable {
