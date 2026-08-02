@@ -1,26 +1,35 @@
-import { FC, useState } from 'react'
-import { CategoryGroup } from '../types'
+import { FC, useEffect, useMemo, useState } from 'react'
+import { CategoryGroup, Transaction } from '../types'
+
+type GroupSection = 'expense' | 'income'
 
 interface CategoryGroupManagerProps {
   groups: CategoryGroup[]
   onUpdate: (groups: CategoryGroup[]) => void
+  incomeCategoryGroups?: CategoryGroup[]
+  onUpdateIncomeGroups?: (groups: CategoryGroup[]) => void
   onMerge: (sourceCategories: string[], targetName: string) => void
   onDeleteCategory: (category: string) => void
   categoryHasTransactions: (category: string) => boolean
   categorySums: Record<string, Record<string, number>>
+  yearTransactions?: Record<string, Transaction[]>
 }
+
+const OTHERS_GROUP_ID = 'others'
+const REMOVED_GROUP_ID = 'removed'
+const INCOME_OTHERS_GROUP_ID = 'income-others'
 
 const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
   groups,
   onUpdate,
+  incomeCategoryGroups,
+  onUpdateIncomeGroups,
   onMerge,
   onDeleteCategory,
   categoryHasTransactions,
   categorySums,
+  yearTransactions,
 }) => {
-  const [newGroupName, setNewGroupName] = useState('')
-
-  /** Strip group prefix from category for display: "X: Y" in group "X" → "Y" */
   const displayCat = (cat: string, groupName: string): string => {
     const prefix = groupName + ':'
     if (cat.toLowerCase().startsWith(prefix.toLowerCase())) {
@@ -28,83 +37,92 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     }
     return cat
   }
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set(groups.map(g => g.id)))
-  const [dragCat, setDragCat] = useState<{ category: string; fromGroupId: string } | null>(null)
-  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
-  const [dragGroup, setDragGroup] = useState<string | null>(null)
-  const [dragOverGroupReorder, setDragOverGroupReorder] = useState<string | null>(null)
-  const [mergeMode, setMergeMode] = useState(false)
-  const [mergeSelected, setMergeSelected] = useState<Set<string>>(new Set())
-  const [mergeTargetName, setMergeTargetName] = useState('')
-  const [deletingCat, setDeletingCat] = useState<string | null>(null)
-  const [deleteMergeTarget, setDeleteMergeTarget] = useState('')
 
-  // Income categories (no negative months) are hidden from group manager
   const isIncomeCategory = (cat: string): boolean => {
     const vals = Object.values(categorySums[cat] || {})
     return !vals.some(v => v < 0) && vals.some(v => v > 0)
   }
 
-  // Filter each group's categories to only show expense categories
-  const displayGroups = groups.map(g => ({
-    ...g,
-    displayCategories: g.categories.filter(c => !isIncomeCategory(c)),
-  }))
+  const resolvedIncomeGroups = useMemo(() => incomeCategoryGroups || [], [incomeCategoryGroups])
+  const expenseDisplayGroups = useMemo(
+    () =>
+      groups.map(g => ({
+        ...g,
+        displayCategories: g.categories.filter(c => !isIncomeCategory(c)),
+      })),
+    [groups, categorySums],
+  )
+  const incomeDisplayGroups = useMemo(
+    () =>
+      resolvedIncomeGroups.map(g => ({
+        ...g,
+        displayCategories: g.categories.filter(c => isIncomeCategory(c)),
+      })),
+    [resolvedIncomeGroups, categorySums],
+  )
+  const showIncomeSection = incomeCategoryGroups !== undefined || onUpdateIncomeGroups !== undefined
 
-  const toggleMergeSelect = (cat: string) => {
-    setMergeSelected(prev => {
+  const [editing, setEditing] = useState<{ section: GroupSection; id: string } | null>(null)
+  const [editName, setEditName] = useState('')
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [dragCat, setDragCat] = useState<{ section: GroupSection; category: string; fromGroupId: string } | null>(null)
+  const [dragOverGroup, setDragOverGroup] = useState<{ section: GroupSection; groupId: string } | null>(null)
+  const [dragGroup, setDragGroup] = useState<{ section: GroupSection; groupId: string } | null>(null)
+  const [dragOverGroupReorder, setDragOverGroupReorder] = useState<{ section: GroupSection; groupId: string } | null>(
+    null,
+  )
+  const [mergeModeSection, setMergeModeSection] = useState<GroupSection | null>(null)
+  const [mergeSelected, setMergeSelected] = useState<Set<string>>(new Set())
+  const [mergeTargetName, setMergeTargetName] = useState('')
+  const [deletingCat, setDeletingCat] = useState<{ section: GroupSection; category: string } | null>(null)
+  const [deleteMergeTarget, setDeleteMergeTarget] = useState('')
+
+  useEffect(() => {
+    setExpandedGroups(prev => {
       const next = new Set(prev)
-      if (next.has(cat)) next.delete(cat)
-      else next.add(cat)
+      groups.forEach(group => next.add(group.id))
+      resolvedIncomeGroups.forEach(group => next.add(group.id))
       return next
     })
-  }
-
-  const handleMerge = () => {
-    const target = mergeTargetName.trim()
-    if (!target || mergeSelected.size < 2) return
-    onMerge([...mergeSelected], target)
-    setMergeMode(false)
-    setMergeSelected(new Set())
-    setMergeTargetName('')
-  }
-
-  const cancelMerge = () => {
-    setMergeMode(false)
-    setMergeSelected(new Set())
-    setMergeTargetName('')
-  }
-
-  const handleDeleteCat = (cat: string) => {
-    if (categoryHasTransactions(cat)) {
-      setDeletingCat(cat)
-      setDeleteMergeTarget('')
-    } else {
-      onDeleteCategory(cat)
-    }
-  }
-
-  const confirmDeleteMerge = () => {
-    if (!deletingCat || !deleteMergeTarget.trim()) return
-    onMerge([deletingCat], deleteMergeTarget.trim())
-    setDeletingCat(null)
-    setDeleteMergeTarget('')
-  }
-
-  // All expense categories across all groups for merge mode
-  const allExpenseCats = displayGroups.flatMap(g => g.displayCategories).sort((a, b) => a.localeCompare(b))
+  }, [groups, resolvedIncomeGroups])
 
   const currencyFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
+  const txnCountByCategory = useMemo(() => {
+    const counts: Record<string, number> = {}
+    if (!yearTransactions) return counts
+    Object.values(yearTransactions).forEach(txs =>
+      txs.forEach(t => {
+        counts[t.category] = (counts[t.category] || 0) + 1
+      }),
+    )
+    return counts
+  }, [yearTransactions])
+
   const getCatStats = (cat: string) => {
     const months = categorySums[cat] || {}
-    const entries = Object.values(months).filter(v => v !== 0)
-    const monthCount = entries.length
-    const total = entries.reduce((s, v) => s + v, 0)
-    return { monthCount, total }
+    const total = Object.values(months).reduce((sum, value) => sum + value, 0)
+    const txnCount = txnCountByCategory[cat] || 0
+    return { txnCount, total }
   }
+
+  const getGroupsForSection = (section: GroupSection) => (section === 'expense' ? groups : resolvedIncomeGroups)
+  const getDisplayGroupsForSection = (section: GroupSection) =>
+    section === 'expense' ? expenseDisplayGroups : incomeDisplayGroups
+  const getFallbackGroupId = (section: GroupSection) => (section === 'expense' ? OTHERS_GROUP_ID : INCOME_OTHERS_GROUP_ID)
+  const isProtectedGroup = (section: GroupSection, id: string) =>
+    id === getFallbackGroupId(section) || id === REMOVED_GROUP_ID
+  const updateSectionGroups = (section: GroupSection, nextGroups: CategoryGroup[]) => {
+    if (section === 'expense') {
+      onUpdate(nextGroups)
+      return
+    }
+    onUpdateIncomeGroups?.(nextGroups)
+  }
+  const getSectionCategories = (section: GroupSection) =>
+    getDisplayGroupsForSection(section)
+      .flatMap(group => group.displayCategories)
+      .sort((a, b) => a.localeCompare(b))
 
   const toggleExpanded = (id: string) => {
     setExpandedGroups(prev => {
@@ -115,65 +133,127 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     })
   }
 
-  const addGroup = () => {
-    const name = newGroupName.trim()
-    if (!name) return
-    if (groups.find(g => g.name.toLowerCase() === name.toLowerCase())) return
-    const id = `group-${Date.now()}`
-    const removedIdx = groups.findIndex(g => g.id === 'removed')
-    const insertAt = removedIdx >= 0 ? removedIdx : groups.length
-    const newGroups = [...groups.slice(0, insertAt), { id, name, categories: [] }, ...groups.slice(insertAt)]
-    onUpdate(newGroups)
-    setNewGroupName('')
+  const toggleMergeSelect = (cat: string) => {
+    setMergeSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat)
+      else next.add(cat)
+      return next
+    })
+  }
+
+  const cancelMerge = () => {
+    setMergeModeSection(null)
+    setMergeSelected(new Set())
+    setMergeTargetName('')
+  }
+
+  const handleMerge = () => {
+    const target = mergeTargetName.trim()
+    if (!target || mergeSelected.size < 2) return
+    onMerge([...mergeSelected], target)
+    cancelMerge()
+  }
+
+  const handleDeleteCat = (section: GroupSection, cat: string) => {
+    if (categoryHasTransactions(cat)) {
+      setDeletingCat({ section, category: cat })
+      setDeleteMergeTarget('')
+      return
+    }
+    onDeleteCategory(cat)
+  }
+
+  const confirmDeleteMerge = () => {
+    if (!deletingCat || !deleteMergeTarget.trim()) return
+    onMerge([deletingCat.category], deleteMergeTarget.trim())
+    setDeletingCat(null)
+    setDeleteMergeTarget('')
+  }
+
+  const addGroup = (section: GroupSection) => {
+    const sectionGroups = getGroupsForSection(section)
+    const id = `${section}-group-${Date.now()}`
+    const name = 'New Group'
+    const removedIdx = sectionGroups.findIndex(g => g.id === REMOVED_GROUP_ID)
+    const insertAt = removedIdx >= 0 ? removedIdx : sectionGroups.length
+    const newGroups = [
+      ...sectionGroups.slice(0, insertAt),
+      { id, name, categories: [] },
+      ...sectionGroups.slice(insertAt),
+    ]
+    updateSectionGroups(section, newGroups)
     setExpandedGroups(prev => new Set([...prev, id]))
+    setEditing({ section, id })
+    setEditName(name)
   }
 
-  const renameGroup = (id: string) => {
+  const renameGroup = (section: GroupSection, id: string) => {
     const name = editName.trim()
-    if (!name || id === 'others' || id === 'removed') return
-    onUpdate(groups.map(g => (g.id === id ? { ...g, name } : g)))
-    setEditingId(null)
-  }
-
-  const removeGroup = (id: string) => {
-    if (id === 'others' || id === 'removed') return
-    const group = groups.find(g => g.id === id)
-    if (!group) return
-    onUpdate(
-      groups
-        .filter(g => g.id !== id)
-        .map(g => (g.id === 'others' ? { ...g, categories: [...g.categories, ...group.categories] } : g)),
+    if (!name || isProtectedGroup(section, id)) return
+    updateSectionGroups(
+      section,
+      getGroupsForSection(section).map(g => (g.id === id ? { ...g, name } : g)),
     )
+    setEditing(null)
   }
 
-  const handleDragStart = (e: React.DragEvent, category: string, fromGroupId: string) => {
+  const removeGroup = (section: GroupSection, id: string) => {
+    if (isProtectedGroup(section, id)) return
+
+    const sectionGroups = getGroupsForSection(section)
+    const group = sectionGroups.find(g => g.id === id)
+    if (!group) return
+
+    const fallbackGroupId = getFallbackGroupId(section)
+    const fallbackName = 'Others'
+    const filteredGroups = sectionGroups.filter(g => g.id !== id)
+    const fallbackGroup = filteredGroups.find(g => g.id === fallbackGroupId)
+
+    if (fallbackGroup) {
+      updateSectionGroups(
+        section,
+        filteredGroups.map(g =>
+          g.id === fallbackGroupId ? { ...g, categories: [...g.categories, ...group.categories] } : g,
+        ),
+      )
+      return
+    }
+
+    updateSectionGroups(section, [...filteredGroups, { id: fallbackGroupId, name: fallbackName, categories: group.categories }])
+  }
+
+  const handleDragStart = (e: React.DragEvent, section: GroupSection, category: string, fromGroupId: string) => {
     e.dataTransfer.setData('text/plain', category)
     e.dataTransfer.effectAllowed = 'move'
-    setDragCat({ category, fromGroupId })
+    setDragCat({ section, category, fromGroupId })
   }
 
-  const handleDragOver = (e: React.DragEvent, groupId: string) => {
+  const handleDragOver = (e: React.DragEvent, section: GroupSection, groupId: string) => {
+    if (dragCat && dragCat.section !== section) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
-    setDragOverGroupId(groupId)
+    setDragOverGroup({ section, groupId })
   }
 
-  const handleDrop = (e: React.DragEvent, toGroupId: string) => {
+  const handleDrop = (e: React.DragEvent, section: GroupSection, toGroupId: string) => {
     e.preventDefault()
-    setDragOverGroupId(null)
-    if (!dragCat || dragCat.fromGroupId === toGroupId) {
+    setDragOverGroup(null)
+    if (!dragCat || dragCat.section !== section || dragCat.fromGroupId === toGroupId) {
       setDragCat(null)
       return
     }
-    onUpdate(
-      groups.map(g => {
-        if (g.id === dragCat.fromGroupId) {
-          return { ...g, categories: g.categories.filter(c => c !== dragCat.category) }
+
+    updateSectionGroups(
+      section,
+      getGroupsForSection(section).map(group => {
+        if (group.id === dragCat.fromGroupId) {
+          return { ...group, categories: group.categories.filter(category => category !== dragCat.category) }
         }
-        if (g.id === toGroupId) {
-          return { ...g, categories: [...g.categories, dragCat.category] }
+        if (group.id === toGroupId) {
+          return { ...group, categories: [...group.categories, dragCat.category] }
         }
-        return g
+        return group
       }),
     )
     setDragCat(null)
@@ -181,44 +261,42 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
 
   const handleDragEnd = () => {
     setDragCat(null)
-    setDragOverGroupId(null)
+    setDragOverGroup(null)
   }
 
-  const handleGroupDragStart = (e: React.DragEvent, groupId: string) => {
+  const handleGroupDragStart = (e: React.DragEvent, section: GroupSection, groupId: string) => {
     e.dataTransfer.setData('text/plain', `group:${groupId}`)
     e.dataTransfer.effectAllowed = 'move'
-    setDragGroup(groupId)
+    setDragGroup({ section, groupId })
   }
 
-  const handleGroupDragOver = (e: React.DragEvent, groupId: string) => {
-    if (!dragGroup || dragGroup === groupId) return
+  const handleGroupDragOver = (e: React.DragEvent, section: GroupSection, groupId: string) => {
+    if (!dragGroup || dragGroup.section !== section || dragGroup.groupId === groupId) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
-    setDragOverGroupReorder(groupId)
+    setDragOverGroupReorder({ section, groupId })
   }
 
-  const handleGroupDrop = (e: React.DragEvent, targetId: string) => {
+  const handleGroupDrop = (e: React.DragEvent, section: GroupSection, targetId: string) => {
     e.preventDefault()
     setDragOverGroupReorder(null)
-    if (!dragGroup || dragGroup === targetId) {
+    if (!dragGroup || dragGroup.section !== section || dragGroup.groupId === targetId) {
       setDragGroup(null)
       return
     }
-    const fromIdx = groups.findIndex(g => g.id === dragGroup)
-    const toIdx = groups.findIndex(g => g.id === targetId)
-    if (fromIdx === -1 || toIdx === -1) {
+
+    const sectionGroups = getGroupsForSection(section)
+    const fromIdx = sectionGroups.findIndex(group => group.id === dragGroup.groupId)
+    const toIdx = sectionGroups.findIndex(group => group.id === targetId)
+    if (fromIdx === -1 || toIdx === -1 || sectionGroups[toIdx].id === REMOVED_GROUP_ID) {
       setDragGroup(null)
       return
     }
-    // Don't allow reordering into the "removed" slot
-    if (groups[toIdx].id === 'removed') {
-      setDragGroup(null)
-      return
-    }
-    const newGroups = [...groups]
+
+    const newGroups = [...sectionGroups]
     const [moved] = newGroups.splice(fromIdx, 1)
     newGroups.splice(toIdx, 0, moved)
-    onUpdate(newGroups)
+    updateSectionGroups(section, newGroups)
     setDragGroup(null)
   }
 
@@ -227,274 +305,286 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     setDragOverGroupReorder(null)
   }
 
-  return (
-    <div className="budget-group-manager">
-      <div className="budget-group-manager-header">
-        <div className="budget-group-manager-header-left">
-          <h4 className="budget-group-manager-title">Expense Category Groups</h4>
-          <p className="budget-group-manager-hint">
-            Drag categories between groups or drag group headers to reorder. Income categories are grouped
-            automatically.
-          </p>
-        </div>
-        <div className="budget-group-manager-header-actions">
-          <input
-            className="budget-group-input"
-            value={newGroupName}
-            onChange={e => setNewGroupName(e.target.value)}
-            placeholder="New group name"
-            onKeyDown={e => {
-              if (e.key === 'Enter') addGroup()
-            }}
-          />
-          <button className="budget-action-btn" onClick={addGroup} disabled={!newGroupName.trim()}>
-            Add Group
-          </button>
-          <button
-            className={`budget-action-btn${mergeMode ? ' budget-merge-active' : ''}`}
-            onClick={() => (mergeMode ? cancelMerge() : setMergeMode(true))}
-          >
-            {mergeMode ? 'Cancel Merge' : 'Merge Categories'}
-          </button>
-        </div>
-      </div>
+  const renderSection = (section: GroupSection, title: string) => {
+    const displayGroups = getDisplayGroupsForSection(section)
+    const allSectionCats = getSectionCategories(section)
 
-      {mergeMode && (
-        <div className="budget-merge-panel">
-          <h4 className="budget-merge-title">Merge Categories</h4>
-          <p className="budget-merge-step">1. Click categories below to select them
-            <span className="budget-merge-count">{mergeSelected.size} selected</span>
-          </p>
-          <p className="budget-merge-step">2. Choose the merged name:</p>
-          <div className="budget-merge-controls">
-            <select
-              className="budget-merge-select"
-              value={mergeTargetName}
-              onChange={e => setMergeTargetName(e.target.value)}
-            >
-              <option value="">Select target name…</option>
-              {[...mergeSelected]
-                .sort((a, b) => a.localeCompare(b))
-                .map(c => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-            </select>
-            <span className="budget-merge-or">or</span>
-            <input
-              className="budget-group-input"
-              value={mergeSelected.has(mergeTargetName) ? '' : mergeTargetName}
-              onChange={e => setMergeTargetName(e.target.value)}
-              placeholder="Type new name"
-            />
-            <button
-              className="budget-group-add-btn"
-              onClick={handleMerge}
-              disabled={mergeSelected.size < 2 || !mergeTargetName.trim()}
-            >
-              Merge
+    return (
+      <section key={section} className="budget-group-manager-section">
+        <div className="budget-group-manager-header">
+          <div className="budget-group-manager-header-left">
+            <h4 className="budget-group-manager-title">{title}</h4>
+            <p className="budget-group-manager-hint">Drag categories between groups or drag group headers to reorder.</p>
+          </div>
+          <div className="budget-group-manager-header-actions">
+            <button className="budget-action-btn" onClick={() => addGroup(section)}>
+              + New Group
             </button>
-            <button className="budget-group-add-btn" onClick={cancelMerge}>
-              Cancel
+            <button
+              className={`budget-action-btn${mergeModeSection === section ? ' budget-merge-active' : ''}`}
+              onClick={() => {
+                if (mergeModeSection === section) {
+                  cancelMerge()
+                  return
+                }
+                setMergeModeSection(section)
+                setMergeSelected(new Set())
+                setMergeTargetName('')
+              }}
+            >
+              {mergeModeSection === section ? 'Cancel Merge' : 'Merge Categories'}
             </button>
           </div>
         </div>
-      )}
 
-      <div className="budget-group-list">
-        {displayGroups.map(g => {
-          const isExpanded = expandedGroups.has(g.id)
-          const isDropTarget = dragOverGroupId === g.id && dragCat?.fromGroupId !== g.id
-          const isRemoved = g.id === 'removed'
-          const isProtected = g.id === 'others' || g.id === 'removed'
-
-          return (
-            <div
-              key={g.id}
-              className={`budget-group-block${isDropTarget ? ' budget-group-block--drop-target' : ''}${isRemoved ? ' budget-group-block--removed' : ''}${dragOverGroupReorder === g.id ? ' budget-group-block--reorder-target' : ''}${dragGroup === g.id ? ' budget-group-block--dragging' : ''}`}
-              onDragOver={e => {
-                if (dragGroup) handleGroupDragOver(e, g.id)
-                else handleDragOver(e, g.id)
-              }}
-              onDrop={e => {
-                if (dragGroup) handleGroupDrop(e, g.id)
-                else handleDrop(e, g.id)
-              }}
-              onDragLeave={e => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  setDragOverGroupId(null)
-                  setDragOverGroupReorder(null)
-                }
-              }}
-            >
-              <div
-                className="budget-group-header"
-                draggable={!isProtected && !editingId}
-                onDragStart={e => !isProtected && handleGroupDragStart(e, g.id)}
-                onDragEnd={handleGroupDragEnd}
+        {mergeModeSection === section && (
+          <div className="budget-merge-panel">
+            <h4 className="budget-merge-title">Merge Categories</h4>
+            <p className="budget-merge-step">
+              1. Click categories below to select them
+              <span className="budget-merge-count">{mergeSelected.size} selected</span>
+            </p>
+            <p className="budget-merge-step">2. Choose the merged name:</p>
+            <div className="budget-merge-controls">
+              <select
+                className="budget-merge-select"
+                value={mergeTargetName}
+                onChange={e => setMergeTargetName(e.target.value)}
               >
-                <button className="budget-group-toggle" onClick={() => toggleExpanded(g.id)}>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
-                  >
-                    <path
-                      d="M4 2l4 4-4 4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                {editingId === g.id ? (
-                  <input
-                    className="budget-group-input"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    onBlur={() => renameGroup(g.id)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') renameGroup(g.id)
-                      if (e.key === 'Escape') setEditingId(null)
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <span
-                    className="budget-group-name"
-                    onDoubleClick={() => {
-                      if (!isProtected) {
-                        setEditingId(g.id)
-                        setEditName(g.name)
-                      }
-                    }}
-                  >
-                    {g.name}
-                    <span className="budget-group-count">{g.displayCategories.length}</span>
-                  </span>
-                )}
-                {!isProtected && (
-                  <div className="budget-group-header-actions">
-                    <button
-                      className="budget-group-rename"
-                      onClick={() => {
-                        setEditingId(g.id)
-                        setEditName(g.name)
+                <option value="">Select target name…</option>
+                {[...mergeSelected]
+                  .sort((a, b) => a.localeCompare(b))
+                  .map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+              </select>
+              <span className="budget-merge-or">or</span>
+              <input
+                className="budget-group-input"
+                value={mergeSelected.has(mergeTargetName) ? '' : mergeTargetName}
+                onChange={e => setMergeTargetName(e.target.value)}
+                placeholder="Type new name"
+              />
+              <button
+                className="budget-action-btn"
+                onClick={handleMerge}
+                disabled={mergeSelected.size < 2 || !mergeTargetName.trim()}
+              >
+                Merge
+              </button>
+              <button className="budget-action-btn" onClick={cancelMerge}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="budget-group-list">
+          {displayGroups.map(group => {
+            const isExpanded = expandedGroups.has(group.id)
+            const isDropTarget =
+              dragOverGroup?.section === section &&
+              dragOverGroup.groupId === group.id &&
+              dragCat?.fromGroupId !== group.id
+            const isRemoved = group.id === REMOVED_GROUP_ID
+            const isProtected = isProtectedGroup(section, group.id)
+            const isEditing = editing?.section === section && editing.id === group.id
+
+            return (
+              <div
+                key={group.id}
+                className={`budget-group-block${isDropTarget ? ' budget-group-block--drop-target' : ''}${isRemoved ? ' budget-group-block--removed' : ''}${dragOverGroupReorder?.section === section && dragOverGroupReorder.groupId === group.id ? ' budget-group-block--reorder-target' : ''}${dragGroup?.section === section && dragGroup.groupId === group.id ? ' budget-group-block--dragging' : ''}`}
+                onDragOver={e => {
+                  if (dragGroup) handleGroupDragOver(e, section, group.id)
+                  else handleDragOver(e, section, group.id)
+                }}
+                onDrop={e => {
+                  if (dragGroup) handleGroupDrop(e, section, group.id)
+                  else handleDrop(e, section, group.id)
+                }}
+                onDragLeave={e => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOverGroup(null)
+                    setDragOverGroupReorder(null)
+                  }
+                }}
+              >
+                <div
+                  className="budget-group-header"
+                  draggable={!isProtected && !editing}
+                  onDragStart={e => !isProtected && handleGroupDragStart(e, section, group.id)}
+                  onDragEnd={handleGroupDragEnd}
+                >
+                  <button className="budget-group-toggle" onClick={() => toggleExpanded(group.id)}>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
+                    >
+                      <path
+                        d="M4 2l4 4-4 4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {isEditing ? (
+                    <input
+                      className="budget-group-input"
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      onBlur={() => renameGroup(section, group.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') renameGroup(section, group.id)
+                        if (e.key === 'Escape') setEditing(null)
                       }}
-                      title="Rename group"
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="budget-group-name"
+                      onDoubleClick={() => {
+                        if (!isProtected) {
+                          setEditing({ section, id: group.id })
+                          setEditName(group.name)
+                        }
+                      }}
                     >
-                      ✎
-                    </button>
-                    <button
-                      className="budget-group-remove"
-                      onClick={() => removeGroup(g.id)}
-                      title="Delete group (categories move to Others)"
-                    >
-                      ×
-                    </button>
+                      {group.name}
+                      <span className="budget-group-count">{group.displayCategories.length}</span>
+                    </span>
+                  )}
+                  {!isProtected && (
+                    <div className="budget-group-header-actions">
+                      <button
+                        className="budget-group-rename"
+                        onClick={() => {
+                          setEditing({ section, id: group.id })
+                          setEditName(group.name)
+                        }}
+                        title="Rename group"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        className="budget-group-remove"
+                        onClick={() => removeGroup(section, group.id)}
+                        title="Delete group (categories move to Others)"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {isExpanded && (
+                  <div className="budget-group-cats">
+                    {group.displayCategories.length === 0 ? (
+                      <div className="budget-group-cats-empty">
+                        {dragCat?.section === section ? 'Drop here' : 'No categories yet - drag categories here from other groups'}
+                      </div>
+                    ) : (
+                      [...group.displayCategories]
+                        .sort((a, b) => a.localeCompare(b))
+                        .map(cat => {
+                          const { txnCount, total } = getCatStats(cat)
+                          const tooltip =
+                            txnCount > 0
+                              ? `${currencyFmt.format(Math.abs(total))} · ${txnCount} transaction${txnCount === 1 ? '' : 's'}`
+                              : undefined
+
+                          return (
+                            <div
+                              key={cat}
+                              className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeModeSection === section && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}${mergeModeSection === section ? ' budget-group-cat--clickable' : ''}`}
+                              draggable={mergeModeSection !== section}
+                              onDragStart={e => mergeModeSection !== section && handleDragStart(e, section, cat, group.id)}
+                              onDragEnd={handleDragEnd}
+                              onClick={() => mergeModeSection === section && toggleMergeSelect(cat)}
+                              title={tooltip}
+                            >
+                              <span className="budget-group-cat-handle">⠿</span>
+                              <span className="budget-group-cat-name">{displayCat(cat, group.name)}</span>
+                              {txnCount > 0 && <span className="budget-group-cat-months">{txnCount}</span>}
+                              {mergeModeSection !== section && (
+                                <button
+                                  className="budget-group-cat-delete"
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    handleDeleteCat(section, cat)
+                                  }}
+                                  title="Delete category"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })
+                    )}
                   </div>
                 )}
               </div>
-
-              {isExpanded && (
-                <div className="budget-group-cats">
-                  {g.displayCategories.length === 0 ? (
-                    <div className="budget-group-cats-empty">
-                      {dragCat ? 'Drop here' : 'No categories yet - drag categories here from other groups'}
-                    </div>
-                  ) : (
-                    [...g.displayCategories]
-                      .sort((a, b) => a.localeCompare(b))
-                      .map(cat => {
-                        const { monthCount, total } = getCatStats(cat)
-                        const tooltip = monthCount > 0
-                          ? `${currencyFmt.format(Math.abs(total))} across ${monthCount} month${monthCount === 1 ? '' : 's'}`
-                          : undefined
-                        return (
-                        <div
-                          key={cat}
-                          className={`budget-group-cat${dragCat?.category === cat ? ' budget-group-cat--dragging' : ''}${mergeMode && mergeSelected.has(cat) ? ' budget-group-cat--merge-selected' : ''}${mergeMode ? ' budget-group-cat--clickable' : ''}`}
-                          draggable={!mergeMode}
-                          onDragStart={e => !mergeMode && handleDragStart(e, cat, g.id)}
-                          onDragEnd={handleDragEnd}
-                          onClick={() => mergeMode && toggleMergeSelect(cat)}
-                          title={tooltip}
-                        >
-                          <span className="budget-group-cat-handle">⠿</span>
-                          <span className="budget-group-cat-name">{displayCat(cat, g.name)}</span>
-                          {monthCount > 0 && (
-                            <span className="budget-group-cat-months">{monthCount}</span>
-                          )}
-                          {!mergeMode && (
-                            <button
-                              className="budget-group-cat-delete"
-                              onClick={e => {
-                                e.stopPropagation()
-                                handleDeleteCat(cat)
-                              }}
-                              title="Delete category"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                        )
-                      })
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Delete category merge prompt */}
-      {deletingCat && (
-        <div className="budget-merge-panel">
-          <p className="budget-merge-hint">
-            <strong>{deletingCat}</strong> has transactions. Choose a category to merge them into:
-          </p>
-          <div className="budget-merge-controls">
-            <select
-              className="budget-merge-select"
-              value={deleteMergeTarget}
-              onChange={e => setDeleteMergeTarget(e.target.value)}
-            >
-              <option value="">Select target…</option>
-              {allExpenseCats
-                .filter(c => c !== deletingCat)
-                .map(c => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-            </select>
-            <span className="budget-merge-or">or</span>
-            <input
-              className="budget-group-input"
-              value={allExpenseCats.includes(deleteMergeTarget) ? '' : deleteMergeTarget}
-              onChange={e => setDeleteMergeTarget(e.target.value)}
-              placeholder="Type new name"
-            />
-            <button className="budget-group-add-btn" onClick={confirmDeleteMerge} disabled={!deleteMergeTarget.trim()}>
-              Merge &amp; Delete
-            </button>
-            <button
-              className="budget-group-add-btn"
-              onClick={() => {
-                setDeletingCat(null)
-                setDeleteMergeTarget('')
-              }}
-            >
-              Cancel
-            </button>
-          </div>
+            )
+          })}
         </div>
-      )}
+
+        {deletingCat?.section === section && (
+          <div className="budget-merge-panel">
+            <p className="budget-merge-hint">
+              <strong>{deletingCat.category}</strong> has transactions. Choose a category to merge them into:
+            </p>
+            <div className="budget-merge-controls">
+              <select
+                className="budget-merge-select"
+                value={deleteMergeTarget}
+                onChange={e => setDeleteMergeTarget(e.target.value)}
+              >
+                <option value="">Select target…</option>
+                {allSectionCats
+                  .filter(cat => cat !== deletingCat.category)
+                  .map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+              </select>
+              <span className="budget-merge-or">or</span>
+              <input
+                className="budget-group-input"
+                value={allSectionCats.includes(deleteMergeTarget) ? '' : deleteMergeTarget}
+                onChange={e => setDeleteMergeTarget(e.target.value)}
+                placeholder="Type new name"
+              />
+              <button className="budget-action-btn" onClick={confirmDeleteMerge} disabled={!deleteMergeTarget.trim()}>
+                Merge &amp; Delete
+              </button>
+              <button
+                className="budget-action-btn"
+                onClick={() => {
+                  setDeletingCat(null)
+                  setDeleteMergeTarget('')
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+    )
+  }
+
+  return (
+    <div className="budget-group-manager">
+      {renderSection('expense', 'Expense Category Groups')}
+      {showIncomeSection && renderSection('income', 'Income Category Groups')}
     </div>
   )
 }

@@ -233,7 +233,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
 
   return (
     <div className="budget-manual-entry">
-      <button className="budget-add-txn-btn" onClick={toggle} aria-expanded={isOpen}>
+      <button className="budget-action-btn" onClick={toggle} aria-expanded={isOpen}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
           <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
