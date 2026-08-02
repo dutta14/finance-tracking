@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
+import { appStorage } from '../../utils/appStorage'
+import * as dataContextModule from '../../contexts/DataContext'
+import * as goalCalculationsModule from './utils/goalCalculations'
+import * as goalMathModule from './utils/goalMath'
+import * as yearMonthlySavingModule from './hooks/useYearMonthlySaving'
 import GoalDetail from './components/GoalDetail'
 
 /* ─── Mock heavy child components ─── */
@@ -45,6 +50,26 @@ vi.mock('./components/SavingsPlan', () => ({
 /* ─── Helpers ─── */
 
 const noop = () => {}
+
+const currentYear = new Date().getFullYear()
+
+beforeEach(() => {
+  localStorage.clear()
+  vi.restoreAllMocks()
+  vi.spyOn(dataContextModule, 'useData').mockReturnValue({
+    accounts: [],
+    balances: [],
+    allMonths: [],
+    setAccounts: noop,
+    setBalances: noop,
+  })
+  vi.spyOn(yearMonthlySavingModule, 'useYearMonthlySaving').mockReturnValue({
+    summaryYear: currentYear,
+    setSummaryYear: vi.fn(),
+    availableYears: [currentYear],
+    yearMonthlySaving: null,
+  })
+})
 
 function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
   return {
@@ -159,6 +184,35 @@ function renderStatefulDetail(route: string, initialGoals: FinancialGoal[], onUp
       </MemoryRouter>,
     ),
   }
+}
+
+function mockSummaryCard({ monthlySaving = 5000, yearMonthlySaving = null as number | null } = {}) {
+  vi.spyOn(dataContextModule, 'useData').mockReturnValue({
+    accounts: [
+      {
+        id: 1,
+        name: '401k',
+        type: 'retirement',
+        owner: 'primary',
+        status: 'active',
+        goalType: 'fi',
+        nature: 'asset',
+        allocation: 'us-stock',
+      },
+    ],
+    balances: [{ id: 1, accountId: 1, month: '2024-01', balance: 0 }],
+    allMonths: ['2024-01'],
+    setAccounts: noop,
+    setBalances: noop,
+  })
+  vi.spyOn(goalCalculationsModule, 'getFiTarget').mockReturnValue(750000)
+  vi.spyOn(goalMathModule, 'calcMonthlySaving').mockReturnValue(monthlySaving)
+  vi.spyOn(yearMonthlySavingModule, 'useYearMonthlySaving').mockReturnValue({
+    summaryYear: currentYear,
+    setSummaryYear: vi.fn(),
+    availableYears: [currentYear, currentYear - 1],
+    yearMonthlySaving,
+  })
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -641,5 +695,111 @@ describe('GoalDrawer removal', () => {
     const sectionPath = path.resolve(__dirname, 'components', 'GoalsSection.tsx')
     const source = fs.readFileSync(sectionPath, 'utf-8')
     expect(source).not.toContain('GoalDrawer')
+  })
+})
+
+describe('GoalDetail gross income summary', () => {
+  it('renders the gross income sentence when total needed is greater than zero', () => {
+    mockSummaryCard()
+
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    expect(screen.getByText(/If you want to spend/i)).toBeInTheDocument()
+    expect(screen.getByText('$60,000/yr')).toBeInTheDocument()
+  })
+
+  it('switches annual spending from formatted text to input on click and back on blur', async () => {
+    mockSummaryCard()
+    const user = userEvent.setup()
+
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    await user.click(screen.getByLabelText('Annual spending'))
+
+    const input = await waitFor(() => screen.getByRole('textbox', { name: 'Annual spending' }))
+    expect(input).toHaveFocus()
+
+    await user.tab()
+
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox', { name: 'Annual spending' })).not.toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('Annual spending')).toHaveTextContent('$0')
+  })
+
+  it('computes the correct gross income from spending and tax rate inputs', async () => {
+    mockSummaryCard()
+    const user = userEvent.setup()
+
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    await user.click(screen.getByLabelText('Annual spending'))
+    const spendingInput = await waitFor(() => screen.getByRole('textbox', { name: 'Annual spending' }))
+    await user.type(spendingInput, '100000')
+    await user.tab()
+
+    await user.click(screen.getByLabelText('Income tax rate'))
+    const taxInput = await waitFor(() => screen.getByRole('textbox', { name: 'Income tax rate' }))
+    await user.type(taxInput, '25')
+    await user.tab()
+
+    expect(screen.getByText('$213,333/yr')).toBeInTheDocument()
+  })
+
+  it('persists spending and tax rate values through onUpdateGoal', async () => {
+    mockSummaryCard()
+    const user = userEvent.setup()
+    const { onUpdateGoal } = renderStatefulDetail('/goal/1', [goalA])
+
+    await user.click(screen.getByLabelText('Annual spending'))
+    const spendingInput = await waitFor(() => screen.getByRole('textbox', { name: 'Annual spending' }))
+    await user.type(spendingInput, '100000')
+    await user.tab()
+
+    await user.click(screen.getByLabelText('Income tax rate'))
+    const taxInput = await waitFor(() => screen.getByRole('textbox', { name: 'Income tax rate' }))
+    await user.type(taxInput, '25')
+    await user.tab()
+
+    expect(onUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ annualSpending: 100000 }))
+    expect(onUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ incomeTaxRate: 25 }))
+  })
+
+  it('shows last year gross income when sgt-overrides has last year data', () => {
+    mockSummaryCard()
+    const lastYear = new Date().getFullYear() - 1
+    vi.spyOn(appStorage, 'getJSON').mockReturnValue({
+      [lastYear]: { grossIncome: 200000, taxes: 50000 },
+    })
+
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    expect(screen.getByText(/Your gross income last year was/i)).toBeInTheDocument()
+    expect(screen.getByText('$200,000')).toBeInTheDocument()
+    expect(screen.getByText('25.0%')).toBeInTheDocument()
+  })
+
+  it('hides the last year gross income sentence when no sgt-overrides data exists', () => {
+    mockSummaryCard()
+    vi.spyOn(appStorage, 'getJSON').mockReturnValue({})
+
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    expect(screen.queryByText(/Your gross income last year was/i)).not.toBeInTheDocument()
+  })
+
+  it('renders required savings and actual savings in separate paragraphs with the year selector', () => {
+    mockSummaryCard({ monthlySaving: 5000, yearMonthlySaving: 4000 })
+
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    const requiredSavingsParagraph = screen.getByText(/To achieve your goals, you need to save/i, { selector: 'p' })
+    const actualSavingsParagraph = screen.getByText(/You're saving/i, { selector: 'p' })
+
+    expect(requiredSavingsParagraph).toHaveTextContent('$5,000/mo')
+    expect(actualSavingsParagraph).toHaveTextContent(`You're saving $4,000/mo in ${currentYear}`)
+    expect(actualSavingsParagraph).toHaveTextContent('you need $1,000/mo more')
+    expect(within(actualSavingsParagraph).getByRole('combobox')).toHaveValue(String(currentYear))
+    expect(requiredSavingsParagraph).not.toBe(actualSavingsParagraph)
   })
 })

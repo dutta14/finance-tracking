@@ -308,16 +308,11 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
   const previousMonth = selectedMonthIndex >= 0 ? allMonths[selectedMonthIndex + 1] : undefined
   const latestMonth = allMonths[0]
 
-  const visibleAccounts = useMemo(
-    () => (showInactive ? accounts : accounts.filter(account => account.status !== 'inactive')),
-    [accounts, showInactive],
-  )
-
   const activeAccounts = useMemo(() => accounts.filter(account => account.status === 'active'), [accounts])
 
-  const accountsByOwner = useMemo<Record<AccountOwner, Account[]>>(
+  const allAccountsByOwner = useMemo<Record<AccountOwner, Account[]>>(
     () =>
-      visibleAccounts.reduce(
+      accounts.reduce(
         (grouped, account) => {
           grouped[account.owner].push(account)
           return grouped
@@ -328,7 +323,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
           joint: [],
         } as Record<AccountOwner, Account[]>,
       ),
-    [visibleAccounts],
+    [accounts],
   )
 
   const primaryInitial = (profile.name || ownerLabels.primary || 'P')[0].toUpperCase()
@@ -564,12 +559,17 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
 
   const renderDisplayItem = (item: OwnerDisplayItem) => {
     if (item.kind === 'account') {
+      if (!showInactive && item.account.status === 'inactive') return null
       return renderAccountCard(item.account, `account-${item.account.id}`)
     }
 
     const currentGroupTotal = editMode
       ? getEditingGroupTotal(item.accounts)
       : getGroupTotal(item.accounts, selectedBalanceLookup)
+
+    const visibleChildren = showInactive ? item.accounts : item.accounts.filter(a => a.status !== 'inactive')
+
+    if (visibleChildren.length === 0) return null
 
     return (
       <article key={item.groupName} className="account-group-card">
@@ -581,14 +581,14 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
           <span className="account-group-card__total">{formatSelectedValue(currentGroupTotal)}</span>
         </div>
         <div className="account-group-card__children">
-          {item.accounts.map(account => renderAccountCard(account, `group-${item.groupName}-${account.id}`))}
+          {visibleChildren.map(account => renderAccountCard(account, `group-${item.groupName}-${account.id}`))}
         </div>
       </article>
     )
   }
 
   const renderOwnerBody = (owner: AccountOwner) => {
-    const ownerAccounts = accountsByOwner[owner]
+    const ownerAccounts = allAccountsByOwner[owner]
 
     if (ownerAccounts.length === 0) {
       return <p className="owner-column__empty">No accounts</p>

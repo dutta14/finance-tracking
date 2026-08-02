@@ -36,7 +36,7 @@ interface GwFormFields {
 
 const EMPTY_FORM: GwFormFields = { label: '', disburseAge: '', disburseAmount: '' }
 
-type GwDollarView = 'creation' | 'disbursement'
+type GwDollarView = 'creation' | 'current' | 'disbursement'
 
 const GwGoalCard: FC<{
   gw: GwGoal
@@ -61,8 +61,8 @@ const GwGoalCard: FC<{
   goalCreatedIn,
   profileBirthday,
   gwGrowthRate,
-  dollarView: _dollarView,
-  onSetDollarView: _onSetDollarView,
+  dollarView,
+  onSetDollarView,
   onEdit,
   onDelete,
   gwProgressPct,
@@ -132,15 +132,30 @@ const GwGoalCard: FC<{
   // Exact month count: creation month → birthday month of disbursement year
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(goalCreatedIn)
+  const now = new Date()
+  const currentYear = now.getUTCFullYear()
   const disburseYear = birthYear + gw.disburseAge
   const retirementYear = birthYear + retirementAge
   const monthsToDisburse = Math.max(
     0,
     (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
   )
+  const monthsFromCreationToNow =
+    (currentYear - created.getUTCFullYear()) * 12 + (now.getUTCMonth() - created.getUTCMonth())
   // PV at retirement: inflation-adjust target to disbursement year, then discount back to retirement
   // This gives the nominal $ needed at retirement — constant regardless of creation/disbursement toggle
   const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsToDisburse)
+  const dollarDisplay =
+    dollarView === 'creation'
+      ? { amount: gw.disburseAmount, yearLabel: creationYear }
+      : dollarView === 'current'
+        ? {
+            amount: gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsFromCreationToNow),
+            yearLabel: currentYear,
+          }
+        : { amount: disbursementTarget, yearLabel: disburseYear }
+  const cycleDollarView = () =>
+    onSetDollarView(dollarView === 'disbursement' ? 'creation' : dollarView === 'creation' ? 'current' : 'disbursement')
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - retirementAge) * 12)
   const pvAtRetirement =
     monthsRetToDisburse > 0
@@ -243,8 +258,12 @@ const GwGoalCard: FC<{
       ) : (
         <>
           <p className="gw-goal-prose">
-            To have <strong>{dollars(disbursementTarget)}</strong> by age {gw.disburseAge} ({disburseYear}), you need{' '}
-            <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear}, growing at {gwGrowthRate}% per year.
+            To have{' '}
+            <strong className="goal-summary-toggleable" onClick={cycleDollarView}>
+              {dollars(dollarDisplay.amount)} ({dollarDisplay.yearLabel} dollars)
+            </strong>{' '}
+            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear},
+            growing at {gwGrowthRate}% per year.
           </p>
 
           <div className="gw-goal-progress-row">
@@ -277,7 +296,7 @@ const GwSection: FC<GwSectionProps> = ({
   const [importPickerOpen, setImportPickerOpen] = useState(false)
   const [form, setForm] = useState<GwFormFields>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
-  const [dollarView, setDollarView] = useState<GwDollarView>('creation')
+  const [dollarView, setDollarView] = useState<GwDollarView>('disbursement')
 
   const goalGoals = gwGoals.filter(g => g.fiGoalId === goal.id)
   const otherGoals = gwGoals.filter(g => g.fiGoalId !== goal.id)

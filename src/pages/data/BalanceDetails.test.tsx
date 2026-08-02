@@ -1200,4 +1200,54 @@ describe('BalanceDetails', () => {
 
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
   })
+
+  it('keeps group totals stable regardless of inactive account visibility', () => {
+    const accounts = [
+      makeAccount({ id: 1, name: 'Zestimate', owner: 'primary', nature: 'asset', group: 'HOME' }),
+      makeAccount({ id: 2, name: 'HELOC', owner: 'primary', nature: 'liability', group: 'HOME', status: 'inactive' }),
+      makeAccount({ id: 3, name: 'Mortgage', owner: 'primary', nature: 'liability', group: 'HOME' }),
+    ]
+    const balances = [
+      makeBalanceEntry({ accountId: 1, month: '2025-07', balance: 1237400 }),
+      makeBalanceEntry({ accountId: 2, month: '2025-07', balance: -4154 }),
+      makeBalanceEntry({ accountId: 3, month: '2025-07', balance: -900291 }),
+    ]
+    const balanceMap = new Map([
+      ['1:2025-07', 1237400],
+      ['2:2025-07', -4154],
+      ['3:2025-07', -900291],
+    ])
+
+    // With inactive shown
+    const { rerender } = render(
+      <BalanceDetails
+        accounts={accounts}
+        balances={balances}
+        allMonths={['2025-07']}
+        balanceMap={balanceMap}
+        profile={baseProfile}
+        showInactive={true}
+      />,
+    )
+
+    const groupTotal = screen.getByText('HOME').closest('article')!.querySelector('.account-group-card__total')!
+    expect(groupTotal.textContent).toBe('$332,955')
+
+    // With inactive hidden — total should remain the same
+    rerender(
+      <BalanceDetails
+        accounts={accounts}
+        balances={balances}
+        allMonths={['2025-07']}
+        balanceMap={balanceMap}
+        profile={baseProfile}
+        showInactive={false}
+      />,
+    )
+
+    const groupTotalAfter = screen.getByText('HOME').closest('article')!.querySelector('.account-group-card__total')!
+    expect(groupTotalAfter.textContent).toBe('$332,955')
+    // HELOC card should be hidden
+    expect(screen.queryByText('HELOC')).not.toBeInTheDocument()
+  })
 })
