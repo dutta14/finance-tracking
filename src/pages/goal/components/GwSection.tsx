@@ -133,7 +133,7 @@ const GwGoalCard: FC<{
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
   const created = new Date(goalCreatedIn)
   const now = new Date()
-  const currentYear = now.getFullYear()
+  const currentYear = now.getUTCFullYear()
   const disburseYear = birthYear + gw.disburseAge
   const retirementYear = birthYear + retirementAge
   const monthsToDisburse = Math.max(
@@ -141,7 +141,7 @@ const GwGoalCard: FC<{
     (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
   )
   const monthsFromCreationToNow =
-    (currentYear - created.getUTCFullYear()) * 12 + (now.getMonth() - created.getUTCMonth())
+    (currentYear - created.getUTCFullYear()) * 12 + (now.getUTCMonth() - created.getUTCMonth())
   // PV at retirement: inflation-adjust target to disbursement year, then discount back to retirement
   // This gives the nominal $ needed at retirement — constant regardless of creation/disbursement toggle
   const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsToDisburse)

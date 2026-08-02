@@ -47,6 +47,15 @@ const InlineEditableValue: FC<{
           setEditing(true)
           setTimeout(() => inputRef.current?.focus(), 0)
         }}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setEditing(true)
+            setTimeout(() => inputRef.current?.focus(), 0)
+          }
+        }}
+        role="button"
+        tabIndex={0}
         aria-label={ariaLabel}
       >
         {value ? displayValue : placeholder}
