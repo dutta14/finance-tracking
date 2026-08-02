@@ -220,6 +220,28 @@ describe('BalanceSpreadsheet', () => {
     expect(screen.getAllByText('$579')).toHaveLength(2)
   })
 
+  it('shows $0 for a collapsed group when at least one child has a zero balance entry for the month', () => {
+    const grouped1 = makeAccount({ id: 10, name: 'Sub A', group: 'Savings', goalType: 'gw', type: 'liquid' })
+    const grouped2 = makeAccount({ id: 11, name: 'Sub B', group: 'Savings', goalType: 'gw', type: 'liquid' })
+    const map = buildBalanceMap([
+      { accountId: 10, month: '2024-01', balance: 0 },
+      { accountId: 11, month: '2024-01', balance: 0 },
+    ])
+
+    render(
+      <BalanceSpreadsheet
+        {...makeProps({
+          spreadsheetAccounts: [grouped1, grouped2],
+          allAccounts: [grouped1, grouped2],
+          allMonths: ['2024-01'],
+          balanceMap: map,
+        })}
+      />,
+    )
+
+    expect(screen.getAllByText('$0')).toHaveLength(2)
+  })
+
   // --- Filters ---
 
   it('filters by owner when owner filter is toggled', async () => {
@@ -627,8 +649,9 @@ describe('BalanceSpreadsheet', () => {
         })}
       />,
     )
-    // Group cell shows empty string when sum is 0 (line 607: groupVal !== 0 ? ... : '')
+    // Group cell stays empty because no child has a balance entry for the month.
     expect(screen.getByText('Empty')).toBeInTheDocument()
+    expect(screen.getAllByText('$0')).toHaveLength(1)
   })
 
   it('renders YTD date filter correctly', async () => {

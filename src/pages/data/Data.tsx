@@ -10,6 +10,7 @@ import { exportCsv } from './csvExport'
 import AccountsModal from './AccountsModal'
 import BalanceSpreadsheet from './BalanceSpreadsheet'
 import BalanceCharts from './BalanceCharts'
+import BalanceDetails from './BalanceDetails'
 import '../../styles/Data.css'
 
 const Allocation = lazy(() => import('../allocation/Allocation'))
@@ -29,7 +30,7 @@ const Data: FC = () => {
   } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
   const [showInactive, setShowInactive] = useState(false)
-  const [dataView, setDataView] = useState<'charts' | 'spreadsheet'>('charts')
+  const [dataView, setDataView] = useState<'charts' | 'spreadsheet' | 'details'>('charts')
 
   const accountsRef = useRef(accounts)
   accountsRef.current = accounts
@@ -130,6 +131,29 @@ const Data: FC = () => {
     }
     saveBalances(updated)
     setInlineEntry(null)
+  }
+
+  const handleSaveMonth = (month: string, values: Record<string, number>) => {
+    let updated = [...balances]
+    let nextId = updated.length > 0 ? Math.max(...updated.map(b => b.id)) + 1 : 1
+    const activeAccountIds = new Set(activeAccounts.map(account => account.id))
+
+    Object.entries(values).forEach(([accountId, balance]) => {
+      const parsedAccountId = Number(accountId)
+
+      if (!Number.isInteger(parsedAccountId) || !activeAccountIds.has(parsedAccountId)) return
+
+      const existing = updated.find(entry => entry.accountId === parsedAccountId && entry.month === month)
+
+      if (existing) {
+        updated = updated.map(entry => (entry.id === existing.id ? { ...entry, balance } : entry))
+        return
+      }
+
+      updated.push({ id: nextId++, accountId: parsedAccountId, month, balance })
+    })
+
+    saveBalances(updated)
   }
 
   const handleDeleteMonth = (month: string) => {
@@ -268,6 +292,14 @@ const Data: FC = () => {
                           Charts
                         </button>
                         <button
+                          className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
+                          role="tab"
+                          aria-selected={dataView === 'details'}
+                          onClick={() => setDataView('details')}
+                        >
+                          Details
+                        </button>
+                        <button
                           className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
                           role="tab"
                           aria-selected={dataView === 'spreadsheet'}
@@ -277,7 +309,7 @@ const Data: FC = () => {
                         </button>
                       </div>
                       <div className="data-toolbar-actions">
-                        {dataView === 'spreadsheet' && (
+                        {(dataView === 'spreadsheet' || dataView === 'details') && (
                           <label className="data-filter-toggle">
                             <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
                             Show inactive
@@ -320,7 +352,7 @@ const Data: FC = () => {
                       </div>
                     </div>
 
-                    {balances.length === 0 && !inlineEntry ? (
+                    {balances.length === 0 && !inlineEntry && dataView !== 'details' ? (
                       <div className="data-empty">
                         <div className="data-empty-icon">
                           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -346,6 +378,16 @@ const Data: FC = () => {
                         balances={balances}
                         allMonths={allMonths}
                         balanceMap={balanceMap}
+                      />
+                    ) : dataView === 'details' ? (
+                      <BalanceDetails
+                        accounts={accounts}
+                        balances={balances}
+                        allMonths={allMonths}
+                        balanceMap={balanceMap}
+                        profile={profile}
+                        showInactive={showInactive}
+                        onSaveMonth={handleSaveMonth}
                       />
                     ) : (
                       <BalanceSpreadsheet

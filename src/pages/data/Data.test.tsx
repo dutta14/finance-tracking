@@ -160,7 +160,7 @@ describe('Data save race condition fix', () => {
 
   it('sequential saveAccounts then saveBalances in same tick passes consistent data to onDataChange', async () => {
     const user = userEvent.setup()
-    const { container } = renderData()
+    renderData()
     await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
     await user.click(screen.getByTitle('Delete Jan 2024'))
     await user.click(screen.getByText(/View Accounts/i))
@@ -170,7 +170,9 @@ describe('Data save race condition fix', () => {
     expect(handleDataChangeSpy).toHaveBeenCalledTimes(1)
     const firstCall = handleDataChangeSpy.mock.calls[0] as [Account[], BalanceEntry[]]
     expect(firstCall[0]).toHaveLength(3)
-    const confirmDeleteBtn = container.querySelector('.data-confirm-delete') as HTMLElement
+    const confirmDialog = screen.getByText(/Delete all balance entries for/i).parentElement?.parentElement
+    expect(confirmDialog).toBeTruthy()
+    const confirmDeleteBtn = within(confirmDialog as HTMLElement).getByRole('button', { name: 'Delete' })
     await user.click(confirmDeleteBtn)
     expect(handleDataChangeSpy).toHaveBeenCalledTimes(2)
     const secondCall = handleDataChangeSpy.mock.calls[1] as [Account[], BalanceEntry[]]
@@ -204,6 +206,25 @@ describe('Data page integration', () => {
     expect(chartsTab).toHaveAttribute('aria-selected', 'true')
   })
 
+  it('switches to the Details view and shows the inactive toggle without spreadsheet-only actions', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+    const detailsTab = screen.getByRole('tab', { name: 'Details' })
+
+    expect(detailsTab).toBeInTheDocument()
+
+    await user.click(detailsTab)
+
+    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('Net worth')).toBeInTheDocument()
+    expect(screen.getByLabelText('Joint details')).toBeInTheDocument()
+    expect(screen.getByLabelText('Show inactive')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Copy balances from last month')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
+  })
+
   it('renders the Allocation tab when navigated to /net-worth/allocation', async () => {
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
@@ -223,6 +244,22 @@ describe('Data page integration', () => {
     await user.click(screen.getByText(/View Accounts/i))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+  })
+
+  it('closes the accounts modal after opening it from the details view toolbar', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    await user.click(screen.getByRole('tab', { name: 'Details' }))
+    await user.click(screen.getByText(/View Accounts/i))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('adds a new account via AccountsModal and updates both accounts and balances state', async () => {
@@ -266,7 +303,7 @@ describe('Data page integration', () => {
   it('bulk-updates multiple accounts and persists all changes', async () => {
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
-    const { container } = renderData()
+    renderData()
     const user = userEvent.setup()
 
     await user.click(screen.getByText(/View Accounts/i))
@@ -285,15 +322,12 @@ describe('Data page integration', () => {
 
     expect(screen.getByText(/selected/)).toBeInTheDocument()
 
-    // Use a bulk bar dropdown to apply update (find selects inside bulk bar)
-    const bulkBarSelects = container.querySelectorAll('.data-bulk-bar select')
+    // Use a bulk bar dropdown to apply update
+    const bulkBarSelects = screen.getAllByRole('combobox')
     expect(bulkBarSelects.length).toBeGreaterThan(0)
-    // Use the Status select (index varies by layout — find by option content)
-    const statusSelect = Array.from(bulkBarSelects).find(sel =>
-      Array.from(sel.querySelectorAll('option')).some(opt => opt.textContent === 'Inactive'),
-    )
+    const statusSelect = bulkBarSelects.find(sel => within(sel).queryByRole('option', { name: 'Inactive' }))
     expect(statusSelect).toBeTruthy()
-    fireEvent.change(statusSelect!, { target: { value: 'inactive' } })
+    fireEvent.change(statusSelect as HTMLSelectElement, { target: { value: 'inactive' } })
 
     expect(mockSetAccounts).toHaveBeenCalled()
     expect(handleDataChangeSpy).toHaveBeenCalled()
@@ -395,13 +429,14 @@ describe('Data page integration', () => {
     const user = userEvent.setup()
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
-    const { container } = renderData()
+    renderData()
 
     await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
     await user.click(screen.getByTitle('Delete Jan 2024'))
 
-    const confirmBtn = container.querySelector('.data-confirm-delete') as HTMLElement
-    expect(confirmBtn).toBeTruthy()
+    const confirmDialog = screen.getByText(/Delete all balance entries for/i).parentElement?.parentElement
+    expect(confirmDialog).toBeTruthy()
+    const confirmBtn = within(confirmDialog as HTMLElement).getByRole('button', { name: 'Delete' })
     await user.click(confirmBtn)
 
     expect(mockSetBalances).toHaveBeenCalledTimes(1)
