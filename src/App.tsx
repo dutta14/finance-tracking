@@ -197,7 +197,7 @@ const AppShell: FC = () => {
                 </ErrorBoundary>
               }
             />
-            <Route path="/tools" element={<Navigate to="/budget/spreadsheet" replace />} />
+            <Route path="/tools" element={<Navigate to="/budget" replace />} />
             <Route
               path="/drive/*"
               element={
