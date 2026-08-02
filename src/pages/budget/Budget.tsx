@@ -116,78 +116,81 @@ const Budget: FC = () => {
           <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
           {viewMode === 'spreadsheet' && (
             <div className="budget-spreadsheet-actions">
-            <div className="budget-upload-dropdown">
-              <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
-                Upload CSV
-              </button>
-              <button
-                className="budget-action-btn budget-split-drop"
-                onClick={() => setShowUploadMenu(v => !v)}
-                aria-haspopup="true"
-                aria-expanded={showUploadMenu}
-                aria-label="Upload options"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path
-                    d="M2 3.5l3 3 3-3"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {showUploadMenu && (
-                <>
-                  <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
-                  <div className="budget-upload-menu" role="menu">
-                    <button
-                      className="budget-upload-menu-item"
-                      role="menuitem"
-                      onClick={() => {
-                        setShowUploadMenu(false)
-                        bulkUploadRef.current?.click()
-                      }}
-                    >
-                      Bulk Upload
-                    </button>
-                    {pdfToCsvEnabled && (
+              <div className="budget-upload-dropdown">
+                <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
+                  Upload CSV
+                </button>
+                <button
+                  className="budget-action-btn budget-split-drop"
+                  onClick={() => setShowUploadMenu(v => !v)}
+                  aria-haspopup="true"
+                  aria-expanded={showUploadMenu}
+                  aria-label="Upload options"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path
+                      d="M2 3.5l3 3 3-3"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {showUploadMenu && (
+                  <>
+                    <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
+                    <div className="budget-upload-menu" role="menu">
                       <button
                         className="budget-upload-menu-item"
                         role="menuitem"
                         onClick={() => {
                           setShowUploadMenu(false)
-                          openPdfModal()
+                          bulkUploadRef.current?.click()
                         }}
                       >
-                        PDF → CSV
+                        Bulk Upload
                       </button>
-                    )}
-                  </div>
-                </>
-              )}
+                      {pdfToCsvEnabled && (
+                        <button
+                          className="budget-upload-menu-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowUploadMenu(false)
+                            openPdfModal()
+                          }}
+                        >
+                          PDF → CSV
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                className="budget-action-btn budget-action-btn--subtle"
+                onClick={() => setShowFormatHelp(v => !v)}
+              >
+                ?
+              </button>
+              <input
+                ref={quickUploadRef}
+                type="file"
+                accept=".csv"
+                data-testid="quick-upload-input"
+                style={{ display: 'none' }}
+                onChange={handleQuickUpload}
+              />
+              <input
+                ref={bulkUploadRef}
+                type="file"
+                accept=".csv"
+                multiple
+                data-testid="bulk-upload-input"
+                style={{ display: 'none' }}
+                onChange={handleBulkUpload}
+              />
             </div>
-            <button className="budget-action-btn budget-action-btn--subtle" onClick={() => setShowFormatHelp(v => !v)}>
-              ?
-            </button>
-            <input
-              ref={quickUploadRef}
-              type="file"
-              accept=".csv"
-              data-testid="quick-upload-input"
-              style={{ display: 'none' }}
-              onChange={handleQuickUpload}
-            />
-            <input
-              ref={bulkUploadRef}
-              type="file"
-              accept=".csv"
-              multiple
-              data-testid="bulk-upload-input"
-              style={{ display: 'none' }}
-              onChange={handleBulkUpload}
-            />
-          </div>
           )}
         </div>
       )}
@@ -281,7 +284,7 @@ const Budget: FC = () => {
                   <BudgetTable
                     year={selectedYear}
                     type="income"
-                    categoryGroups={categoryGroups}
+                    categoryGroups={incomeCategoryGroups}
                     categorySums={categorySums}
                     monthsWithData={monthsWithData}
                     onUploadCSV={uploadCSV}
@@ -309,6 +312,7 @@ const Budget: FC = () => {
                     year={selectedYear}
                     type="income"
                     categoryGroups={categoryGroups}
+                    incomeCategoryGroups={incomeCategoryGroups}
                     categorySums={categorySums}
                     timePeriod={timePeriod}
                   />

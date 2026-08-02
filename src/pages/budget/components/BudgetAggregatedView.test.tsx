@@ -90,14 +90,21 @@ describe('BudgetAggregatedView', () => {
     expect(screen.getByText('Total')).toBeInTheDocument()
   })
 
-  it('groups income categories under a single Income group', () => {
+  it('groups income categories under income category groups', () => {
     const incomeSums = {
       Salary: { '2024-01': 5000 },
       Freelance: { '2024-01': 2000 },
     }
-    render(<BudgetAggregatedView {...baseProps} type="income" categorySums={incomeSums} />)
-    // Income groups are aggregated under "Income" label
-    expect(screen.getByText('Income')).toBeInTheDocument()
+    const incomeCategoryGroups = [{ id: 'income-work', name: 'Work Income', categories: ['Salary', 'Freelance'] }]
+    render(
+      <BudgetAggregatedView
+        {...baseProps}
+        type="income"
+        categorySums={incomeSums}
+        incomeCategoryGroups={incomeCategoryGroups}
+      />,
+    )
+    expect(screen.getByText('Work Income')).toBeInTheDocument()
     expect(screen.getByText('Grand Total')).toBeInTheDocument()
   })
 
