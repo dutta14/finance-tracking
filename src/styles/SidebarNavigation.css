@@ -44,13 +44,6 @@ body.dark .sidebar-link.active {
 }
 
 /* Search button */
-.sidebar-search-kbd {
-  margin-left: auto;
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-semibold);
-  color: var(--color-text-muted);
-  opacity: 0.6;
-}
 
 .sidebar-menu {
   list-style: none;

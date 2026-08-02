@@ -52,18 +52,17 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
         <>
           <ul className="sidebar-menu">
             <li className="sidebar-item">
-              <button className="sidebar-link" onClick={() => setSearchOpen(true)}>
-                Search
-                <kbd className="sidebar-search-kbd">{navigator.platform?.includes('Mac') ? '⌘K' : 'Ctrl+K'}</kbd>
-              </button>
-            </li>
-            <li className="sidebar-item">
               <button
                 className={`sidebar-link${currentPage === 'home' ? ' active' : ''}`}
                 onClick={() => setCurrentPage('home')}
                 aria-current={currentPage === 'home' ? 'page' : undefined}
               >
                 Home
+              </button>
+            </li>
+            <li className="sidebar-item">
+              <button className="sidebar-link" onClick={() => setSearchOpen(true)}>
+                Search
               </button>
             </li>
             <li className="sidebar-item">
