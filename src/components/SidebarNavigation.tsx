@@ -105,79 +105,65 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
         </>
       )}
       {sidebarOpen && (
-        <div className="sidebar-footer" role="group" aria-label="Utilities">
-          <button
-            className={`sidebar-footer-btn${currentPage === 'drive' ? ' sidebar-footer-btn--active' : ''}`}
-            onClick={() => setCurrentPage('drive')}
-            aria-label="Drive"
-            aria-current={currentPage === 'drive' ? 'page' : undefined}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
-              <path
-                d="M4.5 4H8l1.5 2h6A1.5 1.5 0 0 1 17 7.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5V5.5A1.5 1.5 0 0 1 4.5 4z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="sidebar-footer-label">Drive</span>
-          </button>
-          <SettingsMenu
-            darkMode={darkMode}
-            onToggleDarkMode={() => setDarkMode(!darkMode)}
-            profile={profile}
-            onUpdateProfile={updateProfile}
-            hasPendingChanges={gh.hasPendingChanges}
-            ghConfig={gh.config}
-            ghIsConfigured={gh.isConfigured}
-            ghSyncStatus={gh.syncStatus}
-            ghLastSyncAt={gh.lastSyncAt}
-            ghLastError={gh.lastError}
-            ghHistory={gh.history}
-            ghHasStoredToken={gh.hasStoredToken}
-            ghTokenUnlocked={gh.tokenUnlocked}
-            onGhUpdateConfig={gh.updateConfig}
-            onGhSaveEncryptedToken={gh.saveEncryptedToken}
-            onGhUnlockToken={gh.unlockToken}
-            onGhLockToken={gh.lockToken}
-            onGhSyncNow={combinedSyncNow}
-            onGhFetchHistory={gh.fetchHistory}
-            onGhTestConnection={gh.testConnection}
-            onGhRestoreLatest={gh.restoreLatest}
-            onGhRestoreFromCommit={gh.restoreFromCommit}
-            ghData={gh.ghDataToSync}
-            onGhApplyRestore={combinedRestore}
-            ghSyncProgress={gh.syncProgress}
-            ghDirtyFlags={gh.dirtyFlags}
-            onFactoryReset={handleFactoryReset}
-            allowCsvImport={allowCsvImport}
-            onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}
-            onExport={handleExport}
-            onImport={handleImport}
-            externalOpen={!!settingsOpenSection}
-            externalSection={settingsOpenSection as SettingsSection | undefined}
-            onExternalClose={() => setSettingsOpenSection(undefined)}
-          />
-          <a
-            className="sidebar-footer-btn sidebar-footer-link"
-            href="https://github.com/dutta14/finance-tracking#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
-              <path
-                d="M3.5 5A1.5 1.5 0 0 1 5 3.5h4.25a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75H5A1.5 1.5 0 0 1 3.5 15V5zM16.5 5A1.5 1.5 0 0 0 15 3.5h-4.25a.75.75 0 0 0-.75.75v11.5a.75.75 0 0 0 .75.75H15a1.5 1.5 0 0 0 1.5-1.5V5z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="sidebar-footer-label">User guide</span>
-            <span className="sr-only"> (opens in new tab)</span>
-          </a>
-        </div>
+        <ul className="sidebar-menu sidebar-footer-menu" role="group" aria-label="Utilities">
+          <li className="sidebar-item">
+            <button
+              className={`sidebar-link${currentPage === 'drive' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('drive')}
+              aria-current={currentPage === 'drive' ? 'page' : undefined}
+            >
+              Drive
+            </button>
+          </li>
+          <li className="sidebar-item">
+            <SettingsMenu
+              darkMode={darkMode}
+              onToggleDarkMode={() => setDarkMode(!darkMode)}
+              profile={profile}
+              onUpdateProfile={updateProfile}
+              hasPendingChanges={gh.hasPendingChanges}
+              ghConfig={gh.config}
+              ghIsConfigured={gh.isConfigured}
+              ghSyncStatus={gh.syncStatus}
+              ghLastSyncAt={gh.lastSyncAt}
+              ghLastError={gh.lastError}
+              ghHistory={gh.history}
+              ghHasStoredToken={gh.hasStoredToken}
+              ghTokenUnlocked={gh.tokenUnlocked}
+              onGhUpdateConfig={gh.updateConfig}
+              onGhSaveEncryptedToken={gh.saveEncryptedToken}
+              onGhUnlockToken={gh.unlockToken}
+              onGhLockToken={gh.lockToken}
+              onGhSyncNow={combinedSyncNow}
+              onGhFetchHistory={gh.fetchHistory}
+              onGhTestConnection={gh.testConnection}
+              onGhRestoreLatest={gh.restoreLatest}
+              onGhRestoreFromCommit={gh.restoreFromCommit}
+              ghData={gh.ghDataToSync}
+              onGhApplyRestore={combinedRestore}
+              ghSyncProgress={gh.syncProgress}
+              ghDirtyFlags={gh.dirtyFlags}
+              onFactoryReset={handleFactoryReset}
+              allowCsvImport={allowCsvImport}
+              onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}
+              onExport={handleExport}
+              onImport={handleImport}
+              externalOpen={!!settingsOpenSection}
+              externalSection={settingsOpenSection as SettingsSection | undefined}
+              onExternalClose={() => setSettingsOpenSection(undefined)}
+            />
+          </li>
+          <li className="sidebar-item">
+            <a
+              className="sidebar-link"
+              href="https://github.com/dutta14/finance-tracking#readme"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              User Guide
+            </a>
+          </li>
+        </ul>
       )}
     </nav>
   )

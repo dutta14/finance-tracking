@@ -79,7 +79,7 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
   return (
     <>
       <button
-        className="sidebar-footer-btn"
+        className="sidebar-link"
         aria-label="Settings"
         aria-haspopup="dialog"
         onClick={() => {
@@ -87,17 +87,7 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
           setSettingsModalOpen(true)
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
-          <path
-            d="M8.3 4.5L8.2 2.2h3.6l-.1 2.3 2.3 1.3 1.9-1.3 1.8 3.2-2 1-.0 2.6 2 1-1.8 3.2-1.9-1.3-2.3 1.3.1 2.3H8.2l.1-2.3-2.3-1.3-1.8 1.3-1.8-3.2 2-1-.0-2.6-2-1 1.8-3.2 1.8 1.3z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-        <span className="sidebar-footer-label">Settings</span>
+        Settings
       </button>
       {settingsModalOpen && (
         <SettingsModal
