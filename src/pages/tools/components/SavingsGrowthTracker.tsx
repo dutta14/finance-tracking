@@ -1,4 +1,5 @@
 import { FC, useState, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
@@ -163,11 +164,13 @@ interface YearRow {
 type TabMode = 'savings' | 'income'
 
 const SavingsGrowthTracker: FC = () => {
-  const [tab, setTab] = useState<TabMode>('savings')
   const [showPct, setShowPct] = useState(false)
   const [overrides, setOverrides] = useState<Record<number, YearOverrides>>(loadOverrides)
   const [editCell, setEditCell] = useState<{ year: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState('')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const tab: TabMode = location.pathname.endsWith('/income') ? 'income' : 'savings'
 
   const { accounts, balances } = useData()
   const nwByYear = useMemo(() => getYearEndNetWorths(accounts, balances), [accounts, balances])
@@ -350,14 +353,14 @@ const SavingsGrowthTracker: FC = () => {
           <button
             className={`sgt-mode-btn${tab === 'savings' ? ' active' : ''}`}
             aria-pressed={tab === 'savings'}
-            onClick={() => setTab('savings')}
+            onClick={() => navigate('/net-worth/growth/savings')}
           >
             Savings
           </button>
           <button
             className={`sgt-mode-btn${tab === 'income' ? ' active' : ''}`}
             aria-pressed={tab === 'income'}
-            onClick={() => setTab('income')}
+            onClick={() => navigate('/net-worth/growth/income')}
           >
             Income
           </button>
