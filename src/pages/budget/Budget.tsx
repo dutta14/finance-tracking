@@ -61,7 +61,7 @@ const Budget: FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const budgetPath = location.pathname.replace(/\/+$/, '')
-  const viewMode: BudgetViewMode = budgetPath.endsWith('/cashflow') ? 'cashflow' : 'spreadsheet'
+  const viewMode: BudgetViewMode = budgetPath.endsWith('/spreadsheet') ? 'spreadsheet' : 'cashflow'
 
   const pdfModalRef = useRef<HTMLDivElement>(null)
   const pdfTriggerRef = useRef<HTMLElement | null>(null)
@@ -89,7 +89,7 @@ const Budget: FC = () => {
   const currentYear = new Date().getFullYear()
 
   if (budgetPath === '/budget') {
-    return <Navigate to="/budget/spreadsheet" replace />
+    return <Navigate to="/budget/cashflow" replace />
   }
 
   return (

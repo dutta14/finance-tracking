@@ -47,6 +47,22 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
     <div className="budget-header">
       <div className="budget-header-left">
         <h1 className="budget-title">Budget</h1>
+        <div className="budget-view-toggle">
+          <button
+            className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
+            onClick={() => onSetViewMode('cashflow')}
+          >
+            Cashflow
+          </button>
+          <button
+            className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
+            onClick={() => onSetViewMode('spreadsheet')}
+          >
+            Spreadsheet
+          </button>
+        </div>
+      </div>
+      <div className="budget-header-right">
         <div className="budget-year-nav">
           <button className="budget-year-btn" onClick={onPrevYear} title="Previous year">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -70,22 +86,6 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
                 strokeLinejoin="round"
               />
             </svg>
-          </button>
-        </div>
-      </div>
-      <div className="budget-header-right">
-        <div className="budget-view-toggle">
-          <button
-            className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('spreadsheet')}
-          >
-            Spreadsheet
-          </button>
-          <button
-            className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('cashflow')}
-          >
-            Cashflow
           </button>
         </div>
         <div className="budget-view-toggle">
