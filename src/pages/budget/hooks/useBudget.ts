@@ -18,7 +18,9 @@ const INCOME_OTHERS_GROUP_ID = 'income-others'
 const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: INCOME_OTHERS_GROUP_ID, name: 'Others', categories: [] }]
 
 const getIncomeCategoryGroups = (store: BudgetStore): CategoryGroup[] =>
-  store.incomeCategoryGroups && store.incomeCategoryGroups.length > 0 ? store.incomeCategoryGroups : DEFAULT_INCOME_GROUPS
+  store.incomeCategoryGroups && store.incomeCategoryGroups.length > 0
+    ? store.incomeCategoryGroups
+    : DEFAULT_INCOME_GROUPS
 
 const addCategoriesToGroup = (groups: CategoryGroup[], groupId: string, categories: string[]): CategoryGroup[] => {
   if (categories.length === 0) return groups
@@ -26,9 +28,7 @@ const addCategoriesToGroup = (groups: CategoryGroup[], groupId: string, categori
   const dedupedCategories = [...new Set(categories)]
   const targetGroup = groups.find(g => g.id === groupId)
   if (targetGroup) {
-    return groups.map(g =>
-      g.id === groupId ? { ...g, categories: [...g.categories, ...dedupedCategories] } : g,
-    )
+    return groups.map(g => (g.id === groupId ? { ...g, categories: [...g.categories, ...dedupedCategories] } : g))
   }
 
   return [...groups, { id: groupId, name: 'Others', categories: dedupedCategories }]
@@ -111,7 +111,10 @@ export function useBudget() {
         const newCategories = [...newExpenseCategories, ...newIncomeCategories]
 
         if (newExpenseCategories.length > 0) {
-          next = updateGlobalCategoryGroups(next, addCategoriesToGroup(currentGroups, OTHERS_GROUP_ID, newExpenseCategories))
+          next = updateGlobalCategoryGroups(
+            next,
+            addCategoriesToGroup(currentGroups, OTHERS_GROUP_ID, newExpenseCategories),
+          )
         }
         if (newIncomeCategories.length > 0) {
           next = {
@@ -362,18 +365,19 @@ export function useBudget() {
 
   // Migrate: seed existing income categories into income-others if not already grouped
   useEffect(() => {
+    // Classify: any month with negative value = expense, purely positive = income
+    const catHasNegative = new Map<string, boolean>()
+    const catHasPositive = new Map<string, boolean>()
+    Object.values(yearTransactions).forEach(txs =>
+      txs.forEach(t => {
+        if (t.amount < 0) catHasNegative.set(t.category, true)
+        if (t.amount > 0) catHasPositive.set(t.category, true)
+      }),
+    )
     const allIncomeCats = new Set<string>()
-    Object.values(yearTransactions).forEach(txs =>
-      txs.forEach(t => {
-        if (t.amount > 0) allIncomeCats.add(t.category)
-      }),
-    )
-    // Remove any that also appear as expense (has negative amounts)
-    Object.values(yearTransactions).forEach(txs =>
-      txs.forEach(t => {
-        if (t.amount < 0) allIncomeCats.delete(t.category)
-      }),
-    )
+    catHasPositive.forEach((_, cat) => {
+      if (!catHasNegative.get(cat)) allIncomeCats.add(cat)
+    })
 
     const alreadyGrouped = new Set(incomeCategoryGroups.flatMap(g => g.categories))
     const missing = [...allIncomeCats].filter(c => !alreadyGrouped.has(c))

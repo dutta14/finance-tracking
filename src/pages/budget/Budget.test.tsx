@@ -352,7 +352,6 @@ describe('Budget with data', () => {
     renderBudget('/budget/groups')
     expect(screen.queryByText('Upload CSV')).not.toBeInTheDocument()
   })
-
 })
 
 /* ─── Year navigation ─── */

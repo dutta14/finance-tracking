@@ -306,19 +306,19 @@ const BudgetTable: FC<BudgetTableProps> = ({
           <tbody>
             {/* Both income and expense use grouped rows */}
             {relevantGroups.map(group => (
-                <GroupRows
-                  key={group.id}
-                  group={group}
-                  periods={periods}
-                  getPeriodValue={getPeriodValue}
-                  getCategoryTotal={getCategoryTotal}
-                  getGroupPeriodTotal={getGroupPeriodTotal}
-                  getGroupYearTotal={getGroupYearTotal}
-                  getCategoryPct={getCategoryPct}
-                  isExpense={type === 'expense'}
-                  showPct={showPct}
-                />
-              ))}
+              <GroupRows
+                key={group.id}
+                group={group}
+                periods={periods}
+                getPeriodValue={getPeriodValue}
+                getCategoryTotal={getCategoryTotal}
+                getGroupPeriodTotal={getGroupPeriodTotal}
+                getGroupYearTotal={getGroupYearTotal}
+                getCategoryPct={getCategoryPct}
+                isExpense={type === 'expense'}
+                showPct={showPct}
+              />
+            ))}
             {relevantCategories.size > 0 && (
               <tr className="budget-tr--grand-total">
                 <td className="budget-td budget-td--category">
