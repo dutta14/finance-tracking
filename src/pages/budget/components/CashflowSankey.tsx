@@ -29,21 +29,23 @@ const COLORS = [
   '#0ea5e9',
 ]
 
+const SAVINGS_COLOR = '#64748b'
+
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
 /** Rank-based heights: items are assumed sorted descending by amount.
  *  First item gets maxH, last gets minH, linearly interpolated. */
-const rankHeights = (items: { amount: number }[], minH: number, maxH: number) => {
-  if (items.length <= 1) return items.map(() => maxH)
-  return items.map((_, i) => {
-    const t = i / (items.length - 1) // 0 = largest, 1 = smallest
-    return maxH - t * (maxH - minH)
-  })
+const proportionalHeights = (items: { amount: number }[], totalAvailH: number, gap: number, minH: number) => {
+  if (items.length === 0) return []
+  const totalAmt = items.reduce((s, it) => s + it.amount, 0)
+  if (totalAmt === 0) return items.map(() => minH)
+  const gapSpace = Math.max(items.length - 1, 0) * gap
+  const drawH = totalAvailH - gapSpace
+  return items.map(it => Math.max(minH, (it.amount / totalAmt) * drawH))
 }
 
 const CashflowSankey: FC<CashflowSankeyProps> = ({
-  yearTransactions,
   categoryGroups,
   removedCategories,
   categorySums,
@@ -53,22 +55,25 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   const { incomeCategories, expenseGroups, expenseCatArr, totalIncome, totalExpense } = useMemo(() => {
     // Classify categories same as budget table: any negative month → expense
     const expenseCatSet = new Set<string>()
+    const incomeCatSet = new Set<string>()
     Object.entries(categorySums).forEach(([cat, months]) => {
+      if (removedCategories.has(cat)) return
       if (Object.values(months).some(v => v < 0)) expenseCatSet.add(cat)
+      else if (Object.values(months).some(v => v > 0)) incomeCatSet.add(cat)
     })
 
+    // Use categorySums (net monthly totals) for consistency with top cards
     const incomeCats: Record<string, number> = {}
     const expenseCats: Record<string, number> = {}
 
-    Object.values(yearTransactions).forEach(txns => {
-      txns.forEach(t => {
-        if (removedCategories.has(t.category)) return
-        if (expenseCatSet.has(t.category)) {
-          expenseCats[t.category] = (expenseCats[t.category] || 0) + Math.abs(t.amount)
-        } else if (t.amount > 0) {
-          incomeCats[t.category] = (incomeCats[t.category] || 0) + t.amount
-        }
-      })
+    Object.entries(categorySums).forEach(([cat, monthMap]) => {
+      if (removedCategories.has(cat)) return
+      const total = Object.values(monthMap).reduce((s, v) => s + v, 0)
+      if (incomeCatSet.has(cat)) {
+        incomeCats[cat] = total
+      } else if (expenseCatSet.has(cat)) {
+        expenseCats[cat] = Math.abs(total)
+      }
     })
 
     const catToGroup = new Map<string, string>()
@@ -98,9 +103,12 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
       totalIncome: Object.values(incomeCats).reduce((s, v) => s + v, 0),
       totalExpense: Object.values(expenseCats).reduce((s, v) => s + v, 0),
     }
-  }, [yearTransactions, categoryGroups, removedCategories, categorySums])
+  }, [categoryGroups, removedCategories, categorySums])
 
   const rightItems = mode === 'group' ? expenseGroups.map(g => ({ name: g.name, amount: g.total })) : expenseCatArr
+  const savings = Math.max(0, totalIncome - totalExpense)
+  const rightItemsAll = savings > 0 ? [...rightItems, { name: 'Savings', amount: savings }] : rightItems
+  const rightTotal = savings > 0 ? totalIncome : rightItemsAll.reduce((sum, item) => sum + item.amount, 0)
 
   // Layout
   const W = 800
@@ -110,30 +118,34 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   const COL_LEFT = LABEL_PAD
   const COL_RIGHT = W - LABEL_PAD - NODE_W
   const NODE_GAP = 8
-  const NODE_H_MAX = 38
-  const NODE_H_MIN = 10
-  const ROW_H = NODE_H_MAX + NODE_GAP
+  const NODE_H_MIN = 6
 
-  const nodeCount = Math.max(incomeCategories.length, rightItems.length, 3)
-  const H = PAD_TOP * 2 + nodeCount * ROW_H
+  const nodeCount = Math.max(incomeCategories.length, rightItemsAll.length, 3)
+  const H = PAD_TOP * 2 + nodeCount * 46
   const availH = H - PAD_TOP * 2
 
-  // Build node positions with rank-based heights
+  // Build node positions with proportional heights
   const layoutNodes = (items: { name: string; amount: number }[], x: number, colorOffset: number) => {
-    const heights = rankHeights(items, NODE_H_MIN, NODE_H_MAX)
+    const heights = proportionalHeights(items, availH, NODE_GAP, NODE_H_MIN)
     const totalH = heights.reduce((s, h) => s + h, 0) + Math.max(items.length - 1, 0) * NODE_GAP
     const startY = PAD_TOP + Math.max(0, (availH - totalH) / 2)
     let y = startY
     return items.map((c, i) => {
       const h = heights[i]
-      const node = { ...c, x, y, h, color: COLORS[(i + colorOffset) % COLORS.length] }
+      const node = {
+        ...c,
+        x,
+        y,
+        h,
+        color: c.name === 'Savings' ? SAVINGS_COLOR : COLORS[(i + colorOffset) % COLORS.length],
+      }
       y += h + NODE_GAP
       return node
     })
   }
 
   const leftNodes = layoutNodes(incomeCategories, COL_LEFT, 0)
-  const rightNodes = layoutNodes(rightItems, COL_RIGHT, 5)
+  const rightNodes = layoutNodes(rightItemsAll, COL_RIGHT, 5)
 
   // Central band: a vertical strip in the middle where income flows merge and expense flows fan out
   const BAND_X = W / 2 - 4 // left edge of the central band
@@ -169,7 +181,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
 
   // Band → right links: each expense item fans out from the central band
   const rightLinks = useMemo(() => {
-    const totalAmt = rightItems.reduce((s, c) => s + c.amount, 0) || 1
+    const totalAmt = rightTotal || 1
     const bandH = bandBot - bandTop
     let bandY = bandTop
     return rightNodes.map(rn => {
@@ -186,7 +198,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
         color: rn.color,
       }
     })
-  }, [rightNodes, rightItems, bandTop, bandBot, BAND_X])
+  }, [rightNodes, rightTotal, bandTop, bandBot, BAND_X])
 
   if (totalIncome === 0 && totalExpense === 0) {
     return (
@@ -294,7 +306,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
           })}
           {/* Right nodes */}
           {rightNodes.map(n => {
-            const pct = totalExpense > 0 ? ((n.amount / totalExpense) * 100).toFixed(1) : '0.0'
+            const pct = rightTotal > 0 ? ((n.amount / rightTotal) * 100).toFixed(1) : '0.0'
             return (
               <g key={n.name}>
                 <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />

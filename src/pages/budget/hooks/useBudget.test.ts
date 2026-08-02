@@ -741,17 +741,30 @@ describe('useBudget — setSelectedYear triggers year creation', () => {
 })
 
 describe('useBudget — viewMode', () => {
-  it('defaults to aggregated view mode', () => {
+  it('defaults to spreadsheet view mode', () => {
     const { result } = renderHook(() => useBudget())
-    expect(result.current.viewMode).toBe('aggregated')
+    expect(result.current.viewMode).toBe('spreadsheet')
   })
 
   it('switches view mode', () => {
     const { result } = renderHook(() => useBudget())
     act(() => {
-      result.current.setViewMode('detailed')
+      result.current.setViewMode('cashflow')
     })
-    expect(result.current.viewMode).toBe('detailed')
+    expect(result.current.viewMode).toBe('cashflow')
+  })
+
+  it('defaults to detailed spreadsheet mode', () => {
+    const { result } = renderHook(() => useBudget())
+    expect(result.current.spreadsheetMode).toBe('detailed')
+  })
+
+  it('switches spreadsheet mode', () => {
+    const { result } = renderHook(() => useBudget())
+    act(() => {
+      result.current.setSpreadsheetMode('aggregated')
+    })
+    expect(result.current.spreadsheetMode).toBe('aggregated')
   })
 })
 

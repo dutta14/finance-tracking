@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
-import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigData } from '../types'
+import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigData, SpreadsheetMode } from '../types'
 import {
   loadBudgetStore,
   saveBudgetStore,
@@ -19,7 +19,8 @@ export function useBudget() {
   const [store, setStore] = useState<BudgetStore>(loadBudgetStore)
   const storeRef = useRef(store)
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
-  const [viewMode, setViewMode] = useState<BudgetViewMode>('aggregated')
+  const [viewMode, setViewMode] = useState<BudgetViewMode>('spreadsheet')
+  const [spreadsheetMode, setSpreadsheetMode] = useState<SpreadsheetMode>('detailed')
 
   const persist = useCallback((next: BudgetStore) => {
     storeRef.current = next
@@ -368,6 +369,8 @@ export function useBudget() {
     setSelectedYear,
     viewMode,
     setViewMode,
+    spreadsheetMode,
+    setSpreadsheetMode,
     uploadCSV,
     removeCSV,
     addTransaction,

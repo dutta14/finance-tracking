@@ -24,6 +24,8 @@ const Budget: FC = () => {
     setSelectedYear,
     viewMode,
     setViewMode,
+    spreadsheetMode,
+    setSpreadsheetMode,
     uploadCSV,
     removeCSV,
     updateCategoryGroups,
@@ -169,49 +171,71 @@ const Budget: FC = () => {
             />
           )}
 
-          {viewMode === 'detailed' ? (
+          {viewMode === 'spreadsheet' ? (
             <>
-              <BudgetTable
-                year={selectedYear}
-                type="income"
-                categoryGroups={categoryGroups}
-                categorySums={categorySums}
-                monthsWithData={monthsWithData}
-                onUploadCSV={uploadCSV}
-                onRemoveCSV={removeCSV}
-                onEditCategory={editCategory}
-                yearTransactions={yearTransactions}
-                timePeriod={timePeriod}
-              />
-              <BudgetTable
-                year={selectedYear}
-                type="expense"
-                categoryGroups={categoryGroups}
-                categorySums={categorySums}
-                monthsWithData={monthsWithData}
-                onUploadCSV={uploadCSV}
-                onRemoveCSV={removeCSV}
-                onEditCategory={editCategory}
-                yearTransactions={yearTransactions}
-                timePeriod={timePeriod}
-              />
-            </>
-          ) : viewMode === 'aggregated' ? (
-            <>
-              <BudgetAggregatedView
-                year={selectedYear}
-                type="income"
-                categoryGroups={categoryGroups}
-                categorySums={categorySums}
-                timePeriod={timePeriod}
-              />
-              <BudgetAggregatedView
-                year={selectedYear}
-                type="expense"
-                categoryGroups={categoryGroups}
-                categorySums={categorySums}
-                timePeriod={timePeriod}
-              />
+              <div className="budget-spreadsheet-toolbar">
+                <div className="budget-view-toggle budget-view-toggle--secondary">
+                  <button
+                    className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
+                    onClick={() => setSpreadsheetMode('aggregated')}
+                    aria-pressed={spreadsheetMode === 'aggregated'}
+                  >
+                    Aggregated
+                  </button>
+                  <button
+                    className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
+                    onClick={() => setSpreadsheetMode('detailed')}
+                    aria-pressed={spreadsheetMode === 'detailed'}
+                  >
+                    Detailed
+                  </button>
+                </div>
+              </div>
+              {spreadsheetMode === 'detailed' ? (
+                <>
+                  <BudgetTable
+                    year={selectedYear}
+                    type="income"
+                    categoryGroups={categoryGroups}
+                    categorySums={categorySums}
+                    monthsWithData={monthsWithData}
+                    onUploadCSV={uploadCSV}
+                    onRemoveCSV={removeCSV}
+                    onEditCategory={editCategory}
+                    yearTransactions={yearTransactions}
+                    timePeriod={timePeriod}
+                  />
+                  <BudgetTable
+                    year={selectedYear}
+                    type="expense"
+                    categoryGroups={categoryGroups}
+                    categorySums={categorySums}
+                    monthsWithData={monthsWithData}
+                    onUploadCSV={uploadCSV}
+                    onRemoveCSV={removeCSV}
+                    onEditCategory={editCategory}
+                    yearTransactions={yearTransactions}
+                    timePeriod={timePeriod}
+                  />
+                </>
+              ) : (
+                <>
+                  <BudgetAggregatedView
+                    year={selectedYear}
+                    type="income"
+                    categoryGroups={categoryGroups}
+                    categorySums={categorySums}
+                    timePeriod={timePeriod}
+                  />
+                  <BudgetAggregatedView
+                    year={selectedYear}
+                    type="expense"
+                    categoryGroups={categoryGroups}
+                    categorySums={categorySums}
+                    timePeriod={timePeriod}
+                  />
+                </>
+              )}
             </>
           ) : (
             <>
