@@ -28,6 +28,7 @@ const Budget: FC = () => {
     uploadCSV,
     removeCSV,
     updateCategoryGroups,
+    updateIncomeCategoryGroups,
     mergeCategories,
     editCategory,
     categoryHasTransactions,
@@ -35,7 +36,9 @@ const Budget: FC = () => {
     addTransaction,
     yearTransactions,
     categoryGroups,
+    incomeCategoryGroups,
     removedCategories,
+    incomeRemovedCategories,
     categorySums,
     summary,
     monthsWithData,
@@ -232,21 +235,26 @@ const Budget: FC = () => {
         </div>
       ) : (
         <>
-          <BudgetSummary
-            totalIncome={summary.totalIncome}
-            totalExpense={summary.totalExpense}
-            saveRate={summary.saveRate}
-            year={selectedYear}
-          />
+          {viewMode !== 'groups' && (
+            <BudgetSummary
+              totalIncome={summary.totalIncome}
+              totalExpense={summary.totalExpense}
+              saveRate={summary.saveRate}
+              year={selectedYear}
+            />
+          )}
 
           {viewMode === 'groups' ? (
             <CategoryGroupManager
               groups={categoryGroups}
               onUpdate={groups => updateCategoryGroups(groups)}
+              incomeCategoryGroups={incomeCategoryGroups}
+              onUpdateIncomeGroups={groups => updateIncomeCategoryGroups(groups)}
               onMerge={mergeCategories}
               onDeleteCategory={deleteCategory}
               categoryHasTransactions={categoryHasTransactions}
               categorySums={categorySums}
+              yearTransactions={yearTransactions}
             />
           ) : viewMode === 'spreadsheet' ? (
             <>
@@ -320,14 +328,14 @@ const Budget: FC = () => {
                 year={selectedYear}
                 yearTransactions={yearTransactions}
                 timePeriod={timePeriod}
-                removedCategories={removedCategories}
+                removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
                 categorySums={categorySums}
               />
               <CashflowSankey
                 year={selectedYear}
                 yearTransactions={yearTransactions}
                 categoryGroups={categoryGroups}
-                removedCategories={removedCategories}
+                removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
                 categorySums={categorySums}
               />
             </>

@@ -51,7 +51,11 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
         dataAccounts: dataSnapshot.accounts,
         dataBalances: dataSnapshot.balances,
         budgetCsvs: budgetStore.csvs,
-        budgetConfig: { years: budgetStore.years, categoryGroups: budgetStore.categoryGroups },
+        budgetConfig: {
+          years: budgetStore.years,
+          categoryGroups: budgetStore.categoryGroups,
+          incomeCategoryGroups: budgetStore.incomeCategoryGroups,
+        },
         fiSimulations: appStorage.getJSON('fi-simulations', []),
         sgtOverrides: appStorage.getJSON('sgt-overrides', {}),
         allocationCustomRatios: appStorage.getJSON('allocation-custom-ratios', []),

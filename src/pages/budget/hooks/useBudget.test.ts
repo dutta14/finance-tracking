@@ -19,11 +19,14 @@ const DEFAULT_GROUPS: CategoryGroup[] = [
   { id: 'removed', name: 'Remove from Budget', categories: [] },
 ]
 
+const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [] }]
+
 const EMPTY_STORE: BudgetStore = {
   csvs: {},
   configs: {},
   years: [],
   categoryGroups: DEFAULT_GROUPS,
+  incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
 }
 
 let mockStore: BudgetStore = { ...EMPTY_STORE, categoryGroups: [...DEFAULT_GROUPS] }
@@ -69,6 +72,7 @@ beforeEach(() => {
   mockStore = {
     ...EMPTY_STORE,
     categoryGroups: DEFAULT_GROUPS.map(g => ({ ...g, categories: [...g.categories] })),
+    incomeCategoryGroups: DEFAULT_INCOME_GROUPS.map(g => ({ ...g, categories: [...g.categories] })),
   }
   vi.clearAllMocks()
 })
@@ -150,8 +154,21 @@ describe('useBudget — uploadCSV', () => {
 
     const othersGroup = result.current.categoryGroups.find(g => g.id === 'others')
     expect(othersGroup).toBeTruthy()
-    expect(othersGroup!.categories).toContain('Salary')
     expect(othersGroup!.categories).toContain('Groceries')
+    expect(othersGroup!.categories).toContain('Rent')
+  })
+
+  it('assigns unknown income categories to the income others group', () => {
+    const { result } = renderHook(() => useBudget())
+
+    act(() => {
+      result.current.uploadCSV('2025-05', VALID_CSV)
+    })
+
+    const incomeOthersGroup = result.current.incomeCategoryGroups.find(g => g.id === 'income-others')
+    expect(incomeOthersGroup).toBeTruthy()
+    expect(incomeOthersGroup!.categories).toContain('Salary')
+    expect(result.current.categoryGroups.find(g => g.id === 'others')?.categories).not.toContain('Salary')
   })
 
   it('recalculates allCategories when a new CSV is uploaded', () => {
@@ -505,6 +522,23 @@ describe('useBudget — updateCategoryGroups', () => {
   })
 })
 
+describe('useBudget — updateIncomeCategoryGroups', () => {
+  it('persists income category group changes', () => {
+    const { result } = renderHook(() => useBudget())
+
+    const newGroups: CategoryGroup[] = [
+      { id: 'paychecks', name: 'Paychecks', categories: ['Salary'] },
+      { id: 'income-others', name: 'Others', categories: [] },
+    ]
+
+    act(() => {
+      result.current.updateIncomeCategoryGroups(newGroups)
+    })
+
+    expect(result.current.incomeCategoryGroups).toEqual(newGroups)
+  })
+})
+
 describe('useBudget — mergeCategories', () => {
   it('merges categories across all months when merge is invoked', () => {
     const csv1 = 'Date,Category,Amount\n2025-01-01,OldA,-50\n2025-01-02,OldB,-30'
@@ -625,6 +659,10 @@ describe('useBudget — applyConfig', () => {
         { id: 'others', name: 'Others', categories: [] },
         { id: 'removed', name: 'Remove from Budget', categories: [] },
       ],
+      incomeCategoryGroups: [
+        { id: 'paychecks', name: 'Paychecks', categories: ['Salary'] },
+        { id: 'income-others', name: 'Others', categories: [] },
+      ],
     }
 
     act(() => {
@@ -633,6 +671,7 @@ describe('useBudget — applyConfig', () => {
 
     expect(result.current.years).toEqual([2024, 2025, 2026])
     expect(result.current.categoryGroups.find(g => g.id === 'housing')).toBeTruthy()
+    expect(result.current.incomeCategoryGroups.find(g => g.id === 'paychecks')).toBeTruthy()
   })
 
   it('deduplicates years when merging config', () => {
@@ -1345,5 +1384,22 @@ describe('useBudget — removedCategories when no removed group exists (line 290
     }
     const { result } = renderHook(() => useBudget())
     expect(result.current.removedCategories.size).toBe(0)
+  })
+})
+
+describe('useBudget — incomeRemovedCategories', () => {
+  it('returns an empty set when no income removed group exists', () => {
+    const year = new Date().getFullYear()
+    mockStore = {
+      csvs: {},
+      configs: {},
+      years: [year],
+      categoryGroups: DEFAULT_GROUPS,
+      incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
+    }
+
+    const { result } = renderHook(() => useBudget())
+
+    expect(result.current.incomeRemovedCategories.size).toBe(0)
   })
 })

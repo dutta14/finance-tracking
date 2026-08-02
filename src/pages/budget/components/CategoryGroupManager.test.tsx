@@ -193,36 +193,16 @@ describe('CategoryGroupManager', () => {
     expect(othersGroup.categories).toContain('Utilities')
   })
 
-  it('adds a new group via input and Add Group button', async () => {
+  it('adds a new group and enters rename mode', async () => {
     const onUpdate = vi.fn()
     const user = userEvent.setup()
     render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
 
-    const input = screen.getByPlaceholderText('New group name')
-    await user.type(input, 'Subscriptions')
-    await user.click(screen.getByText('Add Group'))
+    await user.click(screen.getByText('+ New Group'))
 
     expect(onUpdate).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ name: 'Subscriptions', categories: [] })]),
+      expect.arrayContaining([expect.objectContaining({ name: 'New Group', categories: [] })]),
     )
-  })
-
-  it('disables Add Group button when input is empty', () => {
-    render(<CategoryGroupManager {...defaultProps} />)
-    const addBtn = screen.getByText('Add Group')
-    expect(addBtn).toBeDisabled()
-  })
-
-  it('does not add a duplicate group name', async () => {
-    const onUpdate = vi.fn()
-    const user = userEvent.setup()
-    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
-
-    const input = screen.getByPlaceholderText('New group name')
-    await user.type(input, 'Essentials')
-    await user.click(screen.getByText('Add Group'))
-
-    expect(onUpdate).not.toHaveBeenCalled()
   })
 
   it('enables merge mode and shows merge panel', async () => {
@@ -289,6 +269,32 @@ describe('CategoryGroupManager', () => {
     expect(screen.queryByText('Salary')).not.toBeInTheDocument()
   })
 
+  it('renders a separate income section when income groups are provided', () => {
+    const categorySums = {
+      ...defaultCategorySums,
+      Salary: { '2024-01': 5000 },
+      Bonus: { '2024-01': 1200 },
+    }
+    const incomeGroups: CategoryGroup[] = [
+      { id: 'paychecks', name: 'Paychecks', categories: ['Salary'] },
+      { id: 'income-others', name: 'Others', categories: ['Bonus'] },
+    ]
+
+    render(
+      <CategoryGroupManager
+        {...defaultProps}
+        incomeCategoryGroups={incomeGroups}
+        onUpdateIncomeGroups={vi.fn()}
+        categorySums={categorySums}
+      />,
+    )
+
+    expect(screen.getByText('Income Category Groups')).toBeInTheDocument()
+    expect(screen.getByText('Paychecks')).toBeInTheDocument()
+    expect(screen.getByText('Salary')).toBeInTheDocument()
+    expect(screen.getByText('Bonus')).toBeInTheDocument()
+  })
+
   it('strips group prefix from category display name', () => {
     const groups: CategoryGroup[] = [
       { id: 'food', name: 'Food', categories: ['Food: Groceries', 'Food: Dining'] },
@@ -307,30 +313,6 @@ describe('CategoryGroupManager', () => {
   })
 
   /* ── Add group via Enter key ── */
-
-  it('adds a new group when pressing Enter in the input', async () => {
-    const onUpdate = vi.fn()
-    const user = userEvent.setup()
-    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
-
-    const input = screen.getByPlaceholderText('New group name')
-    await user.type(input, 'Travel{Enter}')
-
-    expect(onUpdate).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ name: 'Travel', categories: [] })]),
-    )
-  })
-
-  it('does not add a group when pressing Enter with empty input', async () => {
-    const onUpdate = vi.fn()
-    const user = userEvent.setup()
-    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
-
-    const input = screen.getByPlaceholderText('New group name')
-    await user.type(input, '{Enter}')
-
-    expect(onUpdate).not.toHaveBeenCalled()
-  })
 
   /* ── Rename on blur ── */
 
@@ -570,13 +552,11 @@ describe('CategoryGroupManager', () => {
     const user = userEvent.setup()
     render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
 
-    const input = screen.getByPlaceholderText('New group name')
-    await user.type(input, 'Travel')
-    await user.click(screen.getByText('Add Group'))
+    await user.click(screen.getByText('+ New Group'))
 
     const updated = onUpdate.mock.calls[0][0]
     const removedIdx = updated.findIndex((g: CategoryGroup) => g.id === 'removed')
-    const travelIdx = updated.findIndex((g: CategoryGroup) => g.name === 'Travel')
-    expect(travelIdx).toBeLessThan(removedIdx)
+    const newIdx = updated.findIndex((g: CategoryGroup) => g.name === 'New Group')
+    expect(newIdx).toBeLessThan(removedIdx)
   })
 })

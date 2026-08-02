@@ -22,6 +22,8 @@ const DEFAULT_GROUPS: CategoryGroup[] = [
   { id: 'removed', name: 'Remove from Budget', categories: [] },
 ]
 
+const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [] }]
+
 beforeEach(() => {
   localStorage.clear()
 })
@@ -31,6 +33,7 @@ describe('loadBudgetStore', () => {
     const store = loadBudgetStore()
     expect(store.csvs).toEqual({})
     expect(store.years).toEqual([])
+    expect(store.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
   })
 
   it('loads CSVs from store and config from separate key', () => {
@@ -52,6 +55,7 @@ describe('loadBudgetStore', () => {
     expect(store.csvs['2025-01'].csv).toBe('a,b,c')
     expect(store.years).toEqual([2025])
     expect(store.categoryGroups!.find(g => g.id === 'food')).toBeTruthy()
+    expect(store.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
   })
 
   it('returns empty store on corrupt JSON', () => {
@@ -85,6 +89,7 @@ describe('saveBudgetStore', () => {
     const config = appStorage.getJSON<Record<string, unknown>>('budget-config', {})
     expect(config.years).toEqual([2025])
     expect(config.categoryGroups).toHaveLength(3)
+    expect(config.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
   })
 })
 
@@ -94,6 +99,7 @@ describe('loadBudgetConfig', () => {
     expect(config.version).toBe(1)
     expect(config.years).toEqual([])
     expect(config.categoryGroups).toEqual([])
+    expect(config.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
   })
 
   it('loads saved config', () => {
@@ -116,11 +122,13 @@ describe('getBudgetConfigData', () => {
       configs: {},
       years: [2024],
       categoryGroups: [{ id: 'others', name: 'Others', categories: ['Misc'] }],
+      incomeCategoryGroups: [{ id: 'income-others', name: 'Others', categories: ['Salary'] }],
     }
     const config = getBudgetConfigData(store)
     expect(config.version).toBe(1)
     expect(config.years).toEqual([2024])
     expect(config.categoryGroups[0].categories).toEqual(['Misc'])
+    expect(config.incomeCategoryGroups?.[0].categories).toEqual(['Salary'])
   })
 })
 

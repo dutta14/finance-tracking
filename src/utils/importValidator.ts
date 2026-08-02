@@ -47,7 +47,7 @@ export interface ImportPayload {
   dataAccounts?: Account[]
   dataBalances?: BalanceEntry[]
   budgetCsvs?: Record<string, unknown>
-  budgetConfig?: { years: number[]; categoryGroups: CategoryGroup[] }
+  budgetConfig?: { years: number[]; categoryGroups: CategoryGroup[]; incomeCategoryGroups?: CategoryGroup[] }
   fiSimulations?: unknown[]
   sgtOverrides?: Record<string, unknown>
   allocationCustomRatios?: unknown[]

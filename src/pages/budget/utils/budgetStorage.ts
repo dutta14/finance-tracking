@@ -25,11 +25,14 @@ const DEFAULT_GROUPS: CategoryGroup[] = [
   { id: 'removed', name: 'Remove from Budget', categories: [] },
 ]
 
+const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [] }]
+
 const EMPTY_STORE: BudgetStore = {
   csvs: {},
   configs: {},
   years: [],
   categoryGroups: DEFAULT_GROUPS,
+  incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
 }
 
 /** Migrate per-year configs to global categoryGroups.
@@ -77,13 +80,15 @@ function migrateToGlobalGroups(store: BudgetStore): BudgetStore {
   return { ...store, categoryGroups: groups }
 }
 
-/** Remove duplicate categories from "Others": any cat already in a custom/removed group */
-function deduplicateOthers(groups: CategoryGroup[]): CategoryGroup[] {
+/** Remove duplicate categories from the fallback group: any cat already in another group */
+function deduplicateFallbackGroup(groups: CategoryGroup[], fallbackGroupId: string): CategoryGroup[] {
   const customCats = new Set<string>()
   groups.forEach(g => {
-    if (g.id !== 'others') g.categories.forEach(c => customCats.add(c))
+    if (g.id !== fallbackGroupId) g.categories.forEach(c => customCats.add(c))
   })
-  return groups.map(g => (g.id === 'others' ? { ...g, categories: g.categories.filter(c => !customCats.has(c)) } : g))
+  return groups.map(g =>
+    g.id === fallbackGroupId ? { ...g, categories: g.categories.filter(c => !customCats.has(c)) } : g,
+  )
 }
 
 export function loadBudgetStore(): BudgetStore {
@@ -99,6 +104,7 @@ export function loadBudgetStore(): BudgetStore {
       configs: parsed.configs || {},
       years: config.years.length > 0 ? config.years : parsed.years || [],
       categoryGroups: config.categoryGroups,
+      incomeCategoryGroups: config.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
     }
 
     // If old store had categoryGroups but config didn't, migrate
@@ -109,11 +115,21 @@ export function loadBudgetStore(): BudgetStore {
     ) {
       store.categoryGroups = parsed.categoryGroups
     }
+    if (
+      (!config.incomeCategoryGroups || config.incomeCategoryGroups.length === 0) &&
+      parsed.incomeCategoryGroups &&
+      parsed.incomeCategoryGroups.length > 0
+    ) {
+      store.incomeCategoryGroups = parsed.incomeCategoryGroups
+    }
 
     const migrated = migrateToGlobalGroups(store)
     // Always clean up duplicates in "Others"
     if (migrated.categoryGroups) {
-      migrated.categoryGroups = deduplicateOthers(migrated.categoryGroups)
+      migrated.categoryGroups = deduplicateFallbackGroup(migrated.categoryGroups, 'others')
+    }
+    if (migrated.incomeCategoryGroups) {
+      migrated.incomeCategoryGroups = deduplicateFallbackGroup(migrated.incomeCategoryGroups, 'income-others')
     }
 
     // Persist config separately (migration step — strips config from CSV store)
@@ -121,6 +137,7 @@ export function loadBudgetStore(): BudgetStore {
       version: 1,
       years: migrated.years,
       categoryGroups: migrated.categoryGroups || DEFAULT_GROUPS,
+      incomeCategoryGroups: migrated.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
     })
 
     return migrated
@@ -143,11 +160,23 @@ export function saveBudgetStore(store: BudgetStore): void {
     version: 1,
     years: store.years,
     categoryGroups: store.categoryGroups || DEFAULT_GROUPS,
+    incomeCategoryGroups: store.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
   })
 }
 
 export function loadBudgetConfig(): BudgetConfigData {
-  return appStorage.getJSON<BudgetConfigData>(CONFIG_KEY, { version: 1, years: [], categoryGroups: [] })
+  const config = appStorage.getJSON<BudgetConfigData>(CONFIG_KEY, {
+    version: 1,
+    years: [],
+    categoryGroups: [],
+    incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
+  })
+  return {
+    version: config.version || 1,
+    years: config.years || [],
+    categoryGroups: config.categoryGroups || [],
+    incomeCategoryGroups: config.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
+  }
 }
 
 export function saveBudgetConfig(config: BudgetConfigData): void {
@@ -161,6 +190,7 @@ export function getBudgetConfigData(store: BudgetStore): BudgetConfigData {
     version: 1,
     years: store.years,
     categoryGroups: store.categoryGroups || DEFAULT_GROUPS,
+    incomeCategoryGroups: store.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
   }
 }
 
