@@ -97,8 +97,22 @@ body.dark .budget-title {
 }
 .budget-spreadsheet-toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: flex-start;
   margin-bottom: 8px;
+}
+
+.budget-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.budget-spreadsheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .budget-view-btn {
   background: var(--color-surface);
