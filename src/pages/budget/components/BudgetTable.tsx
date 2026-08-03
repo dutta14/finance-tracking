@@ -90,9 +90,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
     .filter(g => g.id !== 'removed')
     .map(g => ({
       ...g,
-      categories: g.categories.filter(c =>
-        type === 'income' ? categorySums[c] !== undefined : relevantCategories.has(c),
-      ),
+      categories: g.categories.filter(c => relevantCategories.has(c)),
     }))
     .filter(g => g.categories.length > 0)
 
