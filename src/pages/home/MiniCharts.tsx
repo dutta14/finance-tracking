@@ -413,8 +413,8 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
               />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
-              <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="liabilities" name="Liabilities" fill="#ef4444" radius={[0, 0, 2, 2]} />
+              <Bar dataKey="assets" name="Assets" stackId="al" fill="#4ade80" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="liabilities" name="Liabilities" stackId="al" fill="#f87171" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

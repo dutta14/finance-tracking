@@ -1,7 +1,12 @@
 .data-page {
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh);
+  padding: 2rem 2rem 0;
   max-width: var(--max-width);
   margin: 0 auto;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .data-header {
@@ -9,6 +14,14 @@
   align-items: center;
   gap: 1.5rem;
   margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.data-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 2rem;
 }
 
 .data-header-left {
