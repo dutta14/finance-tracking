@@ -1,17 +1,36 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import CashflowBarChart from './CashflowBarChart'
 import type { Transaction } from '../types'
 
-// Recharts ResponsiveContainer needs explicit dimensions which JSDOM lacks.
-// Mock recharts to render simple DOM elements so we can verify data logic.
 vi.mock('recharts', async () => {
-  const OrigModule = await vi.importActual<Record<string, unknown>>('recharts')
   return {
-    ...OrigModule,
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="responsive-container">{children}</div>
     ),
+    BarChart: ({
+      children,
+      data,
+      onClick,
+    }: {
+      children: React.ReactNode
+      data?: Array<{ label: string }>
+      onClick?: (e: { activeLabel?: string }) => void
+    }) => (
+      <button type="button" data-testid="bar-chart" onClick={() => onClick?.({ activeLabel: data?.[0]?.label })}>
+        {children}
+      </button>
+    ),
+    Bar: ({ children, name }: { children: React.ReactNode; name?: string }) => (
+      <div data-testid={`bar-${String(name).toLowerCase()}`}>{children}</div>
+    ),
+    Cell: ({ opacity = 1 }: { opacity?: number }) => <div data-testid="bar-cell" data-opacity={opacity} />,
+    XAxis: () => null,
+    YAxis: () => null,
+    Tooltip: () => null,
+    ReferenceLine: () => null,
+    CartesianGrid: () => null,
   }
 })
 
@@ -29,6 +48,8 @@ describe('CashflowBarChart', () => {
     timePeriod: 'month' as const,
     removedCategories: new Set<string>(),
     categorySums: {} as Record<string, Record<string, number>>,
+    selectedPeriod: null,
+    onSelectPeriod: vi.fn(),
   }
 
   it('renders the title with the year', () => {
@@ -120,5 +141,24 @@ describe('CashflowBarChart', () => {
     )
     // Net should be 5000 - 1200 = 3800, not including Removed
     expect(screen.getByText('+$3,800')).toBeInTheDocument()
+  })
+
+  it('selects a period when clicking a bar', async () => {
+    const user = userEvent.setup()
+    const onSelectPeriod = vi.fn()
+
+    render(<CashflowBarChart {...defaultProps} onSelectPeriod={onSelectPeriod} />)
+
+    await user.click(screen.getByTestId('bar-chart'))
+
+    expect(onSelectPeriod).toHaveBeenCalledWith('Jan')
+  })
+
+  it('dims non-selected bars when a period is selected', () => {
+    render(<CashflowBarChart {...defaultProps} selectedPeriod="Feb" />)
+
+    const cells = screen.getAllByTestId('bar-cell')
+    expect(cells[0]).toHaveAttribute('data-opacity', '0.35')
+    expect(cells[1]).toHaveAttribute('data-opacity', '1')
   })
 })

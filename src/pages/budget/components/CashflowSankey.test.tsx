@@ -36,6 +36,8 @@ describe('CashflowSankey', () => {
     categoryGroups: defaultGroups,
     removedCategories: new Set<string>(),
     categorySums: {} as Record<string, Record<string, number>>,
+    selectedPeriod: null,
+    timePeriod: 'month' as const,
   }
 
   it('renders empty state when no transactions exist', () => {
@@ -176,5 +178,48 @@ describe('CashflowSankey', () => {
 
     expect(textContents.some(t => t?.includes('Savings'))).toBe(true)
     expect(textContents.some(t => t?.includes('$3,800') && t?.includes('(76.0%)'))).toBe(true)
+  })
+
+  it('filters sankey data to the selected month', () => {
+    const yearTransactions = {
+      '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
+      '2024-02': [makeTx({ category: 'Salary', amount: 4500 }), makeTx({ category: 'Rent', amount: -2000 })],
+    }
+    const props = {
+      ...baseProps,
+      yearTransactions,
+      categorySums: deriveCategorySums(yearTransactions),
+      selectedPeriod: 'Jan',
+    }
+    const { container } = render(<CashflowSankey {...props} />)
+    const textContents = Array.from(container.querySelectorAll('text')).map(t => t.textContent)
+
+    expect(screen.getByText('Cashflow Sankey — Jan')).toBeInTheDocument()
+    expect(textContents.some(t => t?.includes('INCOME') && t?.includes('$5,000'))).toBe(true)
+    expect(textContents.some(t => t?.includes('EXPENSE GROUPS') && t?.includes('$1,200'))).toBe(true)
+    expect(textContents.some(t => t?.includes('$3,800') && t?.includes('(76.0%)'))).toBe(true)
+  })
+
+  it('filters sankey data to the selected quarter', () => {
+    const yearTransactions = {
+      '2024-01': [makeTx({ category: 'Salary', amount: 5000 })],
+      '2024-02': [makeTx({ category: 'Salary', amount: 4500 })],
+      '2024-03': [makeTx({ category: 'Groceries', amount: -1000 })],
+      '2024-04': [makeTx({ category: 'Bonus', amount: 8000 }), makeTx({ category: 'Rent', amount: -2500 })],
+    }
+    const props = {
+      ...baseProps,
+      yearTransactions,
+      categorySums: deriveCategorySums(yearTransactions),
+      selectedPeriod: 'Q1',
+      timePeriod: 'quarter' as const,
+    }
+    const { container } = render(<CashflowSankey {...props} />)
+    const textContents = Array.from(container.querySelectorAll('text')).map(t => t.textContent)
+
+    expect(screen.getByText('Cashflow Sankey — Q1')).toBeInTheDocument()
+    expect(textContents.some(t => t?.includes('INCOME') && t?.includes('$9,500'))).toBe(true)
+    expect(textContents.some(t => t?.includes('EXPENSE GROUPS') && t?.includes('$1,000'))).toBe(true)
+    expect(textContents.some(t => t?.includes('Bonus'))).toBe(false)
   })
 })

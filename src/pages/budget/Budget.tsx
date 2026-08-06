@@ -57,6 +57,7 @@ const Budget: FC = () => {
   const [showFormatHelp, setShowFormatHelp] = useState(false)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
+  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null)
   const [showPdfToCsv, setShowPdfToCsv] = useState(false)
   const pdfToCsvEnabled = getStorageItem('lab-pdf-to-csv', '0') === '1'
   const location = useLocation()
@@ -90,6 +91,10 @@ const Budget: FC = () => {
       pdfTriggerRef.current?.focus()
     }
   }, [showPdfToCsv, closePdfModal])
+
+  useEffect(() => {
+    setSelectedPeriod(null)
+  }, [timePeriod])
 
   const currentYear = new Date().getFullYear()
 
@@ -329,6 +334,8 @@ const Budget: FC = () => {
                 timePeriod={timePeriod}
                 removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
                 categorySums={categorySums}
+                selectedPeriod={selectedPeriod}
+                onSelectPeriod={setSelectedPeriod}
               />
               <CashflowSankey
                 year={selectedYear}
@@ -336,6 +343,8 @@ const Budget: FC = () => {
                 categoryGroups={categoryGroups}
                 removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
                 categorySums={categorySums}
+                selectedPeriod={selectedPeriod}
+                timePeriod={timePeriod}
               />
             </>
           )}
