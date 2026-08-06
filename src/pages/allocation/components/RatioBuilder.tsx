@@ -1,49 +1,26 @@
 import { FC, ReactNode } from 'react'
 import { AssetAllocation, ALLOCATION_LABELS } from '../../data/types'
-import { Scope, CustomRatio } from '../types'
+import { CustomRatio } from '../types'
 import { ALL_CLASSES, GROUP_COLORS } from '../constants'
 
 interface RatioBuilderProps {
   activeRatio: CustomRatio
-  onUpdateName: (name: string) => void
-  onUpdateScope: (s: Scope) => void
   onUpdateGroupLabel: (idx: number, label: string) => void
   onToggleClass: (groupIdx: number, cls: AssetAllocation) => void
   onAddGroup: () => void
   onRemoveGroup: (idx: number) => void
-  onDeleteRatio: () => void
   goalSection: ReactNode
 }
 
 const RatioBuilder: FC<RatioBuilderProps> = ({
   activeRatio,
-  onUpdateName,
-  onUpdateScope,
   onUpdateGroupLabel,
   onToggleClass,
   onAddGroup,
   onRemoveGroup,
-  onDeleteRatio,
   goalSection,
 }) => (
   <div className="alloc-ratio-builder">
-    <div className="alloc-ratio-builder-header">
-      <span className="alloc-ratio-builder-label">Name</span>
-      <input className="alloc-ratio-name-input" value={activeRatio.name} onChange={e => onUpdateName(e.target.value)} />
-      <span className="alloc-ratio-builder-label alloc-ratio-builder-label--spaced">Scope</span>
-      <div className="alloc-page-scope-tabs">
-        {(['total', 'fi', 'gw'] as Scope[]).map(s => (
-          <button
-            key={s}
-            className={`alloc-page-tab${activeRatio.scope === s ? ' active' : ''}`}
-            onClick={() => onUpdateScope(s)}
-          >
-            {s === 'total' ? 'Total' : s.toUpperCase()}
-          </button>
-        ))}
-      </div>
-    </div>
-
     <div className="alloc-ratio-groups">
       {activeRatio.groups.map((group, gi) => (
         <div key={gi} className="alloc-ratio-group">
@@ -95,11 +72,11 @@ const RatioBuilder: FC<RatioBuilderProps> = ({
       </button>
     )}
 
-    {goalSection}
+    <div className="alloc-ratio-divider">
+      <span className="alloc-ratio-divider-label">Goal</span>
+    </div>
 
-    <button className="alloc-ratio-delete-btn" onClick={onDeleteRatio}>
-      Delete Ratio
-    </button>
+    {goalSection}
   </div>
 )
 

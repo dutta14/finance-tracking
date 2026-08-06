@@ -22,14 +22,15 @@ const GoalSection: FC<GoalSectionProps> = ({ activeRatio, profile, allocMap, com
 
   return (
     <div className="alloc-goal-section">
-      <div className="alloc-goal-scope-label">
-        Goal for <strong>{activeRatio.scope === 'total' ? 'Total' : activeRatio.scope.toUpperCase()}</strong>
-      </div>
-
       {!scopeGoal && !goalEditing && (
-        <button className="alloc-goal-set-btn" onClick={() => setGoalEditing(true)}>
-          Set Goal
-        </button>
+        <div className="alloc-goal-empty">
+          <span className="alloc-goal-empty-text">
+            No goal set for <strong>{activeRatio.scope === 'total' ? 'Total' : activeRatio.scope.toUpperCase()}</strong>
+          </span>
+          <button className="alloc-goal-set-btn" onClick={() => setGoalEditing(true)}>
+            + Set Goal
+          </button>
+        </div>
       )}
 
       {scopeGoal && !goalEditing && (
@@ -68,6 +69,7 @@ const GoalSection: FC<GoalSectionProps> = ({ activeRatio, profile, allocMap, com
 
       {goalEditing && (
         <GoalEditor
+          key={activeRatio.id + '-' + activeRatio.scope}
           groups={activeRatio.groups}
           existingGoal={scopeGoal}
           hasPrimary={!!profile.birthday}
