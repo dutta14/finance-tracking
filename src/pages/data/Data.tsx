@@ -256,49 +256,6 @@ const Data: FC = () => {
           </div>
         ) : (
           <>
-            {dataView !== 'manage' && (
-              <div className="data-toolbar">
-                <div className="data-toolbar-actions">
-                  {(dataView === 'spreadsheet' || dataView === 'details') && (
-                    <label className="data-filter-toggle">
-                      <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
-                      Show inactive
-                    </label>
-                  )}
-                  {dataView === 'spreadsheet' && (
-                    <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
-                      + Add Entry
-                    </button>
-                  )}
-                  {dataView === 'spreadsheet' && allMonths.length > 0 && (
-                    <button
-                      className="data-copy-forward-btn"
-                      onClick={handleCopyForwardEntry}
-                      disabled={!!inlineEntry}
-                      title={`Pre-fill with balances from ${allMonths[0]}`}
-                      aria-label="Copy balances from last month"
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <rect x="9" y="9" width="13" height="13" rx="2" />
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                      </svg>
-                      <span className="data-copy-forward-label">Copy Last Month</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
             {balances.length === 0 && !inlineEntry && dataView !== 'details' && dataView !== 'manage' ? (
               <div className="data-empty">
                 <div className="data-empty-icon">
@@ -329,6 +286,7 @@ const Data: FC = () => {
                 balanceMap={balanceMap}
                 profile={profile}
                 showInactive={showInactive}
+                onToggleShowInactive={() => setShowInactive(v => !v)}
                 onSaveMonth={handleSaveMonth}
               />
             ) : dataView === 'manage' ? (
@@ -353,6 +311,45 @@ const Data: FC = () => {
                 balanceMap={balanceMap}
                 profile={profile}
                 inlineEntry={inlineEntry}
+                toolbarActions={
+                  <>
+                    <button
+                      className="data-filter-toggle"
+                      aria-pressed={showInactive}
+                      onClick={() => setShowInactive(v => !v)}
+                    >
+                      {showInactive ? 'Hide inactive' : 'Show inactive'}
+                    </button>
+                    <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
+                      + Add Entry
+                    </button>
+                    {allMonths.length > 0 && (
+                      <button
+                        className="data-copy-forward-btn"
+                        onClick={handleCopyForwardEntry}
+                        disabled={!!inlineEntry}
+                        title={`Pre-fill with balances from ${allMonths[0]}`}
+                        aria-label="Copy balances from last month"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <rect x="9" y="9" width="13" height="13" rx="2" />
+                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                        </svg>
+                        <span className="data-copy-forward-label">Copy Last Month</span>
+                      </button>
+                    )}
+                  </>
+                }
                 onInlineEntryChange={setInlineEntry}
                 onSaveInlineEntry={handleSaveInlineEntry}
                 onCancelInlineEntry={() => setInlineEntry(null)}

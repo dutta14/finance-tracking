@@ -104,35 +104,48 @@ const AccountsModal: FC<AccountsModalProps> = ({
       )}
       <div className="data-modal-body">
         <div className="data-toolbar">
-          <div className="data-filter-group">
-            <button className={`data-filter-btn${filter === 'all' ? ' active' : ''}`} onClick={() => setFilter('all')}>
+          <div className="data-filter-group" role="tablist" aria-label="Account filters">
+            <button
+              role="tab"
+              aria-selected={filter === 'all'}
+              className={`data-filter-btn${filter === 'all' ? ' active' : ''}`}
+              onClick={() => setFilter('all')}
+            >
               All ({accounts.length})
             </button>
             <button
+              role="tab"
+              aria-selected={filter === 'active'}
               className={`data-filter-btn${filter === 'active' ? ' active' : ''}`}
               onClick={() => setFilter('active')}
             >
               Active ({accounts.filter(a => a.status === 'active').length})
             </button>
             <button
+              role="tab"
+              aria-selected={filter === 'inactive'}
               className={`data-filter-btn${filter === 'inactive' ? ' active' : ''}`}
               onClick={() => setFilter('inactive')}
             >
               Inactive ({accounts.filter(a => a.status === 'inactive').length})
             </button>
             <button
+              role="tab"
+              aria-selected={filter === 'groups'}
               className={`data-filter-btn${filter === 'groups' ? ' active' : ''}`}
               onClick={() => setFilter('groups')}
             >
               Groups{existingGroups.length > 0 ? ` (${existingGroups.length})` : ''}
             </button>
           </div>
-          <button className="data-add-btn data-add-btn--primary" onClick={() => setShowAddForm(true)}>
-            + Add Account
-          </button>
+          {!isGroupsView && (
+            <button className="data-add-btn data-add-btn--primary" onClick={() => setShowAddForm(true)}>
+              + Add Account
+            </button>
+          )}
         </div>
 
-        {showAddForm && (
+        {showAddForm && !isGroupsView && (
           <AccountForm
             profile={profile}
             existingGroups={existingGroups}
@@ -214,7 +227,14 @@ const AccountsModal: FC<AccountsModalProps> = ({
 
   return (
     <div className="data-modal-backdrop" onClick={onClose}>
-      <div ref={modalRef} className="data-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div
+        ref={modalRef}
+        className="data-modal"
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Accounts"
+      >
         {content}
       </div>
     </div>
