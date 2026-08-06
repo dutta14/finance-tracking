@@ -9,6 +9,7 @@ const Home = lazy(() => import('./pages/home/Home'))
 const Goal = lazy(() => import('./pages/goal/Goal'))
 const Data = lazy(() => import('./pages/data/Data'))
 const Budget = lazy(() => import('./pages/budget/Budget'))
+const Transactions = lazy(() => import('./pages/transactions/Transactions'))
 const Drive = lazy(() => import('./pages/drive/Drive'))
 const Taxes = lazy(() => import('./pages/taxes/Taxes'))
 import { DataProvider } from './contexts/DataContext'
@@ -78,16 +79,24 @@ const AppShell: FC = () => {
         ? 'net-worth'
         : location.pathname.startsWith('/budget')
           ? 'budget'
-          : location.pathname.startsWith('/drive')
-            ? 'drive'
-            : location.pathname === '/taxes'
-              ? 'taxes'
-              : 'home'
+          : location.pathname.startsWith('/transactions')
+            ? 'transactions'
+            : location.pathname.startsWith('/drive')
+              ? 'drive'
+              : location.pathname === '/taxes'
+                ? 'taxes'
+                : 'home'
   const setCurrentPage = (page: PageType): void => {
     navigate(
-      { home: '/', goal: '/goal', 'net-worth': '/net-worth', budget: '/budget', drive: '/drive', taxes: '/taxes' }[
-        page
-      ] || '/',
+      {
+        home: '/',
+        goal: '/goal',
+        'net-worth': '/net-worth',
+        budget: '/budget',
+        transactions: '/transactions',
+        drive: '/drive',
+        taxes: '/taxes',
+      }[page] || '/',
     )
   }
   const handleSearchAction = useCallback(
@@ -198,6 +207,14 @@ const AppShell: FC = () => {
               }
             />
             <Route path="/tools" element={<Navigate to="/budget" replace />} />
+            <Route
+              path="/transactions/*"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Transactions />
+                </ErrorBoundary>
+              }
+            />
             <Route
               path="/drive/*"
               element={

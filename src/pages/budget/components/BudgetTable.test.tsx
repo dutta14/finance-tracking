@@ -70,9 +70,11 @@ describe('BudgetTable', () => {
       renderTable({
         type: 'income',
         categorySums: { Salary: { '2025-01': 5000 } },
-        categoryGroups: [makeCategoryGroup({ id: 'income', name: 'Income', categories: ['Salary'] })],
+        categoryGroups: [
+          makeCategoryGroup({ id: 'income', name: 'Paychecks', categories: ['Salary'], type: 'income' }),
+        ],
       })
-      expect(screen.getByText('Income')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Income' })).toBeInTheDocument()
     })
 
     it('renders 12 month column headers for month time period', () => {
@@ -170,7 +172,9 @@ describe('BudgetTable', () => {
   describe('income rendering', () => {
     const incomeProps = {
       type: 'income' as const,
-      categoryGroups: [makeCategoryGroup({ id: 'income', name: 'Income', categories: ['Salary', 'Freelance'] })],
+      categoryGroups: [
+        makeCategoryGroup({ id: 'income', name: 'Paychecks', categories: ['Salary', 'Freelance'], type: 'income' }),
+      ],
       categorySums: {
         Salary: { '2025-01': 5000, '2025-02': 5000 },
         Freelance: { '2025-01': 1000 },
@@ -188,7 +192,7 @@ describe('BudgetTable', () => {
 
     it('renders formatted income amounts', () => {
       renderTable(incomeProps)
-      expect(screen.getAllByText('$5,000')).toHaveLength(3)
+      expect(screen.getAllByText('$5,000')).toHaveLength(4)
       expect(screen.getAllByText('$1,000')).toHaveLength(2)
     })
   })
@@ -1077,11 +1081,10 @@ describe('BudgetTable branch coverage', () => {
       categorySums: {
         Salary: { '2025-01': 5000 },
       },
-      categoryGroups: [makeCategoryGroup({ id: 'inc', name: 'Income', categories: ['Salary'] })],
+      categoryGroups: [makeCategoryGroup({ id: 'inc', name: 'Paychecks', categories: ['Salary'], type: 'income' })],
       yearTransactions: {},
     })
-    // $5,000 appears in: Jan cell, Total cell, Grand Total Jan, Grand Total Total = 4
-    expect(screen.getAllByText('$5,000')).toHaveLength(4)
+    expect(screen.getAllByText('$5,000')).toHaveLength(6)
   })
 
   // --- Branch coverage: drilldown filter sum display and refund class (line 523) ---

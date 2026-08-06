@@ -14,19 +14,20 @@ const updateGlobalCategoryGroups = vi.mocked(_updateGlobalCategoryGroups)
 
 /* ─── Mocks ─── */
 
-const DEFAULT_GROUPS: CategoryGroup[] = [
+const DEFAULT_EXPENSE_GROUPS: CategoryGroup[] = [
   { id: 'others', name: 'Others', categories: [] },
   { id: 'removed', name: 'Remove from Budget', categories: [] },
 ]
 
-const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [] }]
+const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [], type: 'income' }]
+
+const DEFAULT_GROUPS: CategoryGroup[] = [...DEFAULT_EXPENSE_GROUPS, ...DEFAULT_INCOME_GROUPS]
 
 const EMPTY_STORE: BudgetStore = {
   csvs: {},
   configs: {},
   years: [],
   categoryGroups: DEFAULT_GROUPS,
-  incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
 }
 
 let mockStore: BudgetStore = { ...EMPTY_STORE, categoryGroups: [...DEFAULT_GROUPS] }
@@ -56,7 +57,14 @@ vi.mock('../utils/budgetStorage', () => ({
     if (store.years.includes(year)) return store
     return { ...store, years: [...store.years, year].sort() }
   }),
-  getGlobalCategoryGroups: vi.fn((store: BudgetStore) => store.categoryGroups),
+  getGlobalCategoryGroups: vi.fn((store: BudgetStore) =>
+    (store.categoryGroups || []).filter(group => group.type !== 'income'),
+  ),
+  getExpenseGroups: vi.fn((groups: CategoryGroup[]) => groups.filter(group => group.type !== 'income')),
+  getIncomeGroups: vi.fn((groups: CategoryGroup[]) => {
+    const incomeGroups = groups.filter(group => group.type === 'income')
+    return incomeGroups.length > 0 ? incomeGroups : DEFAULT_INCOME_GROUPS
+  }),
   updateGlobalCategoryGroups: vi.fn((store: BudgetStore, groups: CategoryGroup[]) => ({
     ...store,
     categoryGroups: groups,
@@ -72,7 +80,6 @@ beforeEach(() => {
   mockStore = {
     ...EMPTY_STORE,
     categoryGroups: DEFAULT_GROUPS.map(g => ({ ...g, categories: [...g.categories] })),
-    incomeCategoryGroups: DEFAULT_INCOME_GROUPS.map(g => ({ ...g, categories: [...g.categories] })),
   }
   vi.clearAllMocks()
 })
@@ -83,7 +90,7 @@ describe('useBudget — initial state', () => {
 
     expect(result.current.store.csvs).toEqual({})
     expect(result.current.yearTransactions).toEqual({})
-    expect(result.current.categoryGroups).toEqual(DEFAULT_GROUPS)
+    expect(result.current.categoryGroups).toEqual(DEFAULT_EXPENSE_GROUPS)
   })
 
   it('loads existing budget store from budgetStorage on mount', () => {
@@ -535,7 +542,7 @@ describe('useBudget — updateIncomeCategoryGroups', () => {
       result.current.updateIncomeCategoryGroups(newGroups)
     })
 
-    expect(result.current.incomeCategoryGroups).toEqual(newGroups)
+    expect(result.current.incomeCategoryGroups).toEqual(newGroups.map(group => ({ ...group, type: 'income' })))
   })
 })
 
@@ -658,10 +665,8 @@ describe('useBudget — applyConfig', () => {
         { id: 'housing', name: 'Housing', categories: ['Rent'] },
         { id: 'others', name: 'Others', categories: [] },
         { id: 'removed', name: 'Remove from Budget', categories: [] },
-      ],
-      incomeCategoryGroups: [
-        { id: 'paychecks', name: 'Paychecks', categories: ['Salary'] },
-        { id: 'income-others', name: 'Others', categories: [] },
+        { id: 'paychecks', name: 'Paychecks', categories: ['Salary'], type: 'income' },
+        { id: 'income-others', name: 'Others', categories: [], type: 'income' },
       ],
     }
 
@@ -1395,7 +1400,6 @@ describe('useBudget — incomeRemovedCategories', () => {
       configs: {},
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
-      incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
     }
 
     const { result } = renderHook(() => useBudget())

@@ -8,6 +8,9 @@ vi.mock('./pages/home/Home', () => ({ default: () => <div data-testid="page-home
 vi.mock('./pages/goal/Goal', () => ({ default: () => <div data-testid="page-goal">Goal Page</div> }))
 vi.mock('./pages/data/Data', () => ({ default: () => <div data-testid="page-data">Data Page</div> }))
 vi.mock('./pages/budget/Budget', () => ({ default: () => <div data-testid="page-budget">Budget Page</div> }))
+vi.mock('./pages/transactions/Transactions', () => ({
+  default: () => <div data-testid="page-transactions">Transactions Page</div>,
+}))
 vi.mock('./pages/drive/Drive', () => ({ default: () => <div data-testid="page-drive">Drive Page</div> }))
 vi.mock('./pages/taxes/Taxes', () => ({ default: () => <div data-testid="page-taxes">Taxes Page</div> }))
 
@@ -79,6 +82,14 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Taxes' }))
     await waitFor(() => {
       expect(screen.getByTestId('page-taxes')).toBeInTheDocument()
+    })
+  })
+
+  it('navigates to Transactions on sidebar click', async () => {
+    renderApp()
+    await userEvent.click(screen.getByRole('button', { name: 'Transactions' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('page-transactions')).toBeInTheDocument()
     })
   })
 
@@ -181,6 +192,7 @@ describe('App', () => {
       ['/goal', 'page-goal'],
       ['/net-worth', 'page-data'],
       ['/budget/spreadsheet', 'page-budget'],
+      ['/transactions', 'page-transactions'],
       ['/drive', 'page-drive'],
       ['/taxes', 'page-taxes'],
     ] as const) {
@@ -204,6 +216,17 @@ describe('App', () => {
     )
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Budget' })).toHaveAttribute('aria-current', 'page')
+    })
+  })
+
+  it('highlights Transactions in the sidebar for transactions routes', async () => {
+    render(
+      <MemoryRouter initialEntries={['/transactions']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page')
     })
   })
 

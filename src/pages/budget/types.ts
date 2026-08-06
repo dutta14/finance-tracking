@@ -28,6 +28,7 @@ export interface CategoryGroup {
   name: string
   /** Ordered list of category names in this group */
   categories: string[]
+  type?: 'expense' | 'income'
 }
 
 /** Persisted budget configuration per year (legacy — migrated to global) */
@@ -41,7 +42,6 @@ export interface BudgetConfigData {
   version: number
   years: number[]
   categoryGroups: CategoryGroup[]
-  incomeCategoryGroups?: CategoryGroup[]
 }
 
 /** All budget data stored in localStorage */
@@ -54,8 +54,6 @@ export interface BudgetStore {
   years: number[]
   /** Global category groups shared across all years */
   categoryGroups?: CategoryGroup[]
-  /** Global income category groups shared across all years */
-  incomeCategoryGroups?: CategoryGroup[]
 }
 
 export type BudgetViewMode = 'spreadsheet' | 'cashflow' | 'groups'

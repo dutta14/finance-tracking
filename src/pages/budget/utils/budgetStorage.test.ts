@@ -17,12 +17,14 @@ import {
 } from './budgetStorage'
 import type { BudgetStore, CategoryGroup } from '../types'
 
-const DEFAULT_GROUPS: CategoryGroup[] = [
+const DEFAULT_EXPENSE_GROUPS: CategoryGroup[] = [
   { id: 'others', name: 'Others', categories: [] },
   { id: 'removed', name: 'Remove from Budget', categories: [] },
 ]
 
-const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [] }]
+const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [], type: 'income' }]
+
+const DEFAULT_GROUPS: CategoryGroup[] = [...DEFAULT_EXPENSE_GROUPS, ...DEFAULT_INCOME_GROUPS]
 
 beforeEach(() => {
   localStorage.clear()
@@ -33,7 +35,7 @@ describe('loadBudgetStore', () => {
     const store = loadBudgetStore()
     expect(store.csvs).toEqual({})
     expect(store.years).toEqual([])
-    expect(store.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
+    expect(store.categoryGroups?.filter(group => group.type === 'income')).toEqual(DEFAULT_INCOME_GROUPS)
   })
 
   it('loads CSVs from store and config from separate key', () => {
@@ -55,7 +57,7 @@ describe('loadBudgetStore', () => {
     expect(store.csvs['2025-01'].csv).toBe('a,b,c')
     expect(store.years).toEqual([2025])
     expect(store.categoryGroups!.find(g => g.id === 'food')).toBeTruthy()
-    expect(store.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
+    expect(store.categoryGroups?.filter(group => group.type === 'income')).toEqual(DEFAULT_INCOME_GROUPS)
   })
 
   it('returns empty store on corrupt JSON', () => {
@@ -87,9 +89,10 @@ describe('saveBudgetStore', () => {
 
     // Config should have years and groups
     const config = appStorage.getJSON<Record<string, unknown>>('budget-config', {})
+    const configCategoryGroups = (config.categoryGroups as CategoryGroup[]) || []
     expect(config.years).toEqual([2025])
-    expect(config.categoryGroups).toHaveLength(3)
-    expect(config.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
+    expect(configCategoryGroups).toHaveLength(4)
+    expect(configCategoryGroups.filter(group => group.type === 'income')).toEqual(DEFAULT_INCOME_GROUPS)
   })
 })
 
@@ -99,7 +102,7 @@ describe('loadBudgetConfig', () => {
     expect(config.version).toBe(1)
     expect(config.years).toEqual([])
     expect(config.categoryGroups).toEqual([])
-    expect(config.incomeCategoryGroups).toEqual(DEFAULT_INCOME_GROUPS)
+    expect(config.categoryGroups.filter(group => group.type === 'income')).toEqual([])
   })
 
   it('loads saved config', () => {
@@ -121,14 +124,16 @@ describe('getBudgetConfigData', () => {
       csvs: {},
       configs: {},
       years: [2024],
-      categoryGroups: [{ id: 'others', name: 'Others', categories: ['Misc'] }],
-      incomeCategoryGroups: [{ id: 'income-others', name: 'Others', categories: ['Salary'] }],
+      categoryGroups: [
+        { id: 'others', name: 'Others', categories: ['Misc'] },
+        { id: 'income-others', name: 'Others', categories: ['Salary'], type: 'income' },
+      ],
     }
     const config = getBudgetConfigData(store)
     expect(config.version).toBe(1)
     expect(config.years).toEqual([2024])
     expect(config.categoryGroups[0].categories).toEqual(['Misc'])
-    expect(config.incomeCategoryGroups?.[0].categories).toEqual(['Salary'])
+    expect(config.categoryGroups.find(g => g.id === 'income-others')?.categories).toEqual(['Salary'])
   })
 })
 
@@ -162,7 +167,7 @@ describe('getGlobalCategoryGroups', () => {
   it('returns default groups when store has no groups', () => {
     const store: BudgetStore = { csvs: {}, configs: {}, years: [] }
     const groups = getGlobalCategoryGroups(store)
-    expect(groups).toEqual(DEFAULT_GROUPS)
+    expect(groups).toEqual(DEFAULT_EXPENSE_GROUPS)
   })
 })
 
@@ -335,8 +340,9 @@ describe('migrateToGlobalGroups (via loadBudgetStore)', () => {
     expect(groups.find(g => g.id === 'transport')).toBeTruthy()
     // others + removed should be last
     const ids = groups.map(g => g.id)
-    expect(ids[ids.length - 1]).toBe('removed')
-    expect(ids[ids.length - 2]).toBe('others')
+    expect(ids[ids.length - 1]).toBe('income-others')
+    expect(ids[ids.length - 2]).toBe('removed')
+    expect(ids[ids.length - 3]).toBe('others')
   })
 
   it('deduplicates categories in Others that exist in custom groups', () => {
@@ -510,7 +516,7 @@ describe('getBudgetConfigData', () => {
       categoryGroups: undefined as unknown as CategoryGroup[],
     }
     const config = getBudgetConfigData(store)
-    expect(config.categoryGroups).toHaveLength(2)
+    expect(config.categoryGroups).toHaveLength(3)
     expect(config.years).toEqual([2025])
   })
 })
