@@ -87,14 +87,12 @@ describe('SavingsGrowthTracker', () => {
     expect(screen.getByText('Year')).toBeInTheDocument()
     expect(screen.getByText('Net Income')).toBeInTheDocument()
     expect(screen.getByText('Expense')).toBeInTheDocument()
-    // "Savings" appears as both a tab button and column header
     const savingsElements = screen.getAllByText('Savings')
-    expect(savingsElements.length).toBe(2) // tab + column header
+    expect(savingsElements.length).toBe(1)
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
   })
 
-  it('switches to income tab when Income button is clicked', async () => {
-    const user = userEvent.setup()
+  it('renders income tab columns on the income route', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -113,8 +111,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     expect(screen.getByText('Gross Income')).toBeInTheDocument()
     expect(screen.getByText('Taxes')).toBeInTheDocument()
     expect(screen.getByText('Tax Rate')).toBeInTheDocument()
@@ -223,8 +220,7 @@ describe('SavingsGrowthTracker', () => {
     expect(screen.getByText(/Savings = Net Income from budget/)).toBeInTheDocument()
   })
 
-  it('renders editable cell for grossIncome on income tab', async () => {
-    const user = userEvent.setup()
+  it('renders editable cell for grossIncome on income tab', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -243,14 +239,13 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     // Income tab with 1 year, no budget/overrides: grossIncome, taxes, netIncome are editable "—", taxRate is non-editable "—"
     const dashElements = screen.getAllByText('—')
     expect(dashElements.length).toBe(4)
   })
 
-  it('renders the Savings and Income tab buttons with aria-pressed', () => {
+  it('defaults to the savings view on the base growth route', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -270,8 +265,8 @@ describe('SavingsGrowthTracker', () => {
       setBalances: vi.fn(),
     })
     renderTracker()
-    const savingsBtn = screen.getByRole('button', { pressed: true })
-    expect(savingsBtn).toHaveTextContent('Savings')
+    expect(screen.getByText('Expense')).toBeInTheDocument()
+    expect(screen.queryByText('Gross Income')).not.toBeInTheDocument()
   })
 
   it('shows N/A for missing computed values', () => {
@@ -412,8 +407,7 @@ describe('SavingsGrowthTracker', () => {
     expect(deltaElements.length).toBeGreaterThan(0)
   })
 
-  it('renders income tab hint text after switching tabs', async () => {
-    const user = userEvent.setup()
+  it('renders income tab hint text after switching tabs', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -432,8 +426,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     expect(screen.getByText(/Gross income & taxes are user-entered/)).toBeInTheDocument()
   })
 
@@ -487,10 +480,9 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
+    renderTracker('/net-worth/growth/income')
 
-    // Switch to income tab where grossIncome is always editable
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    // Gross income is always editable on the income route
     const editableDashes = screen.getAllByRole('button', { name: '—' })
     if (editableDashes.length > 0) {
       await user.click(editableDashes[0])
@@ -523,8 +515,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     const editableDashes = screen.getAllByRole('button', { name: '—' })
     if (editableDashes.length > 0) {
       await user.click(editableDashes[0])
@@ -555,8 +546,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     const editableDashes = screen.getAllByRole('button', { name: '—' })
     if (editableDashes.length > 0) {
       await user.click(editableDashes[0])
@@ -590,8 +580,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     const editableDashes = screen.getAllByRole('button', { name: '—' })
     if (editableDashes.length > 0) {
       editableDashes[0].focus()
@@ -620,8 +609,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     const editableDashes = screen.getAllByRole('button', { name: '—' })
     if (editableDashes.length > 0) {
       editableDashes[0].focus()
@@ -764,8 +752,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     // grossIncome override = 250000 should display as formatted value
     expect(screen.getByText('$250,000')).toBeInTheDocument()
     // Click the editable value to start editing
@@ -855,10 +842,8 @@ describe('SavingsGrowthTracker', () => {
     })
 
     it('income tab: every row has exactly the documented 5 data-sgt-field cells in order', async () => {
-      const user = userEvent.setup()
       setupTwoYears()
-      renderTracker()
-      await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+      renderTracker('/net-worth/growth/income')
 
       const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
       expect(rows).toHaveLength(2)
@@ -946,8 +931,7 @@ describe('SavingsGrowthTracker', () => {
     expect(screen.getByText('$95,000')).toBeInTheDocument()
   })
 
-  it('renders tax rate when grossIncome and taxes overrides are set', async () => {
-    const user = userEvent.setup()
+  it('renders tax rate when grossIncome and taxes overrides are set', () => {
     vi.mocked(appStorage.getJSON).mockImplementation(() => ({ 2024: { grossIncome: 200000, taxes: 50000 } }))
     mockUseData.mockReturnValue({
       accounts: [
@@ -967,8 +951,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     // Tax Rate = 50000/200000 * 100 = 25.0%
     expect(screen.getByText('25.0%')).toBeInTheDocument()
   })
@@ -1030,8 +1013,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     // Click the editable $150,000 value
     await user.click(screen.getByText('$150,000'))
     const editInput = document.querySelector('.sgt-edit-input') as HTMLInputElement
@@ -1289,8 +1271,7 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    await user.click(screen.getByRole('button', { name: /Income/i, pressed: false }))
+    renderTracker('/net-worth/growth/income')
     // $100,000 is an editable span with role=button (line 289-305)
     const editableValue = screen.getByText('$100,000')
     editableValue.focus()

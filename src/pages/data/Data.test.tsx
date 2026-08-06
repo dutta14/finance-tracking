@@ -105,6 +105,10 @@ function renderData(initialRoute = '/net-worth') {
   )
 }
 
+async function openAccountsManage(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('tab', { name: /^Accounts$/ }))
+}
+
 beforeEach(() => {
   handleDataChangeSpy.mockClear()
   mockSetAccounts.mockClear()
@@ -129,8 +133,7 @@ describe('Data save race condition fix', () => {
   it('handleDeleteAccount passes consistent accounts and balances to onDataChange', async () => {
     const user = userEvent.setup()
     renderData()
-    const viewAccountsBtn = screen.getByText(/View Accounts/i)
-    await user.click(viewAccountsBtn)
+    await openAccountsManage(user)
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
     expect(deleteButtons.length).toBeGreaterThan(0)
     await user.click(deleteButtons[0])
@@ -146,8 +149,7 @@ describe('Data save race condition fix', () => {
   it('saveAccounts passes current balances (via ref) to onDataChange', async () => {
     const user = userEvent.setup()
     renderData()
-    const viewAccountsBtn = screen.getByText(/View Accounts/i)
-    await user.click(viewAccountsBtn)
+    await openAccountsManage(user)
     // Use delete button as the save trigger (toggle buttons not rendered by AccountsModal)
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
     expect(deleteButtons.length).toBeGreaterThan(0)
@@ -161,19 +163,25 @@ describe('Data save race condition fix', () => {
   it('sequential saveAccounts then saveBalances in same tick passes consistent data to onDataChange', async () => {
     const user = userEvent.setup()
     renderData()
-    await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
-    await user.click(screen.getByTitle('Delete Jan 2024'))
-    await user.click(screen.getByText(/View Accounts/i))
+
+    await openAccountsManage(user)
     await user.click(screen.getByText('+ Add Account'))
     await user.type(screen.getByPlaceholderText('e.g. Chase Checking'), 'New Savings')
     await user.click(screen.getByRole('button', { name: 'Add Account' }))
+
     expect(handleDataChangeSpy).toHaveBeenCalledTimes(1)
     const firstCall = handleDataChangeSpy.mock.calls[0] as [Account[], BalanceEntry[]]
     expect(firstCall[0]).toHaveLength(3)
+    mockAccounts = firstCall[0]
+
+    await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
+    await user.click(screen.getByTitle('Delete Jan 2024'))
+
     const confirmDialog = screen.getByText(/Delete all balance entries for/i).parentElement?.parentElement
     expect(confirmDialog).toBeTruthy()
     const confirmDeleteBtn = within(confirmDialog as HTMLElement).getByRole('button', { name: 'Delete' })
     await user.click(confirmDeleteBtn)
+
     expect(handleDataChangeSpy).toHaveBeenCalledTimes(2)
     const secondCall = handleDataChangeSpy.mock.calls[1] as [Account[], BalanceEntry[]]
     const [passedAccounts, passedBalances] = secondCall
@@ -190,11 +198,11 @@ describe('Data save race condition fix', () => {
 describe('Data page integration', () => {
   // --- Tab routing ---
 
-  it('renders the Accounts tab as active by default', () => {
+  it('renders the Dashboard tab as active by default', () => {
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
     renderData()
-    const accountsTab = screen.getByRole('link', { name: 'Accounts' })
+    const accountsTab = screen.getByRole('link', { name: 'Dashboard' })
     expect(accountsTab).toHaveClass('active')
   })
 
@@ -234,32 +242,30 @@ describe('Data page integration', () => {
     })
   })
 
-  // --- AccountsModal ---
+  // --- Accounts management view ---
 
-  it('opens AccountsModal when "View Accounts" button is clicked', async () => {
+  it('renders the inline accounts page when the Accounts view tab is clicked', async () => {
     const user = userEvent.setup()
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
     renderData()
-    await user.click(screen.getByText(/View Accounts/i))
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    await openAccountsManage(user)
+
+    expect(screen.getByRole('tab', { name: /^Accounts$/ })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('closes the accounts modal after opening it from the details view toolbar', async () => {
-    const user = userEvent.setup()
+  it('hides the balance-entry toolbar on the inline accounts page', () => {
     mockAccounts = [...twoAccounts]
     mockBalances = [...twoBalances]
-    renderData()
+    renderData('/net-worth/dashboard/manage')
 
-    await user.click(screen.getByRole('tab', { name: 'Details' }))
-    await user.click(screen.getByText(/View Accounts/i))
-
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Close' }))
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Show inactive')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Copy balances from last month')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ Add Account' })).toBeInTheDocument()
   })
 
   it('adds a new account via AccountsModal and updates both accounts and balances state', async () => {
@@ -268,7 +274,7 @@ describe('Data page integration', () => {
     mockBalances = [...twoBalances]
     renderData()
 
-    await user.click(screen.getByText(/View Accounts/i))
+    await openAccountsManage(user)
     await user.click(screen.getByText('+ Add Account'))
     await user.type(screen.getByPlaceholderText('e.g. Chase Checking'), 'Brokerage')
     await user.click(screen.getByRole('button', { name: 'Add Account' }))
@@ -287,7 +293,7 @@ describe('Data page integration', () => {
     mockBalances = [...twoBalances]
     renderData()
 
-    await user.click(screen.getByText(/View Accounts/i))
+    await openAccountsManage(user)
     const editButtons = screen.getAllByRole('button', { name: /edit/i })
     await user.click(editButtons[0])
 
@@ -306,7 +312,7 @@ describe('Data page integration', () => {
     renderData()
     const user = userEvent.setup()
 
-    await user.click(screen.getByText(/View Accounts/i))
+    await openAccountsManage(user)
 
     // Hold Meta and click first account to start multi-select
     await user.keyboard('{Meta>}')
@@ -339,7 +345,7 @@ describe('Data page integration', () => {
     mockBalances = [...twoBalances]
     renderData()
 
-    await user.click(screen.getByText(/View Accounts/i))
+    await openAccountsManage(user)
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
     await user.click(deleteButtons[0])
 
@@ -565,7 +571,7 @@ describe('Data page integration', () => {
     mockBalances = [...twoBalances]
     renderData()
 
-    expect(screen.getByRole('link', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Allocation' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Growth' })).toBeInTheDocument()
   })
@@ -609,7 +615,7 @@ describe('Data page integration', () => {
     mockBalances = []
     renderData()
 
-    await user.click(screen.getByText(/View Accounts/i))
+    await openAccountsManage(user)
     await user.click(screen.getByRole('button', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
@@ -932,7 +938,7 @@ describe('Data page integration', () => {
     mockBalances = []
     renderData()
 
-    await user.click(screen.getByText(/View Accounts/i))
+    await openAccountsManage(user)
     // Rename group triggers handleRenameGroup (line 87-88)
     const renameBtn = screen.queryByTitle('Rename group')
     if (renameBtn) {
