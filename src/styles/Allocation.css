@@ -45,7 +45,7 @@
 .alloc-page-controls {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 /* ── Tabs / Toggles ──────────────────────────────────────────── */
@@ -55,15 +55,15 @@
   gap: 0.25rem;
   background: var(--color-surface-hover);
   border-radius: var(--radius);
-  padding: 2px;
+  padding: 3px;
 }
 .alloc-page-tab {
   background: none;
   border: none;
   font: inherit;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  padding: 0.3rem 0.65rem;
+  padding: 0.4rem 0.9rem;
   border-radius: var(--radius);
   cursor: pointer;
   color: var(--color-text-muted);
@@ -91,9 +91,9 @@
   background: none;
   border: none;
   font: inherit;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  padding: 0.25rem 0.55rem;
+  padding: 0.4rem 0.75rem;
   cursor: pointer;
   color: var(--color-text-muted);
   transition:
@@ -111,6 +111,7 @@
   display: flex;
   align-items: center;
   gap: 2rem;
+  max-width: 600px;
 }
 .alloc-page-donut {
   flex: 0 0 240px;
@@ -157,6 +158,102 @@
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--fs-md);
+}
+
+/* ── Drill-down ─────────────────────────────────────────────── */
+.alloc-drilldown {
+  margin-top: 1.5rem;
+  padding: 20px 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  max-width: 700px;
+}
+.alloc-drilldown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.alloc-drilldown-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+.alloc-drilldown-title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-heading);
+}
+.alloc-drilldown-total {
+  margin-left: auto;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.alloc-drilldown-chart {
+  margin-left: -8px;
+}
+.alloc-drilldown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.alloc-drilldown-item {
+  display: grid;
+  grid-template-columns: 70px 1fr 110px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.alloc-drilldown-item-info {
+  display: contents;
+}
+.alloc-drilldown-owner {
+  justify-self: start;
+}
+.alloc-drilldown-item-name {
+  font-size: var(--fs-md);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.alloc-drilldown-debt-tag {
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.alloc-drilldown-item-right {
+  display: contents;
+}
+.alloc-drilldown-item-value {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+.alloc-drilldown-item-value--debt {
+  color: #ef4444;
+}
+.alloc-drilldown-bar-track {
+  height: 8px;
+  background: var(--color-surface-hover);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 60px;
+}
+.alloc-drilldown-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
 /* ── Ratio presets ───────────────────────────────────────────── */

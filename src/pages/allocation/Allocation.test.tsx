@@ -9,41 +9,41 @@ beforeEach(() => {
 })
 
 describe('Allocation', () => {
-  it('renders the Breakdown section heading', () => {
-    renderWithProviders(<Allocation />)
-    expect(screen.getByText('Breakdown')).toBeInTheDocument()
+  it('renders the Breakdown section scope tabs', () => {
+    renderWithProviders(<Allocation tab="breakdown" />)
+    expect(screen.getByText('Total')).toBeInTheDocument()
   })
 
   it('renders the My Allocations section heading', () => {
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     expect(screen.getByText('My Allocations')).toBeInTheDocument()
   })
 
   it('shows empty state when no custom ratios exist', () => {
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     expect(screen.getByText(/No allocations yet/)).toBeInTheDocument()
   })
 
   it('renders the + New Ratio button', () => {
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     expect(screen.getByText('+ New Ratio')).toBeInTheDocument()
   })
 
   it('renders scope tabs in the breakdown section', () => {
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="breakdown" />)
     expect(screen.getByText('Total')).toBeInTheDocument()
     expect(screen.getByText('FI')).toBeInTheDocument()
     expect(screen.getByText('GW')).toBeInTheDocument()
   })
 
   it('shows breakdown chart area with No data when no accounts exist', () => {
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="breakdown" />)
     expect(screen.getByText('No data')).toBeInTheDocument()
   })
 
   it('opens create menu when + New Ratio is clicked', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     await user.click(screen.getByText('+ New Ratio'))
     expect(screen.getByText('Blank')).toBeInTheDocument()
     expect(screen.getByText('Stock vs Bond')).toBeInTheDocument()
@@ -51,7 +51,7 @@ describe('Allocation', () => {
 
   it('creates a new ratio when Blank is clicked from the create menu', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     await user.click(screen.getByText('+ New Ratio'))
     await user.click(screen.getByText('Blank'))
     expect(screen.queryByText(/No allocations yet/)).not.toBeInTheDocument()
@@ -59,7 +59,7 @@ describe('Allocation', () => {
 
   it('switches breakdown scope when FI tab is clicked', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="breakdown" />)
     const fiButtons = screen.getAllByText('FI')
     await user.click(fiButtons[0])
     expect(screen.getByText('Breakdown')).toBeInTheDocument()
@@ -67,7 +67,7 @@ describe('Allocation', () => {
 
   it('selects a ratio tab when clicked', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     // Create two ratios so we can switch between them
     await user.click(screen.getByText('+ New Ratio'))
     await user.click(screen.getByText('Blank'))
@@ -81,7 +81,7 @@ describe('Allocation', () => {
 
   it('creates a ratio from a preset when a preset option is selected', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<Allocation />)
+    renderWithProviders(<Allocation tab="ratios" />)
     await user.click(screen.getByText('+ New Ratio'))
     await user.click(screen.getByText('Stock vs Bond'))
     // A ratio was created and is active

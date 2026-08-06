@@ -201,6 +201,7 @@ const Data: FC = () => {
           ? 'manage'
           : 'charts'
   const growthTab = location.pathname.endsWith('/income') ? 'income' : 'savings'
+  const allocTab = location.pathname.endsWith('/ratios') ? 'ratios' : 'breakdown'
   const accountsContent = (
     <>
       {allowCsvImport && (
@@ -441,6 +442,24 @@ const Data: FC = () => {
               </button>
             </div>
           )}
+          {activeTab === 'allocation' && (
+            <div className="data-view-tabs" role="group" aria-label="Allocation view mode">
+              <button
+                className={`data-view-tab${allocTab === 'breakdown' ? ' active' : ''}`}
+                aria-pressed={allocTab === 'breakdown'}
+                onClick={() => navigate('/net-worth/allocation')}
+              >
+                Breakdown
+              </button>
+              <button
+                className={`data-view-tab${allocTab === 'ratios' ? ' active' : ''}`}
+                aria-pressed={allocTab === 'ratios'}
+                onClick={() => navigate('/net-worth/allocation/ratios')}
+              >
+                My Allocation
+              </button>
+            </div>
+          )}
           {activeTab === 'growth' && (
             <div className="data-view-tabs" role="group" aria-label="Growth view mode">
               <button
@@ -467,7 +486,7 @@ const Data: FC = () => {
           <Route index element={<Navigate to="/net-worth/dashboard" replace />} />
           <Route path="dashboard/*" element={accountsContent} />
           <Route
-            path="allocation"
+            path="allocation/*"
             element={
               <Suspense
                 fallback={
@@ -476,7 +495,7 @@ const Data: FC = () => {
                   </div>
                 }
               >
-                <Allocation />
+                <Allocation tab={allocTab} />
               </Suspense>
             }
           />

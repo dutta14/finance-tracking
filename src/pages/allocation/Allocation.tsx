@@ -10,8 +10,12 @@ import RatioResult from './components/RatioResult'
 import RatioBuilder from './components/RatioBuilder'
 import GoalSection from './components/GoalSection'
 
-const Allocation: FC = () => {
-  const { allocMap, getSlices, computeRatio } = useAllocationData()
+interface AllocationProps {
+  tab: 'breakdown' | 'ratios'
+}
+
+const Allocation: FC<AllocationProps> = ({ tab }) => {
+  const { allocMap, getSlices, computeRatio, getAccountsForClass } = useAllocationData()
   const {
     customRatios,
     activeRatioId,
@@ -42,62 +46,64 @@ const Allocation: FC = () => {
 
   return (
     <div className="alloc-page">
-      <BreakdownSection getSlices={getSlices} />
+      {tab === 'breakdown' && <BreakdownSection getSlices={getSlices} getAccountsForClass={getAccountsForClass} />}
 
-      <section className="alloc-page-section">
-        <RatioTabs
-          customRatios={customRatios}
-          activeRatioId={activeRatioId}
-          confirmDeleteId={confirmDeleteId}
-          createMenuOpen={createMenuOpen}
-          createMenuRef={createMenuRef}
-          onSelectRatio={id => {
-            setActiveRatioId(id)
-            setActivePreset(null)
-            setConfirmDeleteId(null)
-          }}
-          onRequestDelete={requestDeleteRatio}
-          onConfirmDelete={doDeleteRatio}
-          onCancelDelete={() => setConfirmDeleteId(null)}
-          onCreateBlank={() => {
-            createRatio()
-            setCreateMenuOpen(false)
-          }}
-          onCreateFromPreset={createFromPreset}
-          onToggleCreateMenu={() => setCreateMenuOpen(v => !v)}
-        />
-
-        {activeRatio && (
-          <RatioResult
-            activeRatio={activeRatio}
-            ratioData={customRatioData}
-            ratioTotal={customRatioTotal}
-            computeGoalPcts={computeGoalPcts}
-            getAge={getAge}
+      {tab === 'ratios' && (
+        <section className="alloc-page-section">
+          <RatioTabs
+            customRatios={customRatios}
+            activeRatioId={activeRatioId}
+            confirmDeleteId={confirmDeleteId}
+            createMenuOpen={createMenuOpen}
+            createMenuRef={createMenuRef}
+            onSelectRatio={id => {
+              setActiveRatioId(id)
+              setActivePreset(null)
+              setConfirmDeleteId(null)
+            }}
+            onRequestDelete={requestDeleteRatio}
+            onConfirmDelete={doDeleteRatio}
+            onCancelDelete={() => setConfirmDeleteId(null)}
+            onCreateBlank={() => {
+              createRatio()
+              setCreateMenuOpen(false)
+            }}
+            onCreateFromPreset={createFromPreset}
+            onToggleCreateMenu={() => setCreateMenuOpen(v => !v)}
           />
-        )}
 
-        {activeRatio && (
-          <RatioBuilder
-            activeRatio={activeRatio}
-            onUpdateName={updateRatioName}
-            onUpdateScope={updateRatioScope}
-            onUpdateGroupLabel={updateGroupLabel}
-            onToggleClass={toggleClass}
-            onAddGroup={addGroup}
-            onRemoveGroup={removeGroup}
-            goalSection={
-              <GoalSection
-                activeRatio={activeRatio}
-                profile={profile}
-                allocMap={allocMap}
-                computeGoalPcts={computeGoalPcts}
-                onSetGoal={setGoalForScope}
-              />
-            }
-          />
-        )}
-      </section>
+          {activeRatio && (
+            <RatioResult
+              activeRatio={activeRatio}
+              ratioData={customRatioData}
+              ratioTotal={customRatioTotal}
+              computeGoalPcts={computeGoalPcts}
+              getAge={getAge}
+            />
+          )}
+
+          {activeRatio && (
+            <RatioBuilder
+              activeRatio={activeRatio}
+              onUpdateName={updateRatioName}
+              onUpdateScope={updateRatioScope}
+              onUpdateGroupLabel={updateGroupLabel}
+              onToggleClass={toggleClass}
+              onAddGroup={addGroup}
+              onRemoveGroup={removeGroup}
+              goalSection={
+                <GoalSection
+                  activeRatio={activeRatio}
+                  profile={profile}
+                  allocMap={allocMap}
+                  computeGoalPcts={computeGoalPcts}
+                  onSetGoal={setGoalForScope}
+                />
+              }
+            />
+          )}
+        </section>
+      )}
     </div>
   )
 }

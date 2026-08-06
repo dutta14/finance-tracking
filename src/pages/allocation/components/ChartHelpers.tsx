@@ -9,9 +9,18 @@ interface DonutChartProps {
   innerR?: number
   outerR?: number
   height?: number
+  selectedIndex?: number
+  onClickSlice?: (index: number) => void
 }
 
-export const DonutChart: FC<DonutChartProps> = ({ data, innerR = 50, outerR = 90, height = 220 }) => {
+export const DonutChart: FC<DonutChartProps> = ({
+  data,
+  innerR = 50,
+  outerR = 90,
+  height = 220,
+  selectedIndex = -1,
+  onClickSlice,
+}) => {
   const tooltipBg = 'var(--color-surface)'
   const tooltipBorder = 'var(--color-border)'
 
@@ -28,9 +37,11 @@ export const DonutChart: FC<DonutChartProps> = ({ data, innerR = 50, outerR = 90
           paddingAngle={2}
           dataKey="value"
           stroke="none"
+          style={{ cursor: onClickSlice ? 'pointer' : undefined }}
+          onClick={(_, index) => onClickSlice?.(index)}
         >
           {data.map((d, i) => (
-            <Cell key={i} fill={d.color} />
+            <Cell key={i} fill={d.color} opacity={selectedIndex >= 0 && selectedIndex !== i ? 0.3 : 1} />
           ))}
         </Pie>
         <Tooltip
