@@ -10,6 +10,7 @@ interface BalanceDetailsProps {
   balanceMap: Map<string, number>
   profile: Profile
   showInactive: boolean
+  onToggleShowInactive?: () => void
   onSaveMonth?: (month: string, values: Record<string, number>) => void
 }
 
@@ -227,6 +228,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
   balanceMap,
   profile,
   showInactive,
+  onToggleShowInactive,
   onSaveMonth,
 }) => {
   const ownerLabels = useMemo(() => getOwnerLabels(profile), [profile])
@@ -620,7 +622,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
         className={`data-details-summary${editMode ? ' data-details-summary--editing' : ''}`}
         aria-label="Net worth summary"
       >
-        <div>
+        <div className="data-details-summary-title">
           <p className="data-details-summary-label">Net worth</p>
           <p className="data-details-summary-value">{formatCurrency(netWorthTotal)}</p>
         </div>
@@ -630,6 +632,11 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
           </div>
         ) : (
           <div className="data-details-summary-controls">
+            {onToggleShowInactive && (
+              <button className="data-filter-toggle" aria-pressed={showInactive} onClick={onToggleShowInactive}>
+                {showInactive ? 'Hide inactive' : 'Show inactive'}
+              </button>
+            )}
             <MonthPicker
               allMonths={allMonths}
               selectedMonth={selectedMonth}

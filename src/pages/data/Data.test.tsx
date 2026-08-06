@@ -228,7 +228,7 @@ describe('Data page integration', () => {
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('Net worth')).toBeInTheDocument()
     expect(screen.getByLabelText('Joint details')).toBeInTheDocument()
-    expect(screen.getByLabelText('Show inactive')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show inactive/i })).toBeInTheDocument()
     expect(screen.queryByLabelText('Copy balances from last month')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
   })
@@ -253,7 +253,7 @@ describe('Data page integration', () => {
     await openAccountsManage(user)
 
     expect(screen.getByRole('tab', { name: /^Accounts$/ })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.getByText('+ Add Account')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -262,7 +262,7 @@ describe('Data page integration', () => {
     mockBalances = [...twoBalances]
     renderData('/net-worth/dashboard/manage')
 
-    expect(screen.queryByLabelText('Show inactive')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /show inactive/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Copy balances from last month')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '+ Add Account' })).toBeInTheDocument()
@@ -506,7 +506,7 @@ describe('Data page integration', () => {
     renderData()
 
     await user.click(screen.getByRole('tab', { name: /spreadsheet/i }))
-    expect(screen.getByLabelText('Show inactive')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show inactive/i })).toBeInTheDocument()
   })
 
   // --- No balance entries empty state ---
@@ -616,7 +616,7 @@ describe('Data page integration', () => {
     renderData()
 
     await openAccountsManage(user)
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     const input = screen.getByDisplayValue('OldGroup')
@@ -902,7 +902,7 @@ describe('Data page integration', () => {
     expect(screen.queryByText('Inactive Acct')).not.toBeInTheDocument()
 
     // Toggle to show inactive
-    const toggle = screen.getByLabelText(/show inactive/i)
+    const toggle = screen.getByRole('button', { name: /show inactive/i })
     await user.click(toggle)
     expect(screen.getByText('Inactive Acct')).toBeInTheDocument()
   })

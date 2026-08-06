@@ -29,6 +29,7 @@ interface BalanceSpreadsheetProps {
   balanceMap: Map<string, number>
   profile: Profile
   inlineEntry: { month: string; values: Record<number, string>; _focused?: number } | null
+  toolbarActions?: React.ReactNode
   onInlineEntryChange: (entry: { month: string; values: Record<number, string>; _focused?: number }) => void
   onSaveInlineEntry: () => void
   onCancelInlineEntry: () => void
@@ -42,6 +43,7 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
   balanceMap,
   profile,
   inlineEntry,
+  toolbarActions,
   onInlineEntryChange,
   onSaveInlineEntry,
   onCancelInlineEntry,
@@ -278,6 +280,7 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
               Clear all
             </button>
           )}
+          {toolbarActions && <div className="data-toolbar-actions">{toolbarActions}</div>}
         </div>
 
         {activeL1 === 'date' && (

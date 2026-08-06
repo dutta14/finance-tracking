@@ -161,10 +161,10 @@ describe('AccountsModal', () => {
 
   it('displays filter buttons with counts', () => {
     renderModal()
-    expect(screen.getByRole('button', { name: /All \(5\)/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Active \(4\)/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Inactive \(1\)/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Groups \(2\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /All \(5\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Active \(4\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Inactive \(1\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Groups \(2\)/ })).toBeInTheDocument()
   })
 
   it('displays group badge for grouped accounts', () => {
@@ -184,7 +184,7 @@ describe('AccountsModal', () => {
   it('filters to active accounts when Active clicked', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Active \(4\)/ }))
+    await user.click(screen.getByRole('tab', { name: /Active \(4\)/ }))
     expect(screen.getByText('Checking')).toBeInTheDocument()
     expect(screen.queryByText('Old 401k')).not.toBeInTheDocument()
   })
@@ -192,7 +192,7 @@ describe('AccountsModal', () => {
   it('filters to inactive accounts when Inactive clicked', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Inactive \(1\)/ }))
+    await user.click(screen.getByRole('tab', { name: /Inactive \(1\)/ }))
     expect(screen.getByText('Old 401k')).toBeInTheDocument()
     expect(screen.queryByText('Checking')).not.toBeInTheDocument()
   })
@@ -200,8 +200,8 @@ describe('AccountsModal', () => {
   it('shows all accounts when All clicked after filtering', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Active \(4\)/ }))
-    await user.click(screen.getByRole('button', { name: /All \(5\)/ }))
+    await user.click(screen.getByRole('tab', { name: /Active \(4\)/ }))
+    await user.click(screen.getByRole('tab', { name: /All \(5\)/ }))
     expect(screen.getByText('Old 401k')).toBeInTheDocument()
     expect(screen.getByText('Checking')).toBeInTheDocument()
   })
@@ -495,7 +495,7 @@ describe('AccountsModal', () => {
   it('switches to Groups tab when Groups clicked', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     expect(screen.getByText('Banking')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Account/ })).not.toBeInTheDocument()
   })
@@ -503,7 +503,7 @@ describe('AccountsModal', () => {
   it('renders group cards with member accounts', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     expect(screen.getByText('Banking')).toBeInTheDocument()
     expect(screen.getByText('Retirement')).toBeInTheDocument()
   })
@@ -511,23 +511,23 @@ describe('AccountsModal', () => {
   it('shows ungrouped accounts section when ungrouped accounts exist', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     expect(screen.getByText('Ungrouped')).toBeInTheDocument()
   })
 
   it('returns to accounts when All clicked after opening Groups', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     expect(screen.queryByRole('button', { name: /^Account/ })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /All \(5\)/ }))
+    await user.click(screen.getByRole('tab', { name: /All \(5\)/ }))
     expect(screen.getByText('Checking')).toBeInTheDocument()
   })
 
   it('shows New Group button and creates group on input', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     const input = screen.getByPlaceholderText('Group name')
     expect(input).toBeInTheDocument()
@@ -536,7 +536,7 @@ describe('AccountsModal', () => {
   it('shows Rename input when rename button clicked on a group', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     // Rename input should appear with the group name pre-filled
@@ -547,7 +547,7 @@ describe('AccountsModal', () => {
   it('calls onRenameGroup when rename is confirmed with Enter', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     const input = screen.getByDisplayValue('Banking')
@@ -560,7 +560,7 @@ describe('AccountsModal', () => {
   it('cancels rename on Escape', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     const input = screen.getByDisplayValue('Banking')
@@ -629,13 +629,13 @@ describe('AccountsModal', () => {
 
   it('shows Groups button with count when groups exist', () => {
     renderModal()
-    expect(screen.getByRole('button', { name: /Groups \(2\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Groups \(2\)/ })).toBeInTheDocument()
   })
 
   it('shows Groups button without count when no groups', () => {
     const accounts = [makeAccount({ id: 1, name: 'Checking' })]
     renderModal({ accounts })
-    const groupsBtn = screen.getByRole('button', { name: 'Groups' })
+    const groupsBtn = screen.getByRole('tab', { name: 'Groups' })
     expect(groupsBtn.textContent).toBe('Groups')
   })
 
@@ -975,7 +975,7 @@ describe('AccountsModal', () => {
   it('creates new group card when group name entered and Enter pressed', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     const input = screen.getByPlaceholderText('Group name')
     await user.type(input, 'Investments{Enter}')
@@ -986,7 +986,7 @@ describe('AccountsModal', () => {
   it('dismisses new group creation on Escape', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     const input = screen.getByPlaceholderText('Group name')
     await user.type(input, 'Test')
@@ -1000,7 +1000,7 @@ describe('AccountsModal', () => {
   it('commits rename on blur with changed value', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     const input = screen.getByDisplayValue('Banking')
@@ -1031,7 +1031,7 @@ describe('AccountsModal', () => {
     const user = userEvent.setup()
     renderModal()
     // Filter to Active
-    await user.click(screen.getByRole('button', { name: /Active \(4\)/ }))
+    await user.click(screen.getByRole('tab', { name: /Active \(4\)/ }))
     // Now filter by Goal = FI
     await user.click(screen.getByTitle('Filter Goal'))
     const dropdown = document.querySelector('.data-th-filter-dropdown')! as HTMLElement
@@ -1202,7 +1202,7 @@ describe('AccountsModal', () => {
     await user.click(screen.getByText('Old 401k'))
     await user.keyboard('{/Meta}')
     // Filter to active only (Old 401k is inactive)
-    await user.click(screen.getByRole('button', { name: /Active \(4\)/ }))
+    await user.click(screen.getByRole('tab', { name: /Active \(4\)/ }))
     // Now shift-click - lastSelectedRef still points to Old 401k (id=4) which isn't in filtered list
     await user.keyboard('{Shift>}')
     await user.click(screen.getByText('Checking'))
@@ -1221,7 +1221,7 @@ describe('AccountsModal', () => {
       makeAccount({ id: 2, name: 'Dead One', status: 'inactive', group: 'TestGroup' }),
     ]
     renderModal({ accounts })
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     expect(screen.getByText('inactive')).toBeInTheDocument()
   })
 
@@ -1230,7 +1230,7 @@ describe('AccountsModal', () => {
   it('creates pending group on blur of new group input with non-empty value', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     const input = screen.getByPlaceholderText('Group name')
     await user.type(input, 'BlurGroup')
@@ -1245,7 +1245,7 @@ describe('AccountsModal', () => {
   it('does not call onRenameGroup on blur when value is same as original', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     screen.getByDisplayValue('Banking')
@@ -1262,7 +1262,7 @@ describe('AccountsModal', () => {
     await user.click(screen.getByTitle('Filter Goal'))
     expect(document.querySelector('.data-th-filter-dropdown')).toBeTruthy()
     // Click outside the dropdown
-    await user.click(screen.getByRole('button', { name: /All \(5\)/ }))
+    await user.click(screen.getByRole('tab', { name: /All \(5\)/ }))
     // Dropdown should close (no longer open)
     // Verify by trying to find filter dropdown items
     expect(document.querySelector('.data-th-filter-dropdown')).toBeFalsy()
@@ -1273,7 +1273,7 @@ describe('AccountsModal', () => {
   it('moves account to a different group via drag and drop on group card', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     // Find a draggable member in Banking group and drag to Retirement group
     const groupCards = document.querySelectorAll('.data-group-card')
@@ -1294,7 +1294,7 @@ describe('AccountsModal', () => {
   it('dragLeave on group card clears drop target when leaving card bounds', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     const groupCards = document.querySelectorAll('.data-group-card')
     const firstGroupCard = groupCards[0] as HTMLElement
@@ -1312,7 +1312,7 @@ describe('AccountsModal', () => {
   it('handles drag end on group member', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     const memberSpans = document.querySelectorAll('.data-group-member[draggable]')
     expect(memberSpans.length).toBeGreaterThan(0)
@@ -1330,7 +1330,7 @@ describe('AccountsModal', () => {
   it('moves account to ungrouped via drag and drop on ungrouped card', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     const ungroupedCard = document.querySelector('.data-group-card--ungrouped') as HTMLElement
     expect(ungroupedCard).toBeTruthy()
@@ -1349,7 +1349,7 @@ describe('AccountsModal', () => {
   it('dragLeave on ungrouped card clears drop target', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     const ungroupedCard = document.querySelector('.data-group-card--ungrouped') as HTMLElement
     fireEvent.dragOver(ungroupedCard)
@@ -1364,7 +1364,7 @@ describe('AccountsModal', () => {
   it('moves account to pending group via drag and drop', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     const input = screen.getByPlaceholderText('Group name')
     await user.type(input, 'PendingDrop{Enter}')
@@ -1387,7 +1387,7 @@ describe('AccountsModal', () => {
   it('dragLeave on pending group card clears drop target', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     const input = screen.getByPlaceholderText('Group name')
     await user.type(input, 'TestPending{Enter}')
@@ -1422,7 +1422,7 @@ describe('AccountsModal', () => {
   it('does not create pending group on blur when new group input is empty', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     await user.click(screen.getByRole('button', { name: /New Group/ }))
     screen.getByPlaceholderText('Group name')
     // Leave input empty and blur
@@ -1501,7 +1501,7 @@ describe('AccountsModal', () => {
   it('does not call onRenameGroup when Enter pressed with same group name', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
     const renameButtons = screen.getAllByTitle('Rename group')
     await user.click(renameButtons[0])
     screen.getByDisplayValue('Banking')
@@ -1528,7 +1528,7 @@ describe('AccountsModal', () => {
   it('does not call onUpdate on drop when no account was being dragged', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     const groupCards = document.querySelectorAll('.data-group-card')
     const firstGroupCard = groupCards[0] as HTMLElement
@@ -1542,7 +1542,7 @@ describe('AccountsModal', () => {
   it('handles drag start and end on ungrouped account member', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /Groups/ }))
+    await user.click(screen.getByRole('tab', { name: /Groups/ }))
 
     const ungroupedCard = document.querySelector('.data-group-card--ungrouped') as HTMLElement
     const members = ungroupedCard.querySelectorAll('.data-group-member[draggable]')
