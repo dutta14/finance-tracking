@@ -130,16 +130,16 @@ describe('AccountsModal', () => {
 
   // --- Rendering ---
 
-  it('renders modal with Accounts heading', () => {
+  it('renders modal without an Accounts heading', () => {
     renderModal()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Accounts' })).not.toBeInTheDocument()
   })
 
   it('renders inline mode without modal chrome', () => {
     renderModal({ inline: true })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Accounts' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
   })
 
@@ -164,6 +164,7 @@ describe('AccountsModal', () => {
     expect(screen.getByRole('button', { name: /All \(5\)/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Active \(4\)/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Inactive \(1\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Groups \(2\)/ })).toBeInTheDocument()
   })
 
   it('displays group badge for grouped accounts', () => {
@@ -489,13 +490,14 @@ describe('AccountsModal', () => {
     expect(props.onDelete).toHaveBeenCalledWith(1)
   })
 
-  // --- Groups page ---
+  // --- Groups tab ---
 
-  it('switches to Groups page when Groups button clicked', async () => {
+  it('switches to Groups tab when Groups clicked', async () => {
     const user = userEvent.setup()
     renderModal()
     await user.click(screen.getByRole('button', { name: /Groups/ }))
-    expect(screen.getByRole('heading', { name: 'Groups' })).toBeInTheDocument()
+    expect(screen.getByText('Banking')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Account/ })).not.toBeInTheDocument()
   })
 
   it('renders group cards with member accounts', async () => {
@@ -513,18 +515,13 @@ describe('AccountsModal', () => {
     expect(screen.getByText('Ungrouped')).toBeInTheDocument()
   })
 
-  it('navigates back from Groups to Accounts page', async () => {
+  it('returns to accounts when All clicked after opening Groups', async () => {
     const user = userEvent.setup()
     renderModal()
     await user.click(screen.getByRole('button', { name: /Groups/ }))
-    expect(screen.getByRole('heading', { name: 'Groups' })).toBeInTheDocument()
-    // Click back button (the SVG arrow button)
-    const backBtn = screen
-      .getByRole('heading', { name: 'Groups' })
-      .closest('.data-modal-header-back')!
-      .querySelector('button')!
-    await user.click(backBtn)
-    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Account/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /All \(5\)/ }))
+    expect(screen.getByText('Checking')).toBeInTheDocument()
   })
 
   it('shows New Group button and creates group on input', async () => {
@@ -1054,7 +1051,8 @@ describe('AccountsModal', () => {
       renderModal()
       const groupsTab = screen.getByText(/Groups/)
       await user.click(groupsTab)
-      expect(screen.getByRole('heading', { name: 'Groups' })).toBeInTheDocument()
+      expect(screen.getByText('Banking')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^Account/ })).not.toBeInTheDocument()
     })
 
     it('renders existing groups on Groups tab', async () => {
@@ -1264,7 +1262,7 @@ describe('AccountsModal', () => {
     await user.click(screen.getByTitle('Filter Goal'))
     expect(document.querySelector('.data-th-filter-dropdown')).toBeTruthy()
     // Click outside the dropdown
-    await user.click(screen.getByRole('heading', { name: 'Accounts' }))
+    await user.click(screen.getByRole('button', { name: /All \(5\)/ }))
     // Dropdown should close (no longer open)
     // Verify by trying to find filter dropdown items
     expect(document.querySelector('.data-th-filter-dropdown')).toBeFalsy()
