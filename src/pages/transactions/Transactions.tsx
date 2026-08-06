@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { loadBudgetStore, saveBudgetStore, saveCSVForMonth } from '../budget/utils/budgetStorage'
 import { parseCSV } from '../budget/utils/csvParser'
 import type { Transaction } from '../budget/types'
@@ -180,12 +181,16 @@ const getEmptySummary = () => ({
 })
 
 const Transactions: FC = () => {
+  const [searchParams] = useSearchParams()
+  const paramFrom = searchParams.get('from') ?? ''
+  const paramTo = searchParams.get('to') ?? ''
+
   const [allTransactions, setAllTransactions] = useState<LoadedTransaction[]>([])
   const [budgetGroups, setBudgetGroups] = useState<BudgetGroupData[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const [fromDate, setFromDate] = useState(paramFrom)
+  const [toDate, setToDate] = useState(paramTo)
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [sortOpen, setSortOpen] = useState(false)
@@ -194,8 +199,8 @@ const Transactions: FC = () => {
   const [editingCategory, setEditingCategory] = useState<EditingCategoryState | null>(null)
   const [categoryEditSearch, setCategoryEditSearch] = useState('')
   const [datePickerOpen, setDatePickerOpen] = useState(false)
-  const [draftFromDate, setDraftFromDate] = useState('')
-  const [draftToDate, setDraftToDate] = useState('')
+  const [draftFromDate, setDraftFromDate] = useState(paramFrom)
+  const [draftToDate, setDraftToDate] = useState(paramTo)
   const [downloadUrl, setDownloadUrl] = useState('')
   const [visibleCount, setVisibleCount] = useState(15)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -234,7 +239,10 @@ const Transactions: FC = () => {
         const removedSet = new Set(removed?.categories ?? [])
         const allCats = new Set(result.transactions.map(t => t.category))
         removedSet.forEach(c => allCats.delete(c))
-        setSelectedCategories(allCats)
+        const urlCategories = searchParams.get('categories')?.split(',').filter(Boolean) ?? []
+        setSelectedCategories(
+          urlCategories.length > 0 ? new Set(urlCategories.filter(category => allCats.has(category))) : allCats,
+        )
         setLoading(false)
       }
     }
@@ -249,6 +257,8 @@ const Transactions: FC = () => {
       window.removeEventListener('budget-changed', refresh)
       window.removeEventListener('storage', refresh)
     }
+    // searchParams is intentionally read only on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

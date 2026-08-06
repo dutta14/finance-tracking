@@ -360,13 +360,48 @@ body.dark .budget-title {
 .budget-td--category-name {
   padding-left: 1.5rem;
   color: var(--color-text-secondary);
-  cursor: grab;
 }
 .budget-drag-handle {
   color: var(--color-border-light);
   margin-right: 0.4rem;
   font-size: var(--fs-sm);
   cursor: grab;
+}
+.budget-table-link {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.12rem;
+}
+.budget-table-link--label {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.budget-table-link--cell {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+}
+.budget-table-link:hover,
+.budget-table-link:focus-visible {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+.budget-table-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
 }
 .budget-td--number {
   text-align: right;
