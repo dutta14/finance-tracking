@@ -30,7 +30,7 @@ describe('GoalSection', () => {
         onSetGoal={vi.fn()}
       />,
     )
-    expect(screen.getByText('Set Goal')).toBeInTheDocument()
+    expect(screen.getByText('+ Set Goal')).toBeInTheDocument()
   })
 
   it('displays goal summary when a constant goal exists', () => {
@@ -125,7 +125,7 @@ describe('GoalSection', () => {
         onSetGoal={vi.fn()}
       />,
     )
-    await user.click(screen.getByText('Set Goal'))
+    await user.click(screen.getByText('+ Set Goal'))
     expect(screen.getByText('Constant')).toBeInTheDocument()
     expect(screen.getByText('Save Goal')).toBeInTheDocument()
   })
@@ -142,7 +142,7 @@ describe('GoalSection', () => {
         onSetGoal={onSetGoal}
       />,
     )
-    await user.click(screen.getByText('Set Goal'))
+    await user.click(screen.getByText('+ Set Goal'))
     await user.click(screen.getByText('Save Goal'))
     expect(onSetGoal).toHaveBeenCalledWith('total', expect.objectContaining({ type: 'constant' }))
     expect(screen.queryByText('Save Goal')).not.toBeInTheDocument()
@@ -160,7 +160,7 @@ describe('GoalSection', () => {
         onSetGoal={onSetGoal}
       />,
     )
-    await user.click(screen.getByText('Set Goal'))
+    await user.click(screen.getByText('+ Set Goal'))
     await user.click(screen.getByText('Cancel'))
     expect(onSetGoal).not.toHaveBeenCalled()
     expect(screen.queryByText('Save Goal')).not.toBeInTheDocument()

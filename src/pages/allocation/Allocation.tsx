@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import '../../styles/Allocation.css'
 
+import { Scope } from './types'
 import { useAllocationData } from './hooks/useAllocationData'
 import { useCustomRatios } from './hooks/useCustomRatios'
 import { useGoals } from './hooks/useGoals'
@@ -73,6 +74,32 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
           />
 
           {activeRatio && (
+            <div className="alloc-ratio-builder-header">
+              <span className="alloc-ratio-builder-label">Name</span>
+              <input
+                className="alloc-ratio-name-input"
+                value={activeRatio.name}
+                onChange={e => updateRatioName(e.target.value)}
+              />
+              <span className="alloc-ratio-builder-label alloc-ratio-builder-label--spaced">Scope</span>
+              <div className="alloc-page-scope-tabs">
+                {(['total', 'fi', 'gw'] as Scope[]).map(s => (
+                  <button
+                    key={s}
+                    className={`alloc-page-tab${activeRatio.scope === s ? ' active' : ''}`}
+                    onClick={() => updateRatioScope(s)}
+                  >
+                    {s === 'total' ? 'Total' : s.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <button className="alloc-ratio-delete-btn" onClick={() => requestDeleteRatio(activeRatio.id)}>
+                Delete
+              </button>
+            </div>
+          )}
+
+          {activeRatio && (
             <RatioResult
               activeRatio={activeRatio}
               ratioData={customRatioData}
@@ -85,13 +112,10 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
           {activeRatio && (
             <RatioBuilder
               activeRatio={activeRatio}
-              onUpdateName={updateRatioName}
-              onUpdateScope={updateRatioScope}
               onUpdateGroupLabel={updateGroupLabel}
               onToggleClass={toggleClass}
               onAddGroup={addGroup}
               onRemoveGroup={removeGroup}
-              onDeleteRatio={() => requestDeleteRatio(activeRatio.id)}
               goalSection={
                 <GoalSection
                   activeRatio={activeRatio}
