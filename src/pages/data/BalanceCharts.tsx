@@ -1,8 +1,9 @@
 import { FC, useState, useMemo, useCallback } from 'react'
 import {
   ResponsiveContainer,
-  LineChart,
+  ComposedChart,
   Line,
+  Area,
   BarChart,
   Bar,
   XAxis,
@@ -157,9 +158,10 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
   const renderLegend = (props: LegendContentProps) => {
     const { payload } = props
     if (!payload) return null
+    const visible = payload.filter(entry => entry.type !== 'none')
     return (
       <div className="data-chart-legend">
-        {payload.map((entry, i) => (
+        {visible.map((entry, i) => (
           <span key={i} className="data-chart-legend-item">
             <span className="data-chart-legend-dot" style={{ background: entry.color }} />
             {entry.value}
@@ -268,7 +270,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
           <div className="data-chart-empty">No data for the selected range</div>
         ) : chartType === 'fi-gw' ? (
           <ResponsiveContainer width="100%" height={380}>
-            <LineChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }}>
+            <ComposedChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }}>
               <defs>
                 <linearGradient id="gradFi" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
@@ -304,6 +306,26 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 }
               />
               <Legend content={renderLegend} />
+              <Area
+                type="natural"
+                dataKey="fi"
+                name="FI"
+                stroke="none"
+                fill="url(#gradFi)"
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+              />
+              <Area
+                type="natural"
+                dataKey="gw"
+                name="GW"
+                stroke="none"
+                fill="url(#gradGw)"
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+              />
               <Line
                 type="natural"
                 dataKey="fi"
@@ -322,11 +344,11 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0, fill: '#f59e0b' }}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         ) : chartType === 'net-worth' ? (
           <ResponsiveContainer width="100%" height={380}>
-            <LineChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }}>
+            <ComposedChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }}>
               <defs>
                 <linearGradient id="gradNw" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
@@ -357,6 +379,16 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                   formatCurrency(Number(v))
                 }
               />
+              <Area
+                type="natural"
+                dataKey="netWorth"
+                name="Net Worth"
+                stroke="none"
+                fill="url(#gradNw)"
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+              />
               <Line
                 type="natural"
                 dataKey="netWorth"
@@ -366,11 +398,16 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0, fill: '#10b981' }}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={380}>
-            <BarChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }} stackOffset="sign">
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 24, bottom: 0, left: 10 }}
+              stackOffset="sign"
+              barCategoryGap="20%"
+            >
               <CartesianGrid vertical={false} stroke={gridColor} />
               <XAxis
                 dataKey="label"
@@ -397,8 +434,15 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
               />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
-              <Bar dataKey="assets" name="Assets" fill="#6366f1" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="liabilities" name="Liabilities" fill="#ef4444" radius={[0, 0, 3, 3]} />
+              <Bar dataKey="assets" name="Assets" stackId="al" fill="#4ade80" radius={[4, 4, 0, 0]} maxBarSize={48} />
+              <Bar
+                dataKey="liabilities"
+                name="Liabilities"
+                stackId="al"
+                fill="#f87171"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={48}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

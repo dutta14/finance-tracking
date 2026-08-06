@@ -1,10 +1,12 @@
 /* ── Budget Page ── */
 .budget-page {
-  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh);
+  padding: 2rem 2.5rem 0;
   width: 100%;
   box-sizing: border-box;
-  min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
   background: var(--color-bg);
 }
 
@@ -16,6 +18,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 .budget-header-left {
   display: flex;
@@ -26,6 +29,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+.budget-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 2rem;
 }
 .budget-title {
   font-size: var(--fs-2xl);

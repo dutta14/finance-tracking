@@ -136,20 +136,12 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
           <ReferenceLine y={0} stroke="var(--cashflow-zero, #9ca3af)" strokeWidth={1} />
           <Bar dataKey="income" name="Income" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
             {data.map((_, i) => (
-              <Cell
-                key={i}
-                fill="var(--cashflow-income, #22c55e)"
-                opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1}
-              />
+              <Cell key={i} fill="#4ade80" opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1} />
             ))}
           </Bar>
           <Bar dataKey="expense" name="Expense" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
             {data.map((_, i) => (
-              <Cell
-                key={i}
-                fill="var(--cashflow-expense, #ef4444)"
-                opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1}
-              />
+              <Cell key={i} fill="#f87171" opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1} />
             ))}
           </Bar>
         </BarChart>

@@ -192,30 +192,30 @@ const Data: FC = () => {
   const dataView = accountsPath === 'details' ? 'details' : accountsPath === 'spreadsheet' ? 'spreadsheet' : 'charts'
   const accountsContent = (
     <>
-      <div className="data-header-actions">
-        {allowCsvImport && (
+      {allowCsvImport && (
+        <div className="data-header-actions">
           <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
             Import from CSV
           </button>
-        )}
-        {allowCsvImport && hasAccounts && balances.length > 0 && (
-          <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
-            Export CSV
-          </button>
-        )}
-        {allowCsvImport && (hasAccounts || balances.length > 0) && (
-          <button
-            className="data-reset-btn"
-            onClick={() => {
-              if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
-                saveBoth([], [])
-              }
-            }}
-          >
-            Reset Data
-          </button>
-        )}
-      </div>
+          {hasAccounts && balances.length > 0 && (
+            <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
+              Export CSV
+            </button>
+          )}
+          {(hasAccounts || balances.length > 0) && (
+            <button
+              className="data-reset-btn"
+              onClick={() => {
+                if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
+                  saveBoth([], [])
+                }
+              }}
+            >
+              Reset Data
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="data-content">
         {!hasAccounts ? (
@@ -413,38 +413,40 @@ const Data: FC = () => {
         </div>
       </div>
 
-      <Routes>
-        <Route index element={<Navigate to="/net-worth/accounts" replace />} />
-        <Route path="accounts/*" element={accountsContent} />
-        <Route
-          path="allocation"
-          element={
-            <Suspense
-              fallback={
-                <div className="nw-tab-loading" role="status">
-                  Loading…
-                </div>
-              }
-            >
-              <Allocation />
-            </Suspense>
-          }
-        />
-        <Route
-          path="growth/*"
-          element={
-            <Suspense
-              fallback={
-                <div className="nw-tab-loading" role="status">
-                  Loading…
-                </div>
-              }
-            >
-              <SavingsGrowthTracker />
-            </Suspense>
-          }
-        />
-      </Routes>
+      <div className="data-scroll-area">
+        <Routes>
+          <Route index element={<Navigate to="/net-worth/accounts" replace />} />
+          <Route path="accounts/*" element={accountsContent} />
+          <Route
+            path="allocation"
+            element={
+              <Suspense
+                fallback={
+                  <div className="nw-tab-loading" role="status">
+                    Loading…
+                  </div>
+                }
+              >
+                <Allocation />
+              </Suspense>
+            }
+          />
+          <Route
+            path="growth/*"
+            element={
+              <Suspense
+                fallback={
+                  <div className="nw-tab-loading" role="status">
+                    Loading…
+                  </div>
+                }
+              >
+                <SavingsGrowthTracker />
+              </Suspense>
+            }
+          />
+        </Routes>
+      </div>
     </div>
   )
 }

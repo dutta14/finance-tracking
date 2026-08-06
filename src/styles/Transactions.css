@@ -1,14 +1,18 @@
 .txn-page {
-  min-height: 100vh;
-  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh);
+  padding: 2rem 1.5rem 0;
   background: var(--color-bg);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .txn-header {
   display: grid;
   gap: 16px;
   margin-bottom: 1.25rem;
+  flex-shrink: 0;
 }
 
 .txn-header-top {
@@ -27,9 +31,15 @@
 
 .txn-title {
   margin: 0;
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
-  color: var(--color-text);
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  width: fit-content;
 }
 
 .txn-header-meta {
@@ -273,7 +283,7 @@
 .txn-date-panel {
   position: absolute;
   top: calc(100% + 6px);
-  left: 0;
+  right: 0;
   z-index: 20;
   display: grid;
   grid-template-columns: 160px 1fr;
@@ -435,6 +445,14 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
   gap: 20px;
   align-items: start;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.txn-list {
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .txn-list,
@@ -797,7 +815,7 @@
 
 @media (max-width: 900px) {
   .txn-page {
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 1rem 0;
   }
 
   .txn-layout {
