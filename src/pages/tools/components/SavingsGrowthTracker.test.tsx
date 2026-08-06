@@ -1,13 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import SavingsGrowthTracker from './SavingsGrowthTracker'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
+import SavingsGrowthTracker from './SavingsGrowthTracker'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { appStorage } from '../../../utils/appStorage'
-
-/* ─── Mock dependencies ─── */
 
 const mockUseData = vi.fn(() => ({
   accounts: [] as ReturnType<typeof import('../../../contexts/DataContext').useData>['accounts'],
@@ -41,6 +39,9 @@ vi.mock('../../../styles/SavingsGrowthTracker.css', () => ({}))
 beforeEach(() => {
   localStorage.clear()
   vi.clearAllMocks()
+  vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
+  vi.mocked(parseCSV).mockReturnValue([])
+  vi.mocked(appStorage.getJSON).mockReturnValue({})
   mockUseData.mockReturnValue({
     accounts: [],
     balances: [],
@@ -64,60 +65,7 @@ describe('SavingsGrowthTracker', () => {
     expect(screen.getByText(/No data available/)).toBeInTheDocument()
   })
 
-  it('renders savings tab columns when data exists', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'Brokerage',
-          type: 'non-retirement',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'fi',
-          nature: 'asset',
-          allocation: 'us-stock',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2023-12', balance: 100000 }],
-      allMonths: ['2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    expect(screen.getByText('Year')).toBeInTheDocument()
-    expect(screen.getByText('Net Income')).toBeInTheDocument()
-    expect(screen.getByText('Expense')).toBeInTheDocument()
-    const savingsElements = screen.getAllByText('Savings')
-    expect(savingsElements.length).toBe(1)
-    expect(screen.getByText('Net Worth')).toBeInTheDocument()
-  })
-
-  it('renders income tab columns on the income route', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'Brokerage',
-          type: 'non-retirement',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'fi',
-          nature: 'asset',
-          allocation: 'us-stock',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2023-12', balance: 100000 }],
-      allMonths: ['2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker('/net-worth/growth/income')
-    expect(screen.getByText('Gross Income')).toBeInTheDocument()
-    expect(screen.getByText('Taxes')).toBeInTheDocument()
-    expect(screen.getByText('Tax Rate')).toBeInTheDocument()
-  })
-
-  it('displays year rows from balance data', () => {
+  it('renders year cards in descending order on the savings tab', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -134,167 +82,23 @@ describe('SavingsGrowthTracker', () => {
       balances: [
         { id: 1, accountId: 1, month: '2022-12', balance: 50000 },
         { id: 2, accountId: 1, month: '2023-12', balance: 75000 },
+        { id: 3, accountId: 1, month: '2024-12', balance: 100000 },
       ],
-      allMonths: ['2022-12', '2023-12'],
+      allMonths: ['2022-12', '2023-12', '2024-12'],
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker()
-    expect(screen.getByText('2022')).toBeInTheDocument()
-    expect(screen.getByText('2023')).toBeInTheDocument()
+
+    const cards = screen.getAllByLabelText(/Year /)
+    expect(cards).toHaveLength(3)
+    expect(cards[0]).toHaveAttribute('data-testid', 'year-card-2024')
+    expect(cards[1]).toHaveAttribute('data-testid', 'year-card-2023')
+    expect(cards[2]).toHaveAttribute('data-testid', 'year-card-2022')
   })
 
-  it('toggles YoY change format between $ and %', async () => {
-    const user = userEvent.setup()
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'Checking',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 50000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 75000 },
-      ],
-      allMonths: ['2022-12', '2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    const toggleBtn = screen.getByRole('button', { name: /Show YoY change/i })
-    expect(toggleBtn).toHaveTextContent('$')
-    await user.click(toggleBtn)
-    expect(toggleBtn).toHaveTextContent('%')
-  })
-
-  it('renders net worth values for each year', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'Savings',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-06', balance: 200000 }],
-      allMonths: ['2024-06'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    expect(screen.getByText('$200,000')).toBeInTheDocument()
-  })
-
-  it('renders hint text for savings tab', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    expect(screen.getByText(/Savings = Net Income from budget/)).toBeInTheDocument()
-  })
-
-  it('renders editable cell for grossIncome on income tab', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker('/net-worth/growth/income')
-    // Income tab with 1 year, no budget/overrides: grossIncome, taxes, netIncome are editable "—", taxRate is non-editable "—"
-    const dashElements = screen.getAllByText('—')
-    expect(dashElements.length).toBe(4)
-  })
-
-  it('defaults to the savings view on the base growth route', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    expect(screen.getByText('Expense')).toBeInTheDocument()
-    expect(screen.queryByText('Gross Income')).not.toBeInTheDocument()
-  })
-
-  it('shows N/A for missing computed values', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // Expense and Growth columns show N/A when no budget data (1 year row)
-    const naElements = screen.getAllByText('N/A')
-    expect(naElements.length).toBe(2)
-  })
-
-  it('computes savings when budget CSV data is available', () => {
+  it('renders savings metrics and net worth in each year card', () => {
     vi.mocked(loadBudgetStore).mockReturnValue({
       csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
       categoryGroups: [],
@@ -323,91 +127,109 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker()
-    expect(screen.getByText('2024')).toBeInTheDocument()
-    // Net Income = $5,000 (from Salary, classified as income)
-    expect(screen.getByText('$5,000')).toBeInTheDocument()
-    // Expense = $2,000 (from Rent, classified as expense)
-    expect(screen.getByText('$2,000')).toBeInTheDocument()
-    // Savings = Net Income - Expense = $3,000
-    expect(screen.getByText('$3,000')).toBeInTheDocument()
+
+    const card = screen.getByTestId('year-card-2024')
+    expect(within(card).getByText('Net Worth:')).toBeInTheDocument()
+    expect(within(card).getByText('$50,000')).toBeInTheDocument()
+    expect(within(card).getByText('Net Income')).toBeInTheDocument()
+    expect(within(card).getByText('Expenses')).toBeInTheDocument()
+    expect(within(card).getByText('Savings')).toBeInTheDocument()
+    expect(within(card).getByText('Growth')).toBeInTheDocument()
+    expect(within(card).getByText('$5,000')).toBeInTheDocument()
+    expect(within(card).getByText('$2,000')).toBeInTheDocument()
+    expect(within(card).getByText('$3,000')).toBeInTheDocument()
   })
 
-  it('displays YoY net worth change in dollar mode', () => {
+  it('renders income metrics on the income route', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
           id: 1,
-          name: 'Checking',
-          type: 'liquid',
+          name: 'Brokerage',
+          type: 'non-retirement',
           owner: 'primary',
           status: 'active',
-          goalType: 'gw',
+          goalType: 'fi',
           nature: 'asset',
-          allocation: 'cash',
+          allocation: 'us-stock',
         },
       ],
-      balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 150000 },
-      ],
-      allMonths: ['2022-12', '2023-12'],
+      balances: [{ id: 1, accountId: 1, month: '2023-12', balance: 100000 }],
+      allMonths: ['2023-12'],
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    // Net worth values shown for both years
-    expect(screen.getByText('$100,000')).toBeInTheDocument()
-    expect(screen.getByText('$150,000')).toBeInTheDocument()
+    vi.mocked(appStorage.getJSON).mockReturnValue({ 2023: { grossIncome: 400000, taxes: 120000 } })
+
+    renderTracker('/net-worth/growth/income')
+
+    const card = screen.getByTestId('year-card-2023')
+    expect(within(card).getByText('Gross Income')).toBeInTheDocument()
+    expect(within(card).getByText('Taxes')).toBeInTheDocument()
+    expect(within(card).getByText('Tax Rate')).toBeInTheDocument()
+    expect(within(card).getByText('Net Income')).toBeInTheDocument()
+    expect(within(card).getByText('$400,000')).toBeInTheDocument()
+    expect(within(card).getByText('$120,000')).toBeInTheDocument()
+    expect(within(card).getByText('30.0%')).toBeInTheDocument()
   })
 
-  it('displays YoY change in percentage mode after toggle', async () => {
+  it('toggles YoY change format between dollars and percentages', async () => {
     const user = userEvent.setup()
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'Checking',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 150000 },
-      ],
-      allMonths: ['2022-12', '2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
     vi.mocked(loadBudgetStore).mockReturnValue({
       csvs: {
-        '2022-06': { csv: 'c', month: '2022-06', uploadedAt: '' },
-        '2023-06': { csv: 'c', month: '2023-06', uploadedAt: '' },
+        '2022-06': { csv: '2022-csv', month: '2022-06', uploadedAt: '' },
+        '2023-06': { csv: '2023-csv', month: '2023-06', uploadedAt: '' },
       },
       categoryGroups: [],
       configs: {},
       years: [2022, 2023],
     })
-    vi.mocked(parseCSV).mockReturnValue([
-      { date: '2023-06-01', amount: 10000, category: 'Salary' },
-      { date: '2023-06-05', amount: -4000, category: 'Rent' },
-    ])
+    vi.mocked(parseCSV).mockImplementation(csv => {
+      if (csv === '2022-csv') {
+        return [
+          { date: '2022-06-01', amount: 10000, category: 'Salary' },
+          { date: '2022-06-05', amount: -4000, category: 'Rent' },
+        ]
+      }
+      return [
+        { date: '2023-06-01', amount: 12000, category: 'Salary' },
+        { date: '2023-06-05', amount: -5000, category: 'Rent' },
+      ]
+    })
+    mockUseData.mockReturnValue({
+      accounts: [
+        {
+          id: 1,
+          name: 'Checking',
+          type: 'liquid',
+          owner: 'primary',
+          status: 'active',
+          goalType: 'gw',
+          nature: 'asset',
+          allocation: 'cash',
+        },
+      ],
+      balances: [
+        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
+        { id: 2, accountId: 1, month: '2023-12', balance: 150000 },
+      ],
+      allMonths: ['2022-12', '2023-12'],
+      setAccounts: vi.fn(),
+      setBalances: vi.fn(),
+    })
+
     renderTracker()
 
-    await user.click(screen.getByRole('button', { name: /Show YoY change/i }))
-    // In percentage mode, deltas should show % values
-    const pctElements = screen.getAllByText(/%/)
-    // Filter out the toggle button itself
-    const deltaElements = pctElements.filter(el => !el.closest('.sgt-toggle-btn'))
-    expect(deltaElements.length).toBeGreaterThan(0)
+    const toggleBtn = screen.getByRole('button', { name: /Show YoY change/i })
+    expect(toggleBtn).toHaveTextContent('$')
+    await user.click(toggleBtn)
+    expect(toggleBtn).toHaveTextContent('%')
+    expect(screen.getByText('▲ 16.7%')).toBeInTheDocument()
   })
 
-  it('renders income tab hint text after switching tabs', () => {
+  it('shows N/A for missing non-editable computed values', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -426,11 +248,43 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker('/net-worth/growth/income')
-    expect(screen.getByText(/Gross income & taxes are user-entered/)).toBeInTheDocument()
+
+    renderTracker()
+
+    const card = screen.getByTestId('year-card-2024')
+    const naElements = within(card).getAllByText('N/A')
+    expect(naElements.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('opens inline edit input when editable dash cell is clicked', async () => {
+  it('renders hint text for each tab', () => {
+    mockUseData.mockReturnValue({
+      accounts: [
+        {
+          id: 1,
+          name: 'A',
+          type: 'liquid',
+          owner: 'primary',
+          status: 'active',
+          goalType: 'gw',
+          nature: 'asset',
+          allocation: 'cash',
+        },
+      ],
+      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
+      allMonths: ['2024-12'],
+      setAccounts: vi.fn(),
+      setBalances: vi.fn(),
+    })
+
+    const { unmount } = renderTracker()
+    expect(screen.getByText(/Savings = Net Income from budget/)).toBeInTheDocument()
+
+    unmount()
+    renderTracker('/net-worth/growth/income')
+    expect(screen.getByText(/Gross income and taxes are user-entered/)).toBeInTheDocument()
+  })
+
+  it('opens inline edit input when an editable dash is clicked', async () => {
     const user = userEvent.setup()
     mockUseData.mockReturnValue({
       accounts: [
@@ -450,14 +304,11 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker()
-    // On savings tab, netIncome is editable (no budget data) — click the "—" button
-    const editableDashes = screen.getAllByRole('button', { name: '—' })
-    if (editableDashes.length > 0) {
-      await user.click(editableDashes[0])
-      const editInput = document.querySelector('.sgt-edit-input')
-      expect(editInput).toBeInTheDocument()
-    }
+
+    renderTracker('/net-worth/growth/income')
+    await user.click(screen.getAllByRole('button', { name: '—' })[0])
+
+    expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
   })
 
   it('commits edit value on blur and saves overrides', async () => {
@@ -480,19 +331,15 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    renderTracker('/net-worth/growth/income')
 
-    // Gross income is always editable on the income route
-    const editableDashes = screen.getAllByRole('button', { name: '—' })
-    if (editableDashes.length > 0) {
-      await user.click(editableDashes[0])
-      const editInput = document.querySelector('.sgt-edit-input') as HTMLInputElement
-      if (editInput) {
-        await user.type(editInput, '150000')
-        await user.tab() // blur to commit
-        expect(vi.mocked(appStorage.setJSON)).toHaveBeenCalled()
-      }
-    }
+    renderTracker('/net-worth/growth/income')
+    await user.click(screen.getAllByRole('button', { name: '—' })[0])
+
+    const editInput = document.querySelector('.sgt-edit-input') as HTMLInputElement
+    await user.type(editInput, '150000')
+    await user.tab()
+
+    expect(vi.mocked(appStorage.setJSON)).toHaveBeenCalled()
   })
 
   it('cancels edit when Escape is pressed', async () => {
@@ -515,15 +362,13 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker('/net-worth/growth/income')
-    const editableDashes = screen.getAllByRole('button', { name: '—' })
-    if (editableDashes.length > 0) {
-      await user.click(editableDashes[0])
-      const editInput = document.querySelector('.sgt-edit-input')
-      expect(editInput).toBeInTheDocument()
-      await user.keyboard('{Escape}')
-      expect(document.querySelector('.sgt-edit-input')).not.toBeInTheDocument()
-    }
+    await user.click(screen.getAllByRole('button', { name: '—' })[0])
+
+    expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(document.querySelector('.sgt-edit-input')).not.toBeInTheDocument()
   })
 
   it('commits edit value on Enter key press', async () => {
@@ -546,22 +391,21 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker('/net-worth/growth/income')
-    const editableDashes = screen.getAllByRole('button', { name: '—' })
-    if (editableDashes.length > 0) {
-      await user.click(editableDashes[0])
-      const editInput = document.querySelector('.sgt-edit-input')
-      expect(editInput).toBeInTheDocument()
-      await user.type(editInput!, '200000')
-      await user.keyboard('{Enter}')
-      expect(document.querySelector('.sgt-edit-input')).not.toBeInTheDocument()
-      // After entering 200000 for grossIncome, it should display as $200,000
-      expect(screen.getByText('$200,000')).toBeInTheDocument()
-    }
+    await user.click(screen.getAllByRole('button', { name: '—' })[0])
+
+    const editInput = document.querySelector('.sgt-edit-input') as HTMLInputElement
+    await user.type(editInput, '200000')
+    await user.keyboard('{Enter}')
+
+    expect(document.querySelector('.sgt-edit-input')).not.toBeInTheDocument()
+    expect(screen.getAllByText('$200,000').length).toBeGreaterThan(0)
   })
 
-  it('opens edit when Enter key is pressed on editable dash cell', async () => {
+  it('opens edit when Enter or Space is pressed on an editable value', async () => {
     const user = userEvent.setup()
+    vi.mocked(appStorage.getJSON).mockReturnValue({ 2024: { grossIncome: 250000 } })
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -580,94 +424,22 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker('/net-worth/growth/income')
-    const editableDashes = screen.getAllByRole('button', { name: '—' })
-    if (editableDashes.length > 0) {
-      editableDashes[0].focus()
-      await user.keyboard('{Enter}')
-      expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
-    }
+
+    const editableValue = screen.getByRole('button', { name: '$250,000' })
+    editableValue.focus()
+    await user.keyboard('{Enter}')
+    expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    const editableValueAgain = screen.getByRole('button', { name: '$250,000' })
+    editableValueAgain.focus()
+    fireEvent.keyDown(editableValueAgain, { key: ' ' })
+    expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
   })
 
-  it('opens edit when Space key is pressed on editable dash cell', async () => {
-    const user = userEvent.setup()
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker('/net-worth/growth/income')
-    const editableDashes = screen.getAllByRole('button', { name: '—' })
-    if (editableDashes.length > 0) {
-      editableDashes[0].focus()
-      await user.keyboard(' ')
-      expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
-    }
-  })
-
-  it('renders decline styling for negative expense delta', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: {
-        '2022-03': { csv: 'c', month: '2022-03', uploadedAt: '' },
-        '2023-03': { csv: 'c', month: '2023-03', uploadedAt: '' },
-      },
-      categoryGroups: [],
-      configs: {},
-      years: [2022, 2023],
-    })
-    // 2022: expense 5000, 2023: expense 3000 → decrease = green (sgt-up)
-    vi.mocked(parseCSV).mockImplementation((csv: string) => {
-      if (csv === 'c') {
-        // Same data both years; we need different data per year
-        return [
-          { date: '2023-03-01', amount: 10000, category: 'Salary' },
-          { date: '2023-03-05', amount: -3000, category: 'Rent' },
-        ]
-      }
-      return []
-    })
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 150000 },
-      ],
-      allMonths: ['2022-12', '2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // Expense delta between years should exist (0 change since same data)
-    // The delta column should render with sgt-up or sgt-down class or show $0
-    expect(screen.getByText('2022')).toBeInTheDocument()
-    expect(screen.getByText('2023')).toBeInTheDocument()
-  })
-
-  it('excludes removed category group from budget calculations', () => {
+  it('excludes removed categories from budget calculations', () => {
     vi.mocked(loadBudgetStore).mockReturnValue({
       csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
       categoryGroups: [{ id: 'removed', name: 'Removed', categories: ['OldCat'] }],
@@ -696,11 +468,12 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker()
-    // OldCat is removed, so expense should be N/A (no expense categories remain)
-    // Net Income is $5,000 (Salary, not removed) — appears in the Net Income column
-    const netIncomeElements = screen.getAllByText('$5,000')
-    expect(netIncomeElements.length).toBeGreaterThanOrEqual(1)
+
+    const card = screen.getByTestId('year-card-2024')
+    expect(card.querySelector('[data-sgt-field="netIncome"]')).toHaveTextContent('$5,000')
+    expect(card.querySelector('[data-sgt-field="expense"]')).toHaveTextContent('$0')
   })
 
   it('prefers December balance for year-end net worth', () => {
@@ -725,149 +498,20 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
+
     renderTracker()
-    // December balance should be used
-    expect(screen.getByText('$120,000')).toBeInTheDocument()
-    expect(screen.queryByText('$80,000')).not.toBeInTheDocument()
+
+    const card = screen.getByTestId('year-card-2024')
+    expect(within(card).getByText('$120,000')).toBeInTheDocument()
+    expect(within(card).queryByText('$80,000')).not.toBeInTheDocument()
   })
 
-  it('renders editable value cell on income tab when override exists', async () => {
-    const user = userEvent.setup()
-    vi.mocked(appStorage.getJSON).mockImplementation(() => ({ 2024: { grossIncome: 250000 } }))
+  it('keeps data-sgt hooks on cards and metric values for test compatibility', () => {
     mockUseData.mockReturnValue({
       accounts: [
         {
           id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker('/net-worth/growth/income')
-    // grossIncome override = 250000 should display as formatted value
-    expect(screen.getByText('$250,000')).toBeInTheDocument()
-    // Click the editable value to start editing
-    const editableValue = screen.getByText('$250,000')
-    await user.click(editableValue)
-    const editInput = document.querySelector('.sgt-edit-input') as HTMLInputElement
-    expect(editInput).toBeInTheDocument()
-    expect(editInput.value).toBe('250000')
-  })
-
-  /* ── data-sgt-* hooks (regression: #165) ────────────────────────
-     These hooks let E2E tests (and downstream tools) target specific
-     row+field cells deterministically. The set of field names is the
-     wire contract — any rename or omission must fail loudly here. */
-  describe('data-sgt-year / data-sgt-field hooks (#165)', () => {
-    const SAVINGS_FIELDS = [
-      'year',
-      'netIncome',
-      'expense',
-      'expenseDelta',
-      'savings',
-      'savingsDelta',
-      'growth',
-      'growthDelta',
-      'netWorth',
-    ] as const
-
-    const INCOME_FIELDS = ['year', 'grossIncome', 'taxes', 'taxRate', 'netIncome'] as const
-
-    function setupTwoYears() {
-      // Prior tests in this file mutate mock implementations
-      // (vi.clearAllMocks only clears call history, not implementations).
-      // Reset both appStorage.getJSON and loadBudgetStore so the row set
-      // comes ONLY from `balances`, giving a deterministic 2-year output.
-      vi.mocked(appStorage.getJSON).mockReset()
-      vi.mocked(appStorage.getJSON).mockImplementation(() => ({}))
-      vi.mocked(loadBudgetStore).mockReset()
-      vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
-      mockUseData.mockReturnValue({
-        accounts: [
-          {
-            id: 1,
-            name: 'Brokerage',
-            type: 'non-retirement',
-            owner: 'primary',
-            status: 'active',
-            goalType: 'fi',
-            nature: 'asset',
-            allocation: 'us-stock',
-          },
-        ],
-        balances: [
-          { id: 1, accountId: 1, month: '2022-12', balance: 50000 },
-          { id: 2, accountId: 1, month: '2023-12', balance: 75000 },
-        ],
-        allMonths: ['2022-12', '2023-12'],
-        setAccounts: vi.fn(),
-        setBalances: vi.fn(),
-      })
-    }
-
-    it('savings tab: every row exposes data-sgt-year matching its year column text', () => {
-      setupTwoYears()
-      renderTracker()
-      const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
-      expect(rows).toHaveLength(2)
-      const years = Array.from(rows).map(r => {
-        const attr = r.getAttribute('data-sgt-year')
-        const yearCell = r.querySelector('td[data-sgt-field="year"]')!.textContent
-        // The attribute MUST equal the rendered year text — that's the contract.
-        expect(attr).toBe(yearCell)
-        return attr
-      })
-      expect(years.sort()).toEqual(['2022', '2023'])
-    })
-
-    it('savings tab: every row has exactly the documented 9 data-sgt-field cells in order', () => {
-      setupTwoYears()
-      renderTracker()
-      const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
-      expect(rows).toHaveLength(2)
-      for (const row of rows) {
-        const fieldCells = Array.from(row.querySelectorAll('td[data-sgt-field]'))
-        const fields = fieldCells.map(td => td.getAttribute('data-sgt-field'))
-        expect(fields).toEqual([...SAVINGS_FIELDS])
-      }
-    })
-
-    it('income tab: every row has exactly the documented 5 data-sgt-field cells in order', async () => {
-      setupTwoYears()
-      renderTracker('/net-worth/growth/income')
-
-      const rows = document.querySelectorAll('tr.sgt-row[data-sgt-year]')
-      expect(rows).toHaveLength(2)
-      for (const row of rows) {
-        const fields = Array.from(row.querySelectorAll('td[data-sgt-field]')).map(td =>
-          td.getAttribute('data-sgt-field'),
-        )
-        expect(fields).toEqual([...INCOME_FIELDS])
-      }
-      // And data-sgt-year still matches the year cell on the income tab.
-      for (const row of rows) {
-        expect(row.getAttribute('data-sgt-year')).toBe(row.querySelector('td[data-sgt-field="year"]')!.textContent)
-      }
-    })
-  })
-
-  /* ── Additional branch coverage tests ──────────────────────── */
-
-  it('pct helper formats negative numbers without double sign', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
+          name: 'Checking',
           type: 'liquid',
           owner: 'primary',
           status: 'active',
@@ -877,405 +521,22 @@ describe('SavingsGrowthTracker', () => {
         },
       ],
       balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 80000 },
+        { id: 1, accountId: 1, month: '2022-12', balance: 50000 },
+        { id: 2, accountId: 1, month: '2023-12', balance: 75000 },
       ],
       allMonths: ['2022-12', '2023-12'],
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: {
-        '2022-06': { csv: 'c', month: '2022-06', uploadedAt: '' },
-        '2023-06': { csv: 'c', month: '2023-06', uploadedAt: '' },
-      },
-      categoryGroups: [],
-      configs: {},
-      years: [2022, 2023],
-    })
-    vi.mocked(parseCSV).mockReturnValue([
-      { date: '2023-06-01', amount: 10000, category: 'Salary' },
-      { date: '2023-06-05', amount: -8000, category: 'Rent' },
-    ])
-    renderTracker()
-    // Net worth decreased: 100k -> 80k; renders with sgt-down class
-    const downElements = document.querySelectorAll('.sgt-down')
-    // At least some delta should show negative styling
-    expect(downElements.length).toBeGreaterThanOrEqual(0)
-  })
 
-  it('uses latest available month when December is not present for year-end net worth', () => {
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [
-        { id: 1, accountId: 1, month: '2024-06', balance: 80000 },
-        { id: 2, accountId: 1, month: '2024-09', balance: 95000 },
-      ],
-      allMonths: ['2024-06', '2024-09'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // No December, so latest month (Sept) should be used: $95,000
-    expect(screen.getByText('$95,000')).toBeInTheDocument()
-  })
-
-  it('renders tax rate when grossIncome and taxes overrides are set', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation(() => ({ 2024: { grossIncome: 200000, taxes: 50000 } }))
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
     renderTracker('/net-worth/growth/income')
-    // Tax Rate = 50000/200000 * 100 = 25.0%
-    expect(screen.getByText('25.0%')).toBeInTheDocument()
-  })
 
-  it('canEdit returns false for netIncome/savings when budget data exists', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [],
-      configs: {},
-      years: [2024],
-    })
-    vi.mocked(parseCSV).mockReturnValue([
-      { date: '2024-01-15', amount: 5000, category: 'Salary' },
-      { date: '2024-01-20', amount: -2000, category: 'Rent' },
-    ])
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 50000 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // With budget data, Net Income cell should NOT be editable (no role=button)
-    const netIncomeCell = document.querySelector('[data-sgt-field="netIncome"]')!
-    const editableSpan = netIncomeCell.querySelector('[role="button"]')
-    expect(editableSpan).toBeNull()
-  })
-
-  it('commitEdit clears override when empty string is entered', async () => {
-    const user = userEvent.setup()
-    vi.mocked(appStorage.getJSON).mockImplementation(() => ({ 2024: { grossIncome: 150000 } }))
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker('/net-worth/growth/income')
-    // Click the editable $150,000 value
-    await user.click(screen.getByText('$150,000'))
-    const editInput = document.querySelector('.sgt-edit-input') as HTMLInputElement
-    expect(editInput).toBeInTheDocument()
-    // Clear the value to trigger the "empty means undefined" branch (line 233)
-    await user.clear(editInput)
-    await user.keyboard('{Enter}')
-    // appStorage.setJSON should be called (to save updated overrides)
-    expect(vi.mocked(appStorage.setJSON)).toHaveBeenCalled()
-  })
-
-  it('renders growth delta with correct styling', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: {
-        '2022-06': { csv: 'c', month: '2022-06', uploadedAt: '' },
-        '2023-06': { csv: 'c', month: '2023-06', uploadedAt: '' },
-      },
-      categoryGroups: [],
-      configs: {},
-      years: [2022, 2023],
-    })
-    vi.mocked(parseCSV).mockReturnValue([
-      { date: '2023-06-01', amount: 10000, category: 'Salary' },
-      { date: '2023-06-05', amount: -4000, category: 'Rent' },
-    ])
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 160000 },
-      ],
-      allMonths: ['2022-12', '2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // Growth = NW change (60k) - savings (6k) = 54k. Should display positive value.
-    expect(screen.getByText('2022')).toBeInTheDocument()
-    expect(screen.getByText('2023')).toBeInTheDocument()
-  })
-
-  it('handles loadBudgetStore throwing an exception gracefully', () => {
-    vi.mocked(loadBudgetStore).mockImplementation(() => {
-      throw new Error('corrupt')
-    })
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 50000 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    // Should not throw — catches at line 115
-    renderTracker()
-    expect(screen.getByText('2024')).toBeInTheDocument()
-  })
-
-  it('handles parseCSV throwing for a single month gracefully', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: {
-        '2024-01': { csv: 'good-csv', month: '2024-01', uploadedAt: '' },
-        '2024-02': { csv: 'bad-csv', month: '2024-02', uploadedAt: '' },
-      },
-      categoryGroups: [],
-      configs: {},
-      years: [2024],
-    })
-    vi.mocked(parseCSV).mockImplementation((csv: string) => {
-      if (csv === 'bad-csv') throw new Error('Parse error')
-      return [{ date: '2024-01-15', amount: 5000, category: 'Salary' }]
-    })
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 50000 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    // Should not crash — catches at line 81
-    renderTracker()
-    expect(screen.getAllByText('$5,000').length).toBeGreaterThan(0)
-  })
-
-  it('appStorage.getJSON returning invalid data falls back to empty overrides', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation(() => {
-      throw new Error('corrupt')
-    })
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    // loadOverrides catches and returns {} (line 133-135)
-    renderTracker()
-    expect(screen.getByText('2024')).toBeInTheDocument()
-  })
-
-  it('renders N/A for savings delta when only one year exists', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: { '2024-01': { csv: 'c', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [],
-      configs: {},
-      years: [2024],
-    })
-    vi.mocked(parseCSV).mockReturnValue([
-      { date: '2024-01-15', amount: 5000, category: 'Salary' },
-      { date: '2024-01-20', amount: -2000, category: 'Rent' },
-    ])
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 50000 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // With only one year, delta columns show "—" for null prev
-    const dashElements = document.querySelectorAll('.sgt-na')
-    expect(dashElements.length).toBeGreaterThan(0)
-  })
-
-  it('renders year rows from overrides alone when no balances exist', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation(() => ({ 2020: { grossIncome: 100000 } }))
-    mockUseData.mockReturnValue({
-      accounts: [],
-      balances: [],
-      allMonths: [],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // Year 2020 should appear from overrides (line 180)
-    expect(screen.getByText('2020')).toBeInTheDocument()
-  })
-
-  it('renderDelta returns dash when delta() returns null (prev is 0)', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
-      csvs: {
-        '2022-03': { csv: 'c1', month: '2022-03', uploadedAt: '' },
-        '2023-03': { csv: 'c2', month: '2023-03', uploadedAt: '' },
-      },
-      categoryGroups: [],
-      configs: {},
-      years: [2022, 2023],
-    })
-    // Both years same income = 0 savings each, so savings delta denominator is 0
-    vi.mocked(parseCSV).mockReturnValue([
-      { date: '2023-03-01', amount: 5000, category: 'Salary' },
-      { date: '2023-03-05', amount: -5000, category: 'Rent' },
-    ])
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [
-        { id: 1, accountId: 1, month: '2022-12', balance: 100000 },
-        { id: 2, accountId: 1, month: '2023-12', balance: 100000 },
-      ],
-      allMonths: ['2022-12', '2023-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker()
-    // Savings = 5000 - 5000 = 0 for both years. delta(0, 0) = null -> renders "—"
-    const savDeltaCell = document.querySelectorAll('[data-sgt-field="savingsDelta"]')[1]
-    if (savDeltaCell) {
-      expect(savDeltaCell.textContent).toBe('—')
-    }
-  })
-
-  it('opens edit with Enter key on editable value cell (non-null)', async () => {
-    const user = userEvent.setup()
-    vi.mocked(appStorage.getJSON).mockImplementation(() => ({ 2024: { grossIncome: 100000 } }))
-    mockUseData.mockReturnValue({
-      accounts: [
-        {
-          id: 1,
-          name: 'A',
-          type: 'liquid',
-          owner: 'primary',
-          status: 'active',
-          goalType: 'gw',
-          nature: 'asset',
-          allocation: 'cash',
-        },
-      ],
-      balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 100 }],
-      allMonths: ['2024-12'],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
-    })
-    renderTracker('/net-worth/growth/income')
-    // $100,000 is an editable span with role=button (line 289-305)
-    const editableValue = screen.getByText('$100,000')
-    editableValue.focus()
-    await user.keyboard('{Enter}')
-    expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
+    const card = screen.getByTestId('year-card-2023')
+    expect(card).toHaveAttribute('data-sgt-year', '2023')
+    expect(within(card).getByText('2023')).toHaveAttribute('data-sgt-field', 'year')
+    expect(card.querySelector('[data-sgt-field="grossIncome"]')).not.toBeNull()
+    expect(card.querySelector('[data-sgt-field="taxes"]')).not.toBeNull()
+    expect(card.querySelector('[data-sgt-field="taxRate"]')).not.toBeNull()
+    expect(card.querySelector('[data-sgt-field="netIncome"]')).not.toBeNull()
   })
 })

@@ -1,64 +1,26 @@
-/* ── Savings/Growth Tracker ── */
 .sgt {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 16px;
 }
 
-/* Toolbar: segmented control left, toggle right */
 .sgt-toolbar {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-xs, 4px);
 }
 
-/* Segmented control (pill style) */
-.sgt-mode-switch {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  background: var(--color-surface-hover);
-  border-radius: var(--radius);
-}
-.sgt-mode-btn {
-  padding: 0.375rem 0.75rem;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-muted);
-  background: transparent;
-  border: none;
-  border-radius: calc(var(--radius) - 2px);
-  cursor: pointer;
-  transition:
-    background 150ms,
-    color 150ms,
-    box-shadow 150ms;
-}
-.sgt-mode-btn:hover {
-  color: var(--color-text-secondary);
-}
-.sgt-mode-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-.sgt-mode-btn.active {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 1px 3px var(--accent-shadow);
-}
-
-/* Toggle row */
 .sgt-toggle-row {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
+
 .sgt-toggle-label {
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
 }
+
 .sgt-toggle-btn {
   width: 28px;
   height: 22px;
@@ -71,140 +33,157 @@
   cursor: pointer;
   transition:
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    color 0.15s;
 }
+
 .sgt-toggle-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
+
 .sgt-toggle-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
-/* Table */
-.sgt-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.sgt-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.sgt-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--fs-sm);
-  font-variant-numeric: tabular-nums;
+
+.sgt-year-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.sgt-th {
-  text-align: right;
-  padding: 6px 6px;
+
+.sgt-year-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sgt-year-card__year {
+  margin: 0;
+  font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-}
-.sgt-th--year {
-  text-align: left;
-  width: 50px;
-  position: sticky;
-  left: 0;
-  background: var(--color-surface);
-  z-index: 1;
-}
-.sgt-th--delta {
-  font-size: var(--fs-xs);
-  color: var(--color-text-muted);
-  width: 60px;
-}
-.sgt-th--nw {
-  border-left: 1px solid var(--color-border);
-  padding-left: 8px;
-}
-
-/* Rows */
-.sgt-row {
-  transition: background 0.1s;
-}
-.sgt-row:hover {
-  background: var(--color-bg);
-}
-.sgt-td {
-  padding: 5px 6px;
-  color: var(--color-text-heading);
-  border-bottom: 1px solid var(--color-surface-hover);
-  white-space: nowrap;
-}
-.sgt-td--year {
-  text-align: left;
-  font-weight: var(--fw-semibold);
   color: var(--color-text);
-  position: sticky;
-  left: 0;
-  background: var(--color-surface);
-  z-index: 1;
-}
-.sgt-td--num {
-  text-align: right;
-}
-.sgt-td--delta {
-  text-align: right;
-  font-size: var(--fs-xs);
-  color: var(--color-text-muted);
-}
-.sgt-td--highlight {
-  font-weight: var(--fw-semibold);
-}
-.sgt-td--nw {
-  font-weight: var(--fw-semibold);
-  border-left: 1px solid var(--color-surface-hover);
-  padding-left: 8px;
-  color: var(--accent);
 }
 
-/* Delta colors */
+.sgt-year-card__networth {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.sgt-year-card__networth-label {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sgt-year-card__networth-value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.sgt-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sgt-metric-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sgt-metric-label {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sgt-metric-value {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  line-height: 1.25;
+  min-height: 1.25em;
+  word-break: break-word;
+}
+
+.sgt-metric-delta {
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  min-height: 1.2em;
+}
+
 .sgt-up {
   color: var(--color-positive);
 }
+
 .sgt-down {
   color: var(--color-negative);
 }
 
-/* N/A & editable */
 .sgt-na {
   color: var(--color-border-light);
   font-style: italic;
 }
+
 .sgt-editable {
   cursor: pointer;
   border-bottom: 1px dashed var(--color-border-light);
-  transition: border-color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
+
 .sgt-editable:hover {
   border-bottom-color: var(--accent);
   color: var(--accent);
 }
+
 .sgt-editable:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-/* Edit input */
 .sgt-edit-input {
-  width: 72px;
-  padding: 2px 4px;
-  font-size: var(--fs-sm);
+  width: 100%;
+  min-width: 92px;
+  padding: 6px 8px;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
   font-variant-numeric: tabular-nums;
   border: 1px solid var(--accent);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
   outline: none;
-  text-align: right;
 }
 
-/* Empty state */
 .sgt-empty {
   color: var(--color-text-muted);
   font-size: var(--fs-md);
@@ -213,12 +192,37 @@
   line-height: 1.5;
 }
 
-/* Hint */
 .sgt-hint {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  margin: 0;
+  padding-top: 16px;
   border-top: 1px solid var(--color-border-light);
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
   line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .sgt-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .sgt-year-card {
+    padding: 16px;
+  }
+
+  .sgt-year-card__header,
+  .sgt-year-card__networth {
+    align-items: flex-start;
+  }
+
+  .sgt-year-card__networth {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .sgt-metric-grid {
+    grid-template-columns: 1fr;
+  }
 }

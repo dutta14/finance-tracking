@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
@@ -10,24 +10,18 @@ import '../../../styles/SavingsGrowthTracker.css'
 
 const REMOVED_GROUP_ID = 'removed'
 
-/* ── helpers ── */
-
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
 const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
 
-/** Net worth at end of each December (or latest available month in each year).
- *  Matches the Data tab's "Total" column: all accounts, raw balance sum. */
 function getYearEndNetWorths(_accounts: Account[], balances: BalanceEntry[]): Map<number, number> {
-  // Group balances by month (include ALL accounts — same as Data tab Total)
   const byMonth = new Map<string, Map<number, number>>()
   for (const b of balances) {
     if (!byMonth.has(b.month)) byMonth.set(b.month, new Map())
     byMonth.get(b.month)!.set(b.accountId, b.balance)
   }
 
-  // Find the best month per year (prefer December, else latest available)
   const monthsByYear = new Map<number, string[]>()
   for (const m of byMonth.keys()) {
     const yr = parseInt(m.split('-')[0], 10)
@@ -38,7 +32,6 @@ function getYearEndNetWorths(_accounts: Account[], balances: BalanceEntry[]): Ma
   const result = new Map<number, number>()
   for (const [yr, months] of monthsByYear) {
     months.sort()
-    // prefer December
     const dec = months.find(m => m.endsWith('-12'))
     const pick = dec || months[months.length - 1]
     const accBals = byMonth.get(pick)!
@@ -50,13 +43,12 @@ function getYearEndNetWorths(_accounts: Account[], balances: BalanceEntry[]): Ma
 }
 
 interface BudgetYearData {
-  netIncome: number | null // income - expense (from budget)
+  netIncome: number | null
   totalIncome: number | null
   totalExpense: number | null
   hasData: boolean
 }
 
-/** For each year that has budget CSVs, compute income, expense */
 function getBudgetYearlyData(): Map<number, BudgetYearData> {
   const result = new Map<number, BudgetYearData>()
   try {
@@ -64,7 +56,6 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
     const groups = store.categoryGroups || []
     const removedCats = new Set(groups.find(g => g.id === REMOVED_GROUP_ID)?.categories || [])
 
-    // Gather all years from CSV keys
     const yearSet = new Set<number>()
     for (const key of Object.keys(store.csvs)) {
       yearSet.add(parseInt(key.split('-')[0], 10))
@@ -85,7 +76,6 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
       }
       if (txns.length === 0) continue
 
-      // Classify categories: group by category+month, category is expense if any monthly sum < 0
       const catMonthSums: Record<string, Record<string, number>> = {}
       txns.forEach(t => {
         if (removedCats.has(t.category)) return
@@ -119,7 +109,6 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
   return result
 }
 
-/* ── Editable overrides (user can fill in missing data) ── */
 const OVERRIDES_KEY = 'sgt-overrides'
 
 interface YearOverrides {
@@ -142,24 +131,19 @@ function saveOverrides(o: Record<number, YearOverrides>) {
   window.dispatchEvent(new Event('tools-changed'))
 }
 
-/* ── Row data type ── */
 interface YearRow {
   year: number
   netWorth: number | null
   nwChange: number | null
-  // Budget-derived
-  totalIncome: number | null // from budget
-  totalExpense: number | null // from budget
-  netIncome: number | null // total income from budget
-  savings: number | null // netIncome - expense = amount saved
-  growth: number | null // nwChange - savings = capital growth
-  // Overrides
+  totalIncome: number | null
+  totalExpense: number | null
+  netIncome: number | null
+  savings: number | null
+  growth: number | null
   grossIncome: number | null
   taxes: number | null
   hasBudgetData: boolean
 }
-
-/* ── Component ── */
 
 type TabMode = 'savings' | 'income'
 
@@ -216,10 +200,8 @@ const SavingsGrowthTracker: FC = () => {
     return result
   }, [nwByYear, budgetData, overrides])
 
-  /* ── Inline editing ── */
   const canEdit = (row: YearRow, field: string) => {
     if (field === 'grossIncome' || field === 'taxes') return true
-    // Allow editing netIncome / savings only if no budget data
     if (field === 'netIncome' || field === 'savings') return !row.hasBudgetData
     return false
   }
@@ -236,7 +218,6 @@ const SavingsGrowthTracker: FC = () => {
     const updated = { ...overrides }
     if (!updated[year]) updated[year] = {}
     ;(updated[year] as Record<string, number | undefined>)[field] = val !== undefined && !isNaN(val) ? val : undefined
-    // Clean empty
     if (Object.values(updated[year]).every(v => v === undefined)) delete updated[year]
     setOverrides(updated)
     saveOverrides(updated)
@@ -309,30 +290,55 @@ const SavingsGrowthTracker: FC = () => {
     return fmt(value)
   }
 
-  const renderDelta = (cur: number | null, prev: number | null) => {
+  const renderDeltaValue = (cur: number | null, prev: number | null, invertColors = false) => {
     if (cur === null || prev === null) return <span className="sgt-na">—</span>
-    const d = delta(cur, prev)
-    if (d === null) return <span className="sgt-na">—</span>
+
     if (showPct) {
-      return <span className={d > 0 ? 'sgt-up' : d < 0 ? 'sgt-down' : ''}>{pct(d)}</span>
+      const d = delta(cur, prev)
+      if (d === null || d === 0) return <span className="sgt-na">—</span>
+      const isPositive = d > 0
+      const className = invertColors ? (isPositive ? 'sgt-down' : 'sgt-up') : isPositive ? 'sgt-up' : 'sgt-down'
+      return (
+        <span className={className}>
+          {isPositive ? '▲' : '▼'} {pct(Math.abs(d)).replace('+', '')}
+        </span>
+      )
     }
+
     const raw = cur - prev
-    return <span className={raw > 0 ? 'sgt-up' : raw < 0 ? 'sgt-down' : ''}>{fmt(raw)}</span>
+    if (raw === 0) return <span className="sgt-na">—</span>
+    const isPositive = raw > 0
+    const className = invertColors ? (isPositive ? 'sgt-down' : 'sgt-up') : isPositive ? 'sgt-up' : 'sgt-down'
+    return (
+      <span className={className}>
+        {isPositive ? '▲' : '▼'} {fmt(Math.abs(raw))}
+      </span>
+    )
   }
 
-  const renderDeltaExpense = (cur: number | null, prev: number | null) => {
-    // For expenses, increase is bad (red), decrease is good (green)
+  const renderRateDelta = (cur: number | null, prev: number | null) => {
     if (cur === null || prev === null) return <span className="sgt-na">—</span>
-    const d = delta(cur, prev)
-    if (d === null) return <span className="sgt-na">—</span>
-    if (showPct) {
-      return <span className={d > 0 ? 'sgt-down' : d < 0 ? 'sgt-up' : ''}>{pct(d)}</span>
-    }
-    const raw = cur - prev
-    return <span className={raw > 0 ? 'sgt-down' : raw < 0 ? 'sgt-up' : ''}>{fmt(raw)}</span>
-  }
 
-  const getPrev = (i: number, field: keyof YearRow) => (i > 0 ? (rows[i - 1][field] as number | null) : null)
+    if (showPct) {
+      const d = delta(cur, prev)
+      if (d === null || d === 0) return <span className="sgt-na">—</span>
+      const isPositive = d > 0
+      return (
+        <span className={isPositive ? 'sgt-down' : 'sgt-up'}>
+          {isPositive ? '▲' : '▼'} {pct(Math.abs(d)).replace('+', '')}
+        </span>
+      )
+    }
+
+    const raw = cur - prev
+    if (raw === 0) return <span className="sgt-na">—</span>
+    const isPositive = raw > 0
+    return (
+      <span className={isPositive ? 'sgt-down' : 'sgt-up'}>
+        {isPositive ? '▲' : '▼'} {Math.abs(raw).toFixed(1)} pts
+      </span>
+    )
+  }
 
   if (rows.length === 0) {
     return (
@@ -344,9 +350,10 @@ const SavingsGrowthTracker: FC = () => {
     )
   }
 
+  const rowsDescending = [...rows].reverse()
+
   return (
     <div className="sgt">
-      {/* Toolbar: toggle only (mode switch moved to page header) */}
       <div className="sgt-toolbar">
         <div className="sgt-toggle-row">
           <span className="sgt-toggle-label">YoY change</span>
@@ -360,125 +367,120 @@ const SavingsGrowthTracker: FC = () => {
         </div>
       </div>
 
-      <div className="sgt-table-wrap">
-        <table className="sgt-table">
-          <thead>
-            {tab === 'savings' ? (
-              <tr>
-                <th scope="col" className="sgt-th sgt-th--year">
-                  Year
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Net Income
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Expense
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">
-                  Exp Δ
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Savings
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">
-                  Sav Δ
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Growth
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--delta">
-                  Gro Δ
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num sgt-th--nw">
-                  Net Worth
-                </th>
-              </tr>
-            ) : (
-              <tr>
-                <th scope="col" className="sgt-th sgt-th--year">
-                  Year
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Gross Income
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Taxes
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Tax Rate
-                </th>
-                <th scope="col" className="sgt-th sgt-th--num">
-                  Net Income
-                </th>
-              </tr>
-            )}
-          </thead>
-          <tbody>
-            {rows.map((row, i) => {
-              if (tab === 'savings') {
-                return (
-                  <tr key={row.year} className="sgt-row" data-sgt-year={row.year}>
-                    <td className="sgt-td sgt-td--year" data-sgt-field="year">
-                      {row.year}
-                    </td>
-                    <td className="sgt-td sgt-td--num" data-sgt-field="netIncome">
-                      {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
-                    </td>
-                    <td className="sgt-td sgt-td--num" data-sgt-field="expense">
-                      {row.totalExpense !== null ? fmt(row.totalExpense) : <span className="sgt-na">N/A</span>}
-                    </td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta" data-sgt-field="expenseDelta">
-                      {renderDeltaExpense(row.totalExpense, getPrev(i, 'totalExpense'))}
-                    </td>
-                    <td className="sgt-td sgt-td--num sgt-td--highlight" data-sgt-field="savings">
-                      {renderCell(row, 'savings', row.savings, canEdit(row, 'savings'))}
-                    </td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta" data-sgt-field="savingsDelta">
-                      {renderDelta(row.savings, getPrev(i, 'savings'))}
-                    </td>
-                    <td className="sgt-td sgt-td--num sgt-td--highlight" data-sgt-field="growth">
-                      {row.growth !== null ? fmt(row.growth) : <span className="sgt-na">N/A</span>}
-                    </td>
-                    <td className="sgt-td sgt-td--num sgt-td--delta" data-sgt-field="growthDelta">
-                      {renderDelta(row.growth, getPrev(i, 'growth'))}
-                    </td>
-                    <td className="sgt-td sgt-td--num sgt-td--nw" data-sgt-field="netWorth">
+      <div className="sgt-card-list">
+        {rowsDescending.map(row => {
+          const index = rows.findIndex(candidate => candidate.year === row.year)
+          const prevRow = index > 0 ? rows[index - 1] : null
+          const taxRate = row.grossIncome && row.taxes != null ? (row.taxes / row.grossIncome) * 100 : null
+          const prevTaxRate =
+            prevRow?.grossIncome && prevRow.taxes != null ? (prevRow.taxes / prevRow.grossIncome) * 100 : null
+
+          return (
+            <section
+              key={row.year}
+              className="sgt-year-card"
+              data-testid={`year-card-${row.year}`}
+              data-sgt-year={row.year}
+              aria-label={`Year ${row.year}`}
+            >
+              <div className="sgt-year-card__header">
+                <h2 className="sgt-year-card__year" data-sgt-field="year">
+                  {row.year}
+                </h2>
+                {tab === 'savings' ? (
+                  <div className="sgt-year-card__networth">
+                    <span className="sgt-year-card__networth-label">Net Worth</span>
+                    <span className="sgt-year-card__networth-value" data-sgt-field="netWorth">
                       {row.netWorth !== null ? fmt(row.netWorth) : <span className="sgt-na">N/A</span>}
-                    </td>
-                  </tr>
-                )
-              }
-              // Income tab
-              const taxRate =
-                row.grossIncome && row.taxes != null ? ((row.taxes / row.grossIncome) * 100).toFixed(1) + '%' : null
-              return (
-                <tr key={row.year} className="sgt-row" data-sgt-year={row.year}>
-                  <td className="sgt-td sgt-td--year" data-sgt-field="year">
-                    {row.year}
-                  </td>
-                  <td className="sgt-td sgt-td--num" data-sgt-field="grossIncome">
-                    {renderCell(row, 'grossIncome', row.grossIncome, true)}
-                  </td>
-                  <td className="sgt-td sgt-td--num" data-sgt-field="taxes">
-                    {renderCell(row, 'taxes', row.taxes, true)}
-                  </td>
-                  <td className="sgt-td sgt-td--num" data-sgt-field="taxRate">
-                    {taxRate ?? <span className="sgt-na">—</span>}
-                  </td>
-                  <td className="sgt-td sgt-td--num" data-sgt-field="netIncome">
-                    {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="sgt-metric-grid">
+                {tab === 'savings' ? (
+                  <>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Net Income</span>
+                      <div className="sgt-metric-value" data-sgt-field="netIncome">
+                        {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
+                      </div>
+                      <div className="sgt-metric-delta">
+                        {renderDeltaValue(row.netIncome, prevRow?.netIncome ?? null)}
+                      </div>
+                    </div>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Expenses</span>
+                      <div className="sgt-metric-value" data-sgt-field="expense">
+                        {row.totalExpense !== null ? fmt(row.totalExpense) : <span className="sgt-na">N/A</span>}
+                      </div>
+                      <div className="sgt-metric-delta">
+                        {renderDeltaValue(row.totalExpense, prevRow?.totalExpense ?? null, true)}
+                      </div>
+                    </div>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Savings</span>
+                      <div className="sgt-metric-value" data-sgt-field="savings">
+                        {renderCell(row, 'savings', row.savings, canEdit(row, 'savings'))}
+                      </div>
+                      <div className="sgt-metric-delta">{renderDeltaValue(row.savings, prevRow?.savings ?? null)}</div>
+                    </div>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Growth</span>
+                      <div className="sgt-metric-value" data-sgt-field="growth">
+                        {row.growth !== null ? fmt(row.growth) : <span className="sgt-na">N/A</span>}
+                      </div>
+                      <div className="sgt-metric-delta">{renderDeltaValue(row.growth, prevRow?.growth ?? null)}</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Gross Income</span>
+                      <div className="sgt-metric-value" data-sgt-field="grossIncome">
+                        {renderCell(row, 'grossIncome', row.grossIncome, true)}
+                      </div>
+                      <div className="sgt-metric-delta">
+                        {renderDeltaValue(row.grossIncome, prevRow?.grossIncome ?? null)}
+                      </div>
+                    </div>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Taxes</span>
+                      <div className="sgt-metric-value" data-sgt-field="taxes">
+                        {renderCell(row, 'taxes', row.taxes, true)}
+                      </div>
+                      <div className="sgt-metric-delta">
+                        {renderDeltaValue(row.taxes, prevRow?.taxes ?? null, true)}
+                      </div>
+                    </div>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Tax Rate</span>
+                      <div className="sgt-metric-value" data-sgt-field="taxRate">
+                        {taxRate !== null ? `${taxRate.toFixed(1)}%` : <span className="sgt-na">—</span>}
+                      </div>
+                      <div className="sgt-metric-delta">{renderRateDelta(taxRate, prevTaxRate)}</div>
+                    </div>
+                    <div className="sgt-metric-card">
+                      <span className="sgt-metric-label">Net Income</span>
+                      <div className="sgt-metric-value" data-sgt-field="netIncome">
+                        {renderCell(row, 'netIncome', row.netIncome, canEdit(row, 'netIncome'))}
+                      </div>
+                      <div className="sgt-metric-delta">
+                        {renderDeltaValue(row.netIncome, prevRow?.netIncome ?? null)}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+          )
+        })}
       </div>
 
       <p className="sgt-hint">
         {tab === 'savings'
           ? 'Savings = Net Income from budget. Growth = Net Worth change − Savings. Click "—" to enter missing data.'
-          : 'Gross income & taxes are user-entered. Net income is derived from budget data when available.'}
+          : 'Gross income and taxes are user-entered. Net income is derived from budget data when available.'}
       </p>
     </div>
   )
