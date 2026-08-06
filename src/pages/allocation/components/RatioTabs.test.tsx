@@ -66,14 +66,7 @@ describe('RatioTabs', () => {
     expect(onSelectRatio).toHaveBeenCalledWith('b')
   })
 
-  it('calls onRequestDelete when delete button on a tab is clicked', async () => {
-    const user = userEvent.setup()
-    const onRequestDelete = vi.fn()
-    const ratios: CustomRatio[] = [{ id: 'a', name: 'Stock Bond', scope: 'total', groups: [] }]
-    render(<RatioTabs {...makeProps({ customRatios: ratios, activeRatioId: 'a', onRequestDelete })} />)
-    await user.click(screen.getByTitle('Delete ratio'))
-    expect(onRequestDelete).toHaveBeenCalledWith('a')
-  })
+  // Delete button removed from tabs — delete is now inside builder details
 
   it('calls onConfirmDelete when Delete button in confirm bar is clicked', async () => {
     const user = userEvent.setup()

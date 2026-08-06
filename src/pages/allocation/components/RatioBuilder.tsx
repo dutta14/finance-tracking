@@ -11,6 +11,7 @@ interface RatioBuilderProps {
   onToggleClass: (groupIdx: number, cls: AssetAllocation) => void
   onAddGroup: () => void
   onRemoveGroup: (idx: number) => void
+  onDeleteRatio: () => void
   goalSection: ReactNode
 }
 
@@ -22,6 +23,7 @@ const RatioBuilder: FC<RatioBuilderProps> = ({
   onToggleClass,
   onAddGroup,
   onRemoveGroup,
+  onDeleteRatio,
   goalSection,
 }) => (
   <div className="alloc-ratio-builder">
@@ -94,6 +96,10 @@ const RatioBuilder: FC<RatioBuilderProps> = ({
     )}
 
     {goalSection}
+
+    <button className="alloc-ratio-delete-btn" onClick={onDeleteRatio}>
+      Delete Ratio
+    </button>
   </div>
 )
 

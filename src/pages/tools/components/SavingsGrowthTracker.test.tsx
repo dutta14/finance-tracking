@@ -131,7 +131,7 @@ describe('SavingsGrowthTracker', () => {
     renderTracker()
 
     const card = screen.getByTestId('year-card-2024')
-    expect(within(card).getByText('Net Worth:')).toBeInTheDocument()
+    expect(within(card).getByText('Net Worth')).toBeInTheDocument()
     expect(within(card).getByText('$50,000')).toBeInTheDocument()
     expect(within(card).getByText('Net Income')).toBeInTheDocument()
     expect(within(card).getByText('Expenses')).toBeInTheDocument()

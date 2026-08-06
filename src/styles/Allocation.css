@@ -111,7 +111,6 @@
   display: flex;
   align-items: center;
   gap: 2rem;
-  max-width: 600px;
 }
 .alloc-page-donut {
   flex: 0 0 240px;
@@ -167,7 +166,6 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  max-width: 700px;
 }
 .alloc-drilldown-header {
   display: flex;
@@ -262,21 +260,19 @@
   position: relative;
 }
 .alloc-ratio-create-btn {
-  background: none;
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius);
-  padding: 0.3rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
   font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
   cursor: pointer;
-  transition:
-    background 0.12s,
-    color 0.12s;
+  transition: background 0.12s;
 }
 .alloc-ratio-create-btn:hover {
-  background: var(--accent-lighter);
+  background: var(--color-surface-hover);
 }
 
 .alloc-ratio-create-menu {
@@ -311,57 +307,50 @@
 
 /* ── Ratio tabs ──────────────────────────────────────────────── */
 
-.alloc-ratio-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
-}
-.alloc-ratio-tab {
+.alloc-ratio-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.5rem 0.35rem 0.7rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    border-color 0.12s;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
-.alloc-ratio-tab:hover {
+.alloc-ratio-toolbar .alloc-ratio-create-wrap {
+  margin-left: auto;
+}
+.alloc-ratio-tabs {
+  display: flex;
+  gap: 0.25rem;
   background: var(--color-surface-hover);
+  border-radius: var(--radius);
+  padding: 3px;
 }
-.alloc-ratio-tab.active {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-.alloc-ratio-tab-name {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-heading);
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.alloc-ratio-tab.active .alloc-ratio-tab-name {
-  color: var(--accent-text-dark);
-  font-weight: var(--fw-semibold);
-}
-.alloc-ratio-tab-delete {
+.alloc-ratio-tab {
   background: none;
   border: none;
-  cursor: pointer;
+  font: inherit;
   font-size: var(--fs-md);
-  line-height: 1;
+  font-weight: var(--fw-medium);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  cursor: pointer;
   color: var(--color-text-muted);
-  padding: 0 0.15rem;
-  transition: color 0.12s;
+  white-space: nowrap;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
-.alloc-ratio-tab-delete:hover {
-  color: var(--color-negative);
+.alloc-ratio-tab:hover {
+  color: var(--color-text);
+}
+.alloc-ratio-tab.active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-weight: var(--fw-semibold);
+}
+.alloc-ratio-tab--add {
+  font-size: var(--fs-lg);
+  padding: 0.25rem 0.7rem;
+  line-height: 1;
 }
 
 /* ── Inline delete confirm ───────────────────────────────────── */
@@ -472,6 +461,14 @@
 .alloc-ratio-result {
   margin-bottom: 1.5rem;
 }
+.alloc-ratio-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+.alloc-ratio-col {
+  min-width: 0;
+}
 .alloc-ratio-result-row {
   display: flex;
   align-items: center;
@@ -531,10 +528,9 @@
 /* ── Ratio builder ───────────────────────────────────────────── */
 
 .alloc-ratio-builder {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  background: var(--color-surface-hover);
+  padding: 0;
+  background: none;
+  border: none;
 }
 .alloc-ratio-builder-header {
   display: flex;
@@ -543,20 +539,21 @@
   margin-bottom: 1rem;
 }
 .alloc-ratio-builder-label {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
   letter-spacing: 0.04em;
 }
 
 .alloc-ratio-groups {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 .alloc-ratio-group {
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -565,7 +562,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 .alloc-ratio-group-dot {
   width: 10px;
@@ -575,11 +572,11 @@
 }
 .alloc-ratio-group-name {
   font: inherit;
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   border: 1px solid transparent;
   background: none;
-  padding: 0.2rem 0.4rem;
+  padding: 0.15rem 0.4rem;
   border-radius: var(--radius);
   color: var(--color-text);
   flex: 1;
@@ -612,9 +609,9 @@
 }
 .alloc-ratio-pill {
   font: inherit;
-  font-size: var(--fs-sm);
+  font-size: 12px;
   font-weight: var(--fw-medium);
-  padding: 0.25rem 0.55rem;
+  padding: 0.2rem 0.45rem;
   border-radius: var(--radius);
   border: 1px solid var(--color-border-light);
   background: var(--color-surface);
@@ -657,6 +654,22 @@
 .alloc-ratio-add-group:hover {
   border-color: var(--accent-border);
   color: var(--accent-text-dark);
+}
+
+.alloc-ratio-delete-btn {
+  margin-top: 1.5rem;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--color-negative);
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.12s;
+}
+.alloc-ratio-delete-btn:hover {
+  opacity: 1;
 }
 
 /* ── Goal section ────────────────────────────────────────────── */

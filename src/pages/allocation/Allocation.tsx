@@ -91,6 +91,7 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
               onToggleClass={toggleClass}
               onAddGroup={addGroup}
               onRemoveGroup={removeGroup}
+              onDeleteRatio={() => requestDeleteRatio(activeRatio.id)}
               goalSection={
                 <GoalSection
                   activeRatio={activeRatio}
