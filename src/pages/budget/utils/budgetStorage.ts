@@ -1,10 +1,6 @@
 import { BudgetStore, CategoryGroup, BudgetConfigData } from '../types'
 import { appStorage } from '../../../utils/appStorage'
 
-/**
- * Lightweight budget savings-rate reader for use outside the useBudget hook.
- * Reads the persisted summary written by useBudget — no CSV re-parsing.
- */
 export function getBudgetSaveRate(): { annualSavings: number; saveRate: number; monthsOfData: number } | null {
   return appStorage.getJSON<{ annualSavings: number; saveRate: number; monthsOfData: number } | null>(
     'budget-summary',
@@ -12,7 +8,6 @@ export function getBudgetSaveRate(): { annualSavings: number; saveRate: number; 
   )
 }
 
-/** Persist budget summary so other pages can read it without useBudget */
 export function saveBudgetSummary(summary: { annualSavings: number; saveRate: number; monthsOfData: number }): void {
   appStorage.setJSON('budget-summary', summary)
 }
@@ -23,187 +18,235 @@ const CONFIG_KEY = 'budget-config'
 const DEFAULT_GROUPS: CategoryGroup[] = [
   { id: 'others', name: 'Others', categories: [] },
   { id: 'removed', name: 'Remove from Budget', categories: [] },
+  { id: 'income-others', name: 'Others', categories: [], type: 'income' },
 ]
-
-const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: 'income-others', name: 'Others', categories: [] }]
 
 const EMPTY_STORE: BudgetStore = {
   csvs: {},
   configs: {},
   years: [],
   categoryGroups: DEFAULT_GROUPS,
-  incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
 }
 
-/** Migrate per-year configs to global categoryGroups.
- *  Merges all per-year groups into one global list, deduplicating categories. */
+const cloneGroup = (group: CategoryGroup): CategoryGroup => {
+  const base = {
+    id: group.id,
+    name: group.name,
+    categories: [...group.categories],
+  }
+
+  return group.type === 'income' || group.id === 'income-others' ? { ...base, type: 'income' } : base
+}
+
+const cloneGroups = (groups: CategoryGroup[]): CategoryGroup[] => groups.map(cloneGroup)
+
+const ensureGroup = (groups: CategoryGroup[], group: CategoryGroup): CategoryGroup[] =>
+  groups.some(current => current.id === group.id) ? groups : [...groups, cloneGroup(group)]
+
+const deduplicateFallbackGroup = (groups: CategoryGroup[], fallbackGroupId: string): CategoryGroup[] => {
+  const customCats = new Set<string>()
+  groups.forEach(group => {
+    if (group.id !== fallbackGroupId) group.categories.forEach(category => customCats.add(category))
+  })
+
+  return groups.map(group =>
+    group.id === fallbackGroupId
+      ? { ...group, categories: group.categories.filter(category => !customCats.has(category)) }
+      : group,
+  )
+}
+
+const normalizeGroups = (groups: CategoryGroup[]): CategoryGroup[] => {
+  const normalized = cloneGroups(groups)
+    .filter(group => group.id && group.name)
+    .map(group => ({ ...group, categories: [...new Set(group.categories)] }))
+
+  const withDefaults = ensureGroup(
+    ensureGroup(ensureGroup(normalized, DEFAULT_GROUPS[0]), DEFAULT_GROUPS[1]),
+    DEFAULT_GROUPS[2],
+  )
+  const incomeGroups = deduplicateFallbackGroup(getIncomeGroups(withDefaults), 'income-others')
+
+  // Remove income categories from the expense "others" fallback
+  const incomeCats = new Set(incomeGroups.flatMap(g => g.categories))
+  const expenseGroups = deduplicateFallbackGroup(getExpenseGroups(withDefaults), 'others').map(g =>
+    g.id === 'others' ? { ...g, categories: g.categories.filter(c => !incomeCats.has(c)) } : g,
+  )
+
+  return [...expenseGroups, ...incomeGroups]
+}
+
+const mergeGroupCollections = (collections: CategoryGroup[][]): CategoryGroup[] => {
+  const merged = new Map<string, CategoryGroup>()
+
+  collections.flat().forEach(group => {
+    const normalized = cloneGroup(group)
+    const existing = merged.get(normalized.id)
+    if (existing) {
+      merged.set(normalized.id, {
+        ...existing,
+        name: normalized.name || existing.name,
+        type: normalized.type === 'income' ? 'income' : existing.type,
+        categories: [...new Set([...existing.categories, ...normalized.categories])],
+      })
+      return
+    }
+
+    merged.set(normalized.id, normalized)
+  })
+
+  return [...merged.values()]
+}
+
+const getLegacyIncomeGroups = (value: unknown): CategoryGroup[] => {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap(group => {
+    if (!group || typeof group !== 'object') return []
+    const current = group as Partial<CategoryGroup>
+    if (typeof current.id !== 'string' || typeof current.name !== 'string' || !Array.isArray(current.categories)) {
+      return []
+    }
+
+    return [{ id: current.id, name: current.name, categories: current.categories, type: 'income' as const }]
+  })
+}
+
 function migrateToGlobalGroups(store: BudgetStore): BudgetStore {
   if (store.categoryGroups && store.categoryGroups.length > 0) return store
 
-  // Collect all groups across years, merging categories
   const groupMap = new Map<string, CategoryGroup>()
-  Object.values(store.configs).forEach(cfg => {
-    cfg.categoryGroups.forEach(g => {
-      const existing = groupMap.get(g.id)
+  Object.values(store.configs).forEach(config => {
+    config.categoryGroups.forEach(group => {
+      const normalized = cloneGroup(group)
+      const existing = groupMap.get(normalized.id)
       if (existing) {
-        const merged = new Set([...existing.categories, ...g.categories])
-        groupMap.set(g.id, { ...existing, categories: [...merged] })
-      } else {
-        groupMap.set(g.id, { ...g })
+        groupMap.set(normalized.id, {
+          ...existing,
+          categories: [...new Set([...existing.categories, ...normalized.categories])],
+        })
+        return
       }
+      groupMap.set(normalized.id, normalized)
     })
   })
 
-  if (groupMap.size === 0) return { ...store, categoryGroups: DEFAULT_GROUPS }
+  if (groupMap.size === 0) return { ...store, categoryGroups: cloneGroups(DEFAULT_GROUPS) }
 
-  // Ensure "others" and "removed" exist
   if (!groupMap.has('others')) groupMap.set('others', { id: 'others', name: 'Others', categories: [] })
   if (!groupMap.has('removed')) groupMap.set('removed', { id: 'removed', name: 'Remove from Budget', categories: [] })
 
-  // Build ordered list: custom groups first, then others, then removed
   const others = groupMap.get('others')!
   const removed = groupMap.get('removed')!
   groupMap.delete('others')
   groupMap.delete('removed')
 
-  // Remove from "Others" any category that already exists in a custom group
   const customCats = new Set<string>()
-  groupMap.forEach(g => g.categories.forEach(c => customCats.add(c)))
-  others.categories = others.categories.filter(c => !customCats.has(c))
+  groupMap.forEach(group => group.categories.forEach(category => customCats.add(category)))
+  others.categories = others.categories.filter(category => !customCats.has(category))
 
-  // Also remove from "Others" anything in "removed"
   const removedCats = new Set(removed.categories)
-  others.categories = others.categories.filter(c => !removedCats.has(c))
+  others.categories = others.categories.filter(category => !removedCats.has(category))
 
-  const groups = [...groupMap.values(), others, removed]
-
-  return { ...store, categoryGroups: groups }
-}
-
-/** Remove duplicate categories from the fallback group: any cat already in another group */
-function deduplicateFallbackGroup(groups: CategoryGroup[], fallbackGroupId: string): CategoryGroup[] {
-  const customCats = new Set<string>()
-  groups.forEach(g => {
-    if (g.id !== fallbackGroupId) g.categories.forEach(c => customCats.add(c))
-  })
-  return groups.map(g =>
-    g.id === fallbackGroupId ? { ...g, categories: g.categories.filter(c => !customCats.has(c)) } : g,
-  )
+  return { ...store, categoryGroups: [...groupMap.values(), others, removed, DEFAULT_GROUPS[2]] }
 }
 
 export function loadBudgetStore(): BudgetStore {
   try {
-    const parsed = appStorage.getJSON<BudgetStore | null>(STORAGE_KEY, null)
-    if (!parsed) return { ...EMPTY_STORE }
+    const parsed = appStorage.getJSON<(BudgetStore & { incomeCategoryGroups?: CategoryGroup[] }) | null>(
+      STORAGE_KEY,
+      null,
+    )
+    if (!parsed) return { ...EMPTY_STORE, categoryGroups: cloneGroups(DEFAULT_GROUPS) }
 
-    // Load config from separate key (or migrate from old format)
     const config = loadBudgetConfig()
+    const mergedGroups = mergeGroupCollections([
+      config.categoryGroups || [],
+      parsed.categoryGroups || [],
+      getLegacyIncomeGroups(parsed.incomeCategoryGroups),
+    ])
 
     const store: BudgetStore = {
       csvs: parsed.csvs || {},
       configs: parsed.configs || {},
       years: config.years.length > 0 ? config.years : parsed.years || [],
-      categoryGroups: config.categoryGroups,
-      incomeCategoryGroups: config.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
-    }
-
-    // If old store had categoryGroups but config didn't, migrate
-    if (
-      (!config.categoryGroups || config.categoryGroups.length === 0) &&
-      parsed.categoryGroups &&
-      parsed.categoryGroups.length > 0
-    ) {
-      store.categoryGroups = parsed.categoryGroups
-    }
-    if (
-      (!config.incomeCategoryGroups || config.incomeCategoryGroups.length === 0) &&
-      parsed.incomeCategoryGroups &&
-      parsed.incomeCategoryGroups.length > 0
-    ) {
-      store.incomeCategoryGroups = parsed.incomeCategoryGroups
+      categoryGroups: mergedGroups,
     }
 
     const migrated = migrateToGlobalGroups(store)
-    // Always clean up duplicates in "Others"
-    if (migrated.categoryGroups) {
-      migrated.categoryGroups = deduplicateFallbackGroup(migrated.categoryGroups, 'others')
-    }
-    if (migrated.incomeCategoryGroups) {
-      migrated.incomeCategoryGroups = deduplicateFallbackGroup(migrated.incomeCategoryGroups, 'income-others')
-    }
+    migrated.categoryGroups = normalizeGroups(migrated.categoryGroups || [])
 
-    // Persist config separately (migration step — strips config from CSV store)
-    saveBudgetConfig({
-      version: 1,
-      years: migrated.years,
-      categoryGroups: migrated.categoryGroups || DEFAULT_GROUPS,
-      incomeCategoryGroups: migrated.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
-    })
+    saveBudgetConfig(getBudgetConfigData(migrated))
 
     return migrated
   } catch {
-    return { ...EMPTY_STORE }
+    return { ...EMPTY_STORE, categoryGroups: cloneGroups(DEFAULT_GROUPS) }
   }
 }
 
 export function saveBudgetStore(store: BudgetStore): void {
-  const csvOnly = {
+  appStorage.setJSON(STORAGE_KEY, {
     csvs: store.csvs,
     configs: {},
     years: [],
-  }
-  appStorage.setJSON(STORAGE_KEY, csvOnly)
-  window.dispatchEvent(new Event('budget-changed'))
-
-  // Save config separately
-  saveBudgetConfig({
-    version: 1,
-    years: store.years,
-    categoryGroups: store.categoryGroups || DEFAULT_GROUPS,
-    incomeCategoryGroups: store.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
   })
+  window.dispatchEvent(new Event('budget-changed'))
+  saveBudgetConfig(getBudgetConfigData(store))
 }
 
 export function loadBudgetConfig(): BudgetConfigData {
-  const config = appStorage.getJSON<BudgetConfigData>(CONFIG_KEY, {
-    version: 1,
-    years: [],
-    categoryGroups: [],
-    incomeCategoryGroups: DEFAULT_INCOME_GROUPS,
-  })
+  const config = appStorage.getJSON<(BudgetConfigData & { incomeCategoryGroups?: CategoryGroup[] }) | null>(
+    CONFIG_KEY,
+    null,
+  )
+  if (!config) {
+    return {
+      version: 1,
+      years: [],
+      categoryGroups: [],
+    }
+  }
+
   return {
     version: config.version || 1,
     years: config.years || [],
-    categoryGroups: config.categoryGroups || [],
-    incomeCategoryGroups: config.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
+    categoryGroups: mergeGroupCollections([
+      config.categoryGroups || [],
+      getLegacyIncomeGroups(config.incomeCategoryGroups),
+    ]),
   }
 }
 
 export function saveBudgetConfig(config: BudgetConfigData): void {
-  appStorage.setJSON(CONFIG_KEY, config)
+  appStorage.setJSON(CONFIG_KEY, {
+    ...config,
+    categoryGroups: normalizeGroups(config.categoryGroups || []),
+  })
   window.dispatchEvent(new Event('budget-changed'))
 }
 
-/** Build a BudgetConfigData from the current store */
 export function getBudgetConfigData(store: BudgetStore): BudgetConfigData {
   return {
     version: 1,
     years: store.years,
-    categoryGroups: store.categoryGroups || DEFAULT_GROUPS,
-    incomeCategoryGroups: store.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
+    categoryGroups: normalizeGroups(store.categoryGroups || []),
   }
+}
+
+export function getExpenseGroups(groups: CategoryGroup[]): CategoryGroup[] {
+  const expenseGroups = cloneGroups(groups.filter(group => group.type !== 'income'))
+  return ensureGroup(ensureGroup(expenseGroups, DEFAULT_GROUPS[0]), DEFAULT_GROUPS[1])
+}
+
+export function getIncomeGroups(groups: CategoryGroup[]): CategoryGroup[] {
+  const incomeGroups = cloneGroups(groups.filter(group => group.type === 'income' || group.id === 'income-others'))
+  return ensureGroup(incomeGroups, DEFAULT_GROUPS[2])
 }
 
 export function getGlobalCategoryGroups(store: BudgetStore): CategoryGroup[] {
   const groups = store.categoryGroups
-  if (groups && groups.length > 0) {
-    // Ensure "removed" exists
-    if (!groups.find(g => g.id === 'removed')) {
-      return [...groups, { id: 'removed', name: 'Remove from Budget', categories: [] }]
-    }
-    return groups
-  }
-  return DEFAULT_GROUPS
+  if (groups && groups.length > 0) return getExpenseGroups(groups)
+  return getExpenseGroups(DEFAULT_GROUPS)
 }
 
 export function updateGlobalCategoryGroups(store: BudgetStore, groups: CategoryGroup[]): BudgetStore {
@@ -220,7 +263,6 @@ export function saveCSVForMonth(store: BudgetStore, monthKey: string, csvText: s
       uploadedAt: new Date().toISOString(),
     },
   }
-  // Ensure year is tracked
   const year = parseInt(monthKey.split('-')[0], 10)
   if (!updated.years.includes(year)) {
     updated.years = [...updated.years, year].sort()

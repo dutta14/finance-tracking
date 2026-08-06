@@ -51,6 +51,7 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Goals')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
     expect(screen.getByText('Budget')).toBeInTheDocument()
+    expect(screen.getByText('Transactions')).toBeInTheDocument()
     expect(screen.getByText('Taxes')).toBeInTheDocument()
 
     // Drive and Settings are now icon buttons in the footer
@@ -139,6 +140,13 @@ describe('SidebarNavigation', () => {
 
     const taxesBtn = screen.getByRole('button', { name: 'Taxes' })
     expect(taxesBtn).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('applies aria-current to Transactions button when currentPage is "transactions"', () => {
+    renderSidebar({ currentPage: 'transactions' })
+
+    const transactionsBtn = screen.getByRole('button', { name: 'Transactions' })
+    expect(transactionsBtn).toHaveAttribute('aria-current', 'page')
   })
 
   it('renders the footer group with correct ARIA attributes', () => {
@@ -257,6 +265,7 @@ describe('SidebarNavigation', () => {
       expect(screen.getByText('Goals')).toBeInTheDocument()
       expect(screen.getByText('Net Worth')).toBeInTheDocument()
       expect(screen.getByText('Budget')).toBeInTheDocument()
+      expect(screen.getByText('Transactions')).toBeInTheDocument()
       expect(screen.getByText('Taxes')).toBeInTheDocument()
     })
   })

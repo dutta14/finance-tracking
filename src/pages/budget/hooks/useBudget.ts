@@ -7,6 +7,8 @@ import {
   deleteCSVForMonth,
   createYear,
   getGlobalCategoryGroups,
+  getExpenseGroups,
+  getIncomeGroups,
   updateGlobalCategoryGroups,
   saveBudgetSummary,
 } from '../utils/budgetStorage'
@@ -15,12 +17,6 @@ import { parseCSV, buildMonthKey, parseCSVLine, getValidLineIndices } from '../u
 const OTHERS_GROUP_ID = 'others'
 const REMOVED_GROUP_ID = 'removed'
 const INCOME_OTHERS_GROUP_ID = 'income-others'
-const DEFAULT_INCOME_GROUPS: CategoryGroup[] = [{ id: INCOME_OTHERS_GROUP_ID, name: 'Others', categories: [] }]
-
-const getIncomeCategoryGroups = (store: BudgetStore): CategoryGroup[] =>
-  store.incomeCategoryGroups && store.incomeCategoryGroups.length > 0
-    ? store.incomeCategoryGroups
-    : DEFAULT_INCOME_GROUPS
 
 const addCategoriesToGroup = (groups: CategoryGroup[], groupId: string, categories: string[]): CategoryGroup[] => {
   if (categories.length === 0) return groups
@@ -31,7 +27,28 @@ const addCategoriesToGroup = (groups: CategoryGroup[], groupId: string, categori
     return groups.map(g => (g.id === groupId ? { ...g, categories: [...g.categories, ...dedupedCategories] } : g))
   }
 
-  return [...groups, { id: groupId, name: 'Others', categories: dedupedCategories }]
+  return [
+    ...groups,
+    {
+      id: groupId,
+      name: 'Others',
+      categories: dedupedCategories,
+      ...(groupId === INCOME_OTHERS_GROUP_ID ? { type: 'income' } : {}),
+    },
+  ]
+}
+
+const mergeGroupsByType = (
+  storeGroups: CategoryGroup[],
+  nextGroups: CategoryGroup[],
+  type: 'expense' | 'income',
+): CategoryGroup[] => {
+  const otherGroups = storeGroups.filter(group =>
+    type === 'income' ? group.type !== 'income' : group.type === 'income',
+  )
+  return type === 'income'
+    ? [...getExpenseGroups(otherGroups), ...nextGroups]
+    : [...nextGroups, ...getIncomeGroups(otherGroups)]
 }
 
 const updateMergedGroups = (groups: CategoryGroup[], sourceSet: Set<string>, targetName: string): CategoryGroup[] => {
@@ -83,12 +100,9 @@ export function useBudget() {
         let next = saveCSVForMonth(storeRef.current, monthKey, csvText)
 
         // Discover new categories and add them to the right "Others" group if not already grouped
-        const currentGroups = getGlobalCategoryGroups(next)
-        const currentIncomeGroups = getIncomeCategoryGroups(next)
-        const allGroupedCategories = new Set([
-          ...currentGroups.flatMap(g => g.categories),
-          ...currentIncomeGroups.flatMap(g => g.categories),
-        ])
+        const currentGroups = getExpenseGroups(next.categoryGroups || [])
+        const currentIncomeGroups = getIncomeGroups(next.categoryGroups || [])
+        const allGroupedCategories = new Set((next.categoryGroups || []).flatMap(group => group.categories))
         const newCategoryTypes = new Map<string, 'expense' | 'income'>()
 
         transactions.forEach(transaction => {
@@ -111,20 +125,19 @@ export function useBudget() {
         const newCategories = [...newExpenseCategories, ...newIncomeCategories]
 
         if (newExpenseCategories.length > 0) {
+          const expenseGroups = addCategoriesToGroup(currentGroups, OTHERS_GROUP_ID, newExpenseCategories)
           next = updateGlobalCategoryGroups(
             next,
-            addCategoriesToGroup(currentGroups, OTHERS_GROUP_ID, newExpenseCategories),
+            mergeGroupsByType(next.categoryGroups || [], expenseGroups, 'expense'),
           )
         }
         if (newIncomeCategories.length > 0) {
-          next = {
-            ...next,
-            incomeCategoryGroups: addCategoriesToGroup(
-              currentIncomeGroups,
-              INCOME_OTHERS_GROUP_ID,
-              newIncomeCategories,
-            ),
-          }
+          const incomeGroups = addCategoriesToGroup(
+            currentIncomeGroups,
+            INCOME_OTHERS_GROUP_ID,
+            newIncomeCategories,
+          ).map(group => ({ ...group, type: 'income' as const }))
+          next = updateGlobalCategoryGroups(next, mergeGroupsByType(next.categoryGroups || [], incomeGroups, 'income'))
         }
 
         persist(next)
@@ -169,14 +182,28 @@ export function useBudget() {
 
   const handleUpdateCategoryGroups = useCallback(
     (groups: CategoryGroup[]) => {
-      persist(updateGlobalCategoryGroups(storeRef.current, groups))
+      persist(
+        updateGlobalCategoryGroups(
+          storeRef.current,
+          mergeGroupsByType(storeRef.current.categoryGroups || [], groups, 'expense'),
+        ),
+      )
     },
     [persist],
   )
 
   const handleUpdateIncomeCategoryGroups = useCallback(
     (groups: CategoryGroup[]) => {
-      persist({ ...storeRef.current, incomeCategoryGroups: groups })
+      persist(
+        updateGlobalCategoryGroups(
+          storeRef.current,
+          mergeGroupsByType(
+            storeRef.current.categoryGroups || [],
+            groups.map(group => ({ ...group, type: 'income' as const })),
+            'income',
+          ),
+        ),
+      )
     },
     [persist],
   )
@@ -215,18 +242,32 @@ export function useBudget() {
       }
 
       // If new category isn't in any group, add it to "Others"
-      const groups = getGlobalCategoryGroups(next)
-      const incomeGroups = getIncomeCategoryGroups(next)
-      const allGrouped = new Set([...groups.flatMap(g => g.categories), ...incomeGroups.flatMap(g => g.categories)])
+      const groups = getExpenseGroups(next.categoryGroups || [])
+      const incomeGroups = getIncomeGroups(next.categoryGroups || [])
+      const allGrouped = new Set((next.categoryGroups || []).flatMap(group => group.categories))
       if (!allGrouped.has(newCategory)) {
         const amount = amountIdx >= 0 ? Number.parseFloat(fields[amountIdx]) : 0
         if (amount < 0) {
-          next = updateGlobalCategoryGroups(next, addCategoriesToGroup(groups, OTHERS_GROUP_ID, [newCategory]))
+          next = updateGlobalCategoryGroups(
+            next,
+            mergeGroupsByType(
+              next.categoryGroups || [],
+              addCategoriesToGroup(groups, OTHERS_GROUP_ID, [newCategory]),
+              'expense',
+            ),
+          )
         } else if (amount > 0) {
-          next = {
-            ...next,
-            incomeCategoryGroups: addCategoriesToGroup(incomeGroups, INCOME_OTHERS_GROUP_ID, [newCategory]),
-          }
+          next = updateGlobalCategoryGroups(
+            next,
+            mergeGroupsByType(
+              next.categoryGroups || [],
+              addCategoriesToGroup(incomeGroups, INCOME_OTHERS_GROUP_ID, [newCategory]).map(group => ({
+                ...group,
+                type: 'income' as const,
+              })),
+              'income',
+            ),
+          )
         }
       }
 
@@ -277,14 +318,19 @@ export function useBudget() {
       })
 
       // Update groups in both sections: remove source categories; target stays in its original group only
-      const expenseGroups = getGlobalCategoryGroups(current)
-      const incomeGroups = getIncomeCategoryGroups(current)
+      const expenseGroups = getExpenseGroups(current.categoryGroups || [])
+      const incomeGroups = getIncomeGroups(current.categoryGroups || [])
 
       persist({
         ...current,
         csvs: newCsvs,
-        categoryGroups: updateMergedGroups(expenseGroups, sourceSet, targetName),
-        incomeCategoryGroups: updateMergedGroups(incomeGroups, sourceSet, targetName),
+        categoryGroups: [
+          ...updateMergedGroups(expenseGroups, sourceSet, targetName),
+          ...updateMergedGroups(incomeGroups, sourceSet, targetName).map(group => ({
+            ...group,
+            type: 'income' as const,
+          })),
+        ],
       })
     },
     [persist],
@@ -312,8 +358,8 @@ export function useBudget() {
   const deleteCategory = useCallback(
     (category: string) => {
       const current = storeRef.current
-      const groups = getGlobalCategoryGroups(current)
-      const incomeGroups = getIncomeCategoryGroups(current)
+      const groups = getExpenseGroups(current.categoryGroups || [])
+      const incomeGroups = getIncomeGroups(current.categoryGroups || [])
       const updated = groups.map(g => ({
         ...g,
         categories: g.categories.filter(c => c !== category),
@@ -323,8 +369,10 @@ export function useBudget() {
         categories: g.categories.filter(c => c !== category),
       }))
       persist({
-        ...updateGlobalCategoryGroups(current, updated),
-        incomeCategoryGroups: updatedIncomeGroups,
+        ...updateGlobalCategoryGroups(current, [
+          ...updated,
+          ...updatedIncomeGroups.map(group => ({ ...group, type: 'income' as const })),
+        ]),
       })
     },
     [persist],
@@ -360,7 +408,7 @@ export function useBudget() {
   }, [store])
 
   const incomeCategoryGroups = useMemo((): CategoryGroup[] => {
-    return getIncomeCategoryGroups(store)
+    return getIncomeGroups(store.categoryGroups || [])
   }, [store])
 
   // Migrate: seed existing income categories into income-others if not already grouped
@@ -383,10 +431,17 @@ export function useBudget() {
     const missing = [...allIncomeCats].filter(c => !alreadyGrouped.has(c))
 
     if (missing.length > 0) {
-      const updated = incomeCategoryGroups.map(g =>
-        g.id === INCOME_OTHERS_GROUP_ID ? { ...g, categories: [...g.categories, ...missing] } : g,
+      const updatedIncomeGroups = incomeCategoryGroups.map(g =>
+        g.id === INCOME_OTHERS_GROUP_ID
+          ? { ...g, categories: [...g.categories, ...missing], type: 'income' as const }
+          : g,
       )
-      persist({ ...storeRef.current, incomeCategoryGroups: updated })
+      persist(
+        updateGlobalCategoryGroups(
+          storeRef.current,
+          mergeGroupsByType(storeRef.current.categoryGroups || [], updatedIncomeGroups, 'income'),
+        ),
+      )
     }
     // Only run when yearTransactions changes (on year switch or CSV upload)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -474,7 +529,6 @@ export function useBudget() {
         ...current,
         years: mergedYears,
         categoryGroups: config.categoryGroups,
-        incomeCategoryGroups: config.incomeCategoryGroups || current.incomeCategoryGroups || DEFAULT_INCOME_GROUPS,
       })
     },
     [persist],

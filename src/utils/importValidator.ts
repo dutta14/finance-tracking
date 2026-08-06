@@ -47,7 +47,7 @@ export interface ImportPayload {
   dataAccounts?: Account[]
   dataBalances?: BalanceEntry[]
   budgetCsvs?: Record<string, unknown>
-  budgetConfig?: { years: number[]; categoryGroups: CategoryGroup[]; incomeCategoryGroups?: CategoryGroup[] }
+  budgetConfig?: { years: number[]; categoryGroups: CategoryGroup[] }
   fiSimulations?: unknown[]
   sgtOverrides?: Record<string, unknown>
   allocationCustomRatios?: unknown[]
@@ -69,6 +69,51 @@ function sanitizeString(input: unknown, maxLen: number = MAX_STRING_LENGTH): str
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v)
+}
+
+function sanitizeCategoryGroups(value: unknown): CategoryGroup[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap(group => {
+    if (!isRecord(group)) return []
+    if (typeof group.id !== 'string' || typeof group.name !== 'string' || !Array.isArray(group.categories)) return []
+
+    const categories = group.categories.filter((category): category is string => typeof category === 'string')
+    const normalized: CategoryGroup = {
+      id: group.id,
+      name: group.name,
+      categories: [...new Set(categories)],
+    }
+
+    if (group.type === 'income' || group.id === 'income-others') {
+      normalized.type = 'income'
+    }
+
+    return [normalized]
+  })
+}
+
+function sanitizeBudgetConfig(raw: unknown, warnings: string[]): ImportPayload['budgetConfig'] | undefined {
+  if (!isRecord(raw)) return undefined
+
+  const years = Array.isArray(raw.years) ? raw.years.filter((year): year is number => typeof year === 'number') : []
+  const categoryGroups = sanitizeCategoryGroups(raw.categoryGroups)
+  const legacyIncomeGroups = sanitizeCategoryGroups(raw.incomeCategoryGroups).map(group => ({
+    ...group,
+    type: 'income' as const,
+  }))
+
+  if (!Array.isArray(raw.years)) warnings.push('budgetConfig.years: invalid or missing, defaulted to []')
+  if (!Array.isArray(raw.categoryGroups))
+    warnings.push('budgetConfig.categoryGroups: invalid or missing, defaulted to []')
+  if (raw.incomeCategoryGroups !== undefined && !Array.isArray(raw.incomeCategoryGroups)) {
+    warnings.push('budgetConfig.incomeCategoryGroups: ignored (not an array)')
+  }
+
+  return {
+    years,
+    categoryGroups: [...categoryGroups, ...legacyIncomeGroups],
+  }
 }
 
 // ── Per-field validators ───────────────────────────────────────
@@ -385,7 +430,7 @@ export function validateImportPayload(raw: unknown, rawJsonLength?: number): Imp
   // Budget Config
   if (parsed.budgetConfig !== undefined) {
     if (isRecord(parsed.budgetConfig)) {
-      sanitized.budgetConfig = parsed.budgetConfig as ImportPayload['budgetConfig']
+      sanitized.budgetConfig = sanitizeBudgetConfig(parsed.budgetConfig, warnings)
     } else {
       warnings.push('budgetConfig: ignored (not an object)')
     }

@@ -4,9 +4,9 @@ import type { PageType } from './types'
 describe('PageType', () => {
   it('includes the expected page identifiers (no tools)', () => {
     // Runtime-level exhaustiveness check: every PageType value is listed here
-    const allPages: PageType[] = ['home', 'goal', 'net-worth', 'budget', 'drive', 'taxes']
+    const allPages: PageType[] = ['home', 'goal', 'net-worth', 'budget', 'transactions', 'drive', 'taxes']
 
-    expect(allPages).toHaveLength(6)
+    expect(allPages).toHaveLength(7)
     expect(allPages).not.toContain('tools')
   })
 
@@ -24,6 +24,8 @@ describe('PageType', () => {
           return 'net-worth'
         case 'budget':
           return 'budget'
+        case 'transactions':
+          return 'transactions'
         case 'drive':
           return 'drive'
         case 'taxes':
@@ -33,5 +35,6 @@ describe('PageType', () => {
 
     expect(assertExhaustive('home')).toBe('home')
     expect(assertExhaustive('budget')).toBe('budget')
+    expect(assertExhaustive('transactions')).toBe('transactions')
   })
 })

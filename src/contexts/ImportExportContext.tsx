@@ -2,6 +2,7 @@ import { createContext, useContext, useCallback, useMemo, FC, ReactNode } from '
 import { useGoals } from './GoalsContext'
 import { useSettings } from './SettingsContext'
 import { loadBudgetStore, saveBudgetStore } from '../pages/budget/utils/budgetStorage'
+import type { CategoryGroup } from '../pages/budget/types'
 import { appStorage } from '../utils/appStorage'
 import { validateImportPayload } from '../utils/importValidator'
 import { getStorageItem, setStorageItem } from '../utils/storage'
@@ -13,6 +14,17 @@ export interface ImportExportContextValue {
 }
 
 const ImportExportContext = createContext<ImportExportContextValue | null>(null)
+
+const mergeImportedCategoryGroups = (budgetConfig: {
+  years: number[]
+  categoryGroups: CategoryGroup[]
+  incomeCategoryGroups?: CategoryGroup[]
+}): CategoryGroup[] => {
+  const groups = [...(budgetConfig.categoryGroups || [])]
+  const incomeGroups = (budgetConfig.incomeCategoryGroups || []).map(group => ({ ...group, type: 'income' as const }))
+
+  return [...groups, ...incomeGroups]
+}
 
 export const useImportExport = (): ImportExportContextValue => {
   const ctx = useContext(ImportExportContext)
@@ -54,7 +66,6 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
         budgetConfig: {
           years: budgetStore.years,
           categoryGroups: budgetStore.categoryGroups,
-          incomeCategoryGroups: budgetStore.incomeCategoryGroups,
         },
         fiSimulations: appStorage.getJSON('fi-simulations', []),
         sgtOverrides: appStorage.getJSON('sgt-overrides', {}),
@@ -116,12 +127,17 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
           if (data.dataAccounts) appStorage.setJSON('data-accounts', data.dataAccounts)
           if (data.dataBalances) appStorage.setJSON('data-balances', data.dataBalances)
 
-          if (data.budgetCsvs) {
+          if (data.budgetCsvs || data.budgetConfig) {
             const store = loadBudgetStore()
-            store.csvs = data.budgetCsvs as typeof store.csvs
+            if (data.budgetCsvs) {
+              store.csvs = data.budgetCsvs as typeof store.csvs
+            }
+            if (data.budgetConfig) {
+              store.years = data.budgetConfig.years
+              store.categoryGroups = mergeImportedCategoryGroups(data.budgetConfig)
+            }
             saveBudgetStore(store)
           }
-          if (data.budgetConfig) appStorage.setJSON('budget-config', data.budgetConfig)
           if (data.fiSimulations) appStorage.setJSON('fi-simulations', data.fiSimulations)
           if (data.sgtOverrides) appStorage.setJSON('sgt-overrides', data.sgtOverrides)
           if (data.allocationCustomRatios) appStorage.setJSON('allocation-custom-ratios', data.allocationCustomRatios)

@@ -94,6 +94,15 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
             </li>
             <li className="sidebar-item">
               <button
+                className={`sidebar-link${currentPage === 'transactions' ? ' active' : ''}`}
+                onClick={() => setCurrentPage('transactions')}
+                aria-current={currentPage === 'transactions' ? 'page' : undefined}
+              >
+                Transactions
+              </button>
+            </li>
+            <li className="sidebar-item">
+              <button
                 className={`sidebar-link${currentPage === 'taxes' ? ' active' : ''}`}
                 onClick={() => setCurrentPage('taxes')}
                 aria-current={currentPage === 'taxes' ? 'page' : undefined}
