@@ -30,7 +30,6 @@ const Budget: FC = () => {
     updateCategoryGroups,
     updateIncomeCategoryGroups,
     mergeCategories,
-    editCategory,
     categoryHasTransactions,
     deleteCategory,
     addTransaction,
@@ -289,8 +288,6 @@ const Budget: FC = () => {
                     monthsWithData={monthsWithData}
                     onUploadCSV={uploadCSV}
                     onRemoveCSV={removeCSV}
-                    onEditCategory={editCategory}
-                    yearTransactions={yearTransactions}
                     timePeriod={timePeriod}
                   />
                   <BudgetTable
@@ -301,8 +298,6 @@ const Budget: FC = () => {
                     monthsWithData={monthsWithData}
                     onUploadCSV={uploadCSV}
                     onRemoveCSV={removeCSV}
-                    onEditCategory={editCategory}
-                    yearTransactions={yearTransactions}
                     timePeriod={timePeriod}
                   />
                 </>

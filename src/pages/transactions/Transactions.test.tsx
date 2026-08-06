@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import Transactions, { resetTransactionCache } from './Transactions'
 import type { CategoryGroup } from '../budget/types'
 
@@ -84,7 +85,12 @@ vi.mock('../budget/utils/csvParser', async () => {
 const createObjectURL = vi.fn(() => 'blob:transactions')
 const revokeObjectURL = vi.fn()
 
-const renderTransactions = () => render(<Transactions />)
+const renderTransactions = (initialEntry = '/transactions') =>
+  render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Transactions />
+    </MemoryRouter>,
+  )
 
 beforeEach(() => {
   localStorage.clear()
@@ -147,14 +153,16 @@ describe('Transactions', () => {
     renderTransactions()
 
     await user.click(await screen.findByRole('button', { name: /Date/i }))
-    await user.type(screen.getByLabelText('Start date'), '2026-08-01')
-    await user.type(screen.getByLabelText('End date'), '2026-08-02')
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-08-01' } })
+    fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-08-02' } })
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
-    expect(screen.getByText('Payroll Deposit')).toBeInTheDocument()
-    expect(screen.getByText('Whole Foods Market')).toBeInTheDocument()
-    expect(screen.queryByText('Performance Bonus')).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'July 30, 2026' })).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Payroll Deposit')).toBeInTheDocument()
+      expect(screen.getByText('Whole Foods Market')).toBeInTheDocument()
+      expect(screen.queryByText('Performance Bonus')).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'July 30, 2026' })).not.toBeInTheDocument()
+    })
   })
 
   it('filters transactions by selected categories', async () => {
@@ -167,6 +175,19 @@ describe('Transactions', () => {
     expect(screen.queryByText('Payroll Deposit')).not.toBeInTheDocument()
     expect(screen.getByText('Book Store')).toBeInTheDocument()
     expect(screen.getByText('Performance Bonus')).toBeInTheDocument()
+  })
+
+  it('preselects categories from the URL query param', async () => {
+    renderTransactions('/transactions?categories=Groceries%2CDining')
+
+    expect(await screen.findByRole('heading', { name: 'Transactions' })).toBeInTheDocument()
+    expect(await screen.findByText('2 transactions')).toBeInTheDocument()
+    expect(screen.getByText('2 selected')).toBeInTheDocument()
+    expect(screen.getByText('Whole Foods Market')).toBeInTheDocument()
+    expect(screen.getByText('Dinner Out')).toBeInTheDocument()
+    expect(screen.queryByText('Payroll Deposit')).not.toBeInTheDocument()
+    expect(screen.queryByText('Book Store')).not.toBeInTheDocument()
+    expect(screen.queryByText('Train Pass')).not.toBeInTheDocument()
   })
 
   it('shows positive-only categories under Income even when expense Others also lists them', async () => {
