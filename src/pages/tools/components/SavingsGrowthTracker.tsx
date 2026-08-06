@@ -1,5 +1,5 @@
 import { FC, useState, useMemo } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
@@ -169,7 +169,6 @@ const SavingsGrowthTracker: FC = () => {
   const [editCell, setEditCell] = useState<{ year: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState('')
   const location = useLocation()
-  const navigate = useNavigate()
   const tab: TabMode = location.pathname.endsWith('/income') ? 'income' : 'savings'
 
   const { accounts, balances } = useData()
@@ -347,24 +346,8 @@ const SavingsGrowthTracker: FC = () => {
 
   return (
     <div className="sgt">
-      {/* Toolbar: segmented control + toggle */}
+      {/* Toolbar: toggle only (mode switch moved to page header) */}
       <div className="sgt-toolbar">
-        <div className="sgt-mode-switch" role="group" aria-label="View mode">
-          <button
-            className={`sgt-mode-btn${tab === 'savings' ? ' active' : ''}`}
-            aria-pressed={tab === 'savings'}
-            onClick={() => navigate('/net-worth/growth/savings')}
-          >
-            Savings
-          </button>
-          <button
-            className={`sgt-mode-btn${tab === 'income' ? ' active' : ''}`}
-            aria-pressed={tab === 'income'}
-            onClick={() => navigate('/net-worth/growth/income')}
-          >
-            Income
-          </button>
-        </div>
         <div className="sgt-toggle-row">
           <span className="sgt-toggle-label">YoY change</span>
           <button

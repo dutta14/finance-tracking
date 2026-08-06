@@ -30,7 +30,7 @@ vi.mock('../../contexts/DataContext', () => ({
   }),
 }))
 
-function renderData(initialRoute = '/net-worth/accounts') {
+function renderData(initialRoute = '/net-worth/dashboard') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
       <Routes>
@@ -53,18 +53,18 @@ describe('Net Worth tab bar', () => {
     expect(nav).toBeInTheDocument()
   })
 
-  it('renders an "Accounts" tab inside the nav', () => {
+  it('renders a "Dashboard" tab inside the nav', () => {
     renderData()
     const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
     const accountsLink = nav.querySelector('a')
     expect(accountsLink).toBeInTheDocument()
-    expect(accountsLink).toHaveTextContent('Accounts')
+    expect(accountsLink).toHaveTextContent('Dashboard')
   })
 
-  it('the "Accounts" tab links to /net-worth/accounts', () => {
+  it('the "Dashboard" tab links to /net-worth/dashboard', () => {
     renderData()
-    const link = screen.getByRole('link', { name: 'Accounts' })
-    expect(link).toHaveAttribute('href', '/net-worth/accounts')
+    const link = screen.getByRole('link', { name: 'Dashboard' })
+    expect(link).toHaveAttribute('href', '/net-worth/dashboard')
   })
 
   it('renders an "Allocation" tab inside the nav', () => {
@@ -100,14 +100,14 @@ describe('Net Worth tab bar', () => {
 
 describe('Net Worth tab active state', () => {
   it('sets aria-current="page" on the active tab', () => {
-    renderData('/net-worth/accounts')
-    const link = screen.getByRole('link', { name: 'Accounts' })
+    renderData('/net-worth/dashboard')
+    const link = screen.getByRole('link', { name: 'Dashboard' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not set aria-current on "Accounts" when on /net-worth/allocation', () => {
+  it('does not set aria-current on "Dashboard" when on /net-worth/allocation', () => {
     renderData('/net-worth/allocation')
-    const link = screen.getByRole('link', { name: 'Accounts' })
+    const link = screen.getByRole('link', { name: 'Dashboard' })
     expect(link).not.toHaveAttribute('aria-current')
   })
 
@@ -118,7 +118,7 @@ describe('Net Worth tab active state', () => {
   })
 
   it('does not set aria-current on "Allocation" when on /net-worth', () => {
-    renderData('/net-worth/accounts')
+    renderData('/net-worth/dashboard')
     const link = screen.getByRole('link', { name: 'Allocation' })
     expect(link).not.toHaveAttribute('aria-current')
   })
@@ -130,7 +130,7 @@ describe('Net Worth tab active state', () => {
   })
 
   it('does not set aria-current on "Growth" when on /net-worth', () => {
-    renderData('/net-worth/accounts')
+    renderData('/net-worth/dashboard')
     const link = screen.getByRole('link', { name: 'Growth' })
     expect(link).not.toHaveAttribute('aria-current')
   })

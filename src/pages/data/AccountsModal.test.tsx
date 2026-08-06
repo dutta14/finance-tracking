@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -93,7 +94,9 @@ const buildAccounts = (): Account[] => [
   }),
 ]
 
-const defaultProps = () => ({
+type AccountsModalProps = ComponentProps<typeof AccountsModal>
+
+const defaultProps = (): AccountsModalProps => ({
   accounts: buildAccounts(),
   profile: defaultProfile,
   onAdd: vi.fn(),
@@ -105,7 +108,7 @@ const defaultProps = () => ({
   onClose: vi.fn(),
 })
 
-const renderModal = (overrides: Partial<ReturnType<typeof defaultProps>> = {}) => {
+const renderModal = (overrides: Partial<AccountsModalProps> = {}) => {
   const props = { ...defaultProps(), ...overrides }
   const result = render(<AccountsModal {...props} />)
   return { ...result, props }
@@ -131,6 +134,13 @@ describe('AccountsModal', () => {
     renderModal()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+  })
+
+  it('renders inline mode without modal chrome', () => {
+    renderModal({ inline: true })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
   })
 
   it('renders all accounts in the table', () => {

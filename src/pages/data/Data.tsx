@@ -188,8 +188,19 @@ const Data: FC = () => {
     : location.pathname.startsWith('/net-worth/growth')
       ? 'growth'
       : 'accounts'
-  const accountsPath = location.pathname.replace('/net-worth/accounts', '').replace('/net-worth', '').replace(/^\//, '')
-  const dataView = accountsPath === 'details' ? 'details' : accountsPath === 'spreadsheet' ? 'spreadsheet' : 'charts'
+  const accountsPath = location.pathname
+    .replace('/net-worth/dashboard', '')
+    .replace('/net-worth', '')
+    .replace(/^\//, '')
+  const dataView =
+    accountsPath === 'details'
+      ? 'details'
+      : accountsPath === 'spreadsheet'
+        ? 'spreadsheet'
+        : accountsPath === 'manage'
+          ? 'manage'
+          : 'charts'
+  const growthTab = location.pathname.endsWith('/income') ? 'income' : 'savings'
   const accountsContent = (
     <>
       {allowCsvImport && (
@@ -244,74 +255,50 @@ const Data: FC = () => {
           </div>
         ) : (
           <>
-            <div className="data-toolbar">
-              <div className="data-view-tabs" role="tablist" aria-label="Data view">
-                <button
-                  className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`}
-                  role="tab"
-                  aria-selected={dataView === 'charts'}
-                  onClick={() => navigate('/net-worth/accounts')}
-                >
-                  Charts
-                </button>
-                <button
-                  className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
-                  role="tab"
-                  aria-selected={dataView === 'details'}
-                  onClick={() => navigate('/net-worth/accounts/details')}
-                >
-                  Details
-                </button>
-                <button
-                  className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
-                  role="tab"
-                  aria-selected={dataView === 'spreadsheet'}
-                  onClick={() => navigate('/net-worth/accounts/spreadsheet')}
-                >
-                  Spreadsheet
-                </button>
-              </div>
-              <div className="data-toolbar-actions">
-                {(dataView === 'spreadsheet' || dataView === 'details') && (
-                  <label className="data-filter-toggle">
-                    <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
-                    Show inactive
-                  </label>
-                )}
-                {dataView === 'spreadsheet' && (
-                  <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
-                    + Add Entry
-                  </button>
-                )}
-                {dataView === 'spreadsheet' && allMonths.length > 0 && (
-                  <button
-                    className="data-copy-forward-btn"
-                    onClick={handleCopyForwardEntry}
-                    disabled={!!inlineEntry}
-                    title={`Pre-fill with balances from ${allMonths[0]}`}
-                    aria-label="Copy balances from last month"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
+            {dataView !== 'manage' && (
+              <div className="data-toolbar">
+                <div className="data-toolbar-actions">
+                  {(dataView === 'spreadsheet' || dataView === 'details') && (
+                    <label className="data-filter-toggle">
+                      <input type="checkbox" checked={showInactive} onChange={() => setShowInactive(v => !v)} />
+                      Show inactive
+                    </label>
+                  )}
+                  {dataView === 'spreadsheet' && (
+                    <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
+                      + Add Entry
+                    </button>
+                  )}
+                  {dataView === 'spreadsheet' && allMonths.length > 0 && (
+                    <button
+                      className="data-copy-forward-btn"
+                      onClick={handleCopyForwardEntry}
+                      disabled={!!inlineEntry}
+                      title={`Pre-fill with balances from ${allMonths[0]}`}
+                      aria-label="Copy balances from last month"
                     >
-                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                    </svg>
-                    <span className="data-copy-forward-label">Copy Last Month</span>
-                  </button>
-                )}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                      </svg>
+                      <span className="data-copy-forward-label">Copy Last Month</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {balances.length === 0 && !inlineEntry && dataView !== 'details' ? (
+            {balances.length === 0 && !inlineEntry && dataView !== 'details' && dataView !== 'manage' ? (
               <div className="data-empty">
                 <div className="data-empty-icon">
                   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -343,6 +330,19 @@ const Data: FC = () => {
                 showInactive={showInactive}
                 onSaveMonth={handleSaveMonth}
               />
+            ) : dataView === 'manage' ? (
+              <AccountsModal
+                accounts={accounts}
+                profile={profile}
+                onAdd={handleAddAccount}
+                onUpdate={handleUpdateAccount}
+                onBulkUpdate={handleBulkUpdateAccounts}
+                onDelete={handleDeleteAccount}
+                onToggleStatus={handleToggleStatus}
+                onRenameGroup={handleRenameGroup}
+                onClose={() => navigate('/net-worth/dashboard')}
+                inline
+              />
             ) : (
               <BalanceSpreadsheet
                 spreadsheetAccounts={spreadsheetAccounts}
@@ -362,7 +362,7 @@ const Data: FC = () => {
         )}
       </div>
 
-      {showAccountsModal && (
+      {showAccountsModal && dataView !== 'manage' && (
         <AccountsModal
           accounts={accounts}
           profile={profile}
@@ -394,8 +394,8 @@ const Data: FC = () => {
           <h1>Net Worth</h1>
         </div>
         <nav className="nw-tab-bar" aria-label="Net Worth sections">
-          <NavLink to="/net-worth/accounts" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
-            Accounts
+          <NavLink to="/net-worth/dashboard" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
+            Dashboard
           </NavLink>
           <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
             Allocation
@@ -406,17 +406,66 @@ const Data: FC = () => {
         </nav>
         <div className="data-header-right">
           {activeTab === 'accounts' && hasAccounts && (
-            <button className="data-view-accounts-btn" onClick={() => setShowAccountsModal(true)}>
-              View Accounts ({accounts.length})
-            </button>
+            <div className="data-view-tabs" role="tablist" aria-label="Data view">
+              <button
+                className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`}
+                role="tab"
+                aria-selected={dataView === 'charts'}
+                onClick={() => navigate('/net-worth/dashboard')}
+              >
+                Charts
+              </button>
+              <button
+                className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
+                role="tab"
+                aria-selected={dataView === 'details'}
+                onClick={() => navigate('/net-worth/dashboard/details')}
+              >
+                Details
+              </button>
+              <button
+                className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
+                role="tab"
+                aria-selected={dataView === 'spreadsheet'}
+                onClick={() => navigate('/net-worth/dashboard/spreadsheet')}
+              >
+                Spreadsheet
+              </button>
+              <button
+                className={`data-view-tab${dataView === 'manage' ? ' active' : ''}`}
+                role="tab"
+                aria-selected={dataView === 'manage'}
+                onClick={() => navigate('/net-worth/dashboard/manage')}
+              >
+                Accounts
+              </button>
+            </div>
+          )}
+          {activeTab === 'growth' && (
+            <div className="data-view-tabs" role="group" aria-label="Growth view mode">
+              <button
+                className={`data-view-tab${growthTab === 'savings' ? ' active' : ''}`}
+                aria-pressed={growthTab === 'savings'}
+                onClick={() => navigate('/net-worth/growth/savings')}
+              >
+                Savings
+              </button>
+              <button
+                className={`data-view-tab${growthTab === 'income' ? ' active' : ''}`}
+                aria-pressed={growthTab === 'income'}
+                onClick={() => navigate('/net-worth/growth/income')}
+              >
+                Income
+              </button>
+            </div>
           )}
         </div>
       </div>
 
       <div className="data-scroll-area">
         <Routes>
-          <Route index element={<Navigate to="/net-worth/accounts" replace />} />
-          <Route path="accounts/*" element={accountsContent} />
+          <Route index element={<Navigate to="/net-worth/dashboard" replace />} />
+          <Route path="dashboard/*" element={accountsContent} />
           <Route
             path="allocation"
             element={
