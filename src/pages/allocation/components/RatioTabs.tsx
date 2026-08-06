@@ -24,7 +24,7 @@ const RatioTabs: FC<RatioTabsProps> = ({
   createMenuOpen,
   createMenuRef,
   onSelectRatio,
-  onRequestDelete,
+  onRequestDelete: _onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
   onCreateBlank,
@@ -32,50 +32,36 @@ const RatioTabs: FC<RatioTabsProps> = ({
   onToggleCreateMenu,
 }) => (
   <>
-    <div className="alloc-page-section-header">
-      <h2>My Allocations</h2>
-      <div className="alloc-ratio-create-wrap" ref={createMenuRef}>
-        <button className="alloc-ratio-create-btn" onClick={onToggleCreateMenu}>
-          + New Ratio
-        </button>
-        {createMenuOpen && (
-          <div className="alloc-ratio-create-menu">
-            <button className="alloc-ratio-create-option" onClick={onCreateBlank}>
-              Blank
-            </button>
-            {PRESETS.map(p => (
-              <button key={p.id} className="alloc-ratio-create-option" onClick={() => onCreateFromPreset(p)}>
-                {p.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-
-    {customRatios.length > 0 && (
+    <div className="alloc-ratio-toolbar">
       <div className="alloc-ratio-tabs">
         {customRatios.map(r => (
-          <div
+          <button
             key={r.id}
             className={`alloc-ratio-tab${r.id === activeRatioId ? ' active' : ''}`}
             onClick={() => onSelectRatio(r.id)}
           >
-            <span className="alloc-ratio-tab-name">{r.name}</span>
-            <button
-              className="alloc-ratio-tab-delete"
-              onClick={e => {
-                e.stopPropagation()
-                onRequestDelete(r.id)
-              }}
-              title="Delete ratio"
-            >
-              ×
-            </button>
-          </div>
+            {r.name}
+          </button>
         ))}
+        <div className="alloc-ratio-create-wrap" ref={createMenuRef}>
+          <button className="alloc-ratio-tab alloc-ratio-tab--add" onClick={onToggleCreateMenu}>
+            +
+          </button>
+          {createMenuOpen && (
+            <div className="alloc-ratio-create-menu">
+              <button className="alloc-ratio-create-option" onClick={onCreateBlank}>
+                Blank
+              </button>
+              {PRESETS.map(p => (
+                <button key={p.id} className="alloc-ratio-create-option" onClick={() => onCreateFromPreset(p)}>
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    )}
+    </div>
 
     {confirmDeleteId &&
       (() => {

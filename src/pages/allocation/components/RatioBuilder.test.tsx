@@ -29,6 +29,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     const input = screen.getByDisplayValue('My Ratio')
@@ -46,6 +47,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     expect(screen.getByDisplayValue('Group A')).toBeInTheDocument()
@@ -66,6 +68,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     expect(screen.getByText('+ Add Group')).toBeInTheDocument()
@@ -85,6 +88,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     expect(screen.queryByText('+ Add Group')).not.toBeInTheDocument()
@@ -103,6 +107,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     const cashPills = screen.getAllByText('Cash')
@@ -123,6 +128,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     const input = screen.getByDisplayValue('My Ratio')
@@ -144,6 +150,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     await user.click(screen.getByText('FI'))
@@ -170,6 +177,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={onRemoveGroup}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     const removeButtons = screen.getAllByTitle('Remove group')
@@ -190,6 +198,7 @@ describe('RatioBuilder', () => {
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
+        onDeleteRatio={vi.fn()}
       />,
     )
     const groupInput = screen.getByDisplayValue('Group A')
