@@ -134,7 +134,9 @@ const GoalEditor: FC<GoalEditorProps> = ({
 
       {goalType === 'constant' && (
         <div className="alloc-goal-pct-grid">
-          <div className="alloc-goal-pct-header">Target %</div>
+          <div className="alloc-goal-pct-cols">
+            <span className="alloc-goal-pct-header">Target %</span>
+          </div>
           {groups.map((g, i) => (
             <div key={i} className="alloc-goal-pct-row">
               <span className="alloc-goal-pct-label">
@@ -161,8 +163,10 @@ const GoalEditor: FC<GoalEditorProps> = ({
       {goalType === 'gradual' && (
         <div className="alloc-goal-pct-grid">
           <div className="alloc-goal-pct-cols">
-            <span className="alloc-goal-pct-header alloc-goal-pct-header--flex" />
             <span className="alloc-goal-pct-header">Start %</span>
+            <span className="alloc-goal-pct-arrow" aria-hidden="true">
+              &nbsp;
+            </span>
             <span className="alloc-goal-pct-header">End %</span>
           </div>
           {groups.map((g, i) => (
