@@ -39,10 +39,11 @@ const AccountsModal: FC<AccountsModalProps> = ({
   const existingGroups = [...new Set(accounts.map(a => a.group).filter((g): g is string => !!g))]
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [page, setPage] = useState<'accounts' | 'groups'>('accounts')
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'groups'>('all')
   const [dragAccountId, setDragAccountId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
+  const isGroupsView = filter === 'groups'
+  const statusFilter = isGroupsView ? 'all' : filter
 
   const {
     sortCol,
@@ -57,7 +58,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
     getColLabel,
     displayAccounts,
     colUniqueValues,
-  } = useColumnSort(accounts, filter, ownerLabels)
+  } = useColumnSort(accounts, statusFilter, ownerLabels)
 
   const filteredAccounts = displayAccounts
 
@@ -92,51 +93,59 @@ const AccountsModal: FC<AccountsModalProps> = ({
 
   const content = (
     <>
-      <div className="data-modal-header">
-        {page === 'accounts' ? (
-          <>
-            <h2>Accounts</h2>
-            <div className="data-modal-header-actions">
-              <button className="data-groups-page-btn" onClick={() => setPage('groups')}>
-                Groups{existingGroups.length > 0 ? ` (${existingGroups.length})` : ''}
-              </button>
-              {!inline && (
-                <button className="data-modal-close" onClick={onClose} aria-label="Close">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="data-modal-header-back">
-              <button className="data-back-btn" onClick={() => setPage('accounts')}>
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12 4l-6 6 6 6"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              <h2>Groups</h2>
-            </div>
-            {!inline && (
-              <button className="data-modal-close" onClick={onClose} aria-label="Close">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-              </button>
-            )}
-          </>
-        )}
-      </div>
+      {!inline && (
+        <div className="data-modal-header data-modal-header--actions-only">
+          <button className="data-modal-close" onClick={onClose} aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+      )}
       <div className="data-modal-body">
-        {page === 'groups' ? (
+        <div className="data-toolbar">
+          <div className="data-filter-group">
+            <button className={`data-filter-btn${filter === 'all' ? ' active' : ''}`} onClick={() => setFilter('all')}>
+              All ({accounts.length})
+            </button>
+            <button
+              className={`data-filter-btn${filter === 'active' ? ' active' : ''}`}
+              onClick={() => setFilter('active')}
+            >
+              Active ({accounts.filter(a => a.status === 'active').length})
+            </button>
+            <button
+              className={`data-filter-btn${filter === 'inactive' ? ' active' : ''}`}
+              onClick={() => setFilter('inactive')}
+            >
+              Inactive ({accounts.filter(a => a.status === 'inactive').length})
+            </button>
+            <button
+              className={`data-filter-btn${filter === 'groups' ? ' active' : ''}`}
+              onClick={() => setFilter('groups')}
+            >
+              Groups{existingGroups.length > 0 ? ` (${existingGroups.length})` : ''}
+            </button>
+          </div>
+          <button className="data-add-btn data-add-btn--primary" onClick={() => setShowAddForm(true)}>
+            + Add Account
+          </button>
+        </div>
+
+        {showAddForm && (
+          <AccountForm
+            profile={profile}
+            existingGroups={existingGroups}
+            allAccounts={accounts}
+            onSave={data => {
+              onAdd(data)
+              setShowAddForm(false)
+            }}
+            onCancel={() => setShowAddForm(false)}
+          />
+        )}
+
+        {isGroupsView ? (
           <GroupManager
             accounts={accounts}
             existingGroups={existingGroups}
@@ -149,45 +158,6 @@ const AccountsModal: FC<AccountsModalProps> = ({
           />
         ) : (
           <>
-            <div className="data-toolbar">
-              <div className="data-filter-group">
-                <button
-                  className={`data-filter-btn${filter === 'all' ? ' active' : ''}`}
-                  onClick={() => setFilter('all')}
-                >
-                  All ({accounts.length})
-                </button>
-                <button
-                  className={`data-filter-btn${filter === 'active' ? ' active' : ''}`}
-                  onClick={() => setFilter('active')}
-                >
-                  Active ({accounts.filter(a => a.status === 'active').length})
-                </button>
-                <button
-                  className={`data-filter-btn${filter === 'inactive' ? ' active' : ''}`}
-                  onClick={() => setFilter('inactive')}
-                >
-                  Inactive ({accounts.filter(a => a.status === 'inactive').length})
-                </button>
-              </div>
-              <button className="data-add-btn" onClick={() => setShowAddForm(true)}>
-                + Add Account
-              </button>
-            </div>
-
-            {showAddForm && (
-              <AccountForm
-                profile={profile}
-                existingGroups={existingGroups}
-                allAccounts={accounts}
-                onSave={data => {
-                  onAdd(data)
-                  setShowAddForm(false)
-                }}
-                onCancel={() => setShowAddForm(false)}
-              />
-            )}
-
             {selectedCount >= 2 && (
               <BulkActions
                 selectedCount={selectedCount}
