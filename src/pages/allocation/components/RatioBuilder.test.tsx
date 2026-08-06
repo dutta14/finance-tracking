@@ -18,36 +18,30 @@ const makeRatio = (overrides: Partial<CustomRatio> = {}): CustomRatio => ({
 const noop = vi.fn()
 
 describe('RatioBuilder', () => {
-  it('renders the ratio name input with current value', () => {
+  it('renders group labels for the active ratio', () => {
     render(
       <RatioBuilder
         activeRatio={makeRatio()}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={noop}
         onToggleClass={noop}
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
-    const input = screen.getByDisplayValue('My Ratio')
-    expect(input).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Group A')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Group B')).toBeInTheDocument()
   })
 
   it('renders group labels and asset class pills', () => {
     render(
       <RatioBuilder
         activeRatio={makeRatio()}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={noop}
         onToggleClass={noop}
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
     expect(screen.getByDisplayValue('Group A')).toBeInTheDocument()
@@ -61,14 +55,11 @@ describe('RatioBuilder', () => {
     render(
       <RatioBuilder
         activeRatio={makeRatio()}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={noop}
         onToggleClass={noop}
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
     expect(screen.getByText('+ Add Group')).toBeInTheDocument()
@@ -81,14 +72,11 @@ describe('RatioBuilder', () => {
     render(
       <RatioBuilder
         activeRatio={ratio}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={noop}
         onToggleClass={noop}
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
     expect(screen.queryByText('+ Add Group')).not.toBeInTheDocument()
@@ -100,61 +88,16 @@ describe('RatioBuilder', () => {
     render(
       <RatioBuilder
         activeRatio={makeRatio()}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={noop}
         onToggleClass={onToggleClass}
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
     const cashPills = screen.getAllByText('Cash')
     await user.click(cashPills[0])
     expect(onToggleClass).toHaveBeenCalledWith(0, 'cash')
-  })
-
-  it('calls onUpdateName when the name input changes', async () => {
-    const user = userEvent.setup()
-    const onUpdateName = vi.fn()
-    render(
-      <RatioBuilder
-        activeRatio={makeRatio()}
-        onUpdateName={onUpdateName}
-        onUpdateScope={noop}
-        onUpdateGroupLabel={noop}
-        onToggleClass={noop}
-        onAddGroup={noop}
-        onRemoveGroup={noop}
-        goalSection={null}
-        onDeleteRatio={vi.fn()}
-      />,
-    )
-    const input = screen.getByDisplayValue('My Ratio')
-    await user.clear(input)
-    await user.type(input, 'New Name')
-    expect(onUpdateName).toHaveBeenCalled()
-  })
-
-  it('calls onUpdateScope when a scope tab is clicked', async () => {
-    const user = userEvent.setup()
-    const onUpdateScope = vi.fn()
-    render(
-      <RatioBuilder
-        activeRatio={makeRatio()}
-        onUpdateName={noop}
-        onUpdateScope={onUpdateScope}
-        onUpdateGroupLabel={noop}
-        onToggleClass={noop}
-        onAddGroup={noop}
-        onRemoveGroup={noop}
-        goalSection={null}
-        onDeleteRatio={vi.fn()}
-      />,
-    )
-    await user.click(screen.getByText('FI'))
-    expect(onUpdateScope).toHaveBeenCalledWith('fi')
   })
 
   it('calls onRemoveGroup when remove button is clicked on a group with more than 2 groups', async () => {
@@ -170,14 +113,11 @@ describe('RatioBuilder', () => {
     render(
       <RatioBuilder
         activeRatio={ratio}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={noop}
         onToggleClass={noop}
         onAddGroup={noop}
         onRemoveGroup={onRemoveGroup}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
     const removeButtons = screen.getAllByTitle('Remove group')
@@ -191,14 +131,11 @@ describe('RatioBuilder', () => {
     render(
       <RatioBuilder
         activeRatio={makeRatio()}
-        onUpdateName={noop}
-        onUpdateScope={noop}
         onUpdateGroupLabel={onUpdateGroupLabel}
         onToggleClass={noop}
         onAddGroup={noop}
         onRemoveGroup={noop}
         goalSection={null}
-        onDeleteRatio={vi.fn()}
       />,
     )
     const groupInput = screen.getByDisplayValue('Group A')
