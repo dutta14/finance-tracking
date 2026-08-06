@@ -8,6 +8,8 @@ interface CashflowBarChartProps {
   timePeriod: TimePeriod
   removedCategories: Set<string>
   categorySums: Record<string, Record<string, number>>
+  selectedPeriod: string | null
+  onSelectPeriod: (label: string | null) => void
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -23,6 +25,8 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
   timePeriod,
   removedCategories,
   categorySums,
+  selectedPeriod,
+  onSelectPeriod,
 }) => {
   // Classify categories the same way as the budget table:
   // A category with ANY negative month value is "expense"; otherwise "income".
@@ -94,7 +98,17 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
     <div className="cashflow-bar-wrap">
       <h3 className="cashflow-section-title">Cashflow — {year}</h3>
       <ResponsiveContainer width="100%" height={340}>
-        <BarChart data={data} margin={{ top: 10, right: 20, bottom: 5, left: 10 }} barGap={0} barCategoryGap="20%">
+        <BarChart
+          data={data}
+          margin={{ top: 10, right: 20, bottom: 5, left: 10 }}
+          barGap={-48}
+          barCategoryGap="20%"
+          onClick={e => {
+            const activeLabel = typeof e?.activeLabel === 'string' ? e.activeLabel : null
+            if (!activeLabel) return
+            onSelectPeriod(activeLabel === selectedPeriod ? null : activeLabel)
+          }}
+        >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--cashflow-grid, #e5e7eb)" />
           <XAxis dataKey="label" tick={{ fontSize: 12 }} />
           <YAxis
@@ -120,14 +134,22 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
             contentStyle={{ fontSize: '0.82rem', borderRadius: 8 }}
           />
           <ReferenceLine y={0} stroke="var(--cashflow-zero, #9ca3af)" strokeWidth={1} />
-          <Bar dataKey="income" name="Income" radius={[4, 4, 0, 0]} maxBarSize={48}>
+          <Bar dataKey="income" name="Income" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
             {data.map((_, i) => (
-              <Cell key={i} fill="var(--cashflow-income, #22c55e)" />
+              <Cell
+                key={i}
+                fill="var(--cashflow-income, #22c55e)"
+                opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1}
+              />
             ))}
           </Bar>
-          <Bar dataKey="expense" name="Expense" radius={[0, 0, 4, 4]} maxBarSize={48}>
+          <Bar dataKey="expense" name="Expense" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
             {data.map((_, i) => (
-              <Cell key={i} fill="var(--cashflow-expense, #ef4444)" />
+              <Cell
+                key={i}
+                fill="var(--cashflow-expense, #ef4444)"
+                opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1}
+              />
             ))}
           </Bar>
         </BarChart>

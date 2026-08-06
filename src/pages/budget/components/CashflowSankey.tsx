@@ -1,5 +1,5 @@
 import { FC, useState, useMemo } from 'react'
-import { CategoryGroup, Transaction } from '../types'
+import { CategoryGroup, TimePeriod, Transaction } from '../types'
 
 type SankeyMode = 'group' | 'category'
 
@@ -9,6 +9,8 @@ interface CashflowSankeyProps {
   categoryGroups: CategoryGroup[]
   removedCategories: Set<string>
   categorySums: Record<string, Record<string, number>>
+  selectedPeriod: string | null
+  timePeriod: TimePeriod
 }
 
 const COLORS = [
@@ -45,14 +47,58 @@ const proportionalHeights = (items: { amount: number }[], totalAvailH: number, g
   return items.map(it => Math.max(minH, (it.amount / totalAmt) * drawH))
 }
 
-const CashflowSankey: FC<CashflowSankeyProps> = ({ categoryGroups, removedCategories, categorySums }) => {
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const CashflowSankey: FC<CashflowSankeyProps> = ({
+  categoryGroups,
+  removedCategories,
+  categorySums,
+  selectedPeriod,
+  timePeriod,
+}) => {
   const [mode, setMode] = useState<SankeyMode>('group')
+  const filteredCategorySums = useMemo(() => {
+    if (!selectedPeriod) return categorySums
+
+    const monthKeys: string[] = []
+
+    if (timePeriod === 'month') {
+      const idx = MONTHS.indexOf(selectedPeriod)
+      if (idx >= 0) monthKeys.push(String(idx + 1).padStart(2, '0'))
+    } else if (timePeriod === 'quarter') {
+      const qi = parseInt(selectedPeriod.replace('Q', '')) - 1
+      for (let m = qi * 3; m < qi * 3 + 3; m++) {
+        monthKeys.push(String(m + 1).padStart(2, '0'))
+      }
+    } else {
+      const hi = parseInt(selectedPeriod.replace('H', '')) - 1
+      for (let m = hi * 6; m < hi * 6 + 6; m++) {
+        monthKeys.push(String(m + 1).padStart(2, '0'))
+      }
+    }
+
+    const filtered: Record<string, Record<string, number>> = {}
+    Object.entries(categorySums).forEach(([cat, months]) => {
+      const filteredMonths: Record<string, number> = {}
+      monthKeys.forEach(monthKey => {
+        Object.entries(months).forEach(([key, val]) => {
+          if (key === monthKey || key.endsWith(`-${monthKey}`)) {
+            filteredMonths[key] = val
+          }
+        })
+      })
+      if (Object.keys(filteredMonths).length > 0) {
+        filtered[cat] = filteredMonths
+      }
+    })
+    return filtered
+  }, [categorySums, selectedPeriod, timePeriod])
 
   const { incomeCategories, expenseGroups, expenseCatArr, totalIncome, totalExpense } = useMemo(() => {
     // Classify categories same as budget table: any negative month → expense
     const expenseCatSet = new Set<string>()
     const incomeCatSet = new Set<string>()
-    Object.entries(categorySums).forEach(([cat, months]) => {
+    Object.entries(filteredCategorySums).forEach(([cat, months]) => {
       if (removedCategories.has(cat)) return
       if (Object.values(months).some(v => v < 0)) expenseCatSet.add(cat)
       else if (Object.values(months).some(v => v > 0)) incomeCatSet.add(cat)
@@ -62,7 +108,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({ categoryGroups, removedCatego
     const incomeCats: Record<string, number> = {}
     const expenseCats: Record<string, number> = {}
 
-    Object.entries(categorySums).forEach(([cat, monthMap]) => {
+    Object.entries(filteredCategorySums).forEach(([cat, monthMap]) => {
       if (removedCategories.has(cat)) return
       const total = Object.values(monthMap).reduce((s, v) => s + v, 0)
       if (incomeCatSet.has(cat)) {
@@ -99,7 +145,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({ categoryGroups, removedCatego
       totalIncome: Object.values(incomeCats).reduce((s, v) => s + v, 0),
       totalExpense: Object.values(expenseCats).reduce((s, v) => s + v, 0),
     }
-  }, [categoryGroups, removedCategories, categorySums])
+  }, [categoryGroups, removedCategories, filteredCategorySums])
 
   const rightItems = mode === 'group' ? expenseGroups.map(g => ({ name: g.name, amount: g.total })) : expenseCatArr
   const savings = Math.max(0, totalIncome - totalExpense)
@@ -199,7 +245,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({ categoryGroups, removedCatego
   if (totalIncome === 0 && totalExpense === 0) {
     return (
       <div className="cashflow-sankey-wrap">
-        <h3 className="cashflow-section-title">Cashflow Sankey</h3>
+        <h3 className="cashflow-section-title">Cashflow Sankey{selectedPeriod ? ` — ${selectedPeriod}` : ''}</h3>
         <p className="cashflow-empty">No transaction data for this year.</p>
       </div>
     )
@@ -208,7 +254,9 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({ categoryGroups, removedCatego
   return (
     <div className="cashflow-sankey-wrap">
       <div className="cashflow-sankey-header">
-        <h3 className="cashflow-section-title cashflow-section-title--flush">Cashflow Sankey</h3>
+        <h3 className="cashflow-section-title cashflow-section-title--flush">
+          Cashflow Sankey{selectedPeriod ? ` — ${selectedPeriod}` : ''}
+        </h3>
         <div className="cashflow-sankey-pills">
           <button
             className={`cashflow-sankey-pill${mode === 'group' ? ' active' : ''}`}
