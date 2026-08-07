@@ -12,6 +12,7 @@ import CategoryGroupManager from './components/CategoryGroupManager'
 import CSVPreviewModal from './components/CSVPreviewModal'
 import CashflowBarChart from './components/CashflowBarChart'
 import CashflowSankey from './components/CashflowSankey'
+import { getCSVFormatHelp } from './utils/csvParser'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { getStorageItem } from '../../utils/storage'
 import '../../styles/Budget.css'
@@ -71,6 +72,7 @@ const Budget: FC = () => {
 
   const pdfModalRef = useRef<HTMLDivElement>(null)
   const pdfTriggerRef = useRef<HTMLElement | null>(null)
+  const formatHelpRef = useRef<HTMLDivElement>(null)
 
   const closePdfModal = useCallback(() => setShowPdfToCsv(false), [])
   const openPdfModal = useCallback(() => {
@@ -96,6 +98,19 @@ const Budget: FC = () => {
     setSelectedPeriod(null)
   }, [timePeriod])
 
+  useEffect(() => {
+    if (!showFormatHelp) return
+
+    const handler = (e: MouseEvent) => {
+      if (formatHelpRef.current && !formatHelpRef.current.contains(e.target as Node)) {
+        setShowFormatHelp(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showFormatHelp])
+
   const currentYear = new Date().getFullYear()
 
   if (budgetPath === '/budget') {
@@ -108,7 +123,6 @@ const Budget: FC = () => {
         selectedYear={selectedYear}
         viewMode={viewMode}
         timePeriod={timePeriod}
-        showFormatHelp={showFormatHelp}
         onPrevYear={() => setSelectedYear(y => y - 1)}
         onNextYear={() => setSelectedYear(y => y + 1)}
         onSetViewMode={mode => navigate(`/budget/${mode}`)}
@@ -116,90 +130,108 @@ const Budget: FC = () => {
       />
 
       <div className="budget-content">
-        {viewMode !== 'groups' && (
+        {viewMode === 'spreadsheet' && (
           <div className="budget-action-bar">
+            <div className="budget-view-toggle budget-view-toggle--secondary">
+              <button
+                className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
+                onClick={() => setSpreadsheetMode('aggregated')}
+                aria-pressed={spreadsheetMode === 'aggregated'}
+              >
+                Aggregated
+              </button>
+              <button
+                className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
+                onClick={() => setSpreadsheetMode('detailed')}
+                aria-pressed={spreadsheetMode === 'detailed'}
+              >
+                Detailed
+              </button>
+            </div>
             <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
-            {viewMode === 'spreadsheet' && (
-              <div className="budget-spreadsheet-actions">
-                <div className="budget-upload-dropdown">
-                  <button
-                    className="budget-action-btn budget-split-main"
-                    onClick={() => quickUploadRef.current?.click()}
-                  >
-                    Upload CSV
-                  </button>
-                  <button
-                    className="budget-action-btn budget-split-drop"
-                    onClick={() => setShowUploadMenu(v => !v)}
-                    aria-haspopup="true"
-                    aria-expanded={showUploadMenu}
-                    aria-label="Upload options"
-                  >
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path
-                        d="M2 3.5l3 3 3-3"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  {showUploadMenu && (
-                    <>
-                      <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
-                      <div className="budget-upload-menu" role="menu">
+            <div className="budget-spreadsheet-actions">
+              <div className="budget-upload-dropdown">
+                <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
+                  Upload CSV
+                </button>
+                <button
+                  className="budget-action-btn budget-split-drop"
+                  onClick={() => setShowUploadMenu(v => !v)}
+                  aria-haspopup="true"
+                  aria-expanded={showUploadMenu}
+                  aria-label="Upload options"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path
+                      d="M2 3.5l3 3 3-3"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {showUploadMenu && (
+                  <>
+                    <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
+                    <div className="budget-upload-menu" role="menu">
+                      <button
+                        className="budget-upload-menu-item"
+                        role="menuitem"
+                        onClick={() => {
+                          setShowUploadMenu(false)
+                          bulkUploadRef.current?.click()
+                        }}
+                      >
+                        Bulk Upload
+                      </button>
+                      {pdfToCsvEnabled && (
                         <button
                           className="budget-upload-menu-item"
                           role="menuitem"
                           onClick={() => {
                             setShowUploadMenu(false)
-                            bulkUploadRef.current?.click()
+                            openPdfModal()
                           }}
                         >
-                          Bulk Upload
+                          PDF → CSV
                         </button>
-                        {pdfToCsvEnabled && (
-                          <button
-                            className="budget-upload-menu-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowUploadMenu(false)
-                              openPdfModal()
-                            }}
-                          >
-                            PDF → CSV
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="budget-format-help-wrapper" ref={formatHelpRef}>
                 <button
                   className="budget-action-btn budget-action-btn--subtle"
                   onClick={() => setShowFormatHelp(v => !v)}
                 >
                   ?
                 </button>
-                <input
-                  ref={quickUploadRef}
-                  type="file"
-                  accept=".csv"
-                  data-testid="quick-upload-input"
-                  style={{ display: 'none' }}
-                  onChange={handleQuickUpload}
-                />
-                <input
-                  ref={bulkUploadRef}
-                  type="file"
-                  accept=".csv"
-                  multiple
-                  data-testid="bulk-upload-input"
-                  style={{ display: 'none' }}
-                  onChange={handleBulkUpload}
-                />
+                {showFormatHelp && (
+                  <div className="budget-format-help-panel">
+                    <pre>{getCSVFormatHelp()}</pre>
+                  </div>
+                )}
               </div>
-            )}
+              <input
+                ref={quickUploadRef}
+                type="file"
+                accept=".csv"
+                data-testid="quick-upload-input"
+                style={{ display: 'none' }}
+                onChange={handleQuickUpload}
+              />
+              <input
+                ref={bulkUploadRef}
+                type="file"
+                accept=".csv"
+                multiple
+                data-testid="bulk-upload-input"
+                style={{ display: 'none' }}
+                onChange={handleBulkUpload}
+              />
+            </div>
           </div>
         )}
 
@@ -269,24 +301,6 @@ const Budget: FC = () => {
               />
             ) : viewMode === 'spreadsheet' ? (
               <>
-                <div className="budget-spreadsheet-toolbar">
-                  <div className="budget-view-toggle budget-view-toggle--secondary">
-                    <button
-                      className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
-                      onClick={() => setSpreadsheetMode('aggregated')}
-                      aria-pressed={spreadsheetMode === 'aggregated'}
-                    >
-                      Aggregated
-                    </button>
-                    <button
-                      className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
-                      onClick={() => setSpreadsheetMode('detailed')}
-                      aria-pressed={spreadsheetMode === 'detailed'}
-                    >
-                      Detailed
-                    </button>
-                  </div>
-                </div>
                 {spreadsheetMode === 'detailed' ? (
                   <>
                     <BudgetTable

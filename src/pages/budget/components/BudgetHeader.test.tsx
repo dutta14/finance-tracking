@@ -9,7 +9,6 @@ function defaultProps(overrides: Partial<React.ComponentProps<typeof BudgetHeade
     selectedYear: 2025,
     viewMode: 'spreadsheet' as BudgetViewMode,
     timePeriod: 'month' as TimePeriod,
-    showFormatHelp: false,
     onPrevYear: vi.fn(),
     onNextYear: vi.fn(),
     onSetViewMode: vi.fn(),
@@ -97,15 +96,5 @@ describe('BudgetHeader', () => {
 
     await user.click(screen.getByText('M'))
     expect(props.onSetTimePeriod).toHaveBeenCalledWith('month')
-  })
-
-  it('renders format help content when showFormatHelp is true', () => {
-    renderHeader({ showFormatHelp: true })
-    expect(screen.getByText(/Date, Category, Amount/)).toBeInTheDocument()
-  })
-
-  it('does not render format help content when showFormatHelp is false', () => {
-    renderHeader({ showFormatHelp: false })
-    expect(screen.queryByText(/category,date/i)).not.toBeInTheDocument()
   })
 })

@@ -189,6 +189,8 @@ const Transactions: FC = () => {
   const [budgetGroups, setBudgetGroups] = useState<BudgetGroupData[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [draftSearchQuery, setDraftSearchQuery] = useState('')
   const [fromDate, setFromDate] = useState(paramFrom)
   const [toDate, setToDate] = useState(paramTo)
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
@@ -206,6 +208,7 @@ const Transactions: FC = () => {
   const sentinelRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
   const allCategoriesRef = useRef<HTMLInputElement>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
   const filterRef = useRef<HTMLDivElement>(null)
   const datePickerRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
@@ -260,6 +263,19 @@ const Transactions: FC = () => {
     // searchParams is intentionally read only on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!searchOpen) return
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [searchOpen])
 
   useEffect(() => {
     if (!filterOpen) return
@@ -350,6 +366,27 @@ const Transactions: FC = () => {
     setDatePickerOpen(true)
   }
 
+  const toggleSearchPanel = (): void => {
+    if (searchOpen) {
+      setSearchOpen(false)
+      return
+    }
+
+    setDraftSearchQuery(searchQuery)
+    setSearchOpen(true)
+  }
+
+  const applySearch = (): void => {
+    setSearchQuery(draftSearchQuery)
+    setSearchOpen(false)
+  }
+
+  const clearSearch = (): void => {
+    setDraftSearchQuery('')
+    setSearchQuery('')
+    setSearchOpen(false)
+  }
+
   const applyDateRange = (): void => {
     setFromDate(draftFromDate)
     setToDate(draftToDate)
@@ -394,7 +431,12 @@ const Transactions: FC = () => {
       if (normalizedSearch) {
         const description = transaction.description?.toLowerCase() ?? ''
         const category = transaction.category.toLowerCase()
-        if (!description.includes(normalizedSearch) && !category.includes(normalizedSearch)) {
+        const amount = String(transaction.amount)
+        if (
+          !description.includes(normalizedSearch) &&
+          !category.includes(normalizedSearch) &&
+          !amount.includes(normalizedSearch)
+        ) {
           return false
         }
       }
@@ -729,259 +771,310 @@ const Transactions: FC = () => {
               {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
             </p>
           </div>
-        </div>
 
-        <div className="txn-toolbar" role="toolbar" aria-label="Transaction controls">
-          <label className="txn-search" htmlFor="txn-search-input">
-            <span className="sr-only">Search transactions</span>
-            <input
-              id="txn-search-input"
-              type="search"
-              placeholder="Search transactions"
-              value={searchQuery}
-              onChange={event => setSearchQuery(event.target.value)}
-            />
-          </label>
-
-          <div className="txn-date-picker" ref={datePickerRef}>
-            <button
-              className="txn-filter-btn"
-              type="button"
-              aria-haspopup="true"
-              aria-expanded={datePickerOpen}
-              onClick={openDatePicker}
-            >
-              <span className="txn-filter-btn-key">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>{' '}
-                Date
-              </span>
-              {dateSummaryLabel && <span className="txn-filter-btn-value">{dateSummaryLabel}</span>}
-            </button>
-            {datePickerOpen && (
-              <div className="txn-date-panel" role="dialog" aria-label="Date range picker">
-                <div className="txn-date-panel-presets">
-                  <h3 className="txn-date-panel-heading">Date Range</h3>
-                  <ul className="txn-date-panel-preset-list">
-                    {getPresets().map(preset => (
-                      <li key={preset.label}>
-                        <button
-                          type="button"
-                          className={`txn-date-preset-btn${draftFromDate === preset.from && draftToDate === preset.to ? ' txn-date-preset-btn--active' : ''}`}
-                          onClick={() => applyPreset(preset.from, preset.to)}
-                        >
-                          {preset.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="txn-date-panel-custom">
-                  <div className="txn-date-panel-field">
-                    <div className="txn-date-panel-field-header">
-                      <label htmlFor="txn-draft-from">Start date</label>
-                      {draftFromDate && (
-                        <button type="button" className="txn-date-clear-btn" onClick={() => setDraftFromDate('')}>
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      id="txn-draft-from"
-                      type="date"
-                      className="txn-date-panel-input"
-                      value={draftFromDate}
-                      onChange={event => setDraftFromDate(event.target.value)}
-                    />
-                  </div>
-                  <div className="txn-date-panel-field">
-                    <div className="txn-date-panel-field-header">
-                      <label htmlFor="txn-draft-to">End date</label>
-                      {draftToDate && (
-                        <button type="button" className="txn-date-clear-btn" onClick={() => setDraftToDate('')}>
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      id="txn-draft-to"
-                      type="date"
-                      className="txn-date-panel-input"
-                      value={draftToDate}
-                      onChange={event => setDraftToDate(event.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="txn-date-panel-footer">
-                  <button
-                    type="button"
-                    className="txn-date-panel-btn txn-date-panel-clear"
-                    onClick={() => {
-                      setDraftFromDate('')
-                      setDraftToDate('')
-                    }}
+          <div className="txn-toolbar" role="toolbar" aria-label="Transaction controls">
+            <div className="txn-search" ref={searchRef}>
+              <button
+                className="txn-filter-btn"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={searchOpen}
+                onClick={toggleSearchPanel}
+              >
+                <span className="txn-filter-btn-key">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    Clear
-                  </button>
-                  <div className="txn-date-panel-actions">
-                    <button type="button" className="txn-date-panel-btn" onClick={() => setDatePickerOpen(false)}>
-                      Cancel
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>{' '}
+                  Search
+                </span>
+                {searchQuery && <span className="txn-filter-btn-value txn-search-btn-value">{searchQuery}</span>}
+              </button>
+              {searchOpen && (
+                <div className="txn-search-panel" role="dialog" aria-label="Search transactions">
+                  <div className="txn-search-panel-body">
+                    <h3 className="txn-date-panel-heading">Search</h3>
+                    <input
+                      type="search"
+                      className="txn-search-panel-input"
+                      autoFocus
+                      aria-label="Search transactions"
+                      placeholder="Enter a search term..."
+                      value={draftSearchQuery}
+                      onChange={event => setDraftSearchQuery(event.target.value)}
+                    />
+                  </div>
+                  <div className="txn-date-panel-footer">
+                    <button type="button" className="txn-date-panel-btn txn-date-panel-clear" onClick={clearSearch}>
+                      Clear
                     </button>
-                    <button type="button" className="txn-date-panel-btn txn-date-panel-apply" onClick={applyDateRange}>
-                      Apply
-                    </button>
+                    <div className="txn-date-panel-actions">
+                      <button type="button" className="txn-date-panel-btn" onClick={() => setSearchOpen(false)}>
+                        Cancel
+                      </button>
+                      <button type="button" className="txn-date-panel-btn txn-date-panel-apply" onClick={applySearch}>
+                        Apply
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          <div className="txn-filter" ref={filterRef}>
-            <button
-              className="txn-filter-btn"
-              type="button"
-              aria-haspopup="true"
-              aria-expanded={filterOpen}
-              onClick={() => {
-                setFilterOpen(current => !current)
-                setFilterSearch('')
-              }}
-            >
-              <span className="txn-filter-btn-key">Category</span>
-              <span className="txn-filter-btn-value">{categorySummaryLabel}</span>
-            </button>
-            {filterOpen && (
-              <div className="txn-filter-panel" role="group" aria-label="Category filters">
-                <input
-                  className="txn-filter-search-input"
-                  type="search"
-                  aria-label="Search categories"
-                  placeholder="Search categories"
-                  value={filterSearch}
-                  onChange={event => setFilterSearch(event.target.value)}
-                />
-                {!filterSearch && categories.length > 0 && (
-                  <label className="txn-filter-item txn-filter-item-all">
-                    <input
-                      ref={allCategoriesRef}
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={() => {
-                        if (allSelected || someSelected) {
-                          setSelectedCategories(new Set())
-                        } else {
-                          setSelectedCategories(new Set(categories))
-                        }
-                      }}
-                    />
-                    <span>All Categories</span>
-                  </label>
-                )}
-                <div className="txn-filter-list">
-                  {filterSections.length > 0 ? (
-                    filterSections.map(section => {
-                      const sectionCats = section.groups.flatMap(g => g.categories)
-                      const sectionChecked = sectionCats.length > 0 && sectionCats.every(c => selectedCategories.has(c))
-
-                      return (
-                        <div key={section.type} className="txn-filter-section">
-                          <label className="txn-filter-item txn-filter-section-header">
-                            <input
-                              ref={element => {
-                                sectionCheckboxRefs.current[section.type] = element
-                              }}
-                              type="checkbox"
-                              checked={sectionChecked}
-                              onChange={() => toggleCategoryGroup(sectionCats)}
-                            />
-                            <span>{section.label}</span>
-                          </label>
-                          <div className="txn-filter-section-groups">
-                            {section.groups.map(group => {
-                              const groupChecked = group.categories.every(c => selectedCategories.has(c))
-
-                              return (
-                                <div key={group.id} className="txn-filter-group">
-                                  <label className="txn-filter-item txn-filter-group-header">
-                                    <input
-                                      ref={element => {
-                                        groupCheckboxRefs.current[group.id] = element
-                                      }}
-                                      type="checkbox"
-                                      checked={groupChecked}
-                                      onChange={() => toggleCategoryGroup(group.categories)}
-                                    />
-                                    <span>{group.name}</span>
-                                  </label>
-                                  <div className="txn-filter-group-categories">
-                                    {group.categories.map(category => (
-                                      <label key={category} className="txn-filter-item txn-filter-item-category">
-                                        <input
-                                          type="checkbox"
-                                          checked={selectedCategories.has(category)}
-                                          onChange={() => toggleCategory(category)}
-                                        />
-                                        <span>{category}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <p className="txn-filter-empty">No matching categories</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="txn-sort" ref={sortRef}>
-            <button
-              className="txn-filter-btn"
-              type="button"
-              aria-haspopup="true"
-              aria-expanded={sortOpen}
-              onClick={() => setSortOpen(current => !current)}
-            >
-              <span className="txn-filter-btn-key">Sort</span>
-              <span className="txn-filter-btn-value">{sortOptions.find(o => o.value === sortBy)?.label}</span>
-            </button>
-            {sortOpen && (
-              <ul className="txn-sort-panel" role="listbox" aria-label="Sort options">
-                {sortOptions.map(option => (
-                  <li key={option.value} role="option" aria-selected={sortBy === option.value}>
+            <div className="txn-date-picker" ref={datePickerRef}>
+              <button
+                className="txn-filter-btn"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={datePickerOpen}
+                onClick={openDatePicker}
+              >
+                <span className="txn-filter-btn-key">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>{' '}
+                  Date
+                </span>
+                {dateSummaryLabel && <span className="txn-filter-btn-value">{dateSummaryLabel}</span>}
+              </button>
+              {datePickerOpen && (
+                <div className="txn-date-panel" role="dialog" aria-label="Date range picker">
+                  <div className="txn-date-panel-presets">
+                    <h3 className="txn-date-panel-heading">Date Range</h3>
+                    <ul className="txn-date-panel-preset-list">
+                      {getPresets().map(preset => (
+                        <li key={preset.label}>
+                          <button
+                            type="button"
+                            className={`txn-date-preset-btn${draftFromDate === preset.from && draftToDate === preset.to ? ' txn-date-preset-btn--active' : ''}`}
+                            onClick={() => applyPreset(preset.from, preset.to)}
+                          >
+                            {preset.label}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="txn-date-panel-custom">
+                    <div className="txn-date-panel-field">
+                      <div className="txn-date-panel-field-header">
+                        <label htmlFor="txn-draft-from">Start date</label>
+                        {draftFromDate && (
+                          <button type="button" className="txn-date-clear-btn" onClick={() => setDraftFromDate('')}>
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        id="txn-draft-from"
+                        type="date"
+                        className="txn-date-panel-input"
+                        value={draftFromDate}
+                        onChange={event => setDraftFromDate(event.target.value)}
+                      />
+                    </div>
+                    <div className="txn-date-panel-field">
+                      <div className="txn-date-panel-field-header">
+                        <label htmlFor="txn-draft-to">End date</label>
+                        {draftToDate && (
+                          <button type="button" className="txn-date-clear-btn" onClick={() => setDraftToDate('')}>
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        id="txn-draft-to"
+                        type="date"
+                        className="txn-date-panel-input"
+                        value={draftToDate}
+                        onChange={event => setDraftToDate(event.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="txn-date-panel-footer">
                     <button
                       type="button"
-                      className={`txn-sort-option${sortBy === option.value ? ' txn-sort-option--active' : ''}`}
+                      className="txn-date-panel-btn txn-date-panel-clear"
                       onClick={() => {
-                        setSortBy(option.value)
-                        setSortOpen(false)
+                        setDraftFromDate('')
+                        setDraftToDate('')
                       }}
                     >
-                      {option.label}
+                      Clear
                     </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    <div className="txn-date-panel-actions">
+                      <button type="button" className="txn-date-panel-btn" onClick={() => setDatePickerOpen(false)}>
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="txn-date-panel-btn txn-date-panel-apply"
+                        onClick={applyDateRange}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="txn-filter" ref={filterRef}>
+              <button
+                className="txn-filter-btn"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={filterOpen}
+                onClick={() => {
+                  setFilterOpen(current => !current)
+                  setFilterSearch('')
+                }}
+              >
+                <span className="txn-filter-btn-key">Category</span>
+                <span className="txn-filter-btn-value">{categorySummaryLabel}</span>
+              </button>
+              {filterOpen && (
+                <div className="txn-filter-panel" role="group" aria-label="Category filters">
+                  <input
+                    className="txn-filter-search-input"
+                    type="search"
+                    aria-label="Search categories"
+                    placeholder="Search categories"
+                    value={filterSearch}
+                    onChange={event => setFilterSearch(event.target.value)}
+                  />
+                  {!filterSearch && categories.length > 0 && (
+                    <label className="txn-filter-item txn-filter-item-all">
+                      <input
+                        ref={allCategoriesRef}
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={() => {
+                          if (allSelected || someSelected) {
+                            setSelectedCategories(new Set())
+                          } else {
+                            setSelectedCategories(new Set(categories))
+                          }
+                        }}
+                      />
+                      <span>All Categories</span>
+                    </label>
+                  )}
+                  <div className="txn-filter-list">
+                    {filterSections.length > 0 ? (
+                      filterSections.map(section => {
+                        const sectionCats = section.groups.flatMap(g => g.categories)
+                        const sectionChecked =
+                          sectionCats.length > 0 && sectionCats.every(c => selectedCategories.has(c))
+
+                        return (
+                          <div key={section.type} className="txn-filter-section">
+                            <label className="txn-filter-item txn-filter-section-header">
+                              <input
+                                ref={element => {
+                                  sectionCheckboxRefs.current[section.type] = element
+                                }}
+                                type="checkbox"
+                                checked={sectionChecked}
+                                onChange={() => toggleCategoryGroup(sectionCats)}
+                              />
+                              <span>{section.label}</span>
+                            </label>
+                            <div className="txn-filter-section-groups">
+                              {section.groups.map(group => {
+                                const groupChecked = group.categories.every(c => selectedCategories.has(c))
+
+                                return (
+                                  <div key={group.id} className="txn-filter-group">
+                                    <label className="txn-filter-item txn-filter-group-header">
+                                      <input
+                                        ref={element => {
+                                          groupCheckboxRefs.current[group.id] = element
+                                        }}
+                                        type="checkbox"
+                                        checked={groupChecked}
+                                        onChange={() => toggleCategoryGroup(group.categories)}
+                                      />
+                                      <span>{group.name}</span>
+                                    </label>
+                                    <div className="txn-filter-group-categories">
+                                      {group.categories.map(category => (
+                                        <label key={category} className="txn-filter-item txn-filter-item-category">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedCategories.has(category)}
+                                            onChange={() => toggleCategory(category)}
+                                          />
+                                          <span>{category}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <p className="txn-filter-empty">No matching categories</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="txn-sort" ref={sortRef}>
+              <button
+                className="txn-filter-btn"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={sortOpen}
+                onClick={() => setSortOpen(current => !current)}
+              >
+                <span className="txn-filter-btn-key">Sort</span>
+                <span className="txn-filter-btn-value">{sortOptions.find(o => o.value === sortBy)?.label}</span>
+              </button>
+              {sortOpen && (
+                <ul className="txn-sort-panel" role="listbox" aria-label="Sort options">
+                  {sortOptions.map(option => (
+                    <li key={option.value} role="option" aria-selected={sortBy === option.value}>
+                      <button
+                        type="button"
+                        className={`txn-sort-option${sortBy === option.value ? ' txn-sort-option--active' : ''}`}
+                        onClick={() => {
+                          setSortBy(option.value)
+                          setSortOpen(false)
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </header>
