@@ -76,12 +76,14 @@ const GoalEditor: FC<GoalEditorProps> = ({
           <button
             className={`alloc-page-tab${goalType === 'constant' ? ' active' : ''}`}
             onClick={() => setGoalType('constant')}
+            aria-pressed={goalType === 'constant'}
           >
             Constant
           </button>
           <button
             className={`alloc-page-tab${goalType === 'gradual' ? ' active' : ''}`}
             onClick={() => setGoalType('gradual')}
+            aria-pressed={goalType === 'gradual'}
           >
             Gradual
           </button>
@@ -97,6 +99,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
                 className={`alloc-page-tab${owner === 'primary' ? ' active' : ''}`}
                 onClick={() => setOwner('primary')}
                 disabled={!hasPrimary}
+                aria-pressed={owner === 'primary'}
               >
                 {primaryName || 'Primary'}
               </button>
@@ -104,6 +107,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
                 className={`alloc-page-tab${owner === 'partner' ? ' active' : ''}`}
                 onClick={() => setOwner('partner')}
                 disabled={!hasPartner}
+                aria-pressed={owner === 'partner'}
               >
                 {partnerName || 'Partner'}
               </button>
@@ -116,6 +120,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
               className="alloc-goal-field-input"
               value={startAge}
               onChange={e => setStartAge(Number(e.target.value))}
+              aria-label="Start age"
               min={0}
               max={120}
             />
@@ -125,6 +130,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
               className="alloc-goal-field-input"
               value={endAge}
               onChange={e => setEndAge(Number(e.target.value))}
+              aria-label="End age"
               min={0}
               max={120}
             />
@@ -148,6 +154,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
                 className="alloc-goal-field-input"
                 value={pcts[i] ?? 0}
                 onChange={e => updatePct(pcts, setPcts, i, Number(e.target.value))}
+                aria-label={`${g.label} target percent`}
                 min={0}
                 max={100}
               />
@@ -181,6 +188,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
                   className="alloc-goal-field-input"
                   value={startPcts[i] ?? 0}
                   onChange={e => updatePct(startPcts, setStartPcts, i, Number(e.target.value))}
+                  aria-label={`${g.label} start percent`}
                   min={0}
                   max={100}
                 />
@@ -190,6 +198,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
                   className="alloc-goal-field-input"
                   value={endPcts[i] ?? 0}
                   onChange={e => updatePct(endPcts, setEndPcts, i, Number(e.target.value))}
+                  aria-label={`${g.label} end percent`}
                   min={0}
                   max={100}
                 />
