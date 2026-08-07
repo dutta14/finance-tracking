@@ -87,4 +87,16 @@ describe('Allocation', () => {
     // A ratio was created and is active
     expect(screen.queryByText(/No allocations yet/)).not.toBeInTheDocument()
   })
+
+  it('adds pressed states and a label for ratio scope controls', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation tab="ratios" />)
+    await user.click(screen.getByText('+'))
+    await user.click(screen.getByText('Blank'))
+
+    expect(screen.getByLabelText('Ratio name')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Total' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'FI' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'GW' })).toHaveAttribute('aria-pressed', 'false')
+  })
 })

@@ -161,4 +161,22 @@ describe('GoalEditor', () => {
     // The value should be clamped to 100
     expect(inputs[0]).toHaveValue(100)
   })
+
+  it('adds pressed states and accessible labels for goal inputs', async () => {
+    const user = userEvent.setup()
+    render(<GoalEditor {...defaultProps} />)
+
+    expect(screen.getByRole('button', { name: 'Constant' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Gradual' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByLabelText('Stocks target percent')).toBeInTheDocument()
+    expect(screen.getByLabelText('Bonds target percent')).toBeInTheDocument()
+
+    await user.click(screen.getByText('Gradual'))
+
+    expect(screen.getByRole('button', { name: 'Alice' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Start age')).toBeInTheDocument()
+    expect(screen.getByLabelText('End age')).toBeInTheDocument()
+    expect(screen.getByLabelText('Stocks start percent')).toBeInTheDocument()
+    expect(screen.getByLabelText('Stocks end percent')).toBeInTheDocument()
+  })
 })

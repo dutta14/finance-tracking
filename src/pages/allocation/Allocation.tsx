@@ -80,6 +80,7 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
                 className="alloc-ratio-name-input"
                 value={activeRatio.name}
                 onChange={e => updateRatioName(e.target.value)}
+                aria-label="Ratio name"
               />
               <span className="alloc-ratio-builder-label alloc-ratio-builder-label--spaced">Scope</span>
               <div className="alloc-page-scope-tabs">
@@ -88,6 +89,7 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
                     key={s}
                     className={`alloc-page-tab${activeRatio.scope === s ? ' active' : ''}`}
                     onClick={() => updateRatioScope(s)}
+                    aria-pressed={activeRatio.scope === s}
                   >
                     {s === 'total' ? 'Total' : s.toUpperCase()}
                   </button>
