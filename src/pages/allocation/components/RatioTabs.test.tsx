@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import RatioTabs from './RatioTabs'
 import type { CustomRatio } from '../types'
 import { createRef } from 'react'
+import { PRESETS } from '../constants'
 
 const noop = vi.fn()
 
@@ -46,12 +47,63 @@ describe('RatioTabs', () => {
     expect(screen.getByText('US vs International')).toBeInTheDocument()
   })
 
+  it('calls the create-menu callbacks when the add button and options are clicked', async () => {
+    const user = userEvent.setup()
+    const onToggleCreateMenu = vi.fn()
+    const onCreateBlank = vi.fn()
+    const onCreateFromPreset = vi.fn()
+
+    render(
+      <RatioTabs
+        {...makeProps({
+          createMenuOpen: true,
+          onToggleCreateMenu,
+          onCreateBlank,
+          onCreateFromPreset,
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: '+' }))
+    await user.click(screen.getByText('Blank'))
+    await user.click(screen.getByText(PRESETS[0].name))
+
+    expect(onToggleCreateMenu).toHaveBeenCalledTimes(1)
+    expect(onCreateBlank).toHaveBeenCalledTimes(1)
+    expect(onCreateFromPreset).toHaveBeenCalledWith(PRESETS[0])
+  })
+
   it('shows delete confirmation when confirmDeleteId matches a ratio', () => {
     const ratios: CustomRatio[] = [
       { id: 'a', name: 'MyRatio', scope: 'total', groups: [], goals: { total: { type: 'constant', pcts: [50, 50] } } },
     ]
     render(<RatioTabs {...makeProps({ customRatios: ratios, confirmDeleteId: 'a' })} />)
     expect(screen.getByText(/Goals for.*will also be removed/)).toBeInTheDocument()
+  })
+
+  it('does not render the delete confirmation bar when the target ratio does not exist', () => {
+    const ratios: CustomRatio[] = [{ id: 'a', name: 'MyRatio', scope: 'total', groups: [] }]
+    render(<RatioTabs {...makeProps({ customRatios: ratios, confirmDeleteId: 'missing' })} />)
+    expect(screen.queryByText(/will also be removed/)).not.toBeInTheDocument()
+  })
+
+  it('lists all goal scopes in the delete confirmation message', () => {
+    const ratios: CustomRatio[] = [
+      {
+        id: 'a',
+        name: 'MyRatio',
+        scope: 'total',
+        groups: [],
+        goals: {
+          total: { type: 'constant', pcts: [50, 50] },
+          gw: { type: 'constant', pcts: [40, 60] },
+        },
+      },
+    ]
+
+    render(<RatioTabs {...makeProps({ customRatios: ratios, confirmDeleteId: 'a' })} />)
+
+    expect(screen.getByText(/Goals for Total, GW will also be removed/)).toBeInTheDocument()
   })
 
   it('calls onSelectRatio when a ratio tab is clicked', async () => {

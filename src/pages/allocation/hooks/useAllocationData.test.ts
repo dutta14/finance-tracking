@@ -7,8 +7,17 @@ const mockData: { accounts: Account[]; balances: BalanceEntry[] } = {
   balances: [],
 }
 
+const mockProfile = {
+  name: 'Alice',
+  partner: { name: 'Bob' },
+}
+
 vi.mock('../../../contexts/DataContext', () => ({
   useData: () => mockData,
+}))
+
+vi.mock('../../../hooks/useProfile', () => ({
+  useProfile: () => ({ profile: mockProfile }),
 }))
 
 import { useAllocationData } from './useAllocationData'
@@ -33,6 +42,8 @@ function makeBalance(accountId: number, balance: number, month = '2024-06'): Bal
 beforeEach(() => {
   mockData.accounts = []
   mockData.balances = []
+  mockProfile.name = 'Alice'
+  mockProfile.partner = { name: 'Bob' }
 })
 
 afterEach(() => {
@@ -366,6 +377,149 @@ describe('useAllocationData', () => {
       const gw = result.current.allocMap.get('gw')
       expect(fi!.has('bonds')).toBe(false)
       expect(gw!.get('bonds')).toBe(30000)
+    })
+  })
+
+  describe('getAccountsForClass', () => {
+    it('returns an empty list when there are no balances', () => {
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([])
+    })
+
+    it('returns sorted asset accounts with owner labels for the selected class', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, allocation: 'us-stock', owner: 'primary', name: '401k' }),
+        makeAccount({ id: 2, allocation: 'us-stock', owner: 'partner', name: 'Brokerage' }),
+        makeAccount({ id: 3, allocation: 'us-stock', owner: 'joint', name: 'Joint Account' }),
+      ]
+      mockData.balances = [makeBalance(1, 30000), makeBalance(2, 70000), makeBalance(3, 50000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([
+        { name: 'Brokerage', value: 70000, isDebt: false, owner: 'partner', ownerName: 'Bob' },
+        { name: 'Joint Account', value: 50000, isDebt: false, owner: 'joint', ownerName: 'Joint' },
+        { name: '401k', value: 30000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      ])
+    })
+
+    it('filters accounts by scope and ignores inactive or zero-balance accounts', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, allocation: 'us-stock', goalType: 'fi', name: 'FI Account' }),
+        makeAccount({ id: 2, allocation: 'us-stock', goalType: 'gw', name: 'GW Account' }),
+        makeAccount({ id: 3, allocation: 'us-stock', goalType: 'fi', status: 'inactive', name: 'Inactive Account' }),
+      ]
+      mockData.balances = [makeBalance(1, 10000), makeBalance(2, 20000), makeBalance(3, 30000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('fi', 'us-stock')).toEqual([
+        { name: 'FI Account', value: 10000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      ])
+      expect(result.current.getAccountsForClass('gw', 'us-stock')).toEqual([
+        { name: 'GW Account', value: 20000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      ])
+    })
+
+    it('skips accounts whose latest balance is zero or missing', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, allocation: 'us-stock', name: 'Included Account' }),
+        makeAccount({ id: 2, allocation: 'us-stock', name: 'Zero Balance Account' }),
+        makeAccount({ id: 3, allocation: 'us-stock', name: 'Missing Balance Account' }),
+      ]
+      mockData.balances = [makeBalance(1, 10000), makeBalance(2, 0)]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([
+        { name: 'Included Account', value: 10000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      ])
+    })
+
+    it('uses default names and default allocations when profile names or allocations are missing', () => {
+      mockProfile.name = ''
+      mockProfile.partner = { name: '' }
+      mockData.accounts = [
+        makeAccount({ id: 1, owner: 'primary', allocation: undefined as unknown as Account['allocation'], name: 'Cash Buffer' }),
+        makeAccount({
+          id: 2,
+          owner: 'partner',
+          nature: 'liability',
+          allocation: undefined as unknown as Account['allocation'],
+          name: 'Credit Card',
+        }),
+      ]
+      mockData.balances = [makeBalance(1, 9000), makeBalance(2, -4000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'cash')).toEqual([
+        { name: 'Cash Buffer', value: 9000, isDebt: false, owner: 'primary', ownerName: 'Primary' },
+      ])
+      expect(result.current.getAccountsForClass('total', 'debt')).toEqual([
+        { name: 'Credit Card', value: 4000, isDebt: true, owner: 'partner', ownerName: 'Partner' },
+      ])
+    })
+
+    it('matches linked and unlinked liabilities against the correct allocation class', () => {
+      mockData.accounts = [
+        makeAccount({ id: 1, nature: 'asset', allocation: 'real-estate', name: 'House' }),
+        makeAccount({ id: 2, nature: 'liability', allocation: 'debt', linkedAccountId: 1, name: 'Mortgage' }),
+        makeAccount({ id: 3, nature: 'liability', allocation: 'debt', linkedAccountId: 999, name: 'Fallback Loan' }),
+        makeAccount({ id: 4, nature: 'liability', allocation: 'debt', name: 'Credit Card' }),
+      ]
+      mockData.balances = [makeBalance(1, 500000), makeBalance(2, -200000), makeBalance(3, -10000), makeBalance(4, -7000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'real-estate')).toEqual([
+        { name: 'House', value: 500000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { name: 'Mortgage', value: 200000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+      ])
+      expect(result.current.getAccountsForClass('total', 'debt')).toEqual([
+        { name: 'Fallback Loan', value: 10000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+        { name: 'Credit Card', value: 7000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+      ])
+    })
+
+    it('falls back to default allocations for linked assets and missing liability allocations', () => {
+      mockData.accounts = [
+        makeAccount({
+          id: 1,
+          nature: undefined as unknown as Account['nature'],
+          allocation: undefined as unknown as Account['allocation'],
+          name: 'Unallocated Asset',
+        }),
+        makeAccount({
+          id: 2,
+          nature: 'liability',
+          allocation: undefined as unknown as Account['allocation'],
+          linkedAccountId: 1,
+          name: 'Loan Against Asset',
+        }),
+        makeAccount({
+          id: 3,
+          nature: 'liability',
+          allocation: undefined as unknown as Account['allocation'],
+          linkedAccountId: 999,
+          name: 'Standalone Liability',
+        }),
+      ]
+      mockData.balances = [makeBalance(1, 5000), makeBalance(2, -3000), makeBalance(3, -2000)]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'cash')).toEqual([
+        { name: 'Unallocated Asset', value: 5000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { name: 'Loan Against Asset', value: 3000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+      ])
+      expect(result.current.getAccountsForClass('total', 'debt')).toEqual([
+        { name: 'Standalone Liability', value: 2000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+      ])
+    })
+
+    it('uses only balances from the latest month when building the account list', () => {
+      mockData.accounts = [makeAccount({ id: 1, allocation: 'us-stock', name: 'Brokerage' })]
+      mockData.balances = [makeBalance(1, 1000, '2024-01'), makeBalance(1, 5000, '2024-06')]
+
+      const { result } = renderHook(() => useAllocationData())
+      expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([
+        { name: 'Brokerage', value: 5000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      ])
     })
   })
 })

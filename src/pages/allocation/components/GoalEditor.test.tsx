@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GoalEditor from './GoalEditor'
 import type { RatioGoal } from '../types'
@@ -162,6 +162,14 @@ describe('GoalEditor', () => {
     expect(inputs[0]).toHaveValue(100)
   })
 
+  it('clamps percentage values to zero when a negative number is entered', async () => {
+    const goal: RatioGoal = { type: 'constant', pcts: [60, 40] }
+    render(<GoalEditor {...defaultProps} existingGoal={goal} />)
+    const inputs = screen.getAllByRole('spinbutton')
+    fireEvent.change(inputs[0], { target: { value: '-5' } })
+    expect(inputs[0]).toHaveValue(0)
+  })
+
   it('adds pressed states and accessible labels for goal inputs', async () => {
     const user = userEvent.setup()
     render(<GoalEditor {...defaultProps} />)
@@ -178,5 +186,65 @@ describe('GoalEditor', () => {
     expect(screen.getByLabelText('End age')).toBeInTheDocument()
     expect(screen.getByLabelText('Stocks start percent')).toBeInTheDocument()
     expect(screen.getByLabelText('Stocks end percent')).toBeInTheDocument()
+  })
+
+  it('falls back to Primary and Partner labels and disables unavailable owners', async () => {
+    const user = userEvent.setup()
+    render(
+      <GoalEditor
+        {...defaultProps}
+        hasPrimary={false}
+        hasPartner={false}
+        primaryName=""
+        partnerName=""
+        existingGoal={{
+          type: 'gradual',
+          owner: 'primary',
+          startAge: 30,
+          endAge: 60,
+          startPcts: [50, 50],
+          endPcts: [50, 50],
+        }}
+      />,
+    )
+
+    const primaryButton = screen.getByRole('button', { name: 'Primary' })
+    const partnerButton = screen.getByRole('button', { name: 'Partner' })
+
+    expect(primaryButton).toBeDisabled()
+    expect(partnerButton).toBeDisabled()
+
+    await user.click(partnerButton)
+    expect(primaryButton).toHaveAttribute('aria-pressed', 'true')
+    expect(partnerButton).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('uses zero for missing percentage entries in the existing goal arrays', async () => {
+    const user = userEvent.setup()
+    render(
+      <GoalEditor
+        {...defaultProps}
+        existingGoal={{
+          type: 'gradual',
+          owner: 'primary',
+          startAge: 30,
+          endAge: 60,
+          startPcts: [100],
+          endPcts: [100],
+        }}
+      />,
+    )
+
+    const stocksEndInput = screen.getByLabelText('Stocks end percent')
+    const bondsStartInput = screen.getByLabelText('Bonds start percent')
+    const bondsEndInput = screen.getByLabelText('Bonds end percent')
+
+    expect(stocksEndInput).toHaveValue(100)
+    expect(bondsStartInput).toHaveValue(0)
+    expect(bondsEndInput).toHaveValue(0)
+
+    await user.clear(bondsStartInput)
+    await user.type(bondsStartInput, '25')
+    expect(bondsStartInput).toHaveValue(25)
   })
 })

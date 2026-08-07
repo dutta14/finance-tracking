@@ -93,4 +93,70 @@ describe('RatioResult', () => {
     )
     expect(screen.getByText(/Goal.*age 35/)).toBeInTheDocument()
   })
+
+  it('skips the goal column when goal percentages are unavailable', () => {
+    const ratio = makeRatio({ goals: { total: { type: 'constant', pcts: [60, 40] } } })
+    render(
+      <RatioResult
+        activeRatio={ratio}
+        ratioData={ratioData}
+        ratioTotal={10000}
+        computeGoalPcts={() => null}
+        getAge={() => null}
+      />,
+    )
+
+    expect(screen.queryByText(/^Goal/)).not.toBeInTheDocument()
+  })
+
+  it('shows a fallback age and on-track or under labels for gradual goals', () => {
+    const ratio = makeRatio({
+      goals: {
+        total: {
+          type: 'gradual',
+          owner: 'partner',
+          startAge: 30,
+          endAge: 60,
+          startPcts: [70, 30],
+          endPcts: [70, 30],
+        },
+      },
+    })
+
+    render(
+      <RatioResult
+        activeRatio={ratio}
+        ratioData={[
+          { name: 'Stocks', value: 6990, color: GROUP_COLORS[0] },
+          { name: 'Bonds', value: 3010, color: GROUP_COLORS[1] },
+        ]}
+        ratioTotal={10000}
+        computeGoalPcts={() => [70, 30]}
+        getAge={() => null}
+      />,
+    )
+
+    expect(screen.getByText('Goal (age ?)')).toBeInTheDocument()
+
+    const stocksDiff = screen.getByText('(-0.1%)')
+    const bondsDiff = screen.getByText('(+0.1%)')
+    expect(stocksDiff).toHaveClass('on-track')
+    expect(bondsDiff).toHaveClass('on-track')
+  })
+
+  it('treats missing actual groups as zero and marks them under goal', () => {
+    const ratio = makeRatio({ goals: { total: { type: 'constant', pcts: [60, 40] } } })
+    render(
+      <RatioResult
+        activeRatio={ratio}
+        ratioData={[{ name: 'Stocks', value: 10000, color: GROUP_COLORS[0] }]}
+        ratioTotal={10000}
+        computeGoalPcts={() => [60, 40]}
+        getAge={() => null}
+      />,
+    )
+
+    const bondsDiff = screen.getByText('(-40.0%)')
+    expect(bondsDiff).toHaveClass('under')
+  })
 })
