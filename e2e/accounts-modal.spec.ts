@@ -52,7 +52,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(bulkCount).toContainText('3 selected')
 
     // Step 6: Switch to groups tab
-    const groupsBtn = nw.modal.locator('button.data-groups-page-btn')
+    const groupsBtn = nw.modal.locator('button.data-filter-btn', { hasText: /^Groups/ })
     await groupsBtn.click()
     // Verify group cards render (Retirement, Taxable, Cash + Ungrouped)
     const groupCards = nw.modal.locator('.data-group-card')
@@ -87,9 +87,9 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
       nw.modal.locator('.data-group-card-name', { hasText: /^Retirement$/ }),
     ).toHaveCount(0)
 
-    // Step 9: Close modal — go back to accounts page, then close
-    await nw.modal.locator('button.data-back-btn').click()
-    await nw.modal.locator('button.data-modal-close').first().click()
+    // Step 9: Leave the inline accounts manager
+    await nw.modal.locator('button.data-filter-btn', { hasText: /^All/ }).click()
+    await nw.chartsTab.click()
     await expect(nw.modal).toBeHidden()
   })
 })

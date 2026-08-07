@@ -48,8 +48,9 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    // After each Tab, the next sidebar Tab-order link (Goals → Net
-    // Worth → Budget → Taxes → Drive → Settings) should hold focus.
+    // After each Tab, the next sidebar Tab-order button (Search →
+    // Goals → Net Worth → Budget → Transactions → Taxes → Drive →
+    // Settings) should hold focus.
     // Drive and Settings live in the sidebar-footer group; their
     // accessible name comes from aria-label but the visible span text
     // also reads "Drive" / "Settings" so `info.text` matches either.
@@ -68,10 +69,10 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    // Tab from Home to Goals (the next sidebar nav link) and press
-    // Enter. The link is a `<button>` so Enter fires its onClick,
-    // which calls navigate('/goal').
+    // Search now sits between Home and Goals in the sidebar tab order.
     await kb.homeLink.focus()
+    await page.keyboard.press('Tab')
+    await expect(kb.searchLink).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(kb.goalsLink).toBeFocused()
 
@@ -240,7 +241,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    for (const expected of ['Goals', 'Net Worth', 'Budget'] as const) {
+    for (const expected of ['Search', 'Goals', 'Net Worth', 'Budget'] as const) {
       await page.keyboard.press('Tab')
       const info = await kb.getActiveElementInfo()
       expect(info.inSidebar).toBe(true)
@@ -255,7 +256,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await expect(kb.budgetLink).toBeFocused()
     await page.keyboard.press('Enter')
 
-    await expect(page).toHaveURL(/#\/budget$/)
+    await expect(page).toHaveURL(/#\/budget(?:\/cashflow)?$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Budget' })).toBeVisible()
     await expect(kb.budgetLink).toHaveAttribute('aria-current', 'page')
   })

@@ -272,7 +272,7 @@ test.describe('Budget Page E2E', () => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
 
       await expect(budget.tableSections).toHaveCount(2)
       await expect(budget.incomeTable).toBeVisible()
@@ -287,7 +287,7 @@ test.describe('Budget Page E2E', () => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('aggregated')
+      await budget.setSpreadsheetMode('aggregated')
 
       await expect(budget.tableSections).toHaveCount(2)
       // Aggregated rows use the budget-tr--agg-row class
@@ -301,8 +301,7 @@ test.describe('Budget Page E2E', () => {
     test('cashflow view renders bar chart and Sankey diagram', async ({ page }) => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
-      await budget.goto()
-      await budget.setViewMode('cashflow')
+      await budget.gotoCashflow()
 
       await expect(page.locator('.cashflow-bar-wrap')).toBeVisible()
       await expect(page.locator('.cashflow-sankey-wrap')).toBeVisible()
@@ -569,7 +568,7 @@ test.describe('Budget Page E2E', () => {
       await seedFullYearBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
       await budget.setTimePeriod('Q')
 
       // Income table: category col + 4 quarters + total = 6 header cells
@@ -585,7 +584,7 @@ test.describe('Budget Page E2E', () => {
       await seedMultiMonthBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
 
       // The seeded data has Jan, Feb, Mar — total expenses = 300+150 + 350+160 + 400+170 = 1530
       await expect(budget.expenseValue).toContainText('$1,530')
@@ -692,7 +691,7 @@ test.describe('Budget Page E2E', () => {
       await expect(budget.incomeValue).toContainText('$5,000')
 
       // Drill into the expense table's May column
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
       await budget.expenseTable.locator('th.budget-th--month').nth(4).click()
       const drilldown = page.locator('.budget-drilldown-table')
       await expect(drilldown).toBeVisible()
@@ -784,7 +783,7 @@ test.describe('Budget Page E2E', () => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
 
       // Open the May drill-down (5th month, index 4) in the expense table
       await budget.expenseTable.locator('th.budget-th--month').nth(4).click()
@@ -1044,7 +1043,7 @@ test.describe('Budget Page E2E', () => {
 
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
 
       const hasDark = await page.evaluate(() => document.body.classList.contains('dark'))
       expect(hasDark).toBe(true)
@@ -1173,7 +1172,7 @@ test.describe('Budget Page E2E', () => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
-      await budget.setViewMode('detailed')
+      await budget.setSpreadsheetMode('detailed')
 
       // Right-click May (index 4) on the expense table and pick "Upload CSV for May".
       // The menu item clicks the hidden <input type="file"> — Playwright intercepts
