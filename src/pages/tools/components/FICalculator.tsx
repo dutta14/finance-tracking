@@ -85,13 +85,17 @@ function getBirthYear(birthday: string): number | null {
 interface ProfileData {
   primaryBirthYear: number | null
   partnerBirthYear: number | null
+  primaryName: string
+  partnerName: string
 }
 
 function loadProfile(): ProfileData {
-  const raw = appStorage.getJSON<{ birthday?: string; partner?: { birthday?: string } }>('user-profile', {})
+  const raw = appStorage.getJSON<{ birthday?: string; name?: string; partner?: { birthday?: string; name?: string } }>('user-profile', {})
   return {
     primaryBirthYear: getBirthYear(raw.birthday || ''),
     partnerBirthYear: raw.partner ? getBirthYear(raw.partner.birthday || '') : null,
+    primaryName: raw.name || 'Primary',
+    partnerName: raw.partner?.name || 'Partner',
   }
 }
 
@@ -307,6 +311,8 @@ const FICalculator: FC = () => {
       retireYear,
       lastYear,
       thisYear,
+      primaryName: profile.primaryName,
+      partnerName: profile.partnerName,
     })
   }, [
     annualExpense,
@@ -325,65 +331,8 @@ const FICalculator: FC = () => {
   ])
 
   return (
+    <div className="fi-calc-layout">
     <div className="fi-calc">
-      {/* Saved simulations */}
-      <div className="fi-sim-bar">
-        <div className="fi-sim-chips">
-          {savedSims.map(s => (
-            <button
-              key={s.name}
-              className={`fi-sim-chip ${activeSim === s.name ? 'fi-sim-chip--active' : ''}`}
-              onClick={() => applySnapshot(s)}
-            >
-              {s.name}
-              <span
-                className="fi-sim-chip-x"
-                onClick={e => {
-                  e.stopPropagation()
-                  handleDeleteSim(s.name)
-                }}
-              >
-                ×
-              </span>
-            </button>
-          ))}
-        </div>
-        {showSaveInput ? (
-          <form
-            className="fi-sim-save-form"
-            onSubmit={e => {
-              e.preventDefault()
-              if (saveNameInput.trim()) handleSave(saveNameInput.trim())
-            }}
-          >
-            <input
-              className="fi-sim-save-input"
-              placeholder="Simulation name"
-              value={saveNameInput}
-              onChange={e => setSaveNameInput(e.target.value)}
-              autoFocus
-            />
-            <button type="submit" className="fi-sim-save-btn" disabled={!saveNameInput.trim()}>
-              Save
-            </button>
-            <button
-              type="button"
-              className="fi-sim-cancel-btn"
-              onClick={() => {
-                setShowSaveInput(false)
-                setSaveNameInput('')
-              }}
-            >
-              ✕
-            </button>
-          </form>
-        ) : (
-          <button className="fi-sim-add-btn" onClick={() => setShowSaveInput(true)}>
-            + Save
-          </button>
-        )}
-      </div>
-
       {/* Annual Expense — hero input */}
       <div className="fi-calc-hero">
         <span className="fi-calc-hero-label">Annual Expense</span>
@@ -464,7 +413,7 @@ const FICalculator: FC = () => {
       {/* 401k access years */}
       <div className="fi-calc-stepper-group">
         <div className="fi-calc-stepper-item">
-          <span className="fi-calc-stepper-label">Primary 401(k)</span>
+          <span className="fi-calc-stepper-label">{profile.primaryName} 401(k)</span>
           <div className="fi-calc-stepper">
             <StepBtn onStep={() => setPrimary401kYear(v => Math.max(primary401kEarliestYear, v - 1))}>−</StepBtn>
             <span className="fi-calc-step-val">{primary401kYear}</span>
@@ -473,7 +422,7 @@ const FICalculator: FC = () => {
         </div>
         {profile.partnerBirthYear && (
           <div className="fi-calc-stepper-item">
-            <span className="fi-calc-stepper-label">Partner 401(k)</span>
+            <span className="fi-calc-stepper-label">{profile.partnerName} 401(k)</span>
             <div className="fi-calc-stepper">
               <StepBtn onStep={() => setPartner401kYear(v => Math.max(partner401kEarliestYear, v - 1))}>−</StepBtn>
               <span className="fi-calc-step-val">{partner401kYear}</span>
@@ -500,11 +449,11 @@ const FICalculator: FC = () => {
       <div className="fi-calc-divider" />
       <div className="fi-calc-holdings">
         <div className="fi-calc-holding-row">
-          <span>FI Retirement (Primary)</span>
+          <span>FI Retirement ({profile.primaryName})</span>
           <span>{fmt(fiRetirementPrimary)}</span>
         </div>
         <div className="fi-calc-holding-row">
-          <span>FI Retirement (Partner)</span>
+          <span>FI Retirement ({profile.partnerName})</span>
           <span>{fmt(fiRetirementPartner)}</span>
         </div>
         <div className="fi-calc-holding-row">
@@ -546,13 +495,13 @@ const FICalculator: FC = () => {
               </div>
               {fiRetirementPrimary > 0 && (
                 <div className="fi-calc-bk-row">
-                  <span>Primary 401(k) at {primary401kYear}</span>
+                  <span>{profile.primaryName} 401(k) at {primary401kYear}</span>
                   <span>{fmt(result.primary401kAtAccess)}</span>
                 </div>
               )}
               {fiRetirementPartner > 0 && (
                 <div className="fi-calc-bk-row">
-                  <span>Partner 401(k) at {partner401kYear}</span>
+                  <span>{profile.partnerName} 401(k) at {partner401kYear}</span>
                   <span>{fmt(result.partner401kAtAccess)}</span>
                 </div>
               )}
@@ -567,7 +516,10 @@ const FICalculator: FC = () => {
             </div>
 
             <button className="fi-calc-expand-btn" onClick={() => setShowYearByYear(v => !v)}>
-              {showYearByYear ? '▾' : '▸'} Year-by-year projection
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transform: showYearByYear ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+                <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {showYearByYear ? 'Hide' : 'Show'} year-by-year projection
             </button>
 
             {showYearByYear && (
@@ -597,6 +549,70 @@ const FICalculator: FC = () => {
           </div>
         </>
       )}
+    </div>
+
+    {/* Saved Simulations Panel */}
+    <div className="fi-sim-panel">
+      <h3 className="fi-sim-panel-title">Saved Simulations</h3>
+      <div className="fi-sim-panel-list">
+        {savedSims.map(s => (
+          <div
+            key={s.name}
+            className={`fi-sim-panel-item ${activeSim === s.name ? 'fi-sim-panel-item--active' : ''}`}
+            onClick={() => applySnapshot(s)}
+          >
+            <span className="fi-sim-panel-item-name">{s.name}</span>
+            <button
+              className="fi-sim-panel-item-delete"
+              onClick={e => {
+                e.stopPropagation()
+                handleDeleteSim(s.name)
+              }}
+              aria-label={`Delete ${s.name}`}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        {savedSims.length === 0 && (
+          <p className="fi-sim-panel-empty">No saved simulations yet. Adjust parameters and save to compare scenarios.</p>
+        )}
+      </div>
+      {showSaveInput ? (
+        <form
+          className="fi-sim-save-form"
+          onSubmit={e => {
+            e.preventDefault()
+            if (saveNameInput.trim()) handleSave(saveNameInput.trim())
+          }}
+        >
+          <input
+            className="fi-sim-save-input"
+            placeholder="Simulation name"
+            value={saveNameInput}
+            onChange={e => setSaveNameInput(e.target.value)}
+            autoFocus
+          />
+          <button type="submit" className="fi-sim-save-btn" disabled={!saveNameInput.trim()}>
+            Save
+          </button>
+          <button
+            type="button"
+            className="fi-sim-cancel-btn"
+            onClick={() => {
+              setShowSaveInput(false)
+              setSaveNameInput('')
+            }}
+          >
+            ✕
+          </button>
+        </form>
+      ) : (
+        <button className="fi-sim-add-btn" onClick={() => setShowSaveInput(true)}>
+          + Save current
+        </button>
+      )}
+    </div>
     </div>
   )
 }
