@@ -30,6 +30,7 @@ const RatioBuilder: FC<RatioBuilderProps> = ({
               className="alloc-ratio-group-name"
               value={group.label}
               onChange={e => onUpdateGroupLabel(gi, e.target.value)}
+              aria-label={`Group ${gi + 1} name`}
             />
             {activeRatio.groups.length > 2 && (
               <button className="alloc-ratio-group-remove" onClick={() => onRemoveGroup(gi)} title="Remove group">
