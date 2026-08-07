@@ -130,6 +130,7 @@ test.describe('Net Worth — Balance Entry', () => {
     const confirmDialog = page.locator('.data-confirm-dialog')
     await expect(confirmDialog).toBeVisible()
     await confirmDialog.locator('button.data-confirm-delete').click()
+    await expect(confirmDialog).toBeHidden()
 
     await expect(page.locator('.data-spreadsheet-month-label', { hasText: firstMonthLabel! })).toHaveCount(0)
     await expect(monthLabels).toHaveCount(initialCount - 1)
