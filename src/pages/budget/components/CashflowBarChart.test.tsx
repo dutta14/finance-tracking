@@ -18,17 +18,41 @@ vi.mock('recharts', async () => {
       data?: Array<{ label: string }>
       onClick?: (e: { activeLabel?: string }) => void
     }) => (
-      <button type="button" data-testid="bar-chart" onClick={() => onClick?.({ activeLabel: data?.[0]?.label })}>
-        {children}
-      </button>
+      <div>
+        <button type="button" data-testid="bar-chart" onClick={() => onClick?.({ activeLabel: data?.[0]?.label })}>
+          {children}
+        </button>
+        <button type="button" data-testid="bar-chart-empty-click" onClick={() => onClick?.({})} />
+      </div>
     ),
     Bar: ({ children, name }: { children: React.ReactNode; name?: string }) => (
       <div data-testid={`bar-${String(name).toLowerCase()}`}>{children}</div>
     ),
     Cell: ({ opacity = 1 }: { opacity?: number }) => <div data-testid="bar-cell" data-opacity={opacity} />,
     XAxis: () => null,
-    YAxis: () => null,
-    Tooltip: () => null,
+    YAxis: ({ tickFormatter }: { tickFormatter?: (value: number) => string }) => (
+      <div>
+        <span data-testid="y-axis-large">{tickFormatter?.(1200)}</span>
+        <span data-testid="y-axis-small">{tickFormatter?.(250)}</span>
+      </div>
+    ),
+    Tooltip: ({
+      formatter,
+      labelFormatter,
+    }: {
+      formatter?: (value: number, name: string) => [string, string]
+      labelFormatter?: (label: string) => string
+    }) => {
+      const [incomeValue, incomeName] = formatter?.(1200, 'Income') ?? ['', '']
+      const [expenseValue, expenseName] = formatter?.(-250, 'Other') ?? ['', '']
+      return (
+        <div>
+          <span data-testid="tooltip-income">{`${incomeName}:${incomeValue}`}</span>
+          <span data-testid="tooltip-expense">{`${expenseName}:${expenseValue}`}</span>
+          <span data-testid="tooltip-label">{labelFormatter?.('Jan')}</span>
+        </div>
+      )
+    },
     ReferenceLine: () => null,
     CartesianGrid: () => null,
   }
@@ -90,7 +114,7 @@ describe('CashflowBarChart', () => {
     }
     render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={categorySums} />)
     // Legend renders 12 items (one per month) with net cashflow amounts
-    const legendItems = screen.getAllByText(/^[+-]?\$/)
+    const legendItems = document.querySelectorAll('.cashflow-bar-legend-item')
     expect(legendItems).toHaveLength(12)
     // Jan has data: net = +$3,800; remaining 11 months show +$0
     expect(screen.getByText('+$3,800')).toBeInTheDocument()
@@ -143,6 +167,16 @@ describe('CashflowBarChart', () => {
     expect(screen.getByText('+$3,800')).toBeInTheDocument()
   })
 
+  it('ignores transactions whose categories are not classified as income or expense', () => {
+    const yearTransactions: Record<string, Transaction[]> = {
+      '2024-01': [makeTx({ category: 'Unknown', amount: -500 }), makeTx({ category: 'Zeroed', amount: 0 })],
+    }
+
+    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={{}} />)
+
+    expect(screen.getAllByText('+$0')).toHaveLength(12)
+  })
+
   it('selects a period when clicking a bar', async () => {
     const user = userEvent.setup()
     const onSelectPeriod = vi.fn()
@@ -160,5 +194,51 @@ describe('CashflowBarChart', () => {
     const cells = screen.getAllByTestId('bar-cell')
     expect(cells[0]).toHaveAttribute('data-opacity', '0.35')
     expect(cells[1]).toHaveAttribute('data-opacity', '1')
+  })
+
+  it('clears the selection when the selected period is clicked again', async () => {
+    const user = userEvent.setup()
+    const onSelectPeriod = vi.fn()
+
+    render(<CashflowBarChart {...defaultProps} selectedPeriod="Jan" onSelectPeriod={onSelectPeriod} />)
+
+    await user.click(screen.getByTestId('bar-chart'))
+
+    expect(onSelectPeriod).toHaveBeenCalledWith(null)
+  })
+
+  it('ignores chart clicks when recharts does not provide an active label', async () => {
+    const user = userEvent.setup()
+    const onSelectPeriod = vi.fn()
+
+    render(<CashflowBarChart {...defaultProps} onSelectPeriod={onSelectPeriod} />)
+
+    await user.click(screen.getByTestId('bar-chart-empty-click'))
+
+    expect(onSelectPeriod).not.toHaveBeenCalled()
+  })
+
+  it('formats axis ticks and tooltip labels for both income and expense values', () => {
+    render(<CashflowBarChart {...defaultProps} />)
+
+    expect(screen.getByTestId('y-axis-large')).toHaveTextContent('$1k')
+    expect(screen.getByTestId('y-axis-small')).toHaveTextContent('$250')
+    expect(screen.getByTestId('tooltip-income')).toHaveTextContent('Income:$1,200')
+    expect(screen.getByTestId('tooltip-expense')).toHaveTextContent('Expense:$250')
+    expect(screen.getByTestId('tooltip-label')).toHaveTextContent('Jan 2024')
+  })
+
+  it('renders negative net values without a leading plus sign', () => {
+    const yearTransactions: Record<string, Transaction[]> = {
+      '2024-01': [makeTx({ category: 'Groceries', amount: -1200 })],
+    }
+    const categorySums: Record<string, Record<string, number>> = {
+      Groceries: { '2024-01': -1200 },
+    }
+
+    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={categorySums} />)
+
+    expect(screen.getByText('-$1,200')).toBeInTheDocument()
+    expect(screen.getByText('-$1,200')).toHaveClass('negative')
   })
 })

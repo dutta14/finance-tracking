@@ -97,4 +97,24 @@ describe('BudgetHeader', () => {
     await user.click(screen.getByText('M'))
     expect(props.onSetTimePeriod).toHaveBeenCalledWith('month')
   })
+
+  it('marks the active view mode button and hides period buttons in groups mode', () => {
+    renderHeader({ viewMode: 'groups' })
+
+    expect(screen.getByText('Groups')).toHaveClass('active')
+    expect(screen.getByText('Cashflow')).not.toHaveClass('active')
+    expect(screen.queryByText('M')).not.toBeInTheDocument()
+    expect(screen.queryByText('Q')).not.toBeInTheDocument()
+    expect(screen.queryByText('H')).not.toBeInTheDocument()
+  })
+
+  it('marks the active cashflow view and half-year period buttons', () => {
+    renderHeader({ viewMode: 'cashflow', timePeriod: 'half' })
+
+    expect(screen.getByText('Cashflow')).toHaveClass('active')
+    expect(screen.getByText('Spreadsheet')).not.toHaveClass('active')
+    expect(screen.getByText('H')).toHaveClass('active')
+    expect(screen.getByText('M')).not.toHaveClass('active')
+    expect(screen.getByText('Q')).not.toHaveClass('active')
+  })
 })

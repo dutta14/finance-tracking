@@ -310,6 +310,24 @@ describe('CategoryGroupManager', () => {
     expect(screen.getByText('Groceries')).toBeInTheDocument()
   })
 
+  it('shows transaction counts when yearly transactions are provided', () => {
+    render(
+      <CategoryGroupManager
+        {...defaultProps}
+        yearTransactions={{
+          '2024-01': [
+            { date: '2024-01-01', category: 'Groceries', amount: -50, description: 'A' },
+            { date: '2024-01-02', category: 'Groceries', amount: -25, description: 'B' },
+          ],
+        }}
+      />,
+    )
+
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')!
+    expect(within(groceriesEl).getByText('2')).toBeInTheDocument()
+    expect(groceriesEl).toHaveAttribute('title', '$500 · 2 transactions')
+  })
+
   /* ── Add group via Enter key ── */
 
   /* ── Rename on blur ── */
@@ -481,6 +499,16 @@ describe('CategoryGroupManager', () => {
     expect(screen.getByText(/0 selected/)).toBeInTheDocument()
   })
 
+  it('keeps a typed custom merge target in the input', async () => {
+    const user = userEvent.setup()
+    render(<CategoryGroupManager {...defaultProps} />)
+
+    await user.click(screen.getByText('Merge Categories'))
+    await user.type(screen.getByPlaceholderText('Type new name'), 'Combined Expenses')
+
+    expect(screen.getByPlaceholderText('Type new name')).toHaveValue('Combined Expenses')
+  })
+
   it('does not merge when fewer than 2 categories selected', async () => {
     const onMerge = vi.fn()
     const user = userEvent.setup()
@@ -556,5 +584,160 @@ describe('CategoryGroupManager', () => {
     const removedIdx = updated.findIndex((g: CategoryGroup) => g.id === 'removed')
     const newIdx = updated.findIndex((g: CategoryGroup) => g.name === 'New Group')
     expect(newIdx).toBeLessThan(removedIdx)
+  })
+
+  it('renders an empty income section when only the income updater is provided', () => {
+    render(<CategoryGroupManager {...defaultProps} onUpdateIncomeGroups={vi.fn()} />)
+
+    expect(screen.getByText('Income Category Groups')).toBeInTheDocument()
+    expect(screen.getAllByText('No categories yet - drag categories here from other groups').length).toBeGreaterThan(1)
+  })
+
+  it('adds a new income group through the income updater', async () => {
+    const onUpdate = vi.fn()
+    const onUpdateIncomeGroups = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <CategoryGroupManager
+        {...defaultProps}
+        onUpdate={onUpdate}
+        onUpdateIncomeGroups={onUpdateIncomeGroups}
+        incomeCategoryGroups={[{ id: 'income-others', name: 'Others', categories: [], type: 'income' }]}
+      />,
+    )
+
+    const newGroupButtons = screen.getAllByText('+ New Group')
+    await user.click(newGroupButtons[1])
+
+    expect(onUpdateIncomeGroups).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ name: 'New Group', categories: [] })]),
+    )
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+
+  it('removes an income group by creating the income fallback when it is missing', async () => {
+    const onUpdateIncomeGroups = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <CategoryGroupManager
+        {...defaultProps}
+        groups={[{ id: 'others', name: 'Others', categories: [] }, { id: 'removed', name: 'Removed', categories: [] }]}
+        incomeCategoryGroups={[{ id: 'paychecks', name: 'Paychecks', categories: ['Salary'], type: 'income' }]}
+        onUpdateIncomeGroups={onUpdateIncomeGroups}
+        categorySums={{ ...defaultCategorySums, Salary: { '2024-01': 5000 } }}
+      />,
+    )
+
+    const paychecksGroup = screen.getByText('Paychecks').closest('.budget-group-block')! as HTMLElement
+    await user.click(within(paychecksGroup).getByTitle('Delete group (categories move to Others)'))
+
+    expect(onUpdateIncomeGroups).toHaveBeenCalledWith([
+      { id: 'income-others', name: 'Others', categories: ['Salary'] },
+    ])
+  })
+
+  it('reorders groups when dragging a group header onto another group', () => {
+    const onUpdate = vi.fn()
+    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
+
+    const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')!
+    const lifestyleGroup = screen.getByText('Lifestyle').closest('.budget-group-block')!
+    const essentialsHeader = essentialsGroup.querySelector('.budget-group-header') as HTMLElement
+
+    fireEvent.dragStart(essentialsHeader, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
+    fireEvent.dragOver(lifestyleGroup, { dataTransfer: { dropEffect: '' } })
+    fireEvent.drop(lifestyleGroup, { dataTransfer: {} })
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'lifestyle' }),
+        expect.objectContaining({ id: 'essentials' }),
+      ]),
+    )
+    const reordered = onUpdate.mock.calls[0][0]
+    expect(reordered[0].id).toBe('lifestyle')
+    expect(reordered[1].id).toBe('essentials')
+  })
+
+  it('does not allow reordering a group onto the removed group', () => {
+    const onUpdate = vi.fn()
+    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
+
+    const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')!
+    const removedGroup = screen.getByText('Removed').closest('.budget-group-block')!
+    const essentialsHeader = essentialsGroup.querySelector('.budget-group-header') as HTMLElement
+
+    fireEvent.dragStart(essentialsHeader, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
+    fireEvent.dragOver(removedGroup, { dataTransfer: { dropEffect: '' } })
+    fireEvent.drop(removedGroup, { dataTransfer: {} })
+
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+
+  it('does not reorder a group when it is dropped onto itself', () => {
+    const onUpdate = vi.fn()
+    render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
+
+    const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')!
+    const essentialsHeader = essentialsGroup.querySelector('.budget-group-header') as HTMLElement
+
+    fireEvent.dragStart(essentialsHeader, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
+    fireEvent.drop(essentialsGroup, { dataTransfer: {} })
+
+    expect(onUpdate).not.toHaveBeenCalled()
+    expect(essentialsGroup).not.toHaveClass('budget-group-block--dragging')
+  })
+
+  it('clears the group drag state when a dragged group header ends', () => {
+    render(<CategoryGroupManager {...defaultProps} />)
+
+    const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')!
+    const essentialsHeader = essentialsGroup.querySelector('.budget-group-header') as HTMLElement
+
+    fireEvent.dragStart(essentialsHeader, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
+    expect(essentialsGroup).toHaveClass('budget-group-block--dragging')
+
+    fireEvent.dragEnd(essentialsHeader)
+
+    expect(essentialsGroup).not.toHaveClass('budget-group-block--dragging')
+  })
+
+  it('clears the custom delete-merge input when an existing target is selected', async () => {
+    const user = userEvent.setup()
+    render(
+      <CategoryGroupManager
+        {...defaultProps}
+        categoryHasTransactions={vi.fn((cat: string) => cat === 'Groceries')}
+      />,
+    )
+
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    await user.click(within(groceriesEl).getByTitle('Delete category'))
+
+    const selects = screen.getAllByRole('combobox')
+    await user.selectOptions(selects[selects.length - 1], 'Rent')
+
+    expect(screen.getByPlaceholderText('Type new name')).toHaveValue('')
+  })
+
+  it('merges a category into a typed custom target from the delete prompt', async () => {
+    const onMerge = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <CategoryGroupManager
+        {...defaultProps}
+        onMerge={onMerge}
+        categoryHasTransactions={vi.fn((cat: string) => cat === 'Groceries')}
+      />,
+    )
+
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    await user.click(within(groceriesEl).getByTitle('Delete category'))
+    await user.type(screen.getByPlaceholderText('Type new name'), 'Merged Groceries')
+    await user.click(screen.getByText('Merge & Delete'))
+
+    expect(onMerge).toHaveBeenCalledWith(['Groceries'], 'Merged Groceries')
   })
 })

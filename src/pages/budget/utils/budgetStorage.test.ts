@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { appStorage } from '../../../utils/appStorage'
 import {
   loadBudgetStore,
@@ -14,6 +14,8 @@ import {
   renameBudgetMonth,
   getBudgetSaveRate,
   saveBudgetSummary,
+  getExpenseGroups,
+  getIncomeGroups,
 } from './budgetStorage'
 import type { BudgetStore, CategoryGroup } from '../types'
 
@@ -64,6 +66,18 @@ describe('loadBudgetStore', () => {
     localStorage.setItem('budget-store', '{bad')
     const store = loadBudgetStore()
     expect(store.csvs).toEqual({})
+  })
+
+  it('returns the default store when storage access throws', () => {
+    const getJSONSpy = vi.spyOn(appStorage, 'getJSON').mockImplementation(() => {
+      throw new Error('storage unavailable')
+    })
+
+    const store = loadBudgetStore()
+
+    expect(store).toEqual(expect.objectContaining({ csvs: {}, years: [] }))
+    expect(store.categoryGroups?.filter(group => group.type === 'income')).toEqual(DEFAULT_INCOME_GROUPS)
+    getJSONSpy.mockRestore()
   })
 })
 
@@ -116,6 +130,45 @@ describe('loadBudgetConfig', () => {
     const config = loadBudgetConfig()
     expect(config.years).toEqual([])
   })
+
+  it('merges legacy income groups and ignores malformed legacy entries', () => {
+    appStorage.setJSON('budget-config', {
+      version: 0,
+      years: [2025],
+      categoryGroups: [{ id: 'salary', name: 'Salary', categories: ['Paycheck'], type: 'income' }],
+      incomeCategoryGroups: [
+        { id: 'salary', name: '', categories: ['Bonus'] },
+        null,
+        { id: 'invalid', categories: ['Broken'] },
+        { id: 'commissions', name: 'Commissions', categories: ['Commission'] },
+      ],
+    })
+
+    const config = loadBudgetConfig()
+
+    expect(config.version).toBe(1)
+    expect(config.categoryGroups).toEqual(
+      expect.arrayContaining([
+        { id: 'salary', name: 'Salary', categories: ['Paycheck', 'Bonus'], type: 'income' },
+        { id: 'commissions', name: 'Commissions', categories: ['Commission'], type: 'income' },
+      ]),
+    )
+  })
+
+  it('falls back missing version and years while merging duplicate groups', () => {
+    appStorage.setJSON('budget-config', {
+      categoryGroups: [{ id: 'food', name: 'Food', categories: ['Groceries'] }],
+      incomeCategoryGroups: [{ id: 'food', name: 'Food', categories: ['Dining'] }],
+    })
+
+    const config = loadBudgetConfig()
+
+    expect(config.version).toBe(1)
+    expect(config.years).toEqual([])
+    expect(config.categoryGroups).toEqual([
+      { id: 'food', name: 'Food', categories: ['Groceries', 'Dining'], type: 'income' },
+    ])
+  })
 })
 
 describe('getBudgetConfigData', () => {
@@ -134,6 +187,25 @@ describe('getBudgetConfigData', () => {
     expect(config.years).toEqual([2024])
     expect(config.categoryGroups[0].categories).toEqual(['Misc'])
     expect(config.categoryGroups.find(g => g.id === 'income-others')?.categories).toEqual(['Salary'])
+  })
+
+  it('normalizes duplicate categories and removes income categories from expense fallback groups', () => {
+    const store: BudgetStore = {
+      csvs: {},
+      configs: {},
+      years: [2024],
+      categoryGroups: [
+        { id: 'food', name: 'Food', categories: ['Groceries', 'Groceries'] },
+        { id: 'others', name: 'Others', categories: ['Groceries', 'Bonus'] },
+        { id: 'income-others', name: 'Others', categories: ['Bonus', 'Bonus'], type: 'income' },
+      ],
+    }
+
+    const config = getBudgetConfigData(store)
+
+    expect(config.categoryGroups.find(g => g.id === 'food')?.categories).toEqual(['Groceries'])
+    expect(config.categoryGroups.find(g => g.id === 'others')?.categories).toEqual([])
+    expect(config.categoryGroups.find(g => g.id === 'income-others')?.categories).toEqual(['Bonus'])
   })
 })
 
@@ -168,6 +240,34 @@ describe('getGlobalCategoryGroups', () => {
     const store: BudgetStore = { csvs: {}, configs: {}, years: [] }
     const groups = getGlobalCategoryGroups(store)
     expect(groups).toEqual(DEFAULT_EXPENSE_GROUPS)
+  })
+})
+
+describe('group helpers', () => {
+  it('returns expense groups without income entries and restores missing defaults', () => {
+    const groups = getExpenseGroups([
+      { id: 'food', name: 'Food', categories: ['Groceries'] },
+      { id: 'paychecks', name: 'Paychecks', categories: ['Salary'], type: 'income' },
+    ])
+
+    expect(groups).toEqual([
+      { id: 'food', name: 'Food', categories: ['Groceries'] },
+      { id: 'others', name: 'Others', categories: [] },
+      { id: 'removed', name: 'Remove from Budget', categories: [] },
+    ])
+  })
+
+  it('returns income groups for explicit income entries and the income fallback id', () => {
+    const groups = getIncomeGroups([
+      { id: 'paychecks', name: 'Paychecks', categories: ['Salary'], type: 'income' },
+      { id: 'income-others', name: 'Others', categories: ['Bonus'] },
+      { id: 'food', name: 'Food', categories: ['Groceries'] },
+    ])
+
+    expect(groups).toEqual([
+      { id: 'paychecks', name: 'Paychecks', categories: ['Salary'], type: 'income' },
+      { id: 'income-others', name: 'Others', categories: ['Bonus'], type: 'income' },
+    ])
   })
 })
 
@@ -478,6 +578,42 @@ describe('loadBudgetStore migration branches', () => {
     localStorage.setItem('budget-store-encrypted', 'not-valid')
     const store = loadBudgetStore()
     expect(store.csvs).toEqual({})
+  })
+
+  it('merges duplicate groups from config, store, and legacy income groups when loading', () => {
+    appStorage.setJSON('budget-store', {
+      csvs: {},
+      configs: {},
+      years: [2024],
+      categoryGroups: [
+        { id: 'salary', name: 'Salary', categories: ['Paycheck'], type: 'income' },
+        { id: 'food', name: 'Food', categories: ['Groceries'] },
+      ],
+      incomeCategoryGroups: [
+        { id: 'salary', name: '', categories: ['Bonus'] },
+        { id: 'income-others', name: 'Others', categories: ['Interest'] },
+      ],
+    })
+    appStorage.setJSON('budget-config', {
+      version: 1,
+      years: [2025],
+      categoryGroups: [
+        { id: 'food', name: 'Food', categories: ['Dining'] },
+        { id: 'others', name: 'Others', categories: [] },
+        { id: 'removed', name: 'Remove from Budget', categories: [] },
+      ],
+    })
+
+    const store = loadBudgetStore()
+
+    expect(store.years).toEqual([2025])
+    expect(store.categoryGroups).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'food', categories: ['Dining', 'Groceries'] }),
+        expect.objectContaining({ id: 'salary', name: 'Salary', categories: ['Paycheck', 'Bonus'], type: 'income' }),
+        expect.objectContaining({ id: 'income-others', categories: ['Interest'], type: 'income' }),
+      ]),
+    )
   })
 })
 
