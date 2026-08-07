@@ -1,5 +1,5 @@
-import { FC, useState, lazy, Suspense } from 'react'
-import { NavLink, useLocation, useNavigate, Routes, Route } from 'react-router-dom'
+import { FC, useState } from 'react'
+import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { FinancialGoal } from '../../types'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useLayout } from '../../contexts/LayoutContext'
@@ -10,10 +10,9 @@ import GoalDetail from './components/GoalDetail'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
 import { useGrowthSettings } from './hooks/useGrowthSettings'
-import NewGoalButton from './components/NewGoalButton'
 import '../../styles/GrowthSettings.css'
 
-const FICalculator = lazy(() => import('../tools/components/FICalculator'))
+import FICalculator from '../tools/components/FICalculator'
 
 const Goal: FC = () => {
   const {
@@ -87,8 +86,7 @@ const Goal: FC = () => {
               <h1>Goals</h1>
               <nav className="goal-tab-bar" aria-label="Goals sections">
                 <NavLink
-                  to="/goal"
-                  end
+                  to="/goal/plans"
                   className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
                 >
                   Plans
@@ -97,45 +95,14 @@ const Goal: FC = () => {
                   Calculator
                 </NavLink>
               </nav>
-              {activeTab === 'plans' && (
-                <div className="goal-header-actions">
-                  {goals.length > 0 && gwGoals.length > 0 && (
-                    <button className="goal-action-btn" onClick={() => setMixerOpen(true)} title="Mix & Match goals">
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M2 4h5l2 8h5M2 12h5l2-8h5" />
-                        <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none" />
-                        <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none" />
-                      </svg>
-                      Mix &amp; Match
-                    </button>
-                  )}
-                  <NewGoalButton
-                    onClick={() => {
-                      resetForm()
-                      stopEditing()
-                      setShowForm(true)
-                    }}
-                  />
-                </div>
-              )}
             </div>
           </>
         )}
 
         <Routes>
+          <Route index element={<Navigate to="/goal/plans" replace />} />
           <Route
-            index
+            path="plans"
             element={
               <>
                 <div className="goal-container">
@@ -153,6 +120,12 @@ const Goal: FC = () => {
                     onCreateGwGoal={onCreateGwGoal}
                     onUpdateGwGoal={onUpdateGwGoal}
                     onDeleteGwGoal={onDeleteGwGoal}
+                    onMixMatch={() => setMixerOpen(true)}
+                    onNewGoal={() => {
+                      resetForm()
+                      stopEditing()
+                      setShowForm(true)
+                    }}
                   />
                 </div>
 
@@ -188,17 +161,7 @@ const Goal: FC = () => {
           />
           <Route
             path="calculator"
-            element={
-              <Suspense
-                fallback={
-                  <div className="goal-tab-loading" role="status">
-                    Loading…
-                  </div>
-                }
-              >
-                <FICalculator />
-              </Suspense>
-            }
+            element={<FICalculator />}
           />
           <Route
             path=":id"

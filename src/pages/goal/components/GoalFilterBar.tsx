@@ -1,10 +1,10 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { FinancialGoal } from '../../../types'
 
 export interface GoalFilters {
-  retirementAges: number[] // selected retirement ages
-  fiGoalBuckets: string[] // e.g. '0-5M', '5M-10M', ...
-  expenseBuckets: string[] // e.g. '0-50k', '50k-100k', ...
+  retirementAges: number[]
+  fiGoalBuckets: string[]
+  expenseBuckets: string[]
 }
 
 export const DEFAULT_FILTERS: GoalFilters = {
@@ -29,44 +29,46 @@ export const EXPENSE_BUCKETS = [
   { label: '$500k+', min: 500_000, max: Infinity },
 ]
 
-interface DropdownProps {
+type FilterCategoryKey = keyof GoalFilters
+
+interface FilterOption<T extends string | number = string | number> {
+  value: T
   label: string
-  active: boolean
-  children: React.ReactNode
-  onClose: () => void
-  triggerRef: React.RefObject<HTMLButtonElement>
 }
 
-const FilterDropdown: FC<DropdownProps> = ({ active, children, onClose, triggerRef }) => {
-  const panelRef = useRef<HTMLDivElement>(null)
+const FILTER_CATEGORIES: Array<{ key: FilterCategoryKey; label: string }> = [
+  { key: 'retirementAges', label: 'Retirement Age' },
+  { key: 'fiGoalBuckets', label: 'FI Goal' },
+  { key: 'expenseBuckets', label: 'Expense at Creation' },
+]
 
-  useEffect(() => {
-    if (!active) return
-    const handler = (e: MouseEvent) => {
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(e.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(e.target as Node)
-      )
-        onClose()
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [active, onClose, triggerRef])
+function cloneFilters(filters: GoalFilters): GoalFilters {
+  return {
+    retirementAges: [...filters.retirementAges],
+    fiGoalBuckets: [...filters.fiGoalBuckets],
+    expenseBuckets: [...filters.expenseBuckets],
+  }
+}
 
-  return (
-    <div className="filter-dropdown-wrapper">
-      {active && (
-        <div className="filter-dropdown-panel" ref={panelRef}>
-          {children}
-          <button className="filter-dropdown-clear" onClick={onClose}>
-            Done
-          </button>
-        </div>
-      )}
-    </div>
-  )
+function countActiveFilters(filters: GoalFilters): number {
+  return filters.retirementAges.length + filters.fiGoalBuckets.length + filters.expenseBuckets.length
+}
+
+function toggleSelection<T extends string | number>(current: T[], value: T, orderedValues: T[]): T[] {
+  const next = current.includes(value) ? current.filter(item => item !== value) : [...current, value]
+  const ordered = orderedValues.filter(item => next.includes(item))
+  return ordered.length === orderedValues.length ? [] : ordered
+}
+
+function renderRetirementAgeLabel(age: number): string {
+  return `Age ${age}`
+}
+
+function renderSummaryGroups(filters: GoalFilters): Array<{ label: string; values: Array<string | number> }> {
+  return FILTER_CATEGORIES.map(category => ({
+    label: category.label,
+    values: filters[category.key],
+  })).filter(group => group.values.length > 0)
 }
 
 interface GoalFilterBarProps {
@@ -76,177 +78,292 @@ interface GoalFilterBarProps {
 }
 
 const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, filters, onChange }) => {
-  const [openMenu, setOpenMenu] = useState<'age' | 'fi' | 'expense' | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategoryKey>('retirementAges')
+  const [draftFilters, setDraftFilters] = useState<GoalFilters>(() => cloneFilters(filters))
 
-  // Unique retirement ages present in goals
-  const availableAges = Array.from(new Set(goals.map(p => p.retirementAge))).sort((a, b) => a - b)
-
-  // Buckets that actually have goals
-  const availableFiBuckets = FI_GOAL_BUCKETS.filter(b => goals.some(p => p.fiGoal >= b.min && p.fiGoal < b.max))
-  const availableExpenseBuckets = EXPENSE_BUCKETS.filter(b =>
-    goals.some(p => p.expenseValue >= b.min && p.expenseValue < b.max),
+  const availableAges = useMemo(
+    () => Array.from(new Set(goals.map(goal => goal.retirementAge))).sort((a, b) => a - b),
+    [goals],
+  )
+  const availableFiBuckets = useMemo(
+    () => FI_GOAL_BUCKETS.filter(bucket => goals.some(goal => goal.fiGoal >= bucket.min && goal.fiGoal < bucket.max)),
+    [goals],
+  )
+  const availableExpenseBuckets = useMemo(
+    () =>
+      EXPENSE_BUCKETS.filter(bucket =>
+        goals.some(goal => goal.expenseValue >= bucket.min && goal.expenseValue < bucket.max),
+      ),
+    [goals],
   )
 
-  const toggleAge = (age: number) => {
-    const next = filters.retirementAges.includes(age)
-      ? filters.retirementAges.filter(a => a !== age)
-      : [...filters.retirementAges, age]
-    onChange({ ...filters, retirementAges: next })
+  const optionsByCategory = useMemo<Record<FilterCategoryKey, FilterOption[]>>(
+    () => ({
+      retirementAges: availableAges.map(age => ({ value: age, label: renderRetirementAgeLabel(age) })),
+      fiGoalBuckets: availableFiBuckets.map(bucket => ({ value: bucket.label, label: bucket.label })),
+      expenseBuckets: availableExpenseBuckets.map(bucket => ({ value: bucket.label, label: bucket.label })),
+    }),
+    [availableAges, availableExpenseBuckets, availableFiBuckets],
+  )
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDraftFilters(cloneFilters(filters))
+    }
+  }, [filters, isOpen])
+
+  const handleCancel = () => {
+    setDraftFilters(cloneFilters(filters))
+    setIsOpen(false)
   }
 
-  const toggleFiBucket = (label: string) => {
-    const next = filters.fiGoalBuckets.includes(label)
-      ? filters.fiGoalBuckets.filter(l => l !== label)
-      : [...filters.fiGoalBuckets, label]
-    onChange({ ...filters, fiGoalBuckets: next })
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) {
+        return
+      }
+      handleCancel()
+    }
+
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [filters, isOpen])
+
+  const openPanel = () => {
+    setDraftFilters(cloneFilters(filters))
+    setIsOpen(true)
   }
 
-  const toggleExpenseBucket = (label: string) => {
-    const next = filters.expenseBuckets.includes(label)
-      ? filters.expenseBuckets.filter(l => l !== label)
-      : [...filters.expenseBuckets, label]
-    onChange({ ...filters, expenseBuckets: next })
+  const handleApply = () => {
+    onChange(cloneFilters(draftFilters))
+    setIsOpen(false)
   }
 
-  const clearAll = () => onChange(DEFAULT_FILTERS)
-  const hasFilters =
-    filters.retirementAges.length > 0 || filters.fiGoalBuckets.length > 0 || filters.expenseBuckets.length > 0
-  const activeCount = filters.retirementAges.length + filters.fiGoalBuckets.length + filters.expenseBuckets.length
+  const setRetirementAges = (next: number[]) => {
+    setDraftFilters(current => ({ ...current, retirementAges: next }))
+  }
 
-  const ageRef = useRef<HTMLButtonElement>(null!)
-  const fiRef = useRef<HTMLButtonElement>(null!)
-  const expRef = useRef<HTMLButtonElement>(null!)
+  const setFiGoalBuckets = (next: string[]) => {
+    setDraftFilters(current => ({ ...current, fiGoalBuckets: next }))
+  }
+
+  const setExpenseBuckets = (next: string[]) => {
+    setDraftFilters(current => ({ ...current, expenseBuckets: next }))
+  }
+
+  const handleSelectAll = (category: FilterCategoryKey) => {
+    if (category === 'retirementAges') {
+      setRetirementAges([])
+      return
+    }
+
+    if (category === 'fiGoalBuckets') {
+      setFiGoalBuckets([])
+      return
+    }
+
+    setExpenseBuckets([])
+  }
+
+  const handleOptionToggle = (category: FilterCategoryKey, value: string | number) => {
+    if (category === 'retirementAges') {
+      setRetirementAges(toggleSelection(draftFilters.retirementAges, Number(value), availableAges))
+      return
+    }
+
+    if (category === 'fiGoalBuckets') {
+      setFiGoalBuckets(
+        toggleSelection(
+          draftFilters.fiGoalBuckets,
+          String(value),
+          availableFiBuckets.map(bucket => bucket.label),
+        ),
+      )
+      return
+    }
+
+    setExpenseBuckets(
+      toggleSelection(
+        draftFilters.expenseBuckets,
+        String(value),
+        availableExpenseBuckets.map(bucket => bucket.label),
+      ),
+    )
+  }
+
+  const handleRemoveSelection = (category: FilterCategoryKey, value: string | number) => {
+    if (category === 'retirementAges') {
+      setRetirementAges(draftFilters.retirementAges.filter(age => age !== value))
+      return
+    }
+
+    if (category === 'fiGoalBuckets') {
+      setFiGoalBuckets(draftFilters.fiGoalBuckets.filter(bucket => bucket !== value))
+      return
+    }
+
+    setExpenseBuckets(draftFilters.expenseBuckets.filter(bucket => bucket !== value))
+  }
+
+  const appliedFilterCount = countActiveFilters(filters)
+  const stagedFilterCount = countActiveFilters(draftFilters)
+  const selectedOptions = optionsByCategory[selectedCategory]
+  const selectedValues = draftFilters[selectedCategory] as Array<string | number>
+  const summaryGroups = renderSummaryGroups(draftFilters)
 
   return (
     <div className="goal-filter-bar">
-      <div className="goal-filter-controls">
-        {/* Retirement Age Filter */}
-        <div className="filter-pill-group">
-          <button
-            ref={ageRef}
-            className={`filter-pill${filters.retirementAges.length > 0 ? ' filter-pill--active' : ''}${openMenu === 'age' ? ' filter-pill--open' : ''}`}
-            onClick={() => setOpenMenu(o => (o === 'age' ? null : 'age'))}
-          >
-            Retirement Age
-            {filters.retirementAges.length > 0 && (
-              <span className="filter-pill-badge">{filters.retirementAges.length}</span>
-            )}
-            <span className="filter-pill-chevron">▾</span>
-          </button>
-          <FilterDropdown
-            label="Retirement Age"
-            active={openMenu === 'age'}
-            onClose={() => setOpenMenu(null)}
-            triggerRef={ageRef}
-          >
-            {availableAges.length === 0 ? (
-              <p className="filter-empty">No goals yet</p>
-            ) : (
-              availableAges.map(age => (
-                <label key={age} className="filter-option">
-                  <input
-                    type="checkbox"
-                    checked={filters.retirementAges.includes(age)}
-                    onChange={() => toggleAge(age)}
-                  />
-                  Age {age}
-                </label>
-              ))
-            )}
-          </FilterDropdown>
-        </div>
-
-        {/* FI Goal Filter */}
-        <div className="filter-pill-group">
-          <button
-            ref={fiRef}
-            className={`filter-pill${filters.fiGoalBuckets.length > 0 ? ' filter-pill--active' : ''}${openMenu === 'fi' ? ' filter-pill--open' : ''}`}
-            onClick={() => setOpenMenu(o => (o === 'fi' ? null : 'fi'))}
-          >
-            FI Goal
-            {filters.fiGoalBuckets.length > 0 && (
-              <span className="filter-pill-badge">{filters.fiGoalBuckets.length}</span>
-            )}
-            <span className="filter-pill-chevron">▾</span>
-          </button>
-          <FilterDropdown
-            label="FI Goal"
-            active={openMenu === 'fi'}
-            onClose={() => setOpenMenu(null)}
-            triggerRef={fiRef}
-          >
-            {availableFiBuckets.length === 0 ? (
-              <p className="filter-empty">No goals yet</p>
-            ) : (
-              FI_GOAL_BUCKETS.map(b => (
-                <label
-                  key={b.label}
-                  className={`filter-option${!availableFiBuckets.includes(b) ? ' filter-option--dim' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.fiGoalBuckets.includes(b.label)}
-                    onChange={() => toggleFiBucket(b.label)}
-                    disabled={!availableFiBuckets.includes(b)}
-                  />
-                  {b.label}
-                </label>
-              ))
-            )}
-          </FilterDropdown>
-        </div>
-
-        {/* Expense at Creation Filter */}
-        <div className="filter-pill-group">
-          <button
-            ref={expRef}
-            className={`filter-pill${filters.expenseBuckets.length > 0 ? ' filter-pill--active' : ''}${openMenu === 'expense' ? ' filter-pill--open' : ''}`}
-            onClick={() => setOpenMenu(o => (o === 'expense' ? null : 'expense'))}
-          >
-            Expense at Creation
-            {filters.expenseBuckets.length > 0 && (
-              <span className="filter-pill-badge">{filters.expenseBuckets.length}</span>
-            )}
-            <span className="filter-pill-chevron">▾</span>
-          </button>
-          <FilterDropdown
-            label="Expense"
-            active={openMenu === 'expense'}
-            onClose={() => setOpenMenu(null)}
-            triggerRef={expRef}
-          >
-            {availableExpenseBuckets.length === 0 ? (
-              <p className="filter-empty">No goals yet</p>
-            ) : (
-              EXPENSE_BUCKETS.map(b => (
-                <label
-                  key={b.label}
-                  className={`filter-option${!availableExpenseBuckets.includes(b) ? ' filter-option--dim' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.expenseBuckets.includes(b.label)}
-                    onChange={() => toggleExpenseBucket(b.label)}
-                    disabled={!availableExpenseBuckets.includes(b)}
-                  />
-                  {b.label}
-                </label>
-              ))
-            )}
-          </FilterDropdown>
-        </div>
-      </div>
-
-      {hasFilters && (
-        <div className="goal-filter-right">
-          <span className="goal-filter-active-count">
-            {activeCount} filter{activeCount > 1 ? 's' : ''} active
+      <div className="goal-filter-trigger-wrap">
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`goal-action-btn goal-filter-trigger${isOpen ? ' goal-filter-trigger--open' : ''}`}
+          aria-haspopup="dialog"
+          aria-expanded={isOpen}
+          aria-controls="goal-filters-panel"
+          onClick={() => (isOpen ? handleCancel() : openPanel())}
+        >
+          <span className="goal-filter-trigger-icon" aria-hidden="true">
+            ≡
           </span>
-          <button className="goal-filter-clear-all" onClick={clearAll}>
-            Clear all
-          </button>
-        </div>
-      )}
+          <span>Filters</span>
+          {appliedFilterCount > 0 && <span className="goal-filter-trigger-count">({appliedFilterCount})</span>}
+        </button>
+
+        {isOpen && (
+          <div ref={panelRef} id="goal-filters-panel" className="goal-filter-panel" role="dialog" aria-label="Filters">
+            <div className="goal-filter-panel-body">
+              <div className="goal-filter-categories" role="tablist" aria-label="Filter categories">
+                {FILTER_CATEGORIES.map(category => {
+                  const count = draftFilters[category.key].length
+                  return (
+                    <button
+                      key={category.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={selectedCategory === category.key}
+                      className={`goal-filter-category${selectedCategory === category.key ? ' goal-filter-category--active' : ''}`}
+                      onClick={() => setSelectedCategory(category.key)}
+                    >
+                      <span>{category.label}</span>
+                      {count > 0 && <span className="goal-filter-category-count">{count}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="goal-filter-values-column">
+                <div className="goal-filter-column-header">
+                  <h3>{FILTER_CATEGORIES.find(category => category.key === selectedCategory)?.label}</h3>
+                </div>
+
+                {selectedOptions.length === 0 ? (
+                  <p className="goal-filter-empty">No filter values available yet.</p>
+                ) : (
+                  <>
+                    <label className="goal-filter-checkbox goal-filter-checkbox--select-all">
+                      <input
+                        type="checkbox"
+                        checked={selectedValues.length === 0}
+                        onChange={() => handleSelectAll(selectedCategory)}
+                      />
+                      <span>Select all</span>
+                    </label>
+
+                    <div className="goal-filter-values-list">
+                      {selectedOptions.map(option => {
+                        const checked = selectedValues.includes(option.value)
+                        return (
+                          <label key={`${selectedCategory}-${String(option.value)}`} className="goal-filter-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => handleOptionToggle(selectedCategory, option.value)}
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="goal-filter-summary-column">
+                <div className="goal-filter-column-header">
+                  <h3>
+                    {stagedFilterCount} filter{stagedFilterCount === 1 ? '' : 's'} selected
+                  </h3>
+                </div>
+
+                {summaryGroups.length === 0 ? (
+                  <p className="goal-filter-empty">No filters selected.</p>
+                ) : (
+                  <div className="goal-filter-summary-groups">
+                    {summaryGroups.map(group => {
+                      const categoryKey = FILTER_CATEGORIES.find(category => category.label === group.label)?.key
+                      if (!categoryKey) return null
+
+                      return (
+                        <div key={group.label} className="goal-filter-summary-group">
+                          <h4>{group.label}</h4>
+                          <ul>
+                            {group.values.map(value => (
+                              <li key={`${group.label}-${String(value)}`}>
+                                <span>
+                                  {categoryKey === 'retirementAges'
+                                    ? renderRetirementAgeLabel(Number(value))
+                                    : String(value)}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="goal-filter-remove"
+                                  aria-label={`Remove ${group.label} ${String(value)}`}
+                                  onClick={() => handleRemoveSelection(categoryKey, value)}
+                                >
+                                  ×
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="goal-filter-footer">
+              <button
+                type="button"
+                className="goal-filter-footer-btn"
+                onClick={() => setDraftFilters(cloneFilters(DEFAULT_FILTERS))}
+              >
+                Clear
+              </button>
+              <div className="goal-filter-footer-actions">
+                <button type="button" className="goal-filter-footer-btn" onClick={handleCancel}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="goal-filter-footer-btn goal-filter-footer-btn--apply"
+                  onClick={handleApply}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -255,19 +372,24 @@ export function applyFilters(goals: FinancialGoal[], filters: GoalFilters): Fina
   let result = goals
 
   if (filters.retirementAges.length > 0) {
-    result = result.filter(p => filters.retirementAges.includes(p.retirementAge))
+    result = result.filter(goal => filters.retirementAges.includes(goal.retirementAge))
   }
 
   if (filters.fiGoalBuckets.length > 0) {
-    result = result.filter(p =>
-      FI_GOAL_BUCKETS.some(b => filters.fiGoalBuckets.includes(b.label) && p.fiGoal >= b.min && p.fiGoal < b.max),
+    result = result.filter(goal =>
+      FI_GOAL_BUCKETS.some(
+        bucket => filters.fiGoalBuckets.includes(bucket.label) && goal.fiGoal >= bucket.min && goal.fiGoal < bucket.max,
+      ),
     )
   }
 
   if (filters.expenseBuckets.length > 0) {
-    result = result.filter(p =>
+    result = result.filter(goal =>
       EXPENSE_BUCKETS.some(
-        b => filters.expenseBuckets.includes(b.label) && p.expenseValue >= b.min && p.expenseValue < b.max,
+        bucket =>
+          filters.expenseBuckets.includes(bucket.label) &&
+          goal.expenseValue >= bucket.min &&
+          goal.expenseValue < bucket.max,
       ),
     )
   }

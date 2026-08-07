@@ -227,86 +227,78 @@
 }
 
 .nw-amount {
-  font-size: var(--fs-md);
+  font-size: 1.3rem;
   font-weight: var(--fw-bold);
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
-.nw-date {
-  font-size: var(--fs-sm);
-  color: var(--color-text-muted);
+.nw-amount-label {
   font-weight: var(--fw-normal);
+}
+.nw-amount .nw-change {
+  font-size: var(--fs-md);
 }
 
-/* NW Tree */
-.nw-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.nw-tree-node {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border-radius: var(--radius);
-  transition: background 0.12s;
-}
-.nw-tree-node--parent {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-}
-.nw-tree-node--parent:hover {
-  background: var(--color-surface-hover);
-}
-.nw-tree-chevron {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  color: var(--color-text-muted);
-  transition: transform 0.15s;
-  flex-shrink: 0;
-}
-.nw-tree-node--parent.open .nw-tree-chevron {
-  color: var(--color-text-muted);
-}
-.nw-tree-label {
+.nw-prose {
   font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-heading);
-  flex: 1;
-}
-.nw-tree-value {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
+  line-height: 1.7;
   color: var(--color-text);
-  font-variant-numeric: tabular-nums;
+  margin: 0.75rem 0 0;
 }
-.nw-tree-children {
-  padding-left: 1.6rem;
+
+.nw-prose strong {
+  font-weight: var(--fw-semibold);
+}
+
+.nw-prose .nw-change {
+  font-size: inherit;
+  margin-left: 0;
+}
+
+.nw-stacked-bar {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.75rem;
 }
-.nw-tree-node--leaf {
-  padding: 0.25rem 0.5rem;
+
+.nw-stacked-fill {
+  height: 100%;
+  transition: width 0.3s ease;
 }
-.nw-tree-node--leaf .nw-tree-label {
+
+.nw-stacked-fill--fi {
+  background: var(--accent);
+}
+
+.nw-stacked-fill--gw {
+  background: #e8913a;
+}
+
+.nw-stacked-legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.35rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-muted);
-  font-weight: var(--fw-normal);
-  font-size: var(--fs-sm);
 }
-.nw-tree-node--leaf .nw-tree-value {
-  color: var(--color-text-heading);
-  font-weight: var(--fw-medium);
-  font-size: var(--fs-sm);
+
+.nw-stacked-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.nw-stacked-dot--fi {
+  background: var(--accent);
+}
+
+.nw-stacked-dot--gw {
+  background: #e8913a;
 }
 
 /* ── Q2: Mini Charts ── */

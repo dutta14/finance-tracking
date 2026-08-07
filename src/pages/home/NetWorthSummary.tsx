@@ -8,16 +8,12 @@ interface NetWorthSummaryProps {
   onNavigate: () => void
 }
 
-interface TreeNode {
-  label: string
-  value: number
-  children?: TreeNode[]
-}
-
 const LONG_PRESS_MS = 400
 
+const sumAccountBalances = (accounts: Account[], balanceMap: Map<number, number>) =>
+  accounts.reduce((sum, account) => sum + (balanceMap.get(account.id) ?? 0), 0)
+
 const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMonths, onNavigate }) => {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [monthIdx, setMonthIdx] = useState(0) // 0 = latest
   const [jumpOpen, setJumpOpen] = useState(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -26,68 +22,71 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
   const selectedMonth = allMonths[monthIdx] || ''
 
-  const { netWorth, prevNw, tree } = useMemo(() => {
-    if (!selectedMonth) return { netWorth: 0, prevNw: null as number | null, tree: [] as TreeNode[] }
-
-    const monthBalances = balances.filter(b => b.month === selectedMonth)
-
-    const balMap = new Map<number, number>()
-    for (const b of monthBalances) balMap.set(b.accountId, b.balance)
-
-    // Previous month net worth
-    const prevMonthKey = allMonths[monthIdx + 1] || null
-    let prevNwVal: number | null = null
-    if (prevMonthKey) {
-      const prevBals = balances.filter(b => b.month === prevMonthKey)
-      const prevMap = new Map<number, number>()
-      for (const b of prevBals) prevMap.set(b.accountId, b.balance)
-      prevNwVal = accounts.reduce((s, a) => s + (prevMap.get(a.id) ?? 0), 0)
+  const balanceMapsByMonth = useMemo(() => {
+    const monthMaps = new Map<string, Map<number, number>>()
+    for (const balance of balances) {
+      let monthMap = monthMaps.get(balance.month)
+      if (!monthMap) {
+        monthMap = new Map<number, number>()
+        monthMaps.set(balance.month, monthMap)
+      }
+      monthMap.set(balance.accountId, balance.balance)
     }
+    return monthMaps
+  }, [balances])
 
-    const sum = (accs: Account[]) => accs.reduce((s, a) => s + (balMap.get(a.id) ?? 0), 0)
+  const { netWorth, prevNw, fiTotal, fiRetirementTotal, fiNonRetirementTotal, gwTotal, gwLiquidTotal, gwIlliquidTotal } =
+    useMemo(() => {
+      if (!selectedMonth) {
+        return {
+          netWorth: 0,
+          prevNw: null as number | null,
+          fiTotal: 0,
+          fiRetirementTotal: 0,
+          fiNonRetirementTotal: 0,
+          gwTotal: 0,
+          gwLiquidTotal: 0,
+          gwIlliquidTotal: 0,
+        }
+      }
 
-    const fiAccounts = accounts.filter(a => a.goalType === 'fi')
-    const gwAccounts = accounts.filter(a => a.goalType === 'gw')
+      const balMap = balanceMapsByMonth.get(selectedMonth) ?? new Map<number, number>()
 
-    const fiRetirement = fiAccounts.filter(a => a.type === 'retirement')
-    const fiNonRetirement = fiAccounts.filter(a => a.type === 'non-retirement')
-    const gwLiquid = gwAccounts.filter(a => a.type === 'liquid')
-    const gwIlliquid = gwAccounts.filter(a => a.type === 'illiquid')
+      // Previous month net worth
+      const prevMonthKey = allMonths[monthIdx + 1] || null
+      let prevNwVal: number | null = null
+      if (prevMonthKey) {
+        const prevMap = balanceMapsByMonth.get(prevMonthKey) ?? new Map<number, number>()
+        prevNwVal = sumAccountBalances(accounts, prevMap)
+      }
 
-    const fiTotal = sum(fiAccounts)
-    const gwTotal = sum(gwAccounts)
-    const nw = sum(accounts)
+      const fiAccounts = accounts.filter(a => a.goalType === 'fi')
+      const gwAccounts = accounts.filter(a => a.goalType === 'gw')
 
-    const tree: TreeNode[] = [
-      {
-        label: 'FI',
-        value: fiTotal,
-        children: [
-          { label: ACCOUNT_TYPE_LABELS.retirement, value: sum(fiRetirement) },
-          { label: ACCOUNT_TYPE_LABELS['non-retirement'], value: sum(fiNonRetirement) },
-        ].filter(c => c.value !== 0),
-      },
-      {
-        label: 'GW',
-        value: gwTotal,
-        children: [
-          { label: ACCOUNT_TYPE_LABELS.liquid, value: sum(gwLiquid) },
-          { label: ACCOUNT_TYPE_LABELS.illiquid, value: sum(gwIlliquid) },
-        ].filter(c => c.value !== 0),
-      },
-    ]
+      const fiRetirement = fiAccounts.filter(a => a.type === 'retirement')
+      const fiNonRetirement = fiAccounts.filter(a => a.type === 'non-retirement')
+      const gwLiquid = gwAccounts.filter(a => a.type === 'liquid')
+      const gwIlliquid = gwAccounts.filter(a => a.type === 'illiquid')
 
-    return { netWorth: nw, prevNw: prevNwVal, tree }
-  }, [accounts, balances, selectedMonth, allMonths, monthIdx])
+      const fiTotal = sumAccountBalances(fiAccounts, balMap)
+      const gwTotal = sumAccountBalances(gwAccounts, balMap)
+      const fiRetirementTotal = sumAccountBalances(fiRetirement, balMap)
+      const fiNonRetirementTotal = sumAccountBalances(fiNonRetirement, balMap)
+      const gwLiquidTotal = sumAccountBalances(gwLiquid, balMap)
+      const gwIlliquidTotal = sumAccountBalances(gwIlliquid, balMap)
+      const nw = sumAccountBalances(accounts, balMap)
 
-  const toggle = (key: string) => {
-    setExpanded(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
+      return {
+        netWorth: nw,
+        prevNw: prevNwVal,
+        fiTotal,
+        fiRetirementTotal,
+        fiNonRetirementTotal,
+        gwTotal,
+        gwLiquidTotal,
+        gwIlliquidTotal,
+      }
+    }, [accounts, selectedMonth, allMonths, monthIdx, balanceMapsByMonth])
 
   const formatMonth = (ym: string) => {
     if (!ym) return ''
@@ -95,6 +94,59 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     return `${names[parseInt(m, 10) - 1]} ${y}`
   }
+
+  const proseParts = useMemo(() => {
+    const monthLabel = formatMonth(selectedMonth)
+    const diff = prevNw === null ? null : netWorth - prevNw
+
+    const fiChildren = [
+      fiRetirementTotal > 0
+        ? { amount: formatCurrency(fiRetirementTotal), label: ACCOUNT_TYPE_LABELS.retirement }
+        : null,
+      fiNonRetirementTotal > 0
+        ? { amount: formatCurrency(fiNonRetirementTotal), label: ACCOUNT_TYPE_LABELS['non-retirement'] }
+        : null,
+    ].filter(Boolean) as Array<{ amount: string; label: string }>
+
+    const gwChildren = [
+      gwLiquidTotal > 0 ? { amount: formatCurrency(gwLiquidTotal), label: ACCOUNT_TYPE_LABELS.liquid } : null,
+      gwIlliquidTotal > 0 ? { amount: formatCurrency(gwIlliquidTotal), label: ACCOUNT_TYPE_LABELS.illiquid } : null,
+    ].filter(Boolean) as Array<{ amount: string; label: string }>
+
+    const clauses = [
+      fiChildren.length > 0 ? { label: 'FI accounts', total: fiTotal, children: fiChildren, includeIsIn: true } : null,
+      gwChildren.length > 0 ? { label: 'GW', total: gwTotal, children: gwChildren, includeIsIn: false } : null,
+    ].filter(Boolean) as Array<{
+      label: string
+      total: number
+      children: Array<{ amount: string; label: string }>
+      includeIsIn: boolean
+    }>
+
+    return { monthLabel, diff, clauses }
+  }, [
+    selectedMonth,
+    prevNw,
+    netWorth,
+    fiRetirementTotal,
+    fiNonRetirementTotal,
+    gwLiquidTotal,
+    gwIlliquidTotal,
+    fiTotal,
+    gwTotal,
+  ])
+
+  const breakdownBars = useMemo(() => {
+    const toPct = (value: number) => {
+      if (netWorth === 0) return 0
+      return Math.max(0, Math.min(100, (value / netWorth) * 100))
+    }
+
+    return [
+      { label: 'FI', value: fiTotal, pct: toPct(fiTotal), fillClass: 'nw-bar-fill--fi' },
+      { label: 'GW', value: gwTotal, pct: toPct(gwTotal), fillClass: 'nw-bar-fill--gw' },
+    ]
+  }, [fiTotal, gwTotal, netWorth])
 
   // Long-press helpers
   const clearLP = useCallback(() => {
@@ -183,7 +235,6 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
   return (
     <div className="home-card home-card--nw">
       <div className="home-card-header">
-        <h3>Net Worth</h3>
         <button className="home-card-link" onClick={onNavigate}>
           View Data →
         </button>
@@ -205,20 +256,20 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
         </button>
         <div className="nw-headline-center">
           <span className="nw-amount">
-            {formatCurrency(netWorth)}
+            {formatCurrency(netWorth)} <span className="nw-amount-label">net worth</span>
             {prevNw !== null &&
               (() => {
                 const diff = netWorth - prevNw
+                const pct = prevNw !== 0 ? ((diff / prevNw) * 100).toFixed(1) : '0.0'
                 const cls = diff > 0 ? 'nw-change up' : diff < 0 ? 'nw-change down' : 'nw-change flat'
-                const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : ''
+                const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : ''
                 return (
                   <span className={cls}>
-                    {arrow} {formatCurrency(Math.abs(diff))}
+                    {arrow} {formatCurrency(Math.abs(diff))} ({pct}%)
                   </span>
                 )
               })()}
           </span>
-          <span className="nw-date">{formatMonth(selectedMonth)}</span>
         </div>
         <button
           className="nw-month-arrow"
@@ -258,41 +309,65 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           </div>
         )}
       </div>
-      <div className="nw-tree">
-        {tree.map(node => (
-          <div key={node.label} className="nw-tree-branch">
-            <button
-              className={`nw-tree-node nw-tree-node--parent${expanded.has(node.label) ? ' open' : ''}`}
-              onClick={() => toggle(node.label)}
-            >
-              <span className="nw-tree-chevron">
-                <svg width="10" height="10" viewBox="0 0 10 10">
-                  <path
-                    d={expanded.has(node.label) ? 'M2 3l3 4 3-4' : 'M3 2l4 3-4 3'}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <span className="nw-tree-label">{node.label}</span>
-              <span className="nw-tree-value">{formatCurrency(node.value)}</span>
-            </button>
-            {expanded.has(node.label) && node.children && (
-              <div className="nw-tree-children">
-                {node.children.map(child => (
-                  <div key={child.label} className="nw-tree-node nw-tree-node--leaf">
-                    <span className="nw-tree-label">{child.label}</span>
-                    <span className="nw-tree-value">{formatCurrency(child.value)}</span>
-                  </div>
+      <p className="nw-prose">
+        {proseParts.diff !== null && proseParts.diff !== 0 && (
+          <>
+            {proseParts.diff > 0 ? 'Up' : 'Down'}{' '}
+            <strong className={proseParts.diff > 0 ? 'nw-change up' : 'nw-change down'}>
+              {formatCurrency(Math.abs(proseParts.diff))}
+            </strong>{' '}
+            from last month.
+          </>
+        )}
+        {proseParts.clauses.length > 0 && (
+          <>
+            {proseParts.diff !== null && proseParts.diff !== 0 ? ' ' : ''}
+            {proseParts.clauses.map((clause, idx) => (
+              <span key={clause.label}>
+                {idx > 0 && (
+                  <>
+                    {idx === proseParts.clauses.length - 1 ? ' and ' : ', '}
+                  </>
+                )}
+                <strong>{formatCurrency(clause.total)}</strong> {clause.includeIsIn ? 'is in ' : 'in '}
+                {clause.label} (
+                {clause.children.map((child, childIdx) => (
+                  <span key={`${clause.label}-${child.label}`}>
+                    {childIdx > 0 ? ', ' : ''}
+                    <strong>{child.amount}</strong> {child.label}
+                  </span>
                 ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                )
+              </span>
+            ))}
+            .
+          </>
+        )}
+      </p>
+      {breakdownBars.length === 2 && (
+        <div className="nw-stacked-bar" aria-label="Net worth goal breakdown">
+          <div
+            className="nw-stacked-fill nw-stacked-fill--fi"
+            style={{ width: `${breakdownBars[0].pct.toFixed(1)}%` }}
+            title={`FI: ${breakdownBars[0].pct.toFixed(1)}%`}
+          />
+          <div
+            className="nw-stacked-fill nw-stacked-fill--gw"
+            style={{ width: `${breakdownBars[1].pct.toFixed(1)}%` }}
+            title={`GW: ${breakdownBars[1].pct.toFixed(1)}%`}
+          />
+        </div>
+      )}
+      {breakdownBars.length === 2 && (
+        <div className="nw-stacked-legend">
+          <span className="nw-stacked-legend-item">
+            <span className="nw-stacked-dot nw-stacked-dot--fi" /> FI {breakdownBars[0].pct.toFixed(1)}%
+          </span>
+          <span className="nw-stacked-legend-item">
+            <span className="nw-stacked-dot nw-stacked-dot--gw" /> GW {breakdownBars[1].pct.toFixed(1)}%
+          </span>
+        </div>
+      )}
     </div>
   )
 }
