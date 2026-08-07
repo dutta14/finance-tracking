@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GoalSection from './GoalSection'
 import type { CustomRatio, RatioGoal } from '../types'
+import type { AssetAllocation } from '../../data/types'
 import type { Profile } from '../../../hooks/useProfile'
 
 vi.mock('./GoalEditor', () => ({
@@ -210,10 +211,10 @@ describe('GoalSection', () => {
 
   it('opens rebalance, computes actual values, and clamps negative class totals to zero', async () => {
     const user = userEvent.setup()
-    const allocMap = new Map([
+    const allocMap = new Map<string, Map<AssetAllocation, number>>([
       [
         'total',
-        new Map([
+        new Map<AssetAllocation, number>([
           ['us-stock', 120000],
           ['bonds', -5000],
         ]),

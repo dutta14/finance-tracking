@@ -230,7 +230,7 @@ describe('CategoryGroupManager', () => {
     render(<CategoryGroupManager {...defaultProps} categoryHasTransactions={categoryHasTransactions} />)
 
     // Click the delete button on Groceries
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     const deleteBtn = within(groceriesEl).getByTitle('Delete category')
     await user.click(deleteBtn)
 
@@ -244,7 +244,7 @@ describe('CategoryGroupManager', () => {
     const user = userEvent.setup()
     render(<CategoryGroupManager {...defaultProps} onDeleteCategory={onDeleteCategory} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     const deleteBtn = within(groceriesEl).getByTitle('Delete category')
     await user.click(deleteBtn)
 
@@ -323,7 +323,7 @@ describe('CategoryGroupManager', () => {
       />,
     )
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')!
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
     expect(within(groceriesEl).getByText('2')).toBeInTheDocument()
     expect(groceriesEl).toHaveAttribute('title', '$500 · 2 transactions')
   })
@@ -381,7 +381,7 @@ describe('CategoryGroupManager', () => {
     const onUpdate = vi.fn()
     render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     const lifestyleGroup = screen.getByText('Lifestyle').closest('.budget-group-block')! as HTMLElement
 
     fireEvent.dragStart(groceriesEl, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
@@ -402,7 +402,7 @@ describe('CategoryGroupManager', () => {
     const onUpdate = vi.fn()
     render(<CategoryGroupManager {...defaultProps} onUpdate={onUpdate} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     const essentialsGroup = screen.getByText('Essentials').closest('.budget-group-block')! as HTMLElement
 
     fireEvent.dragStart(groceriesEl, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
@@ -415,7 +415,7 @@ describe('CategoryGroupManager', () => {
   it('resets drag state on drag end', () => {
     render(<CategoryGroupManager {...defaultProps} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     fireEvent.dragStart(groceriesEl, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
     fireEvent.dragEnd(groceriesEl)
 
@@ -426,7 +426,7 @@ describe('CategoryGroupManager', () => {
   it('clears drag-over highlight on drag leave', () => {
     render(<CategoryGroupManager {...defaultProps} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     const lifestyleGroup = screen.getByText('Lifestyle').closest('.budget-group-block')! as HTMLElement
 
     fireEvent.dragStart(groceriesEl, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
@@ -449,7 +449,7 @@ describe('CategoryGroupManager', () => {
   it('shows "Drop here" in empty group when dragging a category', () => {
     render(<CategoryGroupManager {...defaultProps} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     fireEvent.dragStart(groceriesEl, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } })
 
     // Empty groups should show "Drop here" instead of "No categories"
@@ -490,7 +490,7 @@ describe('CategoryGroupManager', () => {
     await user.click(screen.getByText('Merge Categories'))
 
     // Click the category item (not the dropdown option)
-    const groceriesCat = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesCat = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     await user.click(groceriesCat)
     expect(screen.getByText(/1 selected/)).toBeInTheDocument()
 
@@ -545,7 +545,7 @@ describe('CategoryGroupManager', () => {
     )
 
     // Delete Groceries (has transactions)
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     await user.click(within(groceriesEl).getByTitle('Delete category'))
 
     // Select target from dropdown
@@ -563,7 +563,7 @@ describe('CategoryGroupManager', () => {
     const user = userEvent.setup()
     render(<CategoryGroupManager {...defaultProps} categoryHasTransactions={categoryHasTransactions} />)
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     await user.click(within(groceriesEl).getByTitle('Delete category'))
 
     expect(screen.getByText(/has transactions/)).toBeInTheDocument()
@@ -711,7 +711,7 @@ describe('CategoryGroupManager', () => {
       <CategoryGroupManager {...defaultProps} categoryHasTransactions={vi.fn((cat: string) => cat === 'Groceries')} />,
     )
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     await user.click(within(groceriesEl).getByTitle('Delete category'))
 
     const selects = screen.getAllByRole('combobox')
@@ -731,7 +731,7 @@ describe('CategoryGroupManager', () => {
       />,
     )
 
-    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement
+    const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement as HTMLElement
     await user.click(within(groceriesEl).getByTitle('Delete category'))
     await user.type(screen.getByPlaceholderText('Type new name'), 'Merged Groceries')
     await user.click(screen.getByText('Merge & Delete'))
