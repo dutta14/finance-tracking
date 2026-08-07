@@ -1,4 +1,4 @@
-import { FC, useState, useRef, lazy, Suspense } from 'react'
+import { FC, KeyboardEvent, useState, useRef, lazy, Suspense } from 'react'
 import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useSettings } from '../../contexts/SettingsContext'
@@ -15,6 +15,13 @@ import '../../styles/Data.css'
 
 const Allocation = lazy(() => import('../allocation/Allocation'))
 const SavingsGrowthTracker = lazy(() => import('../tools/components/SavingsGrowthTracker'))
+
+const DATA_VIEW_TABS = [
+  { id: 'charts', label: 'Charts', path: '/net-worth/dashboard' },
+  { id: 'details', label: 'Details', path: '/net-worth/dashboard/details' },
+  { id: 'spreadsheet', label: 'Spreadsheet', path: '/net-worth/dashboard/spreadsheet' },
+  { id: 'manage', label: 'Accounts', path: '/net-worth/dashboard/manage' },
+] as const
 
 const Data: FC = () => {
   const { profile } = useGoals()
@@ -202,6 +209,32 @@ const Data: FC = () => {
           : 'charts'
   const growthTab = location.pathname.endsWith('/income') ? 'income' : 'savings'
   const allocTab = location.pathname.endsWith('/ratios') ? 'ratios' : 'breakdown'
+  const handleDataViewTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const currentIndex = DATA_VIEW_TABS.findIndex(tabDef => tabDef.id === dataView)
+    if (currentIndex === -1) return
+
+    let nextIndex: number | null = null
+
+    switch (event.key) {
+      case 'ArrowRight':
+        nextIndex = (currentIndex + 1) % DATA_VIEW_TABS.length
+        break
+      case 'ArrowLeft':
+        nextIndex = (currentIndex - 1 + DATA_VIEW_TABS.length) % DATA_VIEW_TABS.length
+        break
+      case 'Home':
+        nextIndex = 0
+        break
+      case 'End':
+        nextIndex = DATA_VIEW_TABS.length - 1
+        break
+      default:
+        return
+    }
+
+    event.preventDefault()
+    navigate(DATA_VIEW_TABS[nextIndex].path)
+  }
   const accountsContent = (
     <>
       {allowCsvImport && (
@@ -404,39 +437,24 @@ const Data: FC = () => {
         </nav>
         <div className="data-header-right">
           {activeTab === 'accounts' && hasAccounts && (
-            <div className="data-view-tabs" role="tablist" aria-label="Data view">
-              <button
-                className={`data-view-tab${dataView === 'charts' ? ' active' : ''}`}
-                role="tab"
-                aria-selected={dataView === 'charts'}
-                onClick={() => navigate('/net-worth/dashboard')}
-              >
-                Charts
-              </button>
-              <button
-                className={`data-view-tab${dataView === 'details' ? ' active' : ''}`}
-                role="tab"
-                aria-selected={dataView === 'details'}
-                onClick={() => navigate('/net-worth/dashboard/details')}
-              >
-                Details
-              </button>
-              <button
-                className={`data-view-tab${dataView === 'spreadsheet' ? ' active' : ''}`}
-                role="tab"
-                aria-selected={dataView === 'spreadsheet'}
-                onClick={() => navigate('/net-worth/dashboard/spreadsheet')}
-              >
-                Spreadsheet
-              </button>
-              <button
-                className={`data-view-tab${dataView === 'manage' ? ' active' : ''}`}
-                role="tab"
-                aria-selected={dataView === 'manage'}
-                onClick={() => navigate('/net-worth/dashboard/manage')}
-              >
-                Accounts
-              </button>
+            <div
+              className="data-view-tabs"
+              role="tablist"
+              aria-label="Data view"
+              onKeyDown={handleDataViewTabKeyDown}
+            >
+              {DATA_VIEW_TABS.map(tabDef => (
+                <button
+                  key={tabDef.id}
+                  className={`data-view-tab${dataView === tabDef.id ? ' active' : ''}`}
+                  role="tab"
+                  aria-selected={dataView === tabDef.id}
+                  tabIndex={dataView === tabDef.id ? 0 : -1}
+                  onClick={() => navigate(tabDef.path)}
+                >
+                  {tabDef.label}
+                </button>
+              ))}
             </div>
           )}
           {activeTab === 'allocation' && (

@@ -212,6 +212,29 @@ describe('Data page integration', () => {
     renderData()
     const chartsTab = screen.getByRole('tab', { name: /charts/i })
     expect(chartsTab).toHaveAttribute('aria-selected', 'true')
+    expect(chartsTab).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('tabindex', '-1')
+  })
+
+  it('supports roving tabIndex and arrow key navigation for data view tabs', async () => {
+    const user = userEvent.setup()
+    mockAccounts = [...twoAccounts]
+    mockBalances = [...twoBalances]
+    renderData()
+
+    const chartsTab = screen.getByRole('tab', { name: 'Charts' })
+    chartsTab.focus()
+    await user.keyboard('{ArrowRight}')
+
+    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('tab', { name: 'Charts' })).toHaveAttribute('tabindex', '-1')
+
+    await user.keyboard('{End}')
+    expect(screen.getByRole('tab', { name: 'Accounts' })).toHaveAttribute('aria-selected', 'true')
+
+    await user.keyboard('{Home}')
+    expect(screen.getByRole('tab', { name: 'Charts' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('switches to the Details view and shows the inactive toggle without spreadsheet-only actions', async () => {
