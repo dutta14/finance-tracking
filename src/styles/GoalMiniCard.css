@@ -20,9 +20,9 @@
 }
 
 .goal-mini-card.selected {
-  border-color: var(--accent-border);
-  background: var(--accent-lighter);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  border-color: var(--color-text);
+  background: var(--color-surface-alt);
+  box-shadow: none;
 }
 
 /* Top row: name + retirement year */
@@ -63,14 +63,14 @@
 .mini-progress-track {
   flex: 1;
   height: 4px;
-  background: var(--accent-track);
+  background: var(--color-border);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .mini-progress-fill {
   height: 100%;
-  background: var(--accent);
+  background: var(--color-text);
   border-radius: 99px;
   transition: width 0.3s ease;
 }
@@ -78,7 +78,7 @@
 .mini-progress-pct {
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
-  color: var(--accent);
+  color: var(--color-text);
   white-space: nowrap;
   min-width: 28px;
   text-align: right;
@@ -102,12 +102,11 @@
 }
 
 .mini-value .amount {
-  font-weight: var(--fw-semibold);
-  color: var(--accent);
+  color: var(--color-text);
 }
 
 .mini-amount--gw {
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
 .mini-value--total {
@@ -144,33 +143,37 @@
 
 /* List mode */
 .goal-mini-card.list {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2fr 60px 1.5fr 1fr 1fr 1fr;
   align-items: center;
-  gap: 1.5rem;
+  column-gap: 1.25rem;
   padding: 0.75rem 1.25rem;
 }
 
 .goal-mini-card.list .mini-card-top {
   margin-bottom: 0;
-  min-width: 160px;
-  flex-shrink: 0;
+  display: contents;
 }
 
 .goal-mini-card.list .mini-card-top h4 {
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .goal-mini-card.list .mini-progress {
   margin-bottom: 0;
-  min-width: 100px;
-  max-width: 140px;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .goal-mini-card.list .mini-value {
   margin-bottom: 0;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .goal-mini-card.list .mini-value--total {
@@ -181,6 +184,12 @@
 
 .goal-mini-card.list .mini-value .label {
   margin-right: 0.25rem;
+  display: none;
+}
+
+.goal-mini-card.list .mini-no-gw {
+  grid-column: span 2;
+  color: var(--color-text-muted);
 }
 
 /* Card context menu */

@@ -130,6 +130,16 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           )}
         </div>
         <div className="goal-toolbar-right">
+          {compareMode && selectedGoalIds.length > 0 && (
+            <>
+              <span className="goal-selection-count">
+                {selectedGoalIds.length} selected
+              </span>
+              <button className="goal-action-btn goal-action-btn--danger" onClick={handleDeleteSelected}>
+                Delete
+              </button>
+            </>
+          )}
           {onMixMatch && goals.length > 0 && gwGoals.length > 0 && (
             <button className="goal-action-btn" onClick={onMixMatch} title="Mix & Match goals">
               <svg
@@ -203,21 +213,6 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           selectedGoalIds.length > 0 &&
           `${selectedGoalIds.length} goal${selectedGoalIds.length !== 1 ? 's' : ''} selected for comparison.`}
       </div>
-      {compareMode && selectedGoalIds.length > 0 && (
-        <div className="goal-selection-bar" aria-label="Selection actions">
-          <span className="goal-selection-count">
-            {selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected
-          </span>
-          <div className="goal-selection-actions">
-            <button className="goal-selection-btn goal-selection-btn--danger" onClick={handleDeleteSelected}>
-              Delete selected
-            </button>
-            <button className="goal-selection-btn" onClick={exitCompareMode}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
       {compareMode && selectedGoalIds.length === 0 && (
         <div className="goal-compare-hint" aria-hidden="true">
           Click goals to select them for comparison, or use {modKey}+Click anytime

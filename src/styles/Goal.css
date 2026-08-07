@@ -84,6 +84,15 @@ section.goal {
   border-color: var(--color-border);
 }
 
+.goal-action-btn--danger {
+  color: var(--color-negative);
+}
+
+.goal-action-btn--danger:hover {
+  background: var(--color-negative-light);
+  border-color: var(--color-negative-border);
+}
+
 .goal-header h1 {
   font-size: var(--fs-2xl);
   margin: 0;
@@ -466,6 +475,44 @@ section.goal {
   margin-bottom: 2rem;
 }
 
+.goals-list-header {
+  display: grid;
+  grid-template-columns: 2fr 60px 1.5fr 1fr 1fr 1fr;
+  align-items: center;
+  column-gap: 1.25rem;
+  padding: 0 1.25rem 0.5rem;
+  padding-left: calc(1.25rem + 1px);
+  border-bottom: 1px solid var(--color-border-light);
+  margin-bottom: 0.25rem;
+}
+
+.goals-list-header-cell {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  transition: color 0.15s;
+}
+
+.goals-list-header-cell:hover {
+  color: var(--color-text);
+}
+
+.goals-list-header-cell--active {
+  color: var(--color-text);
+}
+
+.sort-indicator {
+  font-size: 0.7rem;
+}
+
 /* Touch drag states for goal items */
 .goal-drag-item--touch-dragging {
   opacity: 0.6;
@@ -598,19 +645,20 @@ body.dark .goal-drag-item--long-press {
 .goal-selection-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: 0.6rem 1rem;
   margin-bottom: 1rem;
-  background: var(--accent-light);
-  border: 1px solid var(--accent-border);
+  margin-left: auto;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
+  width: fit-content;
 }
 
 .goal-selection-count {
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: var(--accent-text-dark);
+  color: var(--color-text-muted);
 }
 
 .goal-selection-actions {
@@ -619,32 +667,33 @@ body.dark .goal-drag-item--long-press {
 }
 
 .goal-selection-btn {
-  background: none;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: var(--fs-md);
-  padding: 0.35rem 0.75rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  padding: 0 0.75rem;
+  height: 36px;
   color: var(--color-text);
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
 }
 
 .goal-selection-btn:hover {
   background: var(--color-surface-alt);
-  border-color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 
 .goal-selection-btn--danger {
-  border-color: var(--color-negative-border);
   color: var(--color-negative);
 }
 
 .goal-selection-btn--danger:hover {
   background: var(--color-negative-light);
-  border-color: var(--color-negative);
+  border-color: var(--color-negative-border);
 }
 
 .goal-selection-btn:focus-visible {
@@ -675,9 +724,9 @@ body.dark .goal-drag-item--long-press {
 }
 
 .goal-compare-btn.active {
-  color: var(--accent-text-dark);
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
 }
 
 .goal-compare-btn:focus-visible {
@@ -725,9 +774,8 @@ body.dark .goal-drag-item--long-press {
 }
 
 .view-mode-btn.active {
-  color: var(--accent);
-  background: var(--color-surface);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--color-surface);
+  background: var(--color-text);
 }
 
 .goal-detail-container {
