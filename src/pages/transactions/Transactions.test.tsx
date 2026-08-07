@@ -92,6 +92,11 @@ const renderTransactions = (initialEntry = '/transactions') =>
     </MemoryRouter>,
   )
 
+const openSearchPopover = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(await screen.findByRole('button', { name: /Search/i }))
+  return screen.getByRole('searchbox', { name: 'Search transactions' })
+}
+
 beforeEach(() => {
   localStorage.clear()
   resetTransactionCache()
@@ -130,22 +135,36 @@ describe('Transactions', () => {
     expect(downloadLink).toHaveAttribute('download')
   })
 
-  it('filters transactions by search across description and category', async () => {
+  it('filters transactions by search across description, category, and amount', async () => {
     const user = userEvent.setup()
     renderTransactions()
 
-    const searchInput = await screen.findByRole('searchbox', { name: 'Search transactions' })
+    const searchInput = await openSearchPopover(user)
     await user.type(searchInput, 'bonus')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('Performance Bonus')).toBeInTheDocument()
     expect(screen.queryByText('Book Store')).not.toBeInTheDocument()
     expect(screen.getByText('1 transaction')).toBeInTheDocument()
 
-    await user.clear(searchInput)
-    await user.type(searchInput, 'grocer')
+    await user.click(screen.getByRole('button', { name: /Search/i }))
+    const updatedSearchInput = screen.getByRole('searchbox', { name: 'Search transactions' })
+    await user.clear(updatedSearchInput)
+    await user.type(updatedSearchInput, '82.45')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('Whole Foods Market')).toBeInTheDocument()
     expect(screen.queryByText('Performance Bonus')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Search/i }))
+    const amountSearchInput = screen.getByRole('searchbox', { name: 'Search transactions' })
+    await user.clear(amountSearchInput)
+    await user.type(amountSearchInput, 'grocer')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(screen.getByText('Whole Foods Market')).toBeInTheDocument()
+    expect(screen.queryByText('Performance Bonus')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Search/i })).toHaveTextContent('grocer')
   })
 
   it('filters transactions by inclusive date range', async () => {
@@ -250,7 +269,8 @@ describe('Transactions', () => {
     const user = userEvent.setup()
     renderTransactions()
 
-    await user.type(await screen.findByRole('searchbox', { name: 'Search transactions' }), 'train')
+    await user.type(await openSearchPopover(user), 'train')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     const summary = screen.getByRole('heading', { name: 'Summary' }).closest('.txn-summary-card')
     expect(summary).toBeTruthy()
@@ -286,7 +306,8 @@ describe('Transactions', () => {
     const user = userEvent.setup()
     renderTransactions()
 
-    await user.type(await screen.findByRole('searchbox', { name: 'Search transactions' }), 'missing merchant')
+    await user.type(await openSearchPopover(user), 'missing merchant')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'No matching transactions' })).toBeInTheDocument()
@@ -297,6 +318,28 @@ describe('Transactions', () => {
 
     expect(screen.getByText('Book Store')).toBeInTheDocument()
     expect(screen.getByText('6 transactions')).toBeInTheDocument()
+  })
+
+  it('cancels draft search changes and allows clearing the search input', async () => {
+    const user = userEvent.setup()
+    renderTransactions()
+
+    const searchInput = await openSearchPopover(user)
+    await user.type(searchInput, 'bonus')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(screen.queryByRole('searchbox', { name: 'Search transactions' })).not.toBeInTheDocument()
+
+    const reopenedSearchInput = await openSearchPopover(user)
+    expect(reopenedSearchInput).toHaveValue('')
+    await user.type(reopenedSearchInput, 'train')
+    await user.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(screen.queryByRole('searchbox', { name: 'Search transactions' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Search/i })).not.toHaveTextContent('train')
+
+    const clearedSearchInput = await openSearchPopover(user)
+    expect(clearedSearchInput).toHaveValue('')
   })
 
   it('uses the PM fallback when description is empty', async () => {

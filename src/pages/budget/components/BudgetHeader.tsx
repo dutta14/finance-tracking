@@ -1,12 +1,10 @@
 import { FC } from 'react'
 import { TimePeriod, BudgetViewMode } from '../types'
-import { getCSVFormatHelp } from '../utils/csvParser'
 
 interface BudgetHeaderProps {
   selectedYear: number
   viewMode: BudgetViewMode
   timePeriod: TimePeriod
-  showFormatHelp: boolean
   onPrevYear: () => void
   onNextYear: () => void
   onSetViewMode: (mode: BudgetViewMode) => void
@@ -17,63 +15,37 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
   selectedYear,
   viewMode,
   timePeriod,
-  showFormatHelp,
   onPrevYear,
   onNextYear,
   onSetViewMode,
   onSetTimePeriod,
 }) => (
-  <>
-    <div className="budget-header">
-      <div className="budget-header-left">
-        <h1 className="budget-title">Budget</h1>
-        <div className="budget-view-toggle">
-          <button
-            className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('cashflow')}
-          >
-            Cashflow
-          </button>
-          <button
-            className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('spreadsheet')}
-          >
-            Spreadsheet
-          </button>
-          <button
-            className={`budget-view-btn${viewMode === 'groups' ? ' active' : ''}`}
-            onClick={() => onSetViewMode('groups')}
-          >
-            Groups
-          </button>
-        </div>
+  <div className="budget-header">
+    <div className="budget-header-left">
+      <h1 className="budget-title">Budget</h1>
+      <div className="budget-view-toggle">
+        <button
+          className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
+          onClick={() => onSetViewMode('cashflow')}
+        >
+          Cashflow
+        </button>
+        <button
+          className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
+          onClick={() => onSetViewMode('spreadsheet')}
+        >
+          Spreadsheet
+        </button>
+        <button
+          className={`budget-view-btn${viewMode === 'groups' ? ' active' : ''}`}
+          onClick={() => onSetViewMode('groups')}
+        >
+          Groups
+        </button>
       </div>
-      <div className="budget-header-right">
-        <div className="budget-year-nav">
-          <button className="budget-year-btn" onClick={onPrevYear} title="Previous year">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M10 3L5 8l5 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <span className="budget-year-label">{selectedYear}</span>
-          <button className="budget-year-btn" onClick={onNextYear} title="Next year">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M6 3l5 5-5 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
+    </div>
+    <div className="budget-header-right">
+      {viewMode !== 'groups' && (
         <div className="budget-view-toggle">
           <button
             className={`budget-view-btn${timePeriod === 'month' ? ' active' : ''}`}
@@ -94,15 +66,28 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
             H
           </button>
         </div>
+      )}
+      <div className="budget-year-nav">
+        <button className="budget-year-btn" onClick={onPrevYear} title="Previous year">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M10 3L5 8l5 5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <span className="budget-year-label">{selectedYear}</span>
+        <button className="budget-year-btn" onClick={onNextYear} title="Next year">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
-
-    {showFormatHelp && (
-      <div className="budget-format-help">
-        <pre>{getCSVFormatHelp()}</pre>
-      </div>
-    )}
-  </>
+  </div>
 )
 
 export default BudgetHeader

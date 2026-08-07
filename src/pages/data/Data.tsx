@@ -213,8 +213,7 @@ const Data: FC = () => {
     const currentIndex = DATA_VIEW_TABS.findIndex(tabDef => tabDef.id === dataView)
     if (currentIndex === -1) return
 
-    let nextIndex: number | null = null
-
+    let nextIndex: number
     switch (event.key) {
       case 'ArrowRight':
         nextIndex = (currentIndex + 1) % DATA_VIEW_TABS.length
@@ -437,12 +436,7 @@ const Data: FC = () => {
         </nav>
         <div className="data-header-right">
           {activeTab === 'accounts' && hasAccounts && (
-            <div
-              className="data-view-tabs"
-              role="tablist"
-              aria-label="Data view"
-              onKeyDown={handleDataViewTabKeyDown}
-            >
+            <div className="data-view-tabs" role="tablist" aria-label="Data view" onKeyDown={handleDataViewTabKeyDown}>
               {DATA_VIEW_TABS.map(tabDef => (
                 <button
                   key={tabDef.id}

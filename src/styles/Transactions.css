@@ -58,24 +58,7 @@
 }
 
 .txn-search {
-  flex: 1 1 200px;
-  min-width: 0;
-}
-
-.txn-search input {
-  width: 100%;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-size: var(--fs-sm);
-  font-family: inherit;
-}
-
-.txn-search input::placeholder {
-  color: var(--color-text-muted);
+  position: relative;
 }
 
 .txn-filter {
@@ -164,8 +147,17 @@
   font-weight: var(--fw-medium);
 }
 
-.txn-search input:focus-visible,
+.txn-search-btn-value {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .txn-filter-btn:focus-visible,
+.txn-search-panel-input:focus-visible,
+.txn-filter-search-input:focus-visible,
+.txn-date-panel-input:focus-visible,
 .txn-download-link:focus-visible {
   outline: 2px solid var(--accent, #3b82f6);
   outline-offset: 2px;
@@ -196,6 +188,42 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, var(--radius));
   box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
+}
+
+.txn-search-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  min-width: 280px;
+  width: min(28rem, calc(100vw - 3rem));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.txn-search-panel-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.txn-search-panel-input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--fs-sm);
+  font-family: inherit;
+}
+
+.txn-search-panel-input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .txn-filter-search-input {
@@ -828,6 +856,12 @@
 }
 
 @media (max-width: 768px) {
+  .txn-header-top {
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
   .txn-header-title-block {
     align-items: flex-start;
     flex-direction: column;
@@ -836,6 +870,7 @@
 
   .txn-toolbar {
     align-items: stretch;
+    width: 100%;
   }
 
   .txn-search,

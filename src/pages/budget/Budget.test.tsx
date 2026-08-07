@@ -299,7 +299,7 @@ describe('Budget with data', () => {
 
   it('renders aggregated spreadsheet view', () => {
     renderBudget()
-    expect(document.querySelector('.budget-spreadsheet-toolbar')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /aggregated/i })).toBeInTheDocument()
     expect(screen.getAllByTestId('budget-aggregated')).toHaveLength(2)
     expect(screen.queryByTestId('budget-table')).not.toBeInTheDocument()
   })
@@ -335,7 +335,18 @@ describe('Budget with data', () => {
     const user = userEvent.setup()
     renderBudget()
     await user.click(screen.getByText('?'))
-    expect(document.querySelector('.budget-format-help')).toBeInTheDocument()
+    expect(document.querySelector('.budget-format-help-panel')).toBeInTheDocument()
+  })
+
+  it('closes format help panel when clicking outside', async () => {
+    const user = userEvent.setup()
+    renderBudget()
+
+    await user.click(screen.getByText('?'))
+    expect(document.querySelector('.budget-format-help-panel')).toBeInTheDocument()
+
+    await user.click(screen.getByText('Budget'))
+    expect(document.querySelector('.budget-format-help-panel')).not.toBeInTheDocument()
   })
 
   it('shows Upload CSV button only on spreadsheet tab', () => {
