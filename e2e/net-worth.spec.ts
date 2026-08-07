@@ -120,18 +120,18 @@ test.describe('Net Worth — Balance Entry', () => {
     await nw.spreadsheetTab.click()
     const monthLabels = page.locator('.data-spreadsheet-month-label')
     const initialCount = await monthLabels.count()
-    // Delete button is hidden until row header is hovered
+    const firstMonthLabel = (await monthLabels.first().textContent())?.trim()
+    expect(firstMonthLabel).toBeTruthy()
+
     const firstRowHeader = page.locator('.data-spreadsheet-row-header').first()
     await firstRowHeader.hover()
     await nw.deleteRowBtns.first().click()
-    const confirmBtn = page.locator('button', { hasText: 'Delete' })
-    const hasConfirm = await confirmBtn.isVisible({ timeout: 1000 }).catch((e) => {
-      if (e.message?.includes('Timeout')) return false
-      throw e
-    })
-    if (hasConfirm) {
-      await confirmBtn.click()
-    }
+
+    const confirmDialog = page.locator('.data-confirm-dialog')
+    await expect(confirmDialog).toBeVisible()
+    await confirmDialog.locator('button.data-confirm-delete').click()
+
+    await expect(page.locator('.data-spreadsheet-month-label', { hasText: firstMonthLabel! })).toHaveCount(0)
     await expect(monthLabels).toHaveCount(initialCount - 1)
   })
 })
@@ -374,7 +374,7 @@ test.describe('Net Worth — Performance', () => {
 test.describe('Net Worth — Security', () => {
   test('XSS in account name is rendered as text, not executed', async ({ page }) => {
     let alertFired = false
-    page.on('dialog', async (dialog) => {
+    page.on('dialog', async dialog => {
       alertFired = true
       await dialog.dismiss()
     })

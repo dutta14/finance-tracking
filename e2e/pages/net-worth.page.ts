@@ -102,11 +102,11 @@ export class NetWorthPage {
     this.chartsTypePicker = page.locator('.data-charts-type-picker')
 
     // Show inactive
-    this.showInactiveLabel = page.locator('label.data-filter-toggle')
+    this.showInactiveLabel = page.locator('button.data-filter-toggle')
   }
 
   async goto() {
-    await this.page.goto('/finance-tracking/#/net-worth')
+    await this.page.goto('/finance-tracking/#/net-worth/dashboard')
     await this.page.waitForLoadState('domcontentloaded')
   }
 
