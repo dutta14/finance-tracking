@@ -129,6 +129,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  width: fit-content;
+  max-width: 100%;
 }
 .alloc-page-legend-row {
   display: flex;
@@ -150,6 +152,8 @@
   font-weight: var(--fw-semibold);
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
 }
 
 .alloc-page-empty {
