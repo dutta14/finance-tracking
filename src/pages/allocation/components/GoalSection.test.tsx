@@ -127,7 +127,12 @@ describe('GoalSection', () => {
     render(
       <GoalSection
         activeRatio={makeRatio()}
-        profile={{ name: '', avatarDataUrl: '', birthday: '', partner: { name: 'Pat', avatarDataUrl: '', birthday: '1992-03-10' } }}
+        profile={{
+          name: '',
+          avatarDataUrl: '',
+          birthday: '',
+          partner: { name: 'Pat', avatarDataUrl: '', birthday: '1992-03-10' },
+        }}
         allocMap={emptyAllocMap}
         computeGoalPcts={() => null}
         onSetGoal={vi.fn()}

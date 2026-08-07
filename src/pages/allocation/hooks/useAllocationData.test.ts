@@ -437,7 +437,12 @@ describe('useAllocationData', () => {
       mockProfile.name = ''
       mockProfile.partner = { name: '' }
       mockData.accounts = [
-        makeAccount({ id: 1, owner: 'primary', allocation: undefined as unknown as Account['allocation'], name: 'Cash Buffer' }),
+        makeAccount({
+          id: 1,
+          owner: 'primary',
+          allocation: undefined as unknown as Account['allocation'],
+          name: 'Cash Buffer',
+        }),
         makeAccount({
           id: 2,
           owner: 'partner',
@@ -464,7 +469,12 @@ describe('useAllocationData', () => {
         makeAccount({ id: 3, nature: 'liability', allocation: 'debt', linkedAccountId: 999, name: 'Fallback Loan' }),
         makeAccount({ id: 4, nature: 'liability', allocation: 'debt', name: 'Credit Card' }),
       ]
-      mockData.balances = [makeBalance(1, 500000), makeBalance(2, -200000), makeBalance(3, -10000), makeBalance(4, -7000)]
+      mockData.balances = [
+        makeBalance(1, 500000),
+        makeBalance(2, -200000),
+        makeBalance(3, -10000),
+        makeBalance(4, -7000),
+      ]
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'real-estate')).toEqual([

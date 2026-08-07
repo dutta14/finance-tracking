@@ -623,7 +623,10 @@ describe('CategoryGroupManager', () => {
     render(
       <CategoryGroupManager
         {...defaultProps}
-        groups={[{ id: 'others', name: 'Others', categories: [] }, { id: 'removed', name: 'Removed', categories: [] }]}
+        groups={[
+          { id: 'others', name: 'Others', categories: [] },
+          { id: 'removed', name: 'Removed', categories: [] },
+        ]}
         incomeCategoryGroups={[{ id: 'paychecks', name: 'Paychecks', categories: ['Salary'], type: 'income' }]}
         onUpdateIncomeGroups={onUpdateIncomeGroups}
         categorySums={{ ...defaultCategorySums, Salary: { '2024-01': 5000 } }}
@@ -633,9 +636,7 @@ describe('CategoryGroupManager', () => {
     const paychecksGroup = screen.getByText('Paychecks').closest('.budget-group-block')! as HTMLElement
     await user.click(within(paychecksGroup).getByTitle('Delete group (categories move to Others)'))
 
-    expect(onUpdateIncomeGroups).toHaveBeenCalledWith([
-      { id: 'income-others', name: 'Others', categories: ['Salary'] },
-    ])
+    expect(onUpdateIncomeGroups).toHaveBeenCalledWith([{ id: 'income-others', name: 'Others', categories: ['Salary'] }])
   })
 
   it('reorders groups when dragging a group header onto another group', () => {
@@ -707,10 +708,7 @@ describe('CategoryGroupManager', () => {
   it('clears the custom delete-merge input when an existing target is selected', async () => {
     const user = userEvent.setup()
     render(
-      <CategoryGroupManager
-        {...defaultProps}
-        categoryHasTransactions={vi.fn((cat: string) => cat === 'Groceries')}
-      />,
+      <CategoryGroupManager {...defaultProps} categoryHasTransactions={vi.fn((cat: string) => cat === 'Groceries')} />,
     )
 
     const groceriesEl = screen.getByText('Groceries').closest('.budget-group-cat')! as HTMLElement

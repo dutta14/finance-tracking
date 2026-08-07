@@ -58,11 +58,7 @@ vi.mock('./BalanceCharts', () => ({
 }))
 
 vi.mock('./BalanceDetails', () => ({
-  default: ({
-    onSaveMonth,
-  }: {
-    onSaveMonth: (month: string, values: Record<string, number>) => void
-  }) => (
+  default: ({ onSaveMonth }: { onSaveMonth: (month: string, values: Record<string, number>) => void }) => (
     <div>
       <button onClick={() => onSaveMonth('2026-08', { '1': 9100, '3': 3300, abc: 200, '2': 400 })}>
         Save mixed month
