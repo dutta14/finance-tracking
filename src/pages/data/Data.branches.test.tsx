@@ -170,7 +170,7 @@ beforeEach(() => {
       status: 'active',
       goalType: 'fi',
       nature: 'asset',
-      allocation: 'international',
+      allocation: 'intl-stock' as const,
       group: 'Investing',
     },
   ]
