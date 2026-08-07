@@ -143,4 +143,19 @@ describe('RatioBuilder', () => {
     await user.type(groupInput, 'Equities')
     expect(onUpdateGroupLabel).toHaveBeenCalled()
   })
+
+  it('adds accessible labels for group name inputs', () => {
+    render(
+      <RatioBuilder
+        activeRatio={makeRatio()}
+        onUpdateGroupLabel={noop}
+        onToggleClass={noop}
+        onAddGroup={noop}
+        onRemoveGroup={noop}
+        goalSection={null}
+      />,
+    )
+    expect(screen.getByLabelText('Group 1 name')).toHaveValue('Group A')
+    expect(screen.getByLabelText('Group 2 name')).toHaveValue('Group B')
+  })
 })
