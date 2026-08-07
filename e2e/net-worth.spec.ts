@@ -243,7 +243,7 @@ test.describe('Net Worth — Edge Cases', () => {
     })
     // App should not crash — page remains functional
     await expect(page.locator('body')).not.toContainText('Unhandled Runtime Error')
-    await expect(nw.viewAccountsBtn).toBeVisible()
+    await expect(nw.accountsTab).toBeVisible()
   })
 
   test('renders large dataset without crashing', async ({ page }) => {
@@ -276,8 +276,8 @@ test.describe('Net Worth — Corruption Resilience', () => {
     await expect(page.locator('body')).toBeVisible()
     const content = await page.content()
     expect(content).not.toContain('Unhandled Runtime Error')
-    // Account should still render even if balances are corrupted
-    await expect(nw.viewAccountsBtn).toBeVisible()
+    // Accounts view remains reachable even if balances are corrupted
+    await expect(nw.accountsTab).toBeVisible()
     // No NaN or Infinity artifacts
     await expect(page.locator('body')).not.toContainText('NaN')
     await expect(page.locator('body')).not.toContainText('Infinity')
@@ -298,10 +298,10 @@ test.describe('Net Worth — Corruption Resilience', () => {
 
 test.describe('Net Worth — Keyboard Navigation', () => {
   test('closes AccountsModal with Escape key', async ({ page }) => {
-    await seedNetWorthData(page)
+    await seedEmptyState(page)
     const nw = new NetWorthPage(page)
     await nw.goto()
-    await nw.openAccountsModal()
+    await nw.emptyAddBtn.click()
     await expect(nw.modal).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(nw.modal).not.toBeVisible()

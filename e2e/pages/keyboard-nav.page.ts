@@ -29,9 +29,11 @@ export class KeyboardNavPage {
   readonly sidebar: Locator
   readonly main: Locator
   readonly homeLink: Locator
+  readonly searchLink: Locator
   readonly goalsLink: Locator
   readonly netWorthLink: Locator
   readonly budgetLink: Locator
+  readonly transactionsLink: Locator
   readonly taxesLink: Locator
   readonly driveLink: Locator
   readonly settingsLink: Locator
@@ -47,9 +49,11 @@ export class KeyboardNavPage {
     // aria-label="Utilities") and use aria-label for their accessible
     // name; they are still in Tab order after Taxes.
     this.homeLink = this.sidebar.getByRole('button', { name: 'Home', exact: true })
+    this.searchLink = this.sidebar.getByRole('button', { name: 'Search', exact: true })
     this.goalsLink = this.sidebar.getByRole('button', { name: 'Goals', exact: true })
     this.netWorthLink = this.sidebar.getByRole('button', { name: 'Net Worth', exact: true })
     this.budgetLink = this.sidebar.getByRole('button', { name: 'Budget', exact: true })
+    this.transactionsLink = this.sidebar.getByRole('button', { name: 'Transactions', exact: true })
     this.taxesLink = this.sidebar.getByRole('button', { name: 'Taxes', exact: true })
     this.driveLink = this.sidebar.getByRole('button', { name: 'Drive', exact: true })
     this.settingsLink = this.sidebar.getByRole('button', { name: 'Settings', exact: true })
@@ -133,5 +137,5 @@ export class KeyboardNavPage {
  * SidebarNavigation.tsx. The Settings menu trigger is a `<button>`
  * (SettingsMenu.tsx:82) with aria-label="Settings".
  */
-export const SIDEBAR_NAV_ORDER = ['Home', 'Goals', 'Net Worth', 'Budget', 'Taxes', 'Drive', 'Settings'] as const
+export const SIDEBAR_NAV_ORDER = ['Home', 'Search', 'Goals', 'Net Worth', 'Budget', 'Transactions', 'Taxes', 'Drive', 'Settings'] as const
 export type SidebarNavName = (typeof SIDEBAR_NAV_ORDER)[number]

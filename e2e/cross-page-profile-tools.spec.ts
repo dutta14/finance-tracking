@@ -232,16 +232,11 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       })
       await gotoAndSettle(page, URLS.netWorthGrowth, /^net worth$/i)
 
-      // Table mounts as lazy chunk — wait for it.
-      const table = page.locator('table.sgt-table')
-      await expect(table).toBeVisible()
-
-      // Row identified by its first cell (Year). The "$200,000" /
-      // "$260,000" appears in the Net Worth column on each row.
-      const row2023 = table.getByRole('row').filter({ has: page.getByRole('cell', { name: '2023', exact: true }) })
-      await expect(row2023).toContainText('$200,000')
-      // migrating per #165 — remaining selectors to follow
-      await expect(page.locator('tr[data-sgt-year="2024"] [data-sgt-field="netWorth"]')).toContainText('$260,000')
+      const row2023 = page.locator('[data-sgt-year="2023"]')
+      const row2024 = page.locator('[data-sgt-year="2024"]')
+      await expect(row2023).toBeVisible()
+      await expect(row2023.locator('[data-sgt-field="netWorth"]')).toContainText('$200,000')
+      await expect(row2024.locator('[data-sgt-field="netWorth"]')).toContainText('$260,000')
     })
 
     test('32. Savings Growth Tracker pulls budget income and expense for each year', async ({
@@ -259,19 +254,10 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       })
       await gotoAndSettle(page, URLS.netWorthGrowth, /^net worth$/i)
 
-      const table = page.locator('table.sgt-table')
-      await expect(table).toBeVisible()
-
-      // In Savings tab (default), the row shows: Year | Net Income |
-      // Expense | Exp Δ | Savings | Sav Δ | Growth | Gro Δ | Net Worth
-      // (SavingsGrowthTracker.tsx:380-409). With 12 months of Salary
-      // $10,000 → Net Income = $120,000. Rent $-6,667 × 12 → Expense
-      // = $80,004 (which renders rounded to $80,004).
-      const row2024 = table
-        .getByRole('row')
-        .filter({ has: page.getByRole('cell', { name: '2024', exact: true }) })
-      await expect(row2024).toContainText('$120,000')
-      await expect(row2024).toContainText('$80,004')
+      const row2024 = page.locator('[data-sgt-year="2024"]')
+      await expect(row2024).toBeVisible()
+      await expect(row2024.locator('[data-sgt-field="netIncome"]')).toContainText('$120,000')
+      await expect(row2024.locator('[data-sgt-field="expense"]')).toContainText('$80,004')
     })
   })
 

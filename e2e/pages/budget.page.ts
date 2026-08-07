@@ -16,6 +16,8 @@ export class BudgetPage {
   readonly yearLabel: Locator
 
   // View mode + time period
+  readonly spreadsheetBtn: Locator
+  readonly cashflowBtn: Locator
   readonly groupsBtn: Locator
 
   // Upload
@@ -69,7 +71,9 @@ export class BudgetPage {
     this.nextYearBtn = page.locator('.budget-year-btn[title="Next year"]')
     this.yearLabel = page.locator('.budget-year-label')
 
-    this.groupsBtn = page.locator('.budget-action-btn', { hasText: /^(Groups|Hide Groups)$/ })
+    this.cashflowBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Cashflow$/ })
+    this.spreadsheetBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Spreadsheet$/ })
+    this.groupsBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Groups$/ })
 
     this.uploadDropDown = page.locator('.budget-split-drop')
     this.uploadMenu = page.locator('.budget-upload-menu')
@@ -81,7 +85,7 @@ export class BudgetPage {
     this.previewCancel = page.locator('.csv-preview-btn--cancel')
     this.previewConfirm = page.locator('.csv-preview-btn--confirm')
 
-    this.addTxnBtn = page.locator('.budget-add-txn-btn')
+    this.addTxnBtn = page.locator('.budget-manual-entry > .budget-action-btn', { hasText: /^Add Transaction$/ })
     this.txnForm = page.locator('form.budget-txn-form')
     this.txnDate = page.locator('#txn-date')
     this.txnDesc = page.locator('#txn-desc')
@@ -105,33 +109,39 @@ export class BudgetPage {
   }
 
   async goto() {
+    await this.page.goto('/finance-tracking/#/budget/spreadsheet')
+    await this.page.waitForLoadState('domcontentloaded')
+    await this.title.waitFor({ state: 'visible' })
+  }
+
+  async gotoCashflow() {
     await this.page.goto('/finance-tracking/#/budget')
     await this.page.waitForLoadState('domcontentloaded')
     await this.title.waitFor({ state: 'visible' })
   }
 
-  /**
-   * Switch the upper view-mode toggle to a named mode. Buttons inside the
-   * second toggle group share the labels M/Q/H, so we limit to the first
-   * toggle group.
-   */
-  async setViewMode(mode: 'aggregated' | 'detailed' | 'cashflow') {
+  async setViewMode(mode: 'cashflow' | 'spreadsheet' | 'groups') {
     const labels: Record<typeof mode, string> = {
-      aggregated: 'Aggregated',
-      detailed: 'Detailed',
       cashflow: 'Cashflow',
+      spreadsheet: 'Spreadsheet',
+      groups: 'Groups',
     }
     await this.page
-      .locator('.budget-view-toggle')
-      .nth(0)
+      .locator('.budget-header-left .budget-view-toggle')
       .locator('.budget-view-btn', { hasText: labels[mode] })
+      .click()
+  }
+
+  async setSpreadsheetMode(mode: 'aggregated' | 'detailed') {
+    await this.page
+      .locator('.budget-action-bar .budget-view-toggle--secondary')
+      .locator('.budget-view-btn', { hasText: mode === 'aggregated' ? 'Aggregated' : 'Detailed' })
       .click()
   }
 
   async setTimePeriod(period: 'M' | 'Q' | 'H') {
     await this.page
-      .locator('.budget-view-toggle')
-      .nth(1)
+      .locator('.budget-header-right .budget-view-toggle')
       .locator('.budget-view-btn', { hasText: period })
       .click()
   }
@@ -186,10 +196,10 @@ export class BudgetPage {
     await this.txnSave.click()
   }
 
-  /** Open the category group manager panel if not already open. */
+  /** Open the category group manager view if not already visible. */
   async openGroupManager() {
     if (await this.groupManager.isVisible()) return
-    await this.groupsBtn.click()
+    await this.setViewMode('groups')
     await this.groupManager.waitFor({ state: 'visible' })
   }
 

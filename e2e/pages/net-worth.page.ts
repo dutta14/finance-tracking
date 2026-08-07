@@ -10,6 +10,7 @@ export class NetWorthPage {
 
   // Header actions
   readonly viewAccountsBtn: Locator
+  readonly accountsTab: Locator
   readonly addEntryBtn: Locator
   readonly copyLastMonthBtn: Locator
   readonly importCsvBtn: Locator
@@ -60,7 +61,8 @@ export class NetWorthPage {
     this.emptyAddBtn = page.locator('.data-empty .data-add-btn')
 
     // Header actions
-    this.viewAccountsBtn = page.locator('button.data-view-accounts-btn')
+    this.accountsTab = page.getByRole('tab', { name: 'Accounts' })
+    this.viewAccountsBtn = this.accountsTab
     this.addEntryBtn = page.locator('button.data-add-entry-btn').first()
     this.copyLastMonthBtn = page.getByLabel('Copy balances from last month')
     this.importCsvBtn = page.locator('button.data-import-csv-btn').first()
@@ -77,7 +79,7 @@ export class NetWorthPage {
     this.tabBar = page.locator('nav[aria-label="Net Worth sections"]')
 
     // AccountsModal
-    this.modal = page.locator('div[role="dialog"][aria-modal="true"]')
+    this.modal = page.locator('.data-modal').first()
     this.modalCloseBtn = page.locator('button.data-modal-close')
     this.modalAddBtn = this.modal.locator('button.data-add-btn')
 
@@ -119,12 +121,12 @@ export class NetWorthPage {
   }
 
   async openAccountsModal() {
-    await this.viewAccountsBtn.click()
+    await this.accountsTab.click()
     await this.modal.waitFor({ state: 'visible' })
   }
 
   async closeAccountsModal() {
-    await this.modalCloseBtn.first().click()
+    await this.chartsTab.click()
     await this.modal.waitFor({ state: 'hidden' })
   }
 
