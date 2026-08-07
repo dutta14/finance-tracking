@@ -46,7 +46,10 @@ const store: {
   categoryGroups: baseCategoryGroups,
 }
 
-const transactionFixtures: Record<string, Array<{ date: string; category: string; amount: number; description?: string }>> = {
+const transactionFixtures: Record<
+  string,
+  Array<{ date: string; category: string; amount: number; description?: string }>
+> = {
   [csvMap.august]: [...baseAugustTransactions],
   [csvMap.july]: [...baseJulyTransactions],
 }
@@ -196,7 +199,9 @@ describe('Transactions branch coverage', () => {
     await user.click(await screen.findByRole('button', { name: /Sort/i }))
     await user.click(screen.getByRole('button', { name: 'Category Z–A' }))
 
-    let augustRows = within(screen.getByRole('heading', { name: 'August 2, 2026' }).closest('.txn-group') as HTMLElement)
+    let augustRows = within(
+      screen.getByRole('heading', { name: 'August 2, 2026' }).closest('.txn-group') as HTMLElement,
+    )
       .getAllByRole('listitem')
       .map(row => row.textContent)
     expect(augustRows[0]).toContain('Shopping')

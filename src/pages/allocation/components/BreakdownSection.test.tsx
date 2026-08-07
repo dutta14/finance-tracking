@@ -38,7 +38,8 @@ vi.mock('./ChartHelpers', () => {
       <div>
         {data.map(slice => (
           <div key={slice.name}>
-            {slice.name}: {mode === 'pct' ? `${((slice.value / total) * 100).toFixed(1)}%` : formatCurrency(slice.value)}
+            {slice.name}:{' '}
+            {mode === 'pct' ? `${((slice.value / total) * 100).toFixed(1)}%` : formatCurrency(slice.value)}
           </div>
         ))}
       </div>
@@ -141,7 +142,9 @@ describe('BreakdownSection', () => {
 
   it('clears the selected class when the scope changes or when the selected slice disappears', async () => {
     const user = userEvent.setup()
-    const getAccountsForClass = vi.fn(() => [{ name: 'Brokerage', value: 60000, isDebt: false, owner: 'primary', ownerName: 'Alice' }])
+    const getAccountsForClass = vi.fn(() => [
+      { name: 'Brokerage', value: 60000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+    ])
 
     const { rerender } = render(
       <BreakdownSection getSlices={() => mockSlices} getAccountsForClass={getAccountsForClass} />,
