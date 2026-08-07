@@ -394,8 +394,11 @@ test.describe('Budget Page E2E', () => {
       await budget.goto()
       await budget.openGroupManager()
 
-      // Enter merge mode and select the two categories
-      const mergeBtn = page.locator('.budget-group-manager-header .budget-action-btn', { hasText: 'Merge Categories' })
+      // Enter merge mode and select the two categories (scope to Expense section)
+      const expenseSection = page
+        .locator('.budget-group-manager-section')
+        .filter({ hasText: 'Expense Category Groups' })
+      const mergeBtn = expenseSection.locator('.budget-action-btn', { hasText: 'Merge Categories' })
       await mergeBtn.click()
       await page.locator('.budget-group-cat-name', { hasText: 'Groceries' }).click()
       await page.locator('.budget-group-cat-name', { hasText: 'Dining' }).click()
@@ -444,14 +447,17 @@ test.describe('Budget Page E2E', () => {
 
       // Use the "merge single → new target" flow as a rename: select Groceries and
       // type the new name. Merging one category to a new name effectively renames it.
-      const mergeBtn = page.locator('.budget-group-manager-header .budget-action-btn', { hasText: 'Merge Categories' })
+      const expenseSection = page
+        .locator('.budget-group-manager-section')
+        .filter({ hasText: 'Expense Category Groups' })
+      const mergeBtn = expenseSection.locator('.budget-action-btn', { hasText: 'Merge Categories' })
       await mergeBtn.click()
       await page.locator('.budget-group-cat-name', { hasText: 'Groceries' }).click()
 
       // Need at least 2 selections for the in-app Merge button to enable. So
       // instead, use the deleteCategory → merge prompt that runs even for one
       // source. Cancel merge mode first.
-      await page.locator('.budget-group-manager-header .budget-action-btn', { hasText: 'Cancel Merge' }).click()
+      await expenseSection.locator('.budget-action-btn', { hasText: 'Cancel Merge' }).click()
 
       // Click delete (×) on Groceries — since it has transactions, the merge
       // prompt opens letting us pick a new target name.
@@ -786,16 +792,6 @@ test.describe('Budget Page E2E', () => {
   })
 
   test.describe('Keyboard Navigation', () => {
-    test.skip('drilldown inline edit: Enter activates, Escape cancels, Enter confirms', async () => {
-      // Budget drilldown inline editing was removed when drilldown itself was
-      // replaced with navigation to the Transactions page.
-    })
-
-    test.skip('group manager: reorder a group with the move-up button', async () => {
-      // Group reordering now uses drag-and-drop instead of ▲/▼ controls, so
-      // this test needs a dedicated DnD interaction rather than button clicks.
-    })
-
     test('manual entry: keyboard Tab navigates fields in the documented order', async ({ page }) => {
       await seedKnownBudget(page)
       const budget = new BudgetPage(page)
