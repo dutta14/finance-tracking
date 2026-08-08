@@ -377,16 +377,19 @@ const LeverageGoal = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem(SCENARIOS_KEY, JSON.stringify(scenarios))
+    window.dispatchEvent(new Event('tools-changed'))
   }, [scenarios])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem(MAIN_ALLOC_KEY, JSON.stringify(mainAllocations))
+    window.dispatchEvent(new Event('tools-changed'))
   }, [mainAllocations])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem(MAIN_NAME_KEY, currentScenarioName)
+    window.dispatchEvent(new Event('tools-changed'))
   }, [currentScenarioName])
 
   useEffect(() => {
@@ -402,6 +405,7 @@ const LeverageGoal = () => {
     const next = targetInput.trim()
     if (next) window.localStorage.setItem(TARGET_STORAGE_KEY, next)
     else window.localStorage.removeItem(TARGET_STORAGE_KEY)
+    window.dispatchEvent(new Event('tools-changed'))
   }, [targetInput])
 
   const targetValue = useMemo(() => parseNumber(debouncedTargetInput), [debouncedTargetInput])
@@ -457,7 +461,7 @@ const LeverageGoal = () => {
   )
 
   const addScenario = () => {
-    if (!plannerResult || scenarios.length >= 2) return
+    if (!plannerResult || scenarios.length >= 3) return
 
     const nextId = `scenario-${scenarioIdRef.current++}`
     setScenarios(prev => [
@@ -654,9 +658,9 @@ const LeverageGoal = () => {
             <div className="lever-section-head lever-section-head--tight">
               <div className="lever-section-title">
                 <h3>Scenario comparison</h3>
-                <p>Compare up to three session-only leverage plans.</p>
+                <p>Compare up to four allocation plans side by side.</p>
               </div>
-              <button className="goal-action-btn" type="button" onClick={addScenario} disabled={scenarios.length >= 2}>
+              <button className="goal-action-btn" type="button" onClick={addScenario} disabled={scenarios.length >= 3}>
                 Add scenario
               </button>
             </div>

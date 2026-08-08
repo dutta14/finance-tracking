@@ -121,6 +121,12 @@ section.goal {
   border-color: var(--color-border);
 }
 
+.goal-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .goal-action-btn--danger {
   color: var(--color-negative);
 }
