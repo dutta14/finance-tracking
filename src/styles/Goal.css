@@ -16,7 +16,7 @@ section.goal {
   top: 0;
   z-index: 10;
   background: var(--color-bg);
-  padding: 1rem 0;
+  padding: 2rem 0 1rem;
 }
 
 /* Tab bar */
@@ -54,6 +54,38 @@ section.goal {
   background: var(--color-bg-hover, rgba(0, 0, 0, 0.06));
   font-weight: var(--fw-semibold);
 }
+/* Sub-tab bar (right-aligned, e.g. FI Plans / A/L Plan) */
+.goal-sub-tab-bar {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-left: auto;
+}
+.goal-sub-tab {
+  padding: 0.4rem 0.9rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  border: none;
+  background: transparent;
+  transition:
+    color 150ms,
+    background-color 150ms;
+  text-decoration: none;
+  cursor: pointer;
+}
+.goal-sub-tab:hover {
+  color: var(--color-text);
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
+}
+.goal-sub-tab.active {
+  color: var(--color-text);
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.06));
+  font-weight: var(--fw-semibold);
+}
+
 .goal-tab-loading {
   display: flex;
   align-items: center;
@@ -112,7 +144,7 @@ section.goal {
 }
 
 .goal-content {
-  padding: 2rem 2rem 3rem;
+  padding: 0 2rem 3rem;
   background-color: transparent;
   min-height: calc(100vh - 300px);
   transition: padding-right 0.2s;

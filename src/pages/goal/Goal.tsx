@@ -13,6 +13,7 @@ import { useGrowthSettings } from './hooks/useGrowthSettings'
 import '../../styles/GrowthSettings.css'
 
 import FICalculator from '../tools/components/FICalculator'
+import LeverageGoal from './components/LeverageGoal'
 
 const Goal: FC = () => {
   const {
@@ -36,7 +37,7 @@ const Goal: FC = () => {
   const growthCtx = useGrowthSettings()
   const subPath = location.pathname.replace('/goal', '').replace(/^\//, '') || 'plans'
   const isDetailView = /^\d+$/.test(subPath)
-  const activeTab = isDetailView ? 'plans' : subPath
+  const activeTab = isDetailView ? 'plans/fiplan' : subPath
   const { formData, setFormData, error, setError, handleInputChange, populateFromGoal, resetForm } = useFormData()
   const { editingGoalId, stopEditing } = useEditingState()
   const [showForm, setShowForm] = useState(false)
@@ -86,10 +87,16 @@ const Goal: FC = () => {
               <h1>Goals</h1>
               <nav className="goal-tab-bar" aria-label="Goals sections">
                 <NavLink
-                  to="/goal/plans"
-                  className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
+                  to="/goal/plans/fiplan"
+                  className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans/fiplan' ? ' active' : ''}`}
                 >
-                  Plans
+                  FIRE Plans
+                </NavLink>
+                <NavLink
+                  to="/goal/plans/alplan"
+                  className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}
+                >
+                  Leverage
                 </NavLink>
                 <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
                   Calculator
@@ -101,8 +108,9 @@ const Goal: FC = () => {
 
         <Routes>
           <Route index element={<Navigate to="/goal/plans" replace />} />
+          <Route path="plans" element={<Navigate to="/goal/plans/fiplan" replace />} />
           <Route
-            path="plans"
+            path="plans/fiplan"
             element={
               <>
                 <div className="goal-container">
@@ -159,10 +167,8 @@ const Goal: FC = () => {
               </>
             }
           />
-          <Route
-            path="calculator"
-            element={<FICalculator />}
-          />
+          <Route path="plans/alplan" element={<LeverageGoal />} />
+          <Route path="calculator" element={<FICalculator />} />
           <Route
             path=":id"
             element={
