@@ -42,6 +42,7 @@ interface GoalDetailedCardProps {
   summaryYear?: number
   savingsOverride?: number | null
   onSavingsOverrideChange?: (value: number | null) => void
+  gwMonthlySavings?: number
 }
 
 const toEditFields = (p: FinancialGoal): EditFields => ({
@@ -122,6 +123,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   summaryYear,
   savingsOverride: savingsOverrideProp,
   onSavingsOverrideChange,
+  gwMonthlySavings = 0,
 }) => {
   const [editing, setEditing] = useState(initialEditing)
   const [editFields, setEditFields] = useState<EditFields>(toEditFields(goal))
@@ -348,6 +350,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     if (!hasBudgetData) return { state: 'no-budget' as const }
     if (budgetAnnualSavings <= 0) return { state: 'not-reachable' as const }
 
+    const fiAnnualSavings = Math.max(0, budgetAnnualSavings - gwMonthlySavings * 12)
+    if (fiAnnualSavings <= 0) return { state: 'not-reachable' as const }
+
     // End of life from goalEndYear
     const endOfLife = goal.goalEndYear ? new Date(goal.goalEndYear) : null
     // Monthly expense today (from goal creation expenses, inflated to now)
@@ -371,7 +376,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       endOfLife && monthlyExpenseNow > 0
         ? projectFIDateWithDrawdown(
             fiTotal,
-            budgetAnnualSavings,
+            fiAnnualSavings,
             preBoundaryGrowth,
             postBoundaryGrowth,
             monthlyExpenseNow,
@@ -379,7 +384,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
             endOfLife,
             ageBoundaryDate,
           )
-        : projectFIDate(fiTotal, fiGoal, budgetAnnualSavings, preBoundaryGrowth)
+        : projectFIDate(fiTotal, fiGoal, fiAnnualSavings, preBoundaryGrowth)
 
     if (!result) return { state: 'not-reachable' as const }
 
@@ -424,7 +429,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
 
     const shortDate = `${result.date.toLocaleDateString('en-US', { month: 'short' })} '${String(result.date.getFullYear()).slice(2)}`
     const actualDate = result.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    const monthlySavings = budgetAnnualSavings / 12
+    const monthlySavings = Math.max(0, budgetAnnualSavings / 12 - gwMonthlySavings)
     return {
       state: 'projected' as const,
       date: result.date,
@@ -798,6 +803,11 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                   </button>
                 </>
               )}
+            </p>
+          )}
+          {!condensed && projection.state === 'projected' && gwMonthlySavings > 0 && (
+            <p className="fi-goal-prose fi-goal-pace-note">
+              Actual savings ({dollars(showYearly ? budgetAnnualSavings : budgetAnnualSavings / 12)}/{showYearly ? 'yr' : 'mo'}) minus GW goal ({dollars(showYearly ? gwMonthlySavings * 12 : gwMonthlySavings)}/{showYearly ? 'yr' : 'mo'})
             </p>
           )}
           {!condensed && projection.state === 'reached' && (

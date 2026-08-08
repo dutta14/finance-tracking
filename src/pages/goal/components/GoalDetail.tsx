@@ -115,7 +115,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
   const [renameMode, setRenameMode] = useState(false)
   const [renameName, setRenameName] = useState('')
-  const [diveDeepOpen, setDiveDeepOpen] = useState(false)
   const [showYearly, setShowYearly] = useState(false)
   const [annualSpending, setAnnualSpending] = useState(() => (goal?.annualSpending ? String(goal.annualSpending) : ''))
   const [incomeTaxRate, setIncomeTaxRate] = useState(() => (goal?.incomeTaxRate ? String(goal.incomeTaxRate) : ''))
@@ -143,7 +142,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
   useEffect(() => {
     setRenameMode(false)
-    setDiveDeepOpen(false)
   }, [goalId])
 
   useEffect(() => {
@@ -193,7 +191,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const hasGoals = fiTarget > 0 || gwTarget > 0
 
     const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
-    return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown }
+    return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown, gwMonthly }
   }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
 
   const handleSpendingChange = (v: string) => {
@@ -276,10 +274,10 @@ const GoalDetail: FC<GoalDetailProps> = ({
     <div className="goal-detail">
       <div className="goal-detail-header">
         <div className="goal-detail-header-left">
-          <Link className="goal-detail-back-link" to="/goal">
+          <Link className="goal-detail-back-link" to="/goal" aria-label="Back to Goals">
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 16 16"
               fill="none"
               stroke="currentColor"
@@ -290,7 +288,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
             >
               <path d="M10 3L5 8l5 5" />
             </svg>
-            Goals
           </Link>
           {renameMode ? (
             <input
@@ -501,6 +498,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
             summaryYear={summaryYear}
             savingsOverride={savingsOverride}
             onSavingsOverrideChange={setSavingsOverride}
+            gwMonthlySavings={summaryData?.gwMonthly ?? 0}
           />
         </div>
 
@@ -536,42 +534,23 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </div>
       </div>
 
-      <button className={`btn-dive-deep${diveDeepOpen ? ' active' : ''}`} onClick={() => setDiveDeepOpen(v => !v)}>
-        {diveDeepOpen ? 'Close Analysis' : 'Analysis'}
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`goal-detail-chevron${diveDeepOpen ? ' goal-detail-chevron--open' : ''}`}
-          aria-hidden="true"
-        >
-          <path d="M4 6l4 4 4-4" />
-        </svg>
-      </button>
-      {diveDeepOpen && (
-        <GoalDiveDeep
-          goal={goal}
-          profileBirthday={profileBirthday}
-          partnerBirthday={partnerBirthday}
-          currentBalance={summaryData?.fiBal || 0}
-          monthlyContribution={savingsOverride ?? yearMonthlySaving ?? 0}
-          currentMonth={summaryData?.currentMonth}
-          growthRate={fiGrowth}
-          postGrowthRate={growthCtx.settings.postBoundaryGrowth}
-          ageBoundary={growthCtx.settings.ageBoundary}
-          inflation={growthCtx.settings.inflation}
-          fiBreakdown={summaryData?.fiBreakdown}
-          primaryRetirementAccessAge={growthCtx.settings.primaryRetirementAccessAge}
-          partnerRetirementAccessAge={growthCtx.settings.partnerRetirementAccessAge}
-          retirementCap={growthCtx.settings.retirementCap}
-          nonRetirementBase={growthCtx.settings.nonRetirementBase}
-        />
-      )}
+      <GoalDiveDeep
+        goal={goal}
+        profileBirthday={profileBirthday}
+        partnerBirthday={partnerBirthday}
+        currentBalance={summaryData?.fiBal || 0}
+        monthlyContribution={savingsOverride ?? Math.max(0, (yearMonthlySaving ?? 0) - (summaryData?.gwMonthly ?? 0))}
+        currentMonth={summaryData?.currentMonth}
+        growthRate={fiGrowth}
+        postGrowthRate={growthCtx.settings.postBoundaryGrowth}
+        ageBoundary={growthCtx.settings.ageBoundary}
+        inflation={growthCtx.settings.inflation}
+        fiBreakdown={summaryData?.fiBreakdown}
+        primaryRetirementAccessAge={growthCtx.settings.primaryRetirementAccessAge}
+        partnerRetirementAccessAge={growthCtx.settings.partnerRetirementAccessAge}
+        retirementCap={growthCtx.settings.retirementCap}
+        nonRetirementBase={growthCtx.settings.nonRetirementBase}
+      />
     </div>
   )
 }

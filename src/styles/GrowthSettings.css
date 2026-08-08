@@ -9,14 +9,15 @@
 .growth-settings-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.35rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  font-size: var(--fs-xs);
+  border-radius: var(--radius);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -27,7 +28,6 @@
 .growth-settings-toggle:hover {
   background: var(--color-surface-alt);
   border-color: var(--accent-border);
-  color: var(--color-text);
 }
 
 .growth-settings-toggle:focus-visible {
@@ -47,17 +47,14 @@
 
 .growth-settings-body {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   right: 0;
   z-index: 100;
-  margin-top: 8px;
-  padding: 16px 24px;
+  padding: 14px 16px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.16),
-    0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 16px;

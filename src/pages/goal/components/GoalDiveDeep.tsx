@@ -62,7 +62,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   nonRetirementBase,
 }) => {
   const [interval, setInterval] = useState<ViewInterval>('yearly')
-  const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [viewMode, setViewMode] = useState<ViewMode>('chart')
   const [scenario, setScenario] = useState<DataMode>('projected')
 
   const accessDates = useMemo(() => {
@@ -171,29 +171,50 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     ],
   )
 
+  // For Projected view, use the balance at FIRE transition as the effective goal
+  // (since FIRE triggers earlier, the required corpus is different from planned)
+  const effectiveFiGoal = useMemo(() => {
+    if (scenario === 'planned') return fiTarget
+    const fireRow = projection.find(r => r.phase === 'drawdown')
+    return fireRow ? fireRow.remaining : fiTarget
+  }, [scenario, projection, fiTarget])
+
   const intervalMonths = INTERVAL_LABELS.find(i => i.value === interval)!.months
   const filteredRows = useMemo(() => {
     if (projection.length === 0) return []
     if (intervalMonths === 1) return projection
-    const result: ProjectionRow[] = []
-    for (let i = 0; i < projection.length; i += intervalMonths) {
-      const bucketEnd = Math.min(i + intervalMonths, projection.length)
-      const endRow = projection[bucketEnd - 1]
+    // Always include the first point (current month), then bucket from there
+    const result: ProjectionRow[] = [{ ...projection[0], expense: projection[0].expense }]
+    for (let i = intervalMonths; i < projection.length; i += intervalMonths) {
+      const bucketStart = i - intervalMonths + 1
+      const bucketEnd = Math.min(i + 1, projection.length)
+      const endRow = projection[Math.min(i, projection.length - 1)]
       let bucketExpense = 0
-      for (let j = i; j < bucketEnd; j++) {
+      for (let j = bucketStart; j < bucketEnd; j++) {
         bucketExpense += projection[j].expense
       }
       result.push({ ...endRow, expense: bucketExpense })
+    }
+    // Include last point if not already included
+    const lastIdx = projection.length - 1
+    if (result[result.length - 1].month !== projection[lastIdx].month) {
+      const prevEnd = Math.floor((lastIdx - 1) / intervalMonths) * intervalMonths + 1
+      let bucketExpense = 0
+      for (let j = prevEnd; j <= lastIdx; j++) {
+        bucketExpense += projection[j].expense
+      }
+      result.push({ ...projection[lastIdx], expense: bucketExpense })
     }
     return result
   }, [projection, intervalMonths])
 
   return (
     <div className="dive-deep-container">
-      <h3 className="dive-deep-title">Analysis — {goal.goalName}</h3>
+      <div className="dive-deep-header">
+        <h3 className="dive-deep-title">Analysis — {scenario === 'projected' ? 'Projected' : 'Planned'}</h3>
+      </div>
 
       <div className="dive-deep-section">
-        <h4>Full Lifecycle — {scenario === 'projected' ? 'Projected' : 'Planned'}</h4>
         {projection.length === 0 ? (
           <p className="dive-deep-placeholder">No projection available — check retirement date and goal end year.</p>
         ) : (
@@ -227,17 +248,26 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                   </button>
                 ))}
               </div>
-              <button
-                className="projection-view-toggle"
-                onClick={() => setViewMode(v => (v === 'chart' ? 'table' : 'chart'))}
-                aria-label={viewMode === 'chart' ? 'Switch to table view' : 'Switch to chart view'}
-              >
-                {viewMode === 'chart' ? 'View Table' : 'View Chart'}
-              </button>
+              <div className="projection-interval-toggle" role="group" aria-label="View mode">
+                <button
+                  className={`projection-interval-btn${viewMode === 'chart' ? ' active' : ''}`}
+                  onClick={() => setViewMode('chart')}
+                  aria-pressed={viewMode === 'chart'}
+                >
+                  Chart
+                </button>
+                <button
+                  className={`projection-interval-btn${viewMode === 'table' ? ' active' : ''}`}
+                  onClick={() => setViewMode('table')}
+                  aria-pressed={viewMode === 'table'}
+                >
+                  Table
+                </button>
+              </div>
             </div>
 
             {viewMode === 'chart' ? (
-              <LifecycleChart rows={filteredRows} />
+              <LifecycleChart rows={filteredRows} fiGoal={effectiveFiGoal} />
             ) : (
               <LifecycleTable
                 rows={filteredRows}
