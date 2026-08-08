@@ -60,29 +60,41 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   const grabbedGoalId = useRef<number | null>(null)
   const grabHandleRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
 
-  const handleSort = useCallback((field: SortField) => {
-    if (sortField === field) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortField(field)
-      setSortDir('asc')
-    }
-  }, [sortField])
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+      } else {
+        setSortField(field)
+        setSortDir('asc')
+      }
+    },
+    [sortField],
+  )
 
-  const calcGwTotalForGoal = useCallback((goal: FinancialGoal): number => {
-    const matched = gwGoals.filter(g => g.fiGoalId === goal.id)
-    if (!matched.length || !profileBirthday) return 0
-    const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
-    const created = new Date(goal.goalCreatedIn)
-    return matched.reduce((sum, gw) => {
-      const disburseYear = birthYear + gw.disburseAge
-      const monthsToDisburse = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)))
-      const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
-      const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-      const pv = monthsRetToDisburse > 0 ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse) : disbursementTarget
-      return sum + pv
-    }, 0)
-  }, [gwGoals, profileBirthday, inflation])
+  const calcGwTotalForGoal = useCallback(
+    (goal: FinancialGoal): number => {
+      const matched = gwGoals.filter(g => g.fiGoalId === goal.id)
+      if (!matched.length || !profileBirthday) return 0
+      const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
+      const created = new Date(goal.goalCreatedIn)
+      return matched.reduce((sum, gw) => {
+        const disburseYear = birthYear + gw.disburseAge
+        const monthsToDisburse = Math.max(
+          0,
+          (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
+        )
+        const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
+        const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
+        const pv =
+          monthsRetToDisburse > 0
+            ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
+            : disbursementTarget
+        return sum + pv
+      }, 0)
+    },
+    [gwGoals, profileBirthday, inflation],
+  )
 
   const sortedGoals = useMemo(() => {
     if (!sortField || viewMode !== 'list') return goals
@@ -93,7 +105,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
         case 'name':
           av = a.goalName.toLowerCase()
           bv = b.goalName.toLowerCase()
-          return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : (av > bv ? -1 : av < bv ? 1 : 0)
+          return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : av > bv ? -1 : av < bv ? 1 : 0
         case 'retire': {
           const bday = (g: FinancialGoal) => g.birthday || profileBirthday
           av = parseInt(bday(a).split('-')[0]) + a.retirementAge
@@ -123,7 +135,6 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
     })
     return sorted
   }, [goals, sortField, sortDir, viewMode, profileBirthday, calcGwTotalForGoal])
-
 
   useEffect(() => {
     if (!contextMenu) return
@@ -333,7 +344,16 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
     <>
       {viewMode === 'list' && (
         <div className="goals-list-header" role="row">
-          {([['name', 'Name'], ['retire', 'Retire'], ['progress', 'Progress'], ['fi', 'FI Goal'], ['gw', 'GW Goals'], ['total', 'Total']] as [SortField, string][]).map(([field, label]) => (
+          {(
+            [
+              ['name', 'Name'],
+              ['retire', 'Retire'],
+              ['progress', 'Progress'],
+              ['fi', 'FI Goal'],
+              ['gw', 'GW Goals'],
+              ['total', 'Total'],
+            ] as [SortField, string][]
+          ).map(([field, label]) => (
             <button
               key={field}
               className={`goals-list-header-cell${sortField === field ? ' goals-list-header-cell--active' : ''}`}
@@ -341,9 +361,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
               aria-sort={sortField === field ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
             >
               {label}
-              {sortField === field && (
-                <span className="sort-indicator">{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>
-              )}
+              {sortField === field && <span className="sort-indicator">{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>}
             </button>
           ))}
         </div>

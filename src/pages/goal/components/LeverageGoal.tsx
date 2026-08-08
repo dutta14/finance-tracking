@@ -89,7 +89,7 @@ const computeAllocationResult = (allocation: ScenarioAllocation, totalBorrow: nu
   const sharePct = parseNumber(allocation.sharePct)
   if (sharePct === null || sharePct <= 0) return null
 
-  const borrowAmount = totalBorrow * sharePct / 100
+  const borrowAmount = (totalBorrow * sharePct) / 100
 
   if (allocation.type === 'loan') {
     return {
@@ -128,9 +128,18 @@ const RatioTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{
   return (
     <div className="lever-tooltip">
       <span>{point.label}</span>
-      <div className="lever-tooltip-row"><span>Assets</span><strong>{formatCurrency(point.assets)}</strong></div>
-      <div className="lever-tooltip-row"><span>Liabilities</span><strong>{formatCurrency(point.liabilities)}</strong></div>
-      <div className="lever-tooltip-row"><span>Ratio</span><strong>{point.ratio === null ? '—' : formatRatio(point.ratio)}</strong></div>
+      <div className="lever-tooltip-row">
+        <span>Assets</span>
+        <strong>{formatCurrency(point.assets)}</strong>
+      </div>
+      <div className="lever-tooltip-row">
+        <span>Liabilities</span>
+        <strong>{formatCurrency(point.liabilities)}</strong>
+      </div>
+      <div className="lever-tooltip-row">
+        <span>Ratio</span>
+        <strong>{point.ratio === null ? '—' : formatRatio(point.ratio)}</strong>
+      </div>
     </div>
   )
 }
@@ -199,9 +208,7 @@ const ScenarioCard = ({
           className={`scenario-card__summary-metric${isOverAllocated ? ' scenario-card__summary-metric--warning' : ''}`}
         >
           <span>{isOverAllocated ? 'Over by' : 'Remaining'}</span>
-          <strong>
-            {scenario.totalBorrow === null ? '—' : formatCurrency(Math.abs(scenario.remaining))}
-          </strong>
+          <strong>{scenario.totalBorrow === null ? '—' : formatCurrency(Math.abs(scenario.remaining))}</strong>
         </div>
       </div>
 
@@ -225,74 +232,74 @@ const ScenarioCard = ({
               <span />
             </div>
             {scenario.allocations.map(allocation => {
-            const derived = scenario.totalBorrow ? computeAllocationResult(allocation, scenario.totalBorrow) : null
+              const derived = scenario.totalBorrow ? computeAllocationResult(allocation, scenario.totalBorrow) : null
 
-            return (
-              <div className="scenario-alloc-row" key={allocation.id}>
-                <input
-                  className="lever-input"
-                  value={allocation.label}
-                  onChange={event => updateAllocation(allocation.id, { label: event.target.value })}
-                  aria-label="Allocation label"
-                />
-                <button
-                  type="button"
-                  className="lever-type-toggle"
-                  onClick={() =>
-                    updateAllocation(allocation.id, {
-                      type: allocation.type === 'loan' ? 'mortgage' : 'loan',
-                    })
-                  }
-                  aria-label="Allocation type"
-                >
-                  {allocation.type === 'loan' ? 'Loan' : 'Mortgage'}
-                </button>
-                <input
-                  className="lever-input"
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={allocation.sharePct}
-                  onChange={event => updateAllocation(allocation.id, { sharePct: event.target.value })}
-                  aria-label="Allocation share percentage"
-                  placeholder="% of total"
-                />
-                {allocation.type === 'mortgage' ? (
+              return (
+                <div className="scenario-alloc-row" key={allocation.id}>
+                  <input
+                    className="lever-input"
+                    value={allocation.label}
+                    onChange={event => updateAllocation(allocation.id, { label: event.target.value })}
+                    aria-label="Allocation label"
+                  />
+                  <button
+                    type="button"
+                    className="lever-type-toggle"
+                    onClick={() =>
+                      updateAllocation(allocation.id, {
+                        type: allocation.type === 'loan' ? 'mortgage' : 'loan',
+                      })
+                    }
+                    aria-label="Allocation type"
+                  >
+                    {allocation.type === 'loan' ? 'Loan' : 'Mortgage'}
+                  </button>
                   <input
                     className="lever-input"
                     type="number"
                     inputMode="decimal"
                     min="0"
-                    max="99"
+                    max="100"
                     step="1"
-                    value={allocation.downPaymentPct}
-                    onChange={event => updateAllocation(allocation.id, { downPaymentPct: event.target.value })}
-                    aria-label="Mortgage down payment percentage"
-                    placeholder="Down %"
+                    value={allocation.sharePct}
+                    onChange={event => updateAllocation(allocation.id, { sharePct: event.target.value })}
+                    aria-label="Allocation share percentage"
+                    placeholder="% of total"
                   />
-                ) : (
-                  <div className="scenario-alloc-row__spacer" aria-hidden="true" />
-                )}
-                <button
-                  className="goal-action-btn goal-action-btn--danger"
-                  type="button"
-                  onClick={() => removeAllocation(allocation.id)}
-                  aria-label={`Remove ${allocation.label}`}
-                >
-                  ×
-                </button>
-                {derived && (
-                  <div className="scenario-alloc-derived">
-                    Borrow {formatCurrency(derived.borrowAmount)}
-                    {derived.type === 'mortgage' &&
-                      ` · Purchase ${formatCurrency(derived.purchasePrice)} · Down ${formatCurrency(derived.downPayment)}`}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                  {allocation.type === 'mortgage' ? (
+                    <input
+                      className="lever-input"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      max="99"
+                      step="1"
+                      value={allocation.downPaymentPct}
+                      onChange={event => updateAllocation(allocation.id, { downPaymentPct: event.target.value })}
+                      aria-label="Mortgage down payment percentage"
+                      placeholder="Down %"
+                    />
+                  ) : (
+                    <div className="scenario-alloc-row__spacer" aria-hidden="true" />
+                  )}
+                  <button
+                    className="goal-action-btn goal-action-btn--danger"
+                    type="button"
+                    onClick={() => removeAllocation(allocation.id)}
+                    aria-label={`Remove ${allocation.label}`}
+                  >
+                    ×
+                  </button>
+                  {derived && (
+                    <div className="scenario-alloc-derived">
+                      Borrow {formatCurrency(derived.borrowAmount)}
+                      {derived.type === 'mortgage' &&
+                        ` · Purchase ${formatCurrency(derived.purchasePrice)} · Down ${formatCurrency(derived.downPayment)}`}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </>
         )}
       </div>
@@ -301,43 +308,53 @@ const ScenarioCard = ({
         <p className="lever-error lever-error--compact">{scenario.error}</p>
       ) : scenario.totalBorrow !== null ? (
         <>
-          {scenario.allocationResults.length > 0 && currentNetWorth > 0 && (() => {
-            const newDownPayments = scenario.allocationResults
-              .filter(a => a.type === 'mortgage')
-              .reduce((s, a) => s + a.downPayment, 0)
+          {scenario.allocationResults.length > 0 &&
+            currentNetWorth > 0 &&
+            (() => {
+              const newDownPayments = scenario.allocationResults
+                .filter(a => a.type === 'mortgage')
+                .reduce((s, a) => s + a.downPayment, 0)
 
-            const reAssets = assetBreakdown['real-estate'] || 0
-            const reLiabilities = liabilityBreakdown['real-estate'] || 0
-            const beforeREEquity = reAssets - reLiabilities
-            const afterREEquity = beforeREEquity + newDownPayments
-            const beforeOtherEquity = currentNetWorth - beforeREEquity
-            const afterOtherEquity = beforeOtherEquity - newDownPayments
-            const afterNetWorth = afterREEquity + afterOtherEquity
-            const pct = (v: number, total: number) => total > 0 ? `${(v / total * 100).toFixed(1)}%` : '—'
+              const reAssets = assetBreakdown['real-estate'] || 0
+              const reLiabilities = liabilityBreakdown['real-estate'] || 0
+              const beforeREEquity = reAssets - reLiabilities
+              const afterREEquity = beforeREEquity + newDownPayments
+              const beforeOtherEquity = currentNetWorth - beforeREEquity
+              const afterOtherEquity = beforeOtherEquity - newDownPayments
+              const afterNetWorth = afterREEquity + afterOtherEquity
+              const pct = (v: number, total: number) => (total > 0 ? `${((v / total) * 100).toFixed(1)}%` : '—')
 
-            return (
-              <div className="scenario-card__asset-alloc">
-                <span className="lever-field-label">Equity allocation impact</span>
-                <div className="scenario-asset-table">
-                  <div className="scenario-asset-row scenario-asset-row--head">
-                    <span />
-                    <strong>Before</strong>
-                    <strong>After</strong>
-                  </div>
-                  <div className="scenario-asset-row">
-                    <span>RE equity</span>
-                    <span>{formatCurrency(beforeREEquity)} ({pct(beforeREEquity, currentNetWorth)})</span>
-                    <span>{formatCurrency(afterREEquity)} ({pct(afterREEquity, afterNetWorth)})</span>
-                  </div>
-                  <div className="scenario-asset-row">
-                    <span>Other equity</span>
-                    <span>{formatCurrency(beforeOtherEquity)} ({pct(beforeOtherEquity, currentNetWorth)})</span>
-                    <span>{formatCurrency(afterOtherEquity)} ({pct(afterOtherEquity, afterNetWorth)})</span>
+              return (
+                <div className="scenario-card__asset-alloc">
+                  <span className="lever-field-label">Equity allocation impact</span>
+                  <div className="scenario-asset-table">
+                    <div className="scenario-asset-row scenario-asset-row--head">
+                      <span />
+                      <strong>Before</strong>
+                      <strong>After</strong>
+                    </div>
+                    <div className="scenario-asset-row">
+                      <span>RE equity</span>
+                      <span>
+                        {formatCurrency(beforeREEquity)} ({pct(beforeREEquity, currentNetWorth)})
+                      </span>
+                      <span>
+                        {formatCurrency(afterREEquity)} ({pct(afterREEquity, afterNetWorth)})
+                      </span>
+                    </div>
+                    <div className="scenario-asset-row">
+                      <span>Other equity</span>
+                      <span>
+                        {formatCurrency(beforeOtherEquity)} ({pct(beforeOtherEquity, currentNetWorth)})
+                      </span>
+                      <span>
+                        {formatCurrency(afterOtherEquity)} ({pct(afterOtherEquity, afterNetWorth)})
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })()}
+              )
+            })()}
         </>
       ) : null}
     </article>
@@ -346,7 +363,16 @@ const ScenarioCard = ({
 
 const LeverageGoal = () => {
   const { allMonths } = useData()
-  const { totalAssets, totalLiabilities, netWorth, currentRatio, assetBreakdown, liabilityBreakdown, computeAcquisition, getRatioHistory } = useLeverage()
+  const {
+    totalAssets,
+    totalLiabilities,
+    netWorth,
+    currentRatio,
+    assetBreakdown,
+    liabilityBreakdown,
+    computeAcquisition,
+    getRatioHistory,
+  } = useLeverage()
   const [targetInput, setTargetInput] = useState(loadStoredTarget)
   const [debouncedTargetInput, setDebouncedTargetInput] = useState(targetInput)
   const [currentScenarioName, setCurrentScenarioName] = useState(
@@ -357,21 +383,29 @@ const LeverageGoal = () => {
     try {
       const stored = window.localStorage.getItem(SCENARIOS_KEY)
       return stored ? JSON.parse(stored) : []
-    } catch { return [] }
+    } catch {
+      return []
+    }
   })
   const [mainAllocations, setMainAllocations] = useState<ScenarioAllocation[]>(() => {
     if (typeof window === 'undefined') return []
     try {
       const stored = window.localStorage.getItem(MAIN_ALLOC_KEY)
       return stored ? JSON.parse(stored) : []
-    } catch { return [] }
+    } catch {
+      return []
+    }
   })
   const [chartStartMonth, setChartStartMonth] = useState(
     () => (typeof window !== 'undefined' && window.localStorage.getItem(CHART_START_KEY)) || allMonths[0] || '',
   )
   const scenarioIdRef = useRef(scenarios.length + 1)
   const allocationIdRef = useRef(
-    Math.max(1, ...mainAllocations.map((_, i) => i + 1), ...scenarios.flatMap(s => s.allocations.map((_, i) => i + 1))) + 1,
+    Math.max(
+      1,
+      ...mainAllocations.map((_, i) => i + 1),
+      ...scenarios.flatMap(s => s.allocations.map((_, i) => i + 1)),
+    ) + 1,
   )
 
   useEffect(() => {
@@ -484,11 +518,12 @@ const LeverageGoal = () => {
       const error = getPlannerError({ currentRatio, targetValue: nextTargetValue })
       const result = error ? null : computeAcquisition(nextTargetValue as number, 0)
       const totalBorrow = result?.acquisitionAmount ?? null
-      const allocationResults = totalBorrow !== null && totalBorrow > 0
-        ? scenario.allocations
-            .map(a => computeAllocationResult(a, totalBorrow))
-            .filter((allocation): allocation is AllocationResult => allocation !== null)
-        : []
+      const allocationResults =
+        totalBorrow !== null && totalBorrow > 0
+          ? scenario.allocations
+              .map(a => computeAllocationResult(a, totalBorrow))
+              .filter((allocation): allocation is AllocationResult => allocation !== null)
+          : []
       const allocatedTotal = allocationResults.reduce((sum, a) => sum + a.borrowAmount, 0)
 
       return {
@@ -556,9 +591,7 @@ const LeverageGoal = () => {
             <div className="lever-stat">
               <span>Total Assets</span>
               <strong>{formatCurrency(totalAssets)}</strong>
-              {plannerResult && (
-                <span className="lever-stat-target">→ {formatCurrency(plannerResult.newAssets)}</span>
-              )}
+              {plannerResult && <span className="lever-stat-target">→ {formatCurrency(plannerResult.newAssets)}</span>}
             </div>
             <div className="lever-stat">
               <span>Total Liabilities</span>
@@ -570,9 +603,7 @@ const LeverageGoal = () => {
             <div className="lever-stat">
               <span>Net Worth</span>
               <strong>{formatCurrency(netWorth)}</strong>
-              {plannerResult && (
-                <span className="lever-stat-target">→ {formatCurrency(plannerResult.netWorth)}</span>
-              )}
+              {plannerResult && <span className="lever-stat-target">→ {formatCurrency(plannerResult.netWorth)}</span>}
             </div>
             <div className="lever-stat">
               <span>Borrow capacity</span>

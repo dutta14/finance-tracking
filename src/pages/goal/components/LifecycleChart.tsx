@@ -192,18 +192,8 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
-          <XAxis
-            dataKey="month"
-            tick={{ fontSize: 11 }}
-            interval="preserveStartEnd"
-            stroke="var(--projection-axis)"
-          />
-          <YAxis
-            tickFormatter={abbreviate}
-            tick={{ fontSize: 11 }}
-            stroke="var(--projection-axis)"
-            width={72}
-          />
+          <XAxis dataKey="month" tick={{ fontSize: 11 }} interval="preserveStartEnd" stroke="var(--projection-axis)" />
+          <YAxis tickFormatter={abbreviate} tick={{ fontSize: 11 }} stroke="var(--projection-axis)" width={72} />
           <Tooltip content={<CustomTooltip fiGoal={fiGoal} />} />
           <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
 

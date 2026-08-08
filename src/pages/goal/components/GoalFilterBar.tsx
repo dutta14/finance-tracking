@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FinancialGoal } from '../../../types'
 
 export interface GoalFilters {
@@ -115,10 +115,10 @@ const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, filters, onChange }) => 
     }
   }, [filters, isOpen])
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setDraftFilters(cloneFilters(filters))
     setIsOpen(false)
-  }
+  }, [filters])
 
   useEffect(() => {
     if (!isOpen) return
@@ -133,7 +133,7 @@ const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, filters, onChange }) => 
 
     document.addEventListener('mousedown', handleMouseDown)
     return () => document.removeEventListener('mousedown', handleMouseDown)
-  }, [filters, isOpen])
+  }, [isOpen, handleCancel])
 
   const openPanel = () => {
     setDraftFilters(cloneFilters(filters))

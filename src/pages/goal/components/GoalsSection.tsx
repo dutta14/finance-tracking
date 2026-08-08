@@ -132,9 +132,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
         <div className="goal-toolbar-right">
           {compareMode && selectedGoalIds.length > 0 && (
             <>
-              <span className="goal-selection-count">
-                {selectedGoalIds.length} selected
-              </span>
+              <span className="goal-selection-count">{selectedGoalIds.length} selected</span>
               <button className="goal-action-btn goal-action-btn--danger" onClick={handleDeleteSelected}>
                 Delete
               </button>

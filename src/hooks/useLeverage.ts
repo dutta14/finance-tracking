@@ -89,7 +89,13 @@ export function useLeverage() {
 
   const assetBreakdown = useMemo<AssetBreakdown>(() => {
     const breakdown: AssetBreakdown = {
-      cash: 0, 'us-stock': 0, 'intl-stock': 0, bonds: 0, 'real-estate': 0, others: 0, debt: 0,
+      cash: 0,
+      'us-stock': 0,
+      'intl-stock': 0,
+      bonds: 0,
+      'real-estate': 0,
+      others: 0,
+      debt: 0,
     }
     const latestMonth = allMonths[allMonths.length - 1]
     if (!latestMonth) return breakdown
@@ -106,7 +112,13 @@ export function useLeverage() {
 
   const liabilityBreakdown = useMemo<AssetBreakdown>(() => {
     const breakdown: AssetBreakdown = {
-      cash: 0, 'us-stock': 0, 'intl-stock': 0, bonds: 0, 'real-estate': 0, others: 0, debt: 0,
+      cash: 0,
+      'us-stock': 0,
+      'intl-stock': 0,
+      bonds: 0,
+      'real-estate': 0,
+      others: 0,
+      debt: 0,
     }
     const latestMonth = allMonths[allMonths.length - 1]
     if (!latestMonth) return breakdown

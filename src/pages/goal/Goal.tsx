@@ -92,10 +92,7 @@ const Goal: FC = () => {
                 >
                   FIRE Plans
                 </NavLink>
-                <NavLink
-                  to="/goal/leverage"
-                  className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}
-                >
+                <NavLink to="/goal/leverage" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
                   Leverage
                 </NavLink>
                 <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>

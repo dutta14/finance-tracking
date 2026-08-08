@@ -35,58 +35,66 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     return monthMaps
   }, [balances])
 
-  const { netWorth, prevNw, fiTotal, fiRetirementTotal, fiNonRetirementTotal, gwTotal, gwLiquidTotal, gwIlliquidTotal } =
-    useMemo(() => {
-      if (!selectedMonth) {
-        return {
-          netWorth: 0,
-          prevNw: null as number | null,
-          fiTotal: 0,
-          fiRetirementTotal: 0,
-          fiNonRetirementTotal: 0,
-          gwTotal: 0,
-          gwLiquidTotal: 0,
-          gwIlliquidTotal: 0,
-        }
-      }
-
-      const balMap = balanceMapsByMonth.get(selectedMonth) ?? new Map<number, number>()
-
-      // Previous month net worth
-      const prevMonthKey = allMonths[monthIdx + 1] || null
-      let prevNwVal: number | null = null
-      if (prevMonthKey) {
-        const prevMap = balanceMapsByMonth.get(prevMonthKey) ?? new Map<number, number>()
-        prevNwVal = sumAccountBalances(accounts, prevMap)
-      }
-
-      const fiAccounts = accounts.filter(a => a.goalType === 'fi')
-      const gwAccounts = accounts.filter(a => a.goalType === 'gw')
-
-      const fiRetirement = fiAccounts.filter(a => a.type === 'retirement')
-      const fiNonRetirement = fiAccounts.filter(a => a.type === 'non-retirement')
-      const gwLiquid = gwAccounts.filter(a => a.type === 'liquid')
-      const gwIlliquid = gwAccounts.filter(a => a.type === 'illiquid')
-
-      const fiTotal = sumAccountBalances(fiAccounts, balMap)
-      const gwTotal = sumAccountBalances(gwAccounts, balMap)
-      const fiRetirementTotal = sumAccountBalances(fiRetirement, balMap)
-      const fiNonRetirementTotal = sumAccountBalances(fiNonRetirement, balMap)
-      const gwLiquidTotal = sumAccountBalances(gwLiquid, balMap)
-      const gwIlliquidTotal = sumAccountBalances(gwIlliquid, balMap)
-      const nw = sumAccountBalances(accounts, balMap)
-
+  const {
+    netWorth,
+    prevNw,
+    fiTotal,
+    fiRetirementTotal,
+    fiNonRetirementTotal,
+    gwTotal,
+    gwLiquidTotal,
+    gwIlliquidTotal,
+  } = useMemo(() => {
+    if (!selectedMonth) {
       return {
-        netWorth: nw,
-        prevNw: prevNwVal,
-        fiTotal,
-        fiRetirementTotal,
-        fiNonRetirementTotal,
-        gwTotal,
-        gwLiquidTotal,
-        gwIlliquidTotal,
+        netWorth: 0,
+        prevNw: null as number | null,
+        fiTotal: 0,
+        fiRetirementTotal: 0,
+        fiNonRetirementTotal: 0,
+        gwTotal: 0,
+        gwLiquidTotal: 0,
+        gwIlliquidTotal: 0,
       }
-    }, [accounts, selectedMonth, allMonths, monthIdx, balanceMapsByMonth])
+    }
+
+    const balMap = balanceMapsByMonth.get(selectedMonth) ?? new Map<number, number>()
+
+    // Previous month net worth
+    const prevMonthKey = allMonths[monthIdx + 1] || null
+    let prevNwVal: number | null = null
+    if (prevMonthKey) {
+      const prevMap = balanceMapsByMonth.get(prevMonthKey) ?? new Map<number, number>()
+      prevNwVal = sumAccountBalances(accounts, prevMap)
+    }
+
+    const fiAccounts = accounts.filter(a => a.goalType === 'fi')
+    const gwAccounts = accounts.filter(a => a.goalType === 'gw')
+
+    const fiRetirement = fiAccounts.filter(a => a.type === 'retirement')
+    const fiNonRetirement = fiAccounts.filter(a => a.type === 'non-retirement')
+    const gwLiquid = gwAccounts.filter(a => a.type === 'liquid')
+    const gwIlliquid = gwAccounts.filter(a => a.type === 'illiquid')
+
+    const fiTotal = sumAccountBalances(fiAccounts, balMap)
+    const gwTotal = sumAccountBalances(gwAccounts, balMap)
+    const fiRetirementTotal = sumAccountBalances(fiRetirement, balMap)
+    const fiNonRetirementTotal = sumAccountBalances(fiNonRetirement, balMap)
+    const gwLiquidTotal = sumAccountBalances(gwLiquid, balMap)
+    const gwIlliquidTotal = sumAccountBalances(gwIlliquid, balMap)
+    const nw = sumAccountBalances(accounts, balMap)
+
+    return {
+      netWorth: nw,
+      prevNw: prevNwVal,
+      fiTotal,
+      fiRetirementTotal,
+      fiNonRetirementTotal,
+      gwTotal,
+      gwLiquidTotal,
+      gwIlliquidTotal,
+    }
+  }, [accounts, selectedMonth, allMonths, monthIdx, balanceMapsByMonth])
 
   const formatMonth = (ym: string) => {
     if (!ym) return ''
@@ -324,11 +332,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             {proseParts.diff !== null && proseParts.diff !== 0 ? ' ' : ''}
             {proseParts.clauses.map((clause, idx) => (
               <span key={clause.label}>
-                {idx > 0 && (
-                  <>
-                    {idx === proseParts.clauses.length - 1 ? ' and ' : ', '}
-                  </>
-                )}
+                {idx > 0 && <>{idx === proseParts.clauses.length - 1 ? ' and ' : ', '}</>}
                 <strong>{formatCurrency(clause.total)}</strong> {clause.includeIsIn ? 'is in ' : 'in '}
                 {clause.label} (
                 {clause.children.map((child, childIdx) => (

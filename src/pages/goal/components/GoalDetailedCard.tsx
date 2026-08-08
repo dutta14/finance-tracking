@@ -461,6 +461,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     hasBudgetData,
     budgetAnnualSavings,
     budgetSaveRateValue,
+    gwMonthlySavings,
   ])
 
   // ── What-if projection using savings override ──
@@ -807,7 +808,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
           )}
           {!condensed && projection.state === 'projected' && gwMonthlySavings > 0 && (
             <p className="fi-goal-prose fi-goal-pace-note">
-              Actual savings ({dollars(showYearly ? budgetAnnualSavings : budgetAnnualSavings / 12)}/{showYearly ? 'yr' : 'mo'}) minus GW goal ({dollars(showYearly ? gwMonthlySavings * 12 : gwMonthlySavings)}/{showYearly ? 'yr' : 'mo'})
+              Actual savings ({dollars(showYearly ? budgetAnnualSavings : budgetAnnualSavings / 12)}/
+              {showYearly ? 'yr' : 'mo'}) minus GW goal (
+              {dollars(showYearly ? gwMonthlySavings * 12 : gwMonthlySavings)}/{showYearly ? 'yr' : 'mo'})
             </p>
           )}
           {!condensed && projection.state === 'reached' && (
