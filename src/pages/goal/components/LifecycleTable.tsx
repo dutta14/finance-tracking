@@ -45,7 +45,7 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
         label: 'Primary Retirement unlocked',
       })
     }
-    if (prev && prev.phase === 'accumulation' && row.phase === 'drawdown') {
+    if (prev && (prev.phase === 'accumulation' || prev.phase === 'coasting') && row.phase === 'drawdown') {
       items.push({
         key: `fire-start-${row.month}`,
         date: null,
@@ -84,7 +84,7 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
     <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
       <td>{row.month}</td>
       <td className={`phase-badge phase-badge--${row.phase}`}>
-        {row.phase === 'accumulation' ? 'Saving' : 'Spending'}
+        {row.phase === 'drawdown' ? 'Spending' : row.phase === 'coasting' ? 'Coasting' : 'Saving'}
       </td>
       <td>{row.phase === 'drawdown' ? dollars(Math.round(row.expense)) : '—'}</td>
       {hasBreakdown && (

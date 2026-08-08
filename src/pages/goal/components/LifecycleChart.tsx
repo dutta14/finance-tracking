@@ -27,26 +27,49 @@ interface CustomTooltipProps {
   payload?: { value: number; payload: any }[]
   label?: string
   fiGoal?: number
+  fireMonth?: string
 }
 
-const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label, fiGoal }) => {
+const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label, fiGoal, fireMonth }) => {
   if (!active || !payload?.length) return null
-  const { expense, remaining, phase } = payload[0].payload
+  const { expense, remaining, phase, monthlyGrowth, monthlySaved } = payload[0].payload
   const pctOfGoal = fiGoal && fiGoal > 0 ? ((remaining / fiGoal) * 100).toFixed(0) : null
   return (
     <div className="projection-tooltip">
       <div className="projection-tooltip-month">{label}</div>
-      <div className="projection-tooltip-row">
-        <span>Balance</span>
-        <span>{dollars(remaining)}</span>
-      </div>
+      {phase === 'coasting' && (
+        <div className="projection-tooltip-row projection-tooltip-row--pct">
+          <span>Saving $0 (coasting)</span>
+        </div>
+      )}
+      {monthlySaved > 0 && (
+        <div className="projection-tooltip-row">
+          <span>Saved</span>
+          <span>{dollars(monthlySaved)}</span>
+        </div>
+      )}
+      {monthlyGrowth != null && (
+        <div className="projection-tooltip-row">
+          <span>Growth</span>
+          <span>{dollars(monthlyGrowth)}</span>
+        </div>
+      )}
       {expense > 0 && (
         <div className="projection-tooltip-row">
           <span>Expense</span>
           <span>{dollars(expense)}</span>
         </div>
       )}
-      {pctOfGoal && phase === 'accumulation' && (
+      <div className="projection-tooltip-row">
+        <span>Balance</span>
+        <span>{dollars(remaining)}</span>
+      </div>
+      {phase === 'drawdown' && label === fireMonth && (
+        <div className="projection-tooltip-row projection-tooltip-row--pct">
+          <span>🔥 FIRE month</span>
+        </div>
+      )}
+      {pctOfGoal && (phase === 'accumulation' || phase === 'coasting') && (
         <div className="projection-tooltip-row projection-tooltip-row--pct">
           <span>% of FI goal</span>
           <span>{pctOfGoal}%</span>
@@ -90,6 +113,11 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
     }))
   }, [rows])
 
+  const fireMonth = useMemo(() => {
+    const fireRow = rows.find(r => r.phase === 'drawdown')
+    return fireRow?.month ?? null
+  }, [rows])
+
   const milestones = useMemo<Milestone[]>(() => {
     const result: Milestone[] = []
     for (let i = 1; i < rows.length; i++) {
@@ -107,7 +135,7 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
       if (prev.primaryLocked && !row.primaryLocked) {
         result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
       }
-      if (prev.phase === 'accumulation' && row.phase === 'drawdown') {
+      if ((prev.phase === 'accumulation' || prev.phase === 'coasting') && row.phase === 'drawdown') {
         result.push({ month: row.month, label: 'F.I.R.E.', color: 'var(--accent, #0f766e)', dx: -10, dy: 0 })
       }
       if (prev.partnerLocked && !row.partnerLocked) {
@@ -194,7 +222,7 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
           <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
           <XAxis dataKey="month" tick={{ fontSize: 11 }} interval="preserveStartEnd" stroke="var(--projection-axis)" />
           <YAxis tickFormatter={abbreviate} tick={{ fontSize: 11 }} stroke="var(--projection-axis)" width={72} />
-          <Tooltip content={<CustomTooltip fiGoal={fiGoal} />} />
+          <Tooltip content={<CustomTooltip fiGoal={fiGoal} fireMonth={fireMonth ?? undefined} />} />
           <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
 
           {fiGoal && fiGoal > 0 && (
