@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FinancialGoal } from '../../../types'
+import { getFiTarget } from '../utils/goalCalculations'
 
 export interface GoalFilters {
   retirementAges: number[]
@@ -73,24 +74,35 @@ function renderSummaryGroups(filters: GoalFilters): Array<{ label: string; value
 
 interface GoalFilterBarProps {
   goals: FinancialGoal[]
+  profileBirthday?: string
   filters: GoalFilters
   onChange: (f: GoalFilters) => void
 }
 
-const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, filters, onChange }) => {
+const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, profileBirthday = '', filters, onChange }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<FilterCategoryKey>('retirementAges')
   const [draftFilters, setDraftFilters] = useState<GoalFilters>(() => cloneFilters(filters))
 
+  const fiTargets = useMemo(
+    () => new Map(goals.map(goal => [goal.id, getFiTarget(goal, profileBirthday, 8)])),
+    [goals, profileBirthday],
+  )
   const availableAges = useMemo(
     () => Array.from(new Set(goals.map(goal => goal.retirementAge))).sort((a, b) => a - b),
     [goals],
   )
   const availableFiBuckets = useMemo(
-    () => FI_GOAL_BUCKETS.filter(bucket => goals.some(goal => goal.fiGoal >= bucket.min && goal.fiGoal < bucket.max)),
-    [goals],
+    () =>
+      FI_GOAL_BUCKETS.filter(bucket =>
+        goals.some(goal => {
+          const fiTarget = fiTargets.get(goal.id) ?? 0
+          return fiTarget >= bucket.min && fiTarget < bucket.max
+        }),
+      ),
+    [goals, fiTargets],
   )
   const availableExpenseBuckets = useMemo(
     () =>
@@ -368,7 +380,7 @@ const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, filters, onChange }) => 
   )
 }
 
-export function applyFilters(goals: FinancialGoal[], filters: GoalFilters): FinancialGoal[] {
+export function applyFilters(goals: FinancialGoal[], filters: GoalFilters, profileBirthday = ''): FinancialGoal[] {
   let result = goals
 
   if (filters.retirementAges.length > 0) {
@@ -377,9 +389,10 @@ export function applyFilters(goals: FinancialGoal[], filters: GoalFilters): Fina
 
   if (filters.fiGoalBuckets.length > 0) {
     result = result.filter(goal =>
-      FI_GOAL_BUCKETS.some(
-        bucket => filters.fiGoalBuckets.includes(bucket.label) && goal.fiGoal >= bucket.min && goal.fiGoal < bucket.max,
-      ),
+      FI_GOAL_BUCKETS.some(bucket => {
+        const fiTarget = getFiTarget(goal, profileBirthday, 8)
+        return filters.fiGoalBuckets.includes(bucket.label) && fiTarget >= bucket.min && fiTarget < bucket.max
+      }),
     )
   }
 

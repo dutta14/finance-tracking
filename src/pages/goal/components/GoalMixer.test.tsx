@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import GoalMixer from './GoalMixer'
 import { makeGoal, makeGwGoal } from '../../../test/factories'
+import { getFiTarget } from '../utils/goalCalculations'
 
 // Focus trap is mocked because JSDOM does not implement focus management or
 // layout (getBoundingClientRect returns zeros). Testing real focus trapping
@@ -13,8 +14,8 @@ vi.mock('../../../hooks/useFocusTrap', () => ({
 
 vi.mock('../../../styles/GoalMixer.css', () => ({}))
 
-const goal1 = makeGoal({ id: 1, goalName: 'Plan A', fiGoal: 1_000_000 })
-const goal2 = makeGoal({ id: 2, goalName: 'Plan B', fiGoal: 2_000_000 })
+const goal1 = makeGoal({ id: 1, goalName: 'Plan A', fiGoal: 1_000_000, expenseValue: 60_000, goalEndYear: '2050-01' })
+const goal2 = makeGoal({ id: 2, goalName: 'Plan B', fiGoal: 2_000_000, expenseValue: 120_000, goalEndYear: '2050-01' })
 const gw1 = makeGwGoal({
   id: 10,
   fiGoalId: 1,
@@ -42,6 +43,9 @@ const defaultProps = {
   onClose: vi.fn(),
   onGoToGoal: vi.fn(),
 }
+const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
+const goal1FiTarget = getFiTarget(goal1, defaultProps.profileBirthday, 8)
+const goal2FiTarget = getFiTarget(goal2, defaultProps.profileBirthday, 8)
 
 describe('GoalMixer', () => {
   // #42: No actual `new Date(2024)` pattern found in this test file.
@@ -79,8 +83,7 @@ describe('GoalMixer', () => {
 
   it('selects the first goal by default and shows preview', () => {
     render(<GoalMixer {...defaultProps} />)
-    // $1,000,000 appears in the goal list stat and in the preview
-    expect(screen.getAllByText('$1,000,000').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(dollars(goal1FiTarget)).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Preview at retirement/)).toBeInTheDocument()
   })
 
@@ -143,10 +146,8 @@ describe('GoalMixer', () => {
   it('switches FI base goal when a different goal is clicked', async () => {
     const user = userEvent.setup()
     render(<GoalMixer {...defaultProps} />)
-    // Plan B appears in goal list; click the first occurrence (the goal button)
     await user.click(screen.getAllByText('Plan B')[0])
-    // Preview should now show Plan B's FI goal amount
-    expect(screen.getAllByText('$2,000,000').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(dollars(goal2FiTarget)).length).toBeGreaterThanOrEqual(1)
   })
 
   it('creates GW goals for each selected GW goal with the new FI goal id', async () => {

@@ -1,9 +1,11 @@
 import { FC, useState, useMemo, useRef, useEffect } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
+import { getFiTarget } from '../utils/goalCalculations'
 import '../../../styles/GoalMixer.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
+const fiDisplay = (n: number) => (n > 0 ? dollars(n) : '—')
 
 function computeGwPv(gw: GwGoal, base: FinancialGoal, profileBirthday: string, inflation: number): number {
   const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
@@ -83,7 +85,12 @@ const GoalMixer: FC<GoalMixerProps> = ({
     return selectedGwGoals.reduce((sum, gw) => sum + computeGwPv(gw, selectedGoal, profileBirthday, inflation), 0)
   }, [selectedGwGoals, selectedGoal, profileBirthday, inflation])
 
-  const totalAtRetirement = (selectedGoal?.fiGoal ?? 0) + gwTotal
+  const fiTargets = useMemo(
+    () => new Map(goals.map(goal => [goal.id, getFiTarget(goal, profileBirthday, 8)])),
+    [goals, profileBirthday],
+  )
+  const selectedGoalFiTarget = selectedGoal ? (fiTargets.get(selectedGoal.id) ?? 0) : 0
+  const totalAtRetirement = selectedGoalFiTarget + gwTotal
 
   const handleCreate = () => {
     if (!selectedGoal) return
@@ -128,22 +135,25 @@ const GoalMixer: FC<GoalMixerProps> = ({
               Base Goal
             </div>
             <div className="mixer-goal-list">
-              {goals.map(goal => (
-                <button
-                  key={goal.id}
-                  className={`mixer-goal-item${selectedGoalId === goal.id ? ' selected' : ''}`}
-                  onClick={() => setSelectedPlanId(goal.id)}
-                >
-                  <span className="mixer-goal-name">{goal.goalName}</span>
-                  <span className="mixer-goal-stat">
-                    FI Goal <strong>{dollars(goal.fiGoal)}</strong>
-                  </span>
-                  <span className="mixer-goal-stat">
-                    Retire {new Date(profileBirthday).getFullYear() + goal.retirementAge}
-                    &nbsp;·&nbsp;{inflation}% infl
-                  </span>
-                </button>
-              ))}
+              {goals.map(goal => {
+                const fiTarget = fiTargets.get(goal.id) ?? 0
+                return (
+                  <button
+                    key={goal.id}
+                    className={`mixer-goal-item${selectedGoalId === goal.id ? ' selected' : ''}`}
+                    onClick={() => setSelectedPlanId(goal.id)}
+                  >
+                    <span className="mixer-goal-name">{goal.goalName}</span>
+                    <span className="mixer-goal-stat">
+                      FI Goal <strong>{fiDisplay(fiTarget)}</strong>
+                    </span>
+                    <span className="mixer-goal-stat">
+                      Retire {new Date(profileBirthday).getFullYear() + goal.retirementAge}
+                      &nbsp;·&nbsp;{inflation}% infl
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -199,7 +209,7 @@ const GoalMixer: FC<GoalMixerProps> = ({
                   <span className="mixer-badge mixer-badge--fi mixer-badge--sm">FI</span>
                   {selectedGoal.goalName}
                 </span>
-                <span className="mixer-preview-amount">{dollars(selectedGoal.fiGoal)}</span>
+                <span className="mixer-preview-amount">{fiDisplay(selectedGoalFiTarget)}</span>
               </div>
               {selectedGwGoals.map(gw => (
                 <div key={gw.id} className="mixer-preview-row mixer-preview-row--gw">

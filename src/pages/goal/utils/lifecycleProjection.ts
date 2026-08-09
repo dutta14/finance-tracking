@@ -375,7 +375,7 @@ export function buildPlannedProjection(
   const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
 
   const endOfLife = new Date(endYear, 11, 1)
-  const monthlyExpenseAtFI = goal.monthlyExpense2047
+  const monthlyExpenseAtFI = goal.monthlyExpenseRetirement
 
   const corpusCap = computeRequiredCorpus(
     retirementDate,
@@ -445,7 +445,7 @@ export function buildProjectedLifecycle(
   const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
   const retirementYear = retirementDate.getFullYear()
   const nowYear = now.getFullYear()
-  const monthlyExpenseToday = goal.monthlyExpense2047 / Math.pow(1 + inflation / 100, retirementYear - nowYear)
+  const monthlyExpenseToday = goal.monthlyExpenseRetirement / Math.pow(1 + inflation / 100, retirementYear - nowYear)
 
   const endOfLife = new Date(endYear, 11, 1)
 

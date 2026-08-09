@@ -242,7 +242,7 @@ const GoalForm: FC<GoalFormProps> = ({
       monthlyExpenseValue: metrics.monthlyExpenseAtCreation,
       expenseValueMar2026: 0,
       expenseValue2047: metrics.annualExpenseAtRetirement,
-      monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
+      monthlyExpenseRetirement: metrics.monthlyExpenseAtRetirement,
       safeWithdrawalRate: 0,
       growth: Number(formData.growth) || 0,
       retirement: metrics.retirementDateFormatted,

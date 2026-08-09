@@ -178,7 +178,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
     const retirementYear = new Date(by + goal.retirementAge, bm - 1, 1).getFullYear()
     const monthlyExpenseToday =
-      goal.monthlyExpense2047 / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
+      goal.monthlyExpenseRetirement / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
 
     // What expense will be at target FIRE date
     const fiYear = forcedFireDate.getFullYear()

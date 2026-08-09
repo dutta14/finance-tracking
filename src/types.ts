@@ -20,7 +20,7 @@ export interface FinancialGoal {
   monthlyExpenseValue: number
   expenseValueMar2026: number
   expenseValue2047: number
-  monthlyExpense2047: number
+  monthlyExpenseRetirement: number
 
   // Financial Parameters
   safeWithdrawalRate: number

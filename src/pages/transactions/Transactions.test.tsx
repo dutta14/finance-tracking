@@ -124,7 +124,7 @@ describe('Transactions', () => {
     renderTransactions()
 
     expect(await screen.findByRole('heading', { name: 'Transactions' })).toBeInTheDocument()
-    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(await screen.findByText('6 transactions')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'August 2, 2026' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'July 30, 2026' })).toBeInTheDocument()
     expect(screen.getByText('Book Store')).toBeInTheDocument()
@@ -317,7 +317,7 @@ describe('Transactions', () => {
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
 
     expect(screen.getByText('Book Store')).toBeInTheDocument()
-    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(await screen.findByText('6 transactions')).toBeInTheDocument()
   })
 
   it('cancels draft search changes and allows clearing the search input', async () => {
@@ -328,7 +328,7 @@ describe('Transactions', () => {
     await user.type(searchInput, 'bonus')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(await screen.findByText('6 transactions')).toBeInTheDocument()
     expect(screen.queryByRole('searchbox', { name: 'Search transactions' })).not.toBeInTheDocument()
 
     const reopenedSearchInput = await openSearchPopover(user)

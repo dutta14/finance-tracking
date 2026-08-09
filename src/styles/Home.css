@@ -431,11 +431,11 @@
 .goals-peek-item {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.6rem 0.75rem;
+  gap: 0.6rem;
+  padding: 0.75rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-surface-hover);
+  background: transparent;
   cursor: pointer;
   transition:
     border-color 0.15s,
@@ -468,21 +468,21 @@
 }
 .goals-peek-pct {
   font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-normal);
   font-variant-numeric: tabular-nums;
   width: 2.2rem;
   flex-shrink: 0;
   text-align: right;
 }
 .goals-peek-pct--fi {
-  color: var(--color-positive);
+  color: var(--color-text-muted);
 }
 .goals-peek-pct--gw {
-  color: var(--accent);
+  color: var(--color-text-muted);
 }
 .goals-peek-monthly {
   font-size: var(--fs-xs);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-normal);
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -490,10 +490,19 @@
   flex-shrink: 0;
   text-align: right;
 }
+.goals-peek-target {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
+}
 .goals-peek-bars {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 .goals-peek-bar-row {
   display: flex;
@@ -509,7 +518,7 @@
   letter-spacing: 0.02em;
 }
 .goals-peek-bar-track {
-  flex: 1;
+  flex: 0 1 30%;
   height: 4px;
   background: var(--color-border);
   border-radius: var(--radius);
@@ -521,10 +530,29 @@
   transition: width 0.3s ease;
 }
 .goals-peek-bar-fill--fi {
-  background: var(--color-positive);
+  background: var(--color-text-muted);
 }
 .goals-peek-bar-fill--gw {
-  background: var(--accent);
+  background: var(--color-text-muted);
+}
+.goals-peek-item-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.25rem;
+}
+.goals-peek-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.goals-peek-stat-value {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+.goals-peek-stat-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
 }
 .goals-peek-item-meta {
   display: flex;
@@ -539,6 +567,16 @@
 }
 .goals-peek-projected-date {
   color: var(--accent-text-mid);
+}
+.goals-peek-projected-planned {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.goals-peek-projected--early {
+  color: var(--color-positive);
+}
+.goals-peek-projected--late {
+  color: var(--color-negative);
 }
 .goals-peek-projected--reached {
   color: var(--color-positive);

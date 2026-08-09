@@ -25,7 +25,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       // Should show a month and year like "Jan 2045"
       await expect(projectedDate).toHaveText(/[A-Z][a-z]{2}\s\d{4}/)
@@ -37,7 +37,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       const originalDate = await projectedDate.textContent()
 
@@ -161,7 +161,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const peekDate = page.locator('.goals-peek-projected-date')
+      const peekDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(peekDate).toBeVisible()
       await expect(peekDate).toHaveText(/[A-Z][a-z]{2}\s\d{4}/)
 
@@ -180,7 +180,7 @@ test.describe('Goal Projections E2E', () => {
       await home.goto()
 
       // Verify projection uses budget data — projected date should exist
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       const dateText = await projectedDate.textContent()
       expect(dateText).toMatch(/[A-Z][a-z]{2}\s\d{4}/)
@@ -269,7 +269,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       const text = await projectedDate.textContent()
 

@@ -59,49 +59,51 @@ vi.mock('./GoalCardActions', () => ({
 // calls them with internal helpers (getMonthsBetween, parseDate) that are not exported.
 // Removing the mock would require restructuring the component. Instead, we use realistic
 // mock values and assert the displayed output matches these values.
-vi.mock('../utils/goalCalculations', () => ({
-  calculateGoalMetrics: vi.fn(() => ({
-    monthlyExpenseAtCreation: 5000,
-    retirementDate: new Date(2050, 0, 15),
-    retirementDateFormatted: 'Jan 2050',
-    monthsBetween: 300,
-    monthlyExpenseAtRetirement: 8333,
-    annualExpenseAtRetirement: 100000,
-    fiGoal: 2500000,
-  })),
-  computeRequiredCorpus: vi.fn(() => 2_000_000),
-  projectFIDate: vi.fn((current: number, target: number, annualSavings: number) => {
-    if (annualSavings <= 0) return null
-    const months = Math.ceil((target - current) / (annualSavings / 12))
-    const d = new Date()
-    d.setMonth(d.getMonth() + months)
-    return { date: d, months }
-  }),
-  projectFIDateWithDrawdown: vi.fn(
-    (
-      current: number,
-      annualSavings: number,
-      _preGrowth: number,
-      _postGrowth: number,
-      _monthlyExp: number,
-      _inflation: number,
-      _endOfLife: Date,
-      _retDate: Date,
-    ) => {
+vi.mock('../utils/goalCalculations', async () => {
+  const actual = await vi.importActual<typeof import('../utils/goalCalculations')>('../utils/goalCalculations')
+  return {
+    ...actual,
+    calculateGoalMetrics: vi.fn(() => ({
+      monthlyExpenseAtCreation: 5000,
+      retirementDate: new Date(2050, 0, 15),
+      retirementDateFormatted: 'Jan 2050',
+      monthsBetween: 300,
+      monthlyExpenseAtRetirement: 8333,
+      annualExpenseAtRetirement: 100000,
+      fiGoal: 2500000,
+    })),
+    projectFIDate: vi.fn((current: number, target: number, annualSavings: number) => {
       if (annualSavings <= 0) return null
-      const target = 2_000_000
       const months = Math.ceil((target - current) / (annualSavings / 12))
       const d = new Date()
       d.setMonth(d.getMonth() + months)
       return { date: d, months }
-    },
-  ),
-  DEFAULT_PRE_FI_GROWTH_RATE: 8,
-}))
+    }),
+    projectFIDateWithDrawdown: vi.fn(
+      (
+        current: number,
+        annualSavings: number,
+        _preGrowth: number,
+        _postGrowth: number,
+        _monthlyExp: number,
+        _inflation: number,
+        _endOfLife: Date,
+        _retDate: Date,
+      ) => {
+        if (annualSavings <= 0) return null
+        const target = 2_000_000
+        const months = Math.ceil((target - current) / (annualSavings / 12))
+        const d = new Date()
+        d.setMonth(d.getMonth() + months)
+        return { date: d, months }
+      },
+    ),
+  }
+})
 
 import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
-import { projectFIDate, projectFIDateWithDrawdown } from '../utils/goalCalculations'
+import { getFiTarget, projectFIDate, projectFIDateWithDrawdown } from '../utils/goalCalculations'
 
 const mockedGetSaveRate = vi.mocked(getBudgetSaveRate)
 const mockedLoadBudgetStore = vi.mocked(loadBudgetStore)
@@ -109,6 +111,8 @@ const mockedGetGlobalCategoryGroups = vi.mocked(getGlobalCategoryGroups)
 const mockedParseCSV = vi.mocked(parseCSV)
 const mockedProjectFIDate = vi.mocked(projectFIDate)
 const mockedProjectFIDateWithDrawdown = vi.mocked(projectFIDateWithDrawdown)
+const expectedFiTarget = (goalOverrides: Partial<FinancialGoal> = {}, inflation = 3, preGrowth = 8, postGrowth = 6) =>
+  getFiTarget(makeGoal(goalOverrides), '1990-01-15', preGrowth, postGrowth, 60, inflation)
 
 /** Helper: configure the DataContext mock so fiTotal resolves to the given value */
 function setMockFiTotal(fiTotal: number) {
@@ -140,7 +144,7 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     monthlyExpenseValue: 5000,
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
-    monthlyExpense2047: 8333,
+    monthlyExpenseRetirement: 8333,
     safeWithdrawalRate: 3,
     growth: 5,
     retirement: 'Jan 2050',
@@ -439,21 +443,24 @@ describe('GoalDetailedCard header', () => {
 
 describe('GoalDetailedCard FI goal callout', () => {
   it('renders the FI Goal amount with currency formatting', () => {
+    const goal = makeGoal({ fiGoal: 2_000_000 })
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('$2,000,000')).toBeInTheDocument()
+    expect(screen.getByText(`$${Math.round(getFiTarget(goal, '1990-01-15', 8)).toLocaleString()}`)).toBeInTheDocument()
   })
 
   it('renders a progress bar with the correct aria-valuenow', () => {
     setMockFiTotal(500_000)
     renderCard({ fiGoal: 2_000_000 })
+    const progress = Math.min(100, Math.max(0, (500_000 / expectedFiTarget({ fiGoal: 2_000_000 })) * 100))
     const progressBar = screen.getByRole('progressbar')
-    expect(progressBar).toHaveAttribute('aria-valuenow', '25')
+    expect(progressBar).toHaveAttribute('aria-valuenow', String(Math.round(progress)))
   })
 
   it('renders progress percentage text', () => {
     setMockFiTotal(500_000)
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('25.0%')).toBeInTheDocument()
+    const progress = Math.min(100, Math.max(0, (500_000 / expectedFiTarget({ fiGoal: 2_000_000 })) * 100)).toFixed(1)
+    expect(screen.getByText(`${progress}%`)).toBeInTheDocument()
   })
 
   it('clamps progress to 100% when fiTotal exceeds fiGoal', () => {
@@ -463,8 +470,8 @@ describe('GoalDetailedCard FI goal callout', () => {
     expect(progressBar).toHaveAttribute('aria-valuenow', '100')
   })
 
-  it('shows 0% progress when fiGoal is zero', () => {
-    renderCard({ fiGoal: 0 })
+  it('shows 0% progress when the computed fi target is zero', () => {
+    renderCard({ expenseValue: 0, monthlyExpenseRetirement: 0 })
     const progressBar = screen.getByRole('progressbar')
     expect(progressBar).toHaveAttribute('aria-valuenow', '0')
   })
@@ -532,33 +539,33 @@ describe('GoalDetailedCard expense in prose', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalDetailedCard depletion warning', () => {
-  it('shows depletion warning when funds run out before goal end', () => {
+  it('does not show depletion warning for a dynamically computed FI target', () => {
     renderCard(
       {
         fiGoal: 500_000,
         expenseValue: 0,
-        monthlyExpense2047: 8333,
+        monthlyExpenseRetirement: 8333,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
       { inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
     )
-    expect(screen.getByText(/Not sustainable beyond/)).toBeInTheDocument()
+    expect(screen.queryByText(/Not sustainable beyond/)).not.toBeInTheDocument()
   })
 
-  it('shows depletion warning text when onUpdateGoal is provided and depletion exists', () => {
+  it('does not show depletion warning text when the FI target is dynamically recomputed', () => {
     const onUpdateGoal = vi.fn()
     renderCard(
       {
         fiGoal: 500_000,
         expenseValue: 0,
-        monthlyExpense2047: 8333,
+        monthlyExpenseRetirement: 8333,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
       { onUpdateGoal, showActions: false, inflation: 10, preBoundaryGrowth: 0, postBoundaryGrowth: 0 },
     )
-    expect(screen.getByText(/Not sustainable beyond/)).toBeInTheDocument()
+    expect(screen.queryByText(/Not sustainable beyond/)).not.toBeInTheDocument()
   })
 })
 
@@ -673,7 +680,7 @@ describe('GoalDetailedCard suggest SWR (removed feature)', () => {
       {
         fiGoal: 500_000,
         expenseValue: 0,
-        monthlyExpense2047: 8333,
+        monthlyExpenseRetirement: 8333,
         retirementAge: 30,
         goalEndYear: '2080-01-01',
       },
@@ -686,7 +693,7 @@ describe('GoalDetailedCard suggest SWR (removed feature)', () => {
     renderCard({
       fiGoal: 500_000,
       expenseValue: 0,
-      monthlyExpense2047: 8333,
+      monthlyExpenseRetirement: 8333,
       retirementAge: 30,
       goalEndYear: '2080-01-01',
     })
@@ -716,7 +723,7 @@ describe('GoalDetailedCard depletion edge cases', () => {
     renderCard({
       fiGoal: 10_000_000,
       expenseValue2047: 50000,
-      monthlyExpense2047: 4166,
+      monthlyExpenseRetirement: 4166,
       safeWithdrawalRate: 4,
       growth: 7,
       retirementAge: 60,
@@ -805,9 +812,10 @@ describe('GoalDetailedCard progress bar edge cases', () => {
   it('shows correct progress label for partial completion', () => {
     setMockFiTotal(1_000_000)
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('50.0%')).toBeInTheDocument()
+    const progress = Math.min(100, Math.max(0, (1_000_000 / expectedFiTarget({ fiGoal: 2_000_000 })) * 100)).toFixed(1)
+    expect(screen.getByText(`${progress}%`)).toBeInTheDocument()
     const progressBar = screen.getByRole('progressbar')
-    expect(progressBar).toHaveAttribute('aria-valuenow', '50')
+    expect(progressBar).toHaveAttribute('aria-valuenow', String(Math.round(Number(progress))))
   })
 
   it('has accessible label on progress bar', () => {
@@ -925,7 +933,7 @@ describe('GoalDetailedCard — handleSuggest when suggestSWR returns null (line 
     const onUpdateGoal = vi.fn()
     const depletingGoal = makeGoal({
       growth: 1,
-      monthlyExpense2047: 50000,
+      monthlyExpenseRetirement: 50000,
       fiGoal: 500_000,
       expenseValue2047: 0, // causes suggestSWR to return null (line 113: if (!goal.expenseValue2047) return null)
       goalEndYear: '2060-01',
@@ -976,9 +984,9 @@ describe('GoalDetailedCard — fiTotal with active FI accounts (line 263)', () =
       { accountId: 3, month: '2024-06', balance: 200_000 },
     ]
     mockDataCtx.allMonths = ['2024-05', '2024-06']
-    // fiTotal = 500K + 300K = 800K, fiGoal = 2M → 40%
+    const progress = Math.min(100, Math.max(0, (800_000 / expectedFiTarget({ fiGoal: 2_000_000 })) * 100)).toFixed(1)
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('40.0%')).toBeInTheDocument()
+    expect(screen.getByText(`${progress}%`)).toBeInTheDocument()
   })
 
   it('excludes accounts with non-fi goalType from fiTotal', () => {
@@ -991,9 +999,9 @@ describe('GoalDetailedCard — fiTotal with active FI accounts (line 263)', () =
       { accountId: 2, month: '2024-06', balance: 600_000 },
     ]
     mockDataCtx.allMonths = ['2024-06']
-    // fiTotal = 400K only (other goalType excluded), fiGoal = 2M → 20%
+    const progress = Math.min(100, Math.max(0, (400_000 / expectedFiTarget({ fiGoal: 2_000_000 })) * 100)).toFixed(1)
     renderCard({ fiGoal: 2_000_000 })
-    expect(screen.getByText('20.0%')).toBeInTheDocument()
+    expect(screen.getByText(`${progress}%`)).toBeInTheDocument()
   })
 })
 
@@ -1149,11 +1157,11 @@ describe('GoalDetailedCard savings override edge cases', () => {
     vi.useRealTimers()
   })
 
-  it('falls back to projectFIDate when no end-of-life date is available', () => {
-    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpense2047: 0, expenseValue: 60000 })
+  it('does not project when no end-of-life date is available', () => {
+    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpenseRetirement: 0, expenseValue: 60000 })
 
-    expect(mockedProjectFIDate).toHaveBeenCalled()
-    expect(mockedProjectFIDate.mock.calls.at(-1)?.[2]).toBe(60000)
+    expect(mockedProjectFIDate).not.toHaveBeenCalled()
+    expect(screen.queryByText(/At this pace/i)).not.toBeInTheDocument()
   })
 
   it('shows on-track diff text when the projected month matches retirement', () => {
@@ -1280,10 +1288,11 @@ describe('GoalDetailedCard remaining branch coverage', () => {
     expect(getProjectionValue('Save')).toHaveTextContent('$100/mo')
   })
 
-  it('falls back to projectFIDate when current expenses are unavailable', () => {
-    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpense2047: 0, expenseValue: 0 })
+  it('does not project when current expenses are unavailable', () => {
+    renderCard({ fiGoal: 2_000_000, goalEndYear: '', monthlyExpenseRetirement: 0, expenseValue: 0 })
 
-    expect(mockedProjectFIDate).toHaveBeenCalled()
+    expect(mockedProjectFIDate).not.toHaveBeenCalled()
+    expect(screen.queryByText(/At this pace/i)).not.toBeInTheDocument()
   })
 
   it('shows years-only baseline pace copy for whole-year projections', () => {

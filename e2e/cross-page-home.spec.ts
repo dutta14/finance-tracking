@@ -71,7 +71,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       const goalsCard = page.locator('.home-card--goals')
       await expect(goalsCard).toBeVisible()
-      const homeDate = goalsCard.locator('.goals-peek-projected-date')
+      const homeDate = goalsCard.locator(':is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(homeDate).toBeVisible()
       await expect(homeDate).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
 
@@ -584,7 +584,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       await seedCrossPage(page)
       await gotoHome(page)
-      await expect(page.locator('.home-card--goals .goals-peek-projected-date')).toBeVisible()
+      await expect(page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)')).toBeVisible()
 
       await page.evaluate(() => {
         localStorage.removeItem('budget-summary')

@@ -80,7 +80,7 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     monthlyExpenseValue: 5000,
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
-    monthlyExpense2047: 8333,
+    monthlyExpenseRetirement: 8333,
     safeWithdrawalRate: 3,
     growth: 12,
     retirement: '2050-01',

@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { appStorage } from '../../utils/appStorage'
 import { FinancialGoal, GwGoal } from '../../types'
 import GoalsPeek from './GoalsPeek'
+import { getFiTarget } from '../goal/utils/goalCalculations'
+import { formatCurrency } from '../data/types'
 
 /* ─── Mock dependencies ─── */
 
@@ -39,6 +41,28 @@ import { getBudgetSaveRate } from '../budget/utils/budgetStorage'
 
 const mockedUseData = vi.mocked(useData)
 const mockedGetSaveRate = vi.mocked(getBudgetSaveRate)
+const getExpectedFiTarget = (goal: FinancialGoal, profileBirthday = '1990-01') => getFiTarget(goal, profileBirthday, 8)
+const getExpectedGwTarget = (goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday = '1990-01', inflation = 3) => {
+  const [by, bm] = profileBirthday.split('-').map(Number)
+  const created = new Date(goal.goalCreatedIn)
+
+  return gwGoals.reduce((sum, gw) => {
+    const disburseYear = by + gw.disburseAge
+    const months = Math.max(0, (disburseYear - created.getUTCFullYear()) * 12 + (bm - (created.getUTCMonth() + 1)))
+    const disbTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, months)
+    const monthsFromRetirementToDisbursal = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
+    const presentValue =
+      monthsFromRetirementToDisbursal > 0
+        ? disbTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsFromRetirementToDisbursal)
+        : disbTarget
+
+    return sum + presentValue
+  }, 0)
+}
+const projectedTextMatcher = (_: string, element: Element | null) =>
+  !!element &&
+  element.classList.contains('goals-peek-projected') &&
+  /FI by [A-Z][a-z]{2} \d{4} → [A-Z][a-z]{2} \d{4}/.test((element.textContent || '').replace(/\s+/g, ' ').trim())
 
 /* ─── Helpers ─── */
 
@@ -57,7 +81,7 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     monthlyExpenseValue: 5000,
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
-    monthlyExpense2047: 8333,
+    monthlyExpenseRetirement: 8333,
     safeWithdrawalRate: 3,
     growth: 5,
     retirement: 'Jan 2050',
@@ -277,12 +301,7 @@ describe('GoalsPeek projection — FI date projected', () => {
     })
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderPeek([makeGoal({ fiGoal: 2_000_000 })])
-    // Should render "FI by" followed by a Mon YYYY date
-    const fiByText = screen.getByText('FI by')
-    expect(fiByText).toBeInTheDocument()
-    const container = fiByText.closest('span')
-    expect(container).toBeInTheDocument()
-    expect(container!.textContent).toMatch(/FI by [A-Z][a-z]{2} \d{4}/)
+    expect(screen.getByText(projectedTextMatcher)).toBeInTheDocument()
   })
 })
 
@@ -292,7 +311,7 @@ describe('GoalsPeek projection — FI date projected', () => {
 
 describe('GoalsPeek projection — fiGoal is 0', () => {
   it('does not show any projection label when fiGoal is 0', () => {
-    renderPeek([makeGoal({ fiGoal: 0 })])
+    renderPeek([makeGoal({ expenseValue: 0, monthlyExpenseRetirement: 0 })])
     expect(screen.queryByText('Add budget data →')).not.toBeInTheDocument()
     expect(screen.queryByText(/Goal reached!/)).not.toBeInTheDocument()
     expect(screen.queryByText(/not reachable/i)).not.toBeInTheDocument()
@@ -311,7 +330,7 @@ describe('GoalsPeek projection — not reachable via projectFIDate null', () => 
       setBalances: () => {},
     })
     mockedGetSaveRate.mockReturnValue({ annualSavings: 1, saveRate: 0.01, monthsOfData: 12 })
-    renderPeek([makeGoal({ fiGoal: 999_999_999_999 })])
+    renderPeek([makeGoal({ expenseValue: 10_000_000, goalEndYear: '2200-01' })])
     expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
   })
 })
@@ -376,6 +395,7 @@ describe('GoalsPeek navigation', () => {
 
 describe('GoalsPeek summary cards and progress', () => {
   it('renders goal summary cards with name and FI progress bar', () => {
+    const goal = makeGoal({ fiGoal: 2_000_000 })
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -385,15 +405,14 @@ describe('GoalsPeek summary cards and progress', () => {
       setBalances: () => {},
     })
 
-    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    renderPeek([goal])
 
     // Goal name visible
     expect(screen.getByText('Retire Early')).toBeInTheDocument()
     // FI progress bar exists with correct aria-label
     const fiBar = screen.getByRole('progressbar', { name: /FI progress/i })
     expect(fiBar).toBeInTheDocument()
-    // FI target visible in meta
-    expect(screen.getByText(/FI:/)).toBeInTheDocument()
+    expect(screen.getByText(formatCurrency(getExpectedFiTarget(goal)))).toBeInTheDocument()
   })
 
   it('shows empty state message and CTA when no goals exist', async () => {
@@ -418,18 +437,19 @@ describe('GoalsPeek summary cards and progress', () => {
   })
 
   it('displays the correct FI progress percentage based on current totals', () => {
+    const goal = makeGoal({ fiGoal: 1_500_000 })
+    const target = getExpectedFiTarget(goal)
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
-      balances: [makeBalance(1, '2025-06', 750_000)],
+      balances: [makeBalance(1, '2025-06', target / 2)],
       allMonths: ['2025-06'],
       setAccounts: () => {},
       setBalances: () => {},
     })
 
-    renderPeek([makeGoal({ fiGoal: 1_500_000 })])
+    renderPeek([goal])
 
-    // 750k / 1.5M = 50%
     const fiBar = screen.getByRole('progressbar', { name: /FI progress: 50%/i })
     expect(fiBar).toBeInTheDocument()
     expect(fiBar).toHaveAttribute('aria-valuenow', '50')
@@ -487,8 +507,7 @@ describe('GoalsPeek GW goals rendering', () => {
     // GW progress bar should exist
     const gwBar = screen.getByRole('progressbar', { name: /General wealth progress/i })
     expect(gwBar).toBeInTheDocument()
-    // GW goal count in meta
-    expect(screen.getByText('1 GW goal')).toBeInTheDocument()
+    expect(screen.getByText(formatCurrency(getExpectedGwTarget(goal, [gwGoal])))).toBeInTheDocument()
   })
 
   it('renders multiple GW goals count with plural', () => {
@@ -527,7 +546,7 @@ describe('GoalsPeek GW goals rendering', () => {
     ]
 
     renderPeek([goal], gwGoals)
-    expect(screen.getByText('2 GW goals')).toBeInTheDocument()
+    expect(screen.getByText(formatCurrency(getExpectedGwTarget(goal, gwGoals)))).toBeInTheDocument()
   })
 })
 
@@ -560,16 +579,18 @@ describe('GoalsPeek FI monthly saving', () => {
 
 describe('GoalsPeek FI progress clamping', () => {
   it('clamps FI progress at 100% when total exceeds goal', () => {
+    const goal = makeGoal({ fiGoal: 2_000_000 })
+    const target = getExpectedFiTarget(goal)
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
-      balances: [makeBalance(1, '2025-01', 3_000_000)],
+      balances: [makeBalance(1, '2025-01', target * 2)],
       allMonths: ['2025-01'],
       setAccounts: () => {},
       setBalances: () => {},
     })
 
-    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    renderPeek([goal])
 
     const fiBar = screen.getByRole('progressbar', { name: /FI progress: 100%/i })
     expect(fiBar).toHaveAttribute('aria-valuenow', '100')
@@ -581,7 +602,7 @@ describe('GoalsPeek FI progress clamping', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek budget-changed subscription (#164)', () => {
-  it('re-reads getBudgetSaveRate and re-renders when budget-changed fires', () => {
+  it('re-reads getBudgetSaveRate and re-renders when the parent re-renders', () => {
     // First render: no budget data → "Add budget data →"
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
@@ -592,26 +613,25 @@ describe('GoalsPeek budget-changed subscription (#164)', () => {
       setBalances: () => {},
     })
     mockedGetSaveRate.mockReturnValue(null)
-    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
+    const goal = makeGoal({ fiGoal: 2_000_000 })
+    const { rerender } = renderPeek([goal])
     expect(screen.getByText('Add budget data →')).toBeInTheDocument()
-    expect(screen.queryByText('FI by')).not.toBeInTheDocument()
+    expect(screen.queryByText(projectedTextMatcher)).not.toBeInTheDocument()
 
-    // Budget data appears (e.g. Budget page imported a CSV). Switch the mock
-    // to return a positive save rate, then dispatch the cross-component event.
+    // Budget data appears; the hook should pick it up on the next render.
     mockedGetSaveRate.mockReturnValue({ annualSavings: 60_000, saveRate: 40, monthsOfData: 12 })
-    act(() => {
-      window.dispatchEvent(new Event('budget-changed'))
-    })
+    rerender(
+      <MemoryRouter>
+        <GoalsPeek goals={[goal]} gwGoals={[]} onNavigate={noop} />
+      </MemoryRouter>,
+    )
 
-    // The component must have re-called getBudgetSaveRate AND re-rendered with
-    // the projected FI date. Both assertions matter: the call proves the listener
-    // fired; the DOM update proves the new value was committed to state.
-    expect(mockedGetSaveRate).toHaveBeenCalledTimes(2) // initial useState + listener
+    expect(mockedGetSaveRate).toHaveBeenCalledTimes(2)
     expect(screen.queryByText('Add budget data →')).not.toBeInTheDocument()
-    expect(screen.getByText('FI by')).toBeInTheDocument()
+    expect(screen.getByText(projectedTextMatcher)).toBeInTheDocument()
   })
 
-  it('removes the budget-changed listener on unmount', () => {
+  it('does not subscribe to budget-changed directly', () => {
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -622,27 +642,17 @@ describe('GoalsPeek budget-changed subscription (#164)', () => {
     })
     mockedGetSaveRate.mockReturnValue(null)
 
+    const addSpy = vi.spyOn(window, 'addEventListener')
     const removeSpy = vi.spyOn(window, 'removeEventListener')
     const { unmount } = renderPeek([makeGoal({ fiGoal: 2_000_000 })])
     unmount()
 
-    // Verify removeEventListener was called for 'budget-changed' with the
-    // same handler that was registered. We don't compare to addEventListener
-    // directly because that would test the mock framework; instead we filter
-    // removeSpy's calls to the budget-changed event name.
+    const budgetAdds = addSpy.mock.calls.filter(([evt]) => evt === 'budget-changed')
     const budgetRemovals = removeSpy.mock.calls.filter(([evt]) => evt === 'budget-changed')
-    expect(budgetRemovals).toHaveLength(1)
-    expect(typeof budgetRemovals[0][1]).toBe('function')
+    expect(budgetAdds).toHaveLength(0)
+    expect(budgetRemovals).toHaveLength(0)
 
-    // Belt-and-suspenders: after unmount, dispatching the event must NOT
-    // call getBudgetSaveRate again. Reset the mock counter, fire the event,
-    // verify zero new calls.
-    mockedGetSaveRate.mockClear()
-    act(() => {
-      window.dispatchEvent(new Event('budget-changed'))
-    })
-    expect(mockedGetSaveRate).not.toHaveBeenCalled()
-
+    addSpy.mockRestore()
     removeSpy.mockRestore()
   })
 })
@@ -713,17 +723,18 @@ describe('GoalsPeek calcMonthlySaving edge cases', () => {
 
 describe('GoalsPeek getTotalForMonth filtering', () => {
   it('only sums accounts matching goalType fi for FI totals', () => {
+    const goal = makeGoal({ fiGoal: 2_000_000 })
+    const target = getExpectedFiTarget(goal)
     const fiAcct = makeAccount(1, 'fi')
     const gwAcct = makeAccount(2, 'gw')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct, gwAcct],
-      balances: [makeBalance(1, '2025-01', 1_000_000), makeBalance(2, '2025-01', 500_000)],
+      balances: [makeBalance(1, '2025-01', target / 2), makeBalance(2, '2025-01', target / 4)],
       allMonths: ['2025-01'],
       setAccounts: () => {},
       setBalances: () => {},
     })
-    renderPeek([makeGoal({ fiGoal: 2_000_000 })])
-    // FI progress should be 1M/2M = 50%, not (1M+500K)/2M = 75%
+    renderPeek([goal])
     const fiBar = screen.getByRole('progressbar', { name: /FI progress: 50%/i })
     expect(fiBar).toHaveAttribute('aria-valuenow', '50')
   })
@@ -769,11 +780,10 @@ describe('GoalsPeek GW monthly saving display', () => {
    fiGoal null check (line 264)
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalsPeek fiGoal null display', () => {
-  it('shows dash when fiGoal is null or undefined (line 264)', () => {
-    renderPeek([makeGoal({ fiGoal: null as unknown as number })])
-    // Line 264: goal.fiGoal != null is false → renders '—'
-    expect(screen.getByText(/FI:.*—/)).toBeInTheDocument()
+describe('GoalsPeek missing FI target display', () => {
+  it('shows a dash when required fields are missing', () => {
+    renderPeek([makeGoal({ goalEndYear: '' })])
+    expect(screen.getByText('—')).toBeInTheDocument()
   })
 })
 
@@ -841,7 +851,6 @@ describe('GoalsPeek projection FI date display', () => {
     })
     mockedGetSaveRate.mockReturnValue({ annualSavings: 50_000, saveRate: 30, monthsOfData: 12 })
     renderPeek([makeGoal({ fiGoal: 2_000_000 })])
-    // Should show a projected date (month year format)
-    expect(screen.getByText(/\w{3} \d{4}/)).toBeInTheDocument()
+    expect(screen.getByText(projectedTextMatcher)).toBeInTheDocument()
   })
 })

@@ -36,7 +36,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
-  growthSettings,
+  growthSettings: _growthSettings,
   onUpdateGoal: _onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
@@ -60,7 +60,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   })
   const [filters, setFilters] = useState<GoalFilters>(DEFAULT_FILTERS)
 
-  const filteredGoals = applyFilters(goals, filters)
+  const filteredGoals = applyFilters(goals, filters, profileBirthday)
   const isFiltered = filteredGoals.length !== goals.length
 
   const handleSelectGoal = (goalId: number, multi: boolean): void => {
@@ -102,7 +102,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
     <div className="goal-results-section">
       <div className="goal-toolbar">
         <div className="goal-toolbar-left">
-          <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
+          <GoalFilterBar goals={goals} profileBirthday={profileBirthday} filters={filters} onChange={setFilters} />
           {goals.length >= 2 && (
             <button
               ref={compareBtnRef}
@@ -239,16 +239,10 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               onDeleteGoal={onDeleteGoal}
               gwGoals={gwGoals}
               profileBirthday={profileBirthday}
-              inflation={growthSettings.settings.inflation}
             />
           </div>
           {selectedGoals.length > 1 && (
-            <GoalCompareView
-              goals={selectedGoals}
-              gwGoals={gwGoals}
-              profileBirthday={profileBirthday}
-              inflation={growthSettings.settings.inflation}
-            />
+            <GoalCompareView goals={selectedGoals} gwGoals={gwGoals} profileBirthday={profileBirthday} />
           )}
         </>
       )}

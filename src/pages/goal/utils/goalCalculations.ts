@@ -140,15 +140,16 @@ export function computeRequiredCorpus(
 
 /**
  * Convenience: compute finite-depletion FI target from a goal object.
- * Falls back to goal.fiGoal (perpetuity) if birthday or goalEndYear is missing.
+ * Returns 0 when required fields are missing or invalid.
  */
 export function getFiTarget(
   goal: {
-    fiGoal: number
     birthday?: string
     goalEndYear?: string
+    goalCreatedIn?: string
     retirementAge: number
-    monthlyExpense2047: number
+    expenseValue?: number
+    monthlyExpenseRetirement?: number
   },
   profileBirthday: string,
   preBoundaryGrowth: number,
@@ -156,32 +157,43 @@ export function getFiTarget(
   ageBoundary?: number,
   inflationRate = 3,
 ): number {
-  if (goal.fiGoal <= 0) return 0
   const birthday = profileBirthday || goal.birthday
-  if (!birthday || !goal.goalEndYear) return goal.fiGoal
+  if (!birthday || !goal.goalEndYear || goal.retirementAge <= 0) return 0
   const postGrowth = postBoundaryGrowth ?? 6
   const boundary = ageBoundary ?? 60
   const inflation = inflationRate
   const endYear = new Date(goal.goalEndYear).getFullYear()
   const [by, bm] = birthday.split('-').map(Number)
+  if (!Number.isFinite(endYear) || !Number.isFinite(by) || !Number.isFinite(bm) || bm <= 0 || bm > 12) return 0
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, 1)
   const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
   const endOfLife = new Date(endYear, 11, 1)
+
+  // Dynamically compute monthly expense at retirement from creation-year dollars
+  let monthlyExpense: number
+  if (goal.expenseValue && goal.expenseValue > 0) {
+    const [gcYear] = (goal.goalCreatedIn || '').split('-').map(Number)
+    if (!Number.isFinite(gcYear)) return 0
+    const yearsToRetirement = retirementDate.getFullYear() - (gcYear || new Date().getFullYear())
+    const annualExpenseAtRetirement = goal.expenseValue * Math.pow(1 + inflation / 100, yearsToRetirement)
+    monthlyExpense = annualExpenseAtRetirement / 12
+  } else {
+    monthlyExpense = goal.monthlyExpenseRetirement ?? 0
+  }
+
+  if (!Number.isFinite(monthlyExpense) || monthlyExpense <= 0) return 0
+
   return computeRequiredCorpus(
     retirementDate,
     endOfLife,
     ageBoundaryDate,
-    goal.monthlyExpense2047,
+    monthlyExpense,
     inflation,
     preBoundaryGrowth,
     postGrowth,
   )
 }
 
-/**
- * Projects earliest FI date where accumulated savings >= required corpus (depletes to $0 at death).
- * Growth switches from preBoundaryGrowth to postBoundaryGrowth at ageBoundaryDate.
- */
 export function projectFIDateWithDrawdown(
   currentNetWorth: number,
   annualSavings: number,

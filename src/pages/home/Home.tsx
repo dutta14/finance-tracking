@@ -10,7 +10,6 @@ import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
 import SetupProgress from './SetupProgress'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
-import { useGrowthSettings } from '../goal/hooks/useGrowthSettings'
 import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/storage'
 import '../../styles/Home.css'
 
@@ -34,7 +33,6 @@ const Home: FC = () => {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const { accounts, balances } = useData()
-  const growthSettings = useGrowthSettings()
 
   const hasBudgetData = useMemo(() => {
     const store = loadBudgetStore()
@@ -173,12 +171,7 @@ const Home: FC = () => {
       />
     </ErrorBoundary>,
     <ErrorBoundary key="goals" variant="card">
-      <GoalsPeek
-        goals={goals}
-        gwGoals={gwGoals}
-        inflation={growthSettings.settings.inflation}
-        onNavigate={() => navigate('/goal')}
-      />
+      <GoalsPeek goals={goals} gwGoals={gwGoals} onNavigate={() => navigate('/goal')} />
     </ErrorBoundary>,
     <ErrorBoundary key="alloc" variant="card">
       <AllocationBreakdown

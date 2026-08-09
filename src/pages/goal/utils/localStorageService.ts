@@ -20,6 +20,10 @@ const migrateFields = (items: Record<string, unknown>[]): FinancialGoal[] =>
       migrated.goalEndYear = migrated.planEndYear
       delete migrated.planEndYear
     }
+    if ('monthlyExpense2047' in migrated) {
+      migrated.monthlyExpenseRetirement = migrated.monthlyExpense2047
+      delete migrated.monthlyExpense2047
+    }
     return migrated as unknown as FinancialGoal
   })
 

@@ -1,39 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { MouseEvent } from 'react'
 import GoalMiniCard from './GoalMiniCard'
-import { makeGoal, makeGwGoal } from '../../../test/factories'
-import { FinancialGoal, GwGoal } from '../../../types'
+import { makeGoal } from '../../../test/factories'
+import { FinancialGoal } from '../../../types'
+import { getFiTarget } from '../utils/goalCalculations'
 
-vi.mock('../../data/types', () => ({
-  getLatestGoalTotals: () => ({ fiTotal: 500_000, gwTotal: 0 }),
-}))
-
-const defaultGoal = makeGoal({ id: 1, goalName: 'Retire Early', fiGoal: 2_000_000, retirementAge: 50 })
+const defaultGoal = makeGoal({ id: 1, goalName: 'Retire Early', retirementAge: 50 })
+const profileBirthday = '1990-01-15'
+const fiTarget = getFiTarget(defaultGoal, profileBirthday, 8)
+const fiProgress = Math.min(100, Math.max(0, (500_000 / fiTarget) * 100))
+const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
 interface RenderOptions {
   goal?: FinancialGoal
+  fiProgress?: number
+  gwTotal?: number
   isSelected?: boolean
-  onClick?: (e: React.MouseEvent) => void
+  onClick?: (e: MouseEvent) => void
   viewMode?: 'grid' | 'list'
   compareMode?: boolean
-  gwGoals?: GwGoal[]
-  profileBirthday?: string
 }
 
 function renderCard(overrides: RenderOptions = {}) {
+  const goal = overrides.goal ?? defaultGoal
   const onClick = overrides.onClick ?? vi.fn()
   return {
     onClick,
     ...render(
       <GoalMiniCard
-        goal={overrides.goal ?? defaultGoal}
+        goalName={goal.goalName}
+        retirementYear={1990 + goal.retirementAge}
+        fiTarget={getFiTarget(goal, profileBirthday, 8)}
+        fiProgress={overrides.fiProgress ?? fiProgress}
+        gwTotal={overrides.gwTotal ?? 0}
         isSelected={overrides.isSelected ?? false}
         onClick={onClick}
         viewMode={overrides.viewMode ?? 'grid'}
         compareMode={overrides.compareMode ?? false}
-        gwGoals={overrides.gwGoals ?? []}
-        profileBirthday={overrides.profileBirthday ?? '1990-01-15'}
       />,
     ),
   }
@@ -47,13 +52,12 @@ describe('GoalMiniCard', () => {
   it('renders the goal name and FI goal amount', () => {
     renderCard()
     expect(screen.getByText('Retire Early')).toBeInTheDocument()
-    expect(screen.getByText('$2,000,000')).toBeInTheDocument()
+    expect(screen.getByText(dollars(fiTarget))).toBeInTheDocument()
   })
 
   it('displays progress percentage based on current totals', () => {
-    // fiTotal=500k, fiGoal=2M → 25%
     renderCard()
-    expect(screen.getByText('25%')).toBeInTheDocument()
+    expect(screen.getByText(`${fiProgress.toFixed(0)}%`)).toBeInTheDocument()
   })
 
   it('shows "FI only" when there are no GW goals', () => {
@@ -62,8 +66,7 @@ describe('GoalMiniCard', () => {
   })
 
   it('shows GW goals total and combined total when GW goals exist', () => {
-    const gwGoals = [makeGwGoal({ id: 1, fiGoalId: 1, disburseAge: 55, disburseAmount: 100_000, growthRate: 6 })]
-    renderCard({ gwGoals })
+    renderCard({ gwTotal: 100_000 })
     expect(screen.getByText('GW Goals')).toBeInTheDocument()
     expect(screen.getByText('Total')).toBeInTheDocument()
     expect(screen.queryByText('FI only')).not.toBeInTheDocument()
@@ -82,7 +85,9 @@ describe('GoalMiniCard', () => {
     renderCard({ compareMode: true, isSelected: true })
     const btn = screen.getByRole('button')
     expect(btn).toHaveAttribute('aria-pressed', 'true')
-    expect(btn).toHaveAccessibleName(/retire early.*25%.*selected for comparison/i)
+    expect(btn).toHaveAccessibleName(
+      new RegExp(`retire early.*${fiProgress.toFixed(0)}%.*selected for comparison`, 'i'),
+    )
   })
 
   it('sets aria-pressed to undefined outside compare mode', () => {
@@ -91,13 +96,13 @@ describe('GoalMiniCard', () => {
     expect(btn).not.toHaveAttribute('aria-pressed')
   })
 
-  it('handles zero fiGoal without crashing (progress capped at 0%)', () => {
-    const zeroGoal = makeGoal({ fiGoal: 0 })
-    renderCard({ goal: zeroGoal })
+  it('handles zero computed fi target without crashing (progress capped at 0%)', () => {
+    const zeroGoal = makeGoal({ expenseValue: 0, monthlyExpenseRetirement: 0 })
+    renderCard({ goal: zeroGoal, fiProgress: 0 })
     expect(screen.getByText('0%')).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
   })
 
-  // #58: Test keyboard interaction — source has handleKeyDown for Enter and Space
   it('triggers onClick when Enter key is pressed', async () => {
     const user = userEvent.setup()
     const onClick = vi.fn()

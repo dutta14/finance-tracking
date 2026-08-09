@@ -38,7 +38,7 @@ export const makeGoal = (overrides: Partial<FinancialGoal> = {}): FinancialGoal 
   monthlyExpenseValue: 5000,
   expenseValueMar2026: 65000,
   expenseValue2047: 120000,
-  monthlyExpense2047: 10000,
+  monthlyExpenseRetirement: 10000,
   safeWithdrawalRate: 4,
   growth: 7,
   retirement: '2035-01-15',
