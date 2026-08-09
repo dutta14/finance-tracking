@@ -666,7 +666,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       ) : (
         <>
           {/* ── Planned Goal ── */}
-          {!condensed && <h3 className="fi-card-section-title">Planned Goal</h3>}
+          {!condensed && <h3 className="fi-card-section-title">Planned</h3>}
           {!condensed && (
             <p className="fi-goal-prose">
               To spend{' '}
@@ -727,7 +727,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     {!condensed && (projection.state === 'projected' || projection.state === 'reached' || projection.state === 'no-budget' || projection.state === 'not-reachable') && (
       <div className="fi-card">
         <div className="fi-card-section-header">
-          <h3 className="fi-card-section-title">Projections</h3>
+          <h3 className="fi-card-section-title">Projected</h3>
           <div className="fi-projection-controls">
             <div className="fi-projection-period-toggle">
               <button
@@ -795,7 +795,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                 </span>
               </div>
               <div className="fi-projection-row">
-                <span className="fi-projection-key">Expense</span>
+                <span className="fi-projection-key">Expenses</span>
                 <span className="fi-projection-val">
                   {editingExpense ? (
                     <span className="fi-savings-edit-inline">
@@ -840,7 +840,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                 </span>
               </div>
               <div className="fi-projection-row">
-                <span className="fi-projection-key">Saving</span>
+                <span className="fi-projection-key">Save</span>
                 <span className="fi-projection-val">
                   {(() => {
                     const saving = chartRequiredSavings != null

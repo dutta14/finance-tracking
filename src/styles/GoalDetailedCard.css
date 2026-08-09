@@ -247,8 +247,8 @@ body.dark-mode .fi-goal-prose strong {
 }
 
 .fi-projection-period-btn {
-  padding: 0.2rem 0.5rem;
-  font-size: var(--fs-xs, 0.75rem);
+  padding: 0.35rem 0.65rem;
+  font-size: var(--fs-sm, 0.8125rem);
   font-weight: var(--fw-medium);
   border: none;
   background: var(--color-surface);

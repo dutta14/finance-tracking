@@ -66,6 +66,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [fiProjectedMonth, setFiProjectedMonth] = useState<string | null>(null)
   const [fiYearOverride, setFiYearOverride] = useState<string | null>(null)
   const [chartRequiredSavings, setChartRequiredSavings] = useState<number | null>(null)
+  const [gwTargetShowRetirement, setGwTargetShowRetirement] = useState(false)
   const renameInputRef = useRef<HTMLInputElement>(null)
   const [localSavingsOverride, setLocalSavingsOverride] = useState<number | null>(null)
   const savingsOverride = localSavingsOverride
@@ -154,7 +155,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const hasGoals = fiTarget > 0 || gwTarget > 0
 
     const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
-    return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown, gwMonthly }
+    return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown, gwMonthly, gwBal, gwTarget, retMonth }
   }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
 
   // GW Projection: how much to save for GW if FIRE happens at projected FI date
@@ -182,6 +183,9 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const requiredMonthly = calcMonthlySaving(gwBal, gwTargetAtFI, gwGrowth, monthsToFI)
     const [yr, mo] = fiProjectedMonth.split('-').map(Number)
     const fiDate = new Date(yr, mo - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    const [retYr, retMo] = retMonth.split('-').map(Number)
+    const retDate = new Date(retYr, retMo - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    const fiDateShort = new Date(yr, mo - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     const fiYears = Math.floor(monthsToFI / 12)
     const fiRemMonths = monthsToFI % 12
     const timeUntilFI = fiYears > 0 && fiRemMonths > 0
@@ -197,6 +201,8 @@ const GoalDetail: FC<GoalDetailProps> = ({
       annualSaving: requiredMonthly * 12,
       gwTarget: gwTargetAtFI,
       gwTargetAtRetirement,
+      retDate,
+      fiDateShort,
     }
   }, [goal, fiProjectedMonth, allMonths, accounts, balances, profileBirthday, gwGoals, gwGrowth, growthCtx.settings])
 
@@ -374,7 +380,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </h2>
         <div className="goal-detail-section-cards">
           <div className="fi-card">
-            <h3 className="fi-card-section-title">Planned Goal</h3>
+            <h3 className="fi-card-section-title">Planned</h3>
             <GwSavingsPlan
               goal={goal}
               gwGoals={gwGoals}
@@ -401,15 +407,20 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
           {gwProjection && gwProjection.state === 'projected' && fiProjectedMonth && (
             <div className="fi-card">
-              <h3 className="fi-card-section-title">Projections</h3>
+              <h3 className="fi-card-section-title">Projected</h3>
               <div className="fi-projection-block">
                 <div className="fi-projection-rows">
-                  <div className="fi-projection-row">
-                    <span className="fi-projection-key">GW target</span>
-                    <span className="fi-projection-val">{'$' + Math.round(gwProjection.gwTarget).toLocaleString()}</span>
+                  <div className="fi-projection-row" onClick={() => setGwTargetShowRetirement(v => !v)} style={{ cursor: 'pointer' }}>
+                    <span className="fi-projection-key">Target</span>
+                    <span className="fi-projection-val goal-summary-toggleable">
+                      {gwTargetShowRetirement
+                        ? `$${Math.round(gwProjection.gwTargetAtRetirement).toLocaleString()} by ${gwProjection.retDate}`
+                        : `$${Math.round(gwProjection.gwTarget).toLocaleString()} by ${gwProjection.fiDateShort}`
+                      }
+                    </span>
                   </div>
                   <div className="fi-projection-row">
-                    <span className="fi-projection-key">Saving</span>
+                    <span className="fi-projection-key">Save</span>
                     <span className="fi-projection-val">
                       {gwProjection.monthlySaving <= 0
                         ? "You've achieved this goal 🎉"
@@ -452,6 +463,23 @@ const GoalDetail: FC<GoalDetailProps> = ({
         targetFireDate={fiYearOverride}
         onFireMonth={handleFireMonth}
         onRequiredSavings={handleRequiredSavings}
+        gwBalance={summaryData?.gwBal || 0}
+        gwMonthlyContribution={summaryData?.gwMonthly || 0}
+        gwProjectedMonthlyContribution={gwProjection?.state === 'projected' ? gwProjection.monthlySaving : (summaryData?.gwMonthly || 0)}
+        gwGrowthRate={gwGrowth}
+        gwTarget={summaryData?.gwTarget || 0}
+        gwProjectedTarget={gwProjection?.state === 'projected' ? gwProjection.gwTarget : (summaryData?.gwTarget || 0)}
+        gwTargetMonth={summaryData?.retMonth}
+        gwDisburseMonth={(() => {
+          if (!gwGoals.length || !profileBirthday) return undefined
+          const thisGoalsGw = gwGoals.filter(g => g.fiGoalId === goal.id)
+          if (!thisGoalsGw.length) return undefined
+          const [by, bm] = profileBirthday.split('-').map(Number)
+          const maxAge = Math.max(...thisGoalsGw.map(g => g.disburseAge))
+          const year = by + maxAge
+          return `${year}-${String(bm).padStart(2, '0')}`
+        })()}
+        projectedFiMonth={fiProjectedMonth}
       />
     </div>
   )

@@ -28,9 +28,10 @@ interface CustomTooltipProps {
   label?: string
   fiGoal?: number
   fireMonth?: string
+  goalLabel?: string
 }
 
-const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label, fiGoal, fireMonth }) => {
+const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label, fiGoal, fireMonth, goalLabel = 'FI goal' }) => {
   if (!active || !payload?.length) return null
   const { expense, remaining, phase, monthlyGrowth, monthlySaved } = payload[0].payload
   const pctOfGoal = fiGoal && fiGoal > 0 ? ((remaining / fiGoal) * 100).toFixed(0) : null
@@ -71,7 +72,7 @@ const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label, fiGoal,
       )}
       {pctOfGoal && (phase === 'accumulation' || phase === 'coasting') && (
         <div className="projection-tooltip-row projection-tooltip-row--pct">
-          <span>% of FI goal</span>
+          <span>% of {goalLabel}</span>
           <span>{pctOfGoal}%</span>
         </div>
       )}
@@ -90,6 +91,7 @@ interface Milestone {
 interface LifecycleChartProps {
   rows: ProjectionRow[]
   fiGoal?: number
+  goalLabel?: string
 }
 
 interface ChartRow extends ProjectionRow {
@@ -97,7 +99,7 @@ interface ChartRow extends ProjectionRow {
   draw: number | null
 }
 
-const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
+const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal, goalLabel = 'FI goal' }) => {
   const descId = useId()
   const chartRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -203,7 +205,7 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
       {activeRow && (
         <div className="projection-chart-live" aria-live="polite" aria-atomic="true">
           {activeRow.month}: {dollars(activeRow.remaining)}
-          {fiGoal && fiGoal > 0 ? ` (${((activeRow.remaining / fiGoal) * 100).toFixed(0)}% of goal)` : ''}
+          {fiGoal && fiGoal > 0 ? ` (${((activeRow.remaining / fiGoal) * 100).toFixed(0)}% of ${goalLabel})` : ''}
         </div>
       )}
 
@@ -222,7 +224,7 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
           <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
           <XAxis dataKey="month" tick={{ fontSize: 11 }} interval="preserveStartEnd" stroke="var(--projection-axis)" />
           <YAxis tickFormatter={abbreviate} tick={{ fontSize: 11 }} stroke="var(--projection-axis)" width={72} />
-          <Tooltip content={<CustomTooltip fiGoal={fiGoal} fireMonth={fireMonth ?? undefined} />} />
+          <Tooltip content={<CustomTooltip fiGoal={fiGoal} fireMonth={fireMonth ?? undefined} goalLabel={goalLabel} />} />
           <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
 
           {fiGoal && fiGoal > 0 && (
@@ -234,10 +236,11 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal }) => {
               strokeOpacity={0.6}
               label={{
                 value: abbreviate(fiGoal),
-                position: 'left',
+                position: 'insideTopRight',
                 fontSize: 11,
                 fill: 'var(--color-text-muted)',
                 fontWeight: 500,
+                dy: -16,
               }}
             />
           )}

@@ -136,6 +136,7 @@ const GwGoalCard: FC<{
   const currentYear = now.getUTCFullYear()
   const disburseYear = birthYear + gw.disburseAge
   const retirementYear = birthYear + retirementAge
+  const retirementMonthName = new Date(retirementYear, birthMonth - 1).toLocaleDateString('en-US', { month: 'short' })
   const monthsToDisburse = Math.max(
     0,
     (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
@@ -241,7 +242,7 @@ const GwGoalCard: FC<{
             <strong className="goal-summary-toggleable" onClick={cycleDollarView}>
               {dollars(dollarDisplay.amount)} ({dollarDisplay.yearLabel} dollars)
             </strong>{' '}
-            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear},
+            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementMonthName} {retirementYear},
             growing at {gwGrowthRate}% per year.
           </p>
 
