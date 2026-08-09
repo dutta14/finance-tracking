@@ -180,7 +180,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       const holdings = page.locator('.fi-calc-holdings')
       await expect(holdings).toBeVisible()
       // Primary retirement is always shown.
-      const primaryRow = holdings.locator('.fi-calc-holding-row').filter({ hasText: 'FI Retirement (Primary)' })
+      const primaryRow = holdings.locator('.fi-calc-holding-row').filter({ hasText: 'FI Retirement (Casey)' })
       await expect(primaryRow).toContainText('$260,000')
 
       // GW Liquid only appears when the toggle is on (FICalculator.tsx:509).
