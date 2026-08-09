@@ -221,7 +221,7 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     await page.reload()
     await page.waitForLoadState('domcontentloaded')
 
-    await expect(page).toHaveURL(routeRegex('/goal'))
+    await expect(page).toHaveURL(routeRegex('/goal/plans'))
     await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
     await nav.expectActive('Goals')
   })

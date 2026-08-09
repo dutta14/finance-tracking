@@ -140,9 +140,7 @@ export const ALL_DATA_BUDGET_CONFIG = {
 export const ALL_DATA_TAX_STORE = {
   years: {
     2024: {
-      items: [
-        { id: 'item-1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [], files: [] },
-      ],
+      items: [{ id: 'item-1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [], files: [] }],
     },
   },
 }

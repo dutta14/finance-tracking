@@ -105,7 +105,9 @@ export class TaxesPage {
   /** Click × on the file chip whose name matches. */
   async removeFile(itemLabel: string | RegExp, fileName: string) {
     const row = this.item(itemLabel)
-    const chip = row.locator('.tax-file-chip').filter({ has: this.page.locator('.tax-file-name', { hasText: fileName }) })
+    const chip = row
+      .locator('.tax-file-chip')
+      .filter({ has: this.page.locator('.tax-file-name', { hasText: fileName }) })
     await chip.locator('.tax-file-remove').click()
   }
 

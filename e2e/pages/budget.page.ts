@@ -71,8 +71,12 @@ export class BudgetPage {
     this.nextYearBtn = page.locator('.budget-year-btn[title="Next year"]')
     this.yearLabel = page.locator('.budget-year-label')
 
-    this.cashflowBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Cashflow$/ })
-    this.spreadsheetBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Spreadsheet$/ })
+    this.cashflowBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', {
+      hasText: /^Cashflow$/,
+    })
+    this.spreadsheetBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', {
+      hasText: /^Spreadsheet$/,
+    })
     this.groupsBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Groups$/ })
 
     this.uploadDropDown = page.locator('.budget-split-drop')
@@ -104,8 +108,12 @@ export class BudgetPage {
     this.groupManager = page.locator('.budget-group-manager')
 
     this.tableSections = page.locator('.budget-table-section')
-    this.incomeTable = page.locator('.budget-table-section').filter({ has: page.locator('.budget-table-title', { hasText: /^Income/ }) })
-    this.expenseTable = page.locator('.budget-table-section').filter({ has: page.locator('.budget-table-title', { hasText: /^Expenses/ }) })
+    this.incomeTable = page
+      .locator('.budget-table-section')
+      .filter({ has: page.locator('.budget-table-title', { hasText: /^Income/ }) })
+    this.expenseTable = page
+      .locator('.budget-table-section')
+      .filter({ has: page.locator('.budget-table-title', { hasText: /^Expenses/ }) })
   }
 
   async goto() {

@@ -73,17 +73,17 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   text-align: left;
-  background: var(--accent-lighter);
-  color: var(--accent-text-mid);
-  border-top: 2px solid var(--accent-border);
-  border-bottom: 1px solid var(--accent-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-top: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .compare-section-header--gw th {
-  background: var(--color-positive-light);
-  color: var(--color-positive);
-  border-top-color: var(--color-positive-border);
-  border-bottom-color: var(--color-positive-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-top-color: var(--color-border);
+  border-bottom-color: var(--color-border);
 }
 
 .compare-row-label--indent {

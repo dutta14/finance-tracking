@@ -16,6 +16,8 @@ export interface FICalcInput {
   retireYear: number
   lastYear: number
   thisYear: number
+  primaryName?: string
+  partnerName?: string
 }
 
 export interface FICalcResult {
@@ -88,11 +90,12 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
 
     if (y === input.primary401kYear) {
       nw += primary401kAtAccess
-      injection = 'Primary 401(k)'
+      injection = `${input.primaryName || 'Primary'} 401(k)`
     }
     if (y === input.partner401kYear) {
       nw += partner401kAtAccess
-      injection = injection ? injection + ' + Partner 401(k)' : 'Partner 401(k)'
+      const partnerLabel = `${input.partnerName || 'Partner'} 401(k)`
+      injection = injection ? injection + ' + ' + partnerLabel : partnerLabel
     }
 
     const expense = expenseAtRetirement * Math.pow(1 + inf, yearIdx)

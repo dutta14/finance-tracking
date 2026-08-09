@@ -237,6 +237,7 @@ body.modern-design.dark .main-content {
 body.modern-design .goal-tab-bar,
 body.modern-design .nw-tab-bar,
 body.modern-design .data-view-tabs,
+body.modern-design .goal-sub-tab-bar,
 body.modern-design .budget-view-toggle {
   display: flex;
   gap: 2px;
@@ -249,6 +250,7 @@ body.modern-design .budget-view-toggle {
 }
 
 body.modern-design .goal-tab,
+body.modern-design .goal-sub-tab,
 body.modern-design .nw-tab,
 body.modern-design .data-view-tab,
 body.modern-design .budget-view-btn {
@@ -268,6 +270,7 @@ body.modern-design .budget-view-btn {
 }
 
 body.modern-design .goal-tab:hover,
+body.modern-design .goal-sub-tab:hover,
 body.modern-design .nw-tab:hover,
 body.modern-design .data-view-tab:hover,
 body.modern-design .budget-view-btn:not(.active):hover {
@@ -275,6 +278,7 @@ body.modern-design .budget-view-btn:not(.active):hover {
 }
 
 body.modern-design .goal-tab.active,
+body.modern-design .goal-sub-tab.active,
 body.modern-design .nw-tab.active,
 body.modern-design .data-view-tab.active,
 body.modern-design .budget-view-btn.active {

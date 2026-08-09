@@ -28,6 +28,8 @@ interface GoalsSectionProps {
   onCreateGwGoal: (goal: Omit<GwGoal, 'id' | 'createdAt'>) => void
   onUpdateGwGoal: (id: number, updates: Partial<Omit<GwGoal, 'id' | 'createdAt' | 'fiGoalId'>>) => void
   onDeleteGwGoal: (id: number) => void
+  onMixMatch?: () => void
+  onNewGoal?: () => void
 }
 
 const GoalsSection: FC<GoalsSectionProps> = ({
@@ -44,6 +46,8 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   onCreateGwGoal: _onCreateGwGoal,
   onUpdateGwGoal: _onUpdateGwGoal,
   onDeleteGwGoal: _onDeleteGwGoal,
+  onMixMatch,
+  onNewGoal,
 }) => {
   const navigate = useNavigate()
   const [selectedGoalIds, setSelectedGoalIds] = useState<number[]>([])
@@ -58,10 +62,6 @@ const GoalsSection: FC<GoalsSectionProps> = ({
 
   const filteredGoals = applyFilters(goals, filters)
   const isFiltered = filteredGoals.length !== goals.length
-
-  const countLabel = isFiltered
-    ? `${filteredGoals.length} of ${goals.length}`
-    : `${goals.length} goal${goals.length !== 1 ? 's' : ''}`
 
   const handleSelectGoal = (goalId: number, multi: boolean): void => {
     if (multi || compareMode) {
@@ -101,9 +101,8 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   return (
     <div className="goal-results-section">
       <div className="goal-toolbar">
-        <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
-        <div className="goal-toolbar-right">
-          <span className="goal-count-label">{countLabel}</span>
+        <div className="goal-toolbar-left">
+          <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
           {goals.length >= 2 && (
             <button
               ref={compareBtnRef}
@@ -127,6 +126,45 @@ const GoalsSection: FC<GoalsSectionProps> = ({
                 <rect x="9.5" y="2" width="5.5" height="12" rx="1" />
               </svg>
               {compareMode ? 'Exit Compare' : 'Compare'}
+            </button>
+          )}
+        </div>
+        <div className="goal-toolbar-right">
+          {compareMode && selectedGoalIds.length > 0 && (
+            <>
+              <span className="goal-selection-count">{selectedGoalIds.length} selected</span>
+              <button className="goal-action-btn goal-action-btn--danger" onClick={handleDeleteSelected}>
+                Delete
+              </button>
+            </>
+          )}
+          {onMixMatch && goals.length > 0 && gwGoals.length > 0 && (
+            <button className="goal-action-btn" onClick={onMixMatch} title="Mix & Match goals">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M2 4h5l2 8h5M2 12h5l2-8h5" />
+                <circle cx="2" cy="4" r="1" fill="currentColor" stroke="none" />
+                <circle cx="2" cy="12" r="1" fill="currentColor" stroke="none" />
+                <circle cx="14" cy="4" r="1" fill="currentColor" stroke="none" />
+                <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              Mix &amp; Match
+            </button>
+          )}
+          {onNewGoal && (
+            <button className="goal-action-btn goal-action-btn--accent" onClick={onNewGoal} title="Create new goal">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              New Goal
             </button>
           )}
           <div className="view-mode-toggle">
@@ -173,21 +211,6 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           selectedGoalIds.length > 0 &&
           `${selectedGoalIds.length} goal${selectedGoalIds.length !== 1 ? 's' : ''} selected for comparison.`}
       </div>
-      {compareMode && selectedGoalIds.length > 0 && (
-        <div className="goal-selection-bar" aria-label="Selection actions">
-          <span className="goal-selection-count">
-            {selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected
-          </span>
-          <div className="goal-selection-actions">
-            <button className="goal-selection-btn goal-selection-btn--danger" onClick={handleDeleteSelected}>
-              Delete selected
-            </button>
-            <button className="goal-selection-btn" onClick={exitCompareMode}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
       {compareMode && selectedGoalIds.length === 0 && (
         <div className="goal-compare-hint" aria-hidden="true">
           Click goals to select them for comparison, or use {modKey}+Click anytime

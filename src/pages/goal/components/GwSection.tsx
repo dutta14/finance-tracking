@@ -136,6 +136,7 @@ const GwGoalCard: FC<{
   const currentYear = now.getUTCFullYear()
   const disburseYear = birthYear + gw.disburseAge
   const retirementYear = birthYear + retirementAge
+  const retirementMonthName = new Date(retirementYear, birthMonth - 1).toLocaleDateString('en-US', { month: 'short' })
   const monthsToDisburse = Math.max(
     0,
     (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
@@ -150,12 +151,24 @@ const GwGoalCard: FC<{
       ? { amount: gw.disburseAmount, yearLabel: creationYear }
       : dollarView === 'current'
         ? {
-            amount: gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsFromCreationToNow),
+            amount:
+              creationYear === currentYear
+                ? gw.disburseAmount
+                : gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsFromCreationToNow),
             yearLabel: currentYear,
           }
         : { amount: disbursementTarget, yearLabel: disburseYear }
+  const sameYear = creationYear === currentYear
   const cycleDollarView = () =>
-    onSetDollarView(dollarView === 'disbursement' ? 'creation' : dollarView === 'creation' ? 'current' : 'disbursement')
+    onSetDollarView(
+      dollarView === 'disbursement'
+        ? 'creation'
+        : dollarView === 'creation'
+          ? sameYear
+            ? 'disbursement'
+            : 'current'
+          : 'disbursement',
+    )
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - retirementAge) * 12)
   const pvAtRetirement =
     monthsRetToDisburse > 0
@@ -173,29 +186,12 @@ const GwGoalCard: FC<{
         )}
         <div className="gw-goal-card-actions">
           {!editing && (
-            <button className="gw-goal-edit" onClick={() => setEditing(true)} aria-label="Edit GW goal">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M11.5 2.5 L13.5 4.5 L5 13 H3 V11 L11.5 2.5Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path d="M10 4 L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+            <button className="gw-goal-action-btn" onClick={() => setEditing(true)}>
+              Edit
             </button>
           )}
-          <button className="gw-goal-delete" onClick={handleDeleteClick} aria-label="Delete GW goal">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M2.5 3.5h11M6.5 6.5v5M9.5 6.5v5M3.5 3.5l0.5 10c0 0.3 0.2 0.5 0.5 0.5h7c0.3 0 0.5-0.2 0.5-0.5l0.5-10M5.5 3.5V2.5c0-0.3 0.2-0.5 0.5-0.5h4c0.3 0 0.5 0.2 0.5 0.5v1"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <button className="gw-goal-action-btn gw-goal-action-btn--delete" onClick={handleDeleteClick}>
+            Delete
           </button>
         </div>
       </div>
@@ -259,11 +255,11 @@ const GwGoalCard: FC<{
         <>
           <p className="gw-goal-prose">
             To have{' '}
-            <strong className="goal-summary-toggleable" onClick={cycleDollarView}>
+            <button type="button" className="goal-summary-toggleable" onClick={cycleDollarView}>
               {dollars(dollarDisplay.amount)} ({dollarDisplay.yearLabel} dollars)
-            </strong>{' '}
-            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementYear},
-            growing at {gwGrowthRate}% per year.
+            </button>{' '}
+            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementMonthName}{' '}
+            {retirementYear}, growing at {gwGrowthRate}% per year.
           </p>
 
           <div className="gw-goal-progress-row">
@@ -394,7 +390,7 @@ const GwSection: FC<GwSectionProps> = ({
             </button>
             {otherGoals.length > 0 && (
               <button className="gw-add-btn gw-add-btn--copy" onClick={() => setImportPickerOpen(v => !v)}>
-                Copy from existing
+                Copy goal
               </button>
             )}
           </div>
@@ -463,14 +459,14 @@ const GwSection: FC<GwSectionProps> = ({
                   setImportPickerOpen(false)
                 }}
               >
-                + Add another GW goal
+                Add goal
               </button>
               {otherGoals.length > 0 && (
                 <button
                   className="gw-add-btn gw-add-btn--copy gw-add-btn--inline"
                   onClick={() => setImportPickerOpen(v => !v)}
                 >
-                  Copy from existing
+                  Copy goal
                 </button>
               )}
               {importPickerOpen && (

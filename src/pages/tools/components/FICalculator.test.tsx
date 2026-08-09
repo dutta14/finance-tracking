@@ -99,7 +99,7 @@ describe('FICalculator', () => {
   it('renders year-by-year projection when expanded', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const expandBtn = screen.getByText(/Year-by-year projection/)
+    const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
     await user.click(expandBtn)
     expect(screen.getByText('Year')).toBeInTheDocument()
     expect(screen.getByText('Expense')).toBeInTheDocument()
@@ -132,7 +132,7 @@ describe('FICalculator', () => {
   it('shows the Save button and save form', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const saveBtn = screen.getByText('+ Save')
+    const saveBtn = screen.getByRole('button', { name: /\+ save current/i })
     await user.click(saveBtn)
     expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
   })
@@ -170,7 +170,7 @@ describe('FICalculator', () => {
   it('cancel save form hides the input', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByText('+ Save'))
+    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
     expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
     await user.click(screen.getByText('✕'))
     expect(screen.queryByPlaceholderText('Simulation name')).not.toBeInTheDocument()
@@ -281,7 +281,7 @@ describe('FICalculator', () => {
   it('saves a simulation and displays it as a chip', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByText('+ Save'))
+    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
     const nameInput = screen.getByPlaceholderText('Simulation name')
     await user.type(nameInput, 'Base Case')
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -293,15 +293,12 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
     // Save a sim
-    await user.click(screen.getByText('+ Save'))
+    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
     await user.type(screen.getByPlaceholderText('Simulation name'), 'To Delete')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(screen.getByText('To Delete')).toBeInTheDocument()
 
-    // Delete it via the × span
-    const chip = screen.getByText('To Delete').closest('button')! as HTMLElement
-    const deleteBtn = chip.querySelector('.fi-sim-chip-x')!
-    await user.click(deleteBtn)
+    await user.click(screen.getByRole('button', { name: /delete to delete/i }))
     expect(screen.queryByText('To Delete')).not.toBeInTheDocument()
   })
 
@@ -313,7 +310,7 @@ describe('FICalculator', () => {
     await user.clear(input)
     await user.type(input, '99000')
     // Save
-    await user.click(screen.getByText('+ Save'))
+    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
     await user.type(screen.getByPlaceholderText('Simulation name'), 'Custom')
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -382,7 +379,7 @@ describe('FICalculator', () => {
   it('renders year-by-year projection rows with year, expense, and net worth columns', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByText(/Year-by-year projection/))
+    await user.click(screen.getByRole('button', { name: /show year-by-year projection/i }))
     // Should have data rows in the table
     const rows = document.querySelectorAll('.fi-calc-yby-table tbody tr')
     expect(rows.length).toBeGreaterThan(0)
@@ -391,17 +388,17 @@ describe('FICalculator', () => {
   it('collapses year-by-year projection on second click', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const btn = screen.getByText(/Year-by-year projection/)
+    const btn = screen.getByRole('button', { name: /show year-by-year projection/i })
     await user.click(btn) // expand
     expect(document.querySelector('.fi-calc-yby-table')).toBeInTheDocument()
-    await user.click(btn) // collapse
+    await user.click(screen.getByRole('button', { name: /hide year-by-year projection/i })) // collapse
     expect(document.querySelector('.fi-calc-yby-table')).not.toBeInTheDocument()
   })
 
   it('disables save button when simulation name is empty', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByText('+ Save'))
+    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
     const saveBtn = screen.getByRole('button', { name: 'Save' })
     expect(saveBtn).toBeDisabled()
   })
@@ -532,7 +529,7 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    await user.click(screen.getByText('+ Save'))
+    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
     const nameInput = screen.getByPlaceholderText('Simulation name')
     await user.type(nameInput, 'My Sim')
     const saveBtn = screen.getByRole('button', { name: 'Save' })
@@ -598,9 +595,7 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    // Click the × span inside the chip
-    const deleteSpan = document.querySelector('.fi-sim-chip-x')!
-    await user.click(deleteSpan)
+    await user.click(screen.getByRole('button', { name: /delete todelete/i }))
 
     expect(appStorage.setJSON).toHaveBeenCalledWith('fi-simulations', [])
   })
@@ -868,7 +863,7 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    const expandBtn = screen.getByText(/Year-by-year projection/)
+    const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
     await user.click(expandBtn)
     // Table should render without crashing
     expect(screen.getByText('Year')).toBeInTheDocument()

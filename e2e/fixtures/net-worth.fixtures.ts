@@ -138,10 +138,7 @@ export async function seedEmptyState(page: Page) {
   })
 }
 
-export async function seedCorruptedData(
-  page: Page,
-  variant: 'malformed-json' | 'corrupted-balances' | 'missing-keys',
-) {
+export async function seedCorruptedData(page: Page, variant: 'malformed-json' | 'corrupted-balances' | 'missing-keys') {
   await page.addInitScript(
     ({ variant }) => {
       localStorage.clear()
@@ -166,12 +163,12 @@ export async function seedCorruptedData(
             },
           ]),
         )
-        localStorage.setItem('data-balances', JSON.stringify([{ id: 1, accountId: 999, month: '2025-01', balance: 'not-a-number' }]))
-      } else if (variant === 'missing-keys') {
         localStorage.setItem(
-          'data-accounts',
-          JSON.stringify([{ id: 1, name: 'Partial Account' }]),
+          'data-balances',
+          JSON.stringify([{ id: 1, accountId: 999, month: '2025-01', balance: 'not-a-number' }]),
         )
+      } else if (variant === 'missing-keys') {
+        localStorage.setItem('data-accounts', JSON.stringify([{ id: 1, name: 'Partial Account' }]))
       }
     },
     { variant },

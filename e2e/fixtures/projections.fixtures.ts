@@ -152,7 +152,7 @@ export const BUDGET_SUMMARY_NEGATIVE_GROWTH = {
 }
 
 export interface ProjectionSeedOptions {
-  goals?: typeof FI_GOAL[]
+  goals?: (typeof FI_GOAL)[]
   accounts?: typeof FI_ACCOUNTS
   balances?: typeof BALANCES
   budgetSummary?: typeof BUDGET_SUMMARY | null

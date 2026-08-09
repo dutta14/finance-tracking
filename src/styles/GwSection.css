@@ -19,8 +19,8 @@
 }
 
 .gw-section-badge {
-  background: var(--accent-badge);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
@@ -51,7 +51,7 @@
 .gw-empty-state {
   text-align: center;
   padding: 2rem 1rem;
-  border: 2px dashed var(--accent-border);
+  border: 2px dashed var(--color-border);
   border-radius: var(--radius);
 }
 
@@ -59,7 +59,7 @@
   width: 52px;
   height: 52px;
   margin: 0 auto 0.75rem;
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .gw-empty-icon svg {
@@ -75,8 +75,8 @@
 
 /* Add buttons */
 .gw-add-btn {
-  background: var(--accent-badge);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   padding: 0.55rem 1.25rem;
@@ -87,31 +87,31 @@
 }
 
 .gw-add-btn:hover {
-  background: var(--accent-hover);
+  background: var(--color-text, #374151);
 }
 
 .gw-add-btn--inline {
   background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  color: var(--color-text-secondary, #6b7280);
+  border: 1px solid var(--color-border, #e5e7eb);
   font-weight: var(--fw-medium);
 }
 
 .gw-add-btn--inline:hover {
-  background: var(--accent-lighter);
-  color: var(--accent-hover);
+  background: var(--color-bg-hover, #f3f4f6);
+  color: var(--color-text);
 }
 
 .gw-add-btn--copy {
   background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  color: var(--color-text-secondary, #6b7280);
+  border: 1px solid var(--color-border, #e5e7eb);
   font-weight: var(--fw-medium);
 }
 
 .gw-add-btn--copy:hover {
-  background: var(--accent-lighter);
-  color: var(--accent-hover);
+  background: var(--color-bg-hover, #f3f4f6);
+  color: var(--color-text);
 }
 
 .gw-empty-actions {
@@ -132,7 +132,7 @@
 
 .gw-import-picker {
   background: var(--color-surface);
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.5rem;
   width: 100%;
@@ -153,7 +153,7 @@
 .gw-import-picker-title {
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
 .gw-import-picker-cancel {
@@ -199,7 +199,7 @@
 }
 
 .gw-import-item:hover {
-  background: var(--accent-lighter);
+  background: var(--color-surface);
 }
 
 .gw-import-item-label {
@@ -236,13 +236,13 @@
   font-weight: var(--fw-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
 .gw-dollar-toggle {
   display: flex;
-  background: var(--accent-light);
+  background: var(--color-bg-hover, #f3f4f6);
   border-radius: var(--radius);
   padding: 2px;
   gap: 2px;
@@ -255,7 +255,7 @@
   padding: 0.22rem 0.65rem;
   font-size: var(--fs-sm);
   cursor: pointer;
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   font-weight: var(--fw-normal);
   transition:
     background 0.15s,
@@ -265,9 +265,9 @@
 
 .gw-dollar-toggle-btn.active {
   background: var(--color-surface);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   font-weight: var(--fw-semibold);
-  box-shadow: 0 1px 3px var(--accent-shadow-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 /* Undo delete bar */
@@ -293,7 +293,7 @@
 .gw-goal-undo-btn {
   flex-shrink: 0;
   background: var(--color-negative);
-  color: var(--color-text-on-accent);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   padding: 0.2rem 0.65rem;
@@ -339,15 +339,15 @@ body.dark .gw-goal-undo-msg {
 
 /* Goal card */
 .gw-goal-card {
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 1rem 1.1rem;
-  background: var(--accent-lighter);
+  background: var(--color-surface);
   transition: box-shadow 0.15s;
 }
 
 .gw-goal-card:hover {
-  box-shadow: 0 2px 10px var(--accent-shadow);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .gw-goal-card-header {
@@ -363,35 +363,40 @@ body.dark .gw-goal-undo-msg {
   gap: 0.25rem;
 }
 
-.gw-goal-edit {
+.gw-goal-action-btn {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
   background: none;
   border: none;
+  padding: 0.2rem 0.4rem;
   cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 0.2rem;
   border-radius: var(--radius);
-  display: flex;
-  align-items: center;
   transition:
     color 0.15s,
     background 0.15s;
 }
 
-.gw-goal-edit:hover {
-  color: var(--accent);
-  background: var(--accent-lighter);
+.gw-goal-action-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover, #f3f4f6);
+}
+
+.gw-goal-action-btn--delete:hover {
+  color: var(--color-negative);
+  background: var(--color-negative-light);
 }
 
 .gw-goal-label--editing {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .gw-goal-card--editing {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  border-color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
 }
 
 .gw-card-edit-form {
@@ -401,26 +406,13 @@ body.dark .gw-goal-undo-msg {
 .gw-goal-label {
   font-weight: var(--fw-semibold);
   font-size: var(--fs-md);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
-.gw-goal-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 0.2rem;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.gw-goal-delete:hover {
-  color: var(--color-negative);
-  background: var(--color-negative-light);
+.gw-goal-label {
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-md);
+  color: var(--color-text);
 }
 
 .gw-goal-prose {
@@ -450,12 +442,12 @@ body.dark .gw-goal-undo-msg {
 }
 
 .gw-goal-row-label {
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
 }
 
 .gw-goal-row-value {
   font-weight: var(--fw-medium);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
 .gw-goal-row-value--highlight {
@@ -464,7 +456,7 @@ body.dark .gw-goal-undo-msg {
 
 /* Target callout (FV at disbursement) */
 .gw-goal-target {
-  background: var(--accent-light);
+  background: var(--color-bg-hover, #f3f4f6);
   border-radius: var(--radius);
   padding: 0.65rem 0.85rem;
   display: flex;
@@ -476,7 +468,7 @@ body.dark .gw-goal-undo-msg {
 
 .gw-goal-target-label {
   font-size: var(--fs-sm);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: var(--fw-bold);
@@ -485,13 +477,13 @@ body.dark .gw-goal-undo-msg {
 .gw-goal-target-amount {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   line-height: 1.2;
 }
 
 /* GW Goal milestone callout (PV at retirement) */
 .gw-goal-milestone {
-  background: var(--accent-light);
+  background: var(--color-bg-hover, #f3f4f6);
   border-radius: var(--radius);
   padding: 0.7rem 0.85rem 0.6rem;
   margin-bottom: 0.6rem;
@@ -509,13 +501,13 @@ body.dark .gw-goal-undo-msg {
   font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
 .gw-goal-milestone-amount {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   line-height: 1.2;
 }
 
@@ -528,14 +520,14 @@ body.dark .gw-goal-undo-msg {
 .gw-goal-progress-track {
   flex: 1;
   height: 6px;
-  background: var(--accent-track);
+  background: var(--color-border);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .gw-goal-progress-fill {
   height: 100%;
-  background: var(--accent-hover);
+  background: var(--color-text-secondary, #6b7280);
   border-radius: 99px;
   transition: width 0.4s ease;
 }
@@ -550,8 +542,8 @@ body.dark .gw-goal-undo-msg {
 
 /* Set-aside callout */
 .gw-goal-pv {
-  background: var(--accent-lighter);
-  border: 1px solid var(--accent-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.6rem 0.85rem;
   text-align: center;
@@ -559,7 +551,7 @@ body.dark .gw-goal-undo-msg {
 
 .gw-goal-pv-label {
   font-size: var(--fs-sm);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 0.2rem;
@@ -568,29 +560,29 @@ body.dark .gw-goal-undo-msg {
 .gw-goal-pv-amount {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   line-height: 1.2;
 }
 
 .gw-goal-pv-note {
   font-size: var(--fs-sm);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   margin-top: 0.2rem;
 }
 
 /* Add form */
 .gw-form {
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 1.25rem;
-  background: var(--accent-lighter);
+  background: var(--color-surface);
   margin-top: 0.5rem;
 }
 
 .gw-form-title {
   font-size: var(--fs-xl);
   font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   margin: 0 0 1rem;
 }
 
@@ -619,7 +611,7 @@ body.dark .gw-goal-undo-msg {
   display: block;
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   margin-bottom: 0.3rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -628,7 +620,7 @@ body.dark .gw-goal-undo-msg {
 .gw-form-input {
   width: 100%;
   padding: 0.5rem 0.6rem;
-  border: 1px solid var(--accent-track);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: var(--fs-md);
   background: var(--color-surface);
@@ -641,8 +633,8 @@ body.dark .gw-goal-undo-msg {
 
 .gw-form-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  border-color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
 }
 
 .gw-form-hint {
@@ -658,8 +650,8 @@ body.dark .gw-goal-undo-msg {
 }
 
 .gw-form-save {
-  background: var(--accent-badge);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1.1rem;
@@ -670,7 +662,7 @@ body.dark .gw-goal-undo-msg {
 }
 
 .gw-form-save:hover {
-  background: var(--accent-hover);
+  background: var(--color-text-secondary, #6b7280);
 }
 
 .gw-form-cancel {
@@ -702,7 +694,7 @@ body.dark .gw-goal-undo-msg {
   background: none;
   border: none;
   padding: 0;
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;
@@ -711,7 +703,7 @@ body.dark .gw-goal-undo-msg {
 }
 
 .gw-form-copy-link:hover {
-  color: var(--accent-hover);
+  color: var(--color-text-secondary, #6b7280);
 }
 
 /* ── Dark mode ───────────────────────────────────────────── */

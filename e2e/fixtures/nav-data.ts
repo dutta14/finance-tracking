@@ -67,8 +67,8 @@ export type PrimaryNavLink = (typeof PRIMARY_NAV_LINKS)[number]
 /** Hash path each nav link routes to. */
 export const NAV_PATHS: Record<PrimaryNavLink | 'Drive', string> = {
   Home: '/',
-  Goals: '/goal',
-  'Net Worth': '/net-worth',
+  Goals: '/goal/plans',
+  'Net Worth': '/net-worth/dashboard',
   Budget: '/budget',
   Taxes: '/taxes',
   Drive: '/drive',

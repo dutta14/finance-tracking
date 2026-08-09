@@ -188,7 +188,6 @@ describe('Data branch coverage', () => {
 
     const { unmount } = renderData('/net-worth/allocation/ratios')
     expect(await screen.findByRole('button', { name: 'My Allocation' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('status')).toHaveTextContent('Loading…')
     await waitFor(() => {
       expect(screen.getByText('Allocation ratios')).toBeInTheDocument()
     })

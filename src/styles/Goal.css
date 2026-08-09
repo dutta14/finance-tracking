@@ -12,6 +12,11 @@ section.goal {
   align-items: center;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-bg);
+  padding: 2rem 0 1rem;
 }
 
 /* Tab bar */
@@ -40,7 +45,7 @@ section.goal {
   background: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
 }
 .goal-tab:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: -2px;
   border-radius: var(--radius-sm);
 }
@@ -49,6 +54,38 @@ section.goal {
   background: var(--color-bg-hover, rgba(0, 0, 0, 0.06));
   font-weight: var(--fw-semibold);
 }
+/* Sub-tab bar (right-aligned, e.g. FI Plans / A/L Plan) */
+.goal-sub-tab-bar {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-left: auto;
+}
+.goal-sub-tab {
+  padding: 0.4rem 0.9rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  border: none;
+  background: transparent;
+  transition:
+    color 150ms,
+    background-color 150ms;
+  text-decoration: none;
+  cursor: pointer;
+}
+.goal-sub-tab:hover {
+  color: var(--color-text);
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
+}
+.goal-sub-tab.active {
+  color: var(--color-text);
+  background: var(--color-bg-hover, rgba(0, 0, 0, 0.06));
+  font-weight: var(--fw-semibold);
+}
+
 .goal-tab-loading {
   display: flex;
   align-items: center;
@@ -68,8 +105,9 @@ section.goal {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 0.35rem 0.75rem;
-  font-size: var(--fs-md);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
   cursor: pointer;
   color: var(--color-text);
   font-weight: var(--fw-medium);
@@ -81,6 +119,21 @@ section.goal {
 .goal-action-btn:hover {
   background: var(--color-surface-alt);
   border-color: var(--color-border);
+}
+
+.goal-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.goal-action-btn--danger {
+  color: var(--color-negative);
+}
+
+.goal-action-btn--danger:hover {
+  background: var(--color-negative-light);
+  border-color: var(--color-negative-border);
 }
 
 .goal-header h1 {
@@ -97,7 +150,7 @@ section.goal {
 }
 
 .goal-content {
-  padding: 2rem 2rem 3rem;
+  padding: 0 2rem 3rem;
   background-color: transparent;
   min-height: calc(100vh - 300px);
   transition: padding-right 0.2s;
@@ -166,7 +219,7 @@ section.goal {
 .form-group input:focus-visible,
 .form-group textarea:focus-visible {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--color-text-secondary, #6b7280);
   box-shadow: 0 0 0 3px var(--accent-focus-ring, rgba(59, 130, 246, 0.15));
 }
 
@@ -177,8 +230,8 @@ section.goal {
 
 .btn-create {
   padding: 0.75rem 1.5rem;
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   font-size: var(--fs-md);
@@ -265,7 +318,7 @@ section.goal {
   border-color: var(--color-text-muted);
 }
 .btn-use-recommended:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -290,7 +343,7 @@ section.goal {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--accent);
+  accent-color: var(--color-text-secondary, #6b7280);
 }
 
 .display-field {
@@ -344,7 +397,7 @@ section.goal {
 }
 .random-name-btn:hover {
   background: var(--color-negative);
-  color: var(--color-text-on-accent);
+  color: #fff;
 }
 .random-name-btn:focus-visible {
   outline: 2px solid var(--color-negative);
@@ -409,7 +462,7 @@ section.goal {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--accent);
+  background: var(--color-text-secondary, #6b7280);
   border-radius: var(--radius);
   z-index: 10;
   pointer-events: none;
@@ -430,7 +483,7 @@ section.goal {
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--accent);
+  background: var(--color-text-secondary, #6b7280);
   border-radius: var(--radius);
   z-index: 10;
   pointer-events: none;
@@ -463,6 +516,44 @@ section.goal {
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 2rem;
+}
+
+.goals-list-header {
+  display: grid;
+  grid-template-columns: 2fr 60px 1.5fr 1fr 1fr 1fr;
+  align-items: center;
+  column-gap: 1.25rem;
+  padding: 0 1.25rem 0.5rem;
+  padding-left: calc(1.25rem + 1px);
+  border-bottom: 1px solid var(--color-border-light);
+  margin-bottom: 0.25rem;
+}
+
+.goals-list-header-cell {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  transition: color 0.15s;
+}
+
+.goals-list-header-cell:hover {
+  color: var(--color-text);
+}
+
+.goals-list-header-cell--active {
+  color: var(--color-text);
+}
+
+.sort-indicator {
+  font-size: 0.7rem;
 }
 
 /* Touch drag states for goal items */
@@ -576,8 +667,14 @@ body.dark .goal-drag-item--long-press {
 .goal-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.goal-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .goal-count-label {
@@ -591,19 +688,20 @@ body.dark .goal-drag-item--long-press {
 .goal-selection-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: 0.6rem 1rem;
   margin-bottom: 1rem;
-  background: var(--accent-light);
-  border: 1px solid var(--accent-border);
+  margin-left: auto;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
+  width: fit-content;
 }
 
 .goal-selection-count {
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: var(--accent-text-dark);
+  color: var(--color-text-muted);
 }
 
 .goal-selection-actions {
@@ -612,36 +710,37 @@ body.dark .goal-drag-item--long-press {
 }
 
 .goal-selection-btn {
-  background: none;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
-  font-size: var(--fs-md);
-  padding: 0.35rem 0.75rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  padding: 0 0.75rem;
+  height: 36px;
   color: var(--color-text);
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
 }
 
 .goal-selection-btn:hover {
   background: var(--color-surface-alt);
-  border-color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 
 .goal-selection-btn--danger {
-  border-color: var(--color-negative-border);
   color: var(--color-negative);
 }
 
 .goal-selection-btn--danger:hover {
   background: var(--color-negative-light);
-  border-color: var(--color-negative);
+  border-color: var(--color-negative-border);
 }
 
 .goal-selection-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -650,11 +749,12 @@ body.dark .goal-drag-item--long-press {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 0.3rem 0.65rem;
+  padding: 0 0.75rem;
+  height: 36px;
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   transition: all 0.15s;
   display: inline-flex;
   align-items: center;
@@ -667,13 +767,13 @@ body.dark .goal-drag-item--long-press {
 }
 
 .goal-compare-btn.active {
-  color: var(--accent-text-dark);
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
 }
 
 .goal-compare-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -693,6 +793,7 @@ body.dark .goal-drag-item--long-press {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.2rem;
+  height: 36px;
   background: var(--color-surface-alt);
 }
 
@@ -716,9 +817,8 @@ body.dark .goal-drag-item--long-press {
 }
 
 .view-mode-btn.active {
-  color: var(--accent);
-  background: var(--color-surface);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--color-surface);
+  background: var(--color-text);
 }
 
 .goal-detail-container {
@@ -915,7 +1015,7 @@ body.dark .goal-drag-item--long-press {
 }
 
 .wizard-close-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -957,18 +1057,18 @@ body.dark .goal-drag-item--long-press {
   padding: 0;
 }
 .wizard-dot.done {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  border-color: var(--color-text-secondary, #6b7280);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   cursor: pointer;
 }
 .wizard-dot.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  border-color: var(--color-text-secondary, #6b7280);
+  color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
 }
 .wizard-dot:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -1070,8 +1170,8 @@ body.dark .goal-drag-item--long-press {
   box-sizing: border-box;
 }
 .wizard-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  border-color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
 }
 
 .wizard-input--large {
@@ -1111,8 +1211,8 @@ body.dark .goal-drag-item--long-press {
 }
 
 .wizard-btn--next {
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   margin-left: auto;
 }
 .wizard-btn--next:hover {
@@ -1120,15 +1220,15 @@ body.dark .goal-drag-item--long-press {
 }
 
 .wizard-btn--create {
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   margin-left: auto;
 }
 .wizard-btn--create:hover {
   filter: brightness(1.08);
 }
 .wizard-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -1162,7 +1262,7 @@ body.dark .goal-drag-item--long-press {
 }
 
 .wizard-review-row--highlight .wizard-review-value {
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
   font-size: var(--fs-md);
 }
 
@@ -1193,8 +1293,8 @@ body.dark .goal-drag-item--long-press {
     box-shadow 0.15s;
 }
 .wizard-param-card:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  border-color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
 }
 
 .wizard-param-icon {
@@ -1258,7 +1358,7 @@ body.dark .goal-drag-item--long-press {
   margin: 0;
 }
 .wizard-param-input:focus {
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--color-text-secondary, #6b7280);
 }
 
 .wizard-param-unit {

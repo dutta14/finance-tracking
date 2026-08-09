@@ -27,6 +27,8 @@ export class HomePage {
   readonly nwChange: Locator
   readonly nwChangeUp: Locator
   readonly nwChangeDown: Locator
+  readonly nwProse: Locator
+  readonly nwLegendItems: Locator
   readonly nwDate: Locator
   readonly nwViewLink: Locator
 
@@ -81,11 +83,13 @@ export class HomePage {
     this.cardGrid = page.locator('.home-grid')
 
     this.nwCard = page.locator('.home-card--nw')
-    this.nwAmount = page.locator('.nw-amount')
-    this.nwChange = page.locator('.nw-change')
-    this.nwChangeUp = page.locator('.nw-change.up')
-    this.nwChangeDown = page.locator('.nw-change.down')
-    this.nwDate = page.locator('.nw-date')
+    this.nwAmount = this.nwCard.locator('.nw-amount').first()
+    this.nwChange = this.nwCard.locator('.nw-prose .nw-change')
+    this.nwChangeUp = this.nwCard.locator('.nw-prose .nw-change.up')
+    this.nwChangeDown = this.nwCard.locator('.nw-prose .nw-change.down')
+    this.nwProse = page.locator('.nw-prose')
+    this.nwLegendItems = page.locator('.nw-stacked-legend-item')
+    this.nwDate = this.nwProse
     this.nwViewLink = this.nwCard.locator('.home-card-link')
 
     this.goalsCard = page.locator('.home-card--goals')
@@ -123,7 +127,11 @@ export class HomePage {
   }
 
   getCardHeadingInSlot(index: number): Locator {
-    return this.getSlot(index).locator('h3')
+    return this.getSlot(index).locator('h3, .nw-amount-label').first()
+  }
+
+  getCardInSlot(index: number): Locator {
+    return this.getSlot(index).locator('.home-card').first()
   }
 
   getMoveUpBtn(cardName: string): Locator {

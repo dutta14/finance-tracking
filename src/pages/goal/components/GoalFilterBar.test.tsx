@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import GoalFilterBar, { DEFAULT_FILTERS, applyFilters, GoalFilters } from './GoalFilterBar'
+import GoalFilterBar, { DEFAULT_FILTERS, GoalFilters, applyFilters } from './GoalFilterBar'
 import { makeGoal } from '../../../test/factories'
 import { FinancialGoal } from '../../../types'
 
@@ -50,81 +50,145 @@ beforeEach(() => {
 })
 
 describe('GoalFilterBar', () => {
-  it('renders all three filter buttons', () => {
+  it('renders a single Filters button and keeps the panel closed by default', () => {
     renderFilterBar()
-    expect(screen.getByRole('button', { name: /retirement age/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /fi goal/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /expense at creation/i })).toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /filters/i })).not.toBeInTheDocument()
   })
 
-  it('opens retirement age dropdown and shows available ages as checkboxes', async () => {
+  it('opens the panel with categories and values', async () => {
     const user = userEvent.setup()
     renderFilterBar()
 
-    const ageButton = screen.getByRole('button', { name: /retirement age/i })
-    await user.click(ageButton)
+    await user.click(screen.getByRole('button', { name: /filters/i }))
 
-    // #57: SOURCE CODE BUG — GoalFilterBar.tsx filter pill buttons lack aria-expanded
-    // attribute. The dropdown is visually open but not announced to screen readers.
-    // Uncomment the assertion below once the source is fixed:
-    // expect(ageButton).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('dialog', { name: /filters/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /retirement age/i })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /fi goal/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /expense at creation/i })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /select all/i })).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: /age 50/i })).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: /age 55/i })).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: /age 60/i })).toBeInTheDocument()
   })
 
-  it('calls onChange with selected retirement age when a checkbox is toggled', async () => {
+  it('stages changes and only applies them when Apply is clicked', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
     renderFilterBar({ onChange })
 
-    await user.click(screen.getByRole('button', { name: /retirement age/i }))
+    await user.click(screen.getByRole('button', { name: /filters/i }))
     await user.click(screen.getByRole('checkbox', { name: /age 50/i }))
+
+    expect(onChange).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
     expect(onChange).toHaveBeenCalledWith({
       ...DEFAULT_FILTERS,
       retirementAges: [50],
     })
+    expect(screen.queryByRole('dialog', { name: /filters/i })).not.toBeInTheDocument()
   })
 
-  it('shows active filter count badge when filters are applied', () => {
-    const filters: GoalFilters = { retirementAges: [50, 55], fiGoalBuckets: [], expenseBuckets: [] }
-    renderFilterBar({ filters })
-
-    // #56: Scope the "2" text to the specific filter badge element
-    const ageButton = screen.getByRole('button', { name: /retirement age/i })
-    expect(within(ageButton).getByText('2')).toBeInTheDocument()
-  })
-
-  it('shows "N filters active" and Clear all button when filters are applied', () => {
-    const filters: GoalFilters = { retirementAges: [50], fiGoalBuckets: ['< $5M'], expenseBuckets: [] }
-    renderFilterBar({ filters })
-
-    expect(screen.getByText('2 filters active')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /clear all/i })).toBeInTheDocument()
-  })
-
-  it('shows singular "1 filter active" for a single active filter', () => {
-    const filters: GoalFilters = { retirementAges: [50], fiGoalBuckets: [], expenseBuckets: [] }
-    renderFilterBar({ filters })
-
-    expect(screen.getByText('1 filter active')).toBeInTheDocument()
-  })
-
-  it('calls onChange with DEFAULT_FILTERS when Clear all is clicked', async () => {
+  it('cancels staged changes and restores the last applied state', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
-    const filters: GoalFilters = { retirementAges: [50], fiGoalBuckets: [], expenseBuckets: [] }
-    renderFilterBar({ onChange, filters })
+    renderFilterBar({ onChange })
 
-    await user.click(screen.getByRole('button', { name: /clear all/i }))
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    await user.click(screen.getByRole('checkbox', { name: /age 50/i }))
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(onChange).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    expect(screen.getByRole('checkbox', { name: /select all/i })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /age 50/i })).not.toBeChecked()
+  })
+
+  it('treats click-outside as cancel and reverts staged changes', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({ onChange })
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    await user.click(screen.getByRole('checkbox', { name: /age 50/i }))
+    await user.click(document.body)
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog', { name: /filters/i })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    expect(screen.getByRole('checkbox', { name: /age 50/i })).not.toBeChecked()
+  })
+
+  it('shows the applied filter count on the trigger and grouped selections in the summary', async () => {
+    const user = userEvent.setup()
+    renderFilterBar({
+      filters: {
+        retirementAges: [50],
+        fiGoalBuckets: ['< $5M'],
+        expenseBuckets: [],
+      },
+    })
+
+    expect(screen.getByRole('button', { name: /filters/i })).toHaveTextContent('(2)')
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+
+    expect(screen.getByText('2 filters selected')).toBeInTheDocument()
+    const summary = screen.getByText('2 filters selected').closest('.goal-filter-summary-column')
+    expect(summary).not.toBeNull()
+    expect(within(summary as HTMLElement).getByText('Retirement Age')).toBeInTheDocument()
+    expect(within(summary as HTMLElement).getByText('FI Goal')).toBeInTheDocument()
+    expect(within(summary as HTMLElement).getByText('Age 50')).toBeInTheDocument()
+    expect(within(summary as HTMLElement).getByText('< $5M')).toBeInTheDocument()
+  })
+
+  it('clears staged filters and applies the default filters', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({
+      onChange,
+      filters: {
+        retirementAges: [50],
+        fiGoalBuckets: ['< $5M'],
+        expenseBuckets: [],
+      },
+    })
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    await user.click(screen.getByRole('button', { name: /^clear$/i }))
+    expect(screen.getByText('0 filters selected')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
     expect(onChange).toHaveBeenCalledWith(DEFAULT_FILTERS)
   })
 
-  it('does not show Clear all button when no filters are active', () => {
-    renderFilterBar()
-    expect(screen.queryByRole('button', { name: /clear all/i })).not.toBeInTheDocument()
+  it('removes a staged selection from the summary before apply', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderFilterBar({
+      onChange,
+      filters: {
+        retirementAges: [50],
+        fiGoalBuckets: ['< $5M'],
+        expenseBuckets: [],
+      },
+    })
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    await user.click(screen.getByRole('button', { name: /remove retirement age 50/i }))
+    await user.click(screen.getByRole('button', { name: /apply/i }))
+
+    expect(onChange).toHaveBeenCalledWith({
+      retirementAges: [],
+      fiGoalBuckets: ['< $5M'],
+      expenseBuckets: [],
+    })
   })
 })
 
@@ -141,14 +205,14 @@ describe('applyFilters', () => {
   })
 
   it('filters goals by FI goal bucket', () => {
-    const filters: GoalFilters = { retirementAges: [], fiGoalBuckets: ['$10M \u2013 $15M'], expenseBuckets: [] }
+    const filters: GoalFilters = { retirementAges: [], fiGoalBuckets: ['$10M – $15M'], expenseBuckets: [] }
     const result = applyFilters(goals, filters)
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('High FI')
   })
 
   it('filters goals by expense bucket', () => {
-    const filters: GoalFilters = { retirementAges: [], fiGoalBuckets: [], expenseBuckets: ['$100k \u2013 $200k'] }
+    const filters: GoalFilters = { retirementAges: [], fiGoalBuckets: [], expenseBuckets: ['$100k – $200k'] }
     const result = applyFilters(goals, filters)
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('High FI')
@@ -159,101 +223,5 @@ describe('applyFilters', () => {
     const result = applyFilters(goals, filters)
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('Low FI')
-  })
-})
-
-describe('GoalFilterBar — FI Goal filter interactions', () => {
-  it('calls onChange with selected FI bucket when a checkbox is toggled', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    renderFilterBar({ onChange })
-
-    await user.click(screen.getByRole('button', { name: /fi goal/i }))
-    await user.click(screen.getByRole('checkbox', { name: /< \$5M/i }))
-
-    expect(onChange).toHaveBeenCalledWith({
-      ...DEFAULT_FILTERS,
-      fiGoalBuckets: ['< $5M'],
-    })
-  })
-
-  it('removes FI bucket from filters when unchecking an active checkbox', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    renderFilterBar({
-      onChange,
-      filters: { ...DEFAULT_FILTERS, fiGoalBuckets: ['< $5M'] },
-    })
-
-    await user.click(screen.getByRole('button', { name: /fi goal/i }))
-    await user.click(screen.getByRole('checkbox', { name: /< \$5M/i }))
-
-    expect(onChange).toHaveBeenCalledWith({
-      ...DEFAULT_FILTERS,
-      fiGoalBuckets: [],
-    })
-  })
-})
-
-describe('GoalFilterBar — Expense filter interactions', () => {
-  it('calls onChange with selected expense bucket when a checkbox is toggled', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    renderFilterBar({ onChange })
-
-    await user.click(screen.getByRole('button', { name: /expense at creation/i }))
-    await user.click(screen.getByRole('checkbox', { name: /< \$50k/i }))
-
-    expect(onChange).toHaveBeenCalledWith({
-      ...DEFAULT_FILTERS,
-      expenseBuckets: ['< $50k'],
-    })
-  })
-
-  it('removes expense bucket from filters when unchecking an active checkbox', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    renderFilterBar({
-      onChange,
-      filters: { ...DEFAULT_FILTERS, expenseBuckets: ['< $50k'] },
-    })
-
-    await user.click(screen.getByRole('button', { name: /expense at creation/i }))
-    await user.click(screen.getByRole('checkbox', { name: /< \$50k/i }))
-
-    expect(onChange).toHaveBeenCalledWith({
-      ...DEFAULT_FILTERS,
-      expenseBuckets: [],
-    })
-  })
-})
-
-describe('GoalFilterBar — FilterDropdown outside click', () => {
-  it('closes the dropdown when clicking outside the panel and trigger', async () => {
-    const user = userEvent.setup()
-    renderFilterBar()
-
-    await user.click(screen.getByRole('button', { name: /retirement age/i }))
-    expect(screen.getByRole('checkbox', { name: /age 50/i })).toBeInTheDocument()
-
-    await user.click(document.body)
-    expect(screen.queryByRole('checkbox', { name: /age 50/i })).not.toBeInTheDocument()
-  })
-
-  it('removes retirement age from filters when unchecking an active checkbox', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    renderFilterBar({
-      onChange,
-      filters: { ...DEFAULT_FILTERS, retirementAges: [50] },
-    })
-
-    await user.click(screen.getByRole('button', { name: /retirement age/i }))
-    await user.click(screen.getByRole('checkbox', { name: /age 50/i }))
-
-    expect(onChange).toHaveBeenCalledWith({
-      ...DEFAULT_FILTERS,
-      retirementAges: [],
-    })
   })
 })

@@ -177,9 +177,7 @@ async function armReloadGate(page: Page): Promise<() => Promise<void>> {
     ;(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel = true
   })
   return async () => {
-    await page.waitForFunction(
-      () => !(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel,
-    )
+    await page.waitForFunction(() => !(window as unknown as { __preReloadSentinel?: boolean }).__preReloadSentinel)
   }
 }
 
@@ -189,10 +187,7 @@ async function armReloadGate(page: Page): Promise<() => Promise<void>> {
  * be open.
  */
 async function downloadExport(page: Page, settings: SettingsPage): Promise<Record<string, unknown>> {
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    settings.exportBtn.click(),
-  ])
+  const [download] = await Promise.all([page.waitForEvent('download'), settings.exportBtn.click()])
   const stream = await download.createReadStream()
   const chunks: Buffer[] = []
   for await (const chunk of stream) {
@@ -458,9 +453,7 @@ test.describe('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => 
     await page.evaluate(() => localStorage.setItem('accentTheme', 'rose'))
 
     await expect
-      .poll(() =>
-        tabB.evaluate(() => (window as unknown as { __accentEvents: string[] }).__accentEvents),
-      )
+      .poll(() => tabB.evaluate(() => (window as unknown as { __accentEvents: string[] }).__accentEvents))
       .toEqual(['rose'])
     expect(await tabB.evaluate(() => localStorage.getItem('accentTheme'))).toBe('rose')
   })
@@ -500,13 +493,9 @@ test.describe('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => 
     // the universal "page mounted" signal that does not depend on the
     // home-card render path (which is gated on having accounts and on
     // the onboarding-dismissed flag, both wiped by factory reset).
-    await expect(
-      page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ }).first(),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ }).first()).toBeVisible()
     // Greeting carries no name suffix — the seeded "Casey" profile is gone.
-    await expect(
-      page.getByRole('heading', { name: /Good (morning|afternoon|evening), Casey/ }),
-    ).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening), Casey/ })).toHaveCount(0)
   })
 
   test('9. Import sentinel gate completes reliably (anti-flake regression guard for PR #171)', async ({ page }) => {

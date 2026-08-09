@@ -1,7 +1,11 @@
-import { FC, useState, useEffect, useRef, useCallback } from 'react'
+import { FC, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
+import { getLatestGoalTotals } from '../../data/types'
 import { useTouchDrag } from '../../../hooks/useTouchDrag'
 import GoalMiniCard from './GoalMiniCard'
+
+type SortField = 'name' | 'retire' | 'progress' | 'fi' | 'gw' | 'total'
+type SortDir = 'asc' | 'desc'
 
 interface ContextMenuState {
   x: number
@@ -46,6 +50,8 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   const [renameValue, setRenameValue] = useState('')
   const [announcement, setAnnouncement] = useState('')
   const [grabbedIndex, setGrabbedIndex] = useState<number | null>(null)
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
   const menuRef = useRef<HTMLDivElement>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -53,6 +59,82 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   const preGrabOrderRef = useRef<number[]>([])
   const grabbedGoalId = useRef<number | null>(null)
   const grabHandleRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
+
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+      } else {
+        setSortField(field)
+        setSortDir('asc')
+      }
+    },
+    [sortField],
+  )
+
+  const calcGwTotalForGoal = useCallback(
+    (goal: FinancialGoal): number => {
+      const matched = gwGoals.filter(g => g.fiGoalId === goal.id)
+      if (!matched.length || !profileBirthday) return 0
+      const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
+      const created = new Date(goal.goalCreatedIn)
+      return matched.reduce((sum, gw) => {
+        const disburseYear = birthYear + gw.disburseAge
+        const monthsToDisburse = Math.max(
+          0,
+          (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
+        )
+        const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
+        const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
+        const pv =
+          monthsRetToDisburse > 0
+            ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
+            : disbursementTarget
+        return sum + pv
+      }, 0)
+    },
+    [gwGoals, profileBirthday, inflation],
+  )
+
+  const sortedGoals = useMemo(() => {
+    if (!sortField || viewMode !== 'list') return goals
+    const { fiTotal } = getLatestGoalTotals()
+    const sorted = [...goals].sort((a, b) => {
+      let av: number | string = 0
+      let bv: number | string = 0
+      switch (sortField) {
+        case 'name':
+          av = a.goalName.toLowerCase()
+          bv = b.goalName.toLowerCase()
+          return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : av > bv ? -1 : av < bv ? 1 : 0
+        case 'retire': {
+          const bday = (g: FinancialGoal) => g.birthday || profileBirthday
+          av = parseInt(bday(a).split('-')[0]) + a.retirementAge
+          bv = parseInt(bday(b).split('-')[0]) + b.retirementAge
+          break
+        }
+        case 'progress': {
+          av = a.fiGoal > 0 ? fiTotal / a.fiGoal : 0
+          bv = b.fiGoal > 0 ? fiTotal / b.fiGoal : 0
+          break
+        }
+        case 'fi':
+          av = a.fiGoal
+          bv = b.fiGoal
+          break
+        case 'gw':
+          av = calcGwTotalForGoal(a)
+          bv = calcGwTotalForGoal(b)
+          break
+        case 'total':
+          av = a.fiGoal + calcGwTotalForGoal(a)
+          bv = b.fiGoal + calcGwTotalForGoal(b)
+          break
+      }
+      return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number)
+    })
+    return sorted
+  }, [goals, sortField, sortDir, viewMode, profileBirthday, calcGwTotalForGoal])
 
   useEffect(() => {
     if (!contextMenu) return
@@ -260,13 +342,37 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
 
   return (
     <>
+      {viewMode === 'list' && (
+        <div className="goals-list-header" role="row">
+          {(
+            [
+              ['name', 'Name'],
+              ['retire', 'Retire'],
+              ['progress', 'Progress'],
+              ['fi', 'FI Goal'],
+              ['gw', 'GW Goals'],
+              ['total', 'Total'],
+            ] as [SortField, string][]
+          ).map(([field, label]) => (
+            <button
+              key={field}
+              className={`goals-list-header-cell${sortField === field ? ' goals-list-header-cell--active' : ''}`}
+              onClick={() => handleSort(field)}
+              aria-sort={sortField === field ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+            >
+              {label}
+              {sortField === field && <span className="sort-indicator">{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>}
+            </button>
+          ))}
+        </div>
+      )}
       <div
         ref={gridRef}
         className={viewMode === 'list' ? 'goals-mini-list' : 'goals-mini-grid'}
         role={compareMode ? 'group' : undefined}
         aria-label={compareMode ? 'Select goals for comparison' : undefined}
       >
-        {goals.map((goal, goalIdx) => {
+        {(viewMode === 'list' ? sortedGoals : goals).map((goal, goalIdx) => {
           let itemClass = 'goal-drag-item'
           if (draggedId === goal.id) itemClass += ' goal-drag-item--dragging'
           else if (dragOverId === goal.id) itemClass += ` goal-drag-item--drag-${dragOverSide}`

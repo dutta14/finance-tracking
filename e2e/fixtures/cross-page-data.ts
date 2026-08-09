@@ -194,9 +194,7 @@ export async function seedCrossPage(page: Page, overrides: SeedOverrides = {}): 
     budgetStore: 'budgetStore' in overrides ? overrides.budgetStore : CROSS_PAGE_SEED.budgetStore,
     budgetConfig: 'budgetConfig' in overrides ? overrides.budgetConfig : CROSS_PAGE_SEED.budgetConfig,
     allocationCustomRatios:
-      'allocationCustomRatios' in overrides
-        ? overrides.allocationCustomRatios
-        : CROSS_PAGE_SEED.allocationCustomRatios,
+      'allocationCustomRatios' in overrides ? overrides.allocationCustomRatios : CROSS_PAGE_SEED.allocationCustomRatios,
     fiSimulations: 'fiSimulations' in overrides ? overrides.fiSimulations : CROSS_PAGE_SEED.fiSimulations,
     sgtOverrides: 'sgtOverrides' in overrides ? overrides.sgtOverrides : CROSS_PAGE_SEED.sgtOverrides,
     taxStore: 'taxStore' in overrides ? overrides.taxStore : CROSS_PAGE_SEED.taxStore,

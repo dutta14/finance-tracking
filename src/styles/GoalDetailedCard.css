@@ -5,15 +5,20 @@
 
 /* ── Outer card ── */
 .fi-card {
+  position: relative;
   background: var(--color-surface);
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--color-border, #e5e7eb);
   border-radius: var(--radius);
   padding: 1.25rem 1.4rem 1rem;
   transition: box-shadow 0.18s;
 }
 
+.fi-card + .fi-card {
+  margin-top: 1rem;
+}
+
 .fi-card:hover {
-  box-shadow: 0 2px 12px var(--accent-shadow);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
 .fi-card--flat {
@@ -84,8 +89,8 @@
 }
 
 .fi-card-badge {
-  background: var(--accent-badge);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
@@ -100,7 +105,7 @@
   margin: 0;
   font-size: var(--fs-lg);
   font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -128,12 +133,18 @@ body.dark-mode .fi-goal-prose strong {
   color: var(--color-text, #e0e0e0);
 }
 
+.fi-goal-pace-note {
+  font-size: var(--fs-sm, 0.8rem);
+  color: var(--color-text-muted);
+  margin: -0.5rem 0 0.75rem;
+}
+
 /* ── Section sub-cards ── */
 .fi-card-section {
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.75rem 0.9rem 0.6rem;
-  background: var(--accent-lighter);
+  background: var(--color-surface);
   margin-bottom: 0.75rem;
 }
 
@@ -150,12 +161,188 @@ body.dark-mode .fi-goal-prose strong {
   font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary, #6b7280);
   margin: 0 0 0.5rem;
+}
+
+.fi-card-section-title + .fi-card-section-title,
+.fi-card-progress-row + .fi-card-section-title {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light, #e5e7eb);
+}
+
+.fi-card-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
 .fi-card-section-header .fi-card-section-title {
   margin: 0;
+}
+
+.fi-projection-year-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.2rem 0.3rem;
+  background: var(--color-surface);
+}
+
+.fi-projection-year-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.fi-projection-year-chevron:hover:not(:disabled) {
+  background: var(--color-bg-hover, #f3f4f6);
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.fi-projection-year-chevron:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.fi-projection-year-value {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.fi-projection-year-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+}
+
+.fi-projection-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fi-projection-period-toggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.fi-projection-period-btn {
+  padding: 0.35rem 0.65rem;
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: var(--fw-medium);
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-text-secondary, #6b7280);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.fi-projection-period-btn + .fi-projection-period-btn {
+  border-left: 1px solid var(--color-border);
+}
+
+.fi-projection-period-btn--active {
+  background: var(--color-bg-hover, #f3f4f6);
+  color: var(--color-text);
+  font-weight: var(--fw-semibold);
+}
+
+body.dark-mode .fi-projection-period-btn--active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Projection blocks ── */
+.fi-projection-block {
+  margin-bottom: 0.5rem;
+}
+
+.fi-projection-block + .fi-projection-block {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light, #e5e7eb);
+}
+
+.fi-projection-rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.75rem;
+  max-width: 22rem;
+}
+
+.fi-projection-row {
+  display: contents;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.fi-projection-key {
+  color: var(--color-text);
+}
+
+.fi-projection-val {
+  font-weight: 600;
+  color: var(--color-text-strong, var(--color-text));
+  font-feature-settings: 'tnum';
+}
+
+.fi-projection-result {
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--border-light, #e5e7eb);
+}
+
+.fi-projection-result.fi-goal-prose {
+  font-size: var(--fs-sm);
+  margin-bottom: 0;
+}
+
+.fi-projection-result-row {
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--border-light, #e5e7eb);
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.fi-projection-result-label {
+  font-size: var(--fs-sm);
+  margin: 0;
+}
+
+.fi-projection-fi-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.fi-projection-fi-picker .details-month-control {
+  font-size: var(--fs-sm);
 }
 
 /* ── Label / value rows ── */
@@ -174,7 +361,7 @@ body.dark-mode .fi-goal-prose strong {
 }
 
 .fi-card-row-label {
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
@@ -182,7 +369,7 @@ body.dark-mode .fi-goal-prose strong {
 
 .fi-card-row-value {
   font-weight: var(--fw-medium);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -190,10 +377,10 @@ body.dark-mode .fi-goal-prose strong {
 
 /* ── FI Goal callout ── */
 .fi-card-goal {
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.75rem 0.9rem;
-  background: var(--accent-light);
+  background: var(--color-bg-hover, #f3f4f6);
   margin-bottom: 0.75rem;
 }
 
@@ -209,7 +396,7 @@ body.dark-mode .fi-goal-prose strong {
   font-weight: var(--fw-bold);
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
@@ -218,7 +405,7 @@ body.dark-mode .fi-goal-prose strong {
 .fi-card-goal-amount {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
 /* ── Progress bar ── */
@@ -232,14 +419,14 @@ body.dark-mode .fi-goal-prose strong {
 .fi-card-progress-bar-track {
   flex: 1;
   height: 6px;
-  background: var(--accent-track);
+  background: var(--color-border, #e5e7eb);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .fi-card-progress-bar-fill {
   height: 100%;
-  background: var(--accent);
+  background: var(--color-text-secondary, #6b7280);
   border-radius: 99px;
   transition: width 0.4s ease;
 }
@@ -247,14 +434,14 @@ body.dark-mode .fi-goal-prose strong {
 .fi-card-progress-pct {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 /* ── Meta footer ── */
 .fi-card-meta {
-  border-top: 1px solid var(--accent-border);
+  border-top: 1px solid var(--color-border);
   padding-top: 0.6rem;
   margin-top: 0.25rem;
   color: var(--color-text-muted);
@@ -266,7 +453,7 @@ body.dark-mode .fi-goal-prose strong {
    ────────────────────────────────────────────── */
 .expense-toggle {
   display: flex;
-  background: var(--accent-light);
+  background: var(--color-bg-hover, #f3f4f6);
   border-radius: var(--radius);
   padding: 2px;
   gap: 2px;
@@ -279,7 +466,7 @@ body.dark-mode .fi-goal-prose strong {
   padding: 0.2rem 0.6rem;
   font-size: var(--fs-sm);
   cursor: pointer;
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   font-weight: var(--fw-normal);
   transition:
     background 0.15s,
@@ -289,9 +476,9 @@ body.dark-mode .fi-goal-prose strong {
 
 .expense-toggle-btn.active {
   background: var(--color-surface);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   font-weight: var(--fw-semibold);
-  box-shadow: 0 1px 3px var(--accent-shadow-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 /* ──────────────────────────────────────────────
@@ -306,14 +493,14 @@ body.dark-mode .fi-goal-prose strong {
 }
 
 .fi-goal-info-icon {
-  color: var(--accent-icon-subtle);
+  color: var(--color-text-muted);
   cursor: default;
   display: block;
   flex-shrink: 0;
 }
 
 .fi-goal-info:hover .fi-goal-info-icon {
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .fi-goal-tooltip {
@@ -354,7 +541,7 @@ body.dark-mode .fi-goal-prose strong {
 }
 
 .fi-goal-info:focus {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
   border-radius: 50%;
 }
@@ -382,35 +569,30 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   background: var(--color-warning-light);
 }
 
-/* ── Inline edit button ── */
-.fi-card-edit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--fs-md);
+/* ── Action buttons (text-link style) ── */
+.fi-card-action-btn {
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: var(--accent-text-mid);
-  background: var(--accent-light);
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius);
-  padding: 4px 10px;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
   cursor: pointer;
+  border-radius: var(--radius);
   transition:
-    background 0.15s,
     color 0.15s,
-    border-color 0.15s;
+    background 0.15s;
 }
 
-.fi-card-edit-btn:hover {
-  background: var(--accent-light);
-  color: var(--accent-text-dark);
-  border-color: var(--accent);
+.fi-card-action-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover, #f3f4f6);
 }
 
 /* ── Inline edit form ── */
 .fi-card-edit-form {
-  background: var(--accent-lighter);
-  border: 1px solid var(--accent-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 1rem 1.1rem 0.9rem;
   margin-bottom: 0.75rem;
@@ -442,17 +624,17 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 .fi-form-label {
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
 }
 
 .fi-form-input {
   font-size: var(--fs-md);
-  border: 1.5px solid var(--accent-border);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
   padding: 5px 8px;
   outline: none;
-  background: var(--accent-lighter);
-  color: var(--accent-text-dark);
+  background: var(--color-surface);
+  color: var(--color-text);
   width: 100%;
   box-sizing: border-box;
   transition:
@@ -461,8 +643,8 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 }
 
 .fi-form-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-shadow);
+  border-color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 .fi-form-actions {
@@ -472,8 +654,8 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 
 .fi-form-save {
   flex: 1;
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   padding: 7px;
@@ -484,18 +666,18 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 }
 
 .fi-form-save:hover {
-  background: var(--accent-text-mid);
+  background: var(--color-text-secondary);
 }
 
 .fi-form-cancel {
   flex: 1;
   background: none;
-  border: 1.5px solid var(--accent-border);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
   padding: 7px;
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  color: var(--accent-text-mid);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -503,8 +685,8 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 }
 
 .fi-form-cancel:hover {
-  background: var(--accent-light);
-  border-color: var(--accent);
+  background: var(--color-bg-hover, #f3f4f6);
+  border-color: var(--color-text-secondary, #6b7280);
 }
 
 /* ──────────────────────────────────────────────
@@ -514,7 +696,7 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 /* Value modifiers */
 .fi-card-row-value--projected {
   font-weight: var(--fw-semibold);
-  color: var(--accent-text-dark);
+  color: var(--color-text);
 }
 
 .fi-card-row-value--ahead {
@@ -556,7 +738,7 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 /* "Add budget data" link */
 .fi-card-projection-link {
   font-size: var(--fs-md);
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
   font-weight: var(--fw-medium);
   text-decoration: none;
 }

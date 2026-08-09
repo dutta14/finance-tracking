@@ -1,10 +1,6 @@
 import { test, expect } from './fixtures/base'
 import { NetWorthPage } from './pages/net-worth.page'
-import {
-  ACCOUNTS,
-  INACTIVE_ACCOUNT,
-  seedNetWorthData,
-} from './fixtures/net-worth.fixtures'
+import { ACCOUNTS, INACTIVE_ACCOUNT, seedNetWorthData } from './fixtures/net-worth.fixtures'
 
 const ALL_ACCOUNTS = [...ACCOUNTS, INACTIVE_ACCOUNT]
 
@@ -65,9 +61,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     const groupInput = nw.modal.locator('.data-group-rename-input')
     await groupInput.fill('New Test Group')
     await groupInput.press('Enter')
-    await expect(
-      nw.modal.locator('.data-group-card-name', { hasText: 'New Test Group' }),
-    ).toBeVisible()
+    await expect(nw.modal.locator('.data-group-card-name', { hasText: 'New Test Group' })).toBeVisible()
     // Now 5 cards total (4 named groups + ungrouped)
     await expect(groupCards).toHaveCount(5)
 
@@ -79,13 +73,9 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await renameInput.clear()
     await renameInput.fill('Retirement Funds')
     await renameInput.press('Enter')
-    await expect(
-      nw.modal.locator('.data-group-card-name', { hasText: 'Retirement Funds' }),
-    ).toBeVisible()
+    await expect(nw.modal.locator('.data-group-card-name', { hasText: 'Retirement Funds' })).toBeVisible()
     // Old name should be gone
-    await expect(
-      nw.modal.locator('.data-group-card-name', { hasText: /^Retirement$/ }),
-    ).toHaveCount(0)
+    await expect(nw.modal.locator('.data-group-card-name', { hasText: /^Retirement$/ })).toHaveCount(0)
 
     // Step 9: Leave the inline accounts manager
     await nw.modal.locator('button.data-filter-btn', { hasText: /^All/ }).click()

@@ -252,10 +252,7 @@ export async function resetTaxIndexedDB(page: Page) {
  * needs pre-existing file blobs whose IDs are referenced by tax-store
  * metadata. Returns once the IDB transaction has committed.
  */
-export async function seedTaxIndexedDBFiles(
-  page: Page,
-  files: Array<{ id: string; content: string }>,
-): Promise<void> {
+export async function seedTaxIndexedDBFiles(page: Page, files: Array<{ id: string; content: string }>): Promise<void> {
   await page.evaluate(async records => {
     const open = () =>
       new Promise<IDBDatabase>((resolve, reject) => {

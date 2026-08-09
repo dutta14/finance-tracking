@@ -5,8 +5,10 @@ export interface ProjectionRow {
   month: string
   expense: number
   remaining: number
-  phase: 'accumulation' | 'drawdown'
+  phase: 'accumulation' | 'coasting' | 'drawdown'
   growthRate?: number
+  monthlyGrowth?: number
+  monthlySaved?: number
   retirementPrimary?: number
   retirementPartner?: number
   nonRetirement?: number
@@ -72,7 +74,7 @@ function canSustainDrawdown(
 }
 
 // Find earliest month where 3-bucket corpus can sustain base×inflation expenses to end of life
-function findEarliestFIDate(
+export function findEarliestFIDate(
   currentBalance: number,
   monthlyContribution: number,
   preGrowth: number,
@@ -169,20 +171,16 @@ export function buildLifecycle(
   const now = new Date()
   const cursor = new Date(now.getFullYear(), now.getMonth(), 1)
   const end = new Date(endYear, 11, 1)
-  let balance = currentBalance
+  let balance: number
   let fiReached = false
   let expense = 0
-  const fiYear = fiDate.getFullYear()
-  let lastExpenseYear = fiYear
+  let actualFiYear = fiDate.getFullYear()
+  let lastExpenseYear = actualFiYear
 
   // 3-bucket tracking
   let retPrimary = breakdown?.retirementPrimary ?? 0
   let retPartner = breakdown?.retirementPartner ?? 0
   let nonRet = breakdown?.nonRetirement ?? currentBalance
-  if (breakdown) {
-    // use breakdown values; total may differ from currentBalance
-    balance = retPrimary + retPartner + nonRet
-  }
   const primaryAccessDate = breakdown?.primaryAccessDate
   const partnerAccessDate = breakdown?.partnerAccessDate
 
@@ -208,11 +206,34 @@ export function buildLifecycle(
         : 0
       const cNonRet = monthlyContribution - cPrimary - cPartner
 
-      if (cursor >= fiDate) {
+      // Early FIRE check: if balance can sustain drawdown to end of life, trigger FIRE now
+      // Check every 3 months for early FIRE; always trigger at planned fiDate as fallback
+      const checkEarly =
+        monthlyExpenseAtFI > 0 &&
+        rows.length % 3 === 0 &&
+        canSustainDrawdown(
+          retPrimary,
+          retPartner,
+          nonRet,
+          monthlyExpenseAtFI,
+          inflationRate,
+          monthlyPreGrowth,
+          monthlyPostGrowth,
+          cursor,
+          end,
+          ageBoundaryDate,
+          primaryAccessDate,
+          partnerAccessDate,
+          cursor.getFullYear(),
+        )
+      if (checkEarly || cursor >= fiDate) {
         fiReached = true
-        retPrimary *= 1 + growth
-        retPartner *= 1 + growth
-        nonRet *= 1 + growth
+        const gP = retPrimary * growth
+        const gPa = retPartner * growth
+        const gN = nonRet * growth
+        retPrimary += gP
+        retPartner += gPa
+        nonRet += gN
         retPrimary += cPrimary
         retPartner += cPartner
         nonRet += cNonRet
@@ -221,8 +242,10 @@ export function buildLifecycle(
           month: label,
           expense: 0,
           remaining: balance,
-          phase: 'accumulation',
+          phase: monthlyContribution > 0 ? 'accumulation' : 'coasting',
           growthRate: annualRate,
+          monthlyGrowth: gP + gPa + gN,
+          monthlySaved: monthlyContribution,
           retirementPrimary: retPrimary,
           retirementPartner: retPartner,
           nonRetirement: nonRet,
@@ -233,11 +256,15 @@ export function buildLifecycle(
           partnerLocked: !!(partnerAccessDate && cursor < partnerAccessDate),
         })
         expense = Math.round(monthlyExpenseAtFI)
-        lastExpenseYear = fiYear
+        actualFiYear = cursor.getFullYear()
+        lastExpenseYear = cursor.getFullYear()
       } else {
-        retPrimary *= 1 + growth
-        retPartner *= 1 + growth
-        nonRet *= 1 + growth
+        const gP = retPrimary * growth
+        const gPa = retPartner * growth
+        const gN = nonRet * growth
+        retPrimary += gP
+        retPartner += gPa
+        nonRet += gN
         retPrimary += cPrimary
         retPartner += cPartner
         nonRet += cNonRet
@@ -246,8 +273,10 @@ export function buildLifecycle(
           month: label,
           expense: 0,
           remaining: balance,
-          phase: 'accumulation',
+          phase: monthlyContribution > 0 ? 'accumulation' : 'coasting',
           growthRate: annualRate,
+          monthlyGrowth: gP + gPa + gN,
+          monthlySaved: monthlyContribution,
           retirementPrimary: retPrimary,
           retirementPartner: retPartner,
           nonRetirement: nonRet,
@@ -261,7 +290,7 @@ export function buildLifecycle(
     } else {
       const curYear = cursor.getFullYear()
       if (curYear > lastExpenseYear) {
-        const yearsFromFI = curYear - fiYear
+        const yearsFromFI = curYear - actualFiYear
         const inflated = monthlyExpenseAtFI * Math.pow(1 + inflationRate / 100, yearsFromFI)
         expense = Math.round(inflated)
         lastExpenseYear = curYear
@@ -272,23 +301,30 @@ export function buildLifecycle(
       const annualRate = pastBoundary ? postBoundaryGrowth : preBoundaryGrowth
       const primaryLocked = !!(primaryAccessDate && cursor < primaryAccessDate)
       const partnerLocked = !!(partnerAccessDate && cursor < partnerAccessDate)
+
+      // Grow all buckets
+      const gP = retPrimary * drawRate
+      const gPa = retPartner * drawRate
+      const gN = nonRet * drawRate
+      retPrimary += gP
+      retPartner += gPa
+      nonRet += gN
+      balance = retPrimary + retPartner + nonRet
+
       rows.push({
         month: label,
         expense,
         remaining: balance,
         phase: 'drawdown',
         growthRate: annualRate,
+        monthlyGrowth: gP + gPa + gN,
+        monthlySaved: 0,
         retirementPrimary: retPrimary,
         retirementPartner: retPartner,
         nonRetirement: nonRet,
         primaryLocked,
         partnerLocked,
       })
-
-      // Grow all buckets
-      retPrimary *= 1 + drawRate
-      retPartner *= 1 + drawRate
-      nonRet *= 1 + drawRate
 
       // Determine available pool for drawdown
       const primaryUnlocked = !primaryAccessDate || cursor >= primaryAccessDate
@@ -304,8 +340,6 @@ export function buildLifecycle(
         if (primaryUnlocked) retPrimary -= retPrimary * drawRatio
         if (partnerUnlocked) retPartner -= retPartner * drawRatio
       }
-
-      balance = retPrimary + retPartner + nonRet
     }
 
     cursor.setMonth(cursor.getMonth() + 1)
@@ -394,6 +428,7 @@ export function buildProjectedLifecycle(
   ageBoundary?: number,
   breakdown?: BalanceBreakdown,
   inflationOverride?: number,
+  forcedFireDate?: Date | null,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []
@@ -414,20 +449,22 @@ export function buildProjectedLifecycle(
 
   const endOfLife = new Date(endYear, 11, 1)
 
-  // Find earliest FI date where 3-bucket corpus sustains base×inflation expenses to end of life
-  const fiDate = findEarliestFIDate(
-    currentBalance,
-    monthlyContribution,
-    preGrowth,
-    postGrowth,
-    inflation,
-    monthlyExpenseToday,
-    endOfLife,
-    ageBoundaryDate,
-    breakdown,
-    retirementCap,
-    nonRetirementBase,
-  )
+  // Use forced FIRE date if provided, otherwise find the earliest sustainable one
+  const fiDate =
+    forcedFireDate ??
+    findEarliestFIDate(
+      currentBalance,
+      monthlyContribution,
+      preGrowth,
+      postGrowth,
+      inflation,
+      monthlyExpenseToday,
+      endOfLife,
+      ageBoundaryDate,
+      breakdown,
+      retirementCap,
+      nonRetirementBase,
+    )
 
   const fiYear = fiDate.getFullYear()
   const monthlyExpenseAtFI = monthlyExpenseToday * Math.pow(1 + inflation / 100, fiYear - nowYear)

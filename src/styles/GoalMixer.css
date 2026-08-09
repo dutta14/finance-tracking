@@ -116,9 +116,9 @@
   flex-shrink: 0;
 }
 .mixer-badge--fi {
-  background: var(--accent-light);
-  color: var(--accent-text-dark);
-  border: 1px solid var(--accent-border);
+  background: var(--color-bg-hover, #f3f4f6);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 .mixer-badge--gw {
   background: var(--color-positive-light);
@@ -157,13 +157,13 @@
 }
 
 .mixer-goal-item:hover {
-  border-color: var(--accent-icon-subtle);
-  background: var(--accent-lighter);
+  border-color: var(--color-text-muted);
+  background: var(--color-surface);
 }
 
 .mixer-goal-item.selected {
-  border-color: var(--accent);
-  background: var(--accent-lighter);
+  border-color: var(--color-text-secondary, #6b7280);
+  background: var(--color-surface);
 }
 
 .mixer-goal-name {
@@ -178,7 +178,7 @@
 }
 
 .mixer-goal-stat strong {
-  color: var(--accent-text-dark);
+  color: var(--color-text);
   font-weight: var(--fw-semibold);
 }
 
@@ -355,7 +355,7 @@
 }
 
 .mixer-btn-create {
-  background: var(--accent);
+  background: var(--color-text-secondary, #6b7280);
   color: #fff;
   border: none;
   border-radius: var(--radius);
@@ -366,7 +366,7 @@
   transition: background 0.15s;
 }
 .mixer-btn-create:hover:not(:disabled) {
-  background: var(--accent-hover, var(--accent));
+  background: var(--accent-hover, var(--color-text-secondary, #6b7280));
   filter: brightness(1.1);
 }
 .mixer-btn-create:disabled {

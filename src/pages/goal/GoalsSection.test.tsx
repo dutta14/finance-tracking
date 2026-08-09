@@ -224,7 +224,7 @@ describe('Card clicks in compare mode toggle selection', () => {
     await user.click(screen.getByTestId('card-1'))
 
     // Should show selection bar (1 selected)
-    expect(screen.getByText('1 goal selected')).toBeInTheDocument()
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
     // Should NOT navigate
     expect(mockNavigate).not.toHaveBeenCalled()
   })
@@ -236,13 +236,13 @@ describe('Card clicks in compare mode toggle selection', () => {
     await user.click(screen.getByRole('button', { name: /^compare$/i }))
     await user.click(screen.getByTestId('card-1'))
 
-    expect(screen.getByText('1 goal selected')).toBeInTheDocument()
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
 
     // Click same card again to deselect
     await user.click(screen.getByTestId('card-1'))
 
     // Back to zero — hint should show instead of selection bar
-    expect(screen.queryByText(/goal selected/i, { selector: '.goal-selection-count' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/selected/i, { selector: '.goal-selection-count' })).not.toBeInTheDocument()
     expect(screen.getByText(/click goals to select them/i, { selector: '.goal-compare-hint' })).toBeInTheDocument()
   })
 })
@@ -260,7 +260,7 @@ describe('GoalCompareView appears when 2+ goals selected', () => {
     await user.click(screen.getByTestId('card-1'))
     await user.click(screen.getByTestId('card-2'))
 
-    expect(screen.getByText('2 goals selected')).toBeInTheDocument()
+    expect(screen.getByText('2 selected')).toBeInTheDocument()
     expect(screen.getByTestId('compare-view')).toBeInTheDocument()
     expect(screen.getByTestId('compare-view')).toHaveTextContent('Comparing Alpha, Bravo')
   })
@@ -294,7 +294,7 @@ describe('Cmd+Click auto-enters compare mode', () => {
 
     // Should be in compare mode now with 1 selected
     expect(screen.getByRole('button', { name: /exit compare/i })).toBeInTheDocument()
-    expect(screen.getByText('1 goal selected')).toBeInTheDocument()
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
@@ -309,7 +309,7 @@ describe('Cmd+Click auto-enters compare mode', () => {
       capturedGridProps.onSelectGoal(2, true)
     })
 
-    expect(screen.getByText('2 goals selected')).toBeInTheDocument()
+    expect(screen.getByText('2 selected')).toBeInTheDocument()
     expect(screen.getByTestId('compare-view')).toHaveTextContent('Comparing Alpha, Bravo')
   })
 })
@@ -334,7 +334,7 @@ describe('Single click navigates outside compare mode', () => {
 
     await user.click(screen.getByTestId('card-1'))
 
-    expect(screen.queryByText(/goal selected/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/selected/i, { selector: '.goal-selection-count' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /exit compare/i })).not.toBeInTheDocument()
   })
 })
@@ -344,7 +344,7 @@ describe('Single click navigates outside compare mode', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Selection bar content', () => {
-  it('shows correct plural count, Delete selected, and Done buttons', async () => {
+  it('shows correct plural count, Delete button, and Exit Compare button', async () => {
     const user = userEvent.setup()
     renderGoalsSection()
 
@@ -353,19 +353,19 @@ describe('Selection bar content', () => {
     await user.click(screen.getByTestId('card-2'))
     await user.click(screen.getByTestId('card-3'))
 
-    expect(screen.getByText('3 goals selected')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /delete selected/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^done$/i })).toBeInTheDocument()
+    expect(screen.getByText('3 selected')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /exit compare/i })).toBeInTheDocument()
   })
 
-  it('shows singular "1 goal selected" for a single selection', async () => {
+  it('shows singular "1 selected" for a single selection', async () => {
     const user = userEvent.setup()
     renderGoalsSection()
 
     await user.click(screen.getByRole('button', { name: /^compare$/i }))
     await user.click(screen.getByTestId('card-1'))
 
-    expect(screen.getByText('1 goal selected')).toBeInTheDocument()
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
   })
 
   it('does not show selection bar when nothing is selected (only hint)', async () => {
@@ -374,8 +374,7 @@ describe('Selection bar content', () => {
 
     await user.click(screen.getByRole('button', { name: /^compare$/i }))
 
-    expect(screen.queryByText(/delete selected/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^done$/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
   })
 })
 
@@ -383,8 +382,8 @@ describe('Selection bar content', () => {
    8. "Done" exits compare mode and clears selection
    ═══════════════════════════════════════════════════════════════ */
 
-describe('Done button behavior', () => {
-  it('clicking Done exits compare mode and clears all selections', async () => {
+describe('Exit Compare button behavior', () => {
+  it('clicking Exit Compare exits compare mode and clears all selections', async () => {
     const user = userEvent.setup()
     renderGoalsSection()
 
@@ -392,14 +391,14 @@ describe('Done button behavior', () => {
     await user.click(screen.getByTestId('card-1'))
     await user.click(screen.getByTestId('card-2'))
 
-    expect(screen.getByText('2 goals selected')).toBeInTheDocument()
+    expect(screen.getByText('2 selected')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^done$/i }))
+    await user.click(screen.getByRole('button', { name: /exit compare/i }))
 
     // Should exit compare mode
     expect(screen.getByRole('button', { name: /^compare$/i })).toBeInTheDocument()
     // No selection bar or hint
-    expect(screen.queryByText(/goal selected/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/selected/i, { selector: '.goal-selection-count' })).not.toBeInTheDocument()
     expect(screen.queryByText(/click goals to select them/i)).not.toBeInTheDocument()
     // CompareView gone
     expect(screen.queryByTestId('compare-view')).not.toBeInTheDocument()
@@ -420,7 +419,7 @@ describe('Delete selected behavior', () => {
     await user.click(screen.getByTestId('card-1'))
     await user.click(screen.getByTestId('card-3'))
 
-    await user.click(screen.getByRole('button', { name: /delete selected/i }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(onDeleteMultiple).toHaveBeenCalledWith([1, 3])
   })
@@ -432,10 +431,10 @@ describe('Delete selected behavior', () => {
     await user.click(screen.getByRole('button', { name: /^compare$/i }))
     await user.click(screen.getByTestId('card-1'))
 
-    await user.click(screen.getByRole('button', { name: /delete selected/i }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(screen.getByRole('button', { name: /^compare$/i })).toBeInTheDocument()
-    expect(screen.queryByText(/goal selected/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/selected/i, { selector: '.goal-selection-count' })).not.toBeInTheDocument()
   })
 })
 
@@ -502,16 +501,6 @@ describe('Empty states', () => {
   it('shows "No goals created yet" when goals array is empty', () => {
     renderGoalsSection({ goals: [] })
     expect(screen.getByText(/no goals created yet/i)).toBeInTheDocument()
-  })
-
-  it('shows count label "0 goals" when no goals exist', () => {
-    renderGoalsSection({ goals: [] })
-    expect(screen.getByText('0 goals')).toBeInTheDocument()
-  })
-
-  it('shows singular count "1 goal" when one goal exists', () => {
-    renderGoalsSection({ goals: [goalA] })
-    expect(screen.getByText('1 goal')).toBeInTheDocument()
   })
 })
 

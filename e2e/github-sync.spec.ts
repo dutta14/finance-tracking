@@ -48,56 +48,48 @@ async function seedForSync(page: import('@playwright/test').Page) {
 /** Intercept all GitHub API calls with success responses. */
 async function mockGitHubApi(page: import('@playwright/test').Page) {
   // Test connection: GET /repos/:owner/:repo
-  await page.route(
-    `https://api.github.com/repos/${OWNER}/${REPO}`,
-    async route => {
-      if (route.request().method() === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          headers: { 'x-oauth-scopes': '' },
-          body: JSON.stringify({
-            full_name: `${OWNER}/${REPO}`,
-            private: true,
-            permissions: { push: true },
-          }),
-        })
-      } else {
-        await route.continue()
-      }
-    },
-  )
+  await page.route(`https://api.github.com/repos/${OWNER}/${REPO}`, async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'x-oauth-scopes': '' },
+        body: JSON.stringify({
+          full_name: `${OWNER}/${REPO}`,
+          private: true,
+          permissions: { push: true },
+        }),
+      })
+    } else {
+      await route.continue()
+    }
+  })
 
   // Sync (PUT) and restore (GET) for all content files
   const contentFiles = [GOALS_FILE, DATA_FILE, TOOLS_FILE, ALLOCATION_FILE, TAXES_FILE]
   for (const file of contentFiles) {
-    await page.route(
-      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${file}`,
-      async route => {
-        const method = route.request().method()
-        if (method === 'PUT') {
-          await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-              content: { sha: 'abc1234', name: file },
-              commit: { sha: 'def5678' },
-            }),
-          })
-        } else if (method === 'GET') {
-          const content = Buffer.from(
-            JSON.stringify(file === GOALS_FILE ? [GOAL_DATA] : {}),
-          ).toString('base64')
-          await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({ content, encoding: 'base64', sha: 'abc1234' }),
-          })
-        } else {
-          await route.continue()
-        }
-      },
-    )
+    await page.route(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${file}`, async route => {
+      const method = route.request().method()
+      if (method === 'PUT') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            content: { sha: 'abc1234', name: file },
+            commit: { sha: 'def5678' },
+          }),
+        })
+      } else if (method === 'GET') {
+        const content = Buffer.from(JSON.stringify(file === GOALS_FILE ? [GOAL_DATA] : {})).toString('base64')
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ content, encoding: 'base64', sha: 'abc1234' }),
+        })
+      } else {
+        await route.continue()
+      }
+    })
   }
 
   // Commit history
@@ -187,10 +179,9 @@ test.describe('GitHub Sync — Refactor Regression (#180)', () => {
 
     // Restore triggers a state update that may close the modal.
     // Wait for the restore operation to complete by checking data was applied.
-    await expect.poll(
-      () => page.evaluate(() => localStorage.getItem('financialGoals')),
-      { timeout: 10_000 },
-    ).not.toBeNull()
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem('financialGoals')), { timeout: 10_000 })
+      .not.toBeNull()
     const goalData = await page.evaluate(() => localStorage.getItem('financialGoals'))
     expect(JSON.parse(goalData!)[0].goalName).toBe('FI Target')
   })
@@ -269,15 +260,18 @@ test.describe('GitHub Sync — Refactor Regression (#180)', () => {
     await dialog.getByRole('button', { name: 'Restore Latest' }).click()
 
     // Restore triggers state update that may close modal — verify via localStorage
-    await expect.poll(
-      () => page.evaluate(() => {
-        const raw = localStorage.getItem('financialGoals')
-        if (!raw) return null
-        const goals = JSON.parse(raw)
-        return goals[0]?.goalName
-      }),
-      { timeout: 10_000 },
-    ).toBe('FI Target')
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const raw = localStorage.getItem('financialGoals')
+            if (!raw) return null
+            const goals = JSON.parse(raw)
+            return goals[0]?.goalName
+          }),
+        { timeout: 10_000 },
+      )
+      .toBe('FI Target')
 
     // Double-check full data integrity
     const goalData = await page.evaluate(() => localStorage.getItem('financialGoals'))
@@ -290,16 +284,13 @@ test.describe('GitHub Sync — Refactor Regression (#180)', () => {
     await seedForSync(page)
 
     // Override: 404 for repo
-    await page.route(
-      `https://api.github.com/repos/${OWNER}/${REPO}`,
-      async route => {
-        await route.fulfill({
-          status: 404,
-          contentType: 'application/json',
-          body: JSON.stringify({ message: 'Not Found' }),
-        })
-      },
-    )
+    await page.route(`https://api.github.com/repos/${OWNER}/${REPO}`, async route => {
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Not Found' }),
+      })
+    })
 
     await openGitHubSyncTab(page)
 

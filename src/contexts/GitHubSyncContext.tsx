@@ -234,6 +234,12 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
                   exportedAt: new Date().toISOString(),
                   fiSimulations: appStorage.getJSON('fi-simulations', []),
                   sgtOverrides: appStorage.getJSON('sgt-overrides', {}),
+                  leveragePlanner: {
+                    target: localStorage.getItem('al-ratio-target') || '',
+                    scenarios: appStorage.getJSON('al-scenarios', []),
+                    mainAllocations: appStorage.getJSON('al-main-allocations', []),
+                    mainName: localStorage.getItem('al-main-name') || 'Current plan',
+                  },
                 },
                 message ? `Tools: ${message}` : undefined,
               )
@@ -379,10 +385,17 @@ export const GitHubSyncProvider: FC<{ children: ReactNode }> = ({ children }) =>
           }
           const toolsResult = await restoreToolsLatest()
           if (toolsResult.ok && toolsResult.data) {
-            const t = toolsResult.data as { fiSimulations?: unknown; sgtOverrides?: unknown }
+            const t = toolsResult.data as { fiSimulations?: unknown; sgtOverrides?: unknown; leveragePlanner?: unknown }
             if (Array.isArray(t.fiSimulations)) appStorage.setJSON('fi-simulations', t.fiSimulations)
             if (t.sgtOverrides && typeof t.sgtOverrides === 'object')
               appStorage.setJSON('sgt-overrides', t.sgtOverrides)
+            if (t.leveragePlanner && typeof t.leveragePlanner === 'object') {
+              const lp = t.leveragePlanner as Record<string, unknown>
+              if (typeof lp.target === 'string') localStorage.setItem('al-ratio-target', lp.target)
+              if (Array.isArray(lp.scenarios)) appStorage.setJSON('al-scenarios', lp.scenarios)
+              if (Array.isArray(lp.mainAllocations)) appStorage.setJSON('al-main-allocations', lp.mainAllocations)
+              if (typeof lp.mainName === 'string') localStorage.setItem('al-main-name', lp.mainName)
+            }
           }
           const allocResult = await restoreAllocationLatest()
           if (allocResult.ok && allocResult.data) {

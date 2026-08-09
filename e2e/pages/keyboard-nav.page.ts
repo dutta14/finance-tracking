@@ -137,5 +137,15 @@ export class KeyboardNavPage {
  * SidebarNavigation.tsx. The Settings menu trigger is a `<button>`
  * (SettingsMenu.tsx:82) with aria-label="Settings".
  */
-export const SIDEBAR_NAV_ORDER = ['Home', 'Search', 'Goals', 'Net Worth', 'Budget', 'Transactions', 'Taxes', 'Drive', 'Settings'] as const
+export const SIDEBAR_NAV_ORDER = [
+  'Home',
+  'Search',
+  'Goals',
+  'Net Worth',
+  'Budget',
+  'Transactions',
+  'Taxes',
+  'Drive',
+  'Settings',
+] as const
 export type SidebarNavName = (typeof SIDEBAR_NAV_ORDER)[number]

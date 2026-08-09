@@ -11,9 +11,16 @@ interface LifecycleTableProps {
   interval: ViewInterval
   primaryAccessDate?: Date
   partnerAccessDate?: Date
+  hideExpense?: boolean
 }
 
-const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccessDate, partnerAccessDate }) => {
+const LifecycleTable: FC<LifecycleTableProps> = ({
+  rows,
+  interval,
+  primaryAccessDate,
+  partnerAccessDate,
+  hideExpense = false,
+}) => {
   // Order retirement columns by which unlocks first
   const primaryFirst = !partnerAccessDate || (primaryAccessDate && primaryAccessDate <= partnerAccessDate)
   const expenseLabel =
@@ -45,7 +52,7 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
         label: 'Primary Retirement unlocked',
       })
     }
-    if (prev && prev.phase === 'accumulation' && row.phase === 'drawdown') {
+    if (prev && (prev.phase === 'accumulation' || prev.phase === 'coasting') && row.phase === 'drawdown') {
       items.push({
         key: `fire-start-${row.month}`,
         date: null,
@@ -73,7 +80,7 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
     })
     return items.map(item => (
       <tr key={item.key} className={item.className}>
-        <td colSpan={hasBreakdown ? 7 : 4}>
+        <td colSpan={hasBreakdown ? 7 : hideExpense ? 3 : 4}>
           <span className="projection-rate-shift-label">{item.label}</span>
         </td>
       </tr>
@@ -84,9 +91,15 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
     <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
       <td>{row.month}</td>
       <td className={`phase-badge phase-badge--${row.phase}`}>
-        {row.phase === 'accumulation' ? 'Saving' : 'Spending'}
+        {row.phase === 'drawdown'
+          ? hideExpense
+            ? 'Growth'
+            : 'Spending'
+          : row.phase === 'coasting'
+            ? 'Coasting'
+            : 'Saving'}
       </td>
-      <td>{row.phase === 'drawdown' ? dollars(Math.round(row.expense)) : '—'}</td>
+      {!hideExpense && <td>{row.phase === 'drawdown' ? dollars(Math.round(row.expense)) : '—'}</td>}
       {hasBreakdown && (
         <>
           <td>
@@ -124,7 +137,7 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
           <tr>
             <th scope="col">Month</th>
             <th scope="col">Phase</th>
-            <th scope="col">{expenseLabel}</th>
+            {!hideExpense && <th scope="col">{expenseLabel}</th>}
             {hasBreakdown && (
               <>
                 <th scope="col">Non-Retirement</th>

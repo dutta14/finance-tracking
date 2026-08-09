@@ -12,6 +12,7 @@ export class GoalDetailPage {
   readonly savingsPlan: Locator
   readonly savingsPlanHighlightRow: Locator
   readonly savingsPlanEmpty: Locator
+  readonly projectedResult: Locator
 
   // Analysis
   readonly analysisToggle: Locator
@@ -24,16 +25,17 @@ export class GoalDetailPage {
   constructor(page: Page) {
     this.page = page
 
-    this.fiCard = page.locator('.fi-card')
-    this.sparklineFigure = page.locator('.projection-chart-wrapper')
+    this.fiCard = page.locator('.goal-detail-section').first().locator('.fi-card').first()
+    this.sparklineFigure = page.locator('.projection-chart-wrapper').first()
     this.sparklineSvg = this.sparklineFigure.locator('svg')
 
-    this.savingsPlan = page.locator('.fi-goal-pace')
-    this.savingsPlanHighlightRow = this.savingsPlan
-    this.savingsPlanEmpty = this.savingsPlan.locator('a[href="#/budget"]')
+    this.savingsPlan = page.locator('.fi-projection-block, .fi-goal-pace').first()
+    this.savingsPlanHighlightRow = page.locator('.fi-projection-row').filter({ hasText: 'Save' }).first()
+    this.savingsPlanEmpty = page.locator('.fi-goal-pace a[href="#/budget"]')
+    this.projectedResult = page.locator('.fi-projection-result').first()
 
-    this.analysisToggle = page.getByRole('button', { name: /Analysis/ })
-    this.chartViewToggle = page.getByRole('button', { name: 'Switch to chart view' })
+    this.analysisToggle = page.getByRole('group', { name: 'Analysis type' }).getByRole('button', { name: 'FI' })
+    this.chartViewToggle = page.getByRole('group', { name: 'View mode' }).getByRole('button', { name: 'Chart' }).first()
     this.backLink = page.locator('.goal-detail-back-link')
     this.detailTitle = page.locator('.goal-detail-title')
   }

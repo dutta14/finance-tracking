@@ -1,9 +1,20 @@
+/* ── FI Calculator Layout ── */
+.fi-calc-layout {
+  display: grid;
+  grid-template-columns: 520px 280px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
 /* ── FI Calculator ── */
 .fi-calc {
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-width: 520px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  padding: 1.5rem;
 }
 
 /* Hero expense input */
@@ -381,27 +392,32 @@ body.dark .fi-sim-chip--active {
 
 /* Year-by-year expand */
 .fi-calc-expand-btn {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
   font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
-  padding: 6px 0 2px;
-  text-align: left;
-  width: 100%;
+  padding: 0.4rem 0.75rem;
+  margin-top: 0.75rem;
+  transition: all 0.15s;
 }
 .fi-calc-expand-btn:hover {
-  color: var(--color-text-heading);
+  background: var(--color-surface-alt);
 }
 .fi-calc-yby {
-  max-height: 260px;
+  max-height: 360px;
   overflow-y: auto;
-  margin-top: 4px;
+  margin-top: 0.75rem;
 }
 .fi-calc-yby-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
 }
 .fi-calc-yby-table th {
@@ -409,7 +425,7 @@ body.dark .fi-sim-chip--active {
   top: 0;
   background: var(--color-bg);
   text-align: right;
-  padding: 2px 6px;
+  padding: 0.5rem 0.75rem;
   font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
   border-bottom: 1px solid var(--color-border);
@@ -419,7 +435,7 @@ body.dark .fi-sim-chip--active {
 }
 .fi-calc-yby-table td {
   text-align: right;
-  padding: 2px 6px;
+  padding: 0.5rem 0.75rem;
   color: var(--color-text-heading);
 }
 .fi-calc-yby-table td:first-child {
@@ -434,4 +450,94 @@ body.dark .fi-sim-chip--active {
   color: var(--accent) !important;
   text-align: left !important;
   white-space: nowrap;
+}
+
+/* ── Saved Simulations Panel ── */
+.fi-sim-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  position: sticky;
+  top: 5rem;
+  align-self: start;
+}
+
+.fi-sim-panel-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  margin: 0 0 1rem;
+}
+
+.fi-sim-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.fi-sim-panel-item-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  transition: all 0.15s;
+}
+
+.fi-sim-panel-item-row:hover {
+  background: var(--color-surface-alt);
+}
+
+.fi-sim-panel-item-row--active {
+  border-color: var(--color-text);
+  background: var(--color-surface-alt);
+}
+
+button.fi-sim-panel-item {
+  all: unset;
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+}
+
+button.fi-sim-panel-item:focus-visible {
+  outline: 2px solid var(--color-border-strong, #555);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+.fi-sim-panel-item {
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+}
+
+.fi-sim-panel-item-name {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.fi-sim-panel-item-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.fi-sim-panel-item-delete:hover {
+  color: var(--color-negative);
+}
+
+.fi-sim-panel-empty {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
 }

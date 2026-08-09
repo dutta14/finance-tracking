@@ -205,7 +205,9 @@ test.describe('Responsive / mobile viewport (#143)', () => {
 
   /* ── 36. Hamburger is keyboard-focusable, Enter opens ────── */
 
-  test('36. mobile hamburger is keyboard-focusable, Enter opens the sidebar, overlay click closes it', async ({ page }) => {
+  test('36. mobile hamburger is keyboard-focusable, Enter opens the sidebar, overlay click closes it', async ({
+    page,
+  }) => {
     // Adaptation: see suite-level note for test 36. Source has no
     // Escape handler on the hamburger and no documented
     // focus-restoration contract, so we assert the close path that

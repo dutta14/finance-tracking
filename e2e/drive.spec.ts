@@ -192,7 +192,9 @@ test.describe('Drive — File Manager E2E', () => {
       // Sanity: each row carries the expected owner tag.
       await expect(drive.file(SORT_FILE_A.name).locator('.drive-row-tag').first()).toHaveText(SORT_PROFILE.name)
       await expect(drive.file(SORT_FILE_C.name).locator('.drive-row-tag').first()).toHaveText('Joint')
-      await expect(drive.file(SORT_FILE_B.name).locator('.drive-row-tag').first()).toHaveText(SORT_PROFILE.partner!.name)
+      await expect(drive.file(SORT_FILE_B.name).locator('.drive-row-tag').first()).toHaveText(
+        SORT_PROFILE.partner!.name,
+      )
 
       // Date sort: newest uploadedAt first → B (Mar), C (Feb), A (Jan).
       await drive.sortByDate.click()
@@ -214,7 +216,11 @@ test.describe('Drive — File Manager E2E', () => {
       await seedDrive(page, {
         store: {
           csvs: {
-            '2024-01': { month: '2024-01', csv: 'Date,Category,Amount\n2024-01-01,Salary,1', uploadedAt: '2024-01-15T00:00:00.000Z' },
+            '2024-01': {
+              month: '2024-01',
+              csv: 'Date,Category,Amount\n2024-01-01,Salary,1',
+              uploadedAt: '2024-01-15T00:00:00.000Z',
+            },
           },
           configs: {},
           years: [2024],
