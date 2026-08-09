@@ -119,13 +119,14 @@ test.describe('Net Worth — Balance Entry', () => {
     await nw.goto()
     await nw.spreadsheetTab.click()
     const monthLabels = page.locator('.data-spreadsheet-month-label')
+    await expect(monthLabels.first()).toBeVisible()
     const initialCount = await monthLabels.count()
     const firstMonthLabel = (await monthLabels.first().textContent())?.trim()
     expect(firstMonthLabel).toBeTruthy()
 
     const firstRowHeader = page.locator('.data-spreadsheet-row-header').first()
     await firstRowHeader.hover()
-    await nw.deleteRowBtns.first().click()
+    await firstRowHeader.locator('.data-delete-row-btn').click()
 
     const confirmDialog = page.locator('.data-confirm-dialog')
     await expect(confirmDialog).toBeVisible()

@@ -83,10 +83,10 @@ export class HomePage {
     this.cardGrid = page.locator('.home-grid')
 
     this.nwCard = page.locator('.home-card--nw')
-    this.nwAmount = page.locator('.nw-amount')
-    this.nwChange = page.locator('.nw-change')
-    this.nwChangeUp = page.locator('.nw-change.up')
-    this.nwChangeDown = page.locator('.nw-change.down')
+    this.nwAmount = this.nwCard.locator('.nw-amount').first()
+    this.nwChange = this.nwCard.locator('.nw-prose .nw-change')
+    this.nwChangeUp = this.nwCard.locator('.nw-prose .nw-change.up')
+    this.nwChangeDown = this.nwCard.locator('.nw-prose .nw-change.down')
     this.nwProse = page.locator('.nw-prose')
     this.nwLegendItems = page.locator('.nw-stacked-legend-item')
     this.nwDate = this.nwProse

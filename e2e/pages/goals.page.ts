@@ -135,7 +135,7 @@ export class GoalsPage {
 
     this.header = page.locator('.goal-header')
     this.headerActions = page.locator('.goal-header-actions')
-    this.newGoalBtn = page.getByRole('button', { name: '+ New Goal' })
+    this.newGoalBtn = page.getByRole('button', { name: 'New Goal' })
 
     this.tabBar = page.locator('.goal-tab-bar')
     this.plansTab = page.locator('.goal-tab', { hasText: 'Plans' })
