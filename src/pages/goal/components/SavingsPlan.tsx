@@ -285,8 +285,12 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({
             you need to save{' '}
             <button type="button" className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
               {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
-            </button>
-            {' '}upto {new Date(retirementMonth.replace('-', '/') + '/01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+            </button>{' '}
+            upto{' '}
+            {new Date(retirementMonth.replace('-', '/') + '/01').toLocaleDateString('en-US', {
+              month: 'short',
+              year: 'numeric',
+            })}
           </>
         )}
       </p>
@@ -337,8 +341,12 @@ export const GwSavingsPlan: FC<SavingsPlanProps> = ({
             you need to save{' '}
             <button type="button" className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
               {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
-            </button>
-            {' '}upto {new Date(retirementMonth.replace('-', '/') + '/01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+            </button>{' '}
+            upto{' '}
+            {new Date(retirementMonth.replace('-', '/') + '/01').toLocaleDateString('en-US', {
+              month: 'short',
+              year: 'numeric',
+            })}
           </>
         )}
       </p>

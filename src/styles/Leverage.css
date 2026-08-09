@@ -531,7 +531,9 @@
   padding: 0.3rem 0.6rem;
   cursor: pointer;
   text-align: center;
-  transition: border-color 120ms, background 120ms;
+  transition:
+    border-color 120ms,
+    background 120ms;
 }
 
 .lever-type-toggle:hover {

@@ -206,7 +206,9 @@ body.dark-mode .fi-goal-prose strong {
   font-weight: bold;
   cursor: pointer;
   border-radius: 4px;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .fi-projection-year-chevron:hover:not(:disabled) {
@@ -254,7 +256,9 @@ body.dark-mode .fi-goal-prose strong {
   background: var(--color-surface);
   color: var(--color-text-secondary, #6b7280);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .fi-projection-period-btn + .fi-projection-period-btn {
@@ -575,7 +579,9 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   padding: 0.2rem 0.4rem;
   cursor: pointer;
   border-radius: var(--radius);
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .fi-card-action-btn:hover {

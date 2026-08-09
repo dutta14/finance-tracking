@@ -177,7 +177,8 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     const [by, bm] = birthday.split('-').map(Number)
     const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
     const retirementYear = new Date(by + goal.retirementAge, bm - 1, 1).getFullYear()
-    const monthlyExpenseToday = goal.monthlyExpense2047 / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
+    const monthlyExpenseToday =
+      goal.monthlyExpense2047 / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
 
     // What expense will be at target FIRE date
     const fiYear = forcedFireDate.getFullYear()
@@ -186,8 +187,13 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
 
     // Required corpus at the target date to sustain expenses until end of life
     const requiredCorpus = computeRequiredCorpus(
-      forcedFireDate, endOfLife, ageBoundaryDate,
-      monthlyExpenseAtFI, inflationRate, preGrowth, postGrowth,
+      forcedFireDate,
+      endOfLife,
+      ageBoundaryDate,
+      monthlyExpenseAtFI,
+      inflationRate,
+      preGrowth,
+      postGrowth,
     )
 
     // How many months from now to target FIRE date
@@ -196,8 +202,17 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
 
     // Direct formula: what monthly saving gets us from currentBalance to requiredCorpus in monthsToFI months
     return Math.max(0, calcMonthlySaving(currentBalance, requiredCorpus, preGrowth, monthsToFI))
-  }, [forcedFireDate, goal, profileBirthday, currentBalance, monthlyContribution,
-      growthRate, postGrowthRate, ageBoundary, inflation])
+  }, [
+    forcedFireDate,
+    goal,
+    profileBirthday,
+    currentBalance,
+    monthlyContribution,
+    growthRate,
+    postGrowthRate,
+    ageBoundary,
+    inflation,
+  ])
 
   const projectedProjection = useMemo(
     () =>
@@ -346,10 +361,12 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   const buildGwProjection = (monthlyContrib: number, fireMonth?: string | null): ProjectionRow[] => {
     const accumulationEnd = fireMonth || gwTargetMonth
     if (!accumulationEnd || gwTarget <= 0) return []
-    const startMonth = currentMonth || (() => {
-      const now = new Date()
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    })()
+    const startMonth =
+      currentMonth ||
+      (() => {
+        const now = new Date()
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      })()
     const [sy, sm] = startMonth.split('-').map(Number)
     const [ty, tm] = accumulationEnd.split('-').map(Number)
     const monthsToFire = (ty - sy) * 12 + (tm - sm)
@@ -375,7 +392,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
         remaining: balance,
         expense: 0,
         phase: isGrowthPhase ? 'drawdown' : 'accumulation',
-        monthlySaved: i === 0 ? 0 : (isGrowthPhase ? 0 : monthlyContrib),
+        monthlySaved: i === 0 ? 0 : isGrowthPhase ? 0 : monthlyContrib,
       })
 
       if (i < totalMonths) {
@@ -395,9 +412,17 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   const gwProjectedRows = useMemo(
     () => buildGwProjection(gwProjectedMonthlyContribution, projectedFiMonth),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gwBalance, gwProjectedMonthlyContribution, gwGrowthRate, gwTarget, gwTargetMonth, gwDisburseMonth, currentMonth, projectedFiMonth],
+    [
+      gwBalance,
+      gwProjectedMonthlyContribution,
+      gwGrowthRate,
+      gwTarget,
+      gwTargetMonth,
+      gwDisburseMonth,
+      currentMonth,
+      projectedFiMonth,
+    ],
   )
-
 
   const gwFilteredRows = useMemo(() => {
     const rows = scenario === 'planned' ? gwPlannedRows : gwProjectedRows
@@ -461,7 +486,13 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                     onClick={() => setScenario('projected')}
                     aria-pressed={scenario === 'projected'}
                   >
-                    Projected ({dollars(showYearly ? (requiredMonthlySavings ?? monthlyContribution) * 12 : (requiredMonthlySavings ?? monthlyContribution))}/{showYearly ? 'yr' : 'mo'})
+                    Projected (
+                    {dollars(
+                      showYearly
+                        ? (requiredMonthlySavings ?? monthlyContribution) * 12
+                        : (requiredMonthlySavings ?? monthlyContribution),
+                    )}
+                    /{showYearly ? 'yr' : 'mo'})
                   </button>
                 </div>
                 <div className="projection-interval-toggle" role="group" aria-label="Time interval">
@@ -507,70 +538,71 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
               )}
             </>
           )
+        ) : gwPlannedRows.length === 0 ? (
+          <p className="dive-deep-placeholder">No GW projection available — add GW goals first.</p>
         ) : (
-          gwPlannedRows.length === 0 ? (
-            <p className="dive-deep-placeholder">No GW projection available — add GW goals first.</p>
-          ) : (
-            <>
-              <div className="projection-controls" role="toolbar" aria-label="GW Projection controls">
-                <div className="projection-scenario-toggle" role="group" aria-label="Scenario selection">
-                  <button
-                    className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
-                    onClick={() => setScenario('planned')}
-                    aria-pressed={scenario === 'planned'}
-                  >
-                    Planned ({dollars(showYearly ? gwMonthlyContribution * 12 : gwMonthlyContribution)}/{showYearly ? 'yr' : 'mo'})
-                  </button>
-                  <button
-                    className={`projection-interval-btn${scenario === 'projected' ? ' active' : ''}`}
-                    onClick={() => setScenario('projected')}
-                    aria-pressed={scenario === 'projected'}
-                  >
-                    Projected ({dollars(showYearly ? gwProjectedMonthlyContribution * 12 : gwProjectedMonthlyContribution)}/{showYearly ? 'yr' : 'mo'})
-                  </button>
-                </div>
-                <div className="projection-interval-toggle" role="group" aria-label="Time interval">
-                  {INTERVAL_LABELS.map(opt => (
-                    <button
-                      key={opt.value}
-                      className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
-                      onClick={() => setInterval(opt.value)}
-                      aria-pressed={interval === opt.value}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="projection-interval-toggle" role="group" aria-label="View mode">
-                  <button
-                    className={`projection-interval-btn${viewMode === 'chart' ? ' active' : ''}`}
-                    onClick={() => setViewMode('chart')}
-                    aria-pressed={viewMode === 'chart'}
-                  >
-                    Chart
-                  </button>
-                  <button
-                    className={`projection-interval-btn${viewMode === 'table' ? ' active' : ''}`}
-                    onClick={() => setViewMode('table')}
-                    aria-pressed={viewMode === 'table'}
-                  >
-                    Table
-                  </button>
-                </div>
+          <>
+            <div className="projection-controls" role="toolbar" aria-label="GW Projection controls">
+              <div className="projection-scenario-toggle" role="group" aria-label="Scenario selection">
+                <button
+                  className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
+                  onClick={() => setScenario('planned')}
+                  aria-pressed={scenario === 'planned'}
+                >
+                  Planned ({dollars(showYearly ? gwMonthlyContribution * 12 : gwMonthlyContribution)}/
+                  {showYearly ? 'yr' : 'mo'})
+                </button>
+                <button
+                  className={`projection-interval-btn${scenario === 'projected' ? ' active' : ''}`}
+                  onClick={() => setScenario('projected')}
+                  aria-pressed={scenario === 'projected'}
+                >
+                  Projected (
+                  {dollars(showYearly ? gwProjectedMonthlyContribution * 12 : gwProjectedMonthlyContribution)}/
+                  {showYearly ? 'yr' : 'mo'})
+                </button>
               </div>
+              <div className="projection-interval-toggle" role="group" aria-label="Time interval">
+                {INTERVAL_LABELS.map(opt => (
+                  <button
+                    key={opt.value}
+                    className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
+                    onClick={() => setInterval(opt.value)}
+                    aria-pressed={interval === opt.value}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="projection-interval-toggle" role="group" aria-label="View mode">
+                <button
+                  className={`projection-interval-btn${viewMode === 'chart' ? ' active' : ''}`}
+                  onClick={() => setViewMode('chart')}
+                  aria-pressed={viewMode === 'chart'}
+                >
+                  Chart
+                </button>
+                <button
+                  className={`projection-interval-btn${viewMode === 'table' ? ' active' : ''}`}
+                  onClick={() => setViewMode('table')}
+                  aria-pressed={viewMode === 'table'}
+                >
+                  Table
+                </button>
+              </div>
+            </div>
 
-              {viewMode === 'chart' ? (
-                <LifecycleChart key="gw" rows={gwFilteredRows} fiGoal={scenario === 'projected' ? gwProjectedTarget : gwTarget} goalLabel="GW goal" />
-              ) : (
-                <LifecycleTable
-                  key="gw"
-                  rows={gwFilteredRows}
-                  interval={interval}
-                  hideExpense
-                />
-              )}
-            </>
-          )
+            {viewMode === 'chart' ? (
+              <LifecycleChart
+                key="gw"
+                rows={gwFilteredRows}
+                fiGoal={scenario === 'projected' ? gwProjectedTarget : gwTarget}
+                goalLabel="GW goal"
+              />
+            ) : (
+              <LifecycleTable key="gw" rows={gwFilteredRows} interval={interval} hideExpense />
+            )}
+          </>
         )}
       </div>
     </div>

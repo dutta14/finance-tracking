@@ -31,7 +31,14 @@ interface CustomTooltipProps {
   goalLabel?: string
 }
 
-const CustomTooltip: FC<CustomTooltipProps> = ({ active, payload, label, fiGoal, fireMonth, goalLabel = 'FI goal' }) => {
+const CustomTooltip: FC<CustomTooltipProps> = ({
+  active,
+  payload,
+  label,
+  fiGoal,
+  fireMonth,
+  goalLabel = 'FI goal',
+}) => {
   if (!active || !payload?.length) return null
   const { expense, remaining, phase, monthlyGrowth, monthlySaved } = payload[0].payload
   const pctOfGoal = fiGoal && fiGoal > 0 ? ((remaining / fiGoal) * 100).toFixed(0) : null
@@ -224,7 +231,9 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal, goalLabel = 'FI
           <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
           <XAxis dataKey="month" tick={{ fontSize: 11 }} interval="preserveStartEnd" stroke="var(--projection-axis)" />
           <YAxis tickFormatter={abbreviate} tick={{ fontSize: 11 }} stroke="var(--projection-axis)" width={72} />
-          <Tooltip content={<CustomTooltip fiGoal={fiGoal} fireMonth={fireMonth ?? undefined} goalLabel={goalLabel} />} />
+          <Tooltip
+            content={<CustomTooltip fiGoal={fiGoal} fireMonth={fireMonth ?? undefined} goalLabel={goalLabel} />}
+          />
           <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
 
           {fiGoal && fiGoal > 0 && (

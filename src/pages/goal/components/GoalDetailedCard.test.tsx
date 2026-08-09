@@ -1196,10 +1196,7 @@ describe('GoalDetailedCard savings override edge cases', () => {
   it('notifies the parent on savings override changes and reset', () => {
     const onSavingsOverrideChange = vi.fn()
 
-    renderCard(
-      { fiGoal: 2_000_000 },
-      { onSavingsOverrideChange, onTogglePeriod: vi.fn(), showYearly: false },
-    )
+    renderCard({ fiGoal: 2_000_000 }, { onSavingsOverrideChange, onTogglePeriod: vi.fn(), showYearly: false })
 
     const input = openExpenseEditor()
     fireEvent.change(input, { target: { value: '6000' } })

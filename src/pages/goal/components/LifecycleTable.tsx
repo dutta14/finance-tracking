@@ -14,7 +14,13 @@ interface LifecycleTableProps {
   hideExpense?: boolean
 }
 
-const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccessDate, partnerAccessDate, hideExpense = false }) => {
+const LifecycleTable: FC<LifecycleTableProps> = ({
+  rows,
+  interval,
+  primaryAccessDate,
+  partnerAccessDate,
+  hideExpense = false,
+}) => {
   // Order retirement columns by which unlocks first
   const primaryFirst = !partnerAccessDate || (primaryAccessDate && primaryAccessDate <= partnerAccessDate)
   const expenseLabel =
@@ -85,7 +91,13 @@ const LifecycleTable: FC<LifecycleTableProps> = ({ rows, interval, primaryAccess
     <tr key={row.month} className={row.remaining < 0 ? 'projection-row--negative' : ''}>
       <td>{row.month}</td>
       <td className={`phase-badge phase-badge--${row.phase}`}>
-        {row.phase === 'drawdown' ? (hideExpense ? 'Growth' : 'Spending') : row.phase === 'coasting' ? 'Coasting' : 'Saving'}
+        {row.phase === 'drawdown'
+          ? hideExpense
+            ? 'Growth'
+            : 'Spending'
+          : row.phase === 'coasting'
+            ? 'Coasting'
+            : 'Saving'}
       </td>
       {!hideExpense && <td>{row.phase === 'drawdown' ? dollars(Math.round(row.expense)) : '—'}</td>}
       {hasBreakdown && (

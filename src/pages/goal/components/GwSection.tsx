@@ -151,18 +151,23 @@ const GwGoalCard: FC<{
       ? { amount: gw.disburseAmount, yearLabel: creationYear }
       : dollarView === 'current'
         ? {
-            amount: creationYear === currentYear
-              ? gw.disburseAmount
-              : gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsFromCreationToNow),
+            amount:
+              creationYear === currentYear
+                ? gw.disburseAmount
+                : gw.disburseAmount * Math.pow(1 + inflationRate / 100 / 12, monthsFromCreationToNow),
             yearLabel: currentYear,
           }
         : { amount: disbursementTarget, yearLabel: disburseYear }
   const sameYear = creationYear === currentYear
   const cycleDollarView = () =>
     onSetDollarView(
-      dollarView === 'disbursement' ? 'creation'
-        : dollarView === 'creation' ? (sameYear ? 'disbursement' : 'current')
-        : 'disbursement',
+      dollarView === 'disbursement'
+        ? 'creation'
+        : dollarView === 'creation'
+          ? sameYear
+            ? 'disbursement'
+            : 'current'
+          : 'disbursement',
     )
   const monthsRetToDisburse = Math.max(0, (gw.disburseAge - retirementAge) * 12)
   const pvAtRetirement =
@@ -181,9 +186,13 @@ const GwGoalCard: FC<{
         )}
         <div className="gw-goal-card-actions">
           {!editing && (
-            <button className="gw-goal-action-btn" onClick={() => setEditing(true)}>Edit</button>
+            <button className="gw-goal-action-btn" onClick={() => setEditing(true)}>
+              Edit
+            </button>
           )}
-          <button className="gw-goal-action-btn gw-goal-action-btn--delete" onClick={handleDeleteClick}>Delete</button>
+          <button className="gw-goal-action-btn gw-goal-action-btn--delete" onClick={handleDeleteClick}>
+            Delete
+          </button>
         </div>
       </div>
 
@@ -249,8 +258,8 @@ const GwGoalCard: FC<{
             <button type="button" className="goal-summary-toggleable" onClick={cycleDollarView}>
               {dollars(dollarDisplay.amount)} ({dollarDisplay.yearLabel} dollars)
             </button>{' '}
-            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementMonthName} {retirementYear},
-            growing at {gwGrowthRate}% per year.
+            by age {gw.disburseAge}, you need <strong>{dollars(pvAtRetirement)}</strong> saved by {retirementMonthName}{' '}
+            {retirementYear}, growing at {gwGrowthRate}% per year.
           </p>
 
           <div className="gw-goal-progress-row">

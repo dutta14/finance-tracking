@@ -180,12 +180,9 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     [allMonths.length],
   )
 
-  const endLP = useCallback(
-    () => {
-      clearLP()
-    },
-    [clearLP],
-  )
+  const endLP = useCallback(() => {
+    clearLP()
+  }, [clearLP])
 
   const handleMonthClick = useCallback(
     (dir: 'prev' | 'next') => {

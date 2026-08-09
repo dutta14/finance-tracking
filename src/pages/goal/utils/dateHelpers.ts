@@ -33,10 +33,7 @@ export const formatTimeUntilYearMonth = (yearMonth: string, fromDate = new Date(
   const [year, month] = yearMonth.split('-').map(Number)
   if (!year || !month || month < 1 || month > 12) return ''
 
-  const totalMonths = Math.max(
-    0,
-    (year - fromDate.getFullYear()) * 12 + (month - 1 - fromDate.getMonth()),
-  )
+  const totalMonths = Math.max(0, (year - fromDate.getFullYear()) * 12 + (month - 1 - fromDate.getMonth()))
   const years = Math.floor(totalMonths / 12)
   const months = totalMonths % 12
 

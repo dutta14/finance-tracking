@@ -502,7 +502,6 @@ describe('Empty states', () => {
     renderGoalsSection({ goals: [] })
     expect(screen.getByText(/no goals created yet/i)).toBeInTheDocument()
   })
-
 })
 
 /* ═══════════════════════════════════════════════════════════════

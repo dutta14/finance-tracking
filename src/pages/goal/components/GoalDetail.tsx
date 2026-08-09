@@ -170,13 +170,14 @@ const GoalDetail: FC<GoalDetailProps> = ({
     if (monthsToFI <= 0) return null
 
     // Discount GW target back from retirement date to FI date
-    // gwTarget is needed at retirement (retirementAge). If FIRE is earlier, 
+    // gwTarget is needed at retirement (retirementAge). If FIRE is earlier,
     // money grows from FIRE date to retirement date, so we need less at FIRE.
     const retMonth = getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge)
     const monthsFItoRetirement = monthsBetween(fiProjectedMonth, retMonth)
-    const gwTargetAtFI = monthsFItoRetirement > 0
-      ? gwTargetAtRetirement / Math.pow(1 + gwGrowth / 100 / 12, monthsFItoRetirement)
-      : gwTargetAtRetirement
+    const gwTargetAtFI =
+      monthsFItoRetirement > 0
+        ? gwTargetAtRetirement / Math.pow(1 + gwGrowth / 100 / 12, monthsFItoRetirement)
+        : gwTargetAtRetirement
 
     if (gwBal >= gwTargetAtFI) return { state: 'reached' as const }
 
@@ -188,11 +189,12 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const fiDateShort = new Date(yr, mo - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     const fiYears = Math.floor(monthsToFI / 12)
     const fiRemMonths = monthsToFI % 12
-    const timeUntilFI = fiYears > 0 && fiRemMonths > 0
-      ? `${fiYears} year${fiYears > 1 ? 's' : ''} ${fiRemMonths} month${fiRemMonths > 1 ? 's' : ''}`
-      : fiYears > 0
-        ? `${fiYears} year${fiYears > 1 ? 's' : ''}`
-        : `${fiRemMonths} month${fiRemMonths > 1 ? 's' : ''}`
+    const timeUntilFI =
+      fiYears > 0 && fiRemMonths > 0
+        ? `${fiYears} year${fiYears > 1 ? 's' : ''} ${fiRemMonths} month${fiRemMonths > 1 ? 's' : ''}`
+        : fiYears > 0
+          ? `${fiYears} year${fiYears > 1 ? 's' : ''}`
+          : `${fiRemMonths} month${fiRemMonths > 1 ? 's' : ''}`
     return {
       state: 'projected' as const,
       fiDate,
@@ -338,7 +340,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </div>
       </div>
 
-
       {/* FI Row */}
       <div className="goal-detail-section">
         <h2 className="goal-detail-column-title">
@@ -419,8 +420,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
                     >
                       {gwTargetShowRetirement
                         ? `$${Math.round(gwProjection.gwTargetAtRetirement).toLocaleString()} by ${gwProjection.retDate}`
-                        : `$${Math.round(gwProjection.gwTarget).toLocaleString()} by ${gwProjection.fiDateShort}`
-                      }
+                        : `$${Math.round(gwProjection.gwTarget).toLocaleString()} by ${gwProjection.fiDateShort}`}
                     </button>
                   </div>
                   <div className="fi-projection-row">
@@ -428,8 +428,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
                     <span className="fi-projection-val">
                       {gwProjection.monthlySaving <= 0
                         ? "You've achieved this goal 🎉"
-                        : `$${Math.round(showYearly ? gwProjection.annualSaving : gwProjection.monthlySaving).toLocaleString()}/${showYearly ? 'yr' : 'mo'}`
-                      }
+                        : `$${Math.round(showYearly ? gwProjection.annualSaving : gwProjection.monthlySaving).toLocaleString()}/${showYearly ? 'yr' : 'mo'}`}
                     </span>
                   </div>
                 </div>
@@ -437,9 +436,8 @@ const GoalDetail: FC<GoalDetailProps> = ({
               <div className="fi-projection-result-row">
                 <span className="fi-goal-prose fi-projection-result-label">→ FI in</span>
                 <p className="fi-goal-prose fi-projection-result">
-                  <strong>
-                    {formatYearMonthLong(fiYearOverride ?? fiProjectedMonth)}
-                  </strong> ({formatTimeUntilYearMonth(fiYearOverride ?? fiProjectedMonth)})
+                  <strong>{formatYearMonthLong(fiYearOverride ?? fiProjectedMonth)}</strong> (
+                  {formatTimeUntilYearMonth(fiYearOverride ?? fiProjectedMonth)})
                 </p>
               </div>
             </div>
@@ -469,10 +467,12 @@ const GoalDetail: FC<GoalDetailProps> = ({
         onRequiredSavings={handleRequiredSavings}
         gwBalance={summaryData?.gwBal || 0}
         gwMonthlyContribution={summaryData?.gwMonthly || 0}
-        gwProjectedMonthlyContribution={gwProjection?.state === 'projected' ? gwProjection.monthlySaving : (summaryData?.gwMonthly || 0)}
+        gwProjectedMonthlyContribution={
+          gwProjection?.state === 'projected' ? gwProjection.monthlySaving : summaryData?.gwMonthly || 0
+        }
         gwGrowthRate={gwGrowth}
         gwTarget={summaryData?.gwTarget || 0}
-        gwProjectedTarget={gwProjection?.state === 'projected' ? gwProjection.gwTarget : (summaryData?.gwTarget || 0)}
+        gwProjectedTarget={gwProjection?.state === 'projected' ? gwProjection.gwTarget : summaryData?.gwTarget || 0}
         gwTargetMonth={summaryData?.retMonth}
         gwDisburseMonth={(() => {
           if (!gwGoals.length || !profileBirthday) return undefined

@@ -208,14 +208,24 @@ export function buildLifecycle(
 
       // Early FIRE check: if balance can sustain drawdown to end of life, trigger FIRE now
       // Check every 3 months for early FIRE; always trigger at planned fiDate as fallback
-      const checkEarly = monthlyExpenseAtFI > 0 && rows.length % 3 === 0 && canSustainDrawdown(
-        retPrimary, retPartner, nonRet,
-        monthlyExpenseAtFI, inflationRate,
-        monthlyPreGrowth, monthlyPostGrowth,
-        cursor, end, ageBoundaryDate,
-        primaryAccessDate, partnerAccessDate,
-        cursor.getFullYear(),
-      )
+      const checkEarly =
+        monthlyExpenseAtFI > 0 &&
+        rows.length % 3 === 0 &&
+        canSustainDrawdown(
+          retPrimary,
+          retPartner,
+          nonRet,
+          monthlyExpenseAtFI,
+          inflationRate,
+          monthlyPreGrowth,
+          monthlyPostGrowth,
+          cursor,
+          end,
+          ageBoundaryDate,
+          primaryAccessDate,
+          partnerAccessDate,
+          cursor.getFullYear(),
+        )
       if (checkEarly || cursor >= fiDate) {
         fiReached = true
         const gP = retPrimary * growth
@@ -330,7 +340,6 @@ export function buildLifecycle(
         if (primaryUnlocked) retPrimary -= retPrimary * drawRatio
         if (partnerUnlocked) retPartner -= retPartner * drawRatio
       }
-
     }
 
     cursor.setMonth(cursor.getMonth() + 1)
@@ -441,19 +450,21 @@ export function buildProjectedLifecycle(
   const endOfLife = new Date(endYear, 11, 1)
 
   // Use forced FIRE date if provided, otherwise find the earliest sustainable one
-  const fiDate = forcedFireDate ?? findEarliestFIDate(
-    currentBalance,
-    monthlyContribution,
-    preGrowth,
-    postGrowth,
-    inflation,
-    monthlyExpenseToday,
-    endOfLife,
-    ageBoundaryDate,
-    breakdown,
-    retirementCap,
-    nonRetirementBase,
-  )
+  const fiDate =
+    forcedFireDate ??
+    findEarliestFIDate(
+      currentBalance,
+      monthlyContribution,
+      preGrowth,
+      postGrowth,
+      inflation,
+      monthlyExpenseToday,
+      endOfLife,
+      ageBoundaryDate,
+      breakdown,
+      retirementCap,
+      nonRetirementBase,
+    )
 
   const fiYear = fiDate.getFullYear()
   const monthlyExpenseAtFI = monthlyExpenseToday * Math.pow(1 + inflation / 100, fiYear - nowYear)

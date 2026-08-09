@@ -87,7 +87,7 @@ vi.mock('./components/GoalDiveDeep', () => ({
         data-gw-disburse-month={gwDisburseMonth ?? ''}
         data-projected-fi-month={projectedFiMonth ?? ''}
       >
-      DiveDeep
+        DiveDeep
       </div>
     )
   },
