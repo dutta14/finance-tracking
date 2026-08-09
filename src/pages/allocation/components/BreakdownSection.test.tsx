@@ -96,8 +96,8 @@ describe('BreakdownSection', () => {
   it('shows a drilldown for the selected class and hides it when the same slice is clicked again', async () => {
     const user = userEvent.setup()
     const getAccountsForClass = vi.fn(() => [
-      { name: 'Brokerage', value: 60000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
-      { name: 'Margin Loan', value: 5000, isDebt: true, owner: 'joint', ownerName: 'Joint' },
+      { id: 1, name: 'Brokerage', value: 60000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      { id: 2, name: 'Margin Loan', value: 5000, isDebt: true, owner: 'joint', ownerName: 'Joint' },
     ])
 
     render(<BreakdownSection getSlices={() => mockSlices} getAccountsForClass={getAccountsForClass} />)
@@ -143,7 +143,7 @@ describe('BreakdownSection', () => {
   it('clears the selected class when the scope changes or when the selected slice disappears', async () => {
     const user = userEvent.setup()
     const getAccountsForClass = vi.fn(() => [
-      { name: 'Brokerage', value: 60000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+      { id: 1, name: 'Brokerage', value: 60000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
     ])
 
     const { rerender } = render(

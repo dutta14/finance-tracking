@@ -14,9 +14,10 @@ import {
 } from 'recharts'
 import type { Props as LegendContentProps } from 'recharts/types/component/DefaultLegendContent'
 import { Account, BalanceEntry, formatMonth, formatCurrency } from '../data/types'
+import { useDateFilter } from '../../hooks/useDateFilter'
+import { DateFilterBar } from '../../components/DateFilterBar'
 
 type MiniChartType = 'fi-gw' | 'net-worth' | 'assets-liabilities'
-type DateFilter = 'all' | 'ytd' | 'last-12' | 'eoy' | 'custom'
 
 interface MiniChartsProps {
   accounts: Account[]
@@ -34,52 +35,7 @@ const CHART_OPTIONS: { key: MiniChartType; label: string }[] = [
 
 const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMonths, onNavigate }) => {
   const [chartType, setChartType] = useState<MiniChartType>('net-worth')
-  const [dateFilter, setDateFilter] = useState<DateFilter>('last-12')
-  const [customFrom, setCustomFrom] = useState('')
-  const [customTo, setCustomTo] = useState('')
-
-  const availableYears = useMemo(() => {
-    const years = new Set(allMonths.map(m => m.slice(0, 4)))
-    return [...years].sort()
-  }, [allMonths])
-
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, i) => {
-        const val = String(i + 1).padStart(2, '0')
-        const label = new Date(2000, i).toLocaleString('default', { month: 'short' })
-        return { val, label }
-      }),
-    [],
-  )
-
-  const filteredMonths = useMemo(() => {
-    const ascending = [...allMonths].reverse()
-    if (dateFilter === 'all') return ascending
-    const now = new Date()
-    const yr = now.getFullYear().toString()
-    const cur = `${yr}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    switch (dateFilter) {
-      case 'ytd':
-        return ascending.filter(m => m >= `${yr}-01` && m <= cur)
-      case 'last-12':
-        return ascending.slice(-12)
-      case 'eoy':
-        return ascending.filter(m => m.endsWith('-12'))
-      case 'custom':
-        return ascending.filter(m => (!customFrom || m >= customFrom) && (!customTo || m <= customTo))
-      default:
-        return ascending
-    }
-  }, [dateFilter, allMonths, customFrom, customTo])
-
-  const setCustomMonth = (which: 'from' | 'to', part: 'year' | 'month', value: string) => {
-    const setter = which === 'from' ? setCustomFrom : setCustomTo
-    const current = which === 'from' ? customFrom : customTo
-    const [y, m] = current ? current.split('-') : ['', '']
-    if (part === 'year') setter(value ? `${value}-${m || '01'}` : '')
-    else setter(y ? `${y}-${value}` : '')
-  }
+  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } = useDateFilter(allMonths, 'last-12')
 
   const fiAccounts = useMemo(() => accounts.filter(a => a.goalType === 'fi'), [accounts])
   const gwAccounts = useMemo(() => accounts.filter(a => a.goalType === 'gw'), [accounts])
@@ -221,82 +177,15 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
           </button>
         ))}
       </div>
-      <div className="home-mini-date-filter">
-        {(
-          [
-            ['all', 'All'],
-            ['ytd', 'YTD'],
-            ['last-12', '12 mo'],
-            ['eoy', 'Year-End'],
-            ['custom', 'Custom'],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            className={`home-mini-date-btn${dateFilter === key ? ' active' : ''}`}
-            onClick={() => setDateFilter(key as DateFilter)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {dateFilter === 'custom' && (
-        <div className="home-mini-custom-range">
-          <div className="home-mini-range-picker">
-            <select
-              className="home-mini-range-select"
-              value={customFrom ? customFrom.split('-')[0] : ''}
-              onChange={e => setCustomMonth('from', 'year', e.target.value)}
-            >
-              <option value="">Year</option>
-              {availableYears.map(yr => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-            </select>
-            <select
-              className="home-mini-range-select"
-              value={customFrom ? customFrom.split('-')[1] : ''}
-              onChange={e => setCustomMonth('from', 'month', e.target.value)}
-            >
-              <option value="">Month</option>
-              {monthOptions.map(({ val, label }) => (
-                <option key={val} value={val}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <span className="home-mini-range-sep">to</span>
-          <div className="home-mini-range-picker">
-            <select
-              className="home-mini-range-select"
-              value={customTo ? customTo.split('-')[0] : ''}
-              onChange={e => setCustomMonth('to', 'year', e.target.value)}
-            >
-              <option value="">Year</option>
-              {availableYears.map(yr => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-            </select>
-            <select
-              className="home-mini-range-select"
-              value={customTo ? customTo.split('-')[1] : ''}
-              onChange={e => setCustomMonth('to', 'month', e.target.value)}
-            >
-              <option value="">Month</option>
-              {monthOptions.map(({ val, label }) => (
-                <option key={val} value={val}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+      <DateFilterBar
+        dateFilter={dateFilter}
+        setDateFilter={setDateFilter}
+        customFrom={customFrom}
+        customTo={customTo}
+        onFromChange={setCustomFrom}
+        onToChange={setCustomTo}
+        allMonths={allMonths}
+      />
       <div className="home-mini-chart-area">
         {chartType === 'fi-gw' ? (
           <ResponsiveContainer width="100%" height={200}>

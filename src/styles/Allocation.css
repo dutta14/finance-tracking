@@ -30,7 +30,7 @@
 .alloc-page-section-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
@@ -110,13 +110,13 @@
 .alloc-page-chart-row {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  justify-content: center;
+  gap: 3rem;
 }
 .alloc-page-donut {
-  flex: 0 0 240px;
+  flex: 0 0 180px;
 }
 .alloc-page-legend-col {
-  flex: 1;
   min-width: 0;
 }
 .alloc-page-total-label {
@@ -135,8 +135,16 @@
 .alloc-page-legend-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
   font-size: var(--fs-md);
+  padding: 0.3rem 0;
+  transition: opacity 0.2s ease;
+}
+.alloc-page-legend-row.clickable {
+  cursor: pointer;
+}
+.alloc-page-legend-row.dimmed {
+  opacity: 0.35;
 }
 .alloc-page-legend-dot {
   width: 10px;
@@ -154,6 +162,14 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   text-align: right;
+}
+.alloc-page-legend-pct {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+  min-width: 3rem;
 }
 
 .alloc-page-empty {
@@ -198,26 +214,45 @@
 .alloc-drilldown-chart {
   margin-left: -8px;
 }
+.alloc-drilldown-composition {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+}
+.alloc-drilldown-composition > :first-child {
+  flex: 0 0 180px;
+}
 .alloc-drilldown-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.4rem;
+  min-width: 0;
 }
 .alloc-drilldown-item {
   display: grid;
-  grid-template-columns: 70px 1fr 110px 1fr;
+  grid-template-columns: 10px 70px 1fr auto auto;
   align-items: center;
-  gap: 10px;
+  gap: 1rem;
+  font-size: var(--fs-md);
+  padding: 0.3rem 0;
+  transition: opacity 0.2s ease;
 }
-.alloc-drilldown-item-info {
-  display: contents;
+.alloc-drilldown-item.clickable {
+  cursor: pointer;
 }
-.alloc-drilldown-owner {
-  justify-self: start;
+.alloc-drilldown-item.dimmed {
+  opacity: 0.35;
+}
+.alloc-drilldown-item .alloc-drilldown-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius);
+  flex-shrink: 0;
 }
 .alloc-drilldown-item-name {
-  font-size: var(--fs-md);
-  color: var(--color-text);
+  flex: 1;
+  color: var(--color-text-heading);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -231,31 +266,35 @@
   border-radius: var(--radius);
   white-space: nowrap;
 }
-.alloc-drilldown-item-right {
-  display: contents;
+.alloc-drilldown-item-pct {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 3rem;
+  text-align: right;
 }
 .alloc-drilldown-item-value {
-  font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  min-width: 5rem;
   text-align: right;
 }
 .alloc-drilldown-item-value--debt {
   color: #ef4444;
 }
-.alloc-drilldown-bar-track {
-  height: 8px;
-  background: var(--color-surface-hover);
-  border-radius: 4px;
-  overflow: hidden;
-  min-width: 60px;
+
+/* ── Trend chart ─────────────────────────────────────────────── */
+
+.alloc-trend-chart {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
 }
-.alloc-drilldown-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
+.alloc-trend-chart .date-filter-wrap {
+  margin-bottom: 0.5rem;
 }
 
 /* ── Ratio presets ───────────────────────────────────────────── */

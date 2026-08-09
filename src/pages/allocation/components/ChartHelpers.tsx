@@ -63,17 +63,26 @@ export const DonutChart: FC<DonutChartProps> = ({
 interface LegendProps {
   data: ChartDatum[]
   total: number
-  mode: 'pct' | 'val'
+  mode?: 'pct' | 'val'
+  selectedIndex?: number
+  onClickRow?: (index: number) => void
 }
 
-export const Legend: FC<LegendProps> = ({ data, total, mode }) => (
+export const Legend: FC<LegendProps> = ({ data, total, selectedIndex = -1, onClickRow }) => (
   <div className="alloc-page-legend">
     {data.map((d, i) => (
-      <div key={i} className="alloc-page-legend-row">
+      <div
+        key={i}
+        className={`alloc-page-legend-row${onClickRow ? ' clickable' : ''}${selectedIndex >= 0 && selectedIndex !== i ? ' dimmed' : ''}`}
+        onClick={() => onClickRow?.(i)}
+      >
         <span className="alloc-page-legend-dot" style={{ background: d.color }} />
         <span className="alloc-page-legend-label">{d.name}</span>
         <span className="alloc-page-legend-val">
-          {mode === 'pct' ? `${((d.value / total) * 100).toFixed(1)}%` : formatCurrency(d.value)}
+          {formatCurrency(d.value)}
+        </span>
+        <span className="alloc-page-legend-pct">
+          {((d.value / total) * 100).toFixed(1)}%
         </span>
       </div>
     ))}

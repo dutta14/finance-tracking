@@ -351,69 +351,8 @@
 }
 
 /* Mini date filter */
-.home-mini-date-filter {
-  display: flex;
-  gap: 0;
+.home-card--charts .date-filter-wrap {
   margin-bottom: 0.5rem;
-}
-.home-mini-date-btn {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-right: none;
-  padding: 0.2rem 0.5rem;
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-.home-mini-date-btn:first-child {
-  border-radius: var(--radius) 0 0 4px;
-}
-.home-mini-date-btn:last-child {
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  border-right: 1px solid var(--color-border);
-}
-.home-mini-date-btn:hover {
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-}
-.home-mini-date-btn.active {
-  color: var(--accent);
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-.home-mini-date-btn.active + .home-mini-date-btn {
-  border-left-color: var(--accent-border);
-}
-
-.home-mini-custom-range {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-}
-.home-mini-range-picker {
-  display: flex;
-  gap: 0.25rem;
-}
-.home-mini-range-select {
-  font-size: var(--fs-xs);
-  padding: 0.15rem 0.3rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  color: var(--color-text-heading);
-  outline: none;
-}
-.home-mini-range-select:focus {
-  border-color: var(--accent);
-}
-.home-mini-range-sep {
-  font-size: var(--fs-xs);
-  color: var(--color-text-muted);
 }
 
 .home-mini-chart-area {
@@ -1038,7 +977,7 @@ body.dark .home-card-cta-btn:hover {
   .home-card-cta-btn,
   .nw-month-arrow,
   .home-mini-tab,
-  .home-mini-date-btn,
+  .data-filter-btn,
   .alloc-bar-seg,
   .alloc-toggle-btn {
     transition: none;
