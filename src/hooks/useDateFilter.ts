@@ -52,7 +52,7 @@ export function useDateFilter(allMonths: string[], defaultFilter: DateFilter = '
   }
 
   const filteredMonths = useMemo(() => {
-    const ascending = [...allMonths].reverse()
+    const ascending = [...allMonths].sort()
     if (dateFilter === 'all') return ascending
     const now = new Date()
     const yr = now.getFullYear().toString()
