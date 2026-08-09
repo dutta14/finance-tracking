@@ -286,6 +286,7 @@ export const FiSavingsPlan: FC<SavingsPlanProps> = ({
             <span className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
               {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
             </span>
+            {' '}upto {new Date(retirementMonth.replace('-', '/') + '/01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </>
         )}
       </p>
@@ -337,6 +338,7 @@ export const GwSavingsPlan: FC<SavingsPlanProps> = ({
             <span className="splan-simple-amount goal-summary-toggleable" onClick={onTogglePeriod}>
               {formatCurrency(showYearly ? monthlySaving * 12 : monthlySaving)}/{showYearly ? 'yr' : 'mo'}
             </span>
+            {' '}upto {new Date(retirementMonth.replace('-', '/') + '/01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </>
         )}
       </p>

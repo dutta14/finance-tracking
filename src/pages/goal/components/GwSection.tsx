@@ -173,30 +173,9 @@ const GwGoalCard: FC<{
         )}
         <div className="gw-goal-card-actions">
           {!editing && (
-            <button className="gw-goal-edit" onClick={() => setEditing(true)} aria-label="Edit GW goal">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M11.5 2.5 L13.5 4.5 L5 13 H3 V11 L11.5 2.5Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path d="M10 4 L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </button>
+            <button className="gw-goal-action-btn" onClick={() => setEditing(true)}>Edit</button>
           )}
-          <button className="gw-goal-delete" onClick={handleDeleteClick} aria-label="Delete GW goal">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M2.5 3.5h11M6.5 6.5v5M9.5 6.5v5M3.5 3.5l0.5 10c0 0.3 0.2 0.5 0.5 0.5h7c0.3 0 0.5-0.2 0.5-0.5l0.5-10M5.5 3.5V2.5c0-0.3 0.2-0.5 0.5-0.5h4c0.3 0 0.5 0.2 0.5 0.5v1"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+          <button className="gw-goal-action-btn gw-goal-action-btn--delete" onClick={handleDeleteClick}>Delete</button>
         </div>
       </div>
 
@@ -394,7 +373,7 @@ const GwSection: FC<GwSectionProps> = ({
             </button>
             {otherGoals.length > 0 && (
               <button className="gw-add-btn gw-add-btn--copy" onClick={() => setImportPickerOpen(v => !v)}>
-                Copy from existing
+                Copy goal
               </button>
             )}
           </div>
@@ -463,14 +442,14 @@ const GwSection: FC<GwSectionProps> = ({
                   setImportPickerOpen(false)
                 }}
               >
-                + Add another GW goal
+                Add goal
               </button>
               {otherGoals.length > 0 && (
                 <button
                   className="gw-add-btn gw-add-btn--copy gw-add-btn--inline"
                   onClick={() => setImportPickerOpen(v => !v)}
                 >
-                  Copy from existing
+                  Copy goal
                 </button>
               )}
               {importPickerOpen && (

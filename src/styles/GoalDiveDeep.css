@@ -64,7 +64,7 @@
 }
 
 .btn-dive-deep:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -202,7 +202,7 @@ body.dark .projection-chart-wrapper {
 }
 
 .projection-tooltip-row--pct {
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
   font-weight: var(--fw-semibold);
   border-top: 1px solid var(--color-border);
   margin-top: 0.25rem;
@@ -210,7 +210,7 @@ body.dark .projection-chart-wrapper {
 }
 
 .projection-chart-wrapper:focus {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -282,7 +282,7 @@ body.dark .projection-chart-wrapper {
 
 .projection-rate-shift-row td {
   padding: 0.375rem 0.75rem;
-  border-top: 2px dashed var(--accent);
+  border-top: 2px dashed var(--color-text-secondary, #6b7280);
   border-bottom: none;
   background: var(--color-surface-hover, var(--color-surface));
 }
@@ -290,7 +290,7 @@ body.dark .projection-chart-wrapper {
 .projection-rate-shift-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
   letter-spacing: 0.02em;
 }
 
@@ -323,11 +323,11 @@ body.dark .projection-chart-wrapper {
 }
 
 .projection-fire-row td {
-  border-top: 2px dashed var(--accent, #0f766e);
+  border-top: 2px dashed var(--color-text-secondary, #6b7280);
 }
 
 .projection-fire-row .projection-rate-shift-label {
-  color: var(--accent, #0f766e);
+  color: var(--color-text-secondary, #6b7280);
   font-weight: 600;
 }
 

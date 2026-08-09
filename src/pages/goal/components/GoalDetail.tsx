@@ -1,14 +1,12 @@
-import { FC, useState, useRef, useEffect, useMemo } from 'react'
+import { FC, useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
-import { formatCurrency } from '../../data/types'
-import { appStorage } from '../../../utils/appStorage'
 import GoalDetailedCard from './GoalDetailedCard'
 import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
-import { FiSavingsPlan, GwSavingsPlan } from './SavingsPlan'
+import { GwSavingsPlan } from './SavingsPlan'
 import GrowthSettingsPanel from './GrowthSettingsPanel'
 import {
   getTotalForMonth,
@@ -19,6 +17,7 @@ import {
   getGwTarget,
 } from '../utils/goalMath'
 import { getFiTarget } from '../utils/goalCalculations'
+import { formatTimeUntilYearMonth, formatYearMonthLong, parseShortMonthYear } from '../utils/dateHelpers'
 import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
 import { useGrowthSettings } from '../hooks/useGrowthSettings'
 import '../../../styles/GoalDetail.css'
@@ -26,58 +25,6 @@ import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
 import '../../../styles/GrowthSettings.css'
-
-/** Inline value that shows formatted text, becomes an input on click */
-const InlineEditableValue: FC<{
-  value: string
-  onChange: (v: string) => void
-  displayValue: string
-  placeholder: string
-  ariaLabel: string
-  narrow?: boolean
-}> = ({ value, onChange, displayValue, placeholder, ariaLabel, narrow }) => {
-  const [editing, setEditing] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  if (!editing) {
-    return (
-      <strong
-        className="goal-summary-toggleable"
-        onClick={() => {
-          setEditing(true)
-          setTimeout(() => inputRef.current?.focus(), 0)
-        }}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            setEditing(true)
-            setTimeout(() => inputRef.current?.focus(), 0)
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={ariaLabel}
-      >
-        {value ? displayValue : placeholder}
-      </strong>
-    )
-  }
-
-  return (
-    <input
-      ref={inputRef}
-      className={`goal-summary-inline-input${narrow ? ' goal-summary-inline-input--narrow' : ''}`}
-      type="text"
-      inputMode="numeric"
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      onBlur={() => setEditing(false)}
-      placeholder={placeholder}
-      aria-label={ariaLabel}
-      autoFocus
-    />
-  )
-}
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
@@ -116,21 +63,37 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const [renameMode, setRenameMode] = useState(false)
   const [renameName, setRenameName] = useState('')
   const [showYearly, setShowYearly] = useState(false)
-  const [annualSpending, setAnnualSpending] = useState(() => (goal?.annualSpending ? String(goal.annualSpending) : ''))
-  const [incomeTaxRate, setIncomeTaxRate] = useState(() => (goal?.incomeTaxRate ? String(goal.incomeTaxRate) : ''))
+  const [fiProjectedMonth, setFiProjectedMonth] = useState<string | null>(null)
+  const [fiYearOverride, setFiYearOverride] = useState<string | null>(null)
+  const [chartRequiredSavings, setChartRequiredSavings] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
-  const savingsOverride = goal?.savingsOverride ?? null
+  const [localSavingsOverride, setLocalSavingsOverride] = useState<number | null>(null)
+  const savingsOverride = localSavingsOverride
 
-  const setSavingsOverride = (v: number | null) => {
-    if (!goal) return
-    onUpdateGoal(goalId, { ...goal, savingsOverride: v })
-  }
+  const handleFireMonth = useCallback((month: string | null) => {
+    const nextMonth = month ? parseShortMonthYear(month) : null
+    setFiProjectedMonth(prev => (prev === nextMonth ? prev : nextMonth))
+  }, [])
+
+  const handleSavingsOverrideChange = useCallback((v: number | null) => {
+    setLocalSavingsOverride(prev => (prev === v ? prev : v))
+  }, [])
+
+  const handleFiYearOverrideChange = useCallback((v: string | null) => {
+    setFiYearOverride(prev => (prev === v ? prev : v))
+  }, [])
+
+  const handleRequiredSavings = useCallback((v: number | null) => {
+    setChartRequiredSavings(prev => (prev === v ? prev : v))
+  }, [])
 
   // Sync state when navigating between goals
   useEffect(() => {
-    setAnnualSpending(goal?.annualSpending ? String(goal.annualSpending) : '')
-    setIncomeTaxRate(goal?.incomeTaxRate ? String(goal.incomeTaxRate) : '')
-  }, [goal?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    setRenameMode(false)
+    setFiYearOverride(null)
+    setChartRequiredSavings(null)
+    setLocalSavingsOverride(null)
+  }, [goal?.id])
 
   const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
   const gwGrowth = growthCtx.settings.gwGrowth
@@ -194,39 +157,48 @@ const GoalDetail: FC<GoalDetailProps> = ({
     return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown, gwMonthly }
   }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
 
-  const handleSpendingChange = (v: string) => {
-    setAnnualSpending(v)
-    const parsed = Number(v.replace(/[^0-9.]/g, '')) || 0
-    if (goal) onUpdateGoal(goalId, { ...goal, annualSpending: parsed || null })
-  }
+  // GW Projection: how much to save for GW if FIRE happens at projected FI date
+  const gwProjection = useMemo(() => {
+    if (!goal || !fiProjectedMonth || allMonths.length === 0) return null
+    const gwTargetAtRetirement = getGwTarget(goal, gwGoals, profileBirthday, growthCtx.settings.inflation)
+    if (gwTargetAtRetirement <= 0) return null
+    const currentMonth = allMonths[allMonths.length - 1]
+    const gwBal = getTotalForMonth(accounts, balances, currentMonth, 'gw')
 
-  const handleTaxRateChange = (v: string) => {
-    setIncomeTaxRate(v)
-    const parsed = Number(v) || 0
-    if (goal) onUpdateGoal(goalId, { ...goal, incomeTaxRate: parsed || null })
-  }
+    const monthsToFI = monthsBetween(currentMonth, fiProjectedMonth)
+    if (monthsToFI <= 0) return null
 
-  const parsedSpending = Number(annualSpending.replace(/[^0-9.]/g, '')) || 0
-  const parsedTaxRate = Number(incomeTaxRate) || 0
-  const annualSavingsNeeded = (summaryData?.totalNeeded ?? 0) * 12
-  const grossIncome = parsedTaxRate < 100 ? (annualSavingsNeeded + parsedSpending) / (1 - parsedTaxRate / 100) : 0
+    // Discount GW target back from retirement date to FI date
+    // gwTarget is needed at retirement (retirementAge). If FIRE is earlier, 
+    // money grows from FIRE date to retirement date, so we need less at FIRE.
+    const retMonth = getRetirementMonth(goal.birthday || profileBirthday, goal.retirementAge)
+    const monthsFItoRetirement = monthsBetween(fiProjectedMonth, retMonth)
+    const gwTargetAtFI = monthsFItoRetirement > 0
+      ? gwTargetAtRetirement / Math.pow(1 + gwGrowth / 100 / 12, monthsFItoRetirement)
+      : gwTargetAtRetirement
 
-  const lastYearGross = useMemo(() => {
-    const lastYear = new Date().getFullYear() - 1
-    try {
-      const overrides = appStorage.getJSON<Record<number, { grossIncome?: number; taxes?: number }>>(
-        'sgt-overrides',
-        {},
-      )
-      const entry = overrides[lastYear]
-      if (!entry?.grossIncome) return null
-      const taxRate =
-        entry.taxes != null && entry.grossIncome ? ((entry.taxes / entry.grossIncome) * 100).toFixed(1) : null
-      return { grossIncome: entry.grossIncome, taxRate }
-    } catch {
-      return null
+    if (gwBal >= gwTargetAtFI) return { state: 'reached' as const }
+
+    const requiredMonthly = calcMonthlySaving(gwBal, gwTargetAtFI, gwGrowth, monthsToFI)
+    const [yr, mo] = fiProjectedMonth.split('-').map(Number)
+    const fiDate = new Date(yr, mo - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    const fiYears = Math.floor(monthsToFI / 12)
+    const fiRemMonths = monthsToFI % 12
+    const timeUntilFI = fiYears > 0 && fiRemMonths > 0
+      ? `${fiYears} year${fiYears > 1 ? 's' : ''} ${fiRemMonths} month${fiRemMonths > 1 ? 's' : ''}`
+      : fiYears > 0
+        ? `${fiYears} year${fiYears > 1 ? 's' : ''}`
+        : `${fiRemMonths} month${fiRemMonths > 1 ? 's' : ''}`
+    return {
+      state: 'projected' as const,
+      fiDate,
+      timeUntilFI,
+      monthlySaving: requiredMonthly,
+      annualSaving: requiredMonthly * 12,
+      gwTarget: gwTargetAtFI,
+      gwTargetAtRetirement,
     }
-  }, [])
+  }, [goal, fiProjectedMonth, allMonths, accounts, balances, profileBirthday, gwGoals, gwGrowth, growthCtx.settings])
 
   if (!goal) {
     return (
@@ -360,129 +332,14 @@ const GoalDetail: FC<GoalDetailProps> = ({
         </div>
       </div>
 
-      {summaryData && (
-        <div className="goal-summary-card">
-          <p className="goal-summary-prose">
-            {!summaryData.hasGoals ? (
-              <>Set an FI target or add GW goals to see your savings plan.</>
-            ) : summaryData.totalNeeded > 0 ? (
-              <>
-                To achieve your goals, you need to save{' '}
-                <strong
-                  className="goal-summary-toggleable"
-                  onClick={() => setShowYearly(v => !v)}
-                  title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
-                >
-                  {showYearly
-                    ? `${formatCurrency(summaryData.totalNeeded * 12)}/yr`
-                    : `${formatCurrency(summaryData.totalNeeded)}/mo`}
-                </strong>
-                .
-              </>
-            ) : (
-              <>🎉 You&apos;ve already achieved all your goals at the current growth rate.</>
-            )}
-          </p>
-          {summaryData.totalNeeded > 0 && yearMonthlySaving !== null && (
-            <p className="goal-summary-prose">
-              {summaryYear < new Date().getFullYear() ? 'You saved' : 'You\u0027re saving'}{' '}
-              <strong
-                className="goal-summary-toggleable"
-                onClick={() => setShowYearly(v => !v)}
-                title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
-              >
-                {showYearly
-                  ? `${formatCurrency(yearMonthlySaving * 12)}/yr`
-                  : `${formatCurrency(yearMonthlySaving)}/mo`}
-              </strong>{' '}
-              in{' '}
-              <select
-                className="goal-summary-year-select"
-                value={summaryYear}
-                onChange={e => setSummaryYear(Number(e.target.value))}
-              >
-                {availableYears.map(y => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-              {yearMonthlySaving >= summaryData.totalNeeded ? (
-                summaryYear < new Date().getFullYear() ? (
-                  ' \u2014 you were on track.'
-                ) : (
-                  ' \u2014 you\u2019re on track.'
-                )
-              ) : (
-                <>
-                  {summaryYear < new Date().getFullYear() ? ' \u2014 you needed ' : ' \u2014 you need '}
-                  <strong
-                    className="goal-summary-toggleable"
-                    onClick={() => setShowYearly(v => !v)}
-                    title={showYearly ? 'Click to show monthly' : 'Click to show yearly'}
-                  >
-                    {showYearly
-                      ? `${formatCurrency((summaryData.totalNeeded - yearMonthlySaving) * 12)}/yr`
-                      : `${formatCurrency(summaryData.totalNeeded - yearMonthlySaving)}/mo`}
-                  </strong>
-                  {' more.'}
-                </>
-              )}
-            </p>
-          )}
-          {summaryData.totalNeeded > 0 && (
-            <p className="goal-summary-prose">
-              If you want to spend{' '}
-              <InlineEditableValue
-                value={annualSpending}
-                onChange={handleSpendingChange}
-                displayValue={parsedSpending ? `${formatCurrency(parsedSpending)}` : '$0'}
-                placeholder="$0"
-                ariaLabel="Annual spending"
-              />
-              /yr, and your tax rate is{' '}
-              <InlineEditableValue
-                value={incomeTaxRate}
-                onChange={handleTaxRateChange}
-                displayValue={parsedTaxRate ? `${parsedTaxRate}` : '0'}
-                placeholder="0"
-                ariaLabel="Income tax rate"
-                narrow
-              />
-              %, then your gross income should at least be <strong>{formatCurrency(grossIncome)}/yr</strong>.
-            </p>
-          )}
-          {lastYearGross !== null && (
-            <p className="goal-summary-prose">
-              Your gross income last year was <strong>{formatCurrency(lastYearGross.grossIncome)}</strong>
-              {lastYearGross.taxRate !== null && (
-                <>
-                  , and your tax rate was <strong>{lastYearGross.taxRate}%</strong>
-                </>
-              )}
-              .
-            </p>
-          )}
-        </div>
-      )}
 
-      <div className="goal-detail-body goal-detail-body--columns">
-        <div className="goal-detail-column">
-          <h2 className="goal-detail-column-title">
-            <span className="goal-detail-column-badge goal-detail-column-badge--fi">FI</span>
-            Financial Independence
-          </h2>
-          <FiSavingsPlan
-            goal={goal}
-            gwGoals={gwGoals}
-            profileBirthday={profileBirthday}
-            growthRate={fiGrowth}
-            postGrowthRate={growthCtx.settings.postBoundaryGrowth}
-            ageBoundary={growthCtx.settings.ageBoundary}
-            showYearly={showYearly}
-            onTogglePeriod={() => setShowYearly(v => !v)}
-            inflation={growthCtx.settings.inflation}
-          />
+      {/* FI Row */}
+      <div className="goal-detail-section">
+        <h2 className="goal-detail-column-title">
+          <span className="goal-detail-column-badge goal-detail-column-badge--fi">FI</span>
+          Financial Independence
+        </h2>
+        <div className="goal-detail-section-cards">
           <GoalDetailedCard
             goal={goal}
             profileBirthday={profileBirthday}
@@ -496,27 +353,37 @@ const GoalDetail: FC<GoalDetailProps> = ({
             showYearly={showYearly}
             onTogglePeriod={() => setShowYearly(v => !v)}
             summaryYear={summaryYear}
+            availableYears={availableYears}
+            onSummaryYearChange={setSummaryYear}
             savingsOverride={savingsOverride}
-            onSavingsOverrideChange={setSavingsOverride}
+            onSavingsOverrideChange={handleSavingsOverrideChange}
             gwMonthlySavings={summaryData?.gwMonthly ?? 0}
+            fiProjectedMonth={fiProjectedMonth}
+            fiYearOverride={fiYearOverride}
+            onFiYearOverrideChange={handleFiYearOverrideChange}
+            chartRequiredSavings={chartRequiredSavings}
           />
         </div>
+      </div>
 
-        <div className="goal-detail-column">
-          <h2 className="goal-detail-column-title">
-            <span className="goal-detail-column-badge goal-detail-column-badge--gw">GW</span>
-            Generational Wealth
-          </h2>
-          <GwSavingsPlan
-            goal={goal}
-            gwGoals={gwGoals}
-            profileBirthday={profileBirthday}
-            growthRate={gwGrowth}
-            showYearly={showYearly}
-            onTogglePeriod={() => setShowYearly(v => !v)}
-            inflation={growthCtx.settings.inflation}
-          />
-          <div className="goal-detail-column-card">
+      {/* GW Row */}
+      <div className="goal-detail-section">
+        <h2 className="goal-detail-column-title">
+          <span className="goal-detail-column-badge goal-detail-column-badge--gw">GW</span>
+          Generational Wealth
+        </h2>
+        <div className="goal-detail-section-cards">
+          <div className="fi-card">
+            <h3 className="fi-card-section-title">Planned Goal</h3>
+            <GwSavingsPlan
+              goal={goal}
+              gwGoals={gwGoals}
+              profileBirthday={profileBirthday}
+              growthRate={gwGrowth}
+              showYearly={showYearly}
+              onTogglePeriod={() => setShowYearly(v => !v)}
+              inflation={growthCtx.settings.inflation}
+            />
             {goal.fiGoal > 0 && (
               <GwSection
                 goal={goal}
@@ -531,6 +398,37 @@ const GoalDetail: FC<GoalDetailProps> = ({
               />
             )}
           </div>
+
+          {gwProjection && gwProjection.state === 'projected' && fiProjectedMonth && (
+            <div className="fi-card">
+              <h3 className="fi-card-section-title">Projections</h3>
+              <div className="fi-projection-block">
+                <div className="fi-projection-rows">
+                  <div className="fi-projection-row">
+                    <span className="fi-projection-key">GW target</span>
+                    <span className="fi-projection-val">{'$' + Math.round(gwProjection.gwTarget).toLocaleString()}</span>
+                  </div>
+                  <div className="fi-projection-row">
+                    <span className="fi-projection-key">Saving</span>
+                    <span className="fi-projection-val">
+                      {gwProjection.monthlySaving <= 0
+                        ? "You've achieved this goal 🎉"
+                        : `$${Math.round(showYearly ? gwProjection.annualSaving : gwProjection.monthlySaving).toLocaleString()}/${showYearly ? 'yr' : 'mo'}`
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="fi-projection-result-row">
+                <span className="fi-goal-prose fi-projection-result-label">→ FI in</span>
+                <p className="fi-goal-prose fi-projection-result">
+                  <strong>
+                    {formatYearMonthLong(fiYearOverride ?? fiProjectedMonth)}
+                  </strong> ({formatTimeUntilYearMonth(fiYearOverride ?? fiProjectedMonth)})
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -550,6 +448,10 @@ const GoalDetail: FC<GoalDetailProps> = ({
         partnerRetirementAccessAge={growthCtx.settings.partnerRetirementAccessAge}
         retirementCap={growthCtx.settings.retirementCap}
         nonRetirementBase={growthCtx.settings.nonRetirementBase}
+        showYearly={showYearly}
+        targetFireDate={fiYearOverride}
+        onFireMonth={handleFireMonth}
+        onRequiredSavings={handleRequiredSavings}
       />
     </div>
   )

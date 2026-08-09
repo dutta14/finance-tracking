@@ -15,7 +15,7 @@
 }
 
 .goal-mini-card:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
@@ -127,9 +127,9 @@
   padding: 0.3rem 0.7rem;
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
-  color: var(--accent);
+  color: var(--color-text-secondary, #6b7280);
   background: none;
-  border: 1px dashed var(--accent);
+  border: 1px dashed var(--color-text-secondary, #6b7280);
   border-radius: var(--radius);
   cursor: pointer;
   transition:
@@ -137,8 +137,8 @@
     color 0.15s;
 }
 .mini-card-add-gw:hover {
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
 }
 
 /* List mode */
@@ -245,9 +245,9 @@
 .goal-rename-inline {
   padding: 1rem 1.25rem;
   background: var(--color-surface);
-  border: 1.5px solid var(--accent);
+  border: 1.5px solid var(--color-text-secondary, #6b7280);
   border-radius: var(--radius);
-  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
 }
 
 .goal-rename-input {
@@ -255,7 +255,7 @@
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   border: none;
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 2px solid var(--color-text-secondary, #6b7280);
   outline: none;
   padding: 0.25rem 0;
   background: transparent;

@@ -74,7 +74,7 @@ function canSustainDrawdown(
 }
 
 // Find earliest month where 3-bucket corpus can sustain base×inflation expenses to end of life
-function findEarliestFIDate(
+export function findEarliestFIDate(
   currentBalance: number,
   monthlyContribution: number,
   preGrowth: number,
@@ -423,6 +423,7 @@ export function buildProjectedLifecycle(
   ageBoundary?: number,
   breakdown?: BalanceBreakdown,
   inflationOverride?: number,
+  forcedFireDate?: Date | null,
 ): ProjectionRow[] {
   const birthday = profileBirthday || goal.birthday
   if (!birthday || !goal.goalEndYear) return []
@@ -443,8 +444,8 @@ export function buildProjectedLifecycle(
 
   const endOfLife = new Date(endYear, 11, 1)
 
-  // Find earliest FI date where 3-bucket corpus sustains base×inflation expenses to end of life
-  const fiDate = findEarliestFIDate(
+  // Use forced FIRE date if provided, otherwise find the earliest sustainable one
+  const fiDate = forcedFireDate ?? findEarliestFIDate(
     currentBalance,
     monthlyContribution,
     preGrowth,

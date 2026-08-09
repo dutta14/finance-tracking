@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -18,25 +18,46 @@ vi.mock('./components/GoalDetailedCard', () => ({
     goal,
     inflation,
     savingsOverride,
+    fiProjectedMonth,
     onSavingsOverrideChange,
   }: {
     goal: FinancialGoal
     inflation?: number
     savingsOverride?: number | null
+    fiProjectedMonth?: string | null
     onSavingsOverrideChange?: (value: number | null) => void
   }) => (
-    <div data-testid="detailed-card" data-inflation={inflation} data-savings-override={savingsOverride ?? ''}>
+    <div
+      data-testid="detailed-card"
+      data-inflation={inflation}
+      data-savings-override={savingsOverride ?? ''}
+      data-fi-projected-month={fiProjectedMonth ?? ''}
+    >
       <div>{goal.goalName}</div>
       <button onClick={() => onSavingsOverrideChange?.(4321)}>Set savings override</button>
     </div>
   ),
 }))
 vi.mock('./components/GoalDiveDeep', () => ({
-  default: ({ inflation, monthlyContribution }: { inflation?: number; monthlyContribution?: number }) => (
-    <div data-testid="dive-deep" data-inflation={inflation} data-monthly-contribution={monthlyContribution}>
+  default: ({
+    inflation,
+    monthlyContribution,
+    onFireMonth,
+  }: {
+    inflation?: number
+    monthlyContribution?: number
+    onFireMonth?: (month: string | null) => void
+  }) => {
+    useEffect(() => {
+      onFireMonth?.('Aug 2036')
+    }, [onFireMonth])
+
+    return (
+      <div data-testid="dive-deep" data-inflation={inflation} data-monthly-contribution={monthlyContribution}>
       DiveDeep
-    </div>
-  ),
+      </div>
+    )
+  },
 }))
 vi.mock('./components/GwSection', () => ({
   default: () => <div data-testid="gw-section">GwSection</div>,
@@ -249,6 +270,14 @@ describe('GoalDetail rendering', () => {
     const zeroGoal = makeGoal({ id: 1, goalName: 'Zero', fiGoal: 0 })
     renderDetail('/goal/1', { goals: [zeroGoal] })
     expect(screen.queryByTestId('gw-section')).not.toBeInTheDocument()
+  })
+
+  it('keeps the projected FIRE month reported by the chart on initial load', async () => {
+    renderDetail('/goal/1')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('detailed-card')).toHaveAttribute('data-fi-projected-month', '2036-08')
+    })
   })
 })
 

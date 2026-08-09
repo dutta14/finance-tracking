@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { FinancialGoal } from '../../../types'
 import {
   ProjectionRow,
@@ -6,8 +6,8 @@ import {
   buildPlannedProjection,
   buildProjectedLifecycle,
 } from '../utils/lifecycleProjection'
-import { getFiTarget } from '../utils/goalCalculations'
-import { FiBreakdown } from '../utils/goalMath'
+import { computeRequiredCorpus, getFiTarget } from '../utils/goalCalculations'
+import { calcMonthlySaving, FiBreakdown } from '../utils/goalMath'
 import LifecycleChart from './LifecycleChart'
 import LifecycleTable from './LifecycleTable'
 import '../../../styles/GoalDiveDeep.css'
@@ -28,6 +28,10 @@ interface GoalDiveDeepProps {
   partnerRetirementAccessAge?: number
   retirementCap: number
   nonRetirementBase: number
+  showYearly?: boolean
+  targetFireDate?: string | null
+  onFireMonth?: (month: string | null) => void
+  onRequiredSavings?: (monthlySavings: number | null) => void
 }
 
 type DataMode = 'projected' | 'planned'
@@ -60,6 +64,10 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
   partnerRetirementAccessAge = 59.5,
   retirementCap,
   nonRetirementBase,
+  showYearly = false,
+  targetFireDate,
+  onFireMonth,
+  onRequiredSavings,
 }) => {
   const [interval, setInterval] = useState<ViewInterval>('yearly')
   const [viewMode, setViewMode] = useState<ViewMode>('chart')
@@ -125,42 +133,106 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     return (needed * r) / (factor - 1)
   }, [goal, profileBirthday, currentBalance, currentMonth, growthRate, fiTarget])
 
-  const projection = useMemo(
+  // Convert targetFireDate "YYYY-MM" to a Date for forced FIRE
+  // Offset by -1 month because buildLifecycle's transition row uses accumulation phase,
+  // and the first drawdown row appears the month after cursor >= fiDate
+  const forcedFireDate = useMemo(() => {
+    if (!targetFireDate) return null
+    const [yr, mo] = targetFireDate.split('-').map(Number)
+    return new Date(yr, mo - 2, 1)
+  }, [targetFireDate])
+
+  // Compute required monthly savings for the target FIRE date (direct formula, no search)
+  const requiredMonthlySavings = useMemo(() => {
+    if (!forcedFireDate) return null
+
+    const birthday = profileBirthday || goal.birthday
+    if (!birthday || !goal.goalEndYear) return null
+
+    const preGrowth = growthRate
+    const postGrowth = postGrowthRate
+    const boundary = ageBoundary
+    const inflationRate = inflation
+    const endYear = new Date(goal.goalEndYear).getFullYear()
+    const now = new Date()
+    const [by, bm] = birthday.split('-').map(Number)
+    const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
+    const retirementYear = new Date(by + goal.retirementAge, bm - 1, 1).getFullYear()
+    const monthlyExpenseToday = goal.monthlyExpense2047 / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
+
+    // What expense will be at target FIRE date
+    const fiYear = forcedFireDate.getFullYear()
+    const monthlyExpenseAtFI = monthlyExpenseToday * Math.pow(1 + inflationRate / 100, fiYear - now.getFullYear())
+    const endOfLife = new Date(endYear, 11, 1)
+
+    // Required corpus at the target date to sustain expenses until end of life
+    const requiredCorpus = computeRequiredCorpus(
+      forcedFireDate, endOfLife, ageBoundaryDate,
+      monthlyExpenseAtFI, inflationRate, preGrowth, postGrowth,
+    )
+
+    // How many months from now to target FIRE date
+    const monthsToFI = (fiYear - now.getFullYear()) * 12 + (forcedFireDate.getMonth() - now.getMonth())
+    if (monthsToFI <= 0) return monthlyContribution
+
+    // Direct formula: what monthly saving gets us from currentBalance to requiredCorpus in monthsToFI months
+    return Math.max(0, calcMonthlySaving(currentBalance, requiredCorpus, preGrowth, monthsToFI))
+  }, [forcedFireDate, goal, profileBirthday, currentBalance, monthlyContribution,
+      growthRate, postGrowthRate, ageBoundary, inflation])
+
+  const projectedProjection = useMemo(
     () =>
-      scenario === 'planned'
-        ? buildPlannedProjection(
-            goal,
-            profileBirthday,
-            currentBalance,
-            retirementCap,
-            nonRetirementBase,
-            plannedMonthly,
-            growthRate,
-            postGrowthRate,
-            ageBoundary,
-            breakdown,
-            inflation,
-          )
-        : buildProjectedLifecycle(
-            goal,
-            profileBirthday,
-            currentBalance,
-            monthlyContribution,
-            retirementCap,
-            nonRetirementBase,
-            growthRate,
-            postGrowthRate,
-            ageBoundary,
-            breakdown,
-            inflation,
-          ),
+      buildProjectedLifecycle(
+        goal,
+        profileBirthday,
+        currentBalance,
+        requiredMonthlySavings ?? monthlyContribution,
+        retirementCap,
+        nonRetirementBase,
+        growthRate,
+        postGrowthRate,
+        ageBoundary,
+        breakdown,
+        inflation,
+        forcedFireDate,
+      ),
     [
       goal,
       profileBirthday,
       currentBalance,
+      requiredMonthlySavings,
       monthlyContribution,
+      growthRate,
+      postGrowthRate,
+      ageBoundary,
+      inflation,
+      breakdown,
+      retirementCap,
+      nonRetirementBase,
+      forcedFireDate,
+    ],
+  )
+
+  const plannedProjection = useMemo(
+    () =>
+      buildPlannedProjection(
+        goal,
+        profileBirthday,
+        currentBalance,
+        retirementCap,
+        nonRetirementBase,
+        plannedMonthly,
+        growthRate,
+        postGrowthRate,
+        ageBoundary,
+        breakdown,
+        inflation,
+      ),
+    [
+      goal,
+      profileBirthday,
+      currentBalance,
       plannedMonthly,
-      scenario,
       growthRate,
       postGrowthRate,
       ageBoundary,
@@ -171,6 +243,8 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     ],
   )
 
+  const projection = scenario === 'planned' ? plannedProjection : projectedProjection
+
   // For Projected view, use the balance at FIRE transition as the effective goal
   // (since FIRE triggers earlier, the required corpus is different from planned)
   const effectiveFiGoal = useMemo(() => {
@@ -179,21 +253,62 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     return fireRow ? fireRow.remaining : fiTarget
   }, [scenario, projection, fiTarget])
 
+  const projectedFireMonth = useMemo(
+    () => projectedProjection.find(r => r.phase === 'drawdown')?.month ?? null,
+    [projectedProjection],
+  )
+
+  const lastReportedFireMonthRef = useRef<string | null | undefined>(undefined)
+
+  // Report the chart's FIRE month to the parent
+  useEffect(() => {
+    if (!onFireMonth) return
+    if (lastReportedFireMonthRef.current === projectedFireMonth) return
+    lastReportedFireMonthRef.current = projectedFireMonth
+    onFireMonth(projectedFireMonth)
+  }, [projectedFireMonth, onFireMonth])
+
+  // Report the effective required monthly savings when target date overrides contribution
+  const lastReportedSavingsRef = useRef<number | null | undefined>(undefined)
+  useEffect(() => {
+    if (!onRequiredSavings) return
+    const val = requiredMonthlySavings
+    if (lastReportedSavingsRef.current === val) return
+    lastReportedSavingsRef.current = val
+    onRequiredSavings(val)
+  }, [requiredMonthlySavings, onRequiredSavings])
+
   const intervalMonths = INTERVAL_LABELS.find(i => i.value === interval)!.months
   const filteredRows = useMemo(() => {
     if (projection.length === 0) return []
     if (intervalMonths === 1) return projection
+
+    // Find the actual FIRE transition row (first drawdown month)
+    const fireIdx = projection.findIndex(r => r.phase === 'drawdown')
+
     // Always include the first point (current month), then bucket from there
     const result: ProjectionRow[] = [{ ...projection[0], expense: projection[0].expense }]
     for (let i = intervalMonths; i < projection.length; i += intervalMonths) {
       const bucketStart = i - intervalMonths + 1
       const bucketEnd = Math.min(i + 1, projection.length)
       const endRow = projection[Math.min(i, projection.length - 1)]
-      let bucketExpense = 0
-      for (let j = bucketStart; j < bucketEnd; j++) {
-        bucketExpense += projection[j].expense
+
+      // If the FIRE transition falls inside this bucket, insert it before the bucket end
+      if (fireIdx > 0 && fireIdx >= bucketStart && fireIdx < i) {
+        const fireRow = projection[fireIdx]
+        let preFireExpense = 0
+        for (let j = bucketStart; j < fireIdx; j++) preFireExpense += projection[j].expense
+        result.push({ ...projection[fireIdx - 1], expense: preFireExpense })
+        let postFireExpense = 0
+        for (let j = fireIdx; j < bucketEnd; j++) postFireExpense += projection[j].expense
+        result.push({ ...fireRow, expense: postFireExpense })
+      } else {
+        let bucketExpense = 0
+        for (let j = bucketStart; j < bucketEnd; j++) {
+          bucketExpense += projection[j].expense
+        }
+        result.push({ ...endRow, expense: bucketExpense })
       }
-      result.push({ ...endRow, expense: bucketExpense })
     }
     // Include last point if not already included
     const lastIdx = projection.length - 1
@@ -226,14 +341,14 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                   onClick={() => setScenario('projected')}
                   aria-pressed={scenario === 'projected'}
                 >
-                  Projected ({dollars(monthlyContribution)}/mo)
+                  Projected ({dollars(showYearly ? (requiredMonthlySavings ?? monthlyContribution) * 12 : (requiredMonthlySavings ?? monthlyContribution))}/{showYearly ? 'yr' : 'mo'})
                 </button>
                 <button
                   className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
                   onClick={() => setScenario('planned')}
                   aria-pressed={scenario === 'planned'}
                 >
-                  Planned ({dollars(plannedMonthly)}/mo)
+                  Planned ({dollars(showYearly ? plannedMonthly * 12 : plannedMonthly)}/{showYearly ? 'yr' : 'mo'})
                 </button>
               </div>
               <div className="projection-interval-toggle" role="group" aria-label="Time interval">

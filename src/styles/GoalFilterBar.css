@@ -13,8 +13,8 @@
 }
 
 .goal-filter-trigger--open {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text-secondary, #6b7280) 16%, transparent);
 }
 
 .goal-filter-trigger-icon {
@@ -59,7 +59,7 @@
   gap: 0.25rem;
   padding: 0.75rem;
   border-right: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--accent-light));
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg-hover, #f3f4f6));
 }
 
 .goal-filter-category {
@@ -85,14 +85,14 @@
 }
 
 .goal-filter-category:hover {
-  background: color-mix(in srgb, var(--accent-light) 45%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-bg-hover, #f3f4f6) 45%, var(--color-surface));
   color: var(--color-text);
 }
 
 .goal-filter-category--active {
-  background: color-mix(in srgb, var(--accent-light) 65%, var(--color-surface));
-  color: var(--accent);
-  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--color-bg-hover, #f3f4f6) 65%, var(--color-surface));
+  color: var(--color-text-secondary, #6b7280);
+  border-left-color: var(--color-text-secondary, #6b7280);
 }
 
 .goal-filter-category-count {
@@ -109,7 +109,7 @@
 
 .goal-filter-summary-column {
   border-left: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 94%, var(--accent-light));
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg-hover, #f3f4f6));
 }
 
 .goal-filter-column-header {
@@ -140,7 +140,7 @@
   width: 14px;
   height: 14px;
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: var(--color-text-secondary, #6b7280);
   cursor: pointer;
 }
 
@@ -212,8 +212,8 @@
 }
 
 .goal-filter-remove:hover {
-  background: color-mix(in srgb, var(--accent-light) 55%, transparent);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--color-bg-hover, #f3f4f6) 55%, transparent);
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .goal-filter-empty {
@@ -259,21 +259,21 @@
 }
 
 .goal-filter-footer-btn--apply {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--color-text-secondary, #6b7280);
+  background: var(--color-text-secondary, #6b7280);
   color: #fff;
 }
 
 .goal-filter-footer-btn--apply:hover {
-  background: color-mix(in srgb, var(--accent) 88%, black);
-  border-color: color-mix(in srgb, var(--accent) 88%, black);
+  background: color-mix(in srgb, var(--color-text-secondary, #6b7280) 88%, black);
+  border-color: color-mix(in srgb, var(--color-text-secondary, #6b7280) 88%, black);
 }
 
 .goal-filter-trigger:focus-visible,
 .goal-filter-category:focus-visible,
 .goal-filter-remove:focus-visible,
 .goal-filter-footer-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-text-secondary, #6b7280);
   outline-offset: 2px;
 }
 
