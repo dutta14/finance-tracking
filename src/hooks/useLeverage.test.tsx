@@ -23,7 +23,7 @@ describe('useLeverage', () => {
     mockAllMonths = []
   })
 
-  it('computes latest active asset, liability, net worth, and ratio totals', () => {
+  it('computes latest asset, liability, net worth, and ratio totals', () => {
     mockAccounts = [
       makeAccount({ id: 1, name: 'Brokerage', nature: 'asset' }),
       makeAccount({ id: 2, name: 'Home', nature: 'asset', type: 'illiquid' }),
@@ -45,9 +45,9 @@ describe('useLeverage', () => {
     const { result } = renderHook(() => useLeverage())
 
     expect(result.current.totalAssets).toBe(225000)
-    expect(result.current.totalLiabilities).toBe(75000)
-    expect(result.current.netWorth).toBe(150000)
-    expect(result.current.currentRatio).toBeCloseTo(3)
+    expect(result.current.totalLiabilities).toBe(87000)
+    expect(result.current.netWorth).toBe(138000)
+    expect(result.current.currentRatio).toBeCloseTo(225000 / 87000)
   })
 
   it('computes acquisition results including down payment and unchanged net worth', () => {
@@ -92,9 +92,9 @@ describe('useLeverage', () => {
     const history = result.current.getRatioHistory()
 
     expect(history).toEqual([
-      { month: '2026-01', label: 'Jan 2026', ratio: 2 },
-      { month: '2026-02', label: 'Feb 2026', ratio: null },
-      { month: '2026-03', label: 'Mar 2026', ratio: 2 },
+      { month: '2026-01', label: 'Jan 2026', ratio: 2, assets: 100000, liabilities: 50000 },
+      { month: '2026-02', label: 'Feb 2026', ratio: null, assets: 110000, liabilities: 0 },
+      { month: '2026-03', label: 'Mar 2026', ratio: 2, assets: 120000, liabilities: 60000 },
     ])
   })
 })

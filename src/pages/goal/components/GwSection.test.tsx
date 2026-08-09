@@ -67,19 +67,19 @@ describe('GwSection', () => {
       expect(screen.getByText('+ New GW goal')).toBeInTheDocument()
     })
 
-    it('does not show "Copy from existing" button when no other goals have GW goals', () => {
+    it('does not show "Copy goal" button when no other goals have GW goals', () => {
       renderGwSection()
-      expect(screen.queryByText('Copy from existing')).not.toBeInTheDocument()
+      expect(screen.queryByText('Copy goal')).not.toBeInTheDocument()
     })
 
-    it('shows "Copy from existing" button when other FI goals have GW goals', () => {
+    it('shows "Copy goal" button when other FI goals have GW goals', () => {
       const otherGoal = makeGoal({ id: 2, goalName: 'Plan B' })
       const otherGw = makeGwGoal({ id: 10, fiGoalId: 2 })
       renderGwSection({
         goals: [defaultGoal, otherGoal],
         gwGoals: [otherGw],
       })
-      expect(screen.getByText('Copy from existing')).toBeInTheDocument()
+      expect(screen.getByText('Copy goal')).toBeInTheDocument()
     })
   })
 
@@ -236,9 +236,9 @@ describe('GwSection', () => {
       expect(screen.getByText('Unnamed goal')).toBeInTheDocument()
     })
 
-    it('renders "+ Add another GW goal" button when goals already exist', () => {
+    it('renders "Add goal" button when goals already exist', () => {
       renderGwSection({ gwGoals: [gw1] })
-      expect(screen.getByText('+ Add another GW goal')).toBeInTheDocument()
+      expect(screen.getByText('Add goal')).toBeInTheDocument()
     })
 
     it('renders progress percentage', () => {
@@ -260,14 +260,14 @@ describe('GwSection', () => {
     it('opens edit form when edit button is clicked', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
       expect(screen.getByText('Editing goal')).toBeInTheDocument()
     })
 
     it('pre-populates edit form with existing values', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
 
       expect(screen.getByDisplayValue('College Fund')).toBeInTheDocument()
       expect(screen.getByDisplayValue('50')).toBeInTheDocument()
@@ -279,7 +279,7 @@ describe('GwSection', () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1], onUpdateGwGoal: onUpdate })
 
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
 
       const labelInput = screen.getByDisplayValue('College Fund')
       await user.clear(labelInput)
@@ -297,7 +297,7 @@ describe('GwSection', () => {
     it('shows validation error in edit form when label is empty', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
 
       const labelInput = screen.getByDisplayValue('College Fund')
       await user.clear(labelInput)
@@ -309,7 +309,7 @@ describe('GwSection', () => {
     it('shows validation error in edit form when disbursement age is invalid', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
 
       const ageInput = screen.getByDisplayValue('50')
       await user.clear(ageInput)
@@ -322,7 +322,7 @@ describe('GwSection', () => {
     it('shows validation error in edit form when target amount is invalid', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
 
       const amountInput = screen.getByDisplayValue('100000')
       await user.clear(amountInput)
@@ -335,7 +335,7 @@ describe('GwSection', () => {
     it('cancels edit and restores original values', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Edit GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Edit' }))
 
       const labelInput = screen.getByDisplayValue('College Fund')
       await user.clear(labelInput)
@@ -353,7 +353,7 @@ describe('GwSection', () => {
     it('shows undo bar when delete is clicked', async () => {
       const user = userEvent.setup()
       renderGwSection({ gwGoals: [gw1] })
-      await user.click(screen.getByLabelText('Delete GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Delete' }))
       expect(screen.getByText('Goal will be deleted in 10s')).toBeInTheDocument()
       expect(screen.getByText('Undo')).toBeInTheDocument()
     })
@@ -364,7 +364,7 @@ describe('GwSection', () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       renderGwSection({ gwGoals: [gw1], onDeleteGwGoal: onDelete })
 
-      await user.click(screen.getByLabelText('Delete GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Delete' }))
       expect(onDelete).not.toHaveBeenCalled()
 
       await vi.advanceTimersByTimeAsync(10_000)
@@ -377,7 +377,7 @@ describe('GwSection', () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       renderGwSection({ gwGoals: [gw1], onDeleteGwGoal: onDelete })
 
-      await user.click(screen.getByLabelText('Delete GW goal'))
+      await user.click(screen.getByRole('button', { name: 'Delete' }))
       await user.click(screen.getByText('Undo'))
 
       await vi.advanceTimersByTimeAsync(10_000)
@@ -407,14 +407,14 @@ describe('GwSection', () => {
     const otherGoal = makeGoal({ id: 2, goalName: 'Plan B' })
     const otherGw = makeGwGoal({ id: 10, fiGoalId: 2, label: 'Trust Fund', disburseAge: 55, disburseAmount: 200000 })
 
-    it('shows import picker when "Copy from existing" is clicked in empty state', async () => {
+    it('shows import picker when "Copy goal" is clicked in empty state', async () => {
       const user = userEvent.setup()
       renderGwSection({
         goals: [defaultGoal, otherGoal],
         gwGoals: [otherGw],
       })
 
-      await user.click(screen.getByText('Copy from existing'))
+      await user.click(screen.getByText('Copy goal'))
       expect(screen.getByText('Trust Fund')).toBeInTheDocument()
       expect(screen.getByText('Plan B')).toBeInTheDocument()
     })
@@ -428,7 +428,7 @@ describe('GwSection', () => {
         onCreateGwGoal: onCreate,
       })
 
-      await user.click(screen.getByText('Copy from existing'))
+      await user.click(screen.getByText('Copy goal'))
       await user.click(screen.getByText('Trust Fund'))
 
       expect(onCreate).toHaveBeenCalledWith({
@@ -448,7 +448,7 @@ describe('GwSection', () => {
         gwGoals: [otherGw],
       })
 
-      await user.click(screen.getByText('Copy from existing'))
+      await user.click(screen.getByText('Copy goal'))
       expect(screen.getByText('Trust Fund')).toBeInTheDocument()
 
       const cancelBtn = screen.getByRole('button', { name: /cancel/i })
@@ -504,7 +504,7 @@ describe('GwSection', () => {
       })
       renderGwSection({ goal, gwGoals: [gw1] })
       // retirementYear = 1990 + 45 = 2035
-      expect(screen.getByText(/saved by 2035/)).toBeInTheDocument()
+      expect(screen.getByText(/saved by Jan 2035/)).toBeInTheDocument()
     })
 
     it('displays PV at retirement amount', () => {

@@ -60,7 +60,21 @@ vi.mock('../../contexts/LayoutContext', () => ({
 vi.mock('./components/GoalsSection', () => ({
   default: (props: Record<string, unknown>) => {
     capturedGoalsSectionProps = props
-    return <div data-testid="goals-section">GoalsSection</div>
+    return (
+      <div data-testid="goals-section">
+        <button type="button" onClick={() => (props.onNewGoal as (() => void) | undefined)?.()}>
+          New Goal
+        </button>
+        <button
+          type="button"
+          title="Mix & Match goals"
+          onClick={() => (props.onMixMatch as (() => void) | undefined)?.()}
+        >
+          Mix &amp; Match
+        </button>
+        GoalsSection
+      </div>
+    )
   },
 }))
 
@@ -125,18 +139,18 @@ beforeEach(() => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Goal page tab routing', () => {
-  it('renders the Plans tab as active by default at /goal route', () => {
+  it('renders the FIRE Plans tab as active by default at /goal route', () => {
     renderGoal('/goal')
 
-    const plansLink = screen.getByRole('link', { name: 'Plans' })
+    const plansLink = screen.getByRole('link', { name: 'FIRE Plans' })
     expect(plansLink.className).toContain('active')
     expect(screen.getByTestId('goals-section')).toBeInTheDocument()
   })
 
-  it('renders the Calculator tab when navigated to /goal/calculator', async () => {
+  it('renders the FI Calculator tab when navigated to /goal/calculator', async () => {
     renderGoal('/goal/calculator')
 
-    const calcLink = screen.getByRole('link', { name: 'Calculator' })
+    const calcLink = screen.getByRole('link', { name: 'FI Calculator' })
     expect(calcLink.className).toContain('active')
     expect(await screen.findByTestId('fi-calculator')).toBeInTheDocument()
   })
@@ -309,7 +323,7 @@ describe('handleCreateGoal', () => {
     renderGoal('/goal')
 
     // Click the New Goal button to show the form
-    await user.click(screen.getByText('+ New Goal'))
+    await user.click(screen.getByRole('button', { name: /new goal/i }))
 
     // Trigger onSubmit via GoalFormModal props
     const goal = makeGoal({ id: 99, goalName: 'New Plan' })
@@ -414,7 +428,7 @@ describe('handleCancelEdit', () => {
     renderGoal('/goal')
 
     // Open form
-    await user.click(screen.getByText('+ New Goal'))
+    await user.click(screen.getByRole('button', { name: /new goal/i }))
     expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
 
     // Cancel via modal — need act() since it triggers state change

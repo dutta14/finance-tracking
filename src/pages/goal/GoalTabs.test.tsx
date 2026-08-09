@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Goal from './Goal'
 
 vi.mock('../../contexts/GoalsContext', () => ({
@@ -29,7 +29,9 @@ vi.mock('../../contexts/LayoutContext', () => ({
 function renderGoal(initialRoute = '/goal') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Goal />
+      <Routes>
+        <Route path="/goal/*" element={<Goal />} />
+      </Routes>
     </MemoryRouter>,
   )
 }
@@ -43,31 +45,25 @@ describe('Goal tab bar', () => {
     expect(nav).toBeInTheDocument()
   })
 
-  it('renders a "Plans" tab inside the nav', () => {
+  it('renders a "FIRE Plans" tab inside the nav', () => {
     renderGoal()
-    const nav = screen.getByRole('navigation', { name: 'Goals sections' })
-    const links = nav.querySelectorAll('a')
-    const plansLink = Array.from(links).find(a => a.textContent === 'Plans')
-    expect(plansLink).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FIRE Plans' })).toBeInTheDocument()
   })
 
-  it('the "Plans" tab links to /goal', () => {
+  it('the "FIRE Plans" tab links to /goal/plans', () => {
     renderGoal()
-    const link = screen.getByRole('link', { name: 'Plans' })
-    expect(link).toHaveAttribute('href', '/goal')
+    const link = screen.getByRole('link', { name: 'FIRE Plans' })
+    expect(link).toHaveAttribute('href', '/goal/plans')
   })
 
-  it('renders a "Calculator" tab inside the nav', () => {
+  it('renders a "FI Calculator" tab inside the nav', () => {
     renderGoal()
-    const nav = screen.getByRole('navigation', { name: 'Goals sections' })
-    const links = nav.querySelectorAll('a')
-    const calcLink = Array.from(links).find(a => a.textContent === 'Calculator')
-    expect(calcLink).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FI Calculator' })).toBeInTheDocument()
   })
 
-  it('the "Calculator" tab links to /goal/calculator', () => {
+  it('the "FI Calculator" tab links to /goal/calculator', () => {
     renderGoal()
-    const link = screen.getByRole('link', { name: 'Calculator' })
+    const link = screen.getByRole('link', { name: 'FI Calculator' })
     expect(link).toHaveAttribute('href', '/goal/calculator')
   })
 })
@@ -75,27 +71,27 @@ describe('Goal tab bar', () => {
 /* ─── Active state ─── */
 
 describe('Goal tab active state', () => {
-  it('sets aria-current="page" on the active Plans tab', () => {
+  it('sets aria-current="page" on the active FIRE Plans tab', () => {
     renderGoal('/goal')
-    const link = screen.getByRole('link', { name: 'Plans' })
+    const link = screen.getByRole('link', { name: 'FIRE Plans' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('sets aria-current="page" on the Calculator tab when active', () => {
+  it('sets aria-current="page" on the FI Calculator tab when active', () => {
     renderGoal('/goal/calculator')
-    const link = screen.getByRole('link', { name: 'Calculator' })
+    const link = screen.getByRole('link', { name: 'FI Calculator' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not mark "Plans" as active when on /goal/calculator', () => {
+  it('does not mark "FIRE Plans" as active when on /goal/calculator', () => {
     renderGoal('/goal/calculator')
-    const link = screen.getByRole('link', { name: 'Plans' })
+    const link = screen.getByRole('link', { name: 'FIRE Plans' })
     expect(link).not.toHaveAttribute('aria-current')
   })
 
-  it('does not mark "Calculator" as active when on /goal', () => {
+  it('does not mark "FI Calculator" as active when on /goal', () => {
     renderGoal('/goal')
-    const link = screen.getByRole('link', { name: 'Calculator' })
+    const link = screen.getByRole('link', { name: 'FI Calculator' })
     expect(link).not.toHaveAttribute('aria-current')
   })
 })

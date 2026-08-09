@@ -172,10 +172,6 @@
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
-  margin: 1rem 0 0;
-  font-size: var(--fs-sm);
-  color: var(--color-text-muted);
-}
 
 .lever-chart-empty {
   padding: 1rem;

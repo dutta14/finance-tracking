@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../types'
-import { appStorage } from '../../utils/appStorage'
 import * as dataContextModule from '../../contexts/DataContext'
 import * as goalCalculationsModule from './utils/goalCalculations'
 import * as goalMathModule from './utils/goalMath'
@@ -20,18 +19,21 @@ vi.mock('./components/GoalDetailedCard', () => ({
     savingsOverride,
     fiProjectedMonth,
     onSavingsOverrideChange,
+    summaryYear,
   }: {
     goal: FinancialGoal
     inflation?: number
     savingsOverride?: number | null
     fiProjectedMonth?: string | null
     onSavingsOverrideChange?: (value: number | null) => void
+    summaryYear?: number
   }) => (
     <div
       data-testid="detailed-card"
       data-inflation={inflation}
       data-savings-override={savingsOverride ?? ''}
       data-fi-projected-month={fiProjectedMonth ?? ''}
+      data-summary-year={summaryYear ?? ''}
     >
       <div>{goal.goalName}</div>
       <button onClick={() => onSavingsOverrideChange?.(4321)}>Set savings override</button>
@@ -39,21 +41,52 @@ vi.mock('./components/GoalDetailedCard', () => ({
   ),
 }))
 vi.mock('./components/GoalDiveDeep', () => ({
-  default: ({
+  default: function MockGoalDiveDeep({
     inflation,
     monthlyContribution,
     onFireMonth,
+    gwBalance,
+    gwMonthlyContribution,
+    gwProjectedMonthlyContribution,
+    gwGrowthRate,
+    gwTarget,
+    gwProjectedTarget,
+    gwTargetMonth,
+    gwDisburseMonth,
+    projectedFiMonth,
   }: {
     inflation?: number
     monthlyContribution?: number
     onFireMonth?: (month: string | null) => void
-  }) => {
+    gwBalance?: number
+    gwMonthlyContribution?: number
+    gwProjectedMonthlyContribution?: number
+    gwGrowthRate?: number
+    gwTarget?: number
+    gwProjectedTarget?: number
+    gwTargetMonth?: string
+    gwDisburseMonth?: string
+    projectedFiMonth?: string | null
+  }) {
     useEffect(() => {
       onFireMonth?.('Aug 2036')
     }, [onFireMonth])
 
     return (
-      <div data-testid="dive-deep" data-inflation={inflation} data-monthly-contribution={monthlyContribution}>
+      <div
+        data-testid="dive-deep"
+        data-inflation={inflation}
+        data-monthly-contribution={monthlyContribution}
+        data-gw-balance={gwBalance ?? ''}
+        data-gw-monthly-contribution={gwMonthlyContribution ?? ''}
+        data-gw-projected-monthly-contribution={gwProjectedMonthlyContribution ?? ''}
+        data-gw-growth-rate={gwGrowthRate ?? ''}
+        data-gw-target={gwTarget ?? ''}
+        data-gw-projected-target={gwProjectedTarget ?? ''}
+        data-gw-target-month={gwTargetMonth ?? ''}
+        data-gw-disburse-month={gwDisburseMonth ?? ''}
+        data-projected-fi-month={projectedFiMonth ?? ''}
+      >
       DiveDeep
       </div>
     )
@@ -146,7 +179,7 @@ const mockGrowthSettings = {
 const defaultProps = {
   goals: threeGoals,
   profileBirthday: '1990-01-01',
-  gwGoals: [],
+  gwGoals: [] as GwGoal[],
   growthSettings: mockGrowthSettings as ReturnType<typeof import('./hooks/useGrowthSettings').useGrowthSettings>,
   onUpdateGoal: noop as (goalId: number, g: FinancialGoal) => void,
   onCopyGoal: vi.fn(),
@@ -253,12 +286,12 @@ describe('GoalDetail rendering', () => {
 
   it('renders the SavingsPlan aside', () => {
     renderDetail('/goal/1')
-    expect(screen.getByTestId('fi-savings-plan')).toBeInTheDocument()
+    expect(screen.getByTestId('gw-savings-plan')).toBeInTheDocument()
   })
 
-  it('renders the Analysis toggle button', () => {
+  it('renders the Goal Parameters toggle button', () => {
     renderDetail('/goal/1')
-    expect(screen.getByRole('button', { name: /^analysis$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Goal Parameters' })).toBeInTheDocument()
   })
 
   it('renders GwSection when fiGoal > 0', () => {
@@ -420,38 +453,29 @@ describe('GoalDetail arrow key navigation', () => {
    6. Dive Deep toggle
    ═══════════════════════════════════════════════════════════════ */
 
-describe('GoalDetail dive deep toggle', () => {
-  it('does not render DiveDeep initially', () => {
+describe('GoalDetail dive deep rendering', () => {
+  it('renders DiveDeep immediately', () => {
     renderDetail('/goal/1')
-    expect(screen.queryByTestId('dive-deep')).not.toBeInTheDocument()
-  })
-
-  it('renders DiveDeep after clicking the Deep Analysis button', async () => {
-    const user = userEvent.setup()
-    renderDetail('/goal/1')
-
-    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
-
     expect(screen.getByTestId('dive-deep')).toBeInTheDocument()
   })
 
-  it('changes the button label to "Close Analysis" when open', async () => {
-    const user = userEvent.setup()
+  it('does not render an Analysis toggle button', () => {
     renderDetail('/goal/1')
-
-    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
-
-    expect(screen.getByRole('button', { name: /close analysis/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^analysis$/i })).not.toBeInTheDocument()
   })
 
-  it('hides DiveDeep when the toggle is clicked again', async () => {
+  it('threads the default inflation setting into DiveDeep', () => {
+    renderDetail('/goal/1')
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-inflation', '3')
+  })
+
+  it('keeps DiveDeep visible after a savings override is reported', async () => {
     const user = userEvent.setup()
     renderDetail('/goal/1')
 
-    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
-    await user.click(screen.getByRole('button', { name: /close analysis/i }))
+    await user.click(screen.getByRole('button', { name: 'Set savings override' }))
 
-    expect(screen.queryByTestId('dive-deep')).not.toBeInTheDocument()
+    expect(screen.getByTestId('dive-deep')).toBeInTheDocument()
   })
 })
 
@@ -460,22 +484,21 @@ describe('GoalDetail dive deep toggle', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalDetail savings override threading', () => {
-  it('persists the savings override on the goal when GoalDetailedCard changes it', async () => {
+  it('stores the savings override locally when GoalDetailedCard changes it', async () => {
     const user = userEvent.setup()
     const { onUpdateGoal } = renderStatefulDetail('/goal/1', [goalA])
 
     await user.click(screen.getByRole('button', { name: 'Set savings override' }))
 
-    expect(onUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ id: 1, savingsOverride: 4321 }))
+    expect(onUpdateGoal).not.toHaveBeenCalled()
     expect(screen.getByTestId('detailed-card')).toHaveAttribute('data-savings-override', '4321')
   })
 
-  it('threads the persisted savings override into GoalDiveDeep as the monthly contribution', async () => {
+  it('threads the local savings override into GoalDiveDeep as the monthly contribution', async () => {
     const user = userEvent.setup()
     renderStatefulDetail('/goal/1', [goalA])
 
     await user.click(screen.getByRole('button', { name: 'Set savings override' }))
-    await user.click(screen.getByRole('button', { name: /^analysis$/i }))
 
     expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-monthly-contribution', '4321')
   })
@@ -727,108 +750,86 @@ describe('GoalDrawer removal', () => {
   })
 })
 
-describe('GoalDetail gross income summary', () => {
-  it('renders the gross income sentence when total needed is greater than zero', () => {
+describe('GoalDetail summary threading', () => {
+  it('renders the FI and GW section headings', () => {
     mockSummaryCard()
 
     renderDetail('/goal/1', { goals: [goalA] })
 
-    expect(screen.getByText(/If you want to spend/i)).toBeInTheDocument()
-    expect(screen.getByText('$60,000/yr')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /FI Financial Independence/, level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /GW Generational Wealth/, level: 2 })).toBeInTheDocument()
   })
 
-  it('switches annual spending from formatted text to input on click and back on blur', async () => {
-    mockSummaryCard()
-    const user = userEvent.setup()
+  it('threads the selected-year monthly savings into GoalDiveDeep', () => {
+    mockSummaryCard({ yearMonthlySaving: 4000 })
 
     renderDetail('/goal/1', { goals: [goalA] })
 
-    await user.click(screen.getByLabelText('Annual spending'))
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-monthly-contribution', '4000')
+  })
 
-    const input = await waitFor(() => screen.getByRole('textbox', { name: 'Annual spending' }))
-    expect(input).toHaveFocus()
+  it('threads the inflation setting into GoalDetailedCard and GoalDiveDeep', () => {
+    mockSummaryCard()
 
-    await user.tab()
+    renderDetail('/goal/1', { goals: [goalA] })
+
+    expect(screen.getByTestId('detailed-card')).toHaveAttribute('data-inflation', '3')
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-inflation', '3')
+  })
+
+  it('threads GW baseline values into GoalDiveDeep when summary data is available', async () => {
+    mockSummaryCard()
+    vi.spyOn(goalMathModule, 'getTotalForMonth').mockImplementation((_accounts, _balances, _month, goalType) =>
+      goalType === 'gw' ? 50_000 : 100_000,
+    )
+    vi.spyOn(goalMathModule, 'getGwTarget').mockReturnValue(150_000)
+
+    renderDetail('/goal/1', {
+      goals: [goalA],
+      gwGoals: [
+        {
+          id: 1,
+          fiGoalId: 1,
+          label: 'Legacy',
+          disburseAmount: 100000,
+          growthRate: 8,
+          currentSavings: 0,
+          disburseAge: 80,
+          createdAt: '2024-01-01',
+        },
+      ],
+    })
 
     await waitFor(() => {
-      expect(screen.queryByRole('textbox', { name: 'Annual spending' })).not.toBeInTheDocument()
+      expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-balance', '50000')
     })
-    expect(screen.getByLabelText('Annual spending')).toHaveTextContent('$0')
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-monthly-contribution', '5000')
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-target', '150000')
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-target-month', '2050-01')
   })
 
-  it('computes the correct gross income from spending and tax rate inputs', async () => {
+  it('threads the projected FIRE month into GoalDiveDeep after the chart reports it', async () => {
     mockSummaryCard()
-    const user = userEvent.setup()
 
     renderDetail('/goal/1', { goals: [goalA] })
 
-    await user.click(screen.getByLabelText('Annual spending'))
-    const spendingInput = await waitFor(() => screen.getByRole('textbox', { name: 'Annual spending' }))
-    await user.type(spendingInput, '100000')
-    await user.tab()
-
-    await user.click(screen.getByLabelText('Income tax rate'))
-    const taxInput = await waitFor(() => screen.getByRole('textbox', { name: 'Income tax rate' }))
-    await user.type(taxInput, '25')
-    await user.tab()
-
-    expect(screen.getByText('$213,333/yr')).toBeInTheDocument()
-  })
-
-  it('persists spending and tax rate values through onUpdateGoal', async () => {
-    mockSummaryCard()
-    const user = userEvent.setup()
-    const { onUpdateGoal } = renderStatefulDetail('/goal/1', [goalA])
-
-    await user.click(screen.getByLabelText('Annual spending'))
-    const spendingInput = await waitFor(() => screen.getByRole('textbox', { name: 'Annual spending' }))
-    await user.type(spendingInput, '100000')
-    await user.tab()
-
-    await user.click(screen.getByLabelText('Income tax rate'))
-    const taxInput = await waitFor(() => screen.getByRole('textbox', { name: 'Income tax rate' }))
-    await user.type(taxInput, '25')
-    await user.tab()
-
-    expect(onUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ annualSpending: 100000 }))
-    expect(onUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ incomeTaxRate: 25 }))
-  })
-
-  it('shows last year gross income when sgt-overrides has last year data', () => {
-    mockSummaryCard()
-    const lastYear = new Date().getFullYear() - 1
-    vi.spyOn(appStorage, 'getJSON').mockReturnValue({
-      [lastYear]: { grossIncome: 200000, taxes: 50000 },
+    await waitFor(() => {
+      expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-projected-fi-month', '2036-08')
     })
-
-    renderDetail('/goal/1', { goals: [goalA] })
-
-    expect(screen.getByText(/Your gross income last year was/i)).toBeInTheDocument()
-    expect(screen.getByText('$200,000')).toBeInTheDocument()
-    expect(screen.getByText('25.0%')).toBeInTheDocument()
   })
 
-  it('hides the last year gross income sentence when no sgt-overrides data exists', () => {
-    mockSummaryCard()
-    vi.spyOn(appStorage, 'getJSON').mockReturnValue({})
-
+  it('passes zeroed GW props when no GW summary data exists', () => {
     renderDetail('/goal/1', { goals: [goalA] })
 
-    expect(screen.queryByText(/Your gross income last year was/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-balance', '0')
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-target', '0')
   })
 
-  it('renders required savings and actual savings in separate paragraphs with the year selector', () => {
+  it('threads the selected summary year into GoalDetailedCard', () => {
     mockSummaryCard({ monthlySaving: 5000, yearMonthlySaving: 4000 })
 
     renderDetail('/goal/1', { goals: [goalA] })
 
-    const requiredSavingsParagraph = screen.getByText(/To achieve your goals, you need to save/i, { selector: 'p' })
-    const actualSavingsParagraph = screen.getByText(/You're saving/i, { selector: 'p' })
-
-    expect(requiredSavingsParagraph).toHaveTextContent('$5,000/mo')
-    expect(actualSavingsParagraph).toHaveTextContent(`You're saving $4,000/mo in ${currentYear}`)
-    expect(actualSavingsParagraph).toHaveTextContent('you need $1,000/mo more')
-    expect(within(actualSavingsParagraph).getByRole('combobox')).toHaveValue(String(currentYear))
-    expect(requiredSavingsParagraph).not.toBe(actualSavingsParagraph)
+    expect(screen.getByTestId('detailed-card')).toHaveAttribute('data-summary-year', String(currentYear))
   })
 })

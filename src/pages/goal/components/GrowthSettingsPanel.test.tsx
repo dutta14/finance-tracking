@@ -17,13 +17,13 @@ const defaults = {
 describe('GrowthSettingsPanel', () => {
   it('renders collapsed by default', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
-    expect(screen.getByRole('button', { name: /growth settings/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /goal parameters/i })).toBeInTheDocument()
     expect(screen.queryByLabelText(/pre-60/i)).not.toBeInTheDocument()
   })
 
   it('expands on toggle click', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
     expect(screen.getByLabelText(/pre-60/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/post-60/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/boundary/i)).toBeInTheDocument()
@@ -33,7 +33,7 @@ describe('GrowthSettingsPanel', () => {
   it('renders inflation and allocation inputs when the growth settings panel is expanded', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
     expect(screen.getByLabelText(/inflation/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/retirement cap/i)).toBeInTheDocument()
@@ -43,7 +43,7 @@ describe('GrowthSettingsPanel', () => {
   it('collapses the growth settings panel when the user clicks outside the panel', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
 
-    const toggle = screen.getByRole('button', { name: /growth settings/i })
+    const toggle = screen.getByRole('button', { name: /goal parameters/i })
     fireEvent.click(toggle)
     expect(screen.getByLabelText(/pre-60/i)).toBeInTheDocument()
 
@@ -56,7 +56,7 @@ describe('GrowthSettingsPanel', () => {
   it('calls onUpdate when a value changes', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
     const preInput = screen.getByLabelText(/pre-60/i)
     fireEvent.change(preInput, { target: { value: '10' } })
     fireEvent.blur(preInput)
@@ -67,7 +67,7 @@ describe('GrowthSettingsPanel', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
     const preInput = screen.getByLabelText(/pre-60/i)
     fireEvent.change(preInput, { target: { value: '7.5' } })
@@ -84,7 +84,7 @@ describe('GrowthSettingsPanel', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
     const inflationInput = screen.getByLabelText(/inflation/i)
     fireEvent.change(inflationInput, { target: { value: '4' } })
@@ -106,7 +106,7 @@ describe('GrowthSettingsPanel', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
     const boundaryInput = screen.getByLabelText(/boundary/i)
     fireEvent.change(boundaryInput, { target: { value: '' } })
@@ -117,7 +117,7 @@ describe('GrowthSettingsPanel', () => {
 
   it('shows correct labels based on age boundary', () => {
     render(<GrowthSettingsPanel settings={{ ...defaults, ageBoundary: 55 }} onUpdate={vi.fn()} />)
-    fireEvent.click(screen.getByRole('button', { name: /growth settings/i }))
+    fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
     expect(screen.getByLabelText(/pre-55/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/post-55/i)).toBeInTheDocument()
   })

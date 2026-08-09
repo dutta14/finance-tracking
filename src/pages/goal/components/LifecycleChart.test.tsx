@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import LifecycleChart from './LifecycleChart'
 import { ProjectionRow } from '../utils/lifecycleProjection'
 
@@ -8,7 +8,8 @@ vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: ReactNode }) => (
     <div data-testid="responsive-container">{children}</div>
   ),
-  LineChart: ({ children }: { children: ReactNode }) => <div data-testid="line-chart">{children}</div>,
+  ComposedChart: ({ children }: { children: ReactNode }) => <div data-testid="composed-chart">{children}</div>,
+  Area: () => <div data-testid="area" />,
   Line: () => <div data-testid="line" />,
   XAxis: () => null,
   YAxis: () => null,
@@ -105,5 +106,19 @@ describe('LifecycleChart', () => {
 
     expect(primaryLine).toHaveAttribute('data-dy', '0')
     expect(fireLine).toHaveAttribute('data-dy', '14')
+  })
+
+  it('uses a custom goal label in the live region', () => {
+    const rows: ProjectionRow[] = [
+      { month: 'Jan 2035', expense: 0, remaining: 1_000_000, phase: 'accumulation' },
+      { month: 'Feb 2035', expense: 0, remaining: 1_200_000, phase: 'accumulation' },
+    ]
+
+    render(<LifecycleChart rows={rows} fiGoal={2_000_000} goalLabel="GW goal" />)
+
+    const chart = screen.getByRole('img', { name: 'FI lifecycle projection chart' })
+    fireEvent.keyDown(chart, { key: 'ArrowRight' })
+
+    expect(screen.getByText(/% of GW goal/)).toBeInTheDocument()
   })
 })

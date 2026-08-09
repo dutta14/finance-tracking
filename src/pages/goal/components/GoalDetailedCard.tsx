@@ -245,13 +245,11 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     setEditing(false)
   }
 
-  const birthDate = parseDate(profileBirthday)
-  const retirementDate = new Date(
-    birthDate.getFullYear() + goal.retirementAge,
-    birthDate.getMonth(),
-    birthDate.getDate(),
-  )
-  const retirementDateLabel = formatRetirementDate(retirementDate)
+  const retirementDate = useMemo(() => {
+    const bd = parseDate(profileBirthday)
+    return new Date(bd.getFullYear() + goal.retirementAge, bd.getMonth(), bd.getDate())
+  }, [profileBirthday, goal.retirementAge])
+  const retirementDateLabel = useMemo(() => formatRetirementDate(retirementDate), [retirementDate])
 
   // Dynamically recompute fiGoal from current settings (inflation, growth rates)
   const fiGoal = useMemo(() => {
