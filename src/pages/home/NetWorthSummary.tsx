@@ -122,10 +122,15 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     ].filter(Boolean) as Array<{ amount: string; label: string }>
 
     const clauses = [
-      fiChildren.length > 0 ? { label: 'FI accounts', total: fiTotal, children: fiChildren, includeIsIn: true } : null,
-      gwChildren.length > 0 ? { label: 'GW', total: gwTotal, children: gwChildren, includeIsIn: false } : null,
+      fiChildren.length > 0
+        ? { label: 'FI accounts', shortLabel: 'FI', total: fiTotal, children: fiChildren, includeIsIn: true }
+        : null,
+      gwChildren.length > 0
+        ? { label: 'GW', shortLabel: 'GW', total: gwTotal, children: gwChildren, includeIsIn: false }
+        : null,
     ].filter(Boolean) as Array<{
       label: string
+      shortLabel: string
       total: number
       children: Array<{ amount: string; label: string }>
       includeIsIn: boolean
@@ -328,36 +333,29 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           </div>
         )}
       </div>
+      <span className="nw-date">{proseParts.monthLabel}</span>
       <p className="nw-prose">
         {proseParts.diff !== null && proseParts.diff !== 0 && (
-          <>
+          <span className="nw-prose-line">
             {proseParts.diff > 0 ? 'Up' : 'Down'}{' '}
             <strong className={proseParts.diff > 0 ? 'nw-change up' : 'nw-change down'}>
               {formatCurrency(Math.abs(proseParts.diff))}
             </strong>{' '}
             from last month.
-          </>
+          </span>
         )}
-        {proseParts.clauses.length > 0 && (
-          <>
-            {proseParts.diff !== null && proseParts.diff !== 0 ? ' ' : ''}
-            {proseParts.clauses.map((clause, idx) => (
-              <span key={clause.label}>
-                {idx > 0 && <>{idx === proseParts.clauses.length - 1 ? ' and ' : ', '}</>}
-                <strong>{formatCurrency(clause.total)}</strong> {clause.includeIsIn ? 'is in ' : 'in '}
-                {clause.label} (
-                {clause.children.map((child, childIdx) => (
-                  <span key={`${clause.label}-${child.label}`}>
-                    {childIdx > 0 ? ', ' : ''}
-                    <strong>{child.amount}</strong> {child.label}
-                  </span>
-                ))}
-                )
+        {proseParts.clauses.map(clause => (
+          <span key={clause.label} className="nw-prose-line">
+            <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel} (
+            {clause.children.map((child, childIdx) => (
+              <span key={`${clause.label}-${child.label}`}>
+                {childIdx > 0 ? ', ' : ''}
+                <strong>{child.amount}</strong> {child.label}
               </span>
             ))}
-            .
-          </>
-        )}
+            )
+          </span>
+        ))}
       </p>
       {breakdownBars.length === 2 && (
         <div className="nw-stacked-bar" aria-label="Net worth goal breakdown">

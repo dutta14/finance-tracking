@@ -110,7 +110,9 @@ test.describe('Taxes Page E2E', () => {
       await taxes.addCustomItem(/^Alex$/, 'W-2 from Employer')
 
       // Visible in the Alex (primary) section
-      await expect(taxes.section(/^Alex$/).locator('.tax-item-label-text', { hasText: 'W-2 from Employer' })).toBeVisible()
+      await expect(
+        taxes.section(/^Alex$/).locator('.tax-item-label-text', { hasText: 'W-2 from Employer' }),
+      ).toBeVisible()
       // Persisted to tax-store
       const stored = await page.evaluate(() => localStorage.getItem('tax-store'))
       expect(stored).not.toBeNull()
@@ -381,7 +383,10 @@ test.describe('Taxes Page E2E', () => {
       await taxes.goto()
 
       // Primary section header has Alex's initial; partner has Sam's
-      const alexBadge = taxes.section(/^Alex$/).locator('.tax-section-header .tax-owner-avatar').first()
+      const alexBadge = taxes
+        .section(/^Alex$/)
+        .locator('.tax-section-header .tax-owner-avatar')
+        .first()
       await expect(alexBadge).toHaveText('A')
       const samBadge = taxes.section(/^Sam$/).locator('.tax-section-header .tax-owner-avatar').first()
       await expect(samBadge).toHaveText('S')
@@ -750,9 +755,7 @@ test.describe('Taxes Page E2E', () => {
       await taxes.addCustomItem(/^Alex$/, '1099-MISC')
       await expect(taxes.item('1099-MISC')).toBeVisible()
 
-      const count = await page.evaluate(
-        () => (window as unknown as { __taxEventCount: number }).__taxEventCount,
-      )
+      const count = await page.evaluate(() => (window as unknown as { __taxEventCount: number }).__taxEventCount)
       expect(count).toBeGreaterThanOrEqual(1)
     })
   })
@@ -881,8 +884,7 @@ test.describe('Taxes Page E2E', () => {
             const req = indexedDB.open('finance-tracking-files', 1)
             req.onupgradeneeded = () => {
               const db = req.result
-              if (!db.objectStoreNames.contains('tax-files'))
-                db.createObjectStore('tax-files', { keyPath: 'id' })
+              if (!db.objectStoreNames.contains('tax-files')) db.createObjectStore('tax-files', { keyPath: 'id' })
             }
             req.onsuccess = () => resolve(req.result)
             req.onerror = () => reject(req.error)

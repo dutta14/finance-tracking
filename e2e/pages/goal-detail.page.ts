@@ -12,6 +12,7 @@ export class GoalDetailPage {
   readonly savingsPlan: Locator
   readonly savingsPlanHighlightRow: Locator
   readonly savingsPlanEmpty: Locator
+  readonly projectedResult: Locator
 
   // Analysis
   readonly analysisToggle: Locator
@@ -28,9 +29,10 @@ export class GoalDetailPage {
     this.sparklineFigure = page.locator('.projection-chart-wrapper')
     this.sparklineSvg = this.sparklineFigure.locator('svg')
 
-    this.savingsPlan = page.locator('.fi-goal-pace')
-    this.savingsPlanHighlightRow = this.savingsPlan
-    this.savingsPlanEmpty = this.savingsPlan.locator('a[href="#/budget"]')
+    this.savingsPlan = page.locator('.fi-projection-block, .fi-goal-pace').first()
+    this.savingsPlanHighlightRow = page.locator('.fi-projection-row').filter({ hasText: 'Save' }).first()
+    this.savingsPlanEmpty = page.locator('.fi-goal-pace a[href="#/budget"]')
+    this.projectedResult = page.locator('.fi-projection-result').first()
 
     this.analysisToggle = page.getByRole('button', { name: /Analysis/ })
     this.chartViewToggle = page.getByRole('button', { name: 'Switch to chart view' })

@@ -35,9 +35,7 @@ export class ResponsivePage {
     this.hamburger = page.getByRole('button', { name: 'Expand sidebar' })
     this.settingsButton = page.getByRole('button', { name: 'Settings' })
     this.settingsDialog = page.getByRole('dialog', { name: 'Settings' })
-    this.darkThemeOption = this.settingsDialog
-      .locator('.settings-theme-option')
-      .filter({ hasText: 'Dark' })
+    this.darkThemeOption = this.settingsDialog.locator('.settings-theme-option').filter({ hasText: 'Dark' })
   }
 
   /**
@@ -57,9 +55,7 @@ export class ResponsivePage {
    * — the canonical "horizontal page overflow" test.
    */
   async hasHorizontalOverflow(): Promise<boolean> {
-    return await this.page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    )
+    return await this.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
   }
 
   /**

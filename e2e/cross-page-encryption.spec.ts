@@ -1,12 +1,14 @@
 import { test, expect } from './fixtures/base'
 import type { Page } from '@playwright/test'
 import { SecurityPage } from './pages/security.page'
-import { assertAllKeysAreEnvelopes, isEnvelope, PBKDF2_COST_MS, readEnvelope, SENSITIVE_KEYS } from './fixtures/encryption.fixtures'
 import {
-  seedBudgetCsvsForYear,
-  seedCrossPageEncrypted,
-  URLS,
-} from './fixtures/cross-page-data'
+  assertAllKeysAreEnvelopes,
+  isEnvelope,
+  PBKDF2_COST_MS,
+  readEnvelope,
+  SENSITIVE_KEYS,
+} from './fixtures/encryption.fixtures'
+import { seedBudgetCsvsForYear, seedCrossPageEncrypted, URLS } from './fixtures/cross-page-data'
 
 /**
  * #153 — Cross-page: Encryption Round-trip Integration (62c)
@@ -120,9 +122,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
    * Flow 6: Enable → Lock → Unlock → render data on each page
    * ──────────────────────────────────────────────────────────── */
   test.describe('Flow 6: Lock → Unlock → All Pages', () => {
-    test('21. Home page shows $315,000 net worth and Early Retirement goal after unlock', async ({
-      page,
-    }) => {
+    test('21. Home page shows $315,000 net worth and Early Retirement goal after unlock', async ({ page }) => {
       // Adaptations B, A, D, H, G + enhanced assertion.
       const security = await seedCrossPageEncrypted(page, PASSPHRASE)
       // Close the Settings modal before locking so the unlock screen
@@ -158,9 +158,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       expect(await page.evaluate(() => localStorage.getItem('encryption-enabled'))).toBe('1')
     })
 
-    test('22. Goals page shows retirement year 2045 and FI progress 13% after unlock', async ({
-      page,
-    }) => {
+    test('22. Goals page shows retirement year 2045 and FI progress 13% after unlock', async ({ page }) => {
       // Adaptation G: `.mini-progress-pct` = 13% (FI-only sum:
       // 260000/2000000). The Savings GW account is NOT included.
       const security = await seedCrossPageEncrypted(page, PASSPHRASE)
@@ -183,9 +181,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       await expect(card).toContainText('$2,000,000')
     })
 
-    test('23. Net Worth page lists 401k + Savings accounts with latest balances after unlock', async ({
-      page,
-    }) => {
+    test('23. Net Worth page lists 401k + Savings accounts with latest balances after unlock', async ({ page }) => {
       const security = await seedCrossPageEncrypted(page, PASSPHRASE)
       await page.keyboard.press('Escape')
       await expect(security.settingsModal).toBeHidden()
@@ -213,9 +209,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       await expect(sheet.first()).toContainText('$55,000')
     })
 
-    test('24. Budget page shows imported CSVs and 35.0% save rate after unlock', async ({
-      page,
-    }) => {
+    test('24. Budget page shows imported CSVs and 35.0% save rate after unlock', async ({ page }) => {
       // Adaptation I: Budget page recomputes saveRate from CSVs. We
       // seed `currentYear` (Budget defaults `selectedYear` =
       // new Date().getFullYear()) with 12 monthly CSVs at $10,000 in /
@@ -244,9 +238,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       // `budget-csvs-*` envelope decrypted successfully.
     })
 
-    test('25. Wrong passphrase keeps UnlockScreen visible and all 13 keys remain envelopes', async ({
-      page,
-    }) => {
+    test('25. Wrong passphrase keeps UnlockScreen visible and all 13 keys remain envelopes', async ({ page }) => {
       // Adaptation E: UnlockScreen stays mounted, error message reads
       // "Wrong passphrase. Please try again.", input is cleared, no
       // sensitive data leaks.
@@ -262,9 +254,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
 
       // Stays on UnlockScreen with the error.
       await expect(unlockHeading).toBeVisible()
-      await expect(page.locator('#unlock-passphrase-error')).toHaveText(
-        /Wrong passphrase\. Please try again\./,
-      )
+      await expect(page.locator('#unlock-passphrase-error')).toHaveText(/Wrong passphrase\. Please try again\./)
       // Input was cleared.
       await expect(page.locator('#unlock-passphrase')).toHaveValue('')
 
@@ -390,10 +380,7 @@ test.describe('Cross-page: Encryption Round-trip Integration (#153)', () => {
       for (const key of SENSITIVE_KEYS) {
         const value = await readEnvelope(page, key)
         if (value === null) continue
-        expect(
-          isEnvelope(value),
-          `${key} should be plaintext after import, but still has envelope shape`,
-        ).toBe(false)
+        expect(isEnvelope(value), `${key} should be plaintext after import, but still has envelope shape`).toBe(false)
       }
 
       // Final cross-page sanity: Net Worth page still renders the

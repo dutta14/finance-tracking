@@ -173,17 +173,7 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
   } = options
 
   await page.addInitScript(
-    ({
-      accounts,
-      balances,
-      goals,
-      budget,
-      profile,
-      cardOrder,
-      onboardingDismissed,
-      darkMode,
-      data,
-    }) => {
+    ({ accounts, balances, goals, budget, profile, cardOrder, onboardingDismissed, darkMode, data }) => {
       localStorage.clear()
       localStorage.setItem('encryption-enabled', '0')
 

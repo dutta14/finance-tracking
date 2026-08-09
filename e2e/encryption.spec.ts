@@ -161,7 +161,10 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       await expect(tabB.getByRole('heading', { name: /unlock/i })).toBeVisible()
 
       // Unlock tab B by entering the passphrase.
-      await tabB.getByLabel(/passphrase/i).first().fill(PASSPHRASE)
+      await tabB
+        .getByLabel(/passphrase/i)
+        .first()
+        .fill(PASSPHRASE)
       await tabB.getByRole('button', { name: /^Unlock$/ }).click()
       await expect(tabB.getByRole('heading', { name: /unlock/i })).toBeHidden()
 
@@ -288,13 +291,9 @@ test.describe('Encryption Lifecycle, Cross-Tab & Envelope Verification', () => {
       // real WebCrypto implementation, not Playwright IPC.
       const elapsedMs: number = await page.evaluate(async () => {
         const salt = crypto.getRandomValues(new Uint8Array(16))
-        const baseKey = await crypto.subtle.importKey(
-          'raw',
-          new TextEncoder().encode('TestPass123'),
-          'PBKDF2',
-          false,
-          ['deriveKey'],
-        )
+        const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode('TestPass123'), 'PBKDF2', false, [
+          'deriveKey',
+        ])
         const start = performance.now()
         await crypto.subtle.deriveKey(
           { name: 'PBKDF2', salt, iterations: 310_000, hash: 'SHA-256' },

@@ -456,8 +456,8 @@ test.describe('Settings — Non-Security E2E', () => {
       // picker (it only has Light/Dark buttons). The accent-theme contract
       // is therefore: `accentTheme` in localStorage survives reload, AND
       // the `--accent` CSS custom property on document.documentElement is
-      // a defined non-empty color. The colorThemes.css source only ships
-      // the "blue" palette (--accent: #3b82f6) at the moment; this test
+      // a defined non-empty color. The colorThemes.css source currently
+      // ships the light blue palette as --accent: #2563eb; this test
       // pins both halves of the contract so a future accent picker change
       // OR a colorThemes refactor will trip the assertion.
       await page.addInitScript(() => {
@@ -476,12 +476,12 @@ test.describe('Settings — Non-Security E2E', () => {
       await page.reload()
       expect(await page.evaluate(() => localStorage.getItem('accentTheme'))).toBe('blue')
 
-      // CSS custom property is applied and matches the blue palette
-      // shipped in src/styles/colorThemes.css (:root).
+      // CSS custom property is applied and matches the current light-mode
+      // blue palette shipped in src/styles/colorThemes.css (:root).
       const accent = await page.evaluate(() =>
         getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().toLowerCase(),
       )
-      expect(accent).toBe('#3b82f6')
+      expect(accent).toBe('#2563eb')
     })
 
     test('17. `allowCsvImport` setting persists and controls upload visibility', async ({ page }) => {

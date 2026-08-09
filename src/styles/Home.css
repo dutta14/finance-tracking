@@ -239,11 +239,28 @@
   font-size: var(--fs-md);
 }
 
+.nw-date {
+  display: block;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin: 0.25rem 0 0;
+}
+
 .nw-prose {
   font-size: var(--fs-md);
   line-height: 1.7;
   color: var(--color-text);
   margin: 0.75rem 0 0;
+}
+
+.nw-prose-line {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.nw-prose-line:last-child {
+  margin-bottom: 0;
 }
 
 .nw-prose strong {
@@ -257,10 +274,13 @@
 
 .nw-stacked-bar {
   display: flex;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
   height: 8px;
   border-radius: 4px;
   overflow: hidden;
-  margin-top: 0.75rem;
+  margin-top: 1.25rem;
 }
 
 .nw-stacked-fill {
@@ -278,6 +298,7 @@
 
 .nw-stacked-legend {
   display: flex;
+  justify-content: center;
   gap: 1rem;
   margin-top: 0.35rem;
   font-size: var(--fs-sm);

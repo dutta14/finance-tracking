@@ -77,10 +77,11 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       await page.goto(URLS.goalDetail(CROSS_PAGE_GOAL.id))
       await page.waitForLoadState('domcontentloaded')
-      const detailPace = page.locator('.fi-goal-pace')
+      const detailPace = page.locator('.fi-projection-block')
       await expect(detailPace).toBeVisible()
-      await expect(detailPace).toContainText(/At this pace/i)
-      await expect(detailPace).toContainText(/[A-Z][a-z]+ \d{4}/)
+      await expect(detailPace).toContainText('Income')
+      await expect(detailPace).toContainText('Save')
+      await expect(detailPace.locator('.fi-projection-result')).toContainText(/[A-Z][a-z]+ \d{4}/)
     })
 
     test('2. GoalsPeek shows "Add budget data →" when budget-summary is missing', async ({ page }) => {
@@ -118,12 +119,12 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await page.goto(URLS.goalDetail(CROSS_PAGE_GOAL.id))
       await page.waitForLoadState('domcontentloaded')
 
-      const savingsPace = page.locator('.fi-goal-pace')
+      const savingsPace = page.locator('.fi-projection-block')
       await expect(savingsPace).toBeVisible()
+      await expect(savingsPace).toContainText('Save')
       await expect(savingsPace).toContainText('$3,333')
       await expect(savingsPace).toContainText('/mo')
-      await expect(savingsPace).toContainText(/At this pace/i)
-      await expect(savingsPace).toContainText(/(early|behind|on track)/i)
+      await expect(savingsPace.locator('.fi-projection-result')).toContainText(/[A-Z][a-z]+ \d{4}/)
     })
 
     test('5. Goal detailed card shows "no budget" state when budget-summary is absent', async ({ page }) => {
@@ -157,7 +158,8 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await expect(nwCard).toBeVisible()
       const nwAmount = nwCard.locator('.nw-amount')
       await expect(nwAmount).toContainText('$315,000')
-      await expect(nwCard.locator('.nw-date')).toHaveText('Apr 2025')
+      await expect(nwCard.locator('.nw-prose')).toContainText('$260,000')
+      await expect(nwCard.locator('.nw-prose')).toContainText('$55,000')
 
       // Enhanced cross-page assertion (#151 spec): the Net Worth page
       // must read the same data from localStorage. The Net Worth page
@@ -182,29 +184,22 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       expect(total).toBe(315_000)
     })
 
-    test('7. Net Worth Summary shows FI and GW subtotals in expandable tree', async ({ page }) => {
-      // NetWorthSummary.tsx:264–282: each tree node is a <button> with
-      // class .nw-tree-node--parent and a child .nw-tree-label holding
-      // "FI" or "GW". The .nw-tree-value sibling holds the formatted
-      // total: FI=$260,000 (401k only), GW=$55,000 (Savings only).
+    test('7. Net Worth Summary shows FI and GW subtotals in prose and legend', async ({ page }) => {
       await seedCrossPage(page)
       await gotoHome(page)
 
-      const fiNode = page
-        .locator('.home-card--nw .nw-tree-node--parent')
-        .filter({ has: page.locator('.nw-tree-label', { hasText: /^FI$/ }) })
-      const gwNode = page
-        .locator('.home-card--nw .nw-tree-node--parent')
-        .filter({ has: page.locator('.nw-tree-label', { hasText: /^GW$/ }) })
+      const prose = page.locator('.home-card--nw .nw-prose')
+      await expect(prose).toContainText('saved towards FI')
+      await expect(prose).toContainText('$260,000')
+      await expect(prose).toContainText('Retirement')
+      await expect(prose).toContainText('GW')
+      await expect(prose).toContainText('$55,000')
+      await expect(prose).toContainText('Liquid')
 
-      await expect(fiNode.locator('.nw-tree-value')).toHaveText('$260,000')
-      await expect(gwNode.locator('.nw-tree-value')).toHaveText('$55,000')
-
-      // Click to expand and ensure the leaf children render.
-      await fiNode.click()
-      const fiChildren = page.locator('.home-card--nw .nw-tree-children').first()
-      await expect(fiChildren).toBeVisible({ timeout: 2000 })
-      await expect(fiChildren.locator('.nw-tree-label', { hasText: 'Retirement' })).toBeVisible()
+      const legendItems = page.locator('.home-card--nw .nw-stacked-legend-item')
+      await expect(legendItems).toHaveCount(2)
+      await expect(legendItems.nth(0)).toContainText('FI 82.5%')
+      await expect(legendItems.nth(1)).toContainText('GW 17.5%')
     })
 
     test('8. Mini Charts card renders net worth line chart with SVG data points', async ({ page }) => {
@@ -386,16 +381,10 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       const nwCard = page.locator('.home-card--nw')
       await expect(nwCard.locator('.nw-amount')).toContainText('$0')
 
-      const fiValue = nwCard
-        .locator('.nw-tree-node--parent')
-        .filter({ has: page.locator('.nw-tree-label', { hasText: /^FI$/ }) })
-        .locator('.nw-tree-value')
-      const gwValue = nwCard
-        .locator('.nw-tree-node--parent')
-        .filter({ has: page.locator('.nw-tree-label', { hasText: /^GW$/ }) })
-        .locator('.nw-tree-value')
-      await expect(fiValue).toHaveText('$0')
-      await expect(gwValue).toHaveText('$0')
+      const legendItems = nwCard.locator('.nw-stacked-legend-item')
+      await expect(legendItems).toHaveCount(2)
+      await expect(legendItems.nth(0)).toContainText('FI 0.0%')
+      await expect(legendItems.nth(1)).toContainText('GW 0.0%')
     })
   })
 

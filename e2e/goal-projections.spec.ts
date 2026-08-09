@@ -20,9 +20,7 @@ import {
 
 test.describe('Goal Projections E2E', () => {
   test.describe('Projected Date (Happy Path)', () => {
-    test('shows projected FI date on Home GoalsPeek when budget savings exist', async ({
-      page,
-    }) => {
+    test('shows projected FI date on Home GoalsPeek when budget savings exist', async ({ page }) => {
       await seedProjectionData(page)
       const home = new HomePage(page)
       await home.goto()
@@ -44,7 +42,7 @@ test.describe('Goal Projections E2E', () => {
       const originalDate = await projectedDate.textContent()
 
       // Re-seed with higher savings and reload
-      await page.evaluate((highBudget) => {
+      await page.evaluate(highBudget => {
         localStorage.setItem('budget-summary', JSON.stringify(highBudget))
       }, BUDGET_SUMMARY_HIGH_SAVINGS)
       await page.reload()
@@ -74,6 +72,7 @@ test.describe('Goal Projections E2E', () => {
       await detail.goto(FI_GOAL.id)
 
       await expect(detail.savingsPlan).toBeVisible()
+      await expect(detail.savingsPlan).toContainText('Save')
       await expect(detail.savingsPlanHighlightRow).toContainText('$')
       await expect(detail.savingsPlanHighlightRow).toContainText(/\/(mo|yr)/)
     })
@@ -170,8 +169,9 @@ test.describe('Goal Projections E2E', () => {
       await detail.goto(FI_GOAL.id)
 
       await expect(detail.savingsPlan).toBeVisible()
-      await expect(detail.savingsPlan).toContainText(/At this pace/i)
-      await expect(detail.savingsPlan).toContainText(/[A-Z][a-z]+\s\d{4}/)
+      await expect(detail.savingsPlan).toContainText('Income')
+      await expect(detail.savingsPlan).toContainText('Save')
+      await expect(detail.projectedResult).toContainText(/[A-Z][a-z]+\s\d{4}/)
     })
 
     test('savings rate on GoalsPeek is consistent with budget summary', async ({ page }) => {
@@ -290,6 +290,7 @@ test.describe('Goal Projections E2E', () => {
       await detail.goto(FI_GOAL.id)
 
       await expect(detail.savingsPlan).toBeVisible()
+      await expect(detail.savingsPlan).toContainText('Save')
 
       const paceText = await detail.savingsPlan.textContent()
       expect(paceText).toMatch(/\$[\d,]+/)

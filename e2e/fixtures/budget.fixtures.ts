@@ -57,7 +57,9 @@ export interface SeedOptions {
 }
 
 /** Builds a single-month CSV with the standard 4-column format. */
-export function buildCSV(rows: Array<{ date: string; category: string; amount: number; description?: string }>): string {
+export function buildCSV(
+  rows: Array<{ date: string; category: string; amount: number; description?: string }>,
+): string {
   const header = 'Date,Category,Amount,Description'
   const body = rows
     .map(r => {

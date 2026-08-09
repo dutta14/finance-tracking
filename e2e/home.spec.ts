@@ -149,13 +149,13 @@ test.describe('Home Dashboard E2E', () => {
       }
 
       // Default order: Net Worth, Charts, Goals, Allocation
-      await expect(home.getCardHeadingInSlot(0)).toHaveText('Net Worth')
-      await expect(home.getCardHeadingInSlot(1)).toHaveText('Charts')
-      await expect(home.getCardHeadingInSlot(2)).toHaveText('Goals')
-      await expect(home.getCardHeadingInSlot(3)).toHaveText('Asset Allocation')
+      await expect(home.getCardInSlot(0)).toHaveClass(/home-card--nw/)
+      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--charts/)
+      await expect(home.getCardInSlot(2)).toHaveClass(/home-card--goals/)
+      await expect(home.getCardInSlot(3)).toHaveClass(/home-card--alloc/)
     })
 
-    test('net worth card shows amount, change indicator, and month', async ({ page }) => {
+    test('net worth card shows amount, change indicator, and breakdown prose', async ({ page }) => {
       await seedHomeData(page)
       const home = new HomePage(page)
       await home.goto()
@@ -163,8 +163,9 @@ test.describe('Home Dashboard E2E', () => {
       await expect(home.nwAmount).toBeVisible()
       // m1: Content assertion — verify currency amount contains $
       await expect(home.nwAmount).toContainText('$')
-      await expect(home.nwDate).toBeVisible()
-      await expect(home.nwDate).toHaveText('May 2025')
+      await expect(home.nwProse).toBeVisible()
+      await expect(home.nwProse).toContainText('saved towards FI')
+      await expect(home.nwLegendItems).toHaveCount(2)
 
       // Change indicator (up since last month: 382000 vs 371000)
       await expect(home.nwChangeUp).toBeVisible()
@@ -244,8 +245,8 @@ test.describe('Home Dashboard E2E', () => {
       await home.getMoveDownBtn('Net Worth').click()
 
       // Net Worth should now be in slot 1
-      await expect(home.getCardHeadingInSlot(1)).toHaveText('Net Worth')
-      await expect(home.getCardHeadingInSlot(0)).toHaveText('Charts')
+      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--nw/)
+      await expect(home.getCardInSlot(0)).toHaveClass(/home-card--charts/)
 
       // Announcement
       await expect(home.reorderAnnouncement).toHaveText('Net Worth moved to position 2')
@@ -272,7 +273,7 @@ test.describe('Home Dashboard E2E', () => {
 
       // Move Net Worth down
       await home.getMoveDownBtn('Net Worth').click()
-      await expect(home.getCardHeadingInSlot(1)).toHaveText('Net Worth')
+      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--nw/)
 
       // Reload — addInitScript will re-seed but home-card-order should persist
       // So instead, seed the card order AFTER the move and before reload via evaluate
@@ -295,8 +296,8 @@ test.describe('Home Dashboard E2E', () => {
       // Dismiss sidebar again
       await home.dismissSidebarIfVisible()
 
-      await expect(home.getCardHeadingInSlot(1)).toHaveText('Net Worth')
-      await expect(home.getCardHeadingInSlot(0)).toHaveText('Charts')
+      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--nw/)
+      await expect(home.getCardInSlot(0)).toHaveClass(/home-card--charts/)
 
       await context.close()
     })
@@ -363,10 +364,10 @@ test.describe('Home Dashboard E2E', () => {
       await home.goto()
 
       // Should fall back to default order
-      await expect(home.getCardHeadingInSlot(0)).toHaveText('Net Worth')
-      await expect(home.getCardHeadingInSlot(1)).toHaveText('Charts')
-      await expect(home.getCardHeadingInSlot(2)).toHaveText('Goals')
-      await expect(home.getCardHeadingInSlot(3)).toHaveText('Asset Allocation')
+      await expect(home.getCardInSlot(0)).toHaveClass(/home-card--nw/)
+      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--charts/)
+      await expect(home.getCardInSlot(2)).toHaveClass(/home-card--goals/)
+      await expect(home.getCardInSlot(3)).toHaveClass(/home-card--alloc/)
 
       // m2: Assert localStorage was corrected (key removed or reset)
       const storedOrder = await page.evaluate(() => localStorage.getItem('home-card-order'))
@@ -621,10 +622,10 @@ test.describe('Home Dashboard E2E', () => {
       await expect(h1.first()).toBeVisible()
       await expect(home.greeting).toHaveText(/Good (morning|afternoon|evening)/)
 
-      // All card headings are h3
+      // The redesigned Net Worth card no longer renders an h3 heading.
       const cardH3s = home.cardGrid.locator('h3')
       const h3Count = await cardH3s.count()
-      expect(h3Count).toBeGreaterThanOrEqual(4)
+      expect(h3Count).toBeGreaterThanOrEqual(3)
 
       // No h2 elements within cards (heading hierarchy integrity)
       const cardH2s = home.cardGrid.locator('h2')

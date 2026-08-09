@@ -517,9 +517,7 @@ test.describe('Goals Page E2E', () => {
       await expect(goals.getMiniCardByName('Keyboard Goal')).toBeVisible()
     })
 
-    test('GoalMiniCard receives focus via Tab and opens detail on Enter and Space', async ({
-      page,
-    }) => {
+    test('GoalMiniCard receives focus via Tab and opens detail on Enter and Space', async ({ page }) => {
       await seedGoalsData(page)
       const goals = new GoalsPage(page)
       await goals.goto()
@@ -624,12 +622,14 @@ test.describe('Goals Page E2E', () => {
         const newValue = JSON.stringify(existing)
         localStorage.setItem(key, newValue)
         // Dispatch storage event to simulate cross-tab change
-        window.dispatchEvent(new StorageEvent('storage', {
-          key,
-          newValue,
-          oldValue: null,
-          storageArea: localStorage,
-        }))
+        window.dispatchEvent(
+          new StorageEvent('storage', {
+            key,
+            newValue,
+            oldValue: null,
+            storageArea: localStorage,
+          }),
+        )
       })
 
       // Wait for UI to update with the new goal

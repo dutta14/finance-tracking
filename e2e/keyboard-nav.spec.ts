@@ -214,9 +214,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
 
     const skipCandidates = await page.evaluate(() => {
       const all = Array.from(document.querySelectorAll('a, button'))
-      return all
-        .map(el => (el.textContent || '').trim())
-        .filter(t => /skip.*main/i.test(t))
+      return all.map(el => (el.textContent || '').trim()).filter(t => /skip.*main/i.test(t))
     })
     expect(skipCandidates).toEqual(['Skip to main content'])
 
@@ -275,8 +273,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
 
     const elapsed: number[] = []
     for (const t of transitions) {
-      const link =
-        t.to === 'Net Worth' ? kb.netWorthLink : t.to === 'Budget' ? kb.budgetLink : kb.goalsLink
+      const link = t.to === 'Net Worth' ? kb.netWorthLink : t.to === 'Budget' ? kb.budgetLink : kb.goalsLink
       const heading = page.getByRole('heading', { level: 1, name: t.heading })
 
       const start = Date.now()

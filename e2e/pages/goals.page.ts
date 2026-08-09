@@ -218,7 +218,7 @@ export class GoalsPage {
     this.gwUndoBtn = page.locator('.gw-goal-undo-btn')
     this.gwEmptyState = page.locator('.gw-empty-state')
 
-    this.fiCardEditBtn = page.locator('.fi-card-edit-btn')
+    this.fiCardEditBtn = page.locator('.fi-card-edit-row .fi-card-action-btn')
     this.fiCardEditForm = page.locator('.fi-card-edit-form')
     this.undoBtn = page.getByRole('button', { name: /undo/i })
     this.undoToast = page.locator('[role="alert"]')

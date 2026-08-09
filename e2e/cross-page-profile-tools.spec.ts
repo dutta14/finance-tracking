@@ -1,11 +1,6 @@
 import { test, expect } from './fixtures/base'
 import type { Page } from '@playwright/test'
-import {
-  mutateProfile,
-  seedBudgetCsvsForYear,
-  seedCrossPage,
-  URLS,
-} from './fixtures/cross-page-data'
+import { mutateProfile, seedBudgetCsvsForYear, seedCrossPage, URLS } from './fixtures/cross-page-data'
 
 /**
  * #152 — Cross-page: Profile + Tools Integration (62b)
@@ -72,9 +67,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
    * Flow 3: Profile Birthday → Goal/GoalsPeek Retirement Year
    * ──────────────────────────────────────────────────────────── */
   test.describe('Flow 3: Profile Birthday → Goal Age Calculations', () => {
-    test('11. Goal mini card shows correct retirement year based on profile birthday', async ({
-      page,
-    }) => {
+    test('11. Goal mini card shows correct retirement year based on profile birthday', async ({ page }) => {
       // GoalMiniCard.tsx:29-32 → `birthYear + retirementAge`. With
       // birthday "1990-06-15" and retirementAge 55 → year 2045.
       // Adaptation D: `.mini-retire-year` is the bare year text.
@@ -93,9 +86,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // after reload so the goal-tab render is fresh.
       await seedCrossPage(page)
       await gotoAndSettle(page, URLS.goal, /^goals$/i)
-      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toHaveText(
-        '2045',
-      )
+      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toHaveText('2045')
 
       await mutateProfile(page, { birthday: '1985-06-15' })
       await page.reload()
@@ -103,14 +94,10 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await gotoAndSettle(page, URLS.goal, /^goals$/i)
 
       // 1985 + 55 = 2040.
-      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toHaveText(
-        '2040',
-      )
+      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toHaveText('2040')
     })
 
-    test('13. GoalsPeek on Home uses profile birthday for retirement month calculation', async ({
-      page,
-    }) => {
+    test('13. GoalsPeek on Home uses profile birthday for retirement month calculation', async ({ page }) => {
       // GoalsPeek.tsx:103-113 computes nMonths from the latest balance
       // month ("2025-04") to the birthday-derived retirement month
       // ("2045-06") = (2045-2025)*12 + (6-4) = 242. fiMonthly > 0 →
@@ -136,9 +123,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
    * Flow 5: Budget Data + Profile → FI Calculator (`/goal/calculator`)
    * ──────────────────────────────────────────────────────────── */
   test.describe('Flow 5: FI Calculator Pre-fill', () => {
-    test('18. FI Calculator pre-fills annual expense from last year budget data', async ({
-      page,
-    }) => {
+    test('18. FI Calculator pre-fills annual expense from last year budget data', async ({ page }) => {
       // FICalculator.tsx:13-55 reads csvs for `currentYear-1`. We seed
       // 12 monthly CSVs at $10,000 income and $-5,000 expense → last-
       // year total expense = 5,000 * 12 = $60,000. Hero input renders
@@ -155,9 +140,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await expect(heroInput).toHaveValue('60,000')
     })
 
-    test('19. FI Calculator uses profile birth years for last-year and 401k-access defaults', async ({
-      page,
-    }) => {
+    test('19. FI Calculator uses profile birth years for last-year and 401k-access defaults', async ({ page }) => {
       // Adaptation G: spec says defaultLastYear = 2090. Source truth
       // (FICalculator.tsx:174-179) is Math.max(primary+100, partner+100)
       // = max(2090, 2092) = 2092. We assert 2092. Follow-up filed.
@@ -197,9 +180,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       const holdings = page.locator('.fi-calc-holdings')
       await expect(holdings).toBeVisible()
       // Primary retirement is always shown.
-      const primaryRow = holdings
-        .locator('.fi-calc-holding-row')
-        .filter({ hasText: 'FI Retirement (Primary)' })
+      const primaryRow = holdings.locator('.fi-calc-holding-row').filter({ hasText: /FI Retirement \(.+\)/ })
       await expect(primaryRow).toContainText('$260,000')
 
       // GW Liquid only appears when the toggle is on (FICalculator.tsx:509).
@@ -217,9 +198,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
    *         (Adaptation H: `/net-worth/growth`)
    * ──────────────────────────────────────────────────────────── */
   test.describe('Flow 8: Savings Growth Tracker', () => {
-    test('31. Savings Growth Tracker shows year-end net worth from balance data', async ({
-      page,
-    }) => {
+    test('31. Savings Growth Tracker shows year-end net worth from balance data', async ({ page }) => {
       // SavingsGrowthTracker.tsx:21-49 picks December if available,
       // else latest month. Sum across all accounts for that month.
       // We seed Dec 2023 = 200_000, Dec 2024 = 260_000 (single account).
@@ -239,9 +218,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await expect(row2024.locator('[data-sgt-field="netWorth"]')).toContainText('$260,000')
     })
 
-    test('32. Savings Growth Tracker pulls budget income and expense for each year', async ({
-      page,
-    }) => {
+    test('32. Savings Growth Tracker pulls budget income and expense for each year', async ({ page }) => {
       // Seed 2024 budget: $10,000/mo income, $-6,667/mo expense
       // → totalIncome = 120,000; totalExpense = ~80,004 ("~$80,000").
       // SGT classifies categories where any monthly sum < 0 as expense.
@@ -346,17 +323,11 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // Counter increments at least once (we dispatched). Bound at 5 to
       // catch a runaway if future code adds remount dispatch.
       await expect
-        .poll(
-          () =>
-            page.evaluate(() =>
-              Number(localStorage.getItem('__test_budget_changed_count') || '0'),
-            ),
-          { timeout: 5_000 },
-        )
+        .poll(() => page.evaluate(() => Number(localStorage.getItem('__test_budget_changed_count') || '0')), {
+          timeout: 5_000,
+        })
         .toBeGreaterThanOrEqual(1)
-      const count = await page.evaluate(() =>
-        Number(localStorage.getItem('__test_budget_changed_count') || '0'),
-      )
+      const count = await page.evaluate(() => Number(localStorage.getItem('__test_budget_changed_count') || '0'))
       expect(count).toBeGreaterThanOrEqual(1)
       expect(count).toBeLessThanOrEqual(5)
 
