@@ -98,6 +98,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
 
   const sortedGoals = useMemo(() => {
     if (!sortField || viewMode !== 'list') return goals
+    const { fiTotal } = getLatestGoalTotals()
     const sorted = [...goals].sort((a, b) => {
       let av: number | string = 0
       let bv: number | string = 0
@@ -113,7 +114,6 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           break
         }
         case 'progress': {
-          const { fiTotal } = getLatestGoalTotals()
           av = a.fiGoal > 0 ? fiTotal / a.fiGoal : 0
           bv = b.fiGoal > 0 ? fiTotal / b.fiGoal : 0
           break

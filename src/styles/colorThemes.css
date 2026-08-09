@@ -9,7 +9,7 @@
 /* ── DEFAULT LIGHT (blue) ── */
 :root {
   /* Core accent palette */
-  --accent: #3b82f6;
+  --accent: #2563eb;
   --accent-hover: #2563eb;
   --accent-light: #dbeafe;
   --accent-lighter: #f0f5ff;
@@ -26,9 +26,9 @@
   --accent-gradient-to: #1e40af;
 
   /* Semantic colors */
-  --color-positive: #10b981;
+  --color-positive: #047857;
   --color-positive-light: #d1fae5;
-  --color-negative: #ef4444;
+  --color-negative: #dc2626;
   --color-negative-light: #fef2f2;
   --color-negative-border: #fecaca;
   --color-warning: #f59e0b;

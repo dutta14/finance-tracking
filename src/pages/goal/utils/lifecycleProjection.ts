@@ -171,7 +171,7 @@ export function buildLifecycle(
   const now = new Date()
   const cursor = new Date(now.getFullYear(), now.getMonth(), 1)
   const end = new Date(endYear, 11, 1)
-  let balance = currentBalance
+  let balance: number
   let fiReached = false
   let expense = 0
   let actualFiYear = fiDate.getFullYear()
@@ -181,10 +181,6 @@ export function buildLifecycle(
   let retPrimary = breakdown?.retirementPrimary ?? 0
   let retPartner = breakdown?.retirementPartner ?? 0
   let nonRet = breakdown?.nonRetirement ?? currentBalance
-  if (breakdown) {
-    // use breakdown values; total may differ from currentBalance
-    balance = retPrimary + retPartner + nonRet
-  }
   const primaryAccessDate = breakdown?.primaryAccessDate
   const partnerAccessDate = breakdown?.partnerAccessDate
 
@@ -303,6 +299,7 @@ export function buildLifecycle(
       retPrimary += gP
       retPartner += gPa
       nonRet += gN
+      balance = retPrimary + retPartner + nonRet
 
       rows.push({
         month: label,
@@ -334,7 +331,6 @@ export function buildLifecycle(
         if (partnerUnlocked) retPartner -= retPartner * drawRatio
       }
 
-      balance = retPrimary + retPartner + nonRet
     }
 
     cursor.setMonth(cursor.getMonth() + 1)

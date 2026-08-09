@@ -410,14 +410,18 @@ const GoalDetail: FC<GoalDetailProps> = ({
               <h3 className="fi-card-section-title">Projected</h3>
               <div className="fi-projection-block">
                 <div className="fi-projection-rows">
-                  <div className="fi-projection-row" onClick={() => setGwTargetShowRetirement(v => !v)} style={{ cursor: 'pointer' }}>
+                  <div className="fi-projection-row">
                     <span className="fi-projection-key">Target</span>
-                    <span className="fi-projection-val goal-summary-toggleable">
+                    <button
+                      type="button"
+                      className="fi-projection-val goal-summary-toggleable"
+                      onClick={() => setGwTargetShowRetirement(v => !v)}
+                    >
                       {gwTargetShowRetirement
                         ? `$${Math.round(gwProjection.gwTargetAtRetirement).toLocaleString()} by ${gwProjection.retDate}`
                         : `$${Math.round(gwProjection.gwTarget).toLocaleString()} by ${gwProjection.fiDateShort}`
                       }
-                    </span>
+                    </button>
                   </div>
                   <div className="fi-projection-row">
                     <span className="fi-projection-key">Save</span>

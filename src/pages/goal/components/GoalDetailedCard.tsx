@@ -668,9 +668,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
           {!condensed && (
             <p className="fi-goal-prose">
               To spend{' '}
-              <strong className="goal-summary-toggleable" onClick={cycleExpenseDollarMode}>
+              <button type="button" className="goal-summary-toggleable" onClick={cycleExpenseDollarMode}>
                 {expenseLabel}
-              </strong>
+              </button>
               {' '}<strong>in retirement</strong>, you need <strong>{dollars(fiGoal)}</strong> to retire by <strong>{retirementDateLabel}</strong>,
               assuming <strong>{preBoundaryGrowth}%</strong> growth (pre-{ageBoundary}) and{' '}
               <strong>{postBoundaryGrowth}%</strong> growth (post-{ageBoundary}), with <strong>{inflation}%</strong>{' '}
@@ -689,9 +689,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
               ) : (
                 <>
                   You need to save{' '}
-                  <strong className="goal-summary-toggleable" onClick={onTogglePeriod}>
+                  <button type="button" className="goal-summary-toggleable" onClick={onTogglePeriod}>
                     {dollars(showYearly ? requiredMonthlySaving * 12 : requiredMonthlySaving)}/{showYearly ? 'yr' : 'mo'}
-                  </strong>
+                  </button>
                 </>
               )}
             </p>
@@ -816,7 +816,8 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                       />/{showYearly ? 'yr' : 'mo'}
                     </span>
                   ) : (
-                    <strong
+                    <button
+                      type="button"
                       className="goal-summary-toggleable fi-savings-editable"
                       onClick={() => {
                         const display = showYearly ? budgetAnnualExpense : budgetAnnualExpense / 12
@@ -825,7 +826,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                       }}
                     >
                       {dollars(showYearly ? budgetAnnualExpense : budgetAnnualExpense / 12)}/{showYearly ? 'yr' : 'mo'}
-                    </strong>
+                    </button>
                   )}
                   {expenseOverride !== null && !editingExpense && (
                     <button
@@ -868,15 +869,17 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                   </div>
                 ) : projection.state === 'projected' ? (
                   <p className="fi-goal-prose fi-projection-result">
-                    <strong
+                    <button
+                      type="button"
                       className="goal-summary-toggleable fi-savings-editable"
                       onClick={() => fiProjectedMonth && onFiYearOverrideChange?.(fiProjectedMonth)}
                     >
                       {fiProjectedMonth
                         ? formatYearMonthLong(fiProjectedMonth)
                         : 'Calculating…'}
-                    </strong>
-                    {' '}(<strong
+                    </button>
+                    {' '}(<button
+                      type="button"
                       className="goal-summary-toggleable"
                       onClick={() => setFiResultDetail(d => d === 'time' ? 'diff' : 'time')}
                     >
@@ -885,7 +888,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                             ? formatTimeUntilYearMonth(fiProjectedMonth)
                             : 'Calculating…')
                         : projectedDiffText}
-                    </strong>)
+                    </button>)
                   </p>
                 ) : null}
               </div>

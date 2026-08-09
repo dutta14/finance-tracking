@@ -172,14 +172,30 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     }, LONG_PRESS_MS)
   }, [])
 
-  const endLP = useCallback(
+  const stepMonth = useCallback(
     (dir: 'prev' | 'next') => {
-      clearLP()
-      if (didLongPress.current) return // long-press already opened picker
       if (dir === 'prev') setMonthIdx(i => Math.min(i + 1, allMonths.length - 1))
       else setMonthIdx(i => Math.max(i - 1, 0))
     },
-    [allMonths.length, clearLP],
+    [allMonths.length],
+  )
+
+  const endLP = useCallback(
+    () => {
+      clearLP()
+    },
+    [clearLP],
+  )
+
+  const handleMonthClick = useCallback(
+    (dir: 'prev' | 'next') => {
+      if (didLongPress.current) {
+        didLongPress.current = false
+        return
+      }
+      stepMonth(dir)
+    },
+    [stepMonth],
   )
 
   // Close jump picker on outside click
@@ -252,12 +268,11 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           className="nw-month-arrow"
           disabled={monthIdx >= allMonths.length - 1}
           onMouseDown={startLP}
-          onMouseUp={() => endLP('prev')}
+          onMouseUp={endLP}
           onMouseLeave={clearLP}
           onTouchStart={startLP}
-          onTouchEnd={() => {
-            endLP('prev')
-          }}
+          onTouchEnd={endLP}
+          onClick={() => handleMonthClick('prev')}
           aria-label="Previous month"
         >
           ‹
@@ -283,12 +298,11 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           className="nw-month-arrow"
           disabled={monthIdx <= 0}
           onMouseDown={startLP}
-          onMouseUp={() => endLP('next')}
+          onMouseUp={endLP}
           onMouseLeave={clearLP}
           onTouchStart={startLP}
-          onTouchEnd={() => {
-            endLP('next')
-          }}
+          onTouchEnd={endLP}
+          onClick={() => handleMonthClick('next')}
           aria-label="Next month"
         >
           ›

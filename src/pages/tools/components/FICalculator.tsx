@@ -340,10 +340,13 @@ const FICalculator: FC = () => {
       <div className="fi-calc">
         {/* Annual Expense — hero input */}
         <div className="fi-calc-hero">
-          <span className="fi-calc-hero-label">Annual Expense</span>
+          <label className="fi-calc-hero-label" htmlFor="fi-calc-annual-expense">
+            Annual Expense
+          </label>
           <div className="fi-calc-hero-value">
             <span className="fi-calc-hero-dollar">$</span>
             <input
+              id="fi-calc-annual-expense"
               type="text"
               inputMode="numeric"
               className="fi-calc-hero-input"
@@ -580,10 +583,15 @@ const FICalculator: FC = () => {
           {savedSims.map(s => (
             <div
               key={s.name}
-              className={`fi-sim-panel-item ${activeSim === s.name ? 'fi-sim-panel-item--active' : ''}`}
-              onClick={() => applySnapshot(s)}
+              className={`fi-sim-panel-item-row ${activeSim === s.name ? 'fi-sim-panel-item-row--active' : ''}`}
             >
-              <span className="fi-sim-panel-item-name">{s.name}</span>
+              <button
+                type="button"
+                className={`fi-sim-panel-item ${activeSim === s.name ? 'fi-sim-panel-item--active' : ''}`}
+                onClick={() => applySnapshot(s)}
+              >
+                <span className="fi-sim-panel-item-name">{s.name}</span>
+              </button>
               <button
                 className="fi-sim-panel-item-delete"
                 onClick={e => {

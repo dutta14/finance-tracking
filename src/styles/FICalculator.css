@@ -477,24 +477,40 @@ body.dark .fi-sim-chip--active {
   margin-bottom: 1rem;
 }
 
-.fi-sim-panel-item {
+.fi-sim-panel-item-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  cursor: pointer;
   transition: all 0.15s;
 }
 
-.fi-sim-panel-item:hover {
+.fi-sim-panel-item-row:hover {
   background: var(--color-surface-alt);
 }
 
-.fi-sim-panel-item--active {
+.fi-sim-panel-item-row--active {
   border-color: var(--color-text);
   background: var(--color-surface-alt);
+}
+
+button.fi-sim-panel-item {
+  all: unset;
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+}
+
+button.fi-sim-panel-item:focus-visible {
+  outline: 2px solid var(--color-border-strong, #555);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+.fi-sim-panel-item {
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
 }
 
 .fi-sim-panel-item-name {
