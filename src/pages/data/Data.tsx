@@ -183,7 +183,7 @@ const Data: FC = () => {
 
   /* Derived data */
   const hasAccounts = accounts.length > 0
-  const spreadsheetAccounts = showInactive ? accounts : activeAccounts
+  const spreadsheetAccounts = accounts
   const allMonths = [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a))
   const balanceMap = new Map<string, number>()
   for (const b of balances) balanceMap.set(`${b.accountId}:${b.month}`, b.balance)
@@ -345,13 +345,6 @@ const Data: FC = () => {
                 inlineEntry={inlineEntry}
                 toolbarActions={
                   <>
-                    <button
-                      className="data-filter-toggle"
-                      aria-pressed={showInactive}
-                      onClick={() => setShowInactive(v => !v)}
-                    >
-                      {showInactive ? 'Hide inactive' : 'Show inactive'}
-                    </button>
                     <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
                       + Add Entry
                     </button>

@@ -645,8 +645,8 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
               }}
             />
             <div className="data-add-month-wrap">
-              <button className="data-add-month-btn" type="button" onClick={handleOpenAddMonth}>
-                Add Month
+              <button className="data-add-entry-btn" type="button" onClick={handleOpenAddMonth}>
+                + Add Entry
               </button>
               {isAddMonthOpen ? (
                 <div className="data-add-month-popover" role="dialog" aria-label="Add month">

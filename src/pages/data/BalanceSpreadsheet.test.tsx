@@ -269,13 +269,12 @@ describe('BalanceSpreadsheet', () => {
       />,
     )
 
-    // Click Owner filter L1 button
-    const ownerBtn = screen.getByRole('button', { name: /^Owner/ })
-    await user.click(ownerBtn)
-
-    // Click Partner filter
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Owner' }))
     const partnerLabel = profile.partner?.name || 'Partner'
-    await user.click(screen.getByRole('button', { name: partnerLabel }))
+    await user.click(within(dialog).getByRole('checkbox', { name: partnerLabel }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('Partner IRA')).toBeInTheDocument()
     expect(screen.queryByText('Checking')).not.toBeInTheDocument()
@@ -285,8 +284,11 @@ describe('BalanceSpreadsheet', () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps({ allMonths: ['2024-01'] })} />)
 
-    await user.click(screen.getByRole('button', { name: /^Goal/ }))
-    await user.click(screen.getByRole('button', { name: 'FI' }))
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Goal' }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'FI' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('401k')).toBeInTheDocument()
     expect(screen.queryByText('Checking')).not.toBeInTheDocument()
@@ -296,25 +298,34 @@ describe('BalanceSpreadsheet', () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps({ allMonths: ['2024-01'] })} />)
 
-    await user.click(screen.getByRole('button', { name: /^Type/ }))
-    await user.click(screen.getByRole('button', { name: 'Retirement' }))
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Type' }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Retirement' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('401k')).toBeInTheDocument()
     expect(screen.queryByText('Checking')).not.toBeInTheDocument()
   })
 
-  it('shows Clear all button when any filter is active and clears on click', async () => {
+  it('clears applied filters from the Filters panel footer', async () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps({ allMonths: ['2024-01'] })} />)
 
-    expect(screen.queryByRole('button', { name: 'Clear all' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    let dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Goal' }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'FI' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    await user.click(screen.getByRole('button', { name: /^Goal/ }))
-    await user.click(screen.getByRole('button', { name: 'FI' }))
+    expect(screen.getByText('401k')).toBeInTheDocument()
+    expect(screen.queryByText('Checking')).not.toBeInTheDocument()
 
-    expect(screen.getByRole('button', { name: 'Clear all' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('button', { name: 'Clear' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    await user.click(screen.getByRole('button', { name: 'Clear all' }))
     expect(screen.getByText('Checking')).toBeInTheDocument()
     expect(screen.getByText('401k')).toBeInTheDocument()
   })
@@ -326,11 +337,11 @@ describe('BalanceSpreadsheet', () => {
     render(<BalanceSpreadsheet {...makeProps()} />)
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'YTD' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Last 12 mo' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Year-End' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Custom' })).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    expect(within(dialog).getByRole('button', { name: 'All time' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Year to date' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Last 12 months' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Year-end only' })).toBeInTheDocument()
   })
 
   it('filters to year-end months when Year-End preset is selected', async () => {
@@ -346,7 +357,9 @@ describe('BalanceSpreadsheet', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    await user.click(screen.getByRole('button', { name: 'Year-End' }))
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Year-end only' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('Dec 2024')).toBeInTheDocument()
     expect(screen.getByText('Dec 2023')).toBeInTheDocument()
@@ -354,14 +367,15 @@ describe('BalanceSpreadsheet', () => {
     expect(screen.queryByText('Jun 2023')).not.toBeInTheDocument()
   })
 
-  it('shows custom range pickers when Custom preset is selected', async () => {
+  it('shows inline month grids when the Date panel opens', async () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps()} />)
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
-
-    expect(screen.getByText('to')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    expect(within(dialog).getByText('From month')).toBeInTheDocument()
+    expect(within(dialog).getByText('To month')).toBeInTheDocument()
+    expect(within(dialog).getAllByRole('button', { name: 'Jan' }).length).toBeGreaterThan(0)
   })
 
   // --- Inline edit ---
@@ -479,8 +493,11 @@ describe('BalanceSpreadsheet', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: /Asset\/Liability/ }))
-    await user.click(screen.getByRole('button', { name: 'Liability' }))
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Asset/Liability' }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Liability' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('Mortgage')).toBeInTheDocument()
     expect(screen.queryByText('Checking')).not.toBeInTheDocument()
@@ -518,8 +535,11 @@ describe('BalanceSpreadsheet', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: /Allocation/ }))
-    await user.click(screen.getByRole('button', { name: 'Cash' }))
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Allocation' }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Cash' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
     expect(screen.getByText('Savings')).toBeInTheDocument()
     expect(screen.queryByText('Brokerage')).not.toBeInTheDocument()
@@ -554,18 +574,14 @@ describe('BalanceSpreadsheet', () => {
 
   // ── Custom date range ──
 
-  it('shows custom date range pickers when Custom date filter is selected', async () => {
+  it('shows From and To month labels in the Date panel', async () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps()} />)
 
-    // First click "Date" L1 filter to expand date options
     await user.click(screen.getByRole('button', { name: /Date/ }))
-    // Then click "Custom"
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
-
-    // Should show year/month select dropdowns for from and to
-    const selects = screen.getAllByRole('combobox')
-    expect(selects.length).toBeGreaterThanOrEqual(2)
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    expect(within(dialog).getByText('From month')).toBeInTheDocument()
+    expect(within(dialog).getByText('To month')).toBeInTheDocument()
   })
 
   it('filters months by custom from/to selects', async () => {
@@ -573,15 +589,17 @@ describe('BalanceSpreadsheet', () => {
     render(<BalanceSpreadsheet {...makeProps()} />)
 
     await user.click(screen.getByRole('button', { name: /Date/ }))
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    const fields = within(dialog).getAllByText(/month$/)
+    const fromField = fields[0].closest('.txn-date-panel-field') as HTMLElement
+    const toField = fields[1].closest('.txn-date-panel-field') as HTMLElement
+    await user.click(within(fromField).getByRole('button', { name: 'Feb' }))
+    await user.click(within(toField).getByRole('button', { name: 'Mar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    // Select year in the first (from) year dropdown
-    const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[0], '2024')
-    await user.selectOptions(selects[1], '02')
-
-    // Should filter months — only Feb and Mar visible (from >= 2024-02)
     expect(screen.queryByText('Jan 2024')).not.toBeInTheDocument()
+    expect(screen.getByText('Feb 2024')).toBeInTheDocument()
+    expect(screen.getByText('Mar 2024')).toBeInTheDocument()
   })
 
   // ── Delete month confirmation ──
@@ -606,31 +624,36 @@ describe('BalanceSpreadsheet', () => {
 
   // ── Additional branch coverage tests ──
 
-  it('toggles L1 filter closed when same filter button is clicked twice', async () => {
+  it('closes the Filters panel when the Filters button is clicked again', async () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps()} />)
 
-    // Open date filter
-    await user.click(screen.getByRole('button', { name: /^Date/ }))
-    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    expect(screen.getByRole('dialog', { name: 'Filters' })).toBeInTheDocument()
 
-    // Click Date again to close (line 63: prev === f ? null : f)
-    await user.click(screen.getByRole('button', { name: /^Date/ }))
-    expect(screen.queryByRole('button', { name: 'All' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    expect(screen.queryByRole('dialog', { name: 'Filters' })).not.toBeInTheDocument()
   })
 
   it('toggleSet removes value from set when already present', async () => {
     const user = userEvent.setup()
     render(<BalanceSpreadsheet {...makeProps({ allMonths: ['2024-01'] })} />)
 
-    await user.click(screen.getByRole('button', { name: /^Goal/ }))
-    await user.click(screen.getByRole('button', { name: 'FI' }))
-    // FI filter is active — only 401k visible
-    expect(screen.queryByText('Checking')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    let dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: 'Goal' }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'FI' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    // Click FI again to remove it (line 68: next.has(value) ? next.delete(value))
-    await user.click(screen.getByRole('button', { name: 'FI' }))
-    // Both accounts visible again
+    expect(screen.queryByText('Checking')).not.toBeInTheDocument()
+    expect(screen.getByText('401k')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    dialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(dialog).getByRole('tab', { name: /Goal/ }))
+    await user.click(within(dialog).getByRole('checkbox', { name: 'FI' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
+
     expect(screen.getByText('Checking')).toBeInTheDocument()
     expect(screen.getByText('401k')).toBeInTheDocument()
   })
@@ -671,11 +694,12 @@ describe('BalanceSpreadsheet', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    await user.click(screen.getByRole('button', { name: 'YTD' }))
-    // YTD should filter out prev year month (line 206)
-    // Current month should still be visible
-    const rows = document.querySelectorAll('.data-spreadsheet-row-header')
-    expect(rows.length).toBeGreaterThanOrEqual(1)
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Year to date' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
+
+    expect(screen.getByText(new Date(Number(yr), Number(curMonth.slice(5)) - 1).toLocaleString('default', { month: 'short' }) + ` ${yr}`)).toBeInTheDocument()
+    expect(screen.queryByText('Jun ' + String(yr - 1))).not.toBeInTheDocument()
   })
 
   it('renders Last 12 mo date filter showing only first 12 months', async () => {
@@ -697,8 +721,10 @@ describe('BalanceSpreadsheet', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    await user.click(screen.getByRole('button', { name: 'Last 12 mo' }))
-    // Only 12 months visible (line 208: allMonths.slice(0, 12))
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Last 12 months' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
+
     const monthLabels = document.querySelectorAll('.data-spreadsheet-month-label')
     expect(monthLabels.length).toBe(12)
   })
@@ -715,17 +741,14 @@ describe('BalanceSpreadsheet', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    const toField = within(dialog).getByText('To month').closest('.txn-date-panel-field') as HTMLElement
+    await user.click(within(toField).getByRole('button', { name: 'Feb' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    // Set "to" year and month (line 212: !customTo || m <= customTo)
-    const selects = screen.getAllByRole('combobox')
-    // selects[2] is "to" year, selects[3] is "to" month
-    await user.selectOptions(selects[2], '2024')
-    await user.selectOptions(selects[3], '02')
-
-    // Should filter months — only Jan and Feb visible (<= 2024-02)
     expect(screen.queryByText('Mar 2024')).not.toBeInTheDocument()
     expect(screen.getByText('Feb 2024')).toBeInTheDocument()
+    expect(screen.getByText('Jan 2024')).toBeInTheDocument()
   })
 
   it('renders inline entry row with group column as empty cell', () => {
@@ -918,7 +941,7 @@ describe('BalanceSpreadsheet', () => {
     expect(screen.getByText('Vanguard')).toBeInTheDocument()
   })
 
-  it('setCustomMonth with empty year value clears the custom field', async () => {
+  it('clears the selected from month and restores all months', async () => {
     const user = userEvent.setup()
     render(
       <BalanceSpreadsheet
@@ -930,13 +953,12 @@ describe('BalanceSpreadsheet', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
+    const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    const fromField = within(dialog).getByText('From month').closest('.txn-date-panel-field') as HTMLElement
+    await user.click(within(fromField).getByRole('button', { name: 'Feb' }))
+    await user.click(within(fromField).getByRole('button', { name: 'Clear' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    const selects = screen.getAllByRole('combobox')
-    // Set from year then clear it (line 222-223: value ? ... : '')
-    await user.selectOptions(selects[0], '2024')
-    await user.selectOptions(selects[0], '') // clear → empty string
-    // All months should be visible (no from filter)
     expect(screen.getByText('Jan 2024')).toBeInTheDocument()
     expect(screen.getByText('Mar 2024')).toBeInTheDocument()
   })
