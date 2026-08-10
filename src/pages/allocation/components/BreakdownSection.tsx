@@ -95,6 +95,12 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices, getAccountsFor
         </div>
       </div>
 
+      {!selectedClass && (
+        <div className="alloc-drilldown alloc-drilldown--empty">
+          <p>Click an asset class above to drill down into individual accounts</p>
+        </div>
+      )}
+
       {selectedClass &&
         getAccountsForClass &&
         (() => {
