@@ -94,7 +94,9 @@ describe('CashflowBarChart', () => {
     const yearTransactions: Record<string, Transaction[]> = {
       '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
     }
-    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />)
+    render(
+      <CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />,
+    )
     // Legend renders 12 items (one per month) with net cashflow amounts
     const legendItems = document.querySelectorAll('.cashflow-bar-legend-item')
     expect(legendItems).toHaveLength(12)
@@ -108,7 +110,9 @@ describe('CashflowBarChart', () => {
     const yearTransactions: Record<string, Transaction[]> = {
       '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
     }
-    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />)
+    render(
+      <CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />,
+    )
     // Net for Jan = 5000 + (-1200) = 3800
     expect(screen.getByText('+$3,800')).toBeInTheDocument()
   })

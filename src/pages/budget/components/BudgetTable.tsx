@@ -286,7 +286,9 @@ const BudgetTable: FC<BudgetTableProps> = ({
                   const periodTotal = grandPeriodTotal(p)
                   return (
                     <td key={p.label} className="budget-td budget-td--number">
-                      <strong>{periodTotal !== 0 ? fmt(type === 'expense' ? Math.abs(periodTotal) : periodTotal) : ''}</strong>
+                      <strong>
+                        {periodTotal !== 0 ? fmt(type === 'expense' ? Math.abs(periodTotal) : periodTotal) : ''}
+                      </strong>
                     </td>
                   )
                 })}

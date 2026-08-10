@@ -21,6 +21,10 @@ type CategoryFilterGroup = {
 type EditingCategoryState = {
   key: string
 }
+type EditingDateState = {
+  key: string
+  value: string
+}
 
 const sortOptions: Array<{ value: SortOption; label: string }> = [
   { value: 'date-desc', label: 'Newest first' },
@@ -180,6 +184,76 @@ const getEmptySummary = () => ({
   lastTransaction: null as string | null,
 })
 
+// --- DatePickerFlyout ---
+
+type DatePickerFlyoutProps = {
+  value: string
+  onSelect: (date: string) => void
+  onCancel: () => void
+}
+
+const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel }) => {
+  const initialDate = new Date(`${value}T00:00:00`)
+  const [viewYear, setViewYear] = useState(initialDate.getFullYear())
+  const [viewMonth, setViewMonth] = useState(initialDate.getMonth())
+
+  const selectedDay = initialDate.getDate()
+  const selectedYear = initialDate.getFullYear()
+  const selectedMonth = initialDate.getMonth()
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
+    else setViewMonth(m => m - 1)
+  }
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
+    else setViewMonth(m => m + 1)
+  }
+
+  const handleDayClick = (day: number) => {
+    const mm = String(viewMonth + 1).padStart(2, '0')
+    const dd = String(day).padStart(2, '0')
+    onSelect(`${viewYear}-${mm}-${dd}`)
+  }
+
+  return (
+    <div className="txn-date-flyout" role="dialog" aria-label="Pick a date" onKeyDown={e => { if (e.key === 'Escape') onCancel() }}>
+      <div className="txn-date-flyout-header">
+        <button type="button" className="txn-date-flyout-nav" onClick={prevMonth} aria-label="Previous month">‹</button>
+        <span className="txn-date-flyout-title">{MONTH_NAMES[viewMonth]} {viewYear}</span>
+        <button type="button" className="txn-date-flyout-nav" onClick={nextMonth} aria-label="Next month">›</button>
+      </div>
+      <div className="txn-date-flyout-grid">
+        {DAYS_OF_WEEK.map(d => <span key={d} className="txn-date-flyout-dow">{d}</span>)}
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => <span key={`e${i}`} />)}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1
+          const isSelected = day === selectedDay && viewMonth === selectedMonth && viewYear === selectedYear
+          return (
+            <button
+              key={day}
+              type="button"
+              className={`txn-date-flyout-day${isSelected ? ' txn-date-flyout-day--selected' : ''}`}
+              onClick={() => handleDayClick(day)}
+            >
+              {day}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const Transactions: FC = () => {
   const [searchParams] = useSearchParams()
   const paramFrom = searchParams.get('from') ?? ''
@@ -199,6 +273,7 @@ const Transactions: FC = () => {
   const [filterOpen, setFilterOpen] = useState(false)
   const [filterSearch, setFilterSearch] = useState('')
   const [editingCategory, setEditingCategory] = useState<EditingCategoryState | null>(null)
+  const [editingDate, setEditingDate] = useState<EditingDateState | null>(null)
   const [categoryEditSearch, setCategoryEditSearch] = useState('')
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [draftFromDate, setDraftFromDate] = useState(paramFrom)
@@ -213,6 +288,7 @@ const Transactions: FC = () => {
   const datePickerRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const categoryEditorRef = useRef<HTMLDivElement>(null)
+  const dateEditorRef = useRef<HTMLDivElement>(null)
   const groupCheckboxRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const sectionCheckboxRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
@@ -328,6 +404,19 @@ const Transactions: FC = () => {
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [editingCategory])
+
+  useEffect(() => {
+    if (!editingDate) return
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (dateEditorRef.current && !dateEditorRef.current.contains(event.target as Node)) {
+        setEditingDate(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [editingDate])
 
   const categories = useMemo(
     () => Array.from(new Set(allTransactions.map(transaction => transaction.category))).sort(compareText),
@@ -746,6 +835,71 @@ const Transactions: FC = () => {
     saveBudgetStore(nextStore)
   }
 
+  function reassignTransactionDate(transaction: LoadedTransaction, nextDate: string) {
+    if (!nextDate || nextDate === transaction.date) {
+      setEditingDate(null)
+      return
+    }
+
+    const store = loadBudgetStore()
+    const monthCsv = store.csvs[transaction.monthKey]
+    if (!monthCsv) {
+      setEditingDate(null)
+      return
+    }
+
+    const parsedTransactions = parseCSV(monthCsv.csv)
+    const targetIndex = parsedTransactions.findIndex(parsedTransaction => {
+      return (
+        parsedTransaction.date === transaction.date &&
+        parsedTransaction.amount === transaction.amount &&
+        parsedTransaction.category === transaction.category &&
+        getTransactionDescription(parsedTransaction.description) === getTransactionDescription(transaction.description)
+      )
+    })
+
+    if (targetIndex === -1) {
+      setEditingDate(null)
+      return
+    }
+
+    const nextMonthKey = nextDate.slice(0, 7)
+    let updatedStore = store
+
+    if (nextMonthKey === transaction.monthKey) {
+      // Same month — just update the date in place
+      const updatedTransactions = parsedTransactions.map((parsedTransaction, index) =>
+        index === targetIndex ? { ...parsedTransaction, date: nextDate } : parsedTransaction,
+      )
+      updatedStore = saveCSVForMonth(updatedStore, transaction.monthKey, buildCsv(updatedTransactions))
+    } else {
+      // Different month — remove from old CSV, add to new CSV
+      const updatedOldTransactions = parsedTransactions.filter((_, index) => index !== targetIndex)
+      updatedStore = saveCSVForMonth(updatedStore, transaction.monthKey, buildCsv(updatedOldTransactions))
+
+      const newMonthCsv = updatedStore.csvs[nextMonthKey]
+      const newMonthTransactions = newMonthCsv ? parseCSV(newMonthCsv.csv) : []
+      const movedTransaction: Transaction = {
+        date: nextDate,
+        category: transaction.category,
+        amount: transaction.amount,
+        description: transaction.description,
+      }
+      newMonthTransactions.push(movedTransaction)
+      updatedStore = saveCSVForMonth(updatedStore, nextMonthKey, buildCsv(newMonthTransactions))
+    }
+
+    setAllTransactions(currentTransactions =>
+      currentTransactions.map(currentTransaction =>
+        currentTransaction === transaction
+          ? { ...currentTransaction, date: nextDate, monthKey: nextMonthKey }
+          : currentTransaction,
+      ),
+    )
+    setEditingDate(null)
+    saveBudgetStore(updatedStore)
+  }
+
   if (loading) {
     return (
       <div className="txn-page">
@@ -1103,12 +1257,37 @@ const Transactions: FC = () => {
                       const description = transaction.description?.trim() || 'No description'
                       const rowKey = `${transaction.monthKey}-${transaction.date}-${transaction.category}-${transaction.amount}-${description}-${index}`
                       const isEditingCategory = editingCategory?.key === rowKey
+                      const isEditingDateRow = editingDate?.key === rowKey
 
                       return (
                         <li key={rowKey} className={`txn-row${transaction.isRemoved ? ' txn-row--removed' : ''}`}>
                           <span className="txn-row-description" title={description}>
                             {description}
                           </span>
+                          <div className="txn-row-date-cell" ref={isEditingDateRow ? dateEditorRef : undefined}>
+                            <button
+                              type="button"
+                              className={`txn-row-date-button${isEditingDateRow ? ' txn-row-date-button--active' : ''}`}
+                              aria-label={`Edit date for ${description}`}
+                              onClick={() =>
+                                isEditingDateRow
+                                  ? setEditingDate(null)
+                                  : setEditingDate({ key: rowKey, value: transaction.date })
+                              }
+                            >
+                              {new Date(`${transaction.date}T00:00:00`).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </button>
+                            {isEditingDateRow && (
+                              <DatePickerFlyout
+                                value={editingDate.value}
+                                onSelect={nextDate => reassignTransactionDate(transaction, nextDate)}
+                                onCancel={() => setEditingDate(null)}
+                              />
+                            )}
+                          </div>
                           <div
                             className={`txn-row-category-cell${isEditingCategory ? ' txn-row-category-cell--open' : ''}`}
                             ref={isEditingCategory ? categoryEditorRef : undefined}

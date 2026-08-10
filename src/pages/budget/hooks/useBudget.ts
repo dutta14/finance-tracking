@@ -479,7 +479,7 @@ export function useBudget() {
   // Summary totals — use income group membership as source of truth.
   // If a category is explicitly in an income group, it's income regardless of amount sign.
   const incomeCatSet = useMemo(
-    () => new Set(incomeCategoryGroups.flatMap(g => g.id !== REMOVED_GROUP_ID ? g.categories : [])),
+    () => new Set(incomeCategoryGroups.flatMap(g => (g.id !== REMOVED_GROUP_ID ? g.categories : []))),
     [incomeCategoryGroups],
   )
 

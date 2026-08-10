@@ -38,8 +38,6 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     return cat
   }
 
-
-
   const resolvedIncomeGroups = useMemo(() => incomeCategoryGroups || [], [incomeCategoryGroups])
   const expenseDisplayGroups = useMemo(
     () =>
@@ -257,15 +255,17 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
 
     // Add to the target group in the correct section
     if (section === 'expense') {
-      updateSectionGroups('expense', expenseGroups.map(g =>
-        g.id === toGroupId ? { ...g, categories: [...g.categories, dragCat.category] } : g
-      ))
+      updateSectionGroups(
+        'expense',
+        expenseGroups.map(g => (g.id === toGroupId ? { ...g, categories: [...g.categories, dragCat.category] } : g)),
+      )
       updateSectionGroups('income', incomeGroups)
     } else {
       updateSectionGroups('expense', expenseGroups)
-      updateSectionGroups('income', incomeGroups.map(g =>
-        g.id === toGroupId ? { ...g, categories: [...g.categories, dragCat.category] } : g
-      ))
+      updateSectionGroups(
+        'income',
+        incomeGroups.map(g => (g.id === toGroupId ? { ...g, categories: [...g.categories, dragCat.category] } : g)),
+      )
     }
     setDragCat(null)
   }
