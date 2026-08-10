@@ -35,7 +35,10 @@ const CHART_OPTIONS: { key: MiniChartType; label: string }[] = [
 
 const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMonths, onNavigate }) => {
   const [chartType, setChartType] = useState<MiniChartType>('net-worth')
-  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } = useDateFilter(allMonths, 'last-12')
+  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } = useDateFilter(
+    allMonths,
+    'last-12',
+  )
 
   const fiAccounts = useMemo(() => accounts.filter(a => a.goalType === 'fi'), [accounts])
   const gwAccounts = useMemo(() => accounts.filter(a => a.goalType === 'gw'), [accounts])

@@ -402,7 +402,11 @@ const Data: FC = () => {
                           <button type="button" className="data-add-month-continue" onClick={handleConfirmAddEntry}>
                             Continue
                           </button>
-                          <button type="button" className="data-add-month-cancel" onClick={() => setIsAddEntryOpen(false)}>
+                          <button
+                            type="button"
+                            className="data-add-month-cancel"
+                            onClick={() => setIsAddEntryOpen(false)}
+                          >
                             Cancel
                           </button>
                         </div>

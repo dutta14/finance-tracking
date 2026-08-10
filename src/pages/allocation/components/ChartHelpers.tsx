@@ -78,12 +78,8 @@ export const Legend: FC<LegendProps> = ({ data, total, selectedIndex = -1, onCli
       >
         <span className="alloc-page-legend-dot" style={{ background: d.color }} />
         <span className="alloc-page-legend-label">{d.name}</span>
-        <span className="alloc-page-legend-val">
-          {formatCurrency(d.value)}
-        </span>
-        <span className="alloc-page-legend-pct">
-          {((d.value / total) * 100).toFixed(1)}%
-        </span>
+        <span className="alloc-page-legend-val">{formatCurrency(d.value)}</span>
+        <span className="alloc-page-legend-pct">{((d.value / total) * 100).toFixed(1)}%</span>
       </div>
     ))}
   </div>

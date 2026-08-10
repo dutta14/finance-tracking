@@ -698,7 +698,11 @@ describe('BalanceSpreadsheet', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Year to date' }))
     await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
 
-    expect(screen.getByText(new Date(Number(yr), Number(curMonth.slice(5)) - 1).toLocaleString('default', { month: 'short' }) + ` ${yr}`)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        new Date(Number(yr), Number(curMonth.slice(5)) - 1).toLocaleString('default', { month: 'short' }) + ` ${yr}`,
+      ),
+    ).toBeInTheDocument()
     expect(screen.queryByText('Jun ' + String(yr - 1))).not.toBeInTheDocument()
   })
 

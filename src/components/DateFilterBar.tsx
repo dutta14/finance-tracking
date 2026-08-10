@@ -23,7 +23,9 @@ const InlineMonthGrid: FC<{
   onSelect: (month: string) => void
 }> = ({ label, allMonths, selectedMonth, onSelect }) => {
   const availableYears = Array.from(new Set(allMonths.map(m => parseInt(m.slice(0, 4), 10)))).sort()
-  const initialYear = selectedMonth ? parseInt(selectedMonth.slice(0, 4), 10) : (availableYears[availableYears.length - 1] ?? new Date().getFullYear())
+  const initialYear = selectedMonth
+    ? parseInt(selectedMonth.slice(0, 4), 10)
+    : (availableYears[availableYears.length - 1] ?? new Date().getFullYear())
   const [year, setYear] = useState(initialYear)
   const availableSet = new Set(allMonths)
   const yearIdx = availableYears.indexOf(year)
@@ -38,7 +40,18 @@ const InlineMonthGrid: FC<{
           disabled={yearIdx <= 0}
           onClick={() => setYear(availableYears[yearIdx - 1])}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2L4 7L9 12" /></svg>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 2L4 7L9 12" />
+          </svg>
         </button>
         <span>{year}</span>
         <button
@@ -47,7 +60,18 @@ const InlineMonthGrid: FC<{
           disabled={yearIdx >= availableYears.length - 1}
           onClick={() => setYear(availableYears[yearIdx + 1])}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 2L10 7L5 12" /></svg>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 2L10 7L5 12" />
+          </svg>
         </button>
       </div>
       <div className="details-month-picker-grid">
@@ -93,16 +117,21 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
         setFlyoutOpen(false)
       }
     }
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setFlyoutOpen(false) }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFlyoutOpen(false)
+    }
     document.addEventListener('mousedown', handleClick)
     document.addEventListener('keydown', handleEsc)
-    return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleEsc) }
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleEsc)
+    }
   }, [flyoutOpen])
 
   return (
     <div className="date-filter-wrap">
       <div className="data-charts-date-filter">
-        {DATE_FILTER_OPTIONS.map(({ key, label }) => (
+        {DATE_FILTER_OPTIONS.map(({ key, label }) =>
           key === 'custom' ? (
             <div key={key} className="date-filter-custom-wrap">
               <button
@@ -117,7 +146,12 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
               </button>
               {flyoutOpen && dateFilter === 'custom' && onFromChange && onToChange && (
                 <div ref={flyoutRef} className="date-filter-range-flyout">
-                  <InlineMonthGrid label="From" allMonths={allMonths} selectedMonth={customFrom} onSelect={onFromChange} />
+                  <InlineMonthGrid
+                    label="From"
+                    allMonths={allMonths}
+                    selectedMonth={customFrom}
+                    onSelect={onFromChange}
+                  />
                   <div className="date-flyout-divider" />
                   <InlineMonthGrid label="To" allMonths={allMonths} selectedMonth={customTo} onSelect={onToChange} />
                 </div>
@@ -127,19 +161,26 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
             <button
               key={key}
               className={`data-filter-btn data-filter-btn--${size}${dateFilter === key ? ' active' : ''}`}
-              onClick={() => { setDateFilter(key); setFlyoutOpen(false) }}
+              onClick={() => {
+                setDateFilter(key)
+                setFlyoutOpen(false)
+              }}
             >
               {label}
             </button>
-          )
-        ))}
+          ),
+        )}
       </div>
     </div>
   )
 }
 
 /** Convenience: pass entire useDateFilter result */
-export const DateFilterBarFromHook: FC<{ hook: UseDateFilterResult; allMonths: string[]; size?: 'sm' | 'md' }> = ({ hook, allMonths, size }) => (
+export const DateFilterBarFromHook: FC<{ hook: UseDateFilterResult; allMonths: string[]; size?: 'sm' | 'md' }> = ({
+  hook,
+  allMonths,
+  size,
+}) => (
   <DateFilterBar
     dateFilter={hook.dateFilter}
     setDateFilter={hook.setDateFilter}

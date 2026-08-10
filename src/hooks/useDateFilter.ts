@@ -71,5 +71,16 @@ export function useDateFilter(allMonths: string[], defaultFilter: DateFilter = '
     }
   }, [dateFilter, allMonths, customFrom, customTo])
 
-  return { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, setCustomMonth, filteredMonths, availableYears, monthOptions }
+  return {
+    dateFilter,
+    setDateFilter,
+    customFrom,
+    customTo,
+    setCustomFrom,
+    setCustomTo,
+    setCustomMonth,
+    filteredMonths,
+    availableYears,
+    monthOptions,
+  }
 }

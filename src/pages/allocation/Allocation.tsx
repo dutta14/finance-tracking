@@ -16,7 +16,8 @@ interface AllocationProps {
 }
 
 const Allocation: FC<AllocationProps> = ({ tab }) => {
-  const { allocMap, getSlices, computeRatio, getAccountsForClass, getClassHistory, getAccountHistory, allMonths } = useAllocationData()
+  const { allocMap, getSlices, computeRatio, getAccountsForClass, getClassHistory, getAccountHistory, allMonths } =
+    useAllocationData()
   const {
     customRatios,
     activeRatioId,
@@ -47,7 +48,15 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
 
   return (
     <div className="alloc-page">
-      {tab === 'breakdown' && <BreakdownSection getSlices={getSlices} getAccountsForClass={getAccountsForClass} getClassHistory={getClassHistory} getAccountHistory={getAccountHistory} allMonths={allMonths} />}
+      {tab === 'breakdown' && (
+        <BreakdownSection
+          getSlices={getSlices}
+          getAccountsForClass={getAccountsForClass}
+          getClassHistory={getClassHistory}
+          getAccountHistory={getAccountHistory}
+          allMonths={allMonths}
+        />
+      )}
 
       {tab === 'ratios' && (
         <section className="alloc-page-section">

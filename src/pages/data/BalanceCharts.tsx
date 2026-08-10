@@ -35,7 +35,8 @@ const CHART_OPTIONS: { key: ChartType; label: string }[] = [
 
 const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, allMonths, balanceMap }) => {
   const [chartType, setChartType] = useState<ChartType>('fi-gw')
-  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } = useDateFilter(allMonths)
+  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } =
+    useDateFilter(allMonths)
 
   // Build chart data
   const fiAccounts = accounts.filter(a => a.goalType === 'fi')

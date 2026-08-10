@@ -115,7 +115,16 @@ const MonthDatePanel: FC<MonthDatePanelProps> = ({ allMonths, fromMonth, toMonth
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="txn-filter-btn-key">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
             <line x1="8" y1="2" x2="8" y2="6" />
@@ -152,7 +161,9 @@ const MonthDatePanel: FC<MonthDatePanelProps> = ({ allMonths, fromMonth, toMonth
                   <div className="txn-date-panel-field-header">
                     <label>From month</label>
                     {draftFrom && (
-                      <button type="button" className="txn-date-clear-btn" onClick={() => setDraftFrom('')}>Clear</button>
+                      <button type="button" className="txn-date-clear-btn" onClick={() => setDraftFrom('')}>
+                        Clear
+                      </button>
                     )}
                   </div>
                   <InlineMonthGrid allMonths={ascending} selected={draftFrom} onSelect={setDraftFrom} defaultToFirst />
@@ -161,14 +172,25 @@ const MonthDatePanel: FC<MonthDatePanelProps> = ({ allMonths, fromMonth, toMonth
                   <div className="txn-date-panel-field-header">
                     <label>To month</label>
                     {draftTo && (
-                      <button type="button" className="txn-date-clear-btn" onClick={() => setDraftTo('')}>Clear</button>
+                      <button type="button" className="txn-date-clear-btn" onClick={() => setDraftTo('')}>
+                        Clear
+                      </button>
                     )}
                   </div>
                   <InlineMonthGrid allMonths={ascending} selected={draftTo} onSelect={setDraftTo} />
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text-muted)', fontSize: 'var(--fs-sm)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: 'var(--color-text-muted)',
+                  fontSize: 'var(--fs-sm)',
+                }}
+              >
                 {activePreset === 'all' && 'Showing all months'}
                 {activePreset === 'ytd' && 'Showing months from January to now'}
                 {activePreset === 'last-12' && 'Showing the last 12 months'}
@@ -178,10 +200,16 @@ const MonthDatePanel: FC<MonthDatePanelProps> = ({ allMonths, fromMonth, toMonth
           </div>
 
           <div className="txn-date-panel-footer">
-            <button type="button" className="txn-date-panel-btn txn-date-panel-clear" onClick={handleClear}>Clear</button>
+            <button type="button" className="txn-date-panel-btn txn-date-panel-clear" onClick={handleClear}>
+              Clear
+            </button>
             <div className="txn-date-panel-actions">
-              <button type="button" className="txn-date-panel-btn" onClick={() => setIsOpen(false)}>Cancel</button>
-              <button type="button" className="txn-date-panel-btn txn-date-panel-apply" onClick={handleApply}>Apply</button>
+              <button type="button" className="txn-date-panel-btn" onClick={() => setIsOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" className="txn-date-panel-btn txn-date-panel-apply" onClick={handleApply}>
+                Apply
+              </button>
             </div>
           </div>
         </div>
@@ -208,7 +236,10 @@ const InlineMonthGrid: FC<InlineMonthGridProps> = ({ allMonths, selected, onSele
 
   const [viewYear, setViewYear] = useState(() => {
     if (selected) return selected.slice(0, 4)
-    return (defaultToFirst ? availableYears[0] : availableYears[availableYears.length - 1]) || new Date().getFullYear().toString()
+    return (
+      (defaultToFirst ? availableYears[0] : availableYears[availableYears.length - 1]) ||
+      new Date().getFullYear().toString()
+    )
   })
 
   const availableSet = useMemo(() => new Set(allMonths), [allMonths])
@@ -218,7 +249,19 @@ const InlineMonthGrid: FC<InlineMonthGridProps> = ({ allMonths, selected, onSele
   const canNext = yearIdx < availableYears.length - 1
 
   return (
-    <div className="details-month-picker" style={{ position: 'relative', top: 'auto', left: 'auto', right: 'auto', zIndex: 'auto', marginTop: 0, boxShadow: 'none', border: '1px solid var(--color-border)' }}>
+    <div
+      className="details-month-picker"
+      style={{
+        position: 'relative',
+        top: 'auto',
+        left: 'auto',
+        right: 'auto',
+        zIndex: 'auto',
+        marginTop: 0,
+        boxShadow: 'none',
+        border: '1px solid var(--color-border)',
+      }}
+    >
       <div className="details-month-picker-year">
         <button
           type="button"
@@ -226,7 +269,17 @@ const InlineMonthGrid: FC<InlineMonthGridProps> = ({ allMonths, selected, onSele
           disabled={!canPrev}
           onClick={() => canPrev && setViewYear(availableYears[yearIdx - 1])}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M9 2L4 7L9 12" />
           </svg>
         </button>
@@ -237,7 +290,17 @@ const InlineMonthGrid: FC<InlineMonthGridProps> = ({ allMonths, selected, onSele
           disabled={!canNext}
           onClick={() => canNext && setViewYear(availableYears[yearIdx + 1])}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <path d="M5 2L10 7L5 12" />
           </svg>
         </button>

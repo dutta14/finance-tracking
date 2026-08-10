@@ -690,10 +690,12 @@ describe('BalanceDetails', () => {
           makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 2000 }),
         ]}
         allMonths={['2024-02']}
-        balanceMap={new Map([
-          ['1:2024-02', 1000],
-          ['2:2024-02', 2000],
-        ])}
+        balanceMap={
+          new Map([
+            ['1:2024-02', 1000],
+            ['2:2024-02', 2000],
+          ])
+        }
         profile={baseProfile}
       />,
     )

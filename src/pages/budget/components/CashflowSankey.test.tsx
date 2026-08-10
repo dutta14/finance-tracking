@@ -42,7 +42,11 @@ describe('CashflowSankey', () => {
   }
 
   it('renders empty state when no transactions exist', () => {
-    render(<MemoryRouter><CashflowSankey {...baseProps} /></MemoryRouter>)
+    render(
+      <MemoryRouter>
+        <CashflowSankey {...baseProps} />
+      </MemoryRouter>,
+    )
     expect(screen.getByText('No transaction data for this year.')).toBeInTheDocument()
   })
 
@@ -55,8 +59,12 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
-    expect(screen.getByText('Cashflow Sankey')).toBeInTheDocument()
+    render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Breakdown')).toBeInTheDocument()
   })
 
   it('renders Group and Category toggle buttons', () => {
@@ -68,7 +76,11 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     expect(screen.getByText('Group')).toBeInTheDocument()
     expect(screen.getByText('Category')).toBeInTheDocument()
   })
@@ -86,7 +98,11 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const paths = container.querySelectorAll('path')
     // 1 left link (Salary → band) + 1 right link (Essentials group → band) = 2 paths
     expect(paths).toHaveLength(2)
@@ -101,7 +117,11 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const textEls = container.querySelectorAll('text')
     const textContents = Array.from(textEls).map(t => t.textContent)
     expect(textContents.some(t => t?.includes('Salary'))).toBe(true)
@@ -118,7 +138,11 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     await user.click(screen.getByText('Category'))
 
     // In category mode, right column header says EXPENSE CATEGORIES
@@ -143,7 +167,11 @@ describe('CashflowSankey', () => {
       categorySums: deriveCategorySums(yearTransactions),
       removedCategories: new Set(['Hidden']),
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const textEls = container.querySelectorAll('text')
     const textContents = Array.from(textEls).map(t => t.textContent)
     expect(textContents.some(t => t?.includes('Hidden'))).toBe(false)
@@ -158,7 +186,11 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const textEls = container.querySelectorAll('text')
     const textContents = Array.from(textEls).map(t => t.textContent)
     expect(textContents.some(t => t?.includes('INCOME') && t?.includes('$5,000'))).toBe(true)
@@ -173,7 +205,11 @@ describe('CashflowSankey', () => {
       yearTransactions,
       categorySums: deriveCategorySums(yearTransactions),
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const textEls = container.querySelectorAll('text')
     const textContents = Array.from(textEls).map(t => t.textContent)
 
@@ -192,10 +228,14 @@ describe('CashflowSankey', () => {
       categorySums: deriveCategorySums(yearTransactions),
       selectedPeriod: 'Jan',
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const textContents = Array.from(container.querySelectorAll('text')).map(t => t.textContent)
 
-    expect(screen.getByText('Cashflow Sankey — Jan')).toBeInTheDocument()
+    expect(screen.getByText('Breakdown — Jan')).toBeInTheDocument()
     expect(textContents.some(t => t?.includes('INCOME') && t?.includes('$5,000'))).toBe(true)
     expect(textContents.some(t => t?.includes('EXPENSE GROUPS') && t?.includes('$1,200'))).toBe(true)
     expect(textContents.some(t => t?.includes('$3,800') && t?.includes('(76.0%)'))).toBe(true)
@@ -215,10 +255,14 @@ describe('CashflowSankey', () => {
       selectedPeriod: 'Q1',
       timePeriod: 'quarter' as const,
     }
-    const { container } = render(<MemoryRouter><CashflowSankey {...props} /></MemoryRouter>)
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
     const textContents = Array.from(container.querySelectorAll('text')).map(t => t.textContent)
 
-    expect(screen.getByText('Cashflow Sankey — Q1')).toBeInTheDocument()
+    expect(screen.getByText('Breakdown — Q1')).toBeInTheDocument()
     expect(textContents.some(t => t?.includes('INCOME') && t?.includes('$9,500'))).toBe(true)
     expect(textContents.some(t => t?.includes('EXPENSE GROUPS') && t?.includes('$1,000'))).toBe(true)
     expect(textContents.some(t => t?.includes('Bonus'))).toBe(false)

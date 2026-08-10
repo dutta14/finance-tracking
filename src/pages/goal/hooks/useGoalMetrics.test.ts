@@ -282,9 +282,7 @@ describe('useGoalMetrics', () => {
   it('returns not-reachable when gwMonthly exceeds annual savings', () => {
     // Large GW goal that eats all savings
     const goal = makeTestGoal()
-    const gwGoals = [
-      buildGwGoal({ id: 1, fiGoalId: 1, disburseAge: 50, disburseAmount: 50_000_000, growthRate: 8 }),
-    ]
+    const gwGoals = [buildGwGoal({ id: 1, fiGoalId: 1, disburseAge: 50, disburseAmount: 50_000_000, growthRate: 8 })]
     setMockData({
       accounts: [makeFiAccount(1), makeGwAccount(2)],
       balances: [makeBalance(1, 100_000), makeBalance(2, 1000, latestMonth)],

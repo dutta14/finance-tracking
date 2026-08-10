@@ -258,14 +258,50 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
     status: ['active'],
   })
 
-  const filterCategories = useMemo((): FilterCategory[] => [
-    { key: 'owner', label: 'Owner', options: (['primary', 'partner', 'joint'] as const).map(k => ({ value: k, label: ownerLabels[k] })) },
-    { key: 'goal', label: 'Goal', options: (['fi', 'gw'] as const).map(k => ({ value: k, label: GOAL_TYPE_LABELS[k] })) },
-    { key: 'type', label: 'Type', options: (['retirement', 'non-retirement', 'liquid', 'illiquid'] as const).map(k => ({ value: k, label: ACCOUNT_TYPE_LABELS[k] })) },
-    { key: 'nature', label: 'Asset/Liability', options: (['asset', 'liability'] as const).map(k => ({ value: k, label: NATURE_LABELS[k] })) },
-    { key: 'allocation', label: 'Allocation', options: (['cash', 'us-stock', 'intl-stock', 'bonds', 'real-estate', 'others', 'debt'] as const).map(k => ({ value: k, label: ALLOCATION_LABELS[k] })) },
-    { key: 'status', label: 'Status', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
-  ], [ownerLabels])
+  const filterCategories = useMemo(
+    (): FilterCategory[] => [
+      {
+        key: 'owner',
+        label: 'Owner',
+        options: (['primary', 'partner', 'joint'] as const).map(k => ({ value: k, label: ownerLabels[k] })),
+      },
+      {
+        key: 'goal',
+        label: 'Goal',
+        options: (['fi', 'gw'] as const).map(k => ({ value: k, label: GOAL_TYPE_LABELS[k] })),
+      },
+      {
+        key: 'type',
+        label: 'Type',
+        options: (['retirement', 'non-retirement', 'liquid', 'illiquid'] as const).map(k => ({
+          value: k,
+          label: ACCOUNT_TYPE_LABELS[k],
+        })),
+      },
+      {
+        key: 'nature',
+        label: 'Asset/Liability',
+        options: (['asset', 'liability'] as const).map(k => ({ value: k, label: NATURE_LABELS[k] })),
+      },
+      {
+        key: 'allocation',
+        label: 'Allocation',
+        options: (['cash', 'us-stock', 'intl-stock', 'bonds', 'real-estate', 'others', 'debt'] as const).map(k => ({
+          value: k,
+          label: ALLOCATION_LABELS[k],
+        })),
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        options: [
+          { value: 'active', label: 'Active' },
+          { value: 'inactive', label: 'Inactive' },
+        ],
+      },
+    ],
+    [ownerLabels],
+  )
 
   const matchesFilters = useCallback(
     (a: Account) => {
@@ -727,11 +763,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
                 </div>
               ) : null}
             </div>
-            <FilterPanel
-              categories={filterCategories}
-              filters={columnFilters}
-              onChange={setColumnFilters}
-            />
+            <FilterPanel categories={filterCategories} filters={columnFilters} onChange={setColumnFilters} />
             <MonthPicker
               allMonths={allMonths}
               selectedMonth={selectedMonth}

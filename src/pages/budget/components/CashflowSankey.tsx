@@ -309,7 +309,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   if (totalIncome === 0 && totalExpense === 0) {
     return (
       <div id="sankey" className="cashflow-sankey-wrap">
-        <h3 className="cashflow-section-title">Cashflow Sankey{selectedPeriod ? ` — ${selectedPeriod}` : ''}</h3>
+        <h3 className="cashflow-section-title">Breakdown{selectedPeriod ? ` — ${selectedPeriod}` : ''}</h3>
         <p className="cashflow-empty">No transaction data for this year.</p>
       </div>
     )
@@ -319,7 +319,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
     <div id="sankey" className="cashflow-sankey-wrap">
       <div className="cashflow-sankey-header">
         <h3 className="cashflow-section-title cashflow-section-title--flush">
-          Cashflow Sankey{selectedPeriod ? ` — ${selectedPeriod}` : ''}
+          Breakdown{selectedPeriod ? ` — ${selectedPeriod}` : ''}
         </h3>
         <div className="cashflow-sankey-pills">
           <button
@@ -405,7 +405,13 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
             return (
               <g key={n.name} onClick={() => handleNodeClick(n.name, 'left')} style={{ cursor: 'pointer' }}>
                 {/* Invisible hit area spanning labels + node */}
-                <rect x={0} y={n.y - 2} width={COL_LEFT + NODE_W + LABEL_PAD} height={Math.max(n.h + 4, 16)} fill="transparent" />
+                <rect
+                  x={0}
+                  y={n.y - 2}
+                  width={COL_LEFT + NODE_W + LABEL_PAD}
+                  height={Math.max(n.h + 4, 16)}
+                  fill="transparent"
+                />
                 <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />
                 <text
                   x={n.x - 8}
@@ -437,9 +443,19 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
             const isSavings = n.name === 'Savings'
             const pct = rightTotal > 0 ? ((n.amount / rightTotal) * 100).toFixed(1) : '0.0'
             return (
-              <g key={n.name} onClick={isSavings ? undefined : () => handleNodeClick(n.name, 'right')} style={{ cursor: isSavings ? 'default' : 'pointer' }}>
+              <g
+                key={n.name}
+                onClick={isSavings ? undefined : () => handleNodeClick(n.name, 'right')}
+                style={{ cursor: isSavings ? 'default' : 'pointer' }}
+              >
                 {/* Invisible hit area spanning labels + node */}
-                <rect x={COL_RIGHT - LABEL_PAD} y={n.y - 2} width={LABEL_PAD + NODE_W + LABEL_PAD} height={Math.max(n.h + 4, 16)} fill="transparent" />
+                <rect
+                  x={COL_RIGHT - LABEL_PAD}
+                  y={n.y - 2}
+                  width={LABEL_PAD + NODE_W + LABEL_PAD}
+                  height={Math.max(n.h + 4, 16)}
+                  fill="transparent"
+                />
                 <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />
                 <text
                   x={n.x + NODE_W + 8}

@@ -4,16 +4,7 @@ import { Scope } from '../types'
 import { DonutChart, Legend } from './ChartHelpers'
 import { useDateFilter } from '../../../hooks/useDateFilter'
 import { DateFilterBar } from '../../../components/DateFilterBar'
-import {
-  ResponsiveContainer,
-  ComposedChart,
-  Line,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts'
+import { ResponsiveContainer, ComposedChart, Line, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 
 interface BreakdownSectionProps {
   getSlices: (s: Scope) => { key?: string; name: string; value: number; color: string }[]
@@ -27,11 +18,25 @@ interface BreakdownSectionProps {
 }
 
 const DRILLDOWN_COLORS = [
-  '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6',
-  '#06b6d4', '#f97316', '#ec4899', '#14b8a6', '#a855f7',
+  '#6366f1',
+  '#f59e0b',
+  '#10b981',
+  '#ef4444',
+  '#8b5cf6',
+  '#06b6d4',
+  '#f97316',
+  '#ec4899',
+  '#14b8a6',
+  '#a855f7',
 ]
 
-const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices, getAccountsForClass, getClassHistory, getAccountHistory, allMonths = [] }) => {
+const BreakdownSection: FC<BreakdownSectionProps> = ({
+  getSlices,
+  getAccountsForClass,
+  getClassHistory,
+  getAccountHistory,
+  allMonths = [],
+}) => {
   const [scope, setScope] = useState<Scope>('total')
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
   const [selectedAcctIdx, setSelectedAcctIdx] = useState<number | null>(null)
@@ -80,7 +85,9 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices, getAccountsFor
               <Legend
                 data={slices}
                 total={total}
-                selectedIndex={selectedClass ? slices.findIndex(s => (s as { key?: string }).key === selectedClass) : -1}
+                selectedIndex={
+                  selectedClass ? slices.findIndex(s => (s as { key?: string }).key === selectedClass) : -1
+                }
                 onClickRow={(index: number) => {
                   const slice = slices[index] as { key?: string }
                   if (slice?.key) {
@@ -108,12 +115,12 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices, getAccountsFor
           const rawAccts = getAccountsForClass(scope, selectedClass as AssetAllocation)
           if (!selectedSlice || rawAccts.length === 0) return null
           const acctTotal = rawAccts.reduce((s, a) => s + (a.isDebt ? -a.value : a.value), 0)
-          const trendTitle = selectedAcctIdx != null && rawAccts[selectedAcctIdx]
-            ? `${selectedSlice.name}: ${rawAccts[selectedAcctIdx].ownerName}'s ${rawAccts[selectedAcctIdx].name}`
-            : selectedSlice.name
-          const headerValue = selectedAcctIdx != null && rawAccts[selectedAcctIdx]
-            ? rawAccts[selectedAcctIdx].value
-            : acctTotal
+          const trendTitle =
+            selectedAcctIdx != null && rawAccts[selectedAcctIdx]
+              ? `${selectedSlice.name}: ${rawAccts[selectedAcctIdx].ownerName}'s ${rawAccts[selectedAcctIdx].name}`
+              : selectedSlice.name
+          const headerValue =
+            selectedAcctIdx != null && rawAccts[selectedAcctIdx] ? rawAccts[selectedAcctIdx].value : acctTotal
           return (
             <div className="alloc-drilldown">
               <div className="alloc-drilldown-header">
@@ -126,7 +133,11 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({ getSlices, getAccountsFor
                 getAccountHistory={getAccountHistory}
                 scope={scope}
                 cls={selectedClass as AssetAllocation}
-                color={selectedAcctIdx != null ? DRILLDOWN_COLORS[selectedAcctIdx % DRILLDOWN_COLORS.length] : selectedSlice.color}
+                color={
+                  selectedAcctIdx != null
+                    ? DRILLDOWN_COLORS[selectedAcctIdx % DRILLDOWN_COLORS.length]
+                    : selectedSlice.color
+                }
                 selectedAccountId={selectedAcctIdx != null ? rawAccts[selectedAcctIdx]?.id : undefined}
                 allMonths={allMonths}
               />
@@ -194,8 +205,17 @@ interface TrendChartProps {
   allMonths: string[]
 }
 
-const TrendChart: FC<TrendChartProps> = ({ getClassHistory, getAccountHistory, scope, cls, color, selectedAccountId, allMonths }) => {
-  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } = useDateFilter(allMonths)
+const TrendChart: FC<TrendChartProps> = ({
+  getClassHistory,
+  getAccountHistory,
+  scope,
+  cls,
+  color,
+  selectedAccountId,
+  allMonths,
+}) => {
+  const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } =
+    useDateFilter(allMonths)
 
   const rawData = useMemo(() => {
     if (selectedAccountId != null && getAccountHistory) {
@@ -276,21 +296,13 @@ const TrendChart: FC<TrendChartProps> = ({ getClassHistory, getAccountHistory, s
             tickLine={false}
             interval="preserveStartEnd"
           />
-          <YAxis
-            tickFormatter={shortCurrency}
-            tick={axisTickStyle}
-            axisLine={false}
-            tickLine={false}
-            width={56}
-          />
+          <YAxis tickFormatter={shortCurrency} tick={axisTickStyle} axisLine={false} tickLine={false} width={56} />
           <Tooltip
             contentStyle={tooltipStyle}
             labelStyle={tooltipLabelStyle}
             itemStyle={tooltipItemStyle}
-            formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
-              formatCurrency(Number(v))
-            }
-            labelFormatter={(label) => formatMonth(String(label))}
+            formatter={(v: number | string | ReadonlyArray<number | string> | undefined) => formatCurrency(Number(v))}
+            labelFormatter={label => formatMonth(String(label))}
           />
           <Area
             type="natural"

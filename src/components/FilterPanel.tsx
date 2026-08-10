@@ -105,8 +105,10 @@ const FilterPanel: FC<FilterPanelProps> = ({ categories, filters, onChange }) =>
           onClick={() => (isOpen ? handleCancel() : openPanel())}
         >
           <span className="txn-filter-btn-key">
-            <span className="goal-filter-trigger-icon" aria-hidden="true">≡</span>
-            {' '}Filters
+            <span className="goal-filter-trigger-icon" aria-hidden="true">
+              ≡
+            </span>{' '}
+            Filters
           </span>
           {appliedCount > 0 && <span className="txn-filter-btn-value">({appliedCount})</span>}
         </button>
@@ -167,7 +169,9 @@ const FilterPanel: FC<FilterPanelProps> = ({ categories, filters, onChange }) =>
 
               <div className="goal-filter-summary-column">
                 <div className="goal-filter-column-header">
-                  <h3>{stagedCount} filter{stagedCount === 1 ? '' : 's'} selected</h3>
+                  <h3>
+                    {stagedCount} filter{stagedCount === 1 ? '' : 's'} selected
+                  </h3>
                 </div>
                 {summaryGroups.length === 0 ? (
                   <p className="goal-filter-empty">No filters selected.</p>
@@ -187,7 +191,9 @@ const FilterPanel: FC<FilterPanelProps> = ({ categories, filters, onChange }) =>
                                   className="goal-filter-remove"
                                   aria-label={`Remove ${g.label} ${opt?.label ?? val}`}
                                   onClick={() => handleRemove(g.key, val)}
-                                >×</button>
+                                >
+                                  ×
+                                </button>
                               </li>
                             )
                           })}
@@ -208,10 +214,20 @@ const FilterPanel: FC<FilterPanelProps> = ({ categories, filters, onChange }) =>
                   for (const c of categories) empty[c.key] = []
                   setDraft(empty)
                 }}
-              >Clear</button>
+              >
+                Clear
+              </button>
               <div className="goal-filter-footer-actions">
-                <button type="button" className="goal-filter-footer-btn" onClick={handleCancel}>Cancel</button>
-                <button type="button" className="goal-filter-footer-btn goal-filter-footer-btn--apply" onClick={handleApply}>Apply</button>
+                <button type="button" className="goal-filter-footer-btn" onClick={handleCancel}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="goal-filter-footer-btn goal-filter-footer-btn--apply"
+                  onClick={handleApply}
+                >
+                  Apply
+                </button>
               </div>
             </div>
           </div>
