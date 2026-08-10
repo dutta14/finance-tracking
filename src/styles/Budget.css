@@ -1679,38 +1679,6 @@ body.dark {
   color: #fff;
 }
 
-.cashflow-bar-legend {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding: 0.5rem 0;
-  font-size: var(--fs-sm);
-}
-.cashflow-bar-legend-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-}
-.cashflow-bar-legend-label {
-  color: var(--cashflow-subtext);
-  font-size: var(--fs-xs);
-}
-.cashflow-bar-legend-net {
-  font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
-}
-.cashflow-bar-legend-net.positive {
-  color: var(--color-positive);
-}
-.cashflow-bar-legend-net.negative {
-  color: var(--color-negative);
-}
-body.dark .cashflow-bar-legend-net.positive {
-  color: var(--color-positive);
-}
-
 /* Sankey */
 .cashflow-sankey-wrap {
   background: var(--color-surface);

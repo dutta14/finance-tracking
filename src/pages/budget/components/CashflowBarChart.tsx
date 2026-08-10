@@ -282,18 +282,6 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
           />
         </ComposedChart>
       </ResponsiveContainer>
-      {/* Net cashflow legend */}
-      <div className="cashflow-bar-legend">
-        {data.map(d => (
-          <div key={d.label} className="cashflow-bar-legend-item">
-            <span className="cashflow-bar-legend-label">{d.label}</span>
-            <span className={`cashflow-bar-legend-net ${d.net >= 0 ? 'positive' : 'negative'}`}>
-              {d.net >= 0 ? '+' : ''}
-              {fmt(d.net)}
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
