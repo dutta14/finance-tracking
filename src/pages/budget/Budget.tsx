@@ -99,6 +99,14 @@ const Budget: FC = () => {
   }, [timePeriod])
 
   useEffect(() => {
+    const state = location.state as { scrollTo?: string } | null
+    if (state?.scrollTo) {
+      const el = document.getElementById(state.scrollTo)
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+    }
+  }, [location.state])
+
+  useEffect(() => {
     if (!showFormatHelp) return
 
     const handler = (e: MouseEvent) => {

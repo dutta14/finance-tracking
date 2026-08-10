@@ -1,4 +1,5 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useCallback } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { CategoryGroup, TimePeriod, Transaction } from '../types'
 
 type SankeyMode = 'group' | 'category'
@@ -50,12 +51,15 @@ const proportionalHeights = (items: { amount: number }[], totalAvailH: number, g
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const CashflowSankey: FC<CashflowSankeyProps> = ({
+  year,
   categoryGroups,
   removedCategories,
   categorySums,
   selectedPeriod,
   timePeriod,
 }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [mode, setMode] = useState<SankeyMode>('group')
   const filteredCategorySums = useMemo(() => {
     if (!selectedPeriod) return categorySums
@@ -152,6 +156,66 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   const rightItemsAll = savings > 0 ? [...rightItems, { name: 'Savings', amount: savings }] : rightItems
   const rightTotal = savings > 0 ? totalIncome : rightItemsAll.reduce((sum, item) => sum + item.amount, 0)
 
+  const handleNodeClick = useCallback(
+    (nodeName: string, side: 'left' | 'right') => {
+      if (nodeName === 'Savings') return
+
+      const params = new URLSearchParams()
+
+      // Date range based on selectedPeriod + timePeriod
+      if (selectedPeriod && timePeriod === 'month') {
+        const idx = MONTHS.indexOf(selectedPeriod)
+        if (idx >= 0) {
+          const m = String(idx + 1).padStart(2, '0')
+          const lastDay = new Date(year, idx + 1, 0).getDate()
+          params.set('from', `${year}-${m}-01`)
+          params.set('to', `${year}-${m}-${String(lastDay).padStart(2, '0')}`)
+        }
+      } else if (selectedPeriod && timePeriod === 'quarter') {
+        const qi = parseInt(selectedPeriod.replace('Q', '')) - 1
+        const startMonth = String(qi * 3 + 1).padStart(2, '0')
+        const endMonthNum = qi * 3 + 3
+        const endMonth = String(endMonthNum).padStart(2, '0')
+        const lastDay = new Date(year, endMonthNum, 0).getDate()
+        params.set('from', `${year}-${startMonth}-01`)
+        params.set('to', `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`)
+      } else if (selectedPeriod && timePeriod === 'half') {
+        const hi = parseInt(selectedPeriod.replace('H', '')) - 1
+        const startMonth = String(hi * 6 + 1).padStart(2, '0')
+        const endMonthNum = hi * 6 + 6
+        const endMonth = String(endMonthNum).padStart(2, '0')
+        const lastDay = new Date(year, endMonthNum, 0).getDate()
+        params.set('from', `${year}-${startMonth}-01`)
+        params.set('to', `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`)
+      } else {
+        params.set('from', `${year}-01-01`)
+        params.set('to', `${year}-12-31`)
+      }
+
+      // Categories
+      let categories: string[] = []
+      if (side === 'left') {
+        // Income node name IS the category name
+        categories = [nodeName]
+      } else if (mode === 'category') {
+        categories = [nodeName]
+      } else {
+        // Group mode: resolve group name → its categories
+        const group = categoryGroups.find(g => g.name === nodeName)
+        if (group) categories = group.categories
+      }
+
+      if (categories.length > 0) {
+        params.set('categories', categories.join(','))
+      }
+
+      // Replace current history entry so back-navigation returns to this page with sankey state
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: { scrollTo: 'sankey' } })
+      navigate(`/transactions?${params.toString()}`)
+    },
+    [year, selectedPeriod, timePeriod, mode, categoryGroups, navigate, location],
+  )
+
   // Layout
   const W = 800
   const PAD_TOP = 36
@@ -244,7 +308,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
 
   if (totalIncome === 0 && totalExpense === 0) {
     return (
-      <div className="cashflow-sankey-wrap">
+      <div id="sankey" className="cashflow-sankey-wrap">
         <h3 className="cashflow-section-title">Cashflow Sankey{selectedPeriod ? ` — ${selectedPeriod}` : ''}</h3>
         <p className="cashflow-empty">No transaction data for this year.</p>
       </div>
@@ -252,7 +316,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   }
 
   return (
-    <div className="cashflow-sankey-wrap">
+    <div id="sankey" className="cashflow-sankey-wrap">
       <div className="cashflow-sankey-header">
         <h3 className="cashflow-section-title cashflow-section-title--flush">
           Cashflow Sankey{selectedPeriod ? ` — ${selectedPeriod}` : ''}
@@ -299,12 +363,30 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
           </text>
           {/* Left → band links (income colors) */}
           {leftLinks.map(l => (
-            <path key={l.key} d={l.d} fill={l.color} opacity={0.18} />
+            <path
+              key={l.key}
+              d={l.d}
+              fill={l.color}
+              opacity={0.18}
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleNodeClick(l.key.slice(2), 'left')}
+            />
           ))}
           {/* Band → right links (expense colors) */}
-          {rightLinks.map(l => (
-            <path key={l.key} d={l.d} fill={l.color} opacity={0.18} />
-          ))}
+          {rightLinks.map(l => {
+            const name = l.key.slice(2)
+            const isSavings = name === 'Savings'
+            return (
+              <path
+                key={l.key}
+                d={l.d}
+                fill={l.color}
+                opacity={0.18}
+                style={{ cursor: isSavings ? 'default' : 'pointer' }}
+                onClick={isSavings ? undefined : () => handleNodeClick(name, 'right')}
+              />
+            )
+          })}
           {/* Central band */}
           {leftNodes.length > 0 && rightNodes.length > 0 && (
             <rect
@@ -321,7 +403,9 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
           {leftNodes.map(n => {
             const pct = totalIncome > 0 ? ((n.amount / totalIncome) * 100).toFixed(1) : '0.0'
             return (
-              <g key={n.name}>
+              <g key={n.name} onClick={() => handleNodeClick(n.name, 'left')} style={{ cursor: 'pointer' }}>
+                {/* Invisible hit area spanning labels + node */}
+                <rect x={0} y={n.y - 2} width={COL_LEFT + NODE_W + LABEL_PAD} height={Math.max(n.h + 4, 16)} fill="transparent" />
                 <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />
                 <text
                   x={n.x - 8}
@@ -350,9 +434,12 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
           })}
           {/* Right nodes */}
           {rightNodes.map(n => {
+            const isSavings = n.name === 'Savings'
             const pct = rightTotal > 0 ? ((n.amount / rightTotal) * 100).toFixed(1) : '0.0'
             return (
-              <g key={n.name}>
+              <g key={n.name} onClick={isSavings ? undefined : () => handleNodeClick(n.name, 'right')} style={{ cursor: isSavings ? 'default' : 'pointer' }}>
+                {/* Invisible hit area spanning labels + node */}
+                <rect x={COL_RIGHT - LABEL_PAD} y={n.y - 2} width={LABEL_PAD + NODE_W + LABEL_PAD} height={Math.max(n.h + 4, 16)} fill="transparent" />
                 <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />
                 <text
                   x={n.x + NODE_W + 8}
