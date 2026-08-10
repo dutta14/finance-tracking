@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useCallback } from 'react'
+import { FC, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CategoryGroup, TimePeriod } from '../types'
 import { shortMonthName, buildMonthKey, getCSVFormatHelp } from '../utils/csvParser'
@@ -44,24 +44,13 @@ const BudgetTable: FC<BudgetTableProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingMonthRef = useRef<string>('')
 
-  // Filter categories that belong to this table type (income or expense)
-  // If a category has ANY negative month, it's an expense (positives are refunds).
-  // Only purely-positive categories are income.
-  const isTypeCategory = useCallback(
-    (cat: string) => {
-      const monthValues = Object.values(categorySums[cat] || {})
-      const hasNegative = monthValues.some(v => v < 0)
-      if (type === 'expense') return hasNegative
-      // Income: only if never negative
-      return !hasNegative && monthValues.some(v => v > 0)
-    },
-    [categorySums, type],
-  )
-
-  // Get all categories for this type
+  // Show all categories that are in the provided groups and have data in categorySums
   const relevantCategories = new Set<string>()
-  Object.keys(categorySums).forEach(cat => {
-    if (isTypeCategory(cat)) relevantCategories.add(cat)
+  categoryGroups.forEach(g => {
+    if (g.id === 'removed') return
+    g.categories.forEach(cat => {
+      if (categorySums[cat]) relevantCategories.add(cat)
+    })
   })
 
   // Get groups that have relevant categories
@@ -297,12 +286,12 @@ const BudgetTable: FC<BudgetTableProps> = ({
                   const periodTotal = grandPeriodTotal(p)
                   return (
                     <td key={p.label} className="budget-td budget-td--number">
-                      <strong>{periodTotal !== 0 ? fmt(Math.abs(periodTotal)) : ''}</strong>
+                      <strong>{periodTotal !== 0 ? fmt(type === 'expense' ? Math.abs(periodTotal) : periodTotal) : ''}</strong>
                     </td>
                   )
                 })}
                 <td className={`budget-td ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}>
-                  <strong>{showPct ? '100%' : fmt(Math.abs(grandTotal()))}</strong>
+                  <strong>{showPct ? '100%' : fmt(type === 'expense' ? Math.abs(grandTotal()) : grandTotal())}</strong>
                 </td>
               </tr>
             )}
@@ -394,10 +383,10 @@ const GroupRows: FC<{
                   aria-label={`View ${group.name} transactions for ${p.label}`}
                   title={`View ${group.name} transactions for ${p.label}`}
                 >
-                  {fmt(Math.abs(val))}
+                  {fmt(isExpense ? Math.abs(val) : val)}
                 </button>
               ) : val !== 0 ? (
-                fmt(Math.abs(val))
+                fmt(isExpense ? Math.abs(val) : val)
               ) : (
                 ''
               )}
@@ -405,7 +394,7 @@ const GroupRows: FC<{
           )
         })}
         <td className="budget-td budget-td--group-number budget-td--total">
-          {showPct ? '' : groupYearTotal !== 0 ? fmt(Math.abs(groupYearTotal)) : ''}
+          {showPct ? '' : groupYearTotal !== 0 ? fmt(isExpense ? Math.abs(groupYearTotal) : groupYearTotal) : ''}
         </td>
       </tr>
       {/* Category rows */}
@@ -439,10 +428,10 @@ const GroupRows: FC<{
                         aria-label={`View ${categoryLabel} transactions for ${p.label}`}
                         title={`View ${categoryLabel} transactions for ${p.label}`}
                       >
-                        {fmt(Math.abs(val))}
+                        {fmt(isExpense ? Math.abs(val) : val)}
                       </button>
                     ) : val !== 0 ? (
-                      fmt(Math.abs(val))
+                      fmt(isExpense ? Math.abs(val) : val)
                     ) : (
                       ''
                     )}
@@ -452,7 +441,7 @@ const GroupRows: FC<{
               <td
                 className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}
               >
-                {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(Math.abs(total)) : ''}
+                {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(isExpense ? Math.abs(total) : total) : ''}
               </td>
             </tr>
           )

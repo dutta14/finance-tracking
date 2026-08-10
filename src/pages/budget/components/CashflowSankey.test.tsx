@@ -37,6 +37,7 @@ describe('CashflowSankey', () => {
     categoryGroups: defaultGroups,
     removedCategories: new Set<string>(),
     categorySums: {} as Record<string, Record<string, number>>,
+    incomeCatSet: new Set<string>(['Salary']),
     selectedPeriod: null,
     timePeriod: 'month' as const,
   }

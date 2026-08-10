@@ -39,6 +39,7 @@ const Budget: FC = () => {
     incomeCategoryGroups,
     removedCategories,
     incomeRemovedCategories,
+    incomeCatSet,
     categorySums,
     summary,
     monthsWithData,
@@ -359,7 +360,7 @@ const Budget: FC = () => {
                   yearTransactions={yearTransactions}
                   timePeriod={timePeriod}
                   removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
-                  categorySums={categorySums}
+                  incomeCatSet={incomeCatSet}
                   selectedPeriod={selectedPeriod}
                   onSelectPeriod={setSelectedPeriod}
                 />
@@ -369,6 +370,7 @@ const Budget: FC = () => {
                   categoryGroups={categoryGroups}
                   removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
                   categorySums={categorySums}
+                  incomeCatSet={incomeCatSet}
                   selectedPeriod={selectedPeriod}
                   timePeriod={timePeriod}
                 />

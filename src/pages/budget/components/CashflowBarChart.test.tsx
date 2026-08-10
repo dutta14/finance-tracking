@@ -9,7 +9,7 @@ vi.mock('recharts', async () => {
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="responsive-container">{children}</div>
     ),
-    BarChart: ({
+    ComposedChart: ({
       children,
       data,
       onClick,
@@ -28,6 +28,7 @@ vi.mock('recharts', async () => {
     Bar: ({ children, name }: { children: React.ReactNode; name?: string }) => (
       <div data-testid={`bar-${String(name).toLowerCase()}`}>{children}</div>
     ),
+    Line: () => null,
     Cell: ({ opacity = 1 }: { opacity?: number }) => <div data-testid="bar-cell" data-opacity={opacity} />,
     XAxis: () => null,
     YAxis: ({ tickFormatter }: { tickFormatter?: (value: number) => string }) => (
@@ -36,24 +37,9 @@ vi.mock('recharts', async () => {
         <span data-testid="y-axis-small">{tickFormatter?.(250)}</span>
       </div>
     ),
-    Tooltip: ({
-      formatter,
-      labelFormatter,
-    }: {
-      formatter?: (value: number, name: string) => [string, string]
-      labelFormatter?: (label: string) => string
-    }) => {
-      const [incomeValue, incomeName] = formatter?.(1200, 'Income') ?? ['', '']
-      const [expenseValue, expenseName] = formatter?.(-250, 'Other') ?? ['', '']
-      return (
-        <div>
-          <span data-testid="tooltip-income">{`${incomeName}:${incomeValue}`}</span>
-          <span data-testid="tooltip-expense">{`${expenseName}:${expenseValue}`}</span>
-          <span data-testid="tooltip-label">{labelFormatter?.('Jan')}</span>
-        </div>
-      )
-    },
+    Tooltip: () => null,
     ReferenceLine: () => null,
+    ReferenceDot: () => null,
     CartesianGrid: () => null,
   }
 })
@@ -71,7 +57,7 @@ describe('CashflowBarChart', () => {
     yearTransactions: {} as Record<string, Transaction[]>,
     timePeriod: 'month' as const,
     removedCategories: new Set<string>(),
-    categorySums: {} as Record<string, Record<string, number>>,
+    incomeCatSet: new Set<string>(),
     selectedPeriod: null,
     onSelectPeriod: vi.fn(),
   }
@@ -108,11 +94,7 @@ describe('CashflowBarChart', () => {
     const yearTransactions: Record<string, Transaction[]> = {
       '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
     }
-    const categorySums: Record<string, Record<string, number>> = {
-      Salary: { '2024-01': 5000 },
-      Groceries: { '2024-01': -1200 },
-    }
-    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={categorySums} />)
+    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />)
     // Legend renders 12 items (one per month) with net cashflow amounts
     const legendItems = document.querySelectorAll('.cashflow-bar-legend-item')
     expect(legendItems).toHaveLength(12)
@@ -126,11 +108,7 @@ describe('CashflowBarChart', () => {
     const yearTransactions: Record<string, Transaction[]> = {
       '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
     }
-    const categorySums: Record<string, Record<string, number>> = {
-      Salary: { '2024-01': 5000 },
-      Groceries: { '2024-01': -1200 },
-    }
-    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={categorySums} />)
+    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />)
     // Net for Jan = 5000 + (-1200) = 3800
     expect(screen.getByText('+$3,800')).toBeInTheDocument()
   })
@@ -150,16 +128,11 @@ describe('CashflowBarChart', () => {
         makeTx({ category: 'Removed', amount: -9999 }),
       ],
     }
-    const categorySums: Record<string, Record<string, number>> = {
-      Salary: { '2024-01': 5000 },
-      Groceries: { '2024-01': -1200 },
-      Removed: { '2024-01': -9999 },
-    }
     render(
       <CashflowBarChart
         {...defaultProps}
         yearTransactions={yearTransactions}
-        categorySums={categorySums}
+        incomeCatSet={new Set(['Salary'])}
         removedCategories={new Set(['Removed'])}
       />,
     )
@@ -167,14 +140,15 @@ describe('CashflowBarChart', () => {
     expect(screen.getByText('+$3,800')).toBeInTheDocument()
   })
 
-  it('ignores transactions whose categories are not classified as income or expense', () => {
+  it('treats all non-income categories as expense', () => {
     const yearTransactions: Record<string, Transaction[]> = {
       '2024-01': [makeTx({ category: 'Unknown', amount: -500 }), makeTx({ category: 'Zeroed', amount: 0 })],
     }
 
-    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={{}} />)
+    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} />)
 
-    expect(screen.getAllByText('+$0')).toHaveLength(12)
+    // Unknown is not in incomeCatSet, so treated as expense; net = -500
+    expect(screen.getByText('-$500')).toBeInTheDocument()
   })
 
   it('selects a period when clicking a bar', async () => {
@@ -232,11 +206,8 @@ describe('CashflowBarChart', () => {
     const yearTransactions: Record<string, Transaction[]> = {
       '2024-01': [makeTx({ category: 'Groceries', amount: -1200 })],
     }
-    const categorySums: Record<string, Record<string, number>> = {
-      Groceries: { '2024-01': -1200 },
-    }
 
-    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} categorySums={categorySums} />)
+    render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} />)
 
     expect(screen.getByText('-$1,200')).toBeInTheDocument()
     expect(screen.getByText('-$1,200')).toHaveClass('negative')

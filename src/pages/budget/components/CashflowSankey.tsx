@@ -10,6 +10,7 @@ interface CashflowSankeyProps {
   categoryGroups: CategoryGroup[]
   removedCategories: Set<string>
   categorySums: Record<string, Record<string, number>>
+  incomeCatSet: Set<string>
   selectedPeriod: string | null
   timePeriod: TimePeriod
 }
@@ -55,6 +56,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   categoryGroups,
   removedCategories,
   categorySums,
+  incomeCatSet,
   selectedPeriod,
   timePeriod,
 }) => {
@@ -99,16 +101,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   }, [categorySums, selectedPeriod, timePeriod])
 
   const { incomeCategories, expenseGroups, expenseCatArr, totalIncome, totalExpense } = useMemo(() => {
-    // Classify categories same as budget table: any negative month → expense
-    const expenseCatSet = new Set<string>()
-    const incomeCatSet = new Set<string>()
-    Object.entries(filteredCategorySums).forEach(([cat, months]) => {
-      if (removedCategories.has(cat)) return
-      if (Object.values(months).some(v => v < 0)) expenseCatSet.add(cat)
-      else if (Object.values(months).some(v => v > 0)) incomeCatSet.add(cat)
-    })
-
-    // Use categorySums (net monthly totals) for consistency with top cards
+    // Use incomeCatSet (group membership) as source of truth
     const incomeCats: Record<string, number> = {}
     const expenseCats: Record<string, number> = {}
 
@@ -117,7 +110,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
       const total = Object.values(monthMap).reduce((s, v) => s + v, 0)
       if (incomeCatSet.has(cat)) {
         incomeCats[cat] = total
-      } else if (expenseCatSet.has(cat)) {
+      } else {
         expenseCats[cat] = Math.abs(total)
       }
     })
@@ -149,7 +142,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
       totalIncome: Object.values(incomeCats).reduce((s, v) => s + v, 0),
       totalExpense: Object.values(expenseCats).reduce((s, v) => s + v, 0),
     }
-  }, [categoryGroups, removedCategories, filteredCategorySums])
+  }, [categoryGroups, removedCategories, filteredCategorySums, incomeCatSet])
 
   const rightItems = mode === 'group' ? expenseGroups.map(g => ({ name: g.name, amount: g.total })) : expenseCatArr
   const savings = Math.max(0, totalIncome - totalExpense)

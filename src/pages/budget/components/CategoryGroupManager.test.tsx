@@ -251,10 +251,10 @@ describe('CategoryGroupManager', () => {
     expect(onDeleteCategory).toHaveBeenCalledWith('Groceries')
   })
 
-  it('hides income categories from the group manager', () => {
+  it('shows all categories in their groups regardless of amount sign', () => {
     const categorySums = {
       ...defaultCategorySums,
-      Salary: { '2024-01': 5000 }, // income — no negative values
+      Salary: { '2024-01': 5000 }, // positive amount, but in expense group
     }
     const groups: CategoryGroup[] = [
       ...defaultGroups.slice(0, 2),
@@ -263,8 +263,8 @@ describe('CategoryGroupManager', () => {
     ]
     render(<CategoryGroupManager {...defaultProps} groups={groups} categorySums={categorySums} />)
 
-    // Salary should not appear as it's an income category
-    expect(screen.queryByText('Salary')).not.toBeInTheDocument()
+    // Salary appears in expense section since it's in an expense group
+    expect(screen.queryByText('Salary')).toBeInTheDocument()
   })
 
   it('renders a separate income section when income groups are provided', () => {

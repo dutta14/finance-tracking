@@ -18,7 +18,7 @@ interface CashflowBarChartProps {
   yearTransactions: Record<string, Transaction[]>
   timePeriod: TimePeriod
   removedCategories: Set<string>
-  categorySums: Record<string, Record<string, number>>
+  incomeCatSet: Set<string>
   selectedPeriod: string | null
   onSelectPeriod: (label: string | null) => void
 }
@@ -35,24 +35,14 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
   yearTransactions,
   timePeriod,
   removedCategories,
-  categorySums,
+  incomeCatSet,
   selectedPeriod,
   onSelectPeriod,
 }) => {
-  // Classify categories the same way as the budget table:
-  // A category with ANY negative month value is "expense"; otherwise "income".
-  const expenseCats = useMemo(() => {
-    const set = new Set<string>()
-    Object.entries(categorySums).forEach(([cat, months]) => {
-      if (Object.values(months).some(v => v < 0)) set.add(cat)
-    })
-    return set
-  }, [categorySums])
-
   const data = useMemo(() => {
     const filter = (txns: Transaction[]) => txns.filter(t => !removedCategories.has(t.category))
-    const isExpense = (t: Transaction) => expenseCats.has(t.category)
-    const isIncome = (t: Transaction) => !expenseCats.has(t.category) && t.amount > 0
+    const isIncome = (t: Transaction) => incomeCatSet.has(t.category)
+    const isExpense = (t: Transaction) => !incomeCatSet.has(t.category)
 
     const aggregate = (txns: Transaction[]) => {
       let income = 0,
@@ -104,7 +94,7 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
       }
       return { label, income, expense, net: income + expense, netLine: hasData ? income + expense : null }
     })
-  }, [year, yearTransactions, timePeriod, removedCategories, expenseCats])
+  }, [year, yearTransactions, timePeriod, removedCategories, incomeCatSet])
 
   const maxVal = Math.max(...data.map(d => d.income), 1)
   const minVal = Math.min(...data.map(d => d.expense), -1)

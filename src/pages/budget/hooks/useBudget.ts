@@ -476,30 +476,27 @@ export function useBudget() {
     return sums
   }, [yearTransactions, allRemovedCategories])
 
-  // Summary totals — use same per-category classification as tables:
-  // A category with ANY negative month is "expense"; otherwise "income".
-  const summary = useMemo(() => {
-    // First determine which categories are expense vs income
-    const expenseCategories = new Set<string>()
-    const incomeCategories = new Set<string>()
-    Object.keys(categorySums).forEach(cat => {
-      const vals = Object.values(categorySums[cat] || {})
-      const hasNegative = vals.some(v => v < 0)
-      if (hasNegative) expenseCategories.add(cat)
-      else if (vals.some(v => v > 0)) incomeCategories.add(cat)
-    })
+  // Summary totals — use income group membership as source of truth.
+  // If a category is explicitly in an income group, it's income regardless of amount sign.
+  const incomeCatSet = useMemo(
+    () => new Set(incomeCategoryGroups.flatMap(g => g.id !== REMOVED_GROUP_ID ? g.categories : [])),
+    [incomeCategoryGroups],
+  )
 
+  const summary = useMemo(() => {
     let totalIncome = 0
     let totalExpense = 0
     Object.entries(categorySums).forEach(([cat, monthMap]) => {
       const total = Object.values(monthMap).reduce((s, v) => s + v, 0)
-      if (incomeCategories.has(cat)) totalIncome += total
-      else if (expenseCategories.has(cat)) totalExpense += Math.abs(total)
+      if (incomeCatSet.has(cat)) totalIncome += total
+      else totalExpense += total // negative amounts = spending, positive = reimbursements
     })
 
-    const saveRate = totalIncome > 0 ? 1 - totalExpense / totalIncome : 0
-    return { totalIncome, totalExpense, saveRate }
-  }, [categorySums])
+    // totalExpense is typically negative (spending); flip sign for display
+    const absExpense = Math.abs(totalExpense)
+    const saveRate = totalIncome > 0 ? 1 - absExpense / totalIncome : 0
+    return { totalIncome, totalExpense: absExpense, saveRate }
+  }, [categorySums, incomeCatSet])
 
   // Which months have data
   const monthsWithData = useMemo((): Set<string> => {
@@ -560,6 +557,7 @@ export function useBudget() {
     incomeCategoryGroups,
     removedCategories,
     incomeRemovedCategories,
+    incomeCatSet,
     categorySums,
     summary,
     monthsWithData,

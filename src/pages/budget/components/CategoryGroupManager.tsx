@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { CategoryGroup, Transaction } from '../types'
 
 type GroupSection = 'expense' | 'income'
@@ -38,33 +38,24 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
     return cat
   }
 
-  const isIncomeCategory = useCallback(
-    (cat: string): boolean => {
-      const vals = Object.values(categorySums[cat] || {})
-      if (vals.length === 0) return false
-      const hasNegative = vals.some(v => v < 0)
-      if (hasNegative) return false
-      return vals.some(v => v > 0)
-    },
-    [categorySums],
-  )
+
 
   const resolvedIncomeGroups = useMemo(() => incomeCategoryGroups || [], [incomeCategoryGroups])
   const expenseDisplayGroups = useMemo(
     () =>
       groups.map(g => ({
         ...g,
-        displayCategories: g.categories.filter(c => !isIncomeCategory(c)),
+        displayCategories: g.categories,
       })),
-    [groups, isIncomeCategory],
+    [groups],
   )
   const incomeDisplayGroups = useMemo(
     () =>
       resolvedIncomeGroups.map(g => ({
         ...g,
-        displayCategories: g.categories.filter(c => isIncomeCategory(c)),
+        displayCategories: g.categories,
       })),
-    [resolvedIncomeGroups, isIncomeCategory],
+    [resolvedIncomeGroups],
   )
   const showIncomeSection = incomeCategoryGroups !== undefined || onUpdateIncomeGroups !== undefined
 
@@ -240,7 +231,7 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
   }
 
   const handleDragOver = (e: React.DragEvent, section: GroupSection, groupId: string) => {
-    if (dragCat && dragCat.section !== section) return
+    if (!dragCat) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
     setDragOverGroup({ section, groupId })
@@ -249,23 +240,33 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
   const handleDrop = (e: React.DragEvent, section: GroupSection, toGroupId: string) => {
     e.preventDefault()
     setDragOverGroup(null)
-    if (!dragCat || dragCat.section !== section || dragCat.fromGroupId === toGroupId) {
+    if (!dragCat || (dragCat.section === section && dragCat.fromGroupId === toGroupId)) {
       setDragCat(null)
       return
     }
 
-    updateSectionGroups(
-      section,
-      getGroupsForSection(section).map(group => {
-        if (group.id === dragCat.fromGroupId) {
-          return { ...group, categories: group.categories.filter(category => category !== dragCat.category) }
-        }
-        if (group.id === toGroupId) {
-          return { ...group, categories: [...group.categories, dragCat.category] }
-        }
-        return group
-      }),
-    )
+    // Remove the category from ALL groups in BOTH sections, then add to target
+    const removeFromAll = (groups: CategoryGroup[]) =>
+      groups.map(group => ({
+        ...group,
+        categories: group.categories.filter(c => c !== dragCat.category),
+      }))
+
+    const expenseGroups = removeFromAll(getGroupsForSection('expense'))
+    const incomeGroups = removeFromAll(getGroupsForSection('income'))
+
+    // Add to the target group in the correct section
+    if (section === 'expense') {
+      updateSectionGroups('expense', expenseGroups.map(g =>
+        g.id === toGroupId ? { ...g, categories: [...g.categories, dragCat.category] } : g
+      ))
+      updateSectionGroups('income', incomeGroups)
+    } else {
+      updateSectionGroups('expense', expenseGroups)
+      updateSectionGroups('income', incomeGroups.map(g =>
+        g.id === toGroupId ? { ...g, categories: [...g.categories, dragCat.category] } : g
+      ))
+    }
     setDragCat(null)
   }
 
