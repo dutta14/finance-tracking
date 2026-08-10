@@ -1,7 +1,19 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import MonthPicker from '../../components/MonthPicker'
+import FilterPanel, { FilterCategory, FilterState } from '../../components/FilterPanel'
 import { Profile } from '../../hooks/useProfile'
-import { Account, AccountOwner, BalanceEntry, formatCurrency, getOwnerLabels } from './types'
+import {
+  Account,
+  AccountOwner,
+  BalanceEntry,
+  formatCurrency,
+  getOwnerLabels,
+  getDefaultAllocation,
+  ACCOUNT_TYPE_LABELS,
+  GOAL_TYPE_LABELS,
+  NATURE_LABELS,
+  ALLOCATION_LABELS,
+} from './types'
 
 interface BalanceDetailsProps {
   accounts: Account[]
@@ -9,8 +21,6 @@ interface BalanceDetailsProps {
   allMonths: string[]
   balanceMap: Map<string, number>
   profile: Profile
-  showInactive: boolean
-  onToggleShowInactive?: () => void
   onSaveMonth?: (month: string, values: Record<string, number>) => void
 }
 
@@ -227,8 +237,6 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
   allMonths,
   balanceMap,
   profile,
-  showInactive,
-  onToggleShowInactive,
   onSaveMonth,
 }) => {
   const ownerLabels = useMemo(() => getOwnerLabels(profile), [profile])
@@ -241,6 +249,40 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
   })
   const [editMode, setEditMode] = useState<EditMode | null>(null)
   const detailsRef = useRef<HTMLDivElement>(null)
+  const [columnFilters, setColumnFilters] = useState<FilterState>({
+    owner: [],
+    goal: [],
+    type: [],
+    nature: [],
+    allocation: [],
+    status: ['active'],
+  })
+
+  const filterCategories = useMemo((): FilterCategory[] => [
+    { key: 'owner', label: 'Owner', options: (['primary', 'partner', 'joint'] as const).map(k => ({ value: k, label: ownerLabels[k] })) },
+    { key: 'goal', label: 'Goal', options: (['fi', 'gw'] as const).map(k => ({ value: k, label: GOAL_TYPE_LABELS[k] })) },
+    { key: 'type', label: 'Type', options: (['retirement', 'non-retirement', 'liquid', 'illiquid'] as const).map(k => ({ value: k, label: ACCOUNT_TYPE_LABELS[k] })) },
+    { key: 'nature', label: 'Asset/Liability', options: (['asset', 'liability'] as const).map(k => ({ value: k, label: NATURE_LABELS[k] })) },
+    { key: 'allocation', label: 'Allocation', options: (['cash', 'us-stock', 'intl-stock', 'bonds', 'real-estate', 'others', 'debt'] as const).map(k => ({ value: k, label: ALLOCATION_LABELS[k] })) },
+    { key: 'status', label: 'Status', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
+  ], [ownerLabels])
+
+  const matchesFilters = useCallback(
+    (a: Account) => {
+      const { status, owner, goal, type, nature, allocation } = columnFilters
+      return (
+        (status.length === 0 || status.includes(a.status || 'active')) &&
+        (owner.length === 0 || owner.includes(a.owner)) &&
+        (goal.length === 0 || goal.includes(a.goalType)) &&
+        (type.length === 0 || type.includes(a.type)) &&
+        (nature.length === 0 || nature.includes(a.nature || 'asset')) &&
+        (allocation.length === 0 || allocation.includes(a.allocation || getDefaultAllocation(a.nature || 'asset')))
+      )
+    },
+    [columnFilters],
+  )
+
+  const filteredAccounts = useMemo(() => accounts.filter(matchesFilters), [accounts, matchesFilters])
 
   useEffect(() => {
     if (allMonths.length === 0) {
@@ -314,7 +356,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
 
   const allAccountsByOwner = useMemo<Record<AccountOwner, Account[]>>(
     () =>
-      accounts.reduce(
+      filteredAccounts.reduce(
         (grouped, account) => {
           grouped[account.owner].push(account)
           return grouped
@@ -325,7 +367,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
           joint: [],
         } as Record<AccountOwner, Account[]>,
       ),
-    [accounts],
+    [filteredAccounts],
   )
 
   const primaryInitial = (profile.name || ownerLabels.primary || 'P')[0].toUpperCase()
@@ -561,7 +603,6 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
 
   const renderDisplayItem = (item: OwnerDisplayItem) => {
     if (item.kind === 'account') {
-      if (!showInactive && item.account.status === 'inactive') return null
       return renderAccountCard(item.account, `account-${item.account.id}`)
     }
 
@@ -569,7 +610,7 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
       ? getEditingGroupTotal(item.accounts)
       : getGroupTotal(item.accounts, selectedBalanceLookup)
 
-    const visibleChildren = showInactive ? item.accounts : item.accounts.filter(a => a.status !== 'inactive')
+    const visibleChildren = item.accounts
 
     if (visibleChildren.length === 0) return null
 
@@ -632,18 +673,6 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
           </div>
         ) : (
           <div className="data-details-summary-controls">
-            {onToggleShowInactive && (
-              <button className="data-filter-toggle" aria-pressed={showInactive} onClick={onToggleShowInactive}>
-                {showInactive ? 'Hide inactive' : 'Show inactive'}
-              </button>
-            )}
-            <MonthPicker
-              allMonths={allMonths}
-              selectedMonth={selectedMonth}
-              onMonthChange={month => {
-                setSelectedMonth(month)
-              }}
-            />
             <div className="data-add-month-wrap">
               <button className="data-add-entry-btn" type="button" onClick={handleOpenAddMonth}>
                 + Add Entry
@@ -698,6 +727,18 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
                 </div>
               ) : null}
             </div>
+            <FilterPanel
+              categories={filterCategories}
+              filters={columnFilters}
+              onChange={setColumnFilters}
+            />
+            <MonthPicker
+              allMonths={allMonths}
+              selectedMonth={selectedMonth}
+              onMonthChange={month => {
+                setSelectedMonth(month)
+              }}
+            />
           </div>
         )}
       </div>

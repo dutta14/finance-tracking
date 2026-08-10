@@ -195,8 +195,8 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
     <>
       <div className="data-filter-bar">
         {toolbarActions && <div className="data-toolbar-actions">{toolbarActions}</div>}
-        <MonthDatePanel allMonths={allMonths} fromMonth={dateFrom} toMonth={dateTo} preset={datePreset} onApply={handleDateApply} />
         <FilterPanel categories={filterCategories} filters={columnFilters} onChange={setColumnFilters} />
+        <MonthDatePanel allMonths={allMonths} fromMonth={dateFrom} toMonth={dateTo} preset={datePreset} onApply={handleDateApply} />
       </div>
 
       <div className="data-spreadsheet-wrap">
