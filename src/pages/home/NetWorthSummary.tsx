@@ -230,7 +230,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
         <div className="home-card-header">
           <h3>Net Worth</h3>
           <button className="home-card-link" onClick={onNavigate}>
-            View Data →
+            View Details →
           </button>
         </div>
         <div className="home-card-cta">
@@ -262,7 +262,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     <div className="home-card home-card--nw">
       <div className="home-card-header">
         <button className="home-card-link" onClick={onNavigate}>
-          View Data →
+          View Details →
         </button>
       </div>
       <div className="nw-headline">

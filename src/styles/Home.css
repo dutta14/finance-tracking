@@ -94,6 +94,7 @@
   cursor: pointer;
   padding: 0;
   transition: color 0.15s;
+  margin-left: auto;
 }
 .home-card-link:hover {
   color: var(--accent-hover);

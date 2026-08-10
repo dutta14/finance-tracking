@@ -158,7 +158,7 @@ const Home: FC = () => {
         accounts={accounts}
         balances={balances}
         allMonths={allMonths}
-        onNavigate={() => navigate('/net-worth')}
+        onNavigate={() => navigate('/net-worth/dashboard/details')}
       />
     </ErrorBoundary>,
     <ErrorBoundary key="charts" variant="card">
@@ -167,7 +167,7 @@ const Home: FC = () => {
         balances={balances}
         balanceMap={balanceMap}
         allMonths={allMonths}
-        onNavigate={() => navigate('/net-worth')}
+        onNavigate={() => navigate('/net-worth/dashboard')}
       />
     </ErrorBoundary>,
     <ErrorBoundary key="goals" variant="card">

@@ -133,7 +133,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
         <div className="home-card-header">
           <h3>Charts</h3>
           <button className="home-card-link" onClick={onNavigate}>
-            View Data →
+            View Charts →
           </button>
         </div>
         <div className="home-card-cta">
@@ -163,7 +163,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
       <div className="home-card-header">
         <h3>Charts</h3>
         <button className="home-card-link" onClick={onNavigate}>
-          View Data →
+          View Charts →
         </button>
       </div>
       <div className="home-mini-chart-tabs">
