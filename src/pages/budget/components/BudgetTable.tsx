@@ -154,6 +154,8 @@ const BudgetTable: FC<BudgetTableProps> = ({
     return `${pct.toFixed(1)}%`
   }
 
+  const isExpense = type === 'expense'
+
   // Context menu for month headers
   const handleHeaderContextMenu = (e: React.MouseEvent, monthKey: string) => {
     e.preventDefault()
@@ -228,78 +230,151 @@ const BudgetTable: FC<BudgetTableProps> = ({
         </div>
       )}
 
-      <div className="budget-table-wrapper">
-        <table className="budget-table">
-          <thead>
-            <tr>
-              <th className="budget-th budget-th--category">Category</th>
-              {timePeriod === 'month'
-                ? months.map((m, i) => (
-                    <th
-                      key={m}
-                      className={`budget-th budget-th--month${monthsWithData.has(m) ? ' has-data' : ''}`}
-                      onContextMenu={e => handleHeaderContextMenu(e, m)}
-                      onClick={() => handleMonthClick(m)}
-                      title="Click to view transactions. Right-click to upload CSV"
+      {relevantGroups.map(group => (
+        <div key={group.id} className="budget-table-group-block">
+          <div className="budget-table-wrapper">
+            <table className="budget-table">
+              <thead>
+                <tr>
+                  <th className="budget-th budget-th--category">
+                    <button
+                      type="button"
+                      className="budget-table-link budget-table-link--label"
+                      onClick={() => navigateToTransactions(null, group.categories)}
+                      title={`View ${group.name} transactions for the year`}
                     >
-                      {shortMonthName(i)}
-                      {monthsWithData.has(m) && <span className="budget-th-dot" />}
-                    </th>
-                  ))
-                : periods.map(p => (
-                    <th key={p.label} className="budget-th budget-th--month">
-                      {p.label}
-                    </th>
-                  ))}
-              <th
-                className="budget-th budget-th--total budget-th--switchable"
-                onClick={() => setShowPct(p => !p)}
-                title="Click to toggle Total / %"
-              >
-                {showPct ? '%' : 'Total'}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Both income and expense use grouped rows */}
-            {relevantGroups.map(group => (
-              <GroupRows
-                key={group.id}
-                group={group}
-                periods={periods}
-                getPeriodValue={getPeriodValue}
-                getCategoryTotal={getCategoryTotal}
-                getGroupPeriodTotal={getGroupPeriodTotal}
-                getGroupYearTotal={getGroupYearTotal}
-                getCategoryPct={getCategoryPct}
-                isExpense={type === 'expense'}
-                showPct={showPct}
-                onNavigateToTransactions={navigateToTransactions}
-              />
-            ))}
-            {relevantCategories.size > 0 && (
-              <tr className="budget-tr--grand-total">
-                <td className="budget-td budget-td--category">
-                  <strong>Grand Total</strong>
-                </td>
-                {periods.map(p => {
-                  const periodTotal = grandPeriodTotal(p)
-                  return (
-                    <td key={p.label} className="budget-td budget-td--number">
-                      <strong>
-                        {periodTotal !== 0 ? fmt(type === 'expense' ? Math.abs(periodTotal) : periodTotal) : ''}
-                      </strong>
-                    </td>
-                  )
-                })}
-                <td className={`budget-td ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}>
-                  <strong>{showPct ? '100%' : fmt(type === 'expense' ? Math.abs(grandTotal()) : grandTotal())}</strong>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                      {group.name}
+                    </button>
+                  </th>
+                  {timePeriod === 'month'
+                    ? months.map((m, i) => (
+                        <th
+                          key={m}
+                          className={`budget-th budget-th--month${monthsWithData.has(m) ? ' has-data' : ''}`}
+                          onContextMenu={e => handleHeaderContextMenu(e, m)}
+                          onClick={() => handleMonthClick(m)}
+                          title="Click to view transactions. Right-click to upload CSV"
+                        >
+                          {shortMonthName(i)}
+                          {monthsWithData.has(m) && <span className="budget-th-dot" />}
+                        </th>
+                      ))
+                    : periods.map(p => (
+                        <th key={p.label} className="budget-th budget-th--month">
+                          {p.label}
+                        </th>
+                      ))}
+                  <th
+                    className="budget-th budget-th--total budget-th--switchable"
+                    onClick={() => setShowPct(p => !p)}
+                    title="Click to toggle Total / %"
+                  >
+                    {showPct ? '%' : 'Total'}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...group.categories]
+                  .sort((a, b) => a.localeCompare(b))
+                  .map(cat => {
+                    const total = getCategoryTotal(cat)
+                    const categoryLabel = displayCat(cat, group.name)
+                    return (
+                      <tr key={cat} className="budget-tr--category">
+                        <td className="budget-td budget-td--category-name">
+                          <button
+                            type="button"
+                            className="budget-table-link budget-table-link--label"
+                            onClick={() => navigateToTransactions(null, [cat])}
+                            title={`View ${categoryLabel} transactions for the year`}
+                          >
+                            {categoryLabel}
+                          </button>
+                        </td>
+                        {periods.map(p => {
+                          const val = getPeriodValue(cat, p)
+                          const monthKey = p.monthKeys.length === 1 ? p.monthKeys[0] : null
+                          return (
+                            <td key={p.label} className={`budget-td budget-td--number${isExpense && val > 0 ? ' refund' : ''}`}>
+                              {val !== 0 && monthKey ? (
+                                <button
+                                  type="button"
+                                  className="budget-table-link budget-table-link--cell"
+                                  onClick={() => navigateToTransactions(monthKey, [cat])}
+                                  aria-label={`View ${categoryLabel} transactions for ${p.label}`}
+                                  title={`View ${categoryLabel} transactions for ${p.label}`}
+                                >
+                                  {fmt(isExpense ? Math.abs(val) : val)}
+                                </button>
+                              ) : val !== 0 ? (
+                                fmt(isExpense ? Math.abs(val) : val)
+                              ) : (
+                                ''
+                              )}
+                            </td>
+                          )
+                        })}
+                        <td
+                          className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}
+                        >
+                          {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(isExpense ? Math.abs(total) : total) : ''}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                <tr className="budget-tr--group-total">
+                  <td className="budget-td budget-td--category">
+                    <strong>Total</strong>
+                  </td>
+                  {periods.map(p => {
+                    const val = getGroupPeriodTotal(group, p)
+                    return (
+                      <td key={p.label} className="budget-td budget-td--group-number">
+                        <strong>{val !== 0 ? fmt(isExpense ? Math.abs(val) : val) : ''}</strong>
+                      </td>
+                    )
+                  })}
+                  <td className="budget-td budget-td--group-number budget-td--total">
+                    {(() => {
+                      const groupYearTotal = getGroupYearTotal(group)
+                      return <strong>{showPct ? '' : groupYearTotal !== 0 ? fmt(isExpense ? Math.abs(groupYearTotal) : groupYearTotal) : ''}</strong>
+                    })()}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+
+      {relevantCategories.size > 0 && (
+        <div className="budget-table-group-block">
+          <div className="budget-table-wrapper">
+            <table className="budget-table">
+              <tbody>
+                <tr className="budget-tr--grand-total">
+                  <td className="budget-td budget-td--category">
+                    <strong>Grand Total</strong>
+                  </td>
+                  {periods.map(p => {
+                    const periodTotal = grandPeriodTotal(p)
+                    return (
+                      <td key={p.label} className="budget-td budget-td--number">
+                        <strong>
+                          {periodTotal !== 0 ? fmt(isExpense ? Math.abs(periodTotal) : periodTotal) : ''}
+                        </strong>
+                      </td>
+                    )
+                  })}
+                  <td className={`budget-td ${showPct ? 'budget-td--pct' : 'budget-td--number'}`}>
+                    <strong>{showPct ? '100%' : fmt(isExpense ? Math.abs(grandTotal()) : grandTotal())}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Context menu */}
       {contextMenu && (
@@ -329,126 +404,6 @@ const BudgetTable: FC<BudgetTableProps> = ({
         onChange={handleFileChange}
       />
     </div>
-  )
-}
-
-/** Renders a group header row + category rows */
-const GroupRows: FC<{
-  group: CategoryGroup & { categories: string[] }
-  periods: { label: string; monthKeys: string[] }[]
-  getPeriodValue: (cat: string, period: { monthKeys: string[] }) => number
-  getCategoryTotal: (cat: string) => number
-  getGroupPeriodTotal: (g: CategoryGroup, period: { monthKeys: string[] }) => number
-  getGroupYearTotal: (g: CategoryGroup) => number
-  getCategoryPct: (cat: string) => string
-  isExpense: boolean
-  showPct: boolean
-  onNavigateToTransactions: (monthKey: string | null, categories: string[]) => void
-}> = ({
-  group,
-  periods,
-  getPeriodValue,
-  getCategoryTotal,
-  getGroupPeriodTotal,
-  getGroupYearTotal,
-  getCategoryPct,
-  isExpense,
-  showPct,
-  onNavigateToTransactions,
-}) => {
-  const groupYearTotal = getGroupYearTotal(group)
-
-  return (
-    <>
-      {/* Group header */}
-      <tr className="budget-tr--group-header">
-        <td className="budget-td budget-td--group-name" colSpan={1}>
-          <button
-            type="button"
-            className="budget-table-link budget-table-link--label"
-            onClick={() => onNavigateToTransactions(null, group.categories)}
-            title={`View ${group.name} transactions for the year`}
-          >
-            {group.name}
-          </button>
-        </td>
-        {periods.map(p => {
-          const val = getGroupPeriodTotal(group, p)
-          const monthKey = p.monthKeys.length === 1 ? p.monthKeys[0] : null
-          return (
-            <td key={p.label} className="budget-td budget-td--group-number">
-              {val !== 0 && monthKey ? (
-                <button
-                  type="button"
-                  className="budget-table-link budget-table-link--cell"
-                  onClick={() => onNavigateToTransactions(monthKey, group.categories)}
-                  aria-label={`View ${group.name} transactions for ${p.label}`}
-                  title={`View ${group.name} transactions for ${p.label}`}
-                >
-                  {fmt(isExpense ? Math.abs(val) : val)}
-                </button>
-              ) : val !== 0 ? (
-                fmt(isExpense ? Math.abs(val) : val)
-              ) : (
-                ''
-              )}
-            </td>
-          )
-        })}
-        <td className="budget-td budget-td--group-number budget-td--total">
-          {showPct ? '' : groupYearTotal !== 0 ? fmt(isExpense ? Math.abs(groupYearTotal) : groupYearTotal) : ''}
-        </td>
-      </tr>
-      {/* Category rows */}
-      {[...group.categories]
-        .sort((a, b) => a.localeCompare(b))
-        .map(cat => {
-          const total = getCategoryTotal(cat)
-          const categoryLabel = displayCat(cat, group.name)
-          return (
-            <tr key={cat} className="budget-tr--category">
-              <td className="budget-td budget-td--category-name">
-                <button
-                  type="button"
-                  className="budget-table-link budget-table-link--label"
-                  onClick={() => onNavigateToTransactions(null, [cat])}
-                  title={`View ${categoryLabel} transactions for the year`}
-                >
-                  {categoryLabel}
-                </button>
-              </td>
-              {periods.map(p => {
-                const val = getPeriodValue(cat, p)
-                const monthKey = p.monthKeys.length === 1 ? p.monthKeys[0] : null
-                return (
-                  <td key={p.label} className={`budget-td budget-td--number${isExpense && val > 0 ? ' refund' : ''}`}>
-                    {val !== 0 && monthKey ? (
-                      <button
-                        type="button"
-                        className="budget-table-link budget-table-link--cell"
-                        onClick={() => onNavigateToTransactions(monthKey, [cat])}
-                        aria-label={`View ${categoryLabel} transactions for ${p.label}`}
-                        title={`View ${categoryLabel} transactions for ${p.label}`}
-                      >
-                        {fmt(isExpense ? Math.abs(val) : val)}
-                      </button>
-                    ) : val !== 0 ? (
-                      fmt(isExpense ? Math.abs(val) : val)
-                    ) : (
-                      ''
-                    )}
-                  </td>
-                )
-              })}
-              <td
-                className={`budget-td budget-td--total ${showPct ? 'budget-td--pct' : `budget-td--number${isExpense && total > 0 ? ' refund' : ''}`}`}
-              >
-                {showPct ? getCategoryPct(cat) : total !== 0 ? fmt(isExpense ? Math.abs(total) : total) : ''}
-              </td>
-            </tr>
-          )
-        })}
-    </>
   )
 }
 

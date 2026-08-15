@@ -1424,6 +1424,12 @@ const Transactions: FC = () => {
                 <dt>Total spending</dt>
                 <dd>{formatCurrency(summary.totalSpending)}</dd>
               </div>
+              <div className="txn-summary-item txn-summary-item--net">
+                <dt>Net total</dt>
+                <dd className={summary.totalIncome - summary.totalSpending > 0 ? 'txn-amount-positive' : ''}>
+                  {formatSignedCurrency(summary.totalIncome - summary.totalSpending)}
+                </dd>
+              </div>
               <div className="txn-summary-item">
                 <dt>First transaction</dt>
                 <dd>{summary.firstTransaction ? formatDate(summary.firstTransaction) : '—'}</dd>

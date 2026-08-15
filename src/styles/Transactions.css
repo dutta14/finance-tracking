@@ -905,6 +905,12 @@
   min-width: 0;
 }
 
+.txn-summary-item--net {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
 .txn-download-link {
   display: inline-flex;
   color: var(--accent, #3b82f6);

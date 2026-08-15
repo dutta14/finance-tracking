@@ -276,6 +276,12 @@ body.dark .budget-title {
 .budget-table-section {
   margin-bottom: 2rem;
 }
+.budget-table-group-block {
+  margin-bottom: 1.25rem;
+}
+.budget-table-group-block:last-child {
+  margin-bottom: 0;
+}
 .budget-table-title {
   font-size: var(--fs-xl);
   font-weight: var(--fw-semibold);
@@ -470,6 +476,14 @@ body.dark .budget-title {
 }
 
 /* Grand total */
+.budget-tr--group-total {
+  background: var(--color-bg);
+}
+.budget-tr--group-total .budget-td {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
 .budget-tr--grand-total {
   background: var(--accent-lighter);
 }
