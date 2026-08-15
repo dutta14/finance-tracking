@@ -1660,6 +1660,9 @@ body.dark {
   transition: opacity 0.15s ease;
   pointer-events: none;
   white-space: nowrap;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 .cashflow-line-endpoint:hover .cashflow-line-dot-tooltip {
   opacity: 1;

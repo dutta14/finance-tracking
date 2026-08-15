@@ -262,7 +262,7 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
                       stroke="var(--color-surface)"
                       strokeWidth={2}
                     />
-                    <foreignObject x={cx - 190} y={cy - 30} width={180} height={60} className="cashflow-line-fo">
+                    <foreignObject x={cx - 190} y={cy - 62} width={180} height={60} className="cashflow-line-fo">
                       <div className="cashflow-line-dot-tooltip">
                         <div className="cashflow-line-dot-row">
                           <span>Average</span>
