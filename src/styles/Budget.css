@@ -277,7 +277,7 @@ body.dark .budget-title {
   margin-bottom: 2rem;
 }
 .budget-table-group-block {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 .budget-table-group-block:last-child {
   margin-bottom: 0;
@@ -304,7 +304,7 @@ body.dark .budget-title {
 
 /* Table header */
 .budget-th {
-  padding: 0.5rem 0.25rem;
+  padding: 0.65rem 0.5rem;
   text-align: right;
   font-weight: var(--fw-semibold);
   font-size: var(--fs-sm);
@@ -325,22 +325,16 @@ body.dark .budget-title {
   font-size: var(--fs-sm);
 }
 .budget-th--month {
-  cursor: pointer;
+  cursor: default;
 }
 .budget-th--month:hover {
-  background: var(--accent-lighter);
+  background: var(--color-bg);
 }
 .budget-th--month.has-data {
-  color: var(--accent);
+  color: var(--color-text-muted);
 }
 .budget-th-dot {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  margin-left: 3px;
-  vertical-align: middle;
+  display: none;
 }
 .budget-th--total {
   width: 60px;
@@ -362,7 +356,7 @@ body.dark .budget-title {
 
 /* Table cells */
 .budget-td {
-  padding: 0.4rem 0.25rem;
+  padding: 0.7rem 0.5rem;
   border-bottom: 1px solid var(--color-surface-hover);
   white-space: nowrap;
   font-size: var(--fs-sm);
@@ -420,8 +414,8 @@ body.dark .budget-title {
 }
 .budget-table-link:hover,
 .budget-table-link:focus-visible {
-  color: var(--accent);
-  text-decoration-color: currentColor;
+  color: inherit;
+  text-decoration-color: transparent;
 }
 .budget-table-link:focus-visible {
   outline: 2px solid var(--accent);
@@ -497,6 +491,7 @@ body.dark .budget-title {
 /* Aggregated row */
 .budget-tr--agg-row .budget-td {
   padding: 0.55rem 0.5rem;
+  color: var(--color-text-muted);
 }
 .budget-tr--agg-row .budget-td--number,
 .budget-tr--agg-row .budget-td--pct {

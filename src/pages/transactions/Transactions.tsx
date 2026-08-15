@@ -1399,7 +1399,7 @@ const Transactions: FC = () => {
                 <dd>{summary.totalTransactions}</dd>
               </div>
               <div className="txn-summary-item">
-                <dt>Largest transaction</dt>
+                <dt>Largest income</dt>
                 <dd className={summary.largestIncome !== null ? 'txn-amount-positive' : ''}>
                   {summary.largestIncome !== null ? formatSignedCurrency(summary.largestIncome) : '—'}
                 </dd>
@@ -1415,9 +1415,17 @@ const Transactions: FC = () => {
                 </dd>
               </div>
               <div className="txn-summary-item">
+                <dt>First transaction</dt>
+                <dd>{summary.firstTransaction ? formatDate(summary.firstTransaction) : '—'}</dd>
+              </div>
+              <div className="txn-summary-item">
+                <dt>Last transaction</dt>
+                <dd>{summary.lastTransaction ? formatDate(summary.lastTransaction) : '—'}</dd>
+              </div>
+              <div className="txn-summary-item">
                 <dt>Total income</dt>
                 <dd className={summary.totalIncome > 0 ? 'txn-amount-positive' : ''}>
-                  {formatSignedCurrency(summary.totalIncome)}
+                  {formatCurrency(summary.totalIncome)}
                 </dd>
               </div>
               <div className="txn-summary-item">
@@ -1425,18 +1433,8 @@ const Transactions: FC = () => {
                 <dd>{formatCurrency(summary.totalSpending)}</dd>
               </div>
               <div className="txn-summary-item txn-summary-item--net">
-                <dt>Net total</dt>
-                <dd className={summary.totalIncome - summary.totalSpending > 0 ? 'txn-amount-positive' : ''}>
-                  {formatSignedCurrency(summary.totalIncome - summary.totalSpending)}
-                </dd>
-              </div>
-              <div className="txn-summary-item">
-                <dt>First transaction</dt>
-                <dd>{summary.firstTransaction ? formatDate(summary.firstTransaction) : '—'}</dd>
-              </div>
-              <div className="txn-summary-item">
-                <dt>Last transaction</dt>
-                <dd>{summary.lastTransaction ? formatDate(summary.lastTransaction) : '—'}</dd>
+                <dt>{summary.totalIncome >= summary.totalSpending ? 'Net income' : 'Net spending'}</dt>
+                <dd>{formatCurrency(Math.abs(summary.totalSpending - summary.totalIncome))}</dd>
               </div>
             </dl>
           </div>
