@@ -470,7 +470,7 @@ const CategoryGroupManager: FC<CategoryGroupManagerProps> = ({
                       }}
                     >
                       {group.name}
-                      <span className="budget-group-count">{group.displayCategories.length}</span>
+                      <span className="budget-group-count">{group.displayCategories.length} {group.displayCategories.length === 1 ? 'category' : 'categories'}</span>
                     </span>
                   )}
                   {!isProtected && (
