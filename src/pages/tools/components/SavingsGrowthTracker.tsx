@@ -1,6 +1,6 @@
 import { FC, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { loadBudgetStore } from '../../budget/utils/budgetStorage'
+import { loadBudgetStore, getIncomeGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
@@ -56,6 +56,10 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
     const groups = store.categoryGroups || []
     const removedCats = new Set(groups.find(g => g.id === REMOVED_GROUP_ID)?.categories || [])
 
+    // Use income group membership as source of truth (same as Budget page)
+    const incomeGroups = getIncomeGroups(groups)
+    const incomeCatSet = new Set(incomeGroups.flatMap(g => (g.id !== REMOVED_GROUP_ID ? g.categories : [])))
+
     const yearSet = new Set<number>()
     for (const key of Object.keys(store.csvs)) {
       yearSet.add(parseInt(key.split('-')[0], 10))
@@ -85,14 +89,12 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
 
       let totalIncome = 0
       let totalExpense = 0
-      Object.entries(catMonthSums).forEach(([, months]) => {
-        const monthVals = Object.values(months)
-        const hasNeg = monthVals.some(v => v < 0)
-        const sum = monthVals.reduce((s, v) => s + v, 0)
-        if (hasNeg) {
-          totalExpense += Math.abs(sum)
-        } else {
+      Object.entries(catMonthSums).forEach(([cat, months]) => {
+        const sum = Object.values(months).reduce((s, v) => s + v, 0)
+        if (incomeCatSet.has(cat)) {
           totalIncome += sum
+        } else {
+          totalExpense += Math.abs(sum)
         }
       })
 

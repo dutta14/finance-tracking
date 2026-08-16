@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback } from 'react'
+import React, { FC, useState, useMemo, useCallback } from 'react'
 import {
   ResponsiveContainer,
   LineChart,
@@ -27,9 +27,31 @@ interface MiniChartsProps {
   onNavigate: () => void
 }
 
+interface ChartDatum {
+  month: string
+  label: string
+  fi: number
+  gw: number
+  netWorth: number
+  assets: number
+  liabilities: number
+}
+
+type ChartMetricKey = 'fi' | 'gw' | 'netWorth' | 'assets' | 'liabilities'
+
+interface TooltipPayloadItem {
+  color?: string
+  dataKey?: string | number | ((obj: unknown) => unknown)
+  name?: string | number
+  value?: unknown
+}
+
+const isChartMetricKey = (dataKey: string): dataKey is ChartMetricKey =>
+  ['fi', 'gw', 'netWorth', 'assets', 'liabilities'].includes(dataKey)
+
 const CHART_OPTIONS: { key: MiniChartType; label: string }[] = [
-  { key: 'fi-gw', label: 'FI vs GW' },
   { key: 'net-worth', label: 'Net Worth' },
+  { key: 'fi-gw', label: 'FI vs GW' },
   { key: 'assets-liabilities', label: 'Assets / Liabilities' },
 ]
 
@@ -54,7 +76,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     [balanceMap],
   )
 
-  const chartData = useMemo(() => {
+  const chartData = useMemo<ChartDatum[]>(() => {
     return filteredMonths.map(month => {
       const fi = sumForMonth(fiAccounts, month)
       const gw = sumForMonth(gwAccounts, month)
@@ -108,6 +130,121 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
   }
   const tooltipLabelStyle = { color: textColor, fontSize: 10, fontWeight: 500, marginBottom: 2 }
   const tooltipItemStyle = { color: tooltipText, fontSize: 11, fontWeight: 600, padding: 0 }
+  const positiveDeltaColor = '#16a34a'
+  const negativeDeltaColor = '#dc2626'
+  const getRawTooltipValue = useCallback((point: ChartDatum, dataKey?: ChartMetricKey) => (dataKey ? point[dataKey] : null), [])
+  const getTooltipValue = useCallback(
+    (point: ChartDatum, dataKey?: ChartMetricKey) => {
+      if (!dataKey) return null
+      const value = point[dataKey]
+      return typeof value === 'number' ? (chartType === 'assets-liabilities' ? Math.abs(value) : value) : null
+    },
+    [chartType],
+  )
+  const formatDelta = useCallback((value: number, prevValue: number) => {
+    const delta = value - prevValue
+    const sign = delta >= 0 ? '+' : '-'
+    const amount = `${sign}${formatCurrency(Math.abs(delta))}`
+    if (prevValue === 0) return amount
+    const pct = `${sign}${((Math.abs(delta) / Math.abs(prevValue)) * 100).toFixed(1)}%`
+    return `${amount} (${pct})`
+  }, [])
+  const renderTooltip = useCallback(
+    ({
+      active,
+      label,
+      payload,
+    }: {
+      active?: boolean
+      label?: string | number
+      payload?: readonly TooltipPayloadItem[]
+    }) => {
+      if (!active || !payload?.length || typeof label !== 'string') return null
+      const index = chartData.findIndex(point => point.label === label)
+      if (index < 0) return null
+      const prevPoint = index > 0 ? chartData[index - 1] : null
+      const seen = new Set<string>()
+      const items = payload
+        .map(item => {
+          if (
+            typeof item.name !== 'string' ||
+            typeof item.dataKey !== 'string' ||
+            !isChartMetricKey(item.dataKey) ||
+            item.value == null ||
+            seen.has(item.dataKey)
+          ) {
+            return null
+          }
+          seen.add(item.dataKey)
+          const value = getTooltipValue(chartData[index], item.dataKey)
+          if (value == null) return null
+          const prevValue = prevPoint ? getTooltipValue(prevPoint, item.dataKey) : null
+          const rawValue = getRawTooltipValue(chartData[index], item.dataKey)
+          const prevRawValue = prevPoint ? getRawTooltipValue(prevPoint, item.dataKey) : null
+          const deltaColor =
+            rawValue != null && prevRawValue != null
+              ? rawValue - prevRawValue > 0
+                ? positiveDeltaColor
+                : rawValue - prevRawValue < 0
+                  ? negativeDeltaColor
+                  : tooltipText
+              : null
+          return { ...item, value, delta: prevValue == null ? null : formatDelta(value, prevValue), deltaColor }
+        })
+        .filter((item): item is TooltipPayloadItem & { value: number; delta: string | null; deltaColor: string | null } => item !== null)
+      if (!items.length) return null
+      return (
+        <div style={tooltipStyle}>
+          <div style={tooltipLabelStyle}>{label}</div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr 1fr',
+              alignItems: 'baseline',
+              columnGap: 14,
+              rowGap: 4,
+            }}
+          >
+            {items.map((item, itemIndex) => (
+              <React.Fragment key={`${String(item.dataKey)}-${itemIndex}`}>
+                <div style={{ ...tooltipItemStyle, whiteSpace: 'nowrap' }}>{item.name}</div>
+                <div style={{ ...tooltipItemStyle, whiteSpace: 'nowrap', textAlign: 'right' }}>
+                  {formatCurrency(item.value)}
+                </div>
+                {item.delta ? (
+                  <div
+                    style={{
+                      color: item.deltaColor ?? tooltipText,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      textAlign: 'right',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {item.delta}
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )
+    },
+    [
+      chartData,
+      formatDelta,
+      getRawTooltipValue,
+      getTooltipValue,
+      negativeDeltaColor,
+      positiveDeltaColor,
+      tooltipLabelStyle,
+      tooltipStyle,
+      tooltipItemStyle,
+      tooltipText,
+    ],
+  )
   const shortCurrency = (v: number) => {
     const abs = Math.abs(v)
     if (abs >= 1_000_000) return `${v < 0 ? '-' : ''}$${(abs / 1_000_000).toFixed(1)}M`
@@ -210,12 +347,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 width={52}
               />
               <Tooltip
-                contentStyle={tooltipStyle}
-                labelStyle={tooltipLabelStyle}
-                itemStyle={tooltipItemStyle}
-                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
-                  formatCurrency(Number(v))
-                }
+                content={renderTooltip}
               />
               <Legend content={renderLegend} />
               <Line
@@ -258,12 +390,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 width={52}
               />
               <Tooltip
-                contentStyle={tooltipStyle}
-                labelStyle={tooltipLabelStyle}
-                itemStyle={tooltipItemStyle}
-                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
-                  formatCurrency(Number(v))
-                }
+                content={renderTooltip}
               />
               <Line
                 type="natural"
@@ -296,12 +423,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 width={52}
               />
               <Tooltip
-                contentStyle={tooltipStyle}
-                labelStyle={tooltipLabelStyle}
-                itemStyle={tooltipItemStyle}
-                formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
-                  formatCurrency(Math.abs(Number(v)))
-                }
+                content={renderTooltip}
               />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />

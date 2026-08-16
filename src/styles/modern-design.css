@@ -16,6 +16,30 @@ body.modern-design {
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   font-variant-numeric: tabular-nums;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+body.modern-design *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+body.modern-design *::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.modern-design *::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+body.modern-design::-webkit-scrollbar {
+  width: 6px;
+}
+body.modern-design::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.modern-design::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
 }
 
 body.modern-design {
@@ -374,6 +398,9 @@ body.modern-design .budget-th {
   text-align: right;
   text-transform: none;
   letter-spacing: normal;
+}
+body.modern-design .budget-th--category {
+  text-align: left;
 }
 
 /* ─── Page Title Typography (Kai spec) ─── */

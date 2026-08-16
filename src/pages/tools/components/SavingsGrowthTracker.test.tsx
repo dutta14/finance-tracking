@@ -21,6 +21,9 @@ vi.mock('../../../contexts/DataContext', () => ({
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
   loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  getIncomeGroups: vi.fn((groups: Array<{ type?: string; id?: string }>) =>
+    groups.filter(g => g.type === 'income' || g.id === 'income-others'),
+  ),
 }))
 
 vi.mock('../../budget/utils/csvParser', () => ({
@@ -101,7 +104,7 @@ describe('SavingsGrowthTracker', () => {
   it('renders savings metrics and net worth in each year card', () => {
     vi.mocked(loadBudgetStore).mockReturnValue({
       csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2024],
     })
@@ -182,7 +185,7 @@ describe('SavingsGrowthTracker', () => {
         '2022-06': { csv: '2022-csv', month: '2022-06', uploadedAt: '' },
         '2023-06': { csv: '2023-csv', month: '2023-06', uploadedAt: '' },
       },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2022, 2023],
     })
@@ -442,7 +445,10 @@ describe('SavingsGrowthTracker', () => {
   it('excludes removed categories from budget calculations', () => {
     vi.mocked(loadBudgetStore).mockReturnValue({
       csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [{ id: 'removed', name: 'Removed', categories: ['OldCat'] }],
+      categoryGroups: [
+        { id: 'removed', name: 'Removed', categories: ['OldCat'] },
+        { id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' },
+      ],
       configs: {},
       years: [2024],
     })

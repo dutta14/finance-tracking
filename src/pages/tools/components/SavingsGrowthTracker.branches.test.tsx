@@ -30,6 +30,9 @@ vi.mock('../../../contexts/DataContext', () => ({
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
   loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  getIncomeGroups: vi.fn((groups: Array<{ type?: string; id?: string }>) =>
+    groups.filter(g => g.type === 'income' || g.id === 'income-others'),
+  ),
 }))
 
 vi.mock('../../budget/utils/csvParser', () => ({
@@ -177,7 +180,7 @@ describe('SavingsGrowthTracker branch coverage', () => {
         '2023-01': { csv: '2023-csv', month: '2023-01', uploadedAt: '' },
         '2024-01': { csv: '2024-csv', month: '2024-01', uploadedAt: '' },
       },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2023, 2024],
     })
@@ -239,7 +242,7 @@ describe('SavingsGrowthTracker branch coverage', () => {
   it('does not make budget-derived net income editable on the savings tab', () => {
     vi.mocked(loadBudgetStore).mockReturnValue({
       csvs: { '2024-01': { csv: '2024-csv', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2024],
     })

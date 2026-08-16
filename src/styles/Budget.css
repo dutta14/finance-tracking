@@ -35,6 +35,7 @@
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 2rem;
+  padding-right: 0.5rem;
 }
 .budget-title {
   font-size: var(--fs-2xl);
@@ -317,7 +318,7 @@ body.dark .budget-title {
 }
 .budget-th--category {
   text-align: left;
-  width: 110px;
+  width: 150px;
   position: sticky;
   left: 0;
   z-index: 2;
@@ -346,12 +347,14 @@ body.dark .budget-title {
   user-select: none;
 }
 .budget-th--switchable:hover {
-  color: var(--accent);
+  color: var(--color-text-heading);
 }
 
 .budget-td--total {
   background: var(--color-bg);
   border-left: 2px solid var(--color-border);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted) !important;
 }
 
 /* Table cells */
@@ -370,8 +373,8 @@ body.dark .budget-title {
   z-index: 1;
   background: var(--color-surface);
   color: var(--color-text-heading);
-  width: 110px;
-  max-width: 110px;
+  width: 150px;
+  max-width: 150px;
   font-size: var(--fs-sm);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -416,6 +419,8 @@ body.dark .budget-title {
 .budget-table-link:focus-visible {
   color: inherit;
   text-decoration-color: transparent;
+  background: color-mix(in srgb, var(--color-border) 30%, transparent);
+  border-radius: 4px;
 }
 .budget-table-link:focus-visible {
   outline: 2px solid var(--accent);
@@ -479,13 +484,13 @@ body.dark .budget-title {
   padding-bottom: 0.5rem;
 }
 .budget-tr--grand-total {
-  background: var(--accent-lighter);
+  background: color-mix(in srgb, var(--color-border) 20%, var(--color-bg));
 }
 .budget-tr--grand-total .budget-td {
-  border-top: 2px solid var(--color-border);
+  border-top: 3px solid var(--color-text-muted);
   border-bottom: none;
-  padding-top: 0.6rem;
-  padding-bottom: 0.6rem;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
 }
 
 /* Aggregated row */

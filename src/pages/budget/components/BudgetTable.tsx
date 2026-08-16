@@ -271,7 +271,7 @@ const BudgetTable: FC<BudgetTableProps> = ({
               </thead>
               <tbody>
                 {[...group.categories]
-                  .sort((a, b) => a.localeCompare(b))
+                  .sort((a, b) => Math.abs(getCategoryTotal(b)) - Math.abs(getCategoryTotal(a)))
                   .map(cat => {
                     const total = getCategoryTotal(cat)
                     const categoryLabel = displayCat(cat, group.name)

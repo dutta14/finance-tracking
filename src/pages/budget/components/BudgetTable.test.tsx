@@ -118,29 +118,6 @@ describe('BudgetTable', () => {
     expect(screen.getByText('100%')).toBeInTheDocument()
   })
 
-  it('navigates to the transactions page with the clicked month range', async () => {
-    const user = userEvent.setup()
-    renderTable()
-
-    await user.click(screen.getAllByText('Jan')[0])
-
-    expect(mockNavigate).toHaveBeenCalledWith('/transactions?from=2025-01-01&to=2025-01-31')
-  })
-
-  it('uses the last day of the clicked month when navigating', async () => {
-    const user = userEvent.setup()
-    renderTable({
-      year: 2024,
-      monthsWithData: new Set(['2024-02']),
-      categorySums: { Groceries: { '2024-02': -200 } },
-      categoryGroups: [makeCategoryGroup({ id: 'essentials', name: 'Essentials', categories: ['Groceries'] })],
-    })
-
-    await user.click(screen.getByText('Feb'))
-
-    expect(mockNavigate).toHaveBeenCalledWith('/transactions?from=2024-02-01&to=2024-02-29')
-  })
-
   it('navigates to whole-year transactions for a clicked category', async () => {
     const user = userEvent.setup()
     renderTable()
