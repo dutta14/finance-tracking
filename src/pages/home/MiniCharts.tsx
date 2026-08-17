@@ -1,8 +1,9 @@
 import React, { FC, useState, useMemo, useCallback } from 'react'
 import {
   ResponsiveContainer,
-  LineChart,
+  ComposedChart,
   Line,
+  Area,
   BarChart,
   Bar,
   XAxis,
@@ -329,7 +330,17 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
       <div className="home-mini-chart-area">
         {chartType === 'fi-gw' ? (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
+            <ComposedChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="miniGradFi" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="miniGradGw" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
               <XAxis
                 dataKey="label"
@@ -350,6 +361,26 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 content={renderTooltip}
               />
               <Legend content={renderLegend} />
+              <Area
+                type="natural"
+                dataKey="fi"
+                name="FI"
+                stroke="none"
+                fill="url(#miniGradFi)"
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+              />
+              <Area
+                type="natural"
+                dataKey="gw"
+                name="GW"
+                stroke="none"
+                fill="url(#miniGradGw)"
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+              />
               <Line
                 type="natural"
                 dataKey="fi"
@@ -368,11 +399,17 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 dot={false}
                 activeDot={{ r: 3, strokeWidth: 0, fill: '#f59e0b' }}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         ) : chartType === 'net-worth' ? (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
+            <ComposedChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="miniGradNw" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
               <XAxis
                 dataKey="label"
@@ -392,6 +429,16 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
               <Tooltip
                 content={renderTooltip}
               />
+              <Area
+                type="natural"
+                dataKey="netWorth"
+                name="Net Worth"
+                stroke="none"
+                fill="url(#miniGradNw)"
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+              />
               <Line
                 type="natural"
                 dataKey="netWorth"
@@ -401,7 +448,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 dot={false}
                 activeDot={{ r: 3, strokeWidth: 0, fill: '#10b981' }}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={200}>

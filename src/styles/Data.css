@@ -126,6 +126,11 @@
   position: relative;
 }
 
+.data-toolbar-count {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
 .data-filter-group {
   display: flex;
   gap: 0.25rem;
@@ -1318,7 +1323,7 @@ body.dark .data-add-month-popover {
 .data-group-member[draggable] {
   cursor: grab;
   user-select: none;
-  padding: 0.15rem 0.4rem;
+  padding: 0.35rem 0.5rem;
   border-radius: var(--radius);
   transition: background 0.12s;
 }

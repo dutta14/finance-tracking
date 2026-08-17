@@ -345,15 +345,16 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           </span>
         )}
         {proseParts.clauses.map(clause => (
-          <span key={clause.label} className="nw-prose-line">
-            <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel} (
-            {clause.children.map((child, childIdx) => (
-              <span key={`${clause.label}-${child.label}`}>
-                {childIdx > 0 ? ', ' : ''}
-                <strong>{child.amount}</strong> {child.label}
-              </span>
-            ))}
-            )
+          <span key={clause.label} className="nw-prose-line nw-prose-line--goal">
+            <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel}
+            <span className="nw-prose-subline">
+              {clause.children.map((child, childIdx) => (
+                <span key={`${clause.label}-${child.label}`}>
+                  {childIdx > 0 ? ', ' : ''}
+                  <strong>{child.amount}</strong> {child.label}
+                </span>
+              ))}
+            </span>
           </span>
         ))}
       </p>

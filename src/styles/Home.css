@@ -260,6 +260,21 @@
   margin-bottom: 0.5rem;
 }
 
+.nw-prose-line--goal {
+  display: block;
+}
+
+.nw-prose-subline {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+.nw-prose-subline strong {
+  font-weight: var(--fw-medium);
+}
+
 .nw-prose-line:last-child {
   margin-bottom: 0;
 }
