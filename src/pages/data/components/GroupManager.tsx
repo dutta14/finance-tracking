@@ -1,11 +1,14 @@
-import { FC, useState, useRef } from 'react'
+import { FC, useState, useRef, useEffect } from 'react'
 import { Account } from '../types'
 
 interface GroupManagerProps {
   accounts: Account[]
   existingGroups: string[]
+  ownerLabels: Record<string, string>
   dragAccountId: number | null
   dropTarget: string | null
+  startCreating?: boolean
+  onStartCreatingHandled?: () => void
   onSetDragAccountId: (id: number | null) => void
   onSetDropTarget: (target: string | null) => void
   onUpdate: (id: number, updates: Partial<Account>) => void
@@ -15,8 +18,11 @@ interface GroupManagerProps {
 const GroupManager: FC<GroupManagerProps> = ({
   accounts,
   existingGroups,
+  ownerLabels,
   dragAccountId,
   dropTarget,
+  startCreating,
+  onStartCreatingHandled,
   onSetDragAccountId,
   onSetDropTarget,
   onUpdate,
@@ -30,17 +36,55 @@ const GroupManager: FC<GroupManagerProps> = ({
   const [pendingGroupName, setPendingGroupName] = useState<string | null>(null)
   const newGroupRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    if (startCreating) {
+      setCreatingGroup(true)
+      setPendingGroupName(null)
+      onStartCreatingHandled?.()
+      setTimeout(() => newGroupRef.current?.focus(), 0)
+    }
+  }, [startCreating, onStartCreatingHandled])
+
+  // Build composite group entries: split same-name groups by owner
+  const groupEntries: { name: string; ownerKey: string; members: typeof accounts }[] = []
+  for (const g of existingGroups) {
+    const groupAccounts = accounts.filter(a => a.group === g)
+    // Split by owner type; joint accounts stay with joint
+    const byOwner = new Map<string, typeof accounts>()
+    for (const a of groupAccounts) {
+      const key = a.owner
+      if (!byOwner.has(key)) byOwner.set(key, [])
+      byOwner.get(key)!.push(a)
+    }
+    if (byOwner.size === 1) {
+      const [ownerKey, members] = [...byOwner.entries()][0]
+      groupEntries.push({ name: g, ownerKey, members })
+    } else {
+      for (const [ownerKey, members] of byOwner) {
+        groupEntries.push({ name: g, ownerKey, members })
+      }
+    }
+  }
+  // Sort: active groups first, then inactive
+  groupEntries.sort((a, b) => {
+    const aInactive = a.members.every(x => x.status === 'inactive') ? 1 : 0
+    const bInactive = b.members.every(x => x.status === 'inactive') ? 1 : 0
+    return aInactive - bInactive
+  })
+
   return (
     <div className="data-groups-page">
-      {existingGroups.map(g => {
-        const members = accounts.filter(a => a.group === g)
+      {groupEntries.map(({ name: g, ownerKey, members }) => {
+        const compositeKey = `${g}::${ownerKey}`
+        const allInactive = members.every(a => a.status === 'inactive')
+        const ownerLabel = ownerLabels[ownerKey] || ownerKey
         return (
           <div
-            key={g}
-            className={`data-group-card${dropTarget === g ? ' data-group-card--drop' : ''}`}
+            key={compositeKey}
+            className={`data-group-card${allInactive ? ' data-group-card--all-inactive' : ''}${dropTarget === compositeKey ? ' data-group-card--drop' : ''}`}
             onDragOver={e => {
               e.preventDefault()
-              onSetDropTarget(g)
+              onSetDropTarget(compositeKey)
             }}
             onDragLeave={e => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) onSetDropTarget(null)
@@ -54,7 +98,7 @@ const GroupManager: FC<GroupManagerProps> = ({
             }}
           >
             <div className="data-group-card-header">
-              {renamingGroup === g ? (
+              {renamingGroup === compositeKey ? (
                 <input
                   ref={renameInputRef}
                   className="data-group-rename-input"
@@ -75,11 +119,12 @@ const GroupManager: FC<GroupManagerProps> = ({
               ) : (
                 <>
                   <span className="data-group-card-name">{g}</span>
+                  <span className="data-group-card-owner">{ownerLabel}</span>
                   <button
                     className="data-group-rename-btn"
                     title="Rename group"
                     onClick={() => {
-                      setRenamingGroup(g)
+                      setRenamingGroup(compositeKey)
                       setRenameValue(g)
                       setTimeout(() => renameInputRef.current?.select(), 0)
                     }}
@@ -98,10 +143,10 @@ const GroupManager: FC<GroupManagerProps> = ({
               )}
             </div>
             <div className="data-group-card-members">
-              {members.map(a => (
+              {[...members].sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0)).map(a => (
                 <span
                   key={a.id}
-                  className="data-group-member"
+                  className={`data-group-member${a.status === 'inactive' ? ' data-group-member--inactive' : ''}`}
                   draggable
                   onDragStart={() => onSetDragAccountId(a.id)}
                   onDragEnd={() => {
@@ -111,7 +156,6 @@ const GroupManager: FC<GroupManagerProps> = ({
                 >
                   <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
                   {a.name}
-                  {a.status === 'inactive' && <span className="data-group-member-inactive">inactive</span>}
                 </span>
               ))}
             </div>
@@ -187,18 +231,7 @@ const GroupManager: FC<GroupManagerProps> = ({
             <span className="data-group-empty-hint">Drag accounts here</span>
           </div>
         </div>
-      ) : (
-        <button
-          className="data-group-add-btn"
-          onClick={() => {
-            setCreatingGroup(true)
-            setPendingGroupName(null)
-            setTimeout(() => newGroupRef.current?.focus(), 0)
-          }}
-        >
-          + New Group
-        </button>
-      )}
+      ) : null}
 
       {(() => {
         const ungrouped = accounts.filter(a => !a.group)
@@ -224,23 +257,31 @@ const GroupManager: FC<GroupManagerProps> = ({
             <div className="data-group-card-header">
               <span className="data-group-card-name data-group-card-name--muted">Ungrouped</span>
             </div>
-            <div className="data-group-card-members">
-              {ungrouped.map(a => (
-                <span
-                  key={a.id}
-                  className="data-group-member"
-                  draggable
-                  onDragStart={() => onSetDragAccountId(a.id)}
-                  onDragEnd={() => {
-                    onSetDragAccountId(null)
-                    onSetDropTarget(null)
-                  }}
-                >
-                  <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
-                  {a.name}
-                  {a.status === 'inactive' && <span className="data-group-member-inactive">inactive</span>}
-                </span>
-              ))}
+            <div className="data-group-card-members data-group-card-members--ungrouped">
+              {(['primary', 'partner', 'joint'] as const).map(ownerType => {
+                const ownerAccounts = ungrouped.filter(a => a.owner === ownerType)
+                if (ownerAccounts.length === 0 && ownerType !== 'primary') return <div key={ownerType} />
+                return (
+                  <div key={ownerType} className="data-group-ungrouped-col">
+                    <span className="data-group-ungrouped-col-label">{ownerLabels[ownerType]}</span>
+                    {[...ownerAccounts].sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0)).map(a => (
+                      <span
+                        key={a.id}
+                        className={`data-group-member${a.status === 'inactive' ? ' data-group-member--inactive' : ''}`}
+                        draggable
+                        onDragStart={() => onSetDragAccountId(a.id)}
+                        onDragEnd={() => {
+                          onSetDragAccountId(null)
+                          onSetDropTarget(null)
+                        }}
+                      >
+                        <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
+                        {a.name}
+                      </span>
+                    ))}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )

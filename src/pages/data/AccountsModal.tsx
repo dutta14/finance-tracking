@@ -39,11 +39,12 @@ const AccountsModal: FC<AccountsModalProps> = ({
   const existingGroups = [...new Set(accounts.map(a => a.group).filter((g): g is string => !!g))]
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'groups'>('all')
+  const [filter, setFilter] = useState<'all' | 'groups'>('all')
   const [dragAccountId, setDragAccountId] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
+  const [triggerNewGroup, setTriggerNewGroup] = useState(false)
   const isGroupsView = filter === 'groups'
-  const statusFilter = isGroupsView ? 'all' : filter
+  const statusFilter = 'all'
 
   const {
     sortCol,
@@ -115,22 +116,6 @@ const AccountsModal: FC<AccountsModalProps> = ({
             </button>
             <button
               role="tab"
-              aria-selected={filter === 'active'}
-              className={`data-filter-btn${filter === 'active' ? ' active' : ''}`}
-              onClick={() => setFilter('active')}
-            >
-              Active ({accounts.filter(a => a.status === 'active').length})
-            </button>
-            <button
-              role="tab"
-              aria-selected={filter === 'inactive'}
-              className={`data-filter-btn${filter === 'inactive' ? ' active' : ''}`}
-              onClick={() => setFilter('inactive')}
-            >
-              Inactive ({accounts.filter(a => a.status === 'inactive').length})
-            </button>
-            <button
-              role="tab"
               aria-selected={filter === 'groups'}
               className={`data-filter-btn${filter === 'groups' ? ' active' : ''}`}
               onClick={() => setFilter('groups')}
@@ -138,9 +123,13 @@ const AccountsModal: FC<AccountsModalProps> = ({
               Groups{existingGroups.length > 0 ? ` (${existingGroups.length})` : ''}
             </button>
           </div>
-          {!isGroupsView && (
+          {!isGroupsView ? (
             <button className="data-add-btn data-add-btn--primary" onClick={() => setShowAddForm(true)}>
               + Add Account
+            </button>
+          ) : (
+            <button className="data-add-btn data-add-btn--primary" onClick={() => setTriggerNewGroup(true)}>
+              + Add Group
             </button>
           )}
         </div>
@@ -162,8 +151,11 @@ const AccountsModal: FC<AccountsModalProps> = ({
           <GroupManager
             accounts={accounts}
             existingGroups={existingGroups}
+            ownerLabels={ownerLabels}
             dragAccountId={dragAccountId}
             dropTarget={dropTarget}
+            startCreating={triggerNewGroup}
+            onStartCreatingHandled={() => setTriggerNewGroup(false)}
             onSetDragAccountId={setDragAccountId}
             onSetDropTarget={setDropTarget}
             onUpdate={onUpdate}

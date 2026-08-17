@@ -45,12 +45,16 @@ const AccountRow: FC<AccountRowProps> = ({
         <div className="data-account-name">
           <span>{account.name}</span>
           {account.institution && <span className="data-account-institution">{account.institution}</span>}
-          {account.group && <span className="data-account-parent">↳ {account.group}</span>}
-          {account.linkedAccountId != null &&
-            (() => {
-              const linked = accounts.find(a => a.id === account.linkedAccountId)
-              return linked ? <span className="data-account-linked">⛓ {linked.name}</span> : null
-            })()}
+          {(account.group || account.linkedAccountId != null) && (
+            <div className="data-account-meta">
+              {account.group && <span className="data-account-parent">↳ {account.group} · {ownerLabels[account.owner]}</span>}
+              {account.linkedAccountId != null &&
+                (() => {
+                  const linked = accounts.find(a => a.id === account.linkedAccountId)
+                  return linked ? <span className="data-account-linked">⛓ {linked.name}</span> : null
+                })()}
+            </div>
+          )}
         </div>
       </td>
       <td>
