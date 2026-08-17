@@ -13,6 +13,7 @@ vi.mock('./pages/transactions/Transactions', () => ({
 }))
 vi.mock('./pages/drive/Drive', () => ({ default: () => <div data-testid="page-drive">Drive Page</div> }))
 vi.mock('./pages/taxes/Taxes', () => ({ default: () => <div data-testid="page-taxes">Taxes Page</div> }))
+vi.mock('./pages/guide/Guide', () => ({ default: () => <div data-testid="page-guide">Guide Page</div> }))
 
 vi.mock('./search/searchIndex', () => ({
   buildIndex: vi.fn(() => []),
@@ -101,6 +102,14 @@ describe('App', () => {
     })
   })
 
+  it('navigates to Guide on sidebar click', async () => {
+    renderApp()
+    await userEvent.click(screen.getByRole('button', { name: 'User Guide' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('page-guide')).toBeInTheDocument()
+    })
+  })
+
   it('opens search modal when Search button is clicked', async () => {
     renderApp()
     await userEvent.click(screen.getByRole('button', { name: /Search/ }))
@@ -118,9 +127,6 @@ describe('App', () => {
   })
 
   it('wraps pages in Suspense boundary (fallback not testable with synchronous mocks)', () => {
-    // Lazy page mocks resolve synchronously in vitest/JSDOM, so the Suspense
-    // fallback never actually renders. This verifies the main content area
-    // renders, confirming the Suspense wrapper does not break rendering.
     renderApp()
     expect(screen.getByRole('main')).toBeInTheDocument()
   })
@@ -195,6 +201,7 @@ describe('App', () => {
       ['/transactions', 'page-transactions'],
       ['/drive', 'page-drive'],
       ['/taxes', 'page-taxes'],
+      ['/guide', 'page-guide'],
     ] as const) {
       const { unmount } = render(
         <MemoryRouter initialEntries={[route]}>
@@ -227,6 +234,17 @@ describe('App', () => {
     )
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page')
+    })
+  })
+
+  it('highlights Guide in the sidebar for guide routes', async () => {
+    render(
+      <MemoryRouter initialEntries={['/guide']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'User Guide' })).toHaveAttribute('aria-current', 'page')
     })
   })
 
@@ -391,7 +409,6 @@ describe('App handleSearchAction', () => {
       expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
     })
     await userEvent.click(screen.getByText('Test Action'))
-    // Verify demo mode was activated (backup key created)
     await waitFor(() => {
       expect(localStorage.getItem('_demo-backup')).not.toBeNull()
     })
@@ -405,7 +422,6 @@ describe('App handleSearchAction', () => {
       expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
     })
     await userEvent.click(screen.getByText('Test Action'))
-    // Verify search dialog closes (export was triggered)
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
     })

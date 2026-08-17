@@ -43,7 +43,7 @@ describe('AccountRow', () => {
     renderRow()
     expect(screen.getByText('Checking Account')).toBeInTheDocument()
     expect(screen.getByText('Chase')).toBeInTheDocument()
-    expect(screen.getByText('↳ Banking')).toBeInTheDocument()
+    expect(screen.getByText(/↳ Banking/)).toBeInTheDocument()
   })
 
   it('renders correct goal type badge', () => {

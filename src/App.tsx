@@ -12,6 +12,7 @@ const Budget = lazy(() => import('./pages/budget/Budget'))
 const Transactions = lazy(() => import('./pages/transactions/Transactions'))
 const Drive = lazy(() => import('./pages/drive/Drive'))
 const Taxes = lazy(() => import('./pages/taxes/Taxes'))
+const Guide = lazy(() => import('./pages/guide/Guide'))
 import { DataProvider } from './contexts/DataContext'
 import { SettingsProvider, useSettings } from './contexts/SettingsContext'
 import { EncryptionProvider, useEncryption } from './contexts/EncryptionContext'
@@ -85,7 +86,9 @@ const AppShell: FC = () => {
               ? 'drive'
               : location.pathname === '/taxes'
                 ? 'taxes'
-                : 'home'
+                : location.pathname === '/guide'
+                  ? 'guide'
+                  : 'home'
   const setCurrentPage = (page: PageType): void => {
     navigate(
       {
@@ -96,6 +99,7 @@ const AppShell: FC = () => {
         transactions: '/transactions',
         drive: '/drive',
         taxes: '/taxes',
+        guide: '/guide',
       }[page] || '/',
     )
   }
@@ -229,6 +233,14 @@ const AppShell: FC = () => {
               element={
                 <ErrorBoundary variant="card" resetKey={location.pathname}>
                   <Taxes />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/guide"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Guide />
                 </ErrorBoundary>
               }
             />

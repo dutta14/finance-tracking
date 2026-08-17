@@ -163,14 +163,13 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
             />
           </li>
           <li className="sidebar-item">
-            <a
-              className="sidebar-link"
-              href="https://github.com/dutta14/finance-tracking#readme"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              className={`sidebar-link${currentPage === 'guide' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('guide')}
+              aria-current={currentPage === 'guide' ? 'page' : undefined}
             >
               User Guide
-            </a>
+            </button>
           </li>
         </ul>
       )}

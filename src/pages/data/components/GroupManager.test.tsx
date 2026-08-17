@@ -32,6 +32,7 @@ const investAccount: Account = {
 const defaultProps = {
   accounts: [bankingAccount, investAccount],
   existingGroups: ['Banking', 'Investments'],
+  ownerLabels: { primary: 'Primary' },
   dragAccountId: null,
   dropTarget: null,
   onSetDragAccountId: vi.fn(),
@@ -55,9 +56,9 @@ describe('GroupManager', () => {
     expect(screen.getByText('Brokerage')).toBeInTheDocument()
   })
 
-  it('shows "+ New Group" button', () => {
+  it('does not show "+ New Group" button (moved to toolbar)', () => {
     renderGroup()
-    expect(screen.getByText('+ New Group')).toBeInTheDocument()
+    expect(screen.queryByText('+ New Group')).not.toBeInTheDocument()
   })
 
   it('shows rename input when rename button clicked', () => {

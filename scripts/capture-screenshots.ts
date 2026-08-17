@@ -548,6 +548,38 @@ async function captureSettings(page: Page): Promise<void> {
   await snap(page, 'settings.png', { fullPage: false })
 }
 
+async function captureTransactions(page: Page): Promise<void> {
+  await seed(page)
+  await navigate(page, '/transactions')
+  await page.waitForSelector('.app-layout', { timeout: 10_000 })
+  await settle(page, { expectSvg: false })
+  await snap(page, 'transactions.png', { fullPage: true })
+}
+
+async function captureDrive(page: Page): Promise<void> {
+  await seed(page)
+  await navigate(page, '/drive')
+  await page.waitForSelector('.app-layout', { timeout: 10_000 })
+  await settle(page, { expectSvg: false })
+  await snap(page, 'drive.png', { fullPage: true })
+}
+
+async function captureAllocation(page: Page): Promise<void> {
+  await seed(page)
+  await navigate(page, '/net-worth/allocation')
+  await page.waitForSelector('.app-layout', { timeout: 10_000 })
+  await settle(page)
+  await snap(page, 'allocation.png', { fullPage: true })
+}
+
+async function captureGrowth(page: Page): Promise<void> {
+  await seed(page)
+  await navigate(page, '/net-worth/growth')
+  await page.waitForSelector('.app-layout', { timeout: 10_000 })
+  await settle(page)
+  await snap(page, 'growth.png', { fullPage: true })
+}
+
 /* ── Quick-start screenshots ─────────────────────────────────── */
 
 async function captureQuickstart1(page: Page): Promise<void> {
@@ -700,14 +732,18 @@ async function main(): Promise<void> {
 
   const browser = await chromium.launch({ headless: true })
   try {
-    console.log('Capturing 12 screenshots → docs/screenshots/')
+    console.log('Capturing 16 screenshots → docs/screenshots/')
 
     await withFreshPage(browser, p => captureHome(p, 'light'))
     await withFreshPage(browser, p => captureHome(p, 'dark'))
     await withFreshPage(browser, captureNetWorth)
     await withFreshPage(browser, captureGoals)
     await withFreshPage(browser, captureBudget)
+    await withFreshPage(browser, captureTransactions)
     await withFreshPage(browser, captureTaxes)
+    await withFreshPage(browser, captureDrive)
+    await withFreshPage(browser, captureAllocation)
+    await withFreshPage(browser, captureGrowth)
     await withFreshPage(browser, captureSettings)
 
     await withFreshPage(browser, captureQuickstart1)
@@ -716,7 +752,7 @@ async function main(): Promise<void> {
     await withFreshPage(browser, captureQuickstart4)
     await withFreshPage(browser, captureQuickstart5)
 
-    console.log('\nAll 12 screenshots written to', OUT_DIR)
+    console.log('\nAll 16 screenshots written to', OUT_DIR)
   } finally {
     await browser.close()
   }

@@ -2,15 +2,13 @@
 
 **Your money, in your browser, and nowhere else.**
 
-This is a personal finance app for one person, and it lives entirely in your browser. It tracks your net worth, your budget, your savings goals, and your taxes; the data can be encrypted on your device with a passphrase you choose, and never touches a server I run.  If you want a backup, it can sync to a private GitHub repository of your own. Nothing else leaves your machine, and nothing about you is for sale.
+This is a personal finance app for one person, and it lives entirely in your browser. It tracks your net worth, your budget, your transactions, your savings goals, your tax documents, and the little Sunday-morning habits that make all of that sustainable over time; the data can be encrypted on your device with a passphrase you choose, and never touches a server I run. If you want a backup, it can sync to a private GitHub repository of your own. Nothing else leaves your machine, and nothing about you is for sale.
 
 - Browser only.
 - Encrypted on your device.
 - No lock-in.
 
 ![Home dashboard, light and dark](./docs/screenshots/home-light.png)
-
-[**Open the app →**](https://anindya.dev/finance-tracking)
 
 ---
 
@@ -20,7 +18,7 @@ It is a Sunday morning and I have a spreadsheet open that I have kept, on and of
 
 The pattern repeats. The good apps die or get bought and become something else; the subscriptions keep charging long after I have stopped opening them; the free ones want my bank credentials, and somewhere down in the terms of service is a sentence about how my data may be used to improve the product, which is the polite phrasing for sold. The spreadsheets survive in a quieter way, but they live in browser tabs I forget to close and folders I forget to back up, and the formulas drift, and one day a cell refers to a sheet that no longer exists. None of it ever felt like mine. It always felt borrowed. And there is a small embarrassment, after a while, in handing the keys to your financial life to a company that needs to grow every quarter to keep its lights on, and pretending the arrangement is normal.
 
-So this is small, on purpose. It runs in your browser. If you set a passphrase, the data is encrypted before it touches your disk, and the key stays with you;  if you want a backup, you can sync to a private GitHub repository of your own, and that is the only place it ever leaves your machine. There is no account to create. There is no server I run. There is no analytics pixel sitting in the corner of the page, quietly counting how long you spent on the budget screen. It is a small app for one person to keep their own books, on a Sunday morning, in a green they did not quite pick on purpose.
+So this is small, on purpose. It runs in your browser. If you set a passphrase, the data is encrypted before it touches your disk, and the key stays with you; if you want a backup, you can sync to a private GitHub repository of your own, and that is the only place it ever leaves your machine. There is no account to create. There is no server I run. There is no analytics pixel sitting in the corner of the page, quietly counting how long you spent on the budget screen. It is a small app for one person to keep their own books, on a Sunday morning, in a green they did not quite pick on purpose.
 
 ---
 
@@ -30,11 +28,11 @@ What follows is the literal version of the promise above. Where your data lives,
 
 ### Where your data lives
 
-Your browser. Not the cloud. Every account, balance, transaction, goal, and tax document is stored in `localStorage` and `IndexedDB` on the device you're using right now. Close the tab, reopen it, the data is still there. Open it on a different device and you'll start from scratch unless you turn on GitHub Sync.
+Your browser. Not the cloud. Every account, balance, transaction, goal, tax checklist item, uploaded file, and budget record is stored in `localStorage` and `IndexedDB` on the device you're using right now. Close the tab, reopen it, the data is still there. Open it on a different device and you'll start from scratch unless you turn on GitHub Sync or import a backup.
 
 ### What "encrypted at rest" means
 
-When you set a passphrase, sensitive data is encrypted with AES-256-GCM before it's written to your browser. That includes account balances, transactions, goals, and tax documents. If someone opens devtools and inspects your storage, they see ciphertext. The encryption key is derived from your passphrase using PBKDF2 with 600,000 iterations, and the key itself is never stored. It exists in memory only while the app is unlocked.
+When you set a passphrase, sensitive data is encrypted with AES-256-GCM before it's written to your browser. That includes account balances, transactions, goals, tax documents, sync credentials, and the rest of the app state that would be awkward to leave lying around in plaintext. If someone opens devtools and inspects your storage, they see ciphertext. The encryption key is derived from your passphrase using PBKDF2 with 600,000 iterations, and the key itself is never stored. It exists in memory only while the app is unlocked.
 
 ### What GitHub Sync does
 
@@ -54,31 +52,31 @@ If you lose your passphrase, your encrypted data is unrecoverable. There is no p
 
 ### 1. Open the app
 
-Go to [anindya.dev/finance-tracking](https://anindya.dev/finance-tracking) in any modern browser. Nothing to install. No signup screen. The app loads and you're in.
+Go to [anindya.dev/finance-tracking](https://anindya.dev/finance-tracking) in any modern browser. Nothing to install. No signup screen. You land on Home, and from there the rest of the app opens up gradually as you add real data.
 
 ![Landing page on first open](./docs/screenshots/quickstart-1.png)
 
 ### 2. Set a passphrase
 
-In Settings, set a passphrase. This encrypts your data at rest. Pick something you'll remember, because there is no reset. You can skip this step and add encryption later, but if you plan to use GitHub Sync, set it now.
+Open Settings from the sidebar and set a passphrase before you get too far. This encrypts your data at rest. Pick something you'll remember, because there is no reset. You can skip it and come back later, but if you plan to use GitHub Sync, do it now.
 
 ![Passphrase setup in Settings](./docs/screenshots/quickstart-2.png)
 
 ### 3. Add your first account
 
-Go to Net Worth and add an account. Give it a name (e.g. "Chase checking"), pick a type (checking, savings, retirement, real estate, vehicle), and save. You can add more later.
+Go to Net Worth → Accounts and add an account you actually look at every month, a checking account or retirement account works well. Give it a name, pick a type, and save. This is the foundation the dashboard, allocation planner, and goals all build on.
 
 ![Add account form](./docs/screenshots/quickstart-3.png)
 
-### 4. Enter a balance
+### 4. Enter a monthly balance
 
-Click into the account and enter today's balance. That's one data point. Come back next month and add another. Over time, this becomes your net worth history.
+Open that account and add this month's balance. That is enough to make the charts wake up. Come back next month and add another point. You do not need perfect history to get value from it.
 
 ![Enter monthly balance](./docs/screenshots/quickstart-4.png)
 
-### 5. See your net worth
+### 5. Let the rest of the app unfold from there
 
-Go to Home. Your net worth, allocation, and recent activity are on the dashboard. Add a few more accounts and the picture gets sharper.
+Go back Home. You'll see the net worth summary, mini charts, goals peek, and allocation bar start to take shape. From there, add a goal, import a budget CSV, or drop your tax documents into Drive. The app is modular. You can grow into it.
 
 ![Net worth on the home dashboard](./docs/screenshots/quickstart-5.png)
 
@@ -90,32 +88,16 @@ Go to Home. Your net worth, allocation, and recent activity are on the dashboard
 
 ![Home dashboard with summary cards](./docs/screenshots/home-light.png)
 
-Your dashboard. Today's snapshot of net worth, savings rate, goal progress, and recent activity.
+Your dashboard. A quick read on where things stand right now, without opening six tabs or a spreadsheet you have to mentally parse before coffee.
 
 **How to use it**
-- Glance at the summary cards to see where you stand today
-- Click any card to jump to its full page
-- Use the date selector to compare this month to last
-- Check the activity feed for the last balances and transactions you entered
+- Glance at current net worth and the delta from the previous month
+- Flip through the mini charts for Net Worth, FI vs GW, and Assets vs Liabilities
+- Use the goals peek to see which targets are on pace and which ones are drifting
+- Check the allocation bar to see where your money is actually sitting today
+- Drag and reorder the cards until the page matches the way you think
 
-**One tip:** Pin the cards you care about most. The dashboard re-renders in the order you set, so put goal progress first if that's what you check daily.
-
----
-
-### Net Worth
-
-![Net Worth page with accounts and growth chart](./docs/screenshots/networth.png)
-
-Track balances over time. Add accounts, enter monthly balances, see how everything moves together.
-
-**How to use it**
-- Add an account for each real-world account you want to track (checking, savings, retirement, real estate, vehicle)
-- Enter a balance once a month per account
-- Switch between the allocation view and the growth chart
-- Filter by account type to see retirement vs. cash vs. real estate separately
-- Use the year-over-year toggle to see compounding
-
-**One tip:** Pick one day a month (the 1st works well) and update every account that day. Consistency beats accuracy. A balance on the same day each month gives you a clean growth curve.
+**One tip:** Put the card you check most often in the top-left slot. The dashboard remembers the order, and the right first glance matters more than one more chart.
 
 ---
 
@@ -123,16 +105,38 @@ Track balances over time. Add accounts, enter monthly balances, see how everythi
 
 ![Goals page with FI calculator and sub-goals](./docs/screenshots/goals.png)
 
-Set a financial-independence target and track progress toward it. Add sub-goals for things you're saving up for.
+Two modes live here: concrete plans and a more abstract FI calculator. One keeps you honest about named goals. The other answers the older, quieter question of when work becomes optional.
 
 **How to use it**
-- Enter your annual expenses to get a default FI number (25x expenses)
-- Override it if you have a different target
-- Add sub-goals for shorter-term things (down payment, sabbatical fund, emergency fund)
-- Watch progress update automatically as your net worth changes
-- Set a target date to see the savings rate you need to hit it
+- Use the Plans tab for savings or investment goals with target amounts and dates
+- Duplicate a goal when you want to try a more conservative or more aggressive version
+- Reorder goals so the ones that matter this year stay near the top
+- Mix and match goals to see how they stack together
+- Use the Calculator tab to estimate years to financial independence from savings rate and expenses
 
-**One tip:** Set your FI number using your *post-FI* expenses, not your current ones. Most people spend less once they stop commuting, eating out for work, and paying for childcare.
+**One tip:** Create one practical goal and one aspirational one. A near-term emergency fund and a long-term FI target make the page useful in two different time horizons.
+
+---
+
+### Net Worth
+
+![Net Worth page with accounts and growth chart](./docs/screenshots/networth.png)
+
+This is the spine of the app. The Accounts tab gives you the raw history, Allocation turns it into portfolio shape, and Growth lets you connect balances to income, expenses, and savings rate.
+
+**How to use it**
+- In Accounts, add accounts and enter monthly balances over time
+- Switch between chart view and spreadsheet view depending on whether you want trend or detail
+- Hover chart points to see deltas and how a month changed relative to the prior one
+- Filter the accounts table when you want to isolate cash, retirement, debt, or other slices
+- In Allocation, create custom ratio tabs for your ideal asset mix
+- In Growth, log yearly income, expenses, and savings to keep the balance history grounded in behavior
+
+**One tip:** Use Accounts for what happened, Allocation for what you want, and Growth for why the gap exists. The three tabs make more sense when you think of them as history, target, and explanation.
+
+![Allocation tab with ratio targets](./docs/screenshots/allocation.png)
+
+![Growth tab with income, expenses, and savings rate](./docs/screenshots/growth.png)
 
 ---
 
@@ -140,17 +144,33 @@ Set a financial-independence target and track progress toward it. Add sub-goals 
 
 ![Budget page with categorized transactions](./docs/screenshots/budget.png)
 
-Import bank and credit-card CSVs, categorize transactions, and see your savings rate.
+A year-based budgeting workspace that is more interested in patterns than ceremony. Import bank CSVs, clean them up, and look at spending from different distances.
 
 **How to use it**
-- Export a CSV from your bank or card issuer
-- Drop it onto the Budget page to import
-- Review the auto-categorization and fix anything wrong
-- Edit categories to match how you actually think about spending
-- Switch between monthly, quarterly, and yearly views
-- Read your savings rate (income minus expenses, divided by income) at the top
+- Pick a year and import bank or card CSVs, or enter transactions manually
+- Use the Detailed view for category-by-category breakdowns inside each group
+- Switch to Aggregated when you only want group totals
+- Use Cashflow to read income against expenses over time
+- Change the period between monthly, quarterly, and half-yearly views
+- Use the built-in PDF → CSV converter when the bank only gives you a statement PDF
 
-**One tip:** Categorize once, save the rule. The app remembers vendor-to-category mappings, so next month's import will pre-categorize anything it has seen before. Five minutes of cleanup in month one saves you an hour by month three.
+**One tip:** Start in Aggregated view the first time you import a messy file. It lets you find the categories that matter before you get lost in line items.
+
+---
+
+### Transactions
+
+![Transactions page with filters and categorization](./docs/screenshots/transactions.png)
+
+Transaction management lives on its own page now, separate from Budget. It is for the raw stream of money in and out, with filtering and categorization that helps you clean things up before they become a reporting habit.
+
+**How to use it**
+- Review transactions separately from annual budget rollups
+- Filter the list when you want to isolate one account, merchant, or category pattern
+- Categorize or recategorize items before they pollute your longer-term summaries
+- Use it as the place for cleanup work, not just for reading totals
+
+**One tip:** Treat Transactions as the inbox and Budget as the monthly summary. One is where you fix the raw data, the other is where you look for meaning.
 
 ---
 
@@ -158,33 +178,49 @@ Import bank and credit-card CSVs, categorize transactions, and see your savings 
 
 ![Taxes page with checklist and document uploads](./docs/screenshots/taxes.png)
 
-Annual tax checklist, document storage, and estimated payments tracker.
+A yearly tax binder without the actual binder. Checklists, uploads, linked accounts, and reusable templates, all organized by year.
 
 **How to use it**
-- Work through the checklist for the current tax year
-- Upload W-2s, 1099s, K-1s, and receipts as you receive them
-- Log estimated payments by quarter
-- Carry forward the prior year's checklist as a starting template
-- Mark items complete to track progress toward filing
+- Move between tax years with the year navigation
+- Upload W-2s, 1099s, receipts, and whatever else tends to arrive at inconvenient times
+- Work through the checklist and mark items done as they land
+- Use linked-account suggestions when you want the app to help connect documents to the right places
+- Save or import templates so each year does not start from a blank page
 
-**One tip:** Tax documents are encrypted in IndexedDB, not localStorage. They can be large, and IndexedDB handles size better. If you turn on GitHub Sync, tax PDFs sync too, so a fresh device gets your full filing history.
+**One tip:** Build next year's template the week you finish this year's return. Your future self will still remember what was annoying.
 
 ---
 
-### Drive & Settings
+### Drive
+
+![Drive file browser](./docs/screenshots/drive.png)
+
+Drive is the app's file browser for uploaded documents. It gives you one place to browse the practical debris of personal finance, with enough structure to make it useful instead of decorative.
+
+**How to use it**
+- Browse uploaded files and folders with breadcrumbs
+- Sort and filter when the list gets noisy
+- Open CSV previews before you decide what to keep or rename
+- Use it as the home for tax files, imported budget data, and other uploads that should stay close to the rest of the app
+
+**One tip:** Rename files while they still mean something to you. "Statement.pdf" is readable today and useless six months from now.
+
+---
+
+### Settings
 
 ![Settings page with sync and export options](./docs/screenshots/settings.png)
 
-GitHub Sync setup, data export and import, profile, preferences, dark mode.
+Profile, sync, appearance, security, backups, and the slightly more dangerous switches all live here.
 
 **How to use it**
-- Set or change your passphrase
-- Turn on GitHub Sync and paste your personal access token
-- Export your full dataset as a JSON file (encrypted or plaintext, your choice)
-- Import a previously exported file to restore or migrate
-- Toggle dark mode, set your currency, set your fiscal year start
+- Set or change your passphrase in Security
+- Configure GitHub Sync with your repo and token when you want encrypted backups
+- Toggle dark mode and accent preferences in Appearance
+- Import, export, or reset data from Advanced
+- Explore experimental features in Labs and Feature Flags when you are curious
 
-**One tip:** Export a plaintext JSON backup once a quarter and store it somewhere safe (encrypted disk, password manager file vault). Encrypted backups are useless without your passphrase. A plaintext backup in a vault is a real disaster-recovery plan.
+**One tip:** Turn on GitHub Sync only after export works for you locally. A manual backup you understand is a better safety net than an automated one you have not tested.
 
 ---
 
@@ -208,7 +244,7 @@ Your encrypted data is unrecoverable. There is no reset, no backdoor. Store your
 
 ### Can I export my data?
 
-Yes. Settings has a one-click export as JSON. You can export encrypted or plaintext. Plaintext is portable and human-readable. Encrypted is safe to store in any cloud.
+Yes. Settings has a one-click export as JSON. You can export encrypted or plaintext. Plaintext is portable and human-readable. Encrypted is safer to park in generic cloud storage.
 
 ### Is this open source?
 
@@ -216,7 +252,15 @@ Yes. MIT license. Source is at [github.com/dutta14/finance-tracking](https://git
 
 ### Does it work offline?
 
-Yes, once loaded. The app is a static bundle. After the first visit, your browser caches it and you can use it on a plane, in a tunnel, or with your wifi off. GitHub Sync just queues up and runs when you're back online.
+Yes, once loaded. The app is a static bundle. After the first visit, your browser caches it and you can use it on a plane, in a tunnel, or with your wifi off. GitHub Sync just waits until you are back online.
+
+### What's the difference between Budget and Transactions?
+
+Transactions is for the raw list: filter, inspect, correct, categorize. Budget is for the roll-up: detailed, aggregated, or cashflow views across a whole year. If you are fixing individual entries, start in Transactions. If you are asking where the money went, start in Budget.
+
+### Do I need to use every page?
+
+No. The app works fine as a net-worth tracker with goals. Or as a budget tool with tax storage. Or as a private archive for documents. Use the parts that solve your actual problem.
 
 ### Why no mobile app?
 
@@ -228,13 +272,13 @@ No formal audit. One person built it. It's used daily by its author. The crypto 
 
 ### Why should I trust this?
 
-You shouldn't blindly trust anything with your financial data. Here's what's true: the source code is public, the app makes no network calls except optional GitHub Sync (which you can verify in devtools), and your data never leaves your browser. Read the code. Or just try it with one account and see for yourself.
+You shouldn't blindly trust anything with your financial data. Here's what's true: the source code is public, the app makes no network calls except optional GitHub Sync, which you can verify in devtools, and your data never leaves your browser. Read the code. Or just try it with one account and see for yourself.
 
 ---
 
 ## More
 
-- **Self-host or contribute:** see [CONTRIBUTING.md](./CONTRIBUTING.md)
+- **Self-host or contribute:** see [CONTRIBUTING.md](https://github.com/dutta14/finance-tracking/blob/main/CONTRIBUTING.md)
 - **Source code:** [github.com/dutta14/finance-tracking](https://github.com/dutta14/finance-tracking)
 - **Anindya's blog:** [anindya.dev/blog](https://anindya.dev/blog)
 - **License:** MIT
