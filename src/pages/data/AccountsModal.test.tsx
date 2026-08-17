@@ -247,13 +247,13 @@ describe('AccountsModal', () => {
     await user.click(btn)
     await user.click(btn)
     await user.click(btn)
-    // Back to original order (insertion order)
+    // Back to default order (active before inactive, FI before GW, joint → primary → partner)
     const rows = screen.getAllByRole('row').slice(1)
     const names = rows
       .map(r => within(r).queryByText(/^(Checking|401k|Savings|Old 401k|Mortgage)$/))
       .filter(Boolean)
       .map(el => el!.textContent)
-    expect(names).toEqual(['Checking', '401k', 'Savings', 'Old 401k', 'Mortgage'])
+    expect(names).toEqual(['401k', 'Savings', 'Mortgage', 'Checking', 'Old 401k'])
   })
 
   // --- Column filtering ---
@@ -482,7 +482,7 @@ describe('AccountsModal', () => {
   it('shows edit form when Edit button clicked on a row', async () => {
     const user = userEvent.setup()
     renderModal()
-    const editButtons = screen.getAllByTitle('Edit')
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' })
     await user.click(editButtons[0])
     expect(screen.getByTestId('account-form')).toBeInTheDocument()
     expect(screen.getByTestId('form-mode')).toHaveTextContent('edit')
@@ -491,9 +491,9 @@ describe('AccountsModal', () => {
   it('calls onDelete when Delete button clicked', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    const deleteButtons = screen.getAllByTitle('Delete')
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' })
     await user.click(deleteButtons[0])
-    expect(props.onDelete).toHaveBeenCalledWith(1)
+    expect(props.onDelete).toHaveBeenCalledWith(2)
   })
 
   // --- Groups tab ---
@@ -938,18 +938,18 @@ describe('AccountsModal', () => {
   it('calls onUpdate and closes edit form when save is clicked in edit mode', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    const editButtons = screen.getAllByTitle('Edit')
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' })
     await user.click(editButtons[0])
     expect(screen.getByTestId('form-mode')).toHaveTextContent('edit')
     await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(props.onUpdate).toHaveBeenCalledWith(1, mockFormData)
+    expect(props.onUpdate).toHaveBeenCalledWith(2, mockFormData)
     expect(screen.queryByTestId('account-form')).not.toBeInTheDocument()
   })
 
   it('closes edit form without calling onUpdate when cancel is clicked', async () => {
     const user = userEvent.setup()
     const { props } = renderModal()
-    const editButtons = screen.getAllByTitle('Edit')
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' })
     await user.click(editButtons[0])
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(props.onUpdate).not.toHaveBeenCalled()

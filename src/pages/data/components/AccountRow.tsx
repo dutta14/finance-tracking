@@ -83,31 +83,14 @@ const AccountRow: FC<AccountRowProps> = ({
       </td>
       <td>
         <div className="data-row-actions">
-          <button className="data-action-btn" onClick={() => onEdit(account.id)} title="Edit">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M3 17h14M10 3l4 4-7 7H3v-4l7-7z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <button className="data-action-btn" onClick={() => onEdit(account.id)}>
+            Edit
           </button>
           <button
             className="data-action-btn data-action-btn--delete"
             onClick={() => onDelete(account.id)}
-            title="Delete"
           >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M4 6h12M8 6V4h4v2m-6 0v10h8V6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            Delete
           </button>
         </div>
       </td>

@@ -1638,18 +1638,24 @@ body.dark .data-add-month-popover {
 .data-row-actions {
   display: flex;
   gap: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.data-table-wrap tr:hover .data-row-actions {
+  opacity: 1;
 }
 
 .data-action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  padding: 0.2rem 0.55rem;
   border: none;
   border-radius: var(--radius);
   background: none;
   color: var(--color-text-muted);
+  font-size: 0.75rem;
   cursor: pointer;
   transition:
     background 0.15s,

@@ -59,14 +59,14 @@ describe('AccountRow', () => {
   it('calls onEdit when edit button clicked', () => {
     const onEdit = vi.fn()
     renderRow({ onEdit })
-    fireEvent.click(screen.getByTitle('Edit'))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
     expect(onEdit).toHaveBeenCalledWith(1)
   })
 
   it('calls onDelete when delete button clicked', () => {
     const onDelete = vi.fn()
     renderRow({ onDelete })
-    fireEvent.click(screen.getByTitle('Delete'))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
     expect(onDelete).toHaveBeenCalledWith(1)
   })
 })
