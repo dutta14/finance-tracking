@@ -110,12 +110,21 @@
 }
 
 /* ── Q1: Net Worth ── */
+.home-card--nw .details-month-control {
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.home-card--nw .details-month-trigger {
+  border: none;
+  background: none;
+  text-align: center;
+}
 .nw-headline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.4rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   position: relative;
 }
 .nw-headline-center {
