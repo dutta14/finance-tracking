@@ -359,13 +359,22 @@ const SavingsGrowthTracker: FC = () => {
       <div className="sgt-toolbar">
         <div className="sgt-toggle-row">
           <span className="sgt-toggle-label">YoY change</span>
-          <button
-            className="sgt-toggle-btn"
-            onClick={() => setShowPct(!showPct)}
-            aria-label={showPct ? 'Show YoY change in dollars' : 'Show YoY change as percentage'}
-          >
-            {showPct ? '%' : '$'}
-          </button>
+          <div className="tab-bar">
+            <button
+              className={`tab-btn tab-btn--sm${!showPct ? ' active' : ''}`}
+              onClick={() => setShowPct(false)}
+              aria-label="Show YoY change in dollars"
+            >
+              $
+            </button>
+            <button
+              className={`tab-btn tab-btn--sm${showPct ? ' active' : ''}`}
+              onClick={() => setShowPct(true)}
+              aria-label="Show YoY change as percentage"
+            >
+              %
+            </button>
+          </div>
         </div>
       </div>
 

@@ -27,11 +27,11 @@ const AddItemModal: FC<AddItemModalProps> = ({ owner: _owner, onAdd, onClose }) 
           }}
         />
         <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>
+          <button className="action-btn" onClick={onClose}>
             Cancel
           </button>
           <button
-            className="tax-btn tax-btn--primary"
+            className="action-btn"
             disabled={!label.trim()}
             onClick={() => {
               onAdd(label.trim(), 'custom')

@@ -183,7 +183,7 @@ describe('Taxes', () => {
     it('navigates to previous year', async () => {
       const user = userEvent.setup()
       render(<Taxes />)
-      await user.click(screen.getByText('←'))
+      await user.click(screen.getByTitle('Previous year'))
       expect(screen.getByText(String(CURRENT_YEAR - 1))).toBeInTheDocument()
     })
 
@@ -191,14 +191,14 @@ describe('Taxes', () => {
       const user = userEvent.setup()
       render(<Taxes />)
       // Go back first, then forward
-      await user.click(screen.getByText('←'))
-      await user.click(screen.getByText('→'))
+      await user.click(screen.getByTitle('Previous year'))
+      await user.click(screen.getByTitle('Next year'))
       expect(screen.getByText(String(CURRENT_YEAR))).toBeInTheDocument()
     })
 
     it('disables forward navigation at current year', () => {
       render(<Taxes />)
-      const forwardBtn = screen.getByText('→')
+      const forwardBtn = screen.getByTitle('Next year')
       expect(forwardBtn).toBeDisabled()
     })
 
@@ -214,7 +214,7 @@ describe('Taxes', () => {
       )
       const user = userEvent.setup()
       render(<Taxes />)
-      await user.click(screen.getByText('←'))
+      await user.click(screen.getByTitle('Previous year'))
       expect(screen.getByText(`No tax prep for ${CURRENT_YEAR - 1}`)).toBeInTheDocument()
     })
   })
@@ -1494,20 +1494,20 @@ describe('Taxes', () => {
     it('navigates to previous year', () => {
       render(<Taxes />)
       expect(screen.getByText(String(CURRENT_YEAR))).toBeInTheDocument()
-      fireEvent.click(screen.getByText('←'))
+      fireEvent.click(screen.getByTitle('Previous year'))
       expect(screen.getByText(String(CURRENT_YEAR - 1))).toBeInTheDocument()
     })
 
     it('disables forward button when on current year', () => {
       render(<Taxes />)
-      const forwardBtn = screen.getByText('→')
+      const forwardBtn = screen.getByTitle('Next year')
       expect(forwardBtn).toBeDisabled()
     })
 
     it('enables forward button when on a past year', () => {
       render(<Taxes />)
-      fireEvent.click(screen.getByText('←'))
-      const forwardBtn = screen.getByText('→')
+      fireEvent.click(screen.getByTitle('Previous year'))
+      const forwardBtn = screen.getByTitle('Next year')
       expect(forwardBtn).not.toBeDisabled()
     })
   })

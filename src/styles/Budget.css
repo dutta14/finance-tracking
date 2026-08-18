@@ -94,6 +94,18 @@ body.dark .budget-title {
   text-align: center;
   color: var(--color-text);
 }
+.budget-year-nav--sm {
+  padding: 0.15rem 0.3rem;
+  gap: 0.3rem;
+}
+.budget-year-nav--sm .budget-year-label {
+  font-size: var(--fs-sm);
+  min-width: 2.5rem;
+}
+.budget-year-nav--sm .budget-year-btn svg {
+  width: 14px;
+  height: 14px;
+}
 
 /* View toggle */
 .budget-spreadsheet-toolbar {

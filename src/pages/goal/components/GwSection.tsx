@@ -186,11 +186,11 @@ const GwGoalCard: FC<{
         )}
         <div className="gw-goal-card-actions">
           {!editing && (
-            <button className="gw-goal-action-btn" onClick={() => setEditing(true)}>
+            <button className="action-btn" onClick={() => setEditing(true)}>
               Edit
             </button>
           )}
-          <button className="gw-goal-action-btn gw-goal-action-btn--delete" onClick={handleDeleteClick}>
+          <button className="action-btn action-btn--danger" onClick={handleDeleteClick}>
             Delete
           </button>
         </div>

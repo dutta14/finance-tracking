@@ -10,6 +10,7 @@ const baseProps: TaxReturnSectionProps = {
   year: 2024,
   onUpload: vi.fn(),
   onRemoveFile: vi.fn(),
+  onRemoveItem: vi.fn(),
   onAddReturnEntry: vi.fn(),
   primaryName: 'Alice',
   partnerName: 'Bob',

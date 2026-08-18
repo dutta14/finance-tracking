@@ -133,13 +133,13 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           {compareMode && selectedGoalIds.length > 0 && (
             <>
               <span className="goal-selection-count">{selectedGoalIds.length} selected</span>
-              <button className="goal-action-btn goal-action-btn--danger" onClick={handleDeleteSelected}>
+              <button className="action-btn action-btn--danger" onClick={handleDeleteSelected}>
                 Delete
               </button>
             </>
           )}
           {onMixMatch && goals.length > 0 && gwGoals.length > 0 && (
-            <button className="goal-action-btn" onClick={onMixMatch} title="Mix & Match goals">
+            <button className="action-btn" onClick={onMixMatch} title="Mix & Match goals">
               <svg
                 width="12"
                 height="12"
@@ -160,7 +160,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
             </button>
           )}
           {onNewGoal && (
-            <button className="goal-action-btn goal-action-btn--accent" onClick={onNewGoal} title="Create new goal">
+            <button className="action-btn action-btn--accent" onClick={onNewGoal} title="Create new goal">
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>

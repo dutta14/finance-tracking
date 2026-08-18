@@ -316,29 +316,6 @@ body.dark .gw-goal-undo-msg {
   gap: 0.25rem;
 }
 
-.gw-goal-action-btn {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  padding: 0.2rem 0.4rem;
-  cursor: pointer;
-  border-radius: var(--radius);
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.gw-goal-action-btn:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover, #f3f4f6);
-}
-
-.gw-goal-action-btn--delete:hover {
-  color: var(--color-negative);
-  background: var(--color-negative-light);
-}
 
 .gw-goal-label--editing {
   font-size: var(--fs-md);

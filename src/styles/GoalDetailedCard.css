@@ -503,25 +503,6 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
 }
 
 /* ── Action buttons (text-link style) ── */
-.fi-card-action-btn {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  padding: 0.2rem 0.4rem;
-  cursor: pointer;
-  border-radius: var(--radius);
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.fi-card-action-btn:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover, #f3f4f6);
-}
-
 /* ── Inline edit form ── */
 .fi-card-edit-form {
   background: var(--color-surface);

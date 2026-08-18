@@ -14,6 +14,7 @@ import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../
 import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
 import TermAbbr from '../../../components/TermAbbr'
 import MonthPicker from '../../../components/MonthPicker'
+import YearNav from '../../../components/YearNav'
 
 import '../../../styles/GoalDetailedCard.css'
 
@@ -570,7 +571,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
         {/* ── Edit Button (Solo Page) ── */}
         {!showActions && onUpdateGoal && !editing && (
           <div className="fi-card-edit-row">
-            <button className="fi-card-action-btn" onClick={() => setEditing(true)}>
+            <button className="action-btn" onClick={() => setEditing(true)}>
               Edit
             </button>
           </div>
@@ -715,33 +716,19 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                   </button>
                 </div>
                 {availableYears && availableYears.length > 1 && onSummaryYearChange ? (
-                  <div className="fi-projection-year-toggle">
-                    <button
-                      className="fi-projection-year-chevron"
-                      type="button"
-                      aria-label="Previous year"
-                      disabled={summaryYear === availableYears[availableYears.length - 1]}
-                      onClick={() => {
-                        const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
-                        if (idx < availableYears.length - 1) onSummaryYearChange(availableYears[idx + 1])
-                      }}
-                    >
-                      ‹
-                    </button>
-                    <span className="fi-projection-year-value">{summaryYear ?? new Date().getFullYear()}</span>
-                    <button
-                      className="fi-projection-year-chevron"
-                      type="button"
-                      aria-label="Next year"
-                      disabled={summaryYear === availableYears[0]}
-                      onClick={() => {
-                        const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
-                        if (idx > 0) onSummaryYearChange(availableYears[idx - 1])
-                      }}
-                    >
-                      ›
-                    </button>
-                  </div>
+                  <YearNav size="sm"
+                    selectedYear={summaryYear ?? new Date().getFullYear()}
+                    disablePrev={summaryYear === availableYears[availableYears.length - 1]}
+                    disableNext={summaryYear === availableYears[0]}
+                    onPrevYear={() => {
+                      const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
+                      if (idx < availableYears.length - 1) onSummaryYearChange(availableYears[idx + 1])
+                    }}
+                    onNextYear={() => {
+                      const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
+                      if (idx > 0) onSummaryYearChange(availableYears[idx - 1])
+                    }}
+                  />
                 ) : (
                   <span className="fi-projection-year-label">{summaryYear ?? new Date().getFullYear()}</span>
                 )}

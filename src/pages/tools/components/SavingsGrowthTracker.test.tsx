@@ -225,10 +225,10 @@ describe('SavingsGrowthTracker', () => {
 
     renderTracker()
 
-    const toggleBtn = screen.getByRole('button', { name: /Show YoY change/i })
-    expect(toggleBtn).toHaveTextContent('$')
-    await user.click(toggleBtn)
-    expect(toggleBtn).toHaveTextContent('%')
+    const dollarBtn = screen.getByRole('button', { name: /Show YoY change in dollars/i })
+    const pctBtn = screen.getByRole('button', { name: /Show YoY change as percentage/i })
+    expect(dollarBtn).toHaveTextContent('$')
+    await user.click(pctBtn)
     expect(screen.getByText('▲ 16.7%')).toBeInTheDocument()
   })
 

@@ -189,7 +189,7 @@ const ScenarioCard = ({
           aria-label="Scenario name"
         />
         {onRemove && (
-          <button className="goal-action-btn goal-action-btn--danger" type="button" onClick={onRemove}>
+          <button className="action-btn action-btn--danger" type="button" onClick={onRemove}>
             Remove
           </button>
         )}
@@ -215,7 +215,7 @@ const ScenarioCard = ({
       <div className="scenario-card__allocations">
         <div className="scenario-card__alloc-header">
           <h4>Allocations</h4>
-          <button className="goal-action-btn" type="button" onClick={addAllocation}>
+          <button className="action-btn" type="button" onClick={addAllocation}>
             + Add allocation
           </button>
         </div>
@@ -283,7 +283,7 @@ const ScenarioCard = ({
                     <div className="scenario-alloc-row__spacer" aria-hidden="true" />
                   )}
                   <button
-                    className="goal-action-btn goal-action-btn--danger"
+                    className="action-btn action-btn--danger"
                     type="button"
                     onClick={() => removeAllocation(allocation.id)}
                     aria-label={`Remove ${allocation.label}`}
@@ -691,7 +691,7 @@ const LeverageGoal = () => {
                 <h3>Scenario comparison</h3>
                 <p>Compare up to four allocation plans side by side.</p>
               </div>
-              <button className="goal-action-btn" type="button" onClick={addScenario} disabled={scenarios.length >= 3}>
+              <button className="action-btn" type="button" onClick={addScenario} disabled={scenarios.length >= 3}>
                 Add scenario
               </button>
             </div>

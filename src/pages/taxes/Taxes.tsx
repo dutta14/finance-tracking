@@ -11,6 +11,7 @@ import AddItemModal from './components/AddItemModal'
 import SaveTemplateModal from './components/SaveTemplateModal'
 import ImportTemplateModal from './components/ImportTemplateModal'
 import TaxReturnSection from './components/TaxReturnSection'
+import YearNav from '../../components/YearNav'
 import '../../styles/Taxes.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -203,20 +204,23 @@ const Taxes: FC = () => {
     <div className="tax-page">
       <div className="tax-header">
         <h1 className="tax-heading">Taxes</h1>
-        {storageMB !== null && <span className="tax-storage-indicator">{storageMB} MB used</span>}
-        <div className="tax-year-nav">
-          <button className="tax-year-btn" onClick={() => setSelectedYear(y => y - 1)}>
-            ←
-          </button>
-          <span className="tax-year-label">{selectedYear}</span>
-          <button
-            className="tax-year-btn"
-            onClick={() => setSelectedYear(y => y + 1)}
-            disabled={selectedYear >= CURRENT_YEAR}
-          >
-            →
-          </button>
-        </div>
+        <YearNav
+          selectedYear={selectedYear}
+          onPrevYear={() => setSelectedYear(y => y - 1)}
+          onNextYear={() => setSelectedYear(y => y + 1)}
+          disableNext={selectedYear >= CURRENT_YEAR}
+        />
+        {exists && (
+          <div className="tax-header-actions">
+            <button className="action-btn" onClick={() => setSaveTemplateModal(true)}>
+              Save as Template
+            </button>
+            <button className="action-btn action-btn--danger" onClick={() => setConfirmDelete(true)}>
+              Delete Year
+            </button>
+            {storageMB !== null && <span className="tax-storage-indicator">{storageMB} MB used</span>}
+          </div>
+        )}
       </div>
 
       {uploadError && (
@@ -230,11 +234,11 @@ const Taxes: FC = () => {
           <h2>No tax prep for {selectedYear}</h2>
           <p>Create a checklist to start tracking documents for this tax year.</p>
           <div className="tax-empty-actions">
-            <button className="tax-btn tax-btn--primary" onClick={createYear}>
+            <button className="action-btn" onClick={createYear}>
               Create {selectedYear} Tax Prep
             </button>
             {tax.templates.length > 0 && (
-              <button className="tax-btn tax-btn--outline" onClick={() => setImportTemplateModal(true)}>
+              <button className="action-btn" onClick={() => setImportTemplateModal(true)}>
                 Import from Template
               </button>
             )}
@@ -242,30 +246,7 @@ const Taxes: FC = () => {
         </div>
       ) : (
         <div className="tax-body">
-          {/* Save as Template / Delete year */}
-          <div className="tax-template-bar">
-            <button className="tax-btn tax-btn--outline tax-btn--template" onClick={() => setSaveTemplateModal(true)}>
-              💾 Save as Template
-            </button>
-            <button className="tax-btn tax-btn--template tax-btn--danger" onClick={() => setConfirmDelete(true)}>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="tax-icon-align"
-              >
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-              </svg>{' '}
-              Delete Year
-            </button>
-          </div>
-
+          <div className="tax-owners-grid">
           {/* Primary section */}
           <OwnerSection
             owner="primary"
@@ -330,6 +311,7 @@ const Taxes: FC = () => {
             accounts={accounts}
             hasSuggestions={hasSuggestionsFor('joint')}
           />
+          </div>
 
           {/* Tax Returns */}
           <TaxReturnSection
@@ -337,6 +319,7 @@ const Taxes: FC = () => {
             year={selectedYear}
             onUpload={handleUpload}
             onRemoveFile={handleRemoveFile}
+            onRemoveItem={handleRemoveItem}
             onAddReturnEntry={handleAddReturnEntry}
             primaryName={primaryName}
             partnerName={partnerName}
@@ -390,11 +373,11 @@ const Taxes: FC = () => {
               This will remove all checklist items and uploaded documents for {selectedYear}. This cannot be undone.
             </p>
             <div className="tax-modal-actions">
-              <button className="tax-btn tax-btn--outline" onClick={() => setConfirmDelete(false)}>
+              <button className="action-btn" onClick={() => setConfirmDelete(false)}>
                 Cancel
               </button>
               <button
-                className="tax-btn tax-btn--danger"
+                className="action-btn action-btn--danger"
                 onClick={() => {
                   tax.deleteYear(selectedYear)
                   setConfirmDelete(false)

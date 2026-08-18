@@ -423,3 +423,36 @@ body.modern-design .settings-section h3 {
   -webkit-text-fill-color: unset;
   background-clip: unset;
 }
+
+/* ─── Shared Action Button ─── */
+.action-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  color: var(--color-text);
+  font-weight: var(--fw-medium);
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.action-btn:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+}
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.action-btn--danger {
+  color: var(--color-negative);
+}
+.action-btn--danger:hover {
+  background: var(--color-negative-light);
+  border-color: var(--color-negative-border);
+}

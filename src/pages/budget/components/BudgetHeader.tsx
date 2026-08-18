@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { TimePeriod, BudgetViewMode } from '../types'
+import YearNav from '../../../components/YearNav'
 
 interface BudgetHeaderProps {
   selectedYear: number
@@ -64,25 +65,7 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
           </button>
         </div>
       )}
-      <div className="budget-year-nav">
-        <button className="budget-year-btn" onClick={onPrevYear} title="Previous year">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M10 3L5 8l5 5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <span className="budget-year-label">{selectedYear}</span>
-        <button className="budget-year-btn" onClick={onNextYear} title="Next year">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      <YearNav selectedYear={selectedYear} onPrevYear={onPrevYear} onNextYear={onNextYear} />
     </div>
   </div>
 )

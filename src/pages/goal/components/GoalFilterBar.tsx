@@ -235,7 +235,7 @@ const GoalFilterBar: FC<GoalFilterBarProps> = ({ goals, profileBirthday = '', fi
         <button
           ref={triggerRef}
           type="button"
-          className={`goal-action-btn goal-filter-trigger${isOpen ? ' goal-filter-trigger--open' : ''}`}
+          className={`action-btn goal-filter-trigger${isOpen ? ' goal-filter-trigger--open' : ''}`}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
           aria-controls="goal-filters-panel"
