@@ -2,14 +2,14 @@
 .tax-page {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 1.25rem 1.5rem 4rem;
 }
 
 .tax-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 .tax-heading {
   font-size: var(--fs-2xl);

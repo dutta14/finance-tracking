@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: calc(100vh);
-  padding: 2rem 1.5rem 0;
+  padding: 1.25rem 1.5rem 0;
   background: var(--color-bg);
   box-sizing: border-box;
   overflow: hidden;
@@ -11,7 +11,7 @@
 .txn-header {
   display: grid;
   gap: 16px;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
   flex-shrink: 0;
 }
 

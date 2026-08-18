@@ -414,6 +414,7 @@ body.modern-design .alloc-page-title,
 body.modern-design .data-header h1,
 body.modern-design .drive-title,
 body.modern-design .settings-section h3 {
+  font-size: var(--fs-xl);
   font-weight: 600;
   letter-spacing: -0.025em;
   color: var(--color-text);

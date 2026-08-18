@@ -4,13 +4,13 @@
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 2rem 2rem 3rem;
+  padding: 1.25rem 2rem 3rem;
   background: var(--color-bg);
 }
 
 /* Greeting */
 .home-greeting {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 .home-greeting h1 {
   font-size: var(--fs-2xl);
