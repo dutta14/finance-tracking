@@ -363,15 +363,17 @@ const GoalForm: FC<GoalFormProps> = ({
             />
             {editingGoalId === null && (
               <div className="wizard-step-name-actions">
-                <button
-                  type="button"
-                  className="btn-use-template"
-                  onClick={() => setShowTemplates(prev => !prev)}
-                  aria-expanded={showTemplates}
-                  aria-controls="template-picker"
-                >
-                  {showTemplates ? 'Hide Templates' : 'Use Template'}
-                </button>
+                {!showTemplates && (
+                  <button
+                    type="button"
+                    className="btn-use-template"
+                    onClick={() => setShowTemplates(true)}
+                    aria-expanded={showTemplates}
+                    aria-controls="template-picker"
+                  >
+                    Use Template
+                  </button>
+                )}
               </div>
             )}
             {showTemplates && editingGoalId === null && (
@@ -495,7 +497,7 @@ const GoalForm: FC<GoalFormProps> = ({
             {error}
             {step === 0 && error === 'Please enter a goal name' && (
               <button type="button" className="random-name-btn" onClick={pickRandomName}>
-                🎲 Pick random name
+                Pick random name
               </button>
             )}
             {step === 1 &&

@@ -372,12 +372,12 @@ section.goal {
 }
 
 .form-error {
-  padding: 0.75rem;
-  background-color: var(--color-negative-light);
-  border: 1px solid var(--color-negative-border);
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
   color: var(--color-negative);
-  font-size: var(--fs-md);
-  margin-bottom: 1rem;
+  font-size: var(--fs-sm);
+  margin-bottom: 0.75rem;
   border-radius: var(--radius);
   display: flex;
   align-items: center;
@@ -385,22 +385,24 @@ section.goal {
 }
 
 .random-name-btn {
-  background: none;
-  border: 1px solid var(--color-negative);
-  color: var(--color-negative);
-  font-size: var(--fs-md);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius);
   cursor: pointer;
   white-space: nowrap;
   margin-left: auto;
+  transition: background 150ms, color 150ms, border-color 150ms;
 }
 .random-name-btn:hover {
-  background: var(--color-negative);
-  color: #fff;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
 }
 .random-name-btn:focus-visible {
-  outline: 2px solid var(--color-negative);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

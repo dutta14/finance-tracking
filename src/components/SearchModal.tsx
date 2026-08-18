@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { createPortal } from 'react-dom'
-import { buildIndex, search, findMatchRange, getCategoryLabel } from '../search/searchIndex'
+import { buildIndex, search, findMatchRange } from '../search/searchIndex'
 import type { SearchItem, SearchCategory } from '../search/searchIndex'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import '../styles/SearchModal.css'
@@ -176,7 +176,7 @@ const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction
                 ))}
                 {group.total > group.items.length && (
                   <button className="search-group-show-all" onClick={() => handleShowAll(group.category)}>
-                    Show all {group.total} results →
+                    {group.total - group.items.length} more
                   </button>
                 )}
               </div>
@@ -236,6 +236,8 @@ const ICON_PATHS: Record<string, string> = {
   tag: 'M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h0',
   'file-text': 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M16 13H8M16 17H8M10 9H8',
   'pie-chart': 'M21.21 15.89A10 10 0 118 2.83M22 12A10 10 0 0012 2v10z',
+  list: 'M8 6h13M8 12h13M8 18h13M3 6h0M3 12h0M3 18h0',
+  book: 'M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 016.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z',
 }
 
 const SearchIcon: FC<{ name: string }> = ({ name }) => {
@@ -297,7 +299,6 @@ const ResultRow: FC<ResultRowProps> = memo(({ item, query, active, onSelect, onH
         </span>
         <span className="search-result-hint">{item.hint}</span>
       </div>
-      <span className="search-result-badge">{getCategoryLabel(item.category)}</span>
     </button>
   )
 })

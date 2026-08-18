@@ -14,8 +14,6 @@
 .template-picker-title {
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--color-text-muted);
 }
 
@@ -43,8 +41,8 @@
 }
 
 .template-picker-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
@@ -52,22 +50,23 @@
 .template-card {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-surface-alt);
-  border: 1.5px solid var(--color-border);
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   cursor: pointer;
+  text-align: left;
   transition:
     border-color 150ms,
     box-shadow 150ms,
-    background 150ms,
-    transform 150ms;
+    background 150ms;
   outline: none;
 }
 .template-card:hover {
   border-color: var(--accent);
-  background: var(--color-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .template-card:focus-visible {
   border-color: var(--accent);
@@ -76,17 +75,16 @@
 .template-card:active {
   background: var(--color-surface-alt);
   border-color: var(--accent);
-  transform: scale(0.98);
 }
 
 .template-card-name {
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: var(--color-text);
 }
 
 .template-card-desc {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
   line-height: 1.4;
 }
@@ -94,8 +92,8 @@
 .template-card-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
 }
 
 .template-card-stat {
@@ -117,8 +115,7 @@
   transition:
     background 150ms,
     color 150ms,
-    border-color 150ms,
-    transform 150ms;
+    border-color 150ms;
 }
 .btn-use-template:hover {
   background: var(--color-surface-alt);
@@ -128,10 +125,6 @@
 .btn-use-template:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-.btn-use-template:active {
-  background: var(--color-surface-alt);
-  transform: scale(0.97);
 }
 
 .wizard-step-name-actions {
@@ -148,8 +141,7 @@
 }
 
 @media (max-width: 480px) {
-  .template-card-stats {
-    flex-direction: column;
-    gap: 0.25rem;
+  .template-picker-grid {
+    grid-template-columns: 1fr;
   }
 }
