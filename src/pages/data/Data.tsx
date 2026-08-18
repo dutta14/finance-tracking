@@ -37,6 +37,7 @@ const Data: FC = () => {
   } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false)
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
   const [addEntryForm, setAddEntryForm] = useState({ month: '', copyFrom: false, error: '' })
 
   const accountsRef = useRef(accounts)
@@ -255,31 +256,6 @@ const Data: FC = () => {
   }
   const accountsContent = (
     <>
-      {allowCsvImport && (
-        <div className="data-header-actions">
-          <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
-            Import from CSV
-          </button>
-          {hasAccounts && balances.length > 0 && (
-            <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
-              Export CSV
-            </button>
-          )}
-          {(hasAccounts || balances.length > 0) && (
-            <button
-              className="data-reset-btn"
-              onClick={() => {
-                if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
-                  saveBoth([], [])
-                }
-              }}
-            >
-              Reset Data
-            </button>
-          )}
-        </div>
-      )}
-
       <div className="data-content">
         {!hasAccounts ? (
           <div className="data-empty">
@@ -362,9 +338,55 @@ const Data: FC = () => {
                 inlineEntry={inlineEntry}
                 toolbarActions={
                   <div className="data-add-month-wrap">
-                    <button className="data-add-entry-btn" onClick={handleOpenAddEntry} disabled={!!inlineEntry}>
-                      + Add Entry
-                    </button>
+                    <div className="data-add-entry-split-btn">
+                      <button className="action-btn" onClick={handleOpenAddEntry} disabled={!!inlineEntry}>
+                        + Add Entry
+                      </button>
+                      {allowCsvImport && (
+                        <button
+                          className="action-btn data-add-entry-split-btn-chevron"
+                          onClick={() => setAddMenuOpen(o => !o)}
+                          aria-label="More data actions"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      )}
+                      {addMenuOpen && (
+                        <div className="data-add-entry-split-dropdown">
+                          {allowCsvImport && (
+                            <button
+                              className="data-add-entry-split-dropdown-item"
+                              onClick={() => { setAddMenuOpen(false); csvInputRef.current?.click() }}
+                            >
+                              Import from CSV
+                            </button>
+                          )}
+                          {allowCsvImport && hasAccounts && balances.length > 0 && (
+                            <button
+                              className="data-add-entry-split-dropdown-item"
+                              onClick={() => { setAddMenuOpen(false); exportCsv(accounts, balances) }}
+                            >
+                              Export CSV
+                            </button>
+                          )}
+                          {allowCsvImport && (hasAccounts || balances.length > 0) && (
+                            <button
+                              className="data-add-entry-split-dropdown-item data-add-entry-split-dropdown-item--danger"
+                              onClick={() => {
+                                setAddMenuOpen(false)
+                                if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
+                                  saveBoth([], [])
+                                }
+                              }}
+                            >
+                              Reset Data
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {isAddEntryOpen && (
                       <div className="data-add-month-popover" role="dialog" aria-label="Add entry">
                         <label className="data-add-month-field">

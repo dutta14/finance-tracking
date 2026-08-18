@@ -6,7 +6,8 @@
   max-width: var(--max-width);
   margin: 0 auto;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: visible;
+  overflow-y: hidden;
 }
 
 .data-header {
@@ -148,6 +149,57 @@
 
 .data-add-month-wrap {
   position: relative;
+  flex: 0 0 auto;
+}
+.data-add-entry-split-btn {
+  display: inline-flex;
+  position: relative;
+  flex: 0 0 auto;
+}
+.data-add-entry-split-btn .action-btn:first-child:has(+ .data-add-entry-split-btn-chevron) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+.data-add-entry-split-btn-chevron {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  padding: 0 0.35rem !important;
+  min-width: unset;
+  border-left: 1px solid var(--color-border) !important;
+}
+.data-add-entry-split-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  min-width: 160px;
+  padding: 0.25rem 0;
+}
+.data-add-entry-split-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: none;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  color: var(--color-text);
+}
+.data-add-entry-split-dropdown-item:hover {
+  background: var(--color-surface-alt);
+}
+.data-add-entry-split-dropdown-item--danger {
+  color: var(--color-negative);
+}
+.data-add-entry-split-dropdown-item--danger:hover {
+  background: var(--color-negative-light);
 }
 
 .data-add-month-btn {
@@ -629,7 +681,7 @@ body.dark .data-add-month-popover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   padding-right: 1rem;
 }
@@ -1710,10 +1762,13 @@ body.dark .data-add-month-popover {
 
 /* Add entry button */
 .data-toolbar-actions {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+  flex: 0 0 auto;
 }
 
 .data-filter-toggle {
