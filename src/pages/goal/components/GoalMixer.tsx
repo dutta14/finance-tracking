@@ -182,7 +182,9 @@ const GoalMixer: FC<GoalMixerProps> = ({
 }) => {
   const firstGoal = goals[0] ?? null
   const [selectedBaseKey, setSelectedBaseKey] = useState<string | null>(firstGoal ? goalKey(firstGoal.id) : null)
-  const [baseParams, setBaseParams] = useState<BaseParams>(firstGoal ? getBaseParamsFromGoal(firstGoal) : { retirementAge: '', annualExpense: '', growth: '' })
+  const [baseParams, setBaseParams] = useState<BaseParams>(
+    firstGoal ? getBaseParamsFromGoal(firstGoal) : { retirementAge: '', annualExpense: '', growth: '' },
+  )
   const [selectedGwIds, setSelectedGwIds] = useState<Set<number>>(new Set())
   const modalRef = useRef<HTMLDivElement>(null)
   useFocusTrap(modalRef, true)
@@ -257,7 +259,13 @@ const GoalMixer: FC<GoalMixerProps> = ({
   }, [selectedGwGoals, selectedGoal, profileBirthday, inflation])
 
   const fiTargets = useMemo(
-    () => new Map(goals.map(goal => [goal.id, getFiTarget(goal, profileBirthday, goal.growth || 8, undefined, undefined, inflation)])),
+    () =>
+      new Map(
+        goals.map(goal => [
+          goal.id,
+          getFiTarget(goal, profileBirthday, goal.growth || 8, undefined, undefined, inflation),
+        ]),
+      ),
     [goals, profileBirthday, inflation],
   )
 
@@ -389,7 +397,9 @@ const GoalMixer: FC<GoalMixerProps> = ({
                         min="1"
                         aria-label="Retirement age"
                       />
-                      {selectedTemplate && <span className="mixer-param-attribution">from {selectedTemplate.name}</span>}
+                      {selectedTemplate && (
+                        <span className="mixer-param-attribution">from {selectedTemplate.name}</span>
+                      )}
                     </label>
                     <label className="mixer-param-field">
                       <span className="mixer-param-label">Annual expense</span>
@@ -402,7 +412,9 @@ const GoalMixer: FC<GoalMixerProps> = ({
                         step="1000"
                         aria-label="Annual expense"
                       />
-                      {selectedTemplate && <span className="mixer-param-attribution">from {selectedTemplate.name}</span>}
+                      {selectedTemplate && (
+                        <span className="mixer-param-attribution">from {selectedTemplate.name}</span>
+                      )}
                     </label>
                     <label className="mixer-param-field">
                       <span className="mixer-param-label">Growth</span>
@@ -414,7 +426,9 @@ const GoalMixer: FC<GoalMixerProps> = ({
                         step="0.1"
                         aria-label="Growth"
                       />
-                      {selectedTemplate && <span className="mixer-param-attribution">from {selectedTemplate.name}</span>}
+                      {selectedTemplate && (
+                        <span className="mixer-param-attribution">from {selectedTemplate.name}</span>
+                      )}
                     </label>
                   </div>
                 </div>

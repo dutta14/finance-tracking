@@ -314,15 +314,15 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
         <h3 className="cashflow-section-title cashflow-section-title--flush">
           Breakdown{selectedPeriod ? ` — ${selectedPeriod}` : ''}
         </h3>
-        <div className="cashflow-sankey-pills">
+        <div className="tab-bar">
           <button
-            className={`cashflow-sankey-pill${mode === 'group' ? ' active' : ''}`}
+            className={`tab-btn tab-btn--sm${mode === 'group' ? ' active' : ''}`}
             onClick={() => setMode('group')}
           >
             Group
           </button>
           <button
-            className={`cashflow-sankey-pill${mode === 'category' ? ' active' : ''}`}
+            className={`tab-btn tab-btn--sm${mode === 'category' ? ' active' : ''}`}
             onClick={() => setMode('category')}
           >
             Category

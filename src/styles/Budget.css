@@ -453,6 +453,11 @@ body.dark .budget-title {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
+.budget-tr--group-total .budget-td--category,
+.budget-tr--group-total .budget-td--category-name,
+.budget-tr--group-total .budget-td--group-name {
+  background: var(--color-bg);
+}
 .budget-tr--grand-total {
   background: color-mix(in srgb, var(--color-border) 20%, var(--color-bg));
 }
@@ -461,6 +466,11 @@ body.dark .budget-title {
   border-bottom: none;
   padding-top: 0.7rem;
   padding-bottom: 0.7rem;
+}
+.budget-tr--grand-total .budget-td--category,
+.budget-tr--grand-total .budget-td--category-name,
+.budget-tr--grand-total .budget-td--group-name {
+  background: color-mix(in srgb, var(--color-border) 20%, var(--color-bg));
 }
 
 /* Aggregated row */
@@ -1686,34 +1696,6 @@ body.dark {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.75rem;
-}
-.cashflow-sankey-pills {
-  display: flex;
-  gap: 0;
-  background: var(--color-surface-hover);
-  border-radius: var(--radius);
-  padding: 2px;
-}
-.cashflow-sankey-pill {
-  padding: 4px 14px;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  background: transparent;
-  color: var(--color-text-muted);
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-.cashflow-sankey-pill:hover {
-  color: var(--color-text-heading);
-}
-.cashflow-sankey-pill.active {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 .cashflow-sankey-hint {
   font-size: var(--fs-sm);

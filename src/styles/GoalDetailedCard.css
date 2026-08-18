@@ -241,40 +241,6 @@ body.dark-mode .fi-goal-prose strong {
   gap: 0.5rem;
 }
 
-.fi-projection-period-toggle {
-  display: inline-flex;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.fi-projection-period-btn {
-  padding: 0.35rem 0.65rem;
-  font-size: var(--fs-sm, 0.8125rem);
-  font-weight: var(--fw-medium);
-  border: none;
-  background: var(--color-surface);
-  color: var(--color-text-secondary, #6b7280);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.fi-projection-period-btn + .fi-projection-period-btn {
-  border-left: 1px solid var(--color-border);
-}
-
-.fi-projection-period-btn--active {
-  background: var(--color-bg-hover, #f3f4f6);
-  color: var(--color-text);
-  font-weight: var(--fw-semibold);
-}
-
-body.dark-mode .fi-projection-period-btn--active {
-  background: rgba(255, 255, 255, 0.08);
-}
-
 /* ── Projection blocks ── */
 .fi-projection-block {
   margin-bottom: 0.5rem;
@@ -446,39 +412,6 @@ body.dark-mode .fi-projection-period-btn--active {
   margin-top: 0.25rem;
   color: var(--color-text-muted);
   font-size: var(--fs-md);
-}
-
-/* ──────────────────────────────────────────────
-   Expense view toggle
-   ────────────────────────────────────────────── */
-.expense-toggle {
-  display: flex;
-  background: var(--color-bg-hover, #f3f4f6);
-  border-radius: var(--radius);
-  padding: 2px;
-  gap: 2px;
-}
-
-.expense-toggle-btn {
-  background: none;
-  border: none;
-  border-radius: var(--radius);
-  padding: 0.2rem 0.6rem;
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  font-weight: var(--fw-normal);
-  transition:
-    background 0.15s,
-    color 0.15s;
-  white-space: nowrap;
-}
-
-.expense-toggle-btn.active {
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-weight: var(--fw-semibold);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 /* ──────────────────────────────────────────────
@@ -762,7 +695,6 @@ body.dark .fi-card-warning-suggest:hover:not(:disabled) {
   .fi-card,
   .fi-card-progress-bar-fill,
   .fi-card-warning-suggest,
-  .expense-toggle-btn,
   .fi-card-edit-btn,
   .fi-form-input,
   .fi-form-save,

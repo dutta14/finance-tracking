@@ -38,6 +38,7 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({
   allMonths = [],
 }) => {
   const [scope, setScope] = useState<Scope>('total')
+  const [legendMode, setLegendMode] = useState<'pct' | 'val'>('pct')
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
   const [selectedAcctIdx, setSelectedAcctIdx] = useState<number | null>(null)
 
@@ -48,11 +49,11 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({
     <section className="alloc-page-section">
       <div className="alloc-page-section-header">
         <div className="alloc-page-controls">
-          <div className="alloc-page-scope-tabs">
+          <div className="tab-bar">
             {(['total', 'fi', 'gw'] as Scope[]).map(s => (
               <button
                 key={s}
-                className={`alloc-page-tab${scope === s ? ' active' : ''}`}
+                className={`tab-btn${scope === s ? ' active' : ''}`}
                 onClick={() => {
                   setScope(s)
                   setSelectedClass(null)
@@ -61,6 +62,14 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({
                 {s === 'total' ? 'Total' : s.toUpperCase()}
               </button>
             ))}
+          </div>
+          <div className="tab-bar">
+            <button className={`tab-btn${legendMode === 'pct' ? ' active' : ''}`} onClick={() => setLegendMode('pct')}>
+              %
+            </button>
+            <button className={`tab-btn${legendMode === 'val' ? ' active' : ''}`} onClick={() => setLegendMode('val')}>
+              $
+            </button>
           </div>
         </div>
       </div>
@@ -85,6 +94,7 @@ const BreakdownSection: FC<BreakdownSectionProps> = ({
               <Legend
                 data={slices}
                 total={total}
+                mode={legendMode}
                 selectedIndex={
                   selectedClass ? slices.findIndex(s => (s as { key?: string }).key === selectedClass) : -1
                 }

@@ -194,8 +194,18 @@ type DatePickerFlyoutProps = {
 
 const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
 
 const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel }) => {
@@ -211,12 +221,16 @@ const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
 
   const prevMonth = () => {
-    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
-    else setViewMonth(m => m - 1)
+    if (viewMonth === 0) {
+      setViewYear(y => y - 1)
+      setViewMonth(11)
+    } else setViewMonth(m => m - 1)
   }
   const nextMonth = () => {
-    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
-    else setViewMonth(m => m + 1)
+    if (viewMonth === 11) {
+      setViewYear(y => y + 1)
+      setViewMonth(0)
+    } else setViewMonth(m => m + 1)
   }
 
   const handleDayClick = (day: number) => {
@@ -226,15 +240,34 @@ const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel
   }
 
   return (
-    <div className="txn-date-flyout" role="dialog" aria-label="Pick a date" onKeyDown={e => { if (e.key === 'Escape') onCancel() }}>
+    <div
+      className="txn-date-flyout"
+      role="dialog"
+      aria-label="Pick a date"
+      onKeyDown={e => {
+        if (e.key === 'Escape') onCancel()
+      }}
+    >
       <div className="txn-date-flyout-header">
-        <button type="button" className="txn-date-flyout-nav" onClick={prevMonth} aria-label="Previous month">‹</button>
-        <span className="txn-date-flyout-title">{MONTH_NAMES[viewMonth]} {viewYear}</span>
-        <button type="button" className="txn-date-flyout-nav" onClick={nextMonth} aria-label="Next month">›</button>
+        <button type="button" className="txn-date-flyout-nav" onClick={prevMonth} aria-label="Previous month">
+          ‹
+        </button>
+        <span className="txn-date-flyout-title">
+          {MONTH_NAMES[viewMonth]} {viewYear}
+        </span>
+        <button type="button" className="txn-date-flyout-nav" onClick={nextMonth} aria-label="Next month">
+          ›
+        </button>
       </div>
       <div className="txn-date-flyout-grid">
-        {DAYS_OF_WEEK.map(d => <span key={d} className="txn-date-flyout-dow">{d}</span>)}
-        {Array.from({ length: firstDayOfWeek }).map((_, i) => <span key={`e${i}`} />)}
+        {DAYS_OF_WEEK.map(d => (
+          <span key={d} className="txn-date-flyout-dow">
+            {d}
+          </span>
+        ))}
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+          <span key={`e${i}`} />
+        ))}
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1
           const isSelected = day === selectedDay && viewMonth === selectedMonth && viewYear === selectedYear

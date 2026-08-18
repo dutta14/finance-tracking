@@ -167,9 +167,9 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               New Goal
             </button>
           )}
-          <div className="view-mode-toggle">
+          <div className="tab-bar">
             <button
-              className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
+              className={`tab-btn tab-btn--sm${viewMode === 'grid' ? ' active' : ''}`}
               onClick={() => {
                 setViewMode('grid')
                 setStorageItem('goal-view-mode', 'grid')
@@ -185,7 +185,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               </svg>
             </button>
             <button
-              className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
+              className={`tab-btn tab-btn--sm${viewMode === 'list' ? ' active' : ''}`}
               onClick={() => {
                 setViewMode('list')
                 setStorageItem('goal-view-mode', 'list')

@@ -36,10 +36,7 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
         >
           Spreadsheet
         </button>
-        <button
-          className={`tab-btn${viewMode === 'groups' ? ' active' : ''}`}
-          onClick={() => onSetViewMode('groups')}
-        >
+        <button className={`tab-btn${viewMode === 'groups' ? ' active' : ''}`} onClick={() => onSetViewMode('groups')}>
           Groups
         </button>
       </div>

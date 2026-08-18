@@ -243,14 +243,28 @@ describe('GoalMixer', () => {
   })
 
   it('renders "Unnamed goal" for GW goals with empty label', () => {
-    const gwNoLabel = makeGwGoal({ id: 99, fiGoalId: 1, label: '', disburseAge: 50, disburseAmount: 50000, growthRate: 5 })
+    const gwNoLabel = makeGwGoal({
+      id: 99,
+      fiGoalId: 1,
+      label: '',
+      disburseAge: 50,
+      disburseAmount: 50000,
+      growthRate: 5,
+    })
     render(<GoalMixer {...defaultProps} gwGoals={[gwNoLabel]} />)
 
     expect(screen.getByText('Unnamed goal')).toBeInTheDocument()
   })
 
   it('filters out GW goals whose fiGoalId does not match any goal', () => {
-    const orphanGw = makeGwGoal({ id: 30, fiGoalId: 999, label: 'Orphan Goal', disburseAge: 50, disburseAmount: 50000, growthRate: 5 })
+    const orphanGw = makeGwGoal({
+      id: 30,
+      fiGoalId: 999,
+      label: 'Orphan Goal',
+      disburseAge: 50,
+      disburseAmount: 50000,
+      growthRate: 5,
+    })
     render(<GoalMixer {...defaultProps} gwGoals={[orphanGw]} />)
 
     expect(screen.getByText('No GW goals found across any goals.')).toBeInTheDocument()

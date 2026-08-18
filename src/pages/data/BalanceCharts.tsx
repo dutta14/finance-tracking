@@ -134,7 +134,10 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
   const tooltipItemStyle = { color: tooltipText, fontSize: 12, fontWeight: 600, padding: 0 }
   const positiveDeltaColor = '#16a34a'
   const negativeDeltaColor = '#dc2626'
-  const getRawTooltipValue = useCallback((point: ChartDatum, dataKey?: ChartMetricKey) => (dataKey ? point[dataKey] : null), [])
+  const getRawTooltipValue = useCallback(
+    (point: ChartDatum, dataKey?: ChartMetricKey) => (dataKey ? point[dataKey] : null),
+    [],
+  )
   const getTooltipValue = useCallback(
     (point: ChartDatum, dataKey?: ChartMetricKey) => {
       if (!dataKey) return null
@@ -193,7 +196,10 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
               : null
           return { ...item, value, delta: prevValue == null ? null : formatDelta(value, prevValue), deltaColor }
         })
-        .filter((item): item is TooltipPayloadItem & { value: number; delta: string | null; deltaColor: string | null } => item !== null)
+        .filter(
+          (item): item is TooltipPayloadItem & { value: number; delta: string | null; deltaColor: string | null } =>
+            item !== null,
+        )
       if (!items.length) return null
       return (
         <div style={tooltipStyle}>
@@ -322,9 +328,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 tickLine={false}
                 width={80}
               />
-              <Tooltip
-                content={renderTooltip}
-              />
+              <Tooltip content={renderTooltip} />
               <Legend content={renderLegend} />
               <Area
                 type="natural"
@@ -391,9 +395,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 tickLine={false}
                 width={80}
               />
-              <Tooltip
-                content={renderTooltip}
-              />
+              <Tooltip content={renderTooltip} />
               <Area
                 type="natural"
                 dataKey="netWorth"
@@ -439,9 +441,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 tickLine={false}
                 width={80}
               />
-              <Tooltip
-                content={renderTooltip}
-              />
+              <Tooltip content={renderTooltip} />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" stackId="al" fill="#4ade80" radius={[4, 4, 0, 0]} maxBarSize={48} />

@@ -23,7 +23,7 @@ const QuickStart: FC<QuickStartProps> = ({ screenshots }) => {
     {
       id: 'quick-start-passphrase',
       title: 'Set a passphrase',
-      body: 'Open Settings from the sidebar and set a passphrase before you get too far. This encrypts your data at rest. Pick something you\'ll remember, because there is no reset. You can skip it and come back later, but if you plan to use GitHub Sync, do it now.',
+      body: "Open Settings from the sidebar and set a passphrase before you get too far. This encrypts your data at rest. Pick something you'll remember, because there is no reset. You can skip it and come back later, but if you plan to use GitHub Sync, do it now.",
       image: screenshots.step2,
       alt: 'Passphrase setup in Settings',
     },
@@ -37,14 +37,14 @@ const QuickStart: FC<QuickStartProps> = ({ screenshots }) => {
     {
       id: 'quick-start-balance',
       title: 'Enter a monthly balance',
-      body: 'Open that account and add this month\'s balance. That is enough to make the charts wake up. Come back next month and add another point. You do not need perfect history to get value from it.',
+      body: "Open that account and add this month's balance. That is enough to make the charts wake up. Come back next month and add another point. You do not need perfect history to get value from it.",
       image: screenshots.step4,
       alt: 'Enter monthly balance',
     },
     {
       id: 'quick-start-explore',
       title: 'Let the rest of the app unfold from there',
-      body: 'Go back Home. You\'ll see the net worth summary, mini charts, goals peek, and allocation bar start to take shape. From there, add a goal, import a budget CSV, or drop your tax documents into Drive. The app is modular. You can grow into it.',
+      body: "Go back Home. You'll see the net worth summary, mini charts, goals peek, and allocation bar start to take shape. From there, add a goal, import a budget CSV, or drop your tax documents into Drive. The app is modular. You can grow into it.",
       image: screenshots.step5,
       alt: 'Net worth on the home dashboard',
     },

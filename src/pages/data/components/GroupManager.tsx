@@ -143,21 +143,23 @@ const GroupManager: FC<GroupManagerProps> = ({
               )}
             </div>
             <div className="data-group-card-members">
-              {[...members].sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0)).map(a => (
-                <span
-                  key={a.id}
-                  className={`data-group-member${a.status === 'inactive' ? ' data-group-member--inactive' : ''}`}
-                  draggable
-                  onDragStart={() => onSetDragAccountId(a.id)}
-                  onDragEnd={() => {
-                    onSetDragAccountId(null)
-                    onSetDropTarget(null)
-                  }}
-                >
-                  <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
-                  {a.name}
-                </span>
-              ))}
+              {[...members]
+                .sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0))
+                .map(a => (
+                  <span
+                    key={a.id}
+                    className={`data-group-member${a.status === 'inactive' ? ' data-group-member--inactive' : ''}`}
+                    draggable
+                    onDragStart={() => onSetDragAccountId(a.id)}
+                    onDragEnd={() => {
+                      onSetDragAccountId(null)
+                      onSetDropTarget(null)
+                    }}
+                  >
+                    <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
+                    {a.name}
+                  </span>
+                ))}
             </div>
           </div>
         )
@@ -264,21 +266,23 @@ const GroupManager: FC<GroupManagerProps> = ({
                 return (
                   <div key={ownerType} className="data-group-ungrouped-col">
                     <span className="data-group-ungrouped-col-label">{ownerLabels[ownerType]}</span>
-                    {[...ownerAccounts].sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0)).map(a => (
-                      <span
-                        key={a.id}
-                        className={`data-group-member${a.status === 'inactive' ? ' data-group-member--inactive' : ''}`}
-                        draggable
-                        onDragStart={() => onSetDragAccountId(a.id)}
-                        onDragEnd={() => {
-                          onSetDragAccountId(null)
-                          onSetDropTarget(null)
-                        }}
-                      >
-                        <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
-                        {a.name}
-                      </span>
-                    ))}
+                    {[...ownerAccounts]
+                      .sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0))
+                      .map(a => (
+                        <span
+                          key={a.id}
+                          className={`data-group-member${a.status === 'inactive' ? ' data-group-member--inactive' : ''}`}
+                          draggable
+                          onDragStart={() => onSetDragAccountId(a.id)}
+                          onDragEnd={() => {
+                            onSetDragAccountId(null)
+                            onSetDropTarget(null)
+                          }}
+                        >
+                          <span className={`data-group-member-dot data-group-member-dot--${a.owner}`} />
+                          {a.name}
+                        </span>
+                      ))}
                   </div>
                 )
               })}

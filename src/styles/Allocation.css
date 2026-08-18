@@ -48,63 +48,6 @@
   gap: 1rem;
 }
 
-/* ── Tabs / Toggles ──────────────────────────────────────────── */
-
-.alloc-page-scope-tabs {
-  display: flex;
-  gap: 0.25rem;
-  background: var(--color-surface-hover);
-  border-radius: var(--radius);
-  padding: 3px;
-}
-.alloc-page-tab {
-  background: none;
-  border: none;
-  font: inherit;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  padding: 0.4rem 0.9rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  transition:
-    background 0.12s,
-    color 0.12s;
-}
-.alloc-page-tab:hover {
-  color: var(--color-text);
-}
-.alloc-page-tab.active {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.alloc-page-toggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.alloc-page-toggle-btn {
-  background: none;
-  border: none;
-  font: inherit;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
-  padding: 0.4rem 0.75rem;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  transition:
-    background 0.12s,
-    color 0.12s;
-}
-.alloc-page-toggle-btn.active {
-  background: var(--accent-lighter);
-  color: var(--accent-text-dark);
-}
-
 /* ── Chart row ───────────────────────────────────────────────── */
 
 .alloc-page-chart-row {
@@ -375,35 +318,7 @@
   margin-left: auto;
 }
 .alloc-ratio-tabs {
-  display: flex;
-  gap: 0.25rem;
-  background: var(--color-surface-hover);
-  border-radius: var(--radius);
-  padding: 3px;
-}
-.alloc-ratio-tab {
-  background: none;
-  border: none;
-  font: inherit;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  padding: 0.4rem 0.9rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  transition:
-    background 0.12s,
-    color 0.12s;
-}
-.alloc-ratio-tab:hover {
-  color: var(--color-text);
-}
-.alloc-ratio-tab.active {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-weight: var(--fw-semibold);
+  margin-bottom: 0.5rem;
 }
 .alloc-ratio-tab--add {
   font-size: var(--fs-lg);

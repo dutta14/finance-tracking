@@ -33,18 +33,18 @@ const RatioTabs: FC<RatioTabsProps> = ({
 }) => (
   <>
     <div className="alloc-ratio-toolbar">
-      <div className="alloc-ratio-tabs">
+      <div className="tab-bar alloc-ratio-tabs">
         {customRatios.map(r => (
           <button
             key={r.id}
-            className={`alloc-ratio-tab${r.id === activeRatioId ? ' active' : ''}`}
+            className={`tab-btn${r.id === activeRatioId ? ' active' : ''}`}
             onClick={() => onSelectRatio(r.id)}
           >
             {r.name}
           </button>
         ))}
         <div className="alloc-ratio-create-wrap" ref={createMenuRef}>
-          <button className="alloc-ratio-tab alloc-ratio-tab--add" onClick={onToggleCreateMenu}>
+          <button className="tab-btn alloc-ratio-tab--add" onClick={onToggleCreateMenu}>
             +
           </button>
           {createMenuOpen && (

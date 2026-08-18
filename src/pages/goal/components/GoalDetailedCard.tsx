@@ -700,15 +700,15 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
             <div className="fi-card-section-header">
               <h3 className="fi-card-section-title">Projected</h3>
               <div className="fi-projection-controls">
-                <div className="fi-projection-period-toggle">
+                <div className="tab-bar">
                   <button
-                    className={`fi-projection-period-btn${!showYearly ? ' fi-projection-period-btn--active' : ''}`}
+                    className={`tab-btn tab-btn--sm${!showYearly ? ' active' : ''}`}
                     onClick={() => showYearly && onTogglePeriod?.()}
                   >
                     /mo
                   </button>
                   <button
-                    className={`fi-projection-period-btn${showYearly ? ' fi-projection-period-btn--active' : ''}`}
+                    className={`tab-btn tab-btn--sm${showYearly ? ' active' : ''}`}
                     onClick={() => !showYearly && onTogglePeriod?.()}
                   >
                     /yr

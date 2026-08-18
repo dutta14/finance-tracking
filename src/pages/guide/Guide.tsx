@@ -32,9 +32,19 @@ const tocItems: GuideSectionLink[] = [
   { id: 'why-this-exists', title: 'Why this exists', keywords: ['story', 'purpose'] },
   { id: 'privacy', title: 'Privacy & data', keywords: ['security', 'encryption', 'storage'] },
   { id: 'where-your-data-lives', title: 'Where your data lives', level: 3, keywords: ['localstorage', 'indexeddb'] },
-  { id: 'encrypted-at-rest', title: 'What encrypted at rest means', level: 3, keywords: ['aes', 'pbkdf2', 'passphrase'] },
+  {
+    id: 'encrypted-at-rest',
+    title: 'What encrypted at rest means',
+    level: 3,
+    keywords: ['aes', 'pbkdf2', 'passphrase'],
+  },
   { id: 'github-sync', title: 'What GitHub Sync does', level: 3, keywords: ['backup', 'private repo'] },
-  { id: 'what-this-app-does-not-do', title: 'What this app does not do', level: 3, keywords: ['analytics', 'telemetry', 'backend'] },
+  {
+    id: 'what-this-app-does-not-do',
+    title: 'What this app does not do',
+    level: 3,
+    keywords: ['analytics', 'telemetry', 'backend'],
+  },
   { id: 'trade-off', title: 'The trade-off, stated honestly', level: 3, keywords: ['recovery', 'reset'] },
   { id: 'quick-start', title: 'Quick start', keywords: ['setup', 'first steps'] },
   { id: 'features-by-page', title: 'Features, by page', keywords: ['pages', 'navigation'] },
@@ -72,7 +82,9 @@ const Guide: FC = () => {
   const matchCount = useMemo(() => {
     const trimmedQuery = query.trim().toLowerCase()
     if (!trimmedQuery) return tocItems.length
-    return tocItems.filter(item => [item.title, ...(item.keywords ?? [])].join(' ').toLowerCase().includes(trimmedQuery)).length
+    return tocItems.filter(item =>
+      [item.title, ...(item.keywords ?? [])].join(' ').toLowerCase().includes(trimmedQuery),
+    ).length
   }, [query])
 
   return (

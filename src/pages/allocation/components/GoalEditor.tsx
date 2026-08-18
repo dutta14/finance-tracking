@@ -72,16 +72,16 @@ const GoalEditor: FC<GoalEditorProps> = ({
     <div className="alloc-goal-editor">
       <div className="alloc-goal-editor-header">
         <span className="alloc-ratio-builder-label">Goal Type</span>
-        <div className="alloc-page-scope-tabs">
+        <div className="tab-bar">
           <button
-            className={`alloc-page-tab${goalType === 'constant' ? ' active' : ''}`}
+            className={`tab-btn${goalType === 'constant' ? ' active' : ''}`}
             onClick={() => setGoalType('constant')}
             aria-pressed={goalType === 'constant'}
           >
             Constant
           </button>
           <button
-            className={`alloc-page-tab${goalType === 'gradual' ? ' active' : ''}`}
+            className={`tab-btn${goalType === 'gradual' ? ' active' : ''}`}
             onClick={() => setGoalType('gradual')}
             aria-pressed={goalType === 'gradual'}
           >
@@ -94,9 +94,9 @@ const GoalEditor: FC<GoalEditorProps> = ({
         <div className="alloc-goal-gradual-fields">
           <div className="alloc-goal-field-row">
             <label className="alloc-goal-field-label">Based on</label>
-            <div className="alloc-page-scope-tabs">
+            <div className="tab-bar">
               <button
-                className={`alloc-page-tab${owner === 'primary' ? ' active' : ''}`}
+                className={`tab-btn${owner === 'primary' ? ' active' : ''}`}
                 onClick={() => setOwner('primary')}
                 disabled={!hasPrimary}
                 aria-pressed={owner === 'primary'}
@@ -104,7 +104,7 @@ const GoalEditor: FC<GoalEditorProps> = ({
                 {primaryName || 'Primary'}
               </button>
               <button
-                className={`alloc-page-tab${owner === 'partner' ? ' active' : ''}`}
+                className={`tab-btn${owner === 'partner' ? ' active' : ''}`}
                 onClick={() => setOwner('partner')}
                 disabled={!hasPartner}
                 aria-pressed={owner === 'partner'}

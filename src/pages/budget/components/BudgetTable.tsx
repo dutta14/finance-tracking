@@ -291,7 +291,10 @@ const BudgetTable: FC<BudgetTableProps> = ({
                           const val = getPeriodValue(cat, p)
                           const monthKey = p.monthKeys.length === 1 ? p.monthKeys[0] : null
                           return (
-                            <td key={p.label} className={`budget-td budget-td--number${isExpense && val > 0 ? ' refund' : ''}`}>
+                            <td
+                              key={p.label}
+                              className={`budget-td budget-td--number${isExpense && val > 0 ? ' refund' : ''}`}
+                            >
                               {val !== 0 && monthKey ? (
                                 <button
                                   type="button"

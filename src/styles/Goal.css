@@ -327,7 +327,10 @@ section.goal {
   cursor: pointer;
   white-space: nowrap;
   margin-left: auto;
-  transition: background 150ms, color 150ms, border-color 150ms;
+  transition:
+    background 150ms,
+    color 150ms,
+    border-color 150ms;
 }
 .random-name-btn:hover {
   background: var(--color-surface-hover);
@@ -720,40 +723,6 @@ body.dark .goal-drag-item--long-press {
   background: var(--color-surface-alt);
   border-radius: var(--radius);
   text-align: center;
-}
-
-.view-mode-toggle {
-  display: flex;
-  gap: 0.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.2rem;
-  height: 36px;
-  background: var(--color-surface-alt);
-}
-
-.view-mode-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 0.3rem 0.5rem;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.view-mode-btn:hover {
-  color: var(--color-text);
-  background: var(--color-border);
-}
-
-.view-mode-btn.active {
-  color: var(--color-surface);
-  background: var(--color-text);
 }
 
 .goal-detail-container {

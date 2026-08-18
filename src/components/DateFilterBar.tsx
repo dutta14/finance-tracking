@@ -1,4 +1,5 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { CSSProperties, FC, useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { DateFilter, DATE_FILTER_OPTIONS, UseDateFilterResult } from '../hooks/useDateFilter'
 import '../styles/MonthPicker.css'
 
@@ -107,8 +108,32 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
   size = 'sm',
 }) => {
   const [flyoutOpen, setFlyoutOpen] = useState(false)
+  const [flyoutStyle, setFlyoutStyle] = useState<CSSProperties>()
   const flyoutRef = useRef<HTMLDivElement>(null)
   const customBtnRef = useRef<HTMLButtonElement>(null)
+
+  const updateFlyoutPosition = useCallback(() => {
+    const flyoutEl = flyoutRef.current
+    const customBtnEl = customBtnRef.current
+    if (!flyoutEl || !customBtnEl) return
+
+    const buttonRect = customBtnEl.getBoundingClientRect()
+    const flyoutRect = flyoutEl.getBoundingClientRect()
+    const viewportPadding = 12
+    const flyoutWidth = flyoutRect.width
+    const flyoutHeight = flyoutRect.height
+    const fitsBelow = buttonRect.bottom + 6 + flyoutHeight <= window.innerHeight - viewportPadding
+
+    setFlyoutStyle({
+      position: 'fixed',
+      top: fitsBelow ? buttonRect.bottom + 6 : Math.max(viewportPadding, buttonRect.top - flyoutHeight - 6),
+      left: Math.min(
+        Math.max(viewportPadding, buttonRect.right - flyoutWidth),
+        Math.max(viewportPadding, window.innerWidth - flyoutWidth - viewportPadding),
+      ),
+      visibility: 'visible',
+    })
+  }, [])
 
   useEffect(() => {
     if (!flyoutOpen) return
@@ -128,50 +153,75 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
     }
   }, [flyoutOpen])
 
+  useLayoutEffect(() => {
+    if (!flyoutOpen) {
+      setFlyoutStyle(undefined)
+      return
+    }
+
+    updateFlyoutPosition()
+    window.addEventListener('resize', updateFlyoutPosition)
+    window.addEventListener('scroll', updateFlyoutPosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updateFlyoutPosition)
+      window.removeEventListener('scroll', updateFlyoutPosition, true)
+    }
+  }, [flyoutOpen, updateFlyoutPosition])
+
+  const flyout =
+    flyoutOpen &&
+    dateFilter === 'custom' &&
+    onFromChange &&
+    onToChange &&
+    createPortal(
+      <div
+        ref={flyoutRef}
+        className="date-filter-range-flyout"
+        style={flyoutStyle ?? { position: 'fixed', top: 0, left: 0, visibility: 'hidden' }}
+      >
+        <InlineMonthGrid label="From" allMonths={allMonths} selectedMonth={customFrom} onSelect={onFromChange} />
+        <div className="date-flyout-divider" />
+        <InlineMonthGrid label="To" allMonths={allMonths} selectedMonth={customTo} onSelect={onToChange} />
+      </div>,
+      document.body,
+    )
+
   return (
-    <div className="date-filter-wrap">
-      <div className="tab-bar">
-        {DATE_FILTER_OPTIONS.map(({ key, label }) =>
-          key === 'custom' ? (
-            <div key={key} className="date-filter-custom-wrap">
+    <>
+      <div className="date-filter-wrap">
+        <div className="tab-bar">
+          {DATE_FILTER_OPTIONS.map(({ key, label }) =>
+            key === 'custom' ? (
+              <div key={key} className="date-filter-custom-wrap">
+                <button
+                  ref={customBtnRef}
+                  className={`tab-btn tab-btn--${size}${dateFilter === 'custom' ? ' active' : ''}`}
+                  onClick={() => {
+                    setDateFilter('custom')
+                    setFlyoutOpen(o => !o)
+                  }}
+                >
+                  {label}
+                </button>
+              </div>
+            ) : (
               <button
-                ref={customBtnRef}
-                className={`tab-btn tab-btn--${size}${dateFilter === 'custom' ? ' active' : ''}`}
+                key={key}
+                className={`tab-btn tab-btn--${size}${dateFilter === key ? ' active' : ''}`}
                 onClick={() => {
-                  setDateFilter('custom')
-                  setFlyoutOpen(o => !o)
+                  setDateFilter(key)
+                  setFlyoutOpen(false)
                 }}
               >
                 {label}
               </button>
-              {flyoutOpen && dateFilter === 'custom' && onFromChange && onToChange && (
-                <div ref={flyoutRef} className="date-filter-range-flyout">
-                  <InlineMonthGrid
-                    label="From"
-                    allMonths={allMonths}
-                    selectedMonth={customFrom}
-                    onSelect={onFromChange}
-                  />
-                  <div className="date-flyout-divider" />
-                  <InlineMonthGrid label="To" allMonths={allMonths} selectedMonth={customTo} onSelect={onToChange} />
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              key={key}
-              className={`tab-btn tab-btn--${size}${dateFilter === key ? ' active' : ''}`}
-              onClick={() => {
-                setDateFilter(key)
-                setFlyoutOpen(false)
-              }}
-            >
-              {label}
-            </button>
-          ),
-        )}
+            ),
+          )}
+        </div>
       </div>
-    </div>
+      {flyout}
+    </>
   )
 }
 

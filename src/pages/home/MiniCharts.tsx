@@ -51,9 +51,9 @@ const isChartMetricKey = (dataKey: string): dataKey is ChartMetricKey =>
   ['fi', 'gw', 'netWorth', 'assets', 'liabilities'].includes(dataKey)
 
 const CHART_OPTIONS: { key: MiniChartType; label: string }[] = [
-  { key: 'net-worth', label: 'Net Worth' },
+  { key: 'net-worth', label: 'N/W' },
   { key: 'fi-gw', label: 'FI vs GW' },
-  { key: 'assets-liabilities', label: 'Assets / Liabilities' },
+  { key: 'assets-liabilities', label: 'A/L' },
 ]
 
 const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMonths, onNavigate }) => {
@@ -133,7 +133,10 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
   const tooltipItemStyle = { color: tooltipText, fontSize: 11, fontWeight: 600, padding: 0 }
   const positiveDeltaColor = '#16a34a'
   const negativeDeltaColor = '#dc2626'
-  const getRawTooltipValue = useCallback((point: ChartDatum, dataKey?: ChartMetricKey) => (dataKey ? point[dataKey] : null), [])
+  const getRawTooltipValue = useCallback(
+    (point: ChartDatum, dataKey?: ChartMetricKey) => (dataKey ? point[dataKey] : null),
+    [],
+  )
   const getTooltipValue = useCallback(
     (point: ChartDatum, dataKey?: ChartMetricKey) => {
       if (!dataKey) return null
@@ -192,7 +195,10 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
               : null
           return { ...item, value, delta: prevValue == null ? null : formatDelta(value, prevValue), deltaColor }
         })
-        .filter((item): item is TooltipPayloadItem & { value: number; delta: string | null; deltaColor: string | null } => item !== null)
+        .filter(
+          (item): item is TooltipPayloadItem & { value: number; delta: string | null; deltaColor: string | null } =>
+            item !== null,
+        )
       if (!items.length) return null
       return (
         <div style={tooltipStyle}>
@@ -307,26 +313,28 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
           View Charts →
         </button>
       </div>
-      <div className="tab-bar">
-        {CHART_OPTIONS.map(opt => (
-          <button
-            key={opt.key}
-            className={`tab-btn${chartType === opt.key ? ' active' : ''}`}
-            onClick={() => setChartType(opt.key)}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="home-charts-controls">
+        <div className="tab-bar">
+          {CHART_OPTIONS.map(opt => (
+            <button
+              key={opt.key}
+              className={`tab-btn tab-btn--sm${chartType === opt.key ? ' active' : ''}`}
+              onClick={() => setChartType(opt.key)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <DateFilterBar
+          dateFilter={dateFilter}
+          setDateFilter={setDateFilter}
+          customFrom={customFrom}
+          customTo={customTo}
+          onFromChange={setCustomFrom}
+          onToChange={setCustomTo}
+          allMonths={allMonths}
+        />
       </div>
-      <DateFilterBar
-        dateFilter={dateFilter}
-        setDateFilter={setDateFilter}
-        customFrom={customFrom}
-        customTo={customTo}
-        onFromChange={setCustomFrom}
-        onToChange={setCustomTo}
-        allMonths={allMonths}
-      />
       <div className="home-mini-chart-area">
         {chartType === 'fi-gw' ? (
           <ResponsiveContainer width="100%" height={200}>
@@ -357,9 +365,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 tickLine={false}
                 width={52}
               />
-              <Tooltip
-                content={renderTooltip}
-              />
+              <Tooltip content={renderTooltip} />
               <Legend content={renderLegend} />
               <Area
                 type="natural"
@@ -426,9 +432,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 tickLine={false}
                 width={52}
               />
-              <Tooltip
-                content={renderTooltip}
-              />
+              <Tooltip content={renderTooltip} />
               <Area
                 type="natural"
                 dataKey="netWorth"
@@ -469,9 +473,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 tickLine={false}
                 width={52}
               />
-              <Tooltip
-                content={renderTooltip}
-              />
+              <Tooltip content={renderTooltip} />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
               <Bar dataKey="assets" name="Assets" stackId="al" fill="#4ade80" radius={[3, 3, 0, 0]} />

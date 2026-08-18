@@ -106,9 +106,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
       <div className="data-modal-body">
         <div className="data-toolbar">
           <span className="data-toolbar-count">
-            {filter === 'all'
-              ? `${accounts.length} accounts`
-              : `${existingGroups.length} groups`}
+            {filter === 'all' ? `${accounts.length} accounts` : `${existingGroups.length} groups`}
           </span>
           <div className="tab-bar" role="tablist" aria-label="Account filters">
             <button

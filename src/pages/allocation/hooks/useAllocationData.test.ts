@@ -396,9 +396,9 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([
-        { name: 'Brokerage', value: 70000, isDebt: false, owner: 'partner', ownerName: 'Bob' },
-        { name: 'Joint Account', value: 50000, isDebt: false, owner: 'joint', ownerName: 'Joint' },
-        { name: '401k', value: 30000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 2, name: 'Brokerage', value: 70000, isDebt: false, owner: 'partner', ownerName: 'Bob' },
+        { id: 3, name: 'Joint Account', value: 50000, isDebt: false, owner: 'joint', ownerName: 'Joint' },
+        { id: 1, name: '401k', value: 30000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
       ])
     })
 
@@ -412,10 +412,10 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('fi', 'us-stock')).toEqual([
-        { name: 'FI Account', value: 10000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 1, name: 'FI Account', value: 10000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
       ])
       expect(result.current.getAccountsForClass('gw', 'us-stock')).toEqual([
-        { name: 'GW Account', value: 20000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 2, name: 'GW Account', value: 20000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
       ])
     })
 
@@ -429,7 +429,7 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([
-        { name: 'Included Account', value: 10000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 1, name: 'Included Account', value: 10000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
       ])
     })
 
@@ -455,10 +455,10 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'cash')).toEqual([
-        { name: 'Cash Buffer', value: 9000, isDebt: false, owner: 'primary', ownerName: 'Primary' },
+        { id: 1, name: 'Cash Buffer', value: 9000, isDebt: false, owner: 'primary', ownerName: 'Primary' },
       ])
       expect(result.current.getAccountsForClass('total', 'debt')).toEqual([
-        { name: 'Credit Card', value: 4000, isDebt: true, owner: 'partner', ownerName: 'Partner' },
+        { id: 2, name: 'Credit Card', value: 4000, isDebt: true, owner: 'partner', ownerName: 'Partner' },
       ])
     })
 
@@ -478,12 +478,12 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'real-estate')).toEqual([
-        { name: 'House', value: 500000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
-        { name: 'Mortgage', value: 200000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+        { id: 1, name: 'House', value: 500000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 2, name: 'Mortgage', value: 200000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
       ])
       expect(result.current.getAccountsForClass('total', 'debt')).toEqual([
-        { name: 'Fallback Loan', value: 10000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
-        { name: 'Credit Card', value: 7000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+        { id: 3, name: 'Fallback Loan', value: 10000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+        { id: 4, name: 'Credit Card', value: 7000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
       ])
     })
 
@@ -514,11 +514,11 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'cash')).toEqual([
-        { name: 'Unallocated Asset', value: 5000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
-        { name: 'Loan Against Asset', value: 3000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+        { id: 1, name: 'Unallocated Asset', value: 5000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 2, name: 'Loan Against Asset', value: 3000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
       ])
       expect(result.current.getAccountsForClass('total', 'debt')).toEqual([
-        { name: 'Standalone Liability', value: 2000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
+        { id: 3, name: 'Standalone Liability', value: 2000, isDebt: true, owner: 'primary', ownerName: 'Alice' },
       ])
     })
 
@@ -528,7 +528,7 @@ describe('useAllocationData', () => {
 
       const { result } = renderHook(() => useAllocationData())
       expect(result.current.getAccountsForClass('total', 'us-stock')).toEqual([
-        { name: 'Brokerage', value: 5000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
+        { id: 1, name: 'Brokerage', value: 5000, isDebt: false, owner: 'primary', ownerName: 'Alice' },
       ])
     })
   })

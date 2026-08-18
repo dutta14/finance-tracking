@@ -18,7 +18,7 @@ const MAX_PAYLOAD_BYTES = 50 * 1024 * 1024 // 50 MB
 const MAX_STRING_LENGTH = 100
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024 // 2 MB data-url
 
-const ALLOWED_ACCENT_THEMES = ['blue', 'teal', 'purple', 'orange', 'green', 'rose', 'slate'] as const
+const ALLOWED_ACCENT_THEMES = ['blue', 'teal', 'purple', 'orange', 'green', 'rose', 'slate', 'amber'] as const
 const ALLOWED_GOAL_VIEW_MODES = ['grid', 'list', ''] as const
 
 // ── Result types ───────────────────────────────────────────────

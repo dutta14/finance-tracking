@@ -110,7 +110,7 @@ describe('BreakdownSection', () => {
     expect(screen.getByText('Debt')).toBeInTheDocument()
     expect(screen.getByText('-$5,000')).toBeInTheDocument()
     expect(screen.getByText('$55,000')).toBeInTheDocument()
-    expect(screen.getByTestId('selected-index')).toHaveTextContent('0')
+    expect(screen.getAllByTestId('selected-index')[0]).toHaveTextContent('0')
 
     await user.click(screen.getByRole('button', { name: 'Select US Stock' }))
 

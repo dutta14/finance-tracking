@@ -7,6 +7,7 @@ const ACCENT_OPTIONS = [
   { id: 'purple', label: 'Purple', color: '#8b5cf6' },
   { id: 'green', label: 'Green', color: '#22c55e' },
   { id: 'orange', label: 'Orange', color: '#f97316' },
+  { id: 'amber', label: 'Amber', color: '#7c4a1e' },
 ]
 
 const AppearancePane: FC<AppearancePaneProps> = ({ darkMode, onToggleDarkMode, accentTheme, onChangeAccent }) => {

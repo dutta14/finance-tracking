@@ -47,7 +47,11 @@ const AccountRow: FC<AccountRowProps> = ({
           {account.institution && <span className="data-account-institution">{account.institution}</span>}
           {(account.group || account.linkedAccountId != null) && (
             <div className="data-account-meta">
-              {account.group && <span className="data-account-parent">↳ {account.group} · {ownerLabels[account.owner]}</span>}
+              {account.group && (
+                <span className="data-account-parent">
+                  ↳ {account.group} · {ownerLabels[account.owner]}
+                </span>
+              )}
               {account.linkedAccountId != null &&
                 (() => {
                   const linked = accounts.find(a => a.id === account.linkedAccountId)
@@ -86,10 +90,7 @@ const AccountRow: FC<AccountRowProps> = ({
           <button className="data-action-btn" onClick={() => onEdit(account.id)}>
             Edit
           </button>
-          <button
-            className="data-action-btn data-action-btn--delete"
-            onClick={() => onDelete(account.id)}
-          >
+          <button className="data-action-btn data-action-btn--delete" onClick={() => onDelete(account.id)}>
             Delete
           </button>
         </div>

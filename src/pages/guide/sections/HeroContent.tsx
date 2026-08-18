@@ -17,9 +17,9 @@ const HeroContent: FC<HeroContentProps> = ({ heroLightSrc, heroDarkSrc }) => {
         <h1>Your money, in your browser, and nowhere else.</h1>
         <p>
           This is a personal finance app for one person, and it lives entirely in your browser. It tracks your net
-          worth, your budget, your transactions, your savings goals, your tax documents, and the little
-          Sunday-morning habits that make all of that sustainable over time; the data can be encrypted on your device
-          with a passphrase you choose, and never touches a server I run.
+          worth, your budget, your transactions, your savings goals, your tax documents, and the little Sunday-morning
+          habits that make all of that sustainable over time; the data can be encrypted on your device with a passphrase
+          you choose, and never touches a server I run.
         </p>
         <ul className="guide-bullet-list guide-bullet-list--hero">
           <li>Browser only.</li>

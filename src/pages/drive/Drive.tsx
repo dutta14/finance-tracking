@@ -193,11 +193,11 @@ const Drive: FC = () => {
 
       {/* Year tabs (shown when inside a year-level folder with sibling folders) */}
       {siblingYearFolders && siblingYearFolders.length > 1 && (
-        <div className="drive-year-tabs">
+        <div className="tab-bar drive-year-tabs">
           {siblingYearFolders.map(sib => (
             <button
               key={sib.slug}
-              className={`drive-year-tab${sib.slug === currentSlug ? ' active' : ''}`}
+              className={`tab-btn tab-btn--sm${sib.slug === currentSlug ? ' active' : ''}`}
               onClick={() => goTo([...segments.slice(0, -1), sib.slug])}
             >
               {sib.name}

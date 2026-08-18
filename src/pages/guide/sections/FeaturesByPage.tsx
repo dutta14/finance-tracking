@@ -24,8 +24,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
       <h3>Home</h3>
       <GuideFigure src={screenshots.home} alt="Home dashboard with summary cards" />
       <p>
-        Your dashboard. A quick read on where things stand right now, without opening six tabs or a spreadsheet you
-        have to mentally parse before coffee.
+        Your dashboard. A quick read on where things stand right now, without opening six tabs or a spreadsheet you have
+        to mentally parse before coffee.
       </p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
@@ -88,8 +88,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
       <h3>Budget</h3>
       <GuideFigure src={screenshots.budget} alt="Budget page with categorized transactions" />
       <p>
-        A year-based budgeting workspace that is more interested in patterns than ceremony. Import bank CSVs, clean
-        them up, and look at spending from different distances.
+        A year-based budgeting workspace that is more interested in patterns than ceremony. Import bank CSVs, clean them
+        up, and look at spending from different distances.
       </p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
@@ -110,8 +110,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
       <h3>Transactions</h3>
       <GuideFigure src={screenshots.transactions} alt="Transactions page with filtering and categorization" />
       <p>
-        Transaction management lives on its own page now, separate from Budget. It is for the raw stream of money in
-        and out, with filtering and categorization that helps you clean things up before they become a reporting habit.
+        Transaction management lives on its own page now, separate from Budget. It is for the raw stream of money in and
+        out, with filtering and categorization that helps you clean things up before they become a reporting habit.
       </p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
@@ -130,8 +130,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
       <h3>Taxes</h3>
       <GuideFigure src={screenshots.taxes} alt="Taxes page with checklist and document uploads" />
       <p>
-        A yearly tax binder without the actual binder. Checklists, uploads, linked accounts, and reusable templates,
-        all organized by year.
+        A yearly tax binder without the actual binder. Checklists, uploads, linked accounts, and reusable templates, all
+        organized by year.
       </p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
@@ -142,8 +142,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
         <li>Save or import templates so each year does not start from a blank page.</li>
       </ul>
       <p>
-        <strong>One tip:</strong> Build next year&apos;s template the week you finish this year&apos;s return. Your future self
-        will still remember what was annoying.
+        <strong>One tip:</strong> Build next year&apos;s template the week you finish this year&apos;s return. Your
+        future self will still remember what was annoying.
       </p>
     </section>
 
@@ -151,28 +151,29 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
       <h3>Drive</h3>
       <GuideFigure src={screenshots.drive} alt="Drive page with file browser and uploads" />
       <p>
-        Drive is the app&apos;s file browser for uploaded documents. It gives you one place to browse the practical debris
-        of personal finance, with enough structure to make it useful instead of decorative.
+        Drive is the app&apos;s file browser for uploaded documents. It gives you one place to browse the practical
+        debris of personal finance, with enough structure to make it useful instead of decorative.
       </p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
         <li>Browse uploaded files and folders with breadcrumbs.</li>
         <li>Sort and filter when the list gets noisy.</li>
         <li>Open CSV previews before you decide what to keep or rename.</li>
-        <li>Use it as the home for tax files, imported budget data, and other uploads that should stay close to the rest of the app.</li>
+        <li>
+          Use it as the home for tax files, imported budget data, and other uploads that should stay close to the rest
+          of the app.
+        </li>
       </ul>
       <p>
-        <strong>One tip:</strong> Rename files while they still mean something to you. “Statement.pdf” is readable
-        today and useless six months from now.
+        <strong>One tip:</strong> Rename files while they still mean something to you. “Statement.pdf” is readable today
+        and useless six months from now.
       </p>
     </section>
 
     <section className="guide-subsection" id="feature-settings">
       <h3>Settings</h3>
       <GuideFigure src={screenshots.settings} alt="Settings page with sync and export options" />
-      <p>
-        Profile, sync, appearance, security, backups, and the slightly more dangerous switches all live here.
-      </p>
+      <p>Profile, sync, appearance, security, backups, and the slightly more dangerous switches all live here.</p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
         <li>Set or change your passphrase in Security.</li>

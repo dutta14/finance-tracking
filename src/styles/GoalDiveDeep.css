@@ -102,68 +102,6 @@ body.dark .btn-dive-deep.active {
   flex-wrap: wrap;
 }
 
-/* Projection interval toggle */
-.projection-interval-toggle,
-.projection-scenario-toggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  overflow: hidden;
-  width: fit-content;
-}
-
-.projection-interval-btn {
-  padding: 0.4rem 0.9rem;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  background: transparent;
-  border: none;
-  border-right: 1px solid var(--color-border);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  font-family: inherit;
-  transition:
-    background 150ms,
-    color 150ms;
-}
-
-.projection-interval-btn:last-child {
-  border-right: none;
-}
-
-.projection-interval-btn:hover {
-  color: var(--color-text);
-  background: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
-}
-
-.projection-interval-btn.active {
-  color: var(--color-text);
-  background: var(--color-bg-hover, rgba(0, 0, 0, 0.06));
-  font-weight: var(--fw-semibold);
-}
-
-.projection-view-toggle {
-  padding: 0.4rem 0.9rem;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  font-family: inherit;
-  transition:
-    background 150ms,
-    color 150ms;
-  white-space: nowrap;
-}
-
-.projection-view-toggle:hover {
-  color: var(--color-text);
-  background: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
-}
-
 /* Chart */
 .projection-chart-wrapper {
   width: 100%;
