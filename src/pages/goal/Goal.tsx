@@ -85,17 +85,17 @@ const Goal: FC = () => {
           <>
             <div className="goal-header">
               <h1>Goals</h1>
-              <nav className="goal-tab-bar" aria-label="Goals sections">
+              <nav className="tab-bar" aria-label="Goals sections">
                 <NavLink
                   to="/goal/plans"
-                  className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
+                  className={({ isActive }) => `tab-btn${isActive || activeTab === 'plans' ? ' active' : ''}`}
                 >
                   FIRE Plans
                 </NavLink>
-                <NavLink to="/goal/leverage" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
+                <NavLink to="/goal/leverage" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
                   Leverage
                 </NavLink>
-                <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
+                <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
                   FI Calculator
                 </NavLink>
               </nav>

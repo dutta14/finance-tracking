@@ -99,7 +99,7 @@ export class NetWorthPage {
     this.deleteRowBtns = page.locator('button.data-delete-row-btn')
 
     // Charts
-    this.chartsTypePicker = page.locator('.data-charts-type-picker')
+    this.chartsTypePicker = page.locator('.data-charts-controls .tab-bar').first()
 
     // Show inactive
     this.showInactiveLabel = page.locator('button.data-filter-toggle')
@@ -157,10 +157,10 @@ export class NetWorthPage {
   }
 
   getChartTypeBtn(index: number): Locator {
-    return this.chartsTypePicker.locator('button.data-filter-btn').nth(index)
+    return this.chartsTypePicker.locator('button.tab-btn').nth(index)
   }
 
   getTabLink(name: string): Locator {
-    return this.tabBar.locator('.nw-tab', { hasText: name })
+    return this.tabBar.locator('.tab-btn', { hasText: name })
   }
 }

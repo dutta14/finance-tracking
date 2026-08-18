@@ -137,10 +137,10 @@ export class GoalsPage {
     this.headerActions = page.locator('.goal-header-actions')
     this.newGoalBtn = page.getByRole('button', { name: 'New Goal' })
 
-    this.tabBar = page.locator('.goal-tab-bar')
-    this.plansTab = page.locator('.goal-tab', { hasText: 'Plans' })
-    this.calculatorTab = page.locator('.goal-tab', { hasText: 'Calculator' })
-    this.activeTab = page.locator('.goal-tab.active')
+    this.tabBar = page.locator('nav[aria-label="Goals sections"]')
+    this.plansTab = page.locator('.tab-btn', { hasText: 'Plans' })
+    this.calculatorTab = page.locator('.tab-btn', { hasText: 'Calculator' })
+    this.activeTab = page.locator('.tab-btn.active')
 
     this.miniGrid = page.locator('.goals-mini-grid')
     this.miniList = page.locator('.goals-mini-list')

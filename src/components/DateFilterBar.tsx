@@ -130,13 +130,13 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
 
   return (
     <div className="date-filter-wrap">
-      <div className="data-charts-date-filter">
+      <div className="tab-bar">
         {DATE_FILTER_OPTIONS.map(({ key, label }) =>
           key === 'custom' ? (
             <div key={key} className="date-filter-custom-wrap">
               <button
                 ref={customBtnRef}
-                className={`data-filter-btn data-filter-btn--${size}${dateFilter === 'custom' ? ' active' : ''}`}
+                className={`tab-btn tab-btn--${size}${dateFilter === 'custom' ? ' active' : ''}`}
                 onClick={() => {
                   setDateFilter('custom')
                   setFlyoutOpen(o => !o)
@@ -160,7 +160,7 @@ export const DateFilterBar: FC<DateFilterBarProps> = ({
           ) : (
             <button
               key={key}
-              className={`data-filter-btn data-filter-btn--${size}${dateFilter === key ? ' active' : ''}`}
+              className={`tab-btn tab-btn--${size}${dateFilter === key ? ' active' : ''}`}
               onClick={() => {
                 setDateFilter(key)
                 setFlyoutOpen(false)

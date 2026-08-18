@@ -110,11 +110,11 @@ const AccountsModal: FC<AccountsModalProps> = ({
               ? `${accounts.length} accounts`
               : `${existingGroups.length} groups`}
           </span>
-          <div className="data-filter-group" role="tablist" aria-label="Account filters">
+          <div className="tab-bar" role="tablist" aria-label="Account filters">
             <button
               role="tab"
               aria-selected={filter === 'all'}
-              className={`data-filter-btn${filter === 'all' ? ' active' : ''}`}
+              className={`tab-btn${filter === 'all' ? ' active' : ''}`}
               onClick={() => setFilter('all')}
             >
               Accounts
@@ -122,7 +122,7 @@ const AccountsModal: FC<AccountsModalProps> = ({
             <button
               role="tab"
               aria-selected={filter === 'groups'}
-              className={`data-filter-btn${filter === 'groups' ? ' active' : ''}`}
+              className={`tab-btn${filter === 'groups' ? ' active' : ''}`}
               onClick={() => setFilter('groups')}
             >
               Groups

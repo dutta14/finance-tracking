@@ -307,11 +307,11 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
           View Charts →
         </button>
       </div>
-      <div className="home-mini-chart-tabs">
+      <div className="tab-bar">
         {CHART_OPTIONS.map(opt => (
           <button
             key={opt.key}
-            className={`home-mini-tab${chartType === opt.key ? ' active' : ''}`}
+            className={`tab-btn${chartType === opt.key ? ' active' : ''}`}
             onClick={() => setChartType(opt.key)}
           >
             {opt.label}

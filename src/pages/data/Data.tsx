@@ -455,24 +455,24 @@ const Data: FC = () => {
         <div className="data-header-left">
           <h1>Net Worth</h1>
         </div>
-        <nav className="nw-tab-bar" aria-label="Net Worth sections">
-          <NavLink to="/net-worth/dashboard" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
+        <nav className="tab-bar" aria-label="Net Worth sections">
+          <NavLink to="/net-worth/dashboard" className={() => `tab-btn${activeTab === 'accounts' ? ' active' : ''}`}>
             Dashboard
           </NavLink>
-          <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
+          <NavLink to="/net-worth/allocation" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
             Allocation
           </NavLink>
-          <NavLink to="/net-worth/growth" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
+          <NavLink to="/net-worth/growth" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
             Growth
           </NavLink>
         </nav>
         <div className="data-header-right">
           {activeTab === 'accounts' && hasAccounts && (
-            <div className="data-view-tabs" role="tablist" aria-label="Data view" onKeyDown={handleDataViewTabKeyDown}>
+            <div className="tab-bar" role="tablist" aria-label="Data view" onKeyDown={handleDataViewTabKeyDown}>
               {DATA_VIEW_TABS.map(tabDef => (
                 <button
                   key={tabDef.id}
-                  className={`data-view-tab${dataView === tabDef.id ? ' active' : ''}`}
+                  className={`tab-btn${dataView === tabDef.id ? ' active' : ''}`}
                   role="tab"
                   aria-selected={dataView === tabDef.id}
                   tabIndex={dataView === tabDef.id ? 0 : -1}
@@ -484,16 +484,16 @@ const Data: FC = () => {
             </div>
           )}
           {activeTab === 'allocation' && (
-            <div className="data-view-tabs" role="group" aria-label="Allocation view mode">
+            <div className="tab-bar" role="group" aria-label="Allocation view mode">
               <button
-                className={`data-view-tab${allocTab === 'breakdown' ? ' active' : ''}`}
+                className={`tab-btn${allocTab === 'breakdown' ? ' active' : ''}`}
                 aria-pressed={allocTab === 'breakdown'}
                 onClick={() => navigate('/net-worth/allocation')}
               >
                 Breakdown
               </button>
               <button
-                className={`data-view-tab${allocTab === 'ratios' ? ' active' : ''}`}
+                className={`tab-btn${allocTab === 'ratios' ? ' active' : ''}`}
                 aria-pressed={allocTab === 'ratios'}
                 onClick={() => navigate('/net-worth/allocation/ratios')}
               >
@@ -502,16 +502,16 @@ const Data: FC = () => {
             </div>
           )}
           {activeTab === 'growth' && (
-            <div className="data-view-tabs" role="group" aria-label="Growth view mode">
+            <div className="tab-bar" role="group" aria-label="Growth view mode">
               <button
-                className={`data-view-tab${growthTab === 'savings' ? ' active' : ''}`}
+                className={`tab-btn${growthTab === 'savings' ? ' active' : ''}`}
                 aria-pressed={growthTab === 'savings'}
                 onClick={() => navigate('/net-worth/growth/savings')}
               >
                 Savings
               </button>
               <button
-                className={`data-view-tab${growthTab === 'income' ? ' active' : ''}`}
+                className={`tab-btn${growthTab === 'income' ? ' active' : ''}`}
                 aria-pressed={growthTab === 'income'}
                 onClick={() => navigate('/net-worth/growth/income')}
               >

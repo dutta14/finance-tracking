@@ -186,7 +186,7 @@ body.dark .date-filter-range-flyout {
 }
 
 /* DateFilterBar styles (must be co-located to avoid lazy-load issues) */
-.data-charts-date-filter {
+.tab-bar {
   display: flex;
   gap: 0.25rem;
   background: var(--color-bg);
@@ -205,7 +205,7 @@ body.dark .date-filter-range-flyout {
   gap: 0.5rem;
 }
 
-.data-filter-btn {
+.tab-btn {
   padding: 0.4rem 0.75rem;
   border: none;
   border-radius: var(--radius);
@@ -219,17 +219,17 @@ body.dark .date-filter-range-flyout {
     color 0.15s;
 }
 
-.data-filter-btn:hover {
+.tab-btn:hover {
   color: var(--color-text-heading);
 }
 
-.data-filter-btn.active {
+.tab-btn.active {
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
-.data-filter-btn--sm {
+.tab-btn--sm {
   padding: 0.3rem 0.6rem;
   font-size: var(--fs-sm);
 }

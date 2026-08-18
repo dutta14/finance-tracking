@@ -493,11 +493,11 @@ async function captureNetWorth(page: Page): Promise<void> {
   await page.waitForSelector('.app-layout', { timeout: 10_000 })
   await settle(page)
   // Switch to spreadsheet view so the multi-account, multi-month grid is the focal point.
-  const spreadsheetTab = page.locator('button.data-view-tab', { hasText: 'Spreadsheet' })
+  const spreadsheetTab = page.locator('button.tab-btn', { hasText: 'Spreadsheet' })
   await spreadsheetTab.waitFor({ state: 'visible', timeout: 5_000 })
   await spreadsheetTab.click()
   await page
-    .locator('button.data-view-tab.active', { hasText: 'Spreadsheet' })
+    .locator('button.tab-btn.active', { hasText: 'Spreadsheet' })
     .waitFor({ state: 'visible', timeout: 5_000 })
   await settle(page, { expectSvg: false })
   await snap(page, 'networth.png', { fullPage: true })
@@ -509,7 +509,7 @@ async function captureGoals(page: Page): Promise<void> {
   // than the empty Plans list with a single goal card.
   await navigate(page, '/goal/calculator')
   await page.waitForSelector('.app-layout', { timeout: 10_000 })
-  await page.waitForSelector('.goal-tab.active', { timeout: 5_000 }).catch(() => {})
+  await page.waitForSelector('.tab-btn.active', { timeout: 5_000 }).catch(() => {})
   await settle(page)
   await snap(page, 'goals.png', { fullPage: true })
 }
@@ -660,11 +660,11 @@ async function captureQuickstart4(page: Page): Promise<void> {
   await navigate(page, '/net-worth')
   await page.waitForSelector('.app-layout', { timeout: 10_000 })
   await settle(page)
-  const spreadsheetTab = page.locator('button.data-view-tab', { hasText: 'Spreadsheet' })
+  const spreadsheetTab = page.locator('button.tab-btn', { hasText: 'Spreadsheet' })
   await spreadsheetTab.waitFor({ state: 'visible', timeout: 5_000 })
   await spreadsheetTab.click()
   await page
-    .locator('button.data-view-tab.active', { hasText: 'Spreadsheet' })
+    .locator('button.tab-btn.active', { hasText: 'Spreadsheet' })
     .waitFor({ state: 'visible', timeout: 5_000 })
   await settle(page, { expectSvg: false })
   await snap(page, 'quickstart-4.png', { fullPage: false })

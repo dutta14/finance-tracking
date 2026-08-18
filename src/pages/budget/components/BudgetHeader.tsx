@@ -23,21 +23,21 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
   <div className="budget-header">
     <div className="budget-header-left">
       <h1 className="budget-title">Budget</h1>
-      <div className="budget-view-toggle">
+      <div className="tab-bar">
         <button
-          className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
+          className={`tab-btn${viewMode === 'cashflow' ? ' active' : ''}`}
           onClick={() => onSetViewMode('cashflow')}
         >
           Cashflow
         </button>
         <button
-          className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
+          className={`tab-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
           onClick={() => onSetViewMode('spreadsheet')}
         >
           Spreadsheet
         </button>
         <button
-          className={`budget-view-btn${viewMode === 'groups' ? ' active' : ''}`}
+          className={`tab-btn${viewMode === 'groups' ? ' active' : ''}`}
           onClick={() => onSetViewMode('groups')}
         >
           Groups
@@ -46,21 +46,21 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
     </div>
     <div className="budget-header-right">
       {viewMode !== 'groups' && (
-        <div className="budget-view-toggle">
+        <div className="tab-bar">
           <button
-            className={`budget-view-btn${timePeriod === 'month' ? ' active' : ''}`}
+            className={`tab-btn${timePeriod === 'month' ? ' active' : ''}`}
             onClick={() => onSetTimePeriod('month')}
           >
             M
           </button>
           <button
-            className={`budget-view-btn${timePeriod === 'quarter' ? ' active' : ''}`}
+            className={`tab-btn${timePeriod === 'quarter' ? ' active' : ''}`}
             onClick={() => onSetTimePeriod('quarter')}
           >
             Q
           </button>
           <button
-            className={`budget-view-btn${timePeriod === 'half' ? ' active' : ''}`}
+            className={`tab-btn${timePeriod === 'half' ? ' active' : ''}`}
             onClick={() => onSetTimePeriod('half')}
           >
             H

@@ -267,11 +267,11 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
   return (
     <div className="data-charts">
       <div className="data-charts-controls">
-        <div className="data-charts-type-picker">
+        <div className="tab-bar">
           {CHART_OPTIONS.map(opt => (
             <button
               key={opt.key}
-              className={`data-filter-btn${chartType === opt.key ? ' active' : ''}`}
+              className={`tab-btn${chartType === opt.key ? ' active' : ''}`}
               aria-pressed={chartType === opt.key}
               onClick={() => setChartType(opt.key)}
             >

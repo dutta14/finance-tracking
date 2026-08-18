@@ -96,15 +96,6 @@ body.dark .budget-title {
 }
 
 /* View toggle */
-.budget-view-toggle {
-  display: flex;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.budget-view-toggle--secondary {
-  align-items: center;
-}
 .budget-spreadsheet-toolbar {
   display: flex;
   align-items: center;
@@ -120,7 +111,7 @@ body.dark .budget-title {
   margin-bottom: 0.5rem;
 }
 
-.budget-action-bar > .budget-view-toggle--secondary {
+.budget-action-bar > .tab-bar {
   margin-right: auto;
 }
 
@@ -128,27 +119,6 @@ body.dark .budget-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-.budget-view-btn {
-  background: var(--color-surface);
-  border: none;
-  padding: 0.35rem 0.75rem;
-  font-size: var(--fs-md);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  transition: all 0.15s;
-}
-.budget-view-btn.active {
-  background: var(--accent);
-  color: var(--color-text-on-accent);
-}
-.budget-view-btn:not(.active):hover {
-  background: var(--color-surface-hover);
-}
-.budget-view-btn--sm {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  min-height: 28px;
 }
 
 /* Action buttons */
