@@ -2252,6 +2252,7 @@ td.data-spreadsheet-inactive {
   flex: 1;
 }
 
+.data-edit-row-btn,
 .data-delete-row-btn {
   display: none;
   align-items: center;
@@ -2267,11 +2268,17 @@ td.data-spreadsheet-inactive {
   flex-shrink: 0;
 }
 
+.data-edit-row-btn:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
 .data-delete-row-btn:hover {
   color: var(--color-negative);
   background: var(--color-negative-light);
 }
 
+.data-spreadsheet-row-header:hover .data-edit-row-btn,
 .data-spreadsheet-row-header:hover .data-delete-row-btn {
   display: inline-flex;
 }

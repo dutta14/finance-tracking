@@ -15,25 +15,30 @@ import { formatCurrency, formatMonth } from '../../data/types'
 import { appStorage } from '../../../utils/appStorage'
 import { useDateFilter } from '../../../hooks/useDateFilter'
 import { DateFilterBarFromHook } from '../../../components/DateFilterBar'
+import MonthPicker from '../../../components/MonthPicker'
 import '../../../styles/PayDown.css'
 
 interface PaydownLoan {
   id: number
+  type: 'loan' | 'credit-card'
   name: string
   principal: number
   annualRate: number
   termMonths: number
   startDate: string
   linkedAccountId: number
+  monthlyPayment?: number
 }
 
 interface LoanFormState {
+  type: 'loan' | 'credit-card'
   name: string
   principal: string
   annualRate: string
   termMonths: string
   startDate: string
   linkedAccountId: string
+  monthlyPayment: string
 }
 
 interface ChartPoint {
@@ -45,13 +50,24 @@ interface ChartPoint {
 
 const STORAGE_KEY = 'paydown-loans'
 
+// All months from 2050-12 down to 2010-01 (newest first) for the start date picker
+const ALL_PICKER_MONTHS: string[] = []
+for (let y = 2050; y >= 2010; y--) {
+  for (let m = 12; m >= 1; m--) {
+    ALL_PICKER_MONTHS.push(`${y}-${String(m).padStart(2, '0')}`)
+  }
+}
+
+
 const emptyForm: LoanFormState = {
+  type: 'loan',
   name: '',
   principal: '',
   annualRate: '',
   termMonths: '',
   startDate: '',
   linkedAccountId: '',
+  monthlyPayment: '',
 }
 
 const formatCurrencyCompact = (value: number) => {
@@ -85,20 +101,28 @@ const addMonths = (value: string, offset: number) => {
 
 const buildExpectedSchedule = (loan: PaydownLoan) => {
   const monthlyRate = loan.annualRate / 100 / 12
-  const monthlyPayment =
-    monthlyRate === 0
-      ? loan.principal / loan.termMonths
-      : (loan.principal * (monthlyRate * (1 + monthlyRate) ** loan.termMonths)) /
-        ((1 + monthlyRate) ** loan.termMonths - 1)
+  let monthlyPayment: number
 
+  if (loan.type === 'credit-card') {
+    monthlyPayment = loan.monthlyPayment ?? 0
+  } else {
+    monthlyPayment =
+      monthlyRate === 0
+        ? loan.principal / loan.termMonths
+        : (loan.principal * (monthlyRate * (1 + monthlyRate) ** loan.termMonths)) /
+          ((1 + monthlyRate) ** loan.termMonths - 1)
+  }
+
+  const maxMonths = loan.type === 'credit-card' ? loan.termMonths || 600 : loan.termMonths
   const schedule = new Map<string, number>()
   let balance = loan.principal
   schedule.set(loan.startDate, Number(balance.toFixed(2)))
 
-  for (let monthIndex = 1; monthIndex <= loan.termMonths; monthIndex += 1) {
+  for (let monthIndex = 1; monthIndex <= maxMonths; monthIndex += 1) {
     balance = balance * (1 + monthlyRate) - monthlyPayment
     balance = Math.max(0, Number(balance.toFixed(2)))
     schedule.set(addMonths(loan.startDate, monthIndex), balance)
+    if (balance <= 0) break
   }
 
   return schedule
@@ -154,6 +178,62 @@ const PaydownTooltip: FC<{
   )
 }
 
+/* ── Custom Select (styled dropdown) ── */
+interface CustomSelectOption { value: string; label: string }
+const CustomSelect: FC<{
+  value: string
+  onChange: (value: string) => void
+  options: CustomSelectOption[]
+  placeholder?: string
+  disabled?: boolean
+}> = ({ value, onChange, options, placeholder = 'Select…', disabled }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = options.find(o => o.value === value)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div ref={ref} className={`custom-select${disabled ? ' custom-select--disabled' : ''}`}>
+      <button
+        type="button"
+        className="custom-select__trigger"
+        disabled={disabled}
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className={selected ? '' : 'custom-select__placeholder'}>{selected ? selected.label : placeholder}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <path d="M3 5L6 8L9 5" />
+        </svg>
+      </button>
+      {open ? (
+        <ul className="custom-select__menu" role="listbox">
+          {options.map(opt => (
+            <li
+              key={opt.value}
+              role="option"
+              aria-selected={opt.value === value}
+              className={`custom-select__option${opt.value === value ? ' custom-select__option--selected' : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+            >
+              {opt.label}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  )
+}
+
 const PayDownModal: FC<{
   isOpen: boolean
   form: LoanFormState
@@ -197,23 +277,17 @@ const PayDownModal: FC<{
         onClick={event => event.stopPropagation()}
       >
         <div className="paydown-modal__header">
-          <div>
-            <h2>{editingLoanId ? 'Edit loan' : 'Add loan'}</h2>
-            <p>Link a liability account to compare actual balances against the amortization plan.</p>
-          </div>
-          <button className="action-btn" type="button" onClick={onClose}>
-            Close
-          </button>
+          <h2>{editingLoanId ? `Edit ${form.type === 'credit-card' ? 'credit card' : 'loan'}` : `Add ${form.type === 'credit-card' ? 'credit card' : 'loan'}`}</h2>
         </div>
 
         <form className="paydown-form" onSubmit={onSubmit}>
           <label className="paydown-field">
-            <span>Loan name</span>
+            <span>{form.type === 'credit-card' ? 'Card name' : 'Loan name'}</span>
             <input
               type="text"
               value={form.name}
               onChange={event => onChange('name', event.target.value)}
-              placeholder="Home Loan"
+              placeholder={form.type === 'credit-card' ? 'Chase Sapphire' : 'Home Loan'}
               aria-invalid={Boolean(error)}
               aria-describedby={error ? errorId : undefined}
             />
@@ -221,7 +295,7 @@ const PayDownModal: FC<{
 
           <div className="paydown-form__grid">
             <label className="paydown-field">
-              <span>Principal ($)</span>
+              <span>{form.type === 'credit-card' ? 'Balance ($)' : 'Principal ($)'}</span>
               <input
                 type="number"
                 min="0"
@@ -229,14 +303,14 @@ const PayDownModal: FC<{
                 inputMode="decimal"
                 value={form.principal}
                 onChange={event => onChange('principal', event.target.value)}
-                placeholder="300000"
+                placeholder={form.type === 'credit-card' ? '5000' : '300000'}
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? errorId : undefined}
               />
             </label>
 
             <label className="paydown-field">
-              <span>Annual rate (%)</span>
+              <span>APR (%)</span>
               <input
                 type="number"
                 min="0"
@@ -244,56 +318,64 @@ const PayDownModal: FC<{
                 inputMode="decimal"
                 value={form.annualRate}
                 onChange={event => onChange('annualRate', event.target.value)}
-                placeholder="6.5"
+                placeholder={form.type === 'credit-card' ? '24.99' : '6.5'}
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? errorId : undefined}
               />
             </label>
 
-            <label className="paydown-field">
-              <span>Term (months)</span>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                inputMode="numeric"
-                value={form.termMonths}
-                onChange={event => onChange('termMonths', event.target.value)}
-                placeholder="360"
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? errorId : undefined}
-              />
-            </label>
+            {form.type === 'credit-card' ? (
+              <label className="paydown-field">
+                <span>Monthly payment ($)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={form.monthlyPayment}
+                  onChange={event => onChange('monthlyPayment', event.target.value)}
+                  placeholder="200"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? errorId : undefined}
+                />
+              </label>
+            ) : (
+              <label className="paydown-field">
+                <span>Term (months)</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  value={form.termMonths}
+                  onChange={event => onChange('termMonths', event.target.value)}
+                  placeholder="360"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? errorId : undefined}
+                />
+              </label>
+            )}
 
-            <label className="paydown-field">
+            <div className="paydown-field">
               <span>Start date</span>
-              <input
-                type="month"
-                value={form.startDate}
-                onChange={event => onChange('startDate', event.target.value)}
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? errorId : undefined}
+              <MonthPicker
+                allMonths={ALL_PICKER_MONTHS}
+                selectedMonth={form.startDate}
+                onMonthChange={month => onChange('startDate', month)}
               />
-            </label>
+            </div>
           </div>
 
-          <label className="paydown-field">
+          <div className="paydown-field">
             <span>Linked liability account</span>
-            <select
+            <CustomSelect
               value={form.linkedAccountId}
-              onChange={event => onChange('linkedAccountId', event.target.value)}
+              onChange={value => onChange('linkedAccountId', value)}
               disabled={liabilityAccounts.length === 0}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? errorId : undefined}
-            >
-              <option value="">{liabilityAccounts.length === 0 ? 'No liability accounts available' : 'Select account'}</option>
-              {liabilityAccounts.map(account => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              placeholder={liabilityAccounts.length === 0 ? 'No liability accounts available' : 'Select account'}
+              options={liabilityAccounts.map(account => ({ value: String(account.id), label: account.name }))}
+            />
+          </div>
 
           {error ? (
             <p className="paydown-form__error" id={errorId} role="alert">
@@ -306,7 +388,7 @@ const PayDownModal: FC<{
               Cancel
             </button>
             <button className="action-btn" type="submit">
-              Save loan
+              {editingLoanId ? 'Save' : 'Add'}
             </button>
           </div>
         </form>
@@ -347,6 +429,19 @@ const PayDownCard: FC<{
     return [Math.max(0, Math.floor(min - padding)), Math.ceil(max + padding)] as const
   }, [filteredData])
 
+  const loanCosts = useMemo(() => {
+    if (loan.annualRate === 0) {
+      return { monthlyPayment: loan.principal / (loan.termMonths || 1), totalInterest: 0, totalCost: loan.principal }
+    }
+    const monthlyRate = loan.annualRate / 100 / 12
+    const payment = loan.type === 'credit-card'
+      ? (loan.monthlyPayment ?? 0)
+      : (loan.principal * (monthlyRate * (1 + monthlyRate) ** loan.termMonths)) / ((1 + monthlyRate) ** loan.termMonths - 1)
+    const totalMonths = loan.type === 'credit-card' ? chartData.length - 1 : loan.termMonths
+    const totalCost = payment * totalMonths
+    return { monthlyPayment: payment, totalInterest: totalCost - loan.principal, totalCost }
+  }, [loan, chartData.length])
+
   return (
     <article className="paydown-card">
       <div className="paydown-card__header">
@@ -375,7 +470,10 @@ const PayDownCard: FC<{
         </div>
         <div className="paydown-metric">
           <span>Term</span>
-          <strong>{loan.termMonths} mo</strong>
+          <strong>{loan.type === 'credit-card'
+            ? `${chartData.length} mo`
+            : loan.termMonths % 12 === 0 ? `${loan.termMonths / 12} yr` : `${Math.floor(loan.termMonths / 12)} yr ${loan.termMonths % 12} mo`
+          }</strong>
         </div>
         <div className="paydown-metric">
           <span>Start</span>
@@ -384,6 +482,16 @@ const PayDownCard: FC<{
         <div className="paydown-metric">
           <span>Expected end</span>
           <strong>{formatMonth(endDate)}</strong>
+        </div>
+        <div className="paydown-metric">
+          <span>Progress</span>
+          <strong>{(() => {
+            const actuals = chartData.filter(p => p.actual != null && p.month <= currentMonth)
+            if (actuals.length === 0) return '—'
+            const latestBalance = actuals[actuals.length - 1].actual!
+            const pct = Math.min(100, Math.max(0, Math.round(((loan.principal - latestBalance) / loan.principal) * 100)))
+            return `${pct}%`
+          })()}</strong>
         </div>
       </div>
 
@@ -431,6 +539,40 @@ const PayDownCard: FC<{
         </ResponsiveContainer>
       </div>
 
+      <div className="paydown-bottom-sections">
+        <div className="paydown-interest-section">
+          <span className="paydown-interest-label">Interest</span>
+          <div className="paydown-metrics">
+            <div className="paydown-metric">
+              <span>Paid to date</span>
+              <strong>{(() => {
+                if (loan.annualRate === 0) return '$0'
+                const actuals = chartData.filter(p => p.actual != null && p.month <= currentMonth)
+                if (actuals.length === 0) return '—'
+                const monthsElapsed = actuals.length - 1
+                const principalPaidDown = loan.principal - (actuals[actuals.length - 1].actual ?? 0)
+                const totalPaidToDate = loanCosts.monthlyPayment * monthsElapsed
+                return formatCurrency(totalPaidToDate - principalPaidDown)
+              })()}</strong>
+            </div>
+            <div className="paydown-metric">
+              <span>Total interest</span>
+              <strong>{formatCurrency(loanCosts.totalInterest)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="paydown-interest-section">
+          <span className="paydown-interest-label">Total</span>
+          <div className="paydown-metrics">
+            <div className="paydown-metric">
+              <span>Total cost</span>
+              <strong>{formatCurrency(loanCosts.totalCost)}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {!hasActualData ? (
         <p className="paydown-card__hint">No actual balance history found yet for this linked liability account.</p>
       ) : null}
@@ -446,6 +588,18 @@ const PayDown: FC = () => {
   const [error, setError] = useState('')
   const [editingLoanId, setEditingLoanId] = useState<number | null>(null)
   const [paydownTab, setPaydownTab] = useState<'ongoing' | 'completed'>('ongoing')
+  const [selectedCompletedId, setSelectedCompletedId] = useState<number | null>(null)
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const addMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!addMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (!addMenuRef.current?.contains(e.target as Node)) setAddMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [addMenuOpen])
 
   const liabilityAccounts = useMemo(
     () => accounts.filter(account => account.nature === 'liability').sort((a, b) => a.name.localeCompare(b.name)),
@@ -472,11 +626,14 @@ const PayDown: FC = () => {
         }))
         const linkedAccount = liabilityAccounts.find(account => account.id === loan.linkedAccountId) ?? null
 
+        const expectedMonths = [...expected.keys()]
+        const lastExpectedMonth = expectedMonths[expectedMonths.length - 1] || loan.startDate
+
         return {
           loan,
           chartData,
           linkedAccount,
-          endDate: addMonths(loan.startDate, loan.termMonths),
+          endDate: loan.type === 'credit-card' ? lastExpectedMonth : addMonths(loan.startDate, loan.termMonths),
           hasActualData: actualEntries.length > 0,
         }
       }),
@@ -487,14 +644,17 @@ const PayDown: FC = () => {
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
   const ongoingCards = useMemo(
-    () => loanCards.filter(({ endDate }) => endDate > currentMonth),
+    () => loanCards.filter(({ endDate }) => endDate > currentMonth).sort((a, b) => b.loan.startDate.localeCompare(a.loan.startDate)),
     [loanCards, currentMonth],
   )
   const completedCards = useMemo(
-    () => loanCards.filter(({ endDate }) => endDate <= currentMonth),
+    () => loanCards.filter(({ endDate }) => endDate <= currentMonth).sort((a, b) => {
+      const lastActualA = [...a.chartData].reverse().find(p => p.actual != null)?.month ?? a.endDate
+      const lastActualB = [...b.chartData].reverse().find(p => p.actual != null)?.month ?? b.endDate
+      return lastActualB.localeCompare(lastActualA)
+    }),
     [loanCards, currentMonth],
   )
-  const visibleCards = paydownTab === 'ongoing' ? ongoingCards : completedCards
 
   const resetForm = () => {
     setForm(emptyForm)
@@ -502,19 +662,22 @@ const PayDown: FC = () => {
     setEditingLoanId(null)
   }
 
-  const openModal = () => {
+  const openModal = (type: 'loan' | 'credit-card' = 'loan') => {
     resetForm()
+    setForm(current => ({ ...current, type }))
     setIsModalOpen(true)
   }
 
   const openEditModal = (loan: PaydownLoan) => {
     setForm({
+      type: loan.type || 'loan',
       name: loan.name,
       principal: String(loan.principal),
       annualRate: String(loan.annualRate),
       termMonths: String(loan.termMonths),
       startDate: loan.startDate,
       linkedAccountId: String(loan.linkedAccountId),
+      monthlyPayment: loan.monthlyPayment ? String(loan.monthlyPayment) : '',
     })
     setEditingLoanId(loan.id)
     setError('')
@@ -536,27 +699,40 @@ const PayDown: FC = () => {
 
     const principal = Number.parseFloat(form.principal)
     const annualRate = Number.parseFloat(form.annualRate)
-    const termMonths = Number.parseInt(form.termMonths, 10)
     const linkedAccountId = Number.parseInt(form.linkedAccountId, 10)
 
     if (!form.name.trim()) {
-      setError('Enter a loan name.')
+      setError(form.type === 'credit-card' ? 'Enter a card name.' : 'Enter a loan name.')
       return
     }
 
     if (!Number.isFinite(principal) || principal <= 0) {
-      setError('Enter a principal greater than 0.')
+      setError(form.type === 'credit-card' ? 'Enter a balance greater than 0.' : 'Enter a principal greater than 0.')
       return
     }
 
     if (!Number.isFinite(annualRate) || annualRate < 0) {
-      setError('Enter a valid annual rate.')
+      setError('Enter a valid APR.')
       return
     }
 
-    if (!Number.isInteger(termMonths) || termMonths <= 0) {
-      setError('Enter a term in whole months.')
-      return
+    if (form.type === 'credit-card') {
+      const monthlyPayment = Number.parseFloat(form.monthlyPayment)
+      if (!Number.isFinite(monthlyPayment) || monthlyPayment <= 0) {
+        setError('Enter a monthly payment greater than 0.')
+        return
+      }
+      const monthlyRate = annualRate / 100 / 12
+      if (monthlyPayment <= principal * monthlyRate) {
+        setError('Monthly payment must exceed monthly interest to pay down the balance.')
+        return
+      }
+    } else {
+      const termMonths = Number.parseInt(form.termMonths, 10)
+      if (!Number.isInteger(termMonths) || termMonths <= 0) {
+        setError('Enter a term in whole months.')
+        return
+      }
     }
 
     if (!parseMonth(form.startDate)) {
@@ -569,14 +745,19 @@ const PayDown: FC = () => {
       return
     }
 
+    const monthlyPayment = form.type === 'credit-card' ? Number.parseFloat(form.monthlyPayment) : undefined
+    const termMonths = form.type === 'credit-card' ? 0 : Number.parseInt(form.termMonths, 10)
+
     const nextLoan: PaydownLoan = {
       id: editingLoanId ?? Date.now(),
+      type: form.type,
       name: form.name.trim(),
       principal,
       annualRate,
       termMonths,
       startDate: form.startDate,
       linkedAccountId,
+      monthlyPayment,
     }
 
     const nextLoans = editingLoanId
@@ -599,10 +780,18 @@ const PayDown: FC = () => {
         <section className="paydown-page">
           <div className="paydown-empty-state">
             <h2>Track loan payoff progress</h2>
-            <p>Add a loan to compare its expected amortization against the actual balance history from your liability account.</p>
-            <button className="action-btn" type="button" onClick={openModal}>
-              Add Loan
+          <p>Add a loan or credit card to compare its expected amortization against the actual balance history.</p>
+          <div className="paydown-add-menu" ref={addMenuRef}>
+            <button className="action-btn" type="button" onClick={() => setAddMenuOpen(o => !o)}>
+              Add <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 5L6 8L9 5" /></svg>
             </button>
+            {addMenuOpen ? (
+              <ul className="paydown-add-menu__list">
+                <li onClick={() => { openModal('loan'); setAddMenuOpen(false) }}>Add loan</li>
+                <li onClick={() => { openModal('credit-card'); setAddMenuOpen(false) }}>Add credit card</li>
+              </ul>
+            ) : null}
+          </div>
           </div>
         </section>
         <PayDownModal
@@ -637,25 +826,73 @@ const PayDown: FC = () => {
               Completed
             </button>
           </div>
-          <button className="action-btn" type="button" onClick={openModal}>
-            Add Loan
-          </button>
+          <div className="paydown-add-menu" ref={addMenuRef}>
+            <button className="action-btn" type="button" onClick={() => setAddMenuOpen(o => !o)}>
+              Add <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 5L6 8L9 5" /></svg>
+            </button>
+            {addMenuOpen ? (
+              <ul className="paydown-add-menu__list">
+                <li onClick={() => { openModal('loan'); setAddMenuOpen(false) }}>Add loan</li>
+                <li onClick={() => { openModal('credit-card'); setAddMenuOpen(false) }}>Add credit card</li>
+              </ul>
+            ) : null}
+          </div>
         </div>
 
         <div className="paydown-list">
-          {visibleCards.length === 0 && (
-            <div className="paydown-empty-tab">
-              No {paydownTab} loans.
-            </div>
+          {paydownTab === 'ongoing' ? (
+            <>
+              {ongoingCards.length === 0 && (
+                <div className="paydown-empty-tab">No ongoing loans.</div>
+              )}
+              {ongoingCards.map(card => (
+                <PayDownCard
+                  key={card.loan.id}
+                  card={card}
+                  onEdit={openEditModal}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              {completedCards.length === 0 && (
+                <div className="paydown-empty-tab">No completed loans.</div>
+              )}
+              {completedCards.length > 0 && (
+                <div className="paydown-completed-list">
+                  {completedCards.map(card => {
+                    const isSelected = selectedCompletedId === card.loan.id
+                    return (
+                      <div key={card.loan.id} className="paydown-completed-item">
+                        <button
+                          type="button"
+                          className={`paydown-completed-row${isSelected ? ' paydown-completed-row--active' : ''}`}
+                          onClick={() => setSelectedCompletedId(isSelected ? null : card.loan.id)}
+                        >
+                          <span className="paydown-completed-name">{card.loan.name}</span>
+                          <span className="paydown-completed-principal">{formatCurrency(card.loan.principal)}</span>
+                          <span className="paydown-completed-dates">{formatMonth(card.loan.startDate)} – {formatMonth(card.endDate)}</span>
+                          <span className="paydown-completed-paidoff">{(() => {
+                            const lastActual = [...card.chartData].reverse().find(p => p.actual != null && p.actual === 0)
+                            return lastActual ? formatMonth(lastActual.month) : formatMonth(card.endDate)
+                          })()}</span>
+                          <svg className={`paydown-completed-chevron${isSelected ? ' paydown-completed-chevron--open' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 5L6 8L9 5" /></svg>
+                        </button>
+                        {isSelected && (
+                          <PayDownCard
+                            card={card}
+                            onEdit={openEditModal}
+                            onDelete={handleDelete}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
           )}
-          {visibleCards.map(card => (
-            <PayDownCard
-              key={card.loan.id}
-              card={card}
-              onEdit={openEditModal}
-              onDelete={handleDelete}
-            />
-          ))}
         </div>
       </section>
 

@@ -72,6 +72,7 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
         allocationCustomRatios: appStorage.getJSON('allocation-custom-ratios', []),
         taxStore: appStorage.getJSON('tax-store', {}),
         taxTemplates: appStorage.getJSON('tax-templates', []),
+        paydownLoans: appStorage.getJSON('paydown-loans', []),
       },
       null,
       2,
@@ -143,6 +144,7 @@ export const ImportExportProvider: FC<{ children: ReactNode }> = ({ children }) 
           if (data.allocationCustomRatios) appStorage.setJSON('allocation-custom-ratios', data.allocationCustomRatios)
           if (data.taxStore) appStorage.setJSON('tax-store', data.taxStore)
           if (data.taxTemplates) appStorage.setJSON('tax-templates', data.taxTemplates)
+          if (data.paydownLoans) appStorage.setJSON('paydown-loans', data.paydownLoans)
 
           window.dispatchEvent(new Event('data-changed'))
           setTimeout(() => window.location.reload(), 200)

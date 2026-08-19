@@ -17,6 +17,7 @@ import MonthPicker from '../../../components/MonthPicker'
 import YearNav from '../../../components/YearNav'
 
 import '../../../styles/GoalDetailedCard.css'
+import '../../../styles/Budget.css'
 
 interface EditFields {
   goalCreatedIn: string

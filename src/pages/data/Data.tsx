@@ -186,6 +186,15 @@ const Data: FC = () => {
     saveBalances(balances.filter(b => b.month !== month))
   }
 
+  const handleEditMonth = (month: string) => {
+    const values: Record<number, string> = {}
+    for (const a of activeAccounts) {
+      const existing = balances.find(b => b.accountId === a.id && b.month === month)
+      values[a.id] = existing ? String(existing.balance) : ''
+    }
+    setInlineEntry({ month, values })
+  }
+
   /* CSV import */
   const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -440,6 +449,7 @@ const Data: FC = () => {
                 onSaveInlineEntry={handleSaveInlineEntry}
                 onCancelInlineEntry={() => setInlineEntry(null)}
                 onDeleteMonth={handleDeleteMonth}
+                onEditMonth={handleEditMonth}
               />
             )}
           </>

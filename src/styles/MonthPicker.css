@@ -83,6 +83,48 @@
   font-weight: var(--fw-medium);
 }
 
+.details-month-picker-year-btn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.details-month-picker-year-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--accent);
+}
+
+.details-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+.details-year-grid-cell {
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+}
+.details-year-grid-cell:hover {
+  background: var(--color-surface-hover);
+}
+.details-year-grid-cell--selected {
+  background: var(--accent);
+  color: var(--color-text-on-accent);
+}
+
 .details-month-picker-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

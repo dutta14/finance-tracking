@@ -53,6 +53,7 @@ export interface ImportPayload {
   allocationCustomRatios?: unknown[]
   taxStore?: Record<string, unknown>
   taxTemplates?: TaxTemplate[]
+  paydownLoans?: unknown[]
   gitHubConfig?: Record<string, unknown>
 }
 
@@ -483,6 +484,15 @@ export function validateImportPayload(raw: unknown, rawJsonLength?: number): Imp
       sanitized.taxTemplates = valid
     } else {
       warnings.push('taxTemplates: ignored (not an array)')
+    }
+  }
+
+  // Paydown loans — pass through array
+  if (parsed.paydownLoans !== undefined) {
+    if (Array.isArray(parsed.paydownLoans)) {
+      sanitized.paydownLoans = parsed.paydownLoans
+    } else {
+      warnings.push('paydownLoans: ignored (not an array)')
     }
   }
 

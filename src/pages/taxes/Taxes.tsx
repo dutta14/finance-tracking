@@ -13,6 +13,7 @@ import ImportTemplateModal from './components/ImportTemplateModal'
 import TaxReturnSection from './components/TaxReturnSection'
 import YearNav from '../../components/YearNav'
 import '../../styles/Taxes.css'
+import '../../styles/Budget.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB

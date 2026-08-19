@@ -96,11 +96,11 @@ const Goal: FC = () => {
                 <NavLink to="/goal/leverage" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
                   Leverage
                 </NavLink>
-                <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
-                  FI Calculator
-                </NavLink>
                 <NavLink to="/goal/paydown" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
                   Pay Down
+                </NavLink>
+                <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
+                  FI Calculator
                 </NavLink>
               </nav>
             </div>

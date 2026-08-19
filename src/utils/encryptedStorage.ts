@@ -27,6 +27,7 @@ export const SENSITIVE_KEYS: readonly string[] = [
   'fi-simulations',
   'allocation-custom-ratios',
   'sgt-overrides',
+  'paydown-loans',
 ] as const
 
 const sensitiveSet = new Set<string>(SENSITIVE_KEYS)

@@ -29,6 +29,7 @@ interface BalanceSpreadsheetProps {
   onSaveInlineEntry: () => void
   onCancelInlineEntry: () => void
   onDeleteMonth: (month: string) => void
+  onEditMonth?: (month: string) => void
 }
 
 const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
@@ -43,6 +44,7 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
   onSaveInlineEntry,
   onCancelInlineEntry,
   onDeleteMonth,
+  onEditMonth,
 }) => {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -436,6 +438,17 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
                 <tr key={month}>
                   <td className="data-spreadsheet-row-header">
                     <span className="data-spreadsheet-month-label">{formatMonth(month)}</span>
+                    {onEditMonth && (
+                      <button
+                        className="data-edit-row-btn"
+                        title={`Edit ${formatMonth(month)}`}
+                        onClick={() => onEditMonth(month)}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                          <path d="M13.5 3.5l3 3M4 13l-1 4 4-1L15.5 7.5l-3-3L4 13z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       className="data-delete-row-btn"
                       title={`Delete ${formatMonth(month)}`}
