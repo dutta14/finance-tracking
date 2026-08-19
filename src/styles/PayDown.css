@@ -1,0 +1,193 @@
+.paydown-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.paydown-card,
+.paydown-empty-state,
+.paydown-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.paydown-card,
+.paydown-empty-state {
+  padding: 1.25rem;
+}
+
+.paydown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.paydown-empty-tab {
+  color: var(--color-text-muted);
+  font-size: var(--fs-md);
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.paydown-header h2,
+.paydown-empty-state h2,
+.paydown-card h3,
+.paydown-modal h2 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.paydown-header p,
+.paydown-empty-state p,
+.paydown-card__header p,
+.paydown-card__hint,
+.paydown-modal__header p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.paydown-card__filter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.paydown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.paydown-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.paydown-card__header,
+.paydown-modal__header,
+.paydown-form__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.paydown-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.paydown-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.paydown-metric span,
+.paydown-field span {
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+}
+
+.paydown-metric strong {
+  color: var(--color-text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.paydown-chart {
+  width: 100%;
+  height: 280px;
+}
+
+.paydown-empty-state {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.paydown-empty-state p {
+  max-width: 38rem;
+}
+
+.paydown-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.paydown-modal {
+  width: 100%;
+  max-width: 640px;
+  padding: 1.25rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+
+.paydown-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.paydown-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.paydown-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.paydown-form__error {
+  margin: 0;
+  color: var(--color-negative);
+  font-size: var(--fs-sm);
+}
+
+.paydown-form__actions {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .paydown-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .paydown-header,
+  .paydown-card__header,
+  .paydown-modal__header,
+  .paydown-form__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paydown-form__grid,
+  .paydown-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .paydown-modal-backdrop {
+    padding: 1rem;
+    align-items: flex-end;
+  }
+}

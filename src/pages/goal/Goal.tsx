@@ -14,6 +14,7 @@ import '../../styles/GrowthSettings.css'
 
 import FICalculator from '../tools/components/FICalculator'
 import LeverageGoal from './components/LeverageGoal'
+import PayDown from './components/PayDown'
 
 const Goal: FC = () => {
   const {
@@ -98,6 +99,9 @@ const Goal: FC = () => {
                 <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
                   FI Calculator
                 </NavLink>
+                <NavLink to="/goal/paydown" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
+                  Pay Down
+                </NavLink>
               </nav>
             </div>
           </>
@@ -165,6 +169,7 @@ const Goal: FC = () => {
           />
           <Route path="leverage" element={<LeverageGoal />} />
           <Route path="calculator" element={<FICalculator />} />
+          <Route path="paydown" element={<PayDown />} />
           <Route
             path=":id"
             element={
