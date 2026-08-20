@@ -1,7 +1,7 @@
 # Taxes Page
 
 ## Overview
-The Taxes page is the app’s document-prep workspace for a single tax year. Its primary job is to help the user assemble a year-specific checklist of tax documents, upload supporting files, organize items by owner (primary, partner, joint), track completion based on file attachment, and keep that metadata ready for storage, Drive surfacing, and GitHub sync.
+The Taxes page is the app's document-prep workspace for a single tax year. Its primary job is to help the user assemble a year-specific checklist of tax documents, upload supporting files, organize items by owner (primary, partner, joint), and track completion based on file attachment. All data is stored as files in the user's chosen data folder via the `FileStore` interface.
 
 ## Layout
 The page lives at `/taxes` and renders inside the main app shell.
@@ -216,11 +216,9 @@ The page lives at `/taxes` and renders inside the main app shell.
   - `src/pages/taxes/Taxes.tsx`
   - `src/pages/taxes/components/ChecklistRow.tsx`
   - `src/pages/taxes/utils/fileHelpers.ts`
-  - `src/utils/taxFileDB.ts`
   - `src/pages/taxes/useTaxStore.ts`
 - **Data sources**:
   - `useTaxStore().addFileToItemAsync`
-  - `useEncryption()` via `useTaxStore`
   - `getStorageEstimate()`
 - **User interactions**:
   - Click `Upload` or `Add`
@@ -229,15 +227,12 @@ The page lives at `/taxes` and renders inside the main app shell.
   - **Not started**: button label `Upload`
   - **Has files**: button label `Add`, file chips visible
   - **Loading**: no explicit spinner; storage indicator loads asynchronously on mount
-  - **Error**: upload alert appears for invalid size, migration lock, or storage failure
+  - **Error**: upload alert appears for invalid size or storage failure
 - **Edge cases**:
   - Max file size is **10 MB per file**
-  - Uploads during migration are blocked with `Please wait — migrating existing files to new storage…`
   - Any file extension is accepted; the extension is derived from the filename
   - Display name is rewritten to `{OwnerName}_{ItemLabel}.{ext}`
-  - File metadata is stored in `tax-store`; file content is stripped from local metadata and stored in IndexedDB
-  - If a `CryptoKey` exists, IndexedDB content is encrypted at rest
-  - Legacy inline file content is migrated one time from local storage into IndexedDB on hook mount
+  - Files are written to the data folder under `taxes/{year}/files/{filename}` via the `FileStore`
   - Storage errors are surfaced as a temporary alert and auto-clear after 5 seconds
 
 ### File management on the page
@@ -256,7 +251,7 @@ The page lives at `/taxes` and renders inside the main app shell.
   - **Loading**: none
   - **Error**: none
 - **Edge cases**:
-  - Removing a file also triggers fire-and-forget cleanup in IndexedDB
+  - Removing a file deletes it from the data folder via the `FileStore`
   - Deleting the final file reverts the checklist row to incomplete
   - Long display names are visually truncated to avoid overflow
   - **Current limitation**: the Taxes page itself does **not** provide inline file preview or download actions; it only lists and deletes files
@@ -316,7 +311,7 @@ The page lives at `/taxes` and renders inside the main app shell.
   - Import only works for years that do not already exist
 
 ### Delete year workflow
-- **What it does**: Removes all checklist metadata for the selected year and cleans up associated IndexedDB file blobs.
+- **What it does**: Removes all checklist metadata and uploaded files for the selected year from the data folder.
 - **Components**:
   - `src/pages/taxes/Taxes.tsx`
   - `src/pages/taxes/useTaxStore.ts`
@@ -332,12 +327,11 @@ The page lives at `/taxes` and renders inside the main app shell.
   - **Error**: none
 - **Edge cases**:
   - Warning explicitly says deletion is irreversible
-  - IndexedDB cleanup is batch, async, and fire-and-forget
-  - Deleting a year only deletes that year’s file IDs; other years’ blobs remain
+  - Deleting a year removes that year's JSON file and all files under `taxes/{year}/files/` in the data folder
 
 ### Storage usage indicator
 - **What it does**: Shows approximate file storage used by tax documents.
-- **Components**: `src/pages/taxes/Taxes.tsx`, `src/utils/taxFileDB.ts`
+- **Components**: `src/pages/taxes/Taxes.tsx`
 - **Data sources**: `getStorageEstimate()`
 - **User interactions**: none
 - **States**:
@@ -347,34 +341,7 @@ The page lives at `/taxes` and renders inside the main app shell.
   - **Error**: silent failure; indicator stays hidden
 - **Edge cases**:
   - Uses `navigator.storage.estimate()` when available
-  - Falls back to summing raw IndexedDB record sizes
   - UI shows used MB only, not quota
-
-### Tax GitHub sync
-- **What it does**: Syncs tax metadata and uploaded documents through the app’s GitHub sync system.
-- **Components**:
-  - `src/contexts/TaxSyncContext.tsx`
-  - `src/pages/taxes/taxGitHubSync.ts`
-  - `src/components/SidebarNavigation.tsx`
-  - `src/pages/taxes/useTaxStore.ts`
-- **Data sources**:
-  - `useGitHubSyncContext()`
-  - `useEncryption()`
-  - `tax-store` and `tax-templates` in app storage
-  - IndexedDB file content via `getFileContent()`
-- **User interactions**:
-  - Indirect only from the Taxes page; sync is initiated from global app settings/sidebar or debounced automatically after tax mutations
-- **States**:
-  - **Dirty**: any tax mutation dispatches `tax-store-changed`
-  - **Auto-sync**: TaxSyncProvider debounces for 60 seconds
-  - **Manual sync**: sidebar/settings can call `syncTaxNow`
-  - **Error**: errors are caught/logged in sync context; no Taxes-page-specific UI
-- **Edge cases**:
-  - Sync payload includes `version`, `exportedAt`, `taxStore`, and `taxTemplates`
-  - Individual file uploads go to `taxes/{year}/{owner_label}_{item_label}_{fileId}.{ext}` on GitHub
-  - File sync retries up to 3 times on 409 conflicts/network errors
-  - Uploaded GitHub content strips the data-URL prefix before PUT
-  - **Current limitation**: `downloadAllTaxFiles()` exists, but `restoreTaxFromGitHub()` currently restores only `tax-store` and `tax-templates`; it does not repopulate IndexedDB file blobs
 
 ### Drive integration
 - **What it does**: Exposes tax documents to the Drive feature as a top-level `Taxes` folder grouped by year.
@@ -382,7 +349,7 @@ The page lives at `/taxes` and renders inside the main app shell.
   - `src/pages/taxes/buildTaxTree.ts`
   - `src/pages/drive/buildBudgetTree.ts`
 - **Data sources**:
-  - `tax-store`
+  - `taxes/{year}.json` via `FileStore`
   - `data-accounts`
   - `user-profile`
 - **User interactions**:
@@ -421,12 +388,8 @@ The page lives at `/taxes` and renders inside the main app shell.
 - **`TaxTemplate`**: `id`, `name`, `items`
 
 ### Storage model
-- **Checklist metadata**: stored in encrypted app storage under `tax-store`
-- **Templates**: stored under `tax-templates`
-- **File content**: stored in IndexedDB database `finance-tracking-files`, object store `tax-files`
-- **Encryption**: IndexedDB file content is AES-GCM encrypted when a `CryptoKey` is available
-- **Migration behavior**: legacy inline file content is moved from local metadata into IndexedDB on hook mount
-- **Event model**: every persisted store mutation dispatches `window.dispatchEvent(new Event('tax-store-changed'))`
+- **Checklist metadata and templates**: stored in `taxes/{year}.json` and `taxes/templates.json` in the data folder via the `FileStore`
+- **File content**: stored as actual files at `taxes/{year}/files/{filename}` in the data folder
 
 ### Checklist structure rules
 - Year creation from scratch seeds default paystub rows
@@ -440,35 +403,24 @@ The page lives at `/taxes` and renders inside the main app shell.
 - From the page, users can:
   - Switch between tax years with the header arrows
   - Open the global **Drive** view from the app shell footer to access document folders
-  - Use global settings/sidebar controls for GitHub sync and restore
 - There are no page-local links to other routes inside the Taxes content area.
 
 ## Dependencies
-The Taxes page sits inside the app’s provider stack and depends on both page-local state and app-level contexts.
+The Taxes page sits inside the app's provider stack and depends on both page-local state and app-level contexts.
 
 ### Direct dependencies used by the page
 - **`useProfile()`**: provides primary/partner names and avatars
 - **`useData()` / `DataProvider`**: provides account list for account suggestions and linked-account labels
-- **`useTaxStore()`**: owns year data, templates, file metadata, migration, and all checklist mutations
-- **`useEncryption()`** inside `useTaxStore()`: provides optional crypto key for IndexedDB file encryption
-- **`taxFileDB` utilities**: file blob persistence, deletion, and storage estimate
+- **`useTaxStore()`**: owns year data, templates, file metadata, and all checklist mutations
+- **`useFileStore()`**: provides the active `FileStore` for reading and writing tax files
 
 ### Required app providers in practice
 From the app shell/provider stack, the Taxes page is expected to run inside:
 - `SettingsProvider`
-- `EncryptionProvider`
+- `FileStoreProvider`
 - `LayoutProvider`
 - `GoalsProvider` (indirectly, for profile access via hooks)
 - `DataProvider`
-- `GitHubSyncProvider`
 - `FlagProvider`
-- `BudgetSyncProvider`
-- `TaxSyncProvider`
-- `ImportExportProvider`
-
-### Sync dependencies
-- `TaxSyncProvider` listens for `tax-store-changed`
-- `GitHubSyncContext` handles metadata snapshot sync/restore
-- `taxGitHubSync.ts` handles per-file GitHub upload/download utilities
 
 This is the current behavior implemented in `src/pages/taxes/` today.

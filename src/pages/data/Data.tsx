@@ -2,7 +2,6 @@ import { FC, KeyboardEvent, useState, useRef, lazy, Suspense } from 'react'
 import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useSettings } from '../../contexts/SettingsContext'
-import { useGitHubSyncContext } from '../../contexts/GitHubSyncContext'
 import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry } from './types'
 import { parseCsvImport } from './csvImport'
@@ -26,7 +25,6 @@ const DATA_VIEW_TABS = [
 const Data: FC = () => {
   const { profile } = useGoals()
   const { allowCsvImport } = useSettings()
-  const { handleDataChange: onDataChange } = useGitHubSyncContext()
   const { accounts, balances, setAccounts: ctxSetAccounts, setBalances: ctxSetBalances } = useData()
 
   const [showAccountsModal, setShowAccountsModal] = useState(false)
@@ -48,20 +46,17 @@ const Data: FC = () => {
   const saveAccounts = (updated: Account[]) => {
     ctxSetAccounts(updated)
     accountsRef.current = updated
-    onDataChange?.(updated, balancesRef.current)
   }
 
   const saveBalances = (updated: BalanceEntry[]) => {
     ctxSetBalances(updated)
     balancesRef.current = updated
-    onDataChange?.(accountsRef.current, updated)
   }
 
   // Use when updating both in the same handler to avoid stale closure
   const saveBoth = (newAccounts: Account[], newBalances: BalanceEntry[]) => {
     ctxSetAccounts(newAccounts)
     ctxSetBalances(newBalances)
-    onDataChange?.(newAccounts, newBalances)
   }
 
   /* Account CRUD */

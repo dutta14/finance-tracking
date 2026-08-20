@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { loadGoalsFromStorage, saveGoalsToStorage, migrateGoals } from './localStorageService'
-import { appStorage } from '../../../utils/appStorage'
-import type { FinancialGoal } from '../../../types'
+import { describe, it, expect } from 'vitest'
+import {
+  loadGoalsFile,
+  saveGoalsFile,
+  saveGoalsPart,
+  migrateGoals,
+  migrateGwFields,
+  GOALS_PATH,
+} from './localStorageService'
+import { MemoryFileStore } from '../../../utils/memoryFileStore'
+import type { FinancialGoal, GwGoal } from '../../../types'
 
 const mockGoal: FinancialGoal = {
   id: 1,
@@ -25,86 +32,101 @@ const mockGoal: FinancialGoal = {
   progress: 25,
 }
 
-beforeEach(() => {
-  localStorage.clear()
+describe('loadGoalsFile', () => {
+  it('returns empty arrays when nothing stored', async () => {
+    const store = new MemoryFileStore()
+    const result = await loadGoalsFile(store)
+    expect(result.financialGoals).toEqual([])
+    expect(result.gwGoals).toEqual([])
+  })
+
+  it('loads goals from goals.json', async () => {
+    const store = new MemoryFileStore()
+    await store.writeJSON(GOALS_PATH, { financialGoals: [mockGoal], gwGoals: [] })
+    const result = await loadGoalsFile(store)
+    expect(result.financialGoals).toHaveLength(1)
+    expect(result.financialGoals[0].goalName).toBe('Retire Early')
+  })
+
+  it('returns empty arrays when stored value has non-array financialGoals', async () => {
+    const store = new MemoryFileStore()
+    await store.writeJSON(GOALS_PATH, { financialGoals: null, gwGoals: null })
+    const result = await loadGoalsFile(store)
+    expect(result.financialGoals).toEqual([])
+    expect(result.gwGoals).toEqual([])
+  })
+
+  it('returns empty arrays when stored value is empty object', async () => {
+    const store = new MemoryFileStore()
+    await store.writeJSON(GOALS_PATH, {})
+    const result = await loadGoalsFile(store)
+    expect(result.financialGoals).toEqual([])
+    expect(result.gwGoals).toEqual([])
+  })
 })
 
-describe('loadGoalsFromStorage', () => {
-  it('returns empty array when nothing is stored', () => {
-    expect(loadGoalsFromStorage()).toEqual([])
+describe('saveGoalsFile', () => {
+  it('persists goals to goals.json', async () => {
+    const store = new MemoryFileStore()
+    await saveGoalsFile(store, [mockGoal], [])
+    const raw = await store.readJSON<{ financialGoals: FinancialGoal[] }>(GOALS_PATH, { financialGoals: [] })
+    expect(raw.financialGoals).toHaveLength(1)
+    expect(raw.financialGoals[0].goalName).toBe('Retire Early')
   })
 
-  it('loads goals from financialGoals key', () => {
-    appStorage.setJSON('financialGoals', [mockGoal])
-    const result = loadGoalsFromStorage()
-    expect(result).toHaveLength(1)
-    expect(result[0].goalName).toBe('Retire Early')
+  it('handles empty arrays', async () => {
+    const store = new MemoryFileStore()
+    await saveGoalsFile(store, [], [])
+    const raw = await store.readJSON<{ financialGoals: FinancialGoal[]; gwGoals: GwGoal[] }>(GOALS_PATH, {
+      financialGoals: [],
+      gwGoals: [],
+    })
+    expect(raw.financialGoals).toEqual([])
+    expect(raw.gwGoals).toEqual([])
   })
+})
 
+describe('saveGoalsPart', () => {
+  it('merges partial update into goals.json without dropping the other half', async () => {
+    const gwGoal: GwGoal = {
+      id: 1,
+      fiGoalId: 1,
+      label: 'House',
+      createdAt: '2025-01-01',
+      disburseAge: 40,
+      disburseAmount: 50000,
+      growthRate: 7,
+      currentSavings: 0,
+    }
+    const store = new MemoryFileStore()
+    await store.writeJSON(GOALS_PATH, { financialGoals: [mockGoal], gwGoals: [gwGoal] })
+
+    await saveGoalsPart(store, { financialGoals: [] })
+    const result = await loadGoalsFile(store)
+    expect(result.financialGoals).toEqual([])
+    expect(result.gwGoals).toHaveLength(1)
+    expect(result.gwGoals[0].label).toBe('House')
+  })
+})
+
+describe('migrateGoals', () => {
   it('migrates legacy planName → goalName fields', () => {
-    const legacy = [{ ...mockGoal, planName: 'OldPlan', planCreatedIn: '2024-01', planEndYear: '2049' }]
-    // Remove new-style fields
-    delete (legacy[0] as unknown as Record<string, unknown>).goalName
-    delete (legacy[0] as unknown as Record<string, unknown>).goalCreatedIn
-    delete (legacy[0] as unknown as Record<string, unknown>).goalEndYear
-    appStorage.setJSON('financialGoals', legacy)
-    const result = loadGoalsFromStorage()
+    const legacyEntry = { ...mockGoal, planName: 'OldPlan', planCreatedIn: '2024-01', planEndYear: '2049' } as Record<
+      string,
+      unknown
+    >
+    delete legacyEntry.goalName
+    delete legacyEntry.goalCreatedIn
+    delete legacyEntry.goalEndYear
+    const result = migrateGoals([legacyEntry] as unknown as FinancialGoal[])
     expect(result[0].goalName).toBe('OldPlan')
     expect(result[0].goalCreatedIn).toBe('2024-01')
     expect(result[0].goalEndYear).toBe('2049')
     expect((result[0] as unknown as Record<string, unknown>).planName).toBeUndefined()
   })
 
-  it('migrates from legacy financialPlans key', () => {
-    localStorage.setItem('financialPlans', JSON.stringify([mockGoal]))
-    const result = loadGoalsFromStorage()
-    expect(result).toHaveLength(1)
-    expect(result[0].goalName).toBe('Retire Early')
-    // Should have moved data to new key and removed old
-    expect(appStorage.getString('financialGoals')).toBeTruthy()
-    expect(localStorage.getItem('financialPlans')).toBeNull()
-  })
-
-  it('returns empty array on corrupt JSON', () => {
-    localStorage.setItem('financialGoals', '{broken')
-    expect(loadGoalsFromStorage()).toEqual([])
-  })
-
-  it('returns empty array when stored value is empty array', () => {
-    appStorage.setJSON('financialGoals', [])
-    expect(loadGoalsFromStorage()).toEqual([])
-  })
-})
-
-describe('saveGoalsToStorage', () => {
-  it('persists goals to localStorage', () => {
-    saveGoalsToStorage([mockGoal])
-    const parsed = appStorage.getJSON<Record<string, unknown>[]>('financialGoals', [])
-    expect(parsed).toHaveLength(1)
-    expect(parsed[0].goalName).toBe('Retire Early')
-  })
-
-  it('handles empty array', () => {
-    saveGoalsToStorage([])
-    expect(appStorage.getJSON('financialGoals', null)).toEqual([])
-  })
-})
-
-describe('migrateGoals', () => {
-  it('migrates legacy field names', () => {
-    const legacyEntry: Record<string, unknown> = { ...mockGoal, planName: 'Legacy' }
-    delete legacyEntry.goalName
-    const result = migrateGoals([legacyEntry] as unknown as FinancialGoal[])
-    expect(result[0].goalName).toBe('Legacy')
-  })
-
   it('calculates fiGoal when zero but has expense and SWR data', () => {
-    const goalWithZeroFi = {
-      ...mockGoal,
-      fiGoal: 0,
-      expenseValue2047: 80000,
-      safeWithdrawalRate: 4,
-    }
+    const goalWithZeroFi = { ...mockGoal, fiGoal: 0, expenseValue2047: 80000, safeWithdrawalRate: 4 }
     const result = migrateGoals([goalWithZeroFi])
     // 80000 / 0.04 = 2000000
     expect(result[0].fiGoal).toBe(2000000)
@@ -118,18 +140,35 @@ describe('migrateGoals', () => {
   it('handles zero SWR gracefully (no division by zero recalc)', () => {
     const goal = { ...mockGoal, fiGoal: 0, expenseValue2047: 80000, safeWithdrawalRate: 0 }
     const result = migrateGoals([goal])
-    // SWR is 0, so condition `safeWithdrawalRate > 0` is false => fiGoal stays 0
     expect(result[0].fiGoal).toBe(0)
   })
 
   it('handles zero expense (no recalc)', () => {
     const goal = { ...mockGoal, fiGoal: 0, expenseValue2047: 0, safeWithdrawalRate: 4 }
     const result = migrateGoals([goal])
-    // expense is 0, condition `expenseValue2047 > 0` is false
     expect(result[0].fiGoal).toBe(0)
   })
 
   it('returns empty array for empty input', () => {
     expect(migrateGoals([])).toEqual([])
+  })
+})
+
+describe('migrateGwFields', () => {
+  it('renames fiPlanId to fiGoalId', () => {
+    const input = [{ id: 1, fiPlanId: 42, label: 'Test' }]
+    const result = migrateGwFields(input)
+    expect(result[0].fiGoalId).toBe(42)
+    expect((result[0] as unknown as Record<string, unknown>).fiPlanId).toBeUndefined()
+  })
+
+  it('leaves fiGoalId untouched if already present', () => {
+    const input = [{ id: 1, fiGoalId: 42, label: 'Test' }]
+    const result = migrateGwFields(input)
+    expect(result[0].fiGoalId).toBe(42)
+  })
+
+  it('handles empty array', () => {
+    expect(migrateGwFields([])).toEqual([])
   })
 })

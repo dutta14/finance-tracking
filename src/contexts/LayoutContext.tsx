@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, FC, ReactNode, Dispatch, SetStateAction } from 'react'
-import { isDemoActive, enterDemoMode, exitDemoMode } from '../pages/settings/demoMode'
+import { isDemoActive, useFileStore } from './FileStoreContext'
 
 export interface LayoutContextValue {
   sidebarOpen: boolean
@@ -25,6 +25,7 @@ export const useLayout = (): LayoutContextValue => {
 }
 
 export const LayoutProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const { enterDemo, exitDemo } = useFileStore()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900)
   const [settingsOpenSection, setSettingsOpenSection] = useState<string | undefined>()
@@ -45,7 +46,7 @@ export const LayoutProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
         e.preventDefault()
-        isDemoActive() ? exitDemoMode() : enterDemoMode()
+        isDemoActive() ? exitDemo() : enterDemo()
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
@@ -54,7 +55,7 @@ export const LayoutProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [enterDemo, exitDemo])
 
   const value = useMemo<LayoutContextValue>(
     () => ({

@@ -182,7 +182,7 @@ describe('SearchModal', () => {
     expect(screen.getByText('Try a different keyword or check spelling')).toBeInTheDocument()
   })
 
-  it('shows "Show all" button when group is truncated', async () => {
+  it('offers a "more" button counting the hidden results when a group is truncated', async () => {
     const items = Array.from({ length: 5 }, (_, i) => makeItem({ id: `p${i}`, label: `Item ${i}` }))
     const groups = [makeGroup({ items, total: 10 })]
     mockedSearch.mockReturnValue(groups)
@@ -190,7 +190,7 @@ describe('SearchModal', () => {
     render(<SearchModal {...defaultProps} />)
     await userEvent.type(screen.getByRole('combobox'), 'item')
 
-    expect(screen.getByText('Show all 10 results →')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '5 more' })).toBeInTheDocument()
   })
 
   it('updates selection on mouse hover', async () => {

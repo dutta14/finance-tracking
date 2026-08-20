@@ -6,11 +6,13 @@ import {
   saveBudgetStore as _saveBudgetStore,
   saveBudgetSummary as _saveBudgetSummary,
   updateGlobalCategoryGroups as _updateGlobalCategoryGroups,
+  loadBudgetStore as _loadBudgetStore,
 } from '../utils/budgetStorage'
 
 const saveBudgetStore = vi.mocked(_saveBudgetStore)
 const saveBudgetSummary = vi.mocked(_saveBudgetSummary)
 const updateGlobalCategoryGroups = vi.mocked(_updateGlobalCategoryGroups)
+const loadBudgetStore = vi.mocked(_loadBudgetStore)
 
 /* ─── Mocks ─── */
 
@@ -33,25 +35,11 @@ const EMPTY_STORE: BudgetStore = {
 let mockStore: BudgetStore = { ...EMPTY_STORE, categoryGroups: [...DEFAULT_GROUPS] }
 
 vi.mock('../utils/budgetStorage', () => ({
-  loadBudgetStore: () => mockStore,
-  saveBudgetStore: vi.fn((store: BudgetStore) => {
+  loadBudgetStore: vi.fn(() => Promise.resolve(mockStore)),
+  saveBudgetStore: vi.fn((_fs: unknown, store: BudgetStore) => {
     mockStore = store
     window.dispatchEvent(new Event('budget-changed'))
-  }),
-  saveCSVForMonth: vi.fn((store: BudgetStore, monthKey: string, csv: string) => {
-    const year = parseInt(monthKey.split('-')[0], 10)
-    return {
-      ...store,
-      csvs: {
-        ...store.csvs,
-        [monthKey]: { month: monthKey, csv, uploadedAt: new Date().toISOString() },
-      },
-      years: store.years.includes(year) ? store.years : [...store.years, year].sort(),
-    }
-  }),
-  deleteCSVForMonth: vi.fn((store: BudgetStore, monthKey: string) => {
-    const { [monthKey]: _, ...rest } = store.csvs
-    return { ...store, csvs: rest }
+    return Promise.resolve()
   }),
   createYear: vi.fn((store: BudgetStore, year: number) => {
     if (store.years.includes(year)) return store
@@ -69,31 +57,44 @@ vi.mock('../utils/budgetStorage', () => ({
     ...store,
     categoryGroups: groups,
   })),
-  saveBudgetSummary: vi.fn(),
+  saveBudgetSummary: vi.fn((_fs: unknown) => Promise.resolve()),
 }))
 
 const VALID_CSV =
   'Date,Category,Amount,Description\n2025-05-01,Salary,5000,Paycheck\n2025-05-02,Groceries,-120,Weekly groceries\n2025-05-03,Rent,-2000,Monthly rent'
 
 beforeEach(() => {
-  localStorage.clear()
   mockStore = {
     ...EMPTY_STORE,
     categoryGroups: DEFAULT_GROUPS.map(g => ({ ...g, categories: [...g.categories] })),
   }
   vi.clearAllMocks()
+  // re-apply mock implementation since clearAllMocks resets it
+  vi.mocked(loadBudgetStore).mockImplementation(() => Promise.resolve(mockStore))
+  vi.mocked(saveBudgetStore).mockImplementation((_fs, store) => {
+    mockStore = store
+    window.dispatchEvent(new Event('budget-changed'))
+    return Promise.resolve()
+  })
 })
 
+
+/** Render useBudget and wait for the initial async load to settle. */
+async function renderAndLoad() {
+  const utils = renderHook(() => useBudget())
+  await act(async () => { await Promise.resolve() })
+  return utils
+}
 describe('useBudget — initial state', () => {
-  it('returns empty store, transactions map, and category groups on initial load with no saved data', () => {
-    const { result } = renderHook(() => useBudget())
+  it('returns empty store, transactions map, and category groups on initial load with no saved data', async () => {
+    const { result } = await renderAndLoad()
 
     expect(result.current.store.csvs).toEqual({})
     expect(result.current.yearTransactions).toEqual({})
     expect(result.current.categoryGroups).toEqual(DEFAULT_EXPENSE_GROUPS)
   })
 
-  it('loads existing budget store from budgetStorage on mount', () => {
+  it('loads existing budget store from budgetStorage on mount', async () => {
     mockStore = {
       csvs: { '2025-01': { month: '2025-01', csv: VALID_CSV, uploadedAt: '2025-01-01' } },
       configs: {},
@@ -101,22 +102,22 @@ describe('useBudget — initial state', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     expect(result.current.store.csvs['2025-01'].csv).toBe(VALID_CSV)
     expect(result.current.years).toContain(2025)
   })
 
-  it('selects the current year by default', () => {
-    const { result } = renderHook(() => useBudget())
+  it('selects the current year by default', async () => {
+    const { result } = await renderAndLoad()
     expect(result.current.selectedYear).toBe(new Date().getFullYear())
   })
 
-  it('returns the correct year list from the store', () => {
+  it('returns the correct year list from the store', async () => {
     const currentYear = new Date().getFullYear()
     mockStore = { ...EMPTY_STORE, years: [2023, 2024, currentYear], categoryGroups: DEFAULT_GROUPS }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.years).toContain(2023)
     expect(result.current.years).toContain(2024)
     expect(result.current.years).toContain(currentYear)
@@ -124,8 +125,8 @@ describe('useBudget — initial state', () => {
 })
 
 describe('useBudget — uploadCSV', () => {
-  it('parses uploaded CSV and creates transactions for the given month key', () => {
-    const { result } = renderHook(() => useBudget())
+  it('parses uploaded CSV and creates transactions for the given month key', async () => {
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -138,8 +139,8 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.transactions![1].amount).toBe(-120)
   })
 
-  it('auto-discovers new categories from uploaded CSV and adds to global category groups', () => {
-    const { result } = renderHook(() => useBudget())
+  it('auto-discovers new categories from uploaded CSV and adds to global category groups', async () => {
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -152,8 +153,8 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.newCategories).toContain('Rent')
   })
 
-  it('assigns unknown categories to the "Others" group', () => {
-    const { result } = renderHook(() => useBudget())
+  it('assigns unknown categories to the "Others" group', async () => {
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.uploadCSV('2025-05', VALID_CSV)
@@ -165,8 +166,8 @@ describe('useBudget — uploadCSV', () => {
     expect(othersGroup!.categories).toContain('Rent')
   })
 
-  it('assigns unknown income categories to the income others group', () => {
-    const { result } = renderHook(() => useBudget())
+  it('assigns unknown income categories to the income others group', async () => {
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.uploadCSV('2025-05', VALID_CSV)
@@ -178,8 +179,8 @@ describe('useBudget — uploadCSV', () => {
     expect(result.current.categoryGroups.find(g => g.id === 'others')?.categories).not.toContain('Salary')
   })
 
-  it('recalculates allCategories when a new CSV is uploaded', () => {
-    const { result } = renderHook(() => useBudget())
+  it('recalculates allCategories when a new CSV is uploaded', async () => {
+    const { result } = await renderAndLoad()
 
     expect(result.current.allCategories.size).toBe(0)
 
@@ -196,9 +197,9 @@ describe('useBudget — uploadCSV', () => {
     expect(result.current.allCategories.size).toBe(3)
   })
 
-  it('handles CSV with extra columns gracefully', () => {
+  it('handles CSV with extra columns gracefully', async () => {
     const csvWithExtra = 'Date,Category,Amount,Description,Extra1,Extra2\n2025-05-01,Food,-50,Lunch,ignore,me'
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -210,9 +211,9 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.transactions![0].category).toBe('Food')
   })
 
-  it('handles malformed CSV lines without crashing', () => {
+  it('handles malformed CSV lines without crashing', async () => {
     const malformedCSV = 'Date,Category,Amount\n2025-05-01,Food,-50\n\nbad line\n2025-05-03,Rent,-1000'
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -224,9 +225,9 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.transactions!).toHaveLength(2)
   })
 
-  it('returns error when CSV has no valid transactions', () => {
+  it('returns error when CSV has no valid transactions', async () => {
     const emptyCSV = 'Date,Category,Amount\n'
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -237,9 +238,9 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.error).toContain('No valid transactions')
   })
 
-  it('returns error when CSV headers are missing required columns', () => {
+  it('returns error when CSV headers are missing required columns', async () => {
     const badCSV = 'Name,Value\nfoo,100'
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -250,9 +251,9 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.error).toContain('CSV must have headers: Date, Category, Amount')
   })
 
-  it('handles quoted CSV fields correctly', () => {
+  it('handles quoted CSV fields correctly', async () => {
     const quotedCSV = 'Date,Category,Amount,Description\n2025-05-01,"Dining, Restaurants",-75,"Dinner with ""friends"""'
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -263,8 +264,8 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.transactions![0].category).toBe('Dining, Restaurants')
   })
 
-  it('dispatches "budget-changed" event after uploads via saveBudgetStore', () => {
-    const { result } = renderHook(() => useBudget())
+  it('dispatches "budget-changed" event after uploads via saveBudgetStore', async () => {
+    const { result } = await renderAndLoad()
     const eventSpy = vi.fn()
     window.addEventListener('budget-changed', eventSpy)
 
@@ -280,7 +281,7 @@ describe('useBudget — uploadCSV', () => {
     window.removeEventListener('budget-changed', eventSpy)
   })
 
-  it('does not add categories that are already in a group', () => {
+  it('does not add categories that are already in a group', async () => {
     mockStore = {
       ...EMPTY_STORE,
       categoryGroups: [
@@ -290,7 +291,7 @@ describe('useBudget — uploadCSV', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -305,13 +306,13 @@ describe('useBudget — uploadCSV', () => {
     expect(uploadResult!.newCategories).toContain('NewCat')
   })
 
-  it('auto-creates Others group if it does not exist', () => {
+  it('auto-creates Others group if it does not exist', async () => {
     mockStore = {
       ...EMPTY_STORE,
       categoryGroups: [{ id: 'removed', name: 'Remove from Budget', categories: [] }],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.uploadCSV('2025-05', 'Date,Category,Amount\n2025-05-01,Food,-50')
@@ -324,8 +325,8 @@ describe('useBudget — uploadCSV', () => {
     expect(others!.categories).toContain('Food')
   })
 
-  it('does not classify zero-amount categories as new expense or income groups', () => {
-    const { result } = renderHook(() => useBudget())
+  it('does not classify zero-amount categories as new expense or income groups', async () => {
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -340,7 +341,7 @@ describe('useBudget — uploadCSV', () => {
 })
 
 describe('useBudget — yearTransactions and computed data', () => {
-  it('computes yearTransactions by aggregating all months for the selected year', () => {
+  it('computes yearTransactions by aggregating all months for the selected year', async () => {
     mockStore = {
       csvs: {
         '2025-01': {
@@ -359,7 +360,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.setSelectedYear(2025)
@@ -369,7 +370,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.yearTransactions['2025-02']).toHaveLength(1)
   })
 
-  it('computes categorySums correctly: positive = income, negative = expense', () => {
+  it('computes categorySums correctly: positive = income, negative = expense', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Salary,5000\n2025-01-02,Groceries,-200'
     mockStore = {
       csvs: {
@@ -380,7 +381,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setSelectedYear(2025)
     })
@@ -389,7 +390,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.categorySums['Groceries']['2025-01']).toBe(-200)
   })
 
-  it('computes monthly summary (totalIncome, totalExpense, saveRate)', () => {
+  it('computes monthly summary (totalIncome, totalExpense, saveRate)', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Salary,5000\n2025-01-02,Rent,-2000\n2025-01-03,Food,-500'
     mockStore = {
       csvs: {
@@ -400,7 +401,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setSelectedYear(2025)
     })
@@ -410,7 +411,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.summary.saveRate).toBeCloseTo(0.5)
   })
 
-  it('computes savings rate as 0 when there is no income', () => {
+  it('computes savings rate as 0 when there is no income', async () => {
     const csv = 'Date,Category,Amount\n2025-01-02,Rent,-2000'
     mockStore = {
       csvs: {
@@ -421,7 +422,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setSelectedYear(2025)
     })
@@ -429,7 +430,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.summary.saveRate).toBe(0)
   })
 
-  it('saves budget summary to storage whenever it changes', () => {
+  it('saves budget summary to storage whenever it changes', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Salary,5000'
     mockStore = {
       csvs: { '2025-01': { month: '2025-01', csv, uploadedAt: '2025-01-01' } },
@@ -443,7 +444,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(saveBudgetSummary).toHaveBeenCalled()
   })
 
-  it('excludes removed categories from categorySums', () => {
+  it('excludes removed categories from categorySums', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Salary,5000\n2025-01-02,ATM,-100'
     mockStore = {
       csvs: { '2025-01': { month: '2025-01', csv, uploadedAt: '2025-01-01' } },
@@ -455,7 +456,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setSelectedYear(2025)
     })
@@ -464,7 +465,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.categorySums['Salary']).toBeDefined()
   })
 
-  it('seeds missing income categories into the income others group during migration', () => {
+  it('seeds missing income categories into the income others group during migration', async () => {
     mockStore = {
       csvs: {
         '2025-01': {
@@ -483,7 +484,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.setSelectedYear(2025)
@@ -492,7 +493,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.incomeCategoryGroups.find(g => g.id === 'income-others')?.categories).toContain('Salary')
   })
 
-  it('seeds missing income categories even when the store has no category groups yet', () => {
+  it('seeds missing income categories even when the store has no category groups yet', async () => {
     mockStore = {
       csvs: {
         '2025-01': {
@@ -506,7 +507,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       categoryGroups: undefined as unknown as CategoryGroup[],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.setSelectedYear(2025)
@@ -516,7 +517,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(result.current.incomeCategoryGroups.find(g => g.id === 'income-others')?.categories).toContain('Salary')
   })
 
-  it('does not reseed income categories that are already grouped', () => {
+  it('does not reseed income categories that are already grouped', async () => {
     mockStore = {
       csvs: {
         '2025-01': {
@@ -535,7 +536,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.setSelectedYear(2025)
@@ -544,7 +545,7 @@ describe('useBudget — yearTransactions and computed data', () => {
     expect(updateGlobalCategoryGroups).not.toHaveBeenCalled()
   })
 
-  it('treats mixed-sign categories as expenses and ignores zero-only categories in the summary', () => {
+  it('treats mixed-sign categories as expenses and ignores zero-only categories in the summary', async () => {
     const csv =
       'Date,Category,Amount\n2025-01-01,Salary,5000\n2025-01-02,Refundable,-50\n2025-02-01,Refundable,10\n2025-01-03,ZeroCat,0'
     mockStore = {
@@ -556,7 +557,7 @@ describe('useBudget — yearTransactions and computed data', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.setSelectedYear(2025)
@@ -570,7 +571,7 @@ describe('useBudget — yearTransactions and computed data', () => {
 })
 
 describe('useBudget — removeCSV', () => {
-  it('removes CSV for a month and clears its transactions', () => {
+  it('removes CSV for a month and clears its transactions', async () => {
     mockStore = {
       csvs: {
         '2025-01': { month: '2025-01', csv: VALID_CSV, uploadedAt: '2025-01-01' },
@@ -580,7 +581,7 @@ describe('useBudget — removeCSV', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.removeCSV('2025-01')
@@ -591,8 +592,8 @@ describe('useBudget — removeCSV', () => {
 })
 
 describe('useBudget — createYear', () => {
-  it('creates a new year entry in the budget store', () => {
-    const { result } = renderHook(() => useBudget())
+  it('creates a new year entry in the budget store', async () => {
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.createYear(2030)
@@ -604,7 +605,7 @@ describe('useBudget — createYear', () => {
 })
 
 describe('useBudget — editCategory', () => {
-  it('edits a transaction category in-place by modifying the CSV field', () => {
+  it('edits a transaction category in-place by modifying the CSV field', async () => {
     const csv = 'Date,Category,Amount\n2025-05-01,OldCat,-50\n2025-05-02,Food,-30'
     mockStore = {
       csvs: { '2025-05': { month: '2025-05', csv, uploadedAt: '2025-05-01' } },
@@ -616,7 +617,7 @@ describe('useBudget — editCategory', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.editCategory('2025-05', 0, 'NewCat')
@@ -628,7 +629,7 @@ describe('useBudget — editCategory', () => {
     expect(updatedCsv).not.toContain('OldCat')
   })
 
-  it('adds a new income category to the income others group when editing a positive transaction', () => {
+  it('adds a new income category to the income others group when editing a positive transaction', async () => {
     const csv = 'Date,Category,Amount\n2025-05-01,Salary,5000'
     mockStore = {
       csvs: { '2025-05': { month: '2025-05', csv, uploadedAt: '2025-05-01' } },
@@ -641,7 +642,7 @@ describe('useBudget — editCategory', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.editCategory('2025-05', 0, 'Bonus')
@@ -652,7 +653,7 @@ describe('useBudget — editCategory', () => {
     expect(result.current.incomeCategoryGroups.find(g => g.id === 'income-others')?.categories).toContain('Bonus')
   })
 
-  it('creates default expense groups when editing a negative transaction in a store without category groups', () => {
+  it('creates default expense groups when editing a negative transaction in a store without category groups', async () => {
     mockStore = {
       csvs: {
         '2025-05': { month: '2025-05', csv: 'Date,Category,Amount\n2025-05-01,Food,-50', uploadedAt: '2025-05-01' },
@@ -662,7 +663,7 @@ describe('useBudget — editCategory', () => {
       categoryGroups: undefined as unknown as CategoryGroup[],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.editCategory('2025-05', 0, 'Gas')
@@ -672,7 +673,7 @@ describe('useBudget — editCategory', () => {
     expect(updateGlobalCategoryGroups).toHaveBeenCalled()
   })
 
-  it('creates default income groups when editing a positive transaction in a store without category groups', () => {
+  it('creates default income groups when editing a positive transaction in a store without category groups', async () => {
     mockStore = {
       csvs: {
         '2025-05': { month: '2025-05', csv: 'Date,Category,Amount\n2025-05-01,Salary,5000', uploadedAt: '2025-05-01' },
@@ -682,7 +683,7 @@ describe('useBudget — editCategory', () => {
       categoryGroups: undefined as unknown as CategoryGroup[],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.editCategory('2025-05', 0, 'Bonus')
@@ -694,8 +695,8 @@ describe('useBudget — editCategory', () => {
 })
 
 describe('useBudget — updateCategoryGroups', () => {
-  it('persists category group changes via updateGlobalCategoryGroups', () => {
-    const { result } = renderHook(() => useBudget())
+  it('persists category group changes via updateGlobalCategoryGroups', async () => {
+    const { result } = await renderAndLoad()
 
     const newGroups: CategoryGroup[] = [
       { id: 'housing', name: 'Housing', categories: ['Rent', 'Utilities'] },
@@ -712,8 +713,8 @@ describe('useBudget — updateCategoryGroups', () => {
 })
 
 describe('useBudget — updateIncomeCategoryGroups', () => {
-  it('persists income category group changes', () => {
-    const { result } = renderHook(() => useBudget())
+  it('persists income category group changes', async () => {
+    const { result } = await renderAndLoad()
 
     const newGroups: CategoryGroup[] = [
       { id: 'paychecks', name: 'Paychecks', categories: ['Salary'] },
@@ -729,7 +730,7 @@ describe('useBudget — updateIncomeCategoryGroups', () => {
 })
 
 describe('useBudget — mergeCategories', () => {
-  it('merges categories across all months when merge is invoked', () => {
+  it('merges categories across all months when merge is invoked', async () => {
     const csv1 = 'Date,Category,Amount\n2025-01-01,OldA,-50\n2025-01-02,OldB,-30'
     const csv2 = 'Date,Category,Amount\n2025-02-01,OldA,-40'
     mockStore = {
@@ -745,7 +746,7 @@ describe('useBudget — mergeCategories', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['OldA', 'OldB'], 'Merged')
@@ -761,7 +762,7 @@ describe('useBudget — mergeCategories', () => {
     expect(csv2Updated).not.toContain('OldA')
   })
 
-  it('does nothing when merging a category into itself only', () => {
+  it('does nothing when merging a category into itself only', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Food,-50'
     mockStore = {
       csvs: { '2025-01': { month: '2025-01', csv, uploadedAt: '2025-01-01' } },
@@ -775,7 +776,7 @@ describe('useBudget — mergeCategories', () => {
 
     saveBudgetStore.mockClear()
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['Food'], 'Food')
@@ -791,7 +792,7 @@ describe('useBudget — mergeCategories', () => {
     expect(saveBudgetStore.mock.calls.length).toBe(callCountAfterMount)
   })
 
-  it('leaves valid CSV months unchanged when none of their categories match the merge sources', () => {
+  it('leaves valid CSV months unchanged when none of their categories match the merge sources', async () => {
     const csv1 = 'Date,Category,Amount\n2025-01-01,OldA,-50'
     const untouchedCsv = 'Date,Category,Amount\n2025-02-01,Rent,-1000'
     mockStore = {
@@ -807,7 +808,7 @@ describe('useBudget — mergeCategories', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['OldA'], 'Merged')
@@ -817,7 +818,7 @@ describe('useBudget — mergeCategories', () => {
     expect(result.current.store.csvs['2025-02']?.csv).toBe(untouchedCsv)
   })
 
-  it('merges categories even when the store starts without category groups', () => {
+  it('merges categories even when the store starts without category groups', async () => {
     mockStore = {
       csvs: {
         '2025-01': { month: '2025-01', csv: 'Date,Category,Amount\n2025-01-01,OldA,-50', uploadedAt: '2025-01-01' },
@@ -827,7 +828,7 @@ describe('useBudget — mergeCategories', () => {
       categoryGroups: undefined as unknown as CategoryGroup[],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['OldA'], 'Merged')
@@ -840,7 +841,7 @@ describe('useBudget — mergeCategories', () => {
 })
 
 describe('useBudget — categoryHasTransactions', () => {
-  it('returns true when category has transactions in any CSV', () => {
+  it('returns true when category has transactions in any CSV', async () => {
     mockStore = {
       csvs: {
         '2025-01': {
@@ -854,11 +855,11 @@ describe('useBudget — categoryHasTransactions', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('Groceries')).toBe(true)
   })
 
-  it('returns false when category has no transactions', () => {
+  it('returns false when category has no transactions', async () => {
     mockStore = {
       csvs: {
         '2025-01': {
@@ -872,20 +873,20 @@ describe('useBudget — categoryHasTransactions', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('NonExistent')).toBe(false)
   })
 })
 
 describe('useBudget — applyConfig', () => {
-  it('merges years and replaces category groups from config', () => {
+  it('merges years and replaces category groups from config', async () => {
     mockStore = {
       ...EMPTY_STORE,
       years: [2024],
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     const config: BudgetConfigData = {
       version: 1,
@@ -908,10 +909,10 @@ describe('useBudget — applyConfig', () => {
     expect(result.current.incomeCategoryGroups.find(g => g.id === 'paychecks')).toBeTruthy()
   })
 
-  it('deduplicates years when merging config', () => {
+  it('deduplicates years when merging config', async () => {
     mockStore = { ...EMPTY_STORE, years: [2024, 2025], categoryGroups: DEFAULT_GROUPS }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.applyConfig({
@@ -927,9 +928,9 @@ describe('useBudget — applyConfig', () => {
 })
 
 describe('useBudget — header row detection', () => {
-  it('detects header row with different casing and spacing', () => {
+  it('detects header row with different casing and spacing', async () => {
     const csv = ' Date , Category , Amount \n2025-05-01,Food,-50'
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let uploadResult: ReturnType<typeof result.current.uploadCSV>
     act(() => {
@@ -942,7 +943,7 @@ describe('useBudget — header row detection', () => {
 })
 
 describe('useBudget — addTransaction', () => {
-  it('appends a CSV line to an existing month CSV', () => {
+  it('appends a CSV line to an existing month CSV', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Salary,5000'
     mockStore = {
       csvs: { '2025-01': { month: '2025-01', csv, uploadedAt: '2025-01-01' } },
@@ -951,7 +952,7 @@ describe('useBudget — addTransaction', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     let addResult: ReturnType<typeof result.current.addTransaction>
     act(() => {
@@ -962,8 +963,8 @@ describe('useBudget — addTransaction', () => {
     expect(addResult!.transactions!.length).toBeGreaterThan(1)
   })
 
-  it('creates a new CSV with headers when month has no existing data', () => {
-    const { result } = renderHook(() => useBudget())
+  it('creates a new CSV with headers when month has no existing data', async () => {
+    const { result } = await renderAndLoad()
 
     let addResult: ReturnType<typeof result.current.addTransaction>
     act(() => {
@@ -977,7 +978,7 @@ describe('useBudget — addTransaction', () => {
 })
 
 describe('useBudget — deleteCategory', () => {
-  it('removes a category from all groups', () => {
+  it('removes a category from all groups', async () => {
     mockStore = {
       ...EMPTY_STORE,
       categoryGroups: [
@@ -987,7 +988,7 @@ describe('useBudget — deleteCategory', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.deleteCategory('Groceries')
@@ -998,7 +999,7 @@ describe('useBudget — deleteCategory', () => {
     expect(foodGroup?.categories).toContain('Dining')
   })
 
-  it('removes a category from income groups as well', () => {
+  it('removes a category from income groups as well', async () => {
     mockStore = {
       ...EMPTY_STORE,
       categoryGroups: [
@@ -1009,7 +1010,7 @@ describe('useBudget — deleteCategory', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.deleteCategory('Salary')
@@ -1019,7 +1020,7 @@ describe('useBudget — deleteCategory', () => {
     expect(result.current.incomeCategoryGroups.find(g => g.id === 'income-others')?.categories).toContain('Bonus')
   })
 
-  it('handles deleting a category when the store has no category groups yet', () => {
+  it('handles deleting a category when the store has no category groups yet', async () => {
     mockStore = {
       csvs: {},
       configs: {},
@@ -1027,7 +1028,7 @@ describe('useBudget — deleteCategory', () => {
       categoryGroups: undefined as unknown as CategoryGroup[],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.deleteCategory('Anything')
@@ -1040,9 +1041,9 @@ describe('useBudget — deleteCategory', () => {
 })
 
 describe('useBudget — setSelectedYear triggers year creation', () => {
-  it('auto-creates the year if it does not exist when setSelectedYear is called', () => {
+  it('auto-creates the year if it does not exist when setSelectedYear is called', async () => {
     mockStore = { ...EMPTY_STORE, years: [2024], categoryGroups: DEFAULT_GROUPS }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.setSelectedYear(2026)
@@ -1054,26 +1055,26 @@ describe('useBudget — setSelectedYear triggers year creation', () => {
 })
 
 describe('useBudget — viewMode', () => {
-  it('defaults to spreadsheet view mode', () => {
-    const { result } = renderHook(() => useBudget())
+  it('defaults to spreadsheet view mode', async () => {
+    const { result } = await renderAndLoad()
     expect(result.current.viewMode).toBe('spreadsheet')
   })
 
-  it('switches view mode', () => {
-    const { result } = renderHook(() => useBudget())
+  it('switches view mode', async () => {
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setViewMode('cashflow')
     })
     expect(result.current.viewMode).toBe('cashflow')
   })
 
-  it('defaults to detailed spreadsheet mode', () => {
-    const { result } = renderHook(() => useBudget())
+  it('defaults to detailed spreadsheet mode', async () => {
+    const { result } = await renderAndLoad()
     expect(result.current.spreadsheetMode).toBe('detailed')
   })
 
-  it('switches spreadsheet mode', () => {
-    const { result } = renderHook(() => useBudget())
+  it('switches spreadsheet mode', async () => {
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setSpreadsheetMode('aggregated')
     })
@@ -1082,7 +1083,7 @@ describe('useBudget — viewMode', () => {
 })
 
 describe('useBudget — monthsWithData', () => {
-  it('tracks which months have CSV data for the selected year', () => {
+  it('tracks which months have CSV data for the selected year', async () => {
     mockStore = {
       csvs: {
         '2025-01': { month: '2025-01', csv: 'Date,Category,Amount\n2025-01-01,X,-1', uploadedAt: '' },
@@ -1093,7 +1094,7 @@ describe('useBudget — monthsWithData', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     act(() => {
       result.current.setSelectedYear(2025)
     })
@@ -1106,8 +1107,8 @@ describe('useBudget — monthsWithData', () => {
 })
 
 describe('useBudget — editCategory edge cases', () => {
-  it('does nothing when monthKey has no CSV data', () => {
-    const { result } = renderHook(() => useBudget())
+  it('does nothing when monthKey has no CSV data', async () => {
+    const { result } = await renderAndLoad()
     const initialStore = result.current.store
 
     act(() => {
@@ -1117,7 +1118,7 @@ describe('useBudget — editCategory edge cases', () => {
     expect(result.current.store.csvs).toEqual(initialStore.csvs)
   })
 
-  it('does nothing when transactionIdx is out of bounds', () => {
+  it('does nothing when transactionIdx is out of bounds', async () => {
     const csv = 'Date,Category,Amount\n2025-05-01,Food,-50'
     mockStore = {
       csvs: { '2025-05': { month: '2025-05', csv, uploadedAt: '' } },
@@ -1130,7 +1131,7 @@ describe('useBudget — editCategory edge cases', () => {
     }
 
     saveBudgetStore.mockClear()
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     const callsAfterMount = saveBudgetStore.mock.calls.length
 
     act(() => {
@@ -1142,7 +1143,7 @@ describe('useBudget — editCategory edge cases', () => {
 })
 
 describe('useBudget — mergeCategories preserves non-matching rows', () => {
-  it('replaces only matching categories and preserves rows with different categories', () => {
+  it('replaces only matching categories and preserves rows with different categories', async () => {
     const csv = 'Date,Category,Amount\n2025-01-01,Food,-50\n2025-01-02,Transport,-20\n2025-01-03,Food,-30'
     mockStore = {
       csvs: { '2025-01': { month: '2025-01', csv, uploadedAt: '2025-01-01' } },
@@ -1154,7 +1155,7 @@ describe('useBudget — mergeCategories preserves non-matching rows', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['Food'], 'Dining')
@@ -1168,7 +1169,7 @@ describe('useBudget — mergeCategories preserves non-matching rows', () => {
 })
 
 describe('useBudget — parsedCSVs handles malformed CSV gracefully', () => {
-  it('returns empty array for a month with missing required headers', () => {
+  it('returns empty array for a month with missing required headers', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1180,13 +1181,13 @@ describe('useBudget — parsedCSVs handles malformed CSV gracefully', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.yearTransactions[key]).toEqual([])
   })
 })
 
 describe('useBudget — uploadCSV discovers new categories and adds to Others', () => {
-  it('adds new categories from uploaded CSV into the Others group', () => {
+  it('adds new categories from uploaded CSV into the Others group', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1199,7 +1200,7 @@ describe('useBudget — uploadCSV discovers new categories and adds to Others', 
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     const csv = `Date,Category,Amount\n${year}-01-01,NewCat,-50`
 
     act(() => {
@@ -1213,12 +1214,12 @@ describe('useBudget — uploadCSV discovers new categories and adds to Others', 
 })
 
 describe('useBudget — addTransaction builds CSV for new month', () => {
-  it('creates CSV with headers when no existing CSV for that month', () => {
+  it('creates CSV with headers when no existing CSV for that month', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-03`
     mockStore = { csvs: {}, configs: {}, years: [year], categoryGroups: DEFAULT_GROUPS }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.addTransaction(key, `${year}-03-01,Coffee,-5,Morning`)
@@ -1229,7 +1230,7 @@ describe('useBudget — addTransaction builds CSV for new month', () => {
     expect(csv).toContain('Coffee')
   })
 
-  it('appends to existing CSV without trailing newline', () => {
+  it('appends to existing CSV without trailing newline', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-02`
     mockStore = {
@@ -1239,7 +1240,7 @@ describe('useBudget — addTransaction builds CSV for new month', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.addTransaction(key, `${year}-02-15,Gas,-40,Fill up`)
@@ -1252,9 +1253,9 @@ describe('useBudget — addTransaction builds CSV for new month', () => {
 })
 
 describe('useBudget — editCategory guard branches', () => {
-  it('does nothing when month has no CSV data', () => {
+  it('does nothing when month has no CSV data', async () => {
     mockStore = { csvs: {}, configs: {}, years: [2025], categoryGroups: DEFAULT_GROUPS }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     saveBudgetStore.mockClear()
 
     act(() => {
@@ -1264,7 +1265,7 @@ describe('useBudget — editCategory guard branches', () => {
     expect(saveBudgetStore).not.toHaveBeenCalled()
   })
 
-  it('does nothing when CSV has fewer than 2 lines', () => {
+  it('does nothing when CSV has fewer than 2 lines', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1273,7 +1274,7 @@ describe('useBudget — editCategory guard branches', () => {
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     saveBudgetStore.mockClear()
 
     act(() => {
@@ -1283,7 +1284,7 @@ describe('useBudget — editCategory guard branches', () => {
     expect(saveBudgetStore).not.toHaveBeenCalled()
   })
 
-  it('adds new category to Others when editing to unlisted category', () => {
+  it('adds new category to Others when editing to unlisted category', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1296,7 +1297,7 @@ describe('useBudget — editCategory guard branches', () => {
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.editCategory(key, 0, 'BrandNewCat')
@@ -1307,7 +1308,7 @@ describe('useBudget — editCategory guard branches', () => {
 })
 
 describe('useBudget — categoryHasTransactions', () => {
-  it('returns true when category exists in a CSV', () => {
+  it('returns true when category exists in a CSV', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1316,11 +1317,11 @@ describe('useBudget — categoryHasTransactions', () => {
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('Rent')).toBe(true)
   })
 
-  it('returns false when category is not in any CSV', () => {
+  it('returns false when category is not in any CSV', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1329,11 +1330,11 @@ describe('useBudget — categoryHasTransactions', () => {
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('NonExistent')).toBe(false)
   })
 
-  it('returns false when CSV has no category header', () => {
+  it('returns false when CSV has no category header', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1342,13 +1343,13 @@ describe('useBudget — categoryHasTransactions', () => {
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('Food')).toBe(false)
   })
 })
 
 describe('useBudget — deleteCategory', () => {
-  it('removes a category from all groups', () => {
+  it('removes a category from all groups', async () => {
     const year = new Date().getFullYear()
     mockStore = {
       csvs: {},
@@ -1359,7 +1360,7 @@ describe('useBudget — deleteCategory', () => {
         { id: 'removed', name: 'Remove from Budget', categories: [] },
       ],
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.deleteCategory('Food')
@@ -1374,9 +1375,9 @@ describe('useBudget — deleteCategory', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('useBudget — uploadCSV catch branch (line 69)', () => {
-  it('returns error message from thrown Error object', () => {
+  it('returns error message from thrown Error object', async () => {
     // Trigger the catch branch by providing CSV that causes parseCSV to throw
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     // A completely garbled CSV that has valid headers but causes a non-Error throw
     // We need to trigger the catch(e) → e instanceof Error path
@@ -1396,7 +1397,7 @@ describe('useBudget — uploadCSV catch branch (line 69)', () => {
 })
 
 describe('useBudget — addTransaction with existing CSV ending in newline (line 81)', () => {
-  it('does not double-newline when existing CSV ends with newline', () => {
+  it('does not double-newline when existing CSV ends with newline', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-04`
     // CSV that ends with a trailing newline
@@ -1407,7 +1408,7 @@ describe('useBudget — addTransaction with existing CSV ending in newline (line
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.addTransaction(key, `${year}-04-15,Gas,-40,Fill up`)
@@ -1422,7 +1423,7 @@ describe('useBudget — addTransaction with existing CSV ending in newline (line
 })
 
 describe('useBudget — editCategory with catIdx >= fields.length (line 132)', () => {
-  it('does nothing when category column index exceeds the row fields', () => {
+  it('does nothing when category column index exceeds the row fields', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     // CSV where a data row has fewer fields than the header
@@ -1432,7 +1433,7 @@ describe('useBudget — editCategory with catIdx >= fields.length (line 132)', (
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     saveBudgetStore.mockClear()
 
     act(() => {
@@ -1445,7 +1446,7 @@ describe('useBudget — editCategory with catIdx >= fields.length (line 132)', (
 })
 
 describe('useBudget — editCategory with no category header (line 124)', () => {
-  it('does nothing when CSV headers lack a category column', () => {
+  it('does nothing when CSV headers lack a category column', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1454,7 +1455,7 @@ describe('useBudget — editCategory with no category header (line 124)', () => 
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     saveBudgetStore.mockClear()
 
     act(() => {
@@ -1466,7 +1467,7 @@ describe('useBudget — editCategory with no category header (line 124)', () => 
 })
 
 describe('useBudget — editCategory with negative transactionIdx (line 136 guard)', () => {
-  it('does nothing when transactionIdx is negative', () => {
+  it('does nothing when transactionIdx is negative', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1478,7 +1479,7 @@ describe('useBudget — editCategory with negative transactionIdx (line 136 guar
         { id: 'removed', name: 'Remove from Budget', categories: [] },
       ],
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     saveBudgetStore.mockClear()
 
     act(() => {
@@ -1490,7 +1491,7 @@ describe('useBudget — editCategory with negative transactionIdx (line 136 guar
 })
 
 describe('useBudget — mergeCategories with CSV that has no category header (line 177)', () => {
-  it('skips CSVs without a category column header during merge', () => {
+  it('skips CSVs without a category column header during merge', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1503,7 +1504,7 @@ describe('useBudget — mergeCategories with CSV that has no category header (li
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['Food'], 'Dining')
@@ -1516,7 +1517,7 @@ describe('useBudget — mergeCategories with CSV that has no category header (li
 })
 
 describe('useBudget — mergeCategories with single-line CSV (line 171)', () => {
-  it('skips CSVs with fewer than 2 lines during merge', () => {
+  it('skips CSVs with fewer than 2 lines during merge', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1529,7 +1530,7 @@ describe('useBudget — mergeCategories with single-line CSV (line 171)', () => 
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['Food'], 'Dining')
@@ -1542,7 +1543,7 @@ describe('useBudget — mergeCategories with single-line CSV (line 171)', () => 
 })
 
 describe('useBudget — mergeCategories with empty lines in CSV (line 183)', () => {
-  it('preserves empty lines during merge without crashing', () => {
+  it('preserves empty lines during merge without crashing', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1557,7 +1558,7 @@ describe('useBudget — mergeCategories with empty lines in CSV (line 183)', () 
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['Food'], 'Dining')
@@ -1572,7 +1573,7 @@ describe('useBudget — mergeCategories with empty lines in CSV (line 183)', () 
 })
 
 describe('useBudget — mergeCategories target already in a group (line 211)', () => {
-  it('does not duplicate target when it already belongs to a group', () => {
+  it('does not duplicate target when it already belongs to a group', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1588,7 +1589,7 @@ describe('useBudget — mergeCategories target already in a group (line 211)', (
       ],
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     act(() => {
       result.current.mergeCategories(['OldA'], 'Target')
@@ -1602,7 +1603,7 @@ describe('useBudget — mergeCategories target already in a group (line 211)', (
 })
 
 describe('useBudget — categoryHasTransactions with single-line CSV (line 231)', () => {
-  it('returns false when CSV has only a header line (fewer than 2 lines effectively)', () => {
+  it('returns false when CSV has only a header line (fewer than 2 lines effectively)', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1611,13 +1612,13 @@ describe('useBudget — categoryHasTransactions with single-line CSV (line 231)'
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('Food')).toBe(false)
   })
 })
 
 describe('useBudget — categoryHasTransactions skips empty lines (line 236)', () => {
-  it('skips empty lines when searching for category transactions', () => {
+  it('skips empty lines when searching for category transactions', async () => {
     const year = new Date().getFullYear()
     const key = `${year}-01`
     mockStore = {
@@ -1626,13 +1627,13 @@ describe('useBudget — categoryHasTransactions skips empty lines (line 236)', (
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.categoryHasTransactions('Food')).toBe(true)
   })
 })
 
 describe('useBudget — summary with no categorySums (line 313)', () => {
-  it('returns 0 for totalIncome and totalExpense when there are no categories', () => {
+  it('returns 0 for totalIncome and totalExpense when there are no categories', async () => {
     const year = new Date().getFullYear()
     mockStore = {
       csvs: {},
@@ -1640,7 +1641,7 @@ describe('useBudget — summary with no categorySums (line 313)', () => {
       years: [year],
       categoryGroups: DEFAULT_GROUPS,
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.summary.totalIncome).toBe(0)
     expect(result.current.summary.totalExpense).toBe(0)
     expect(result.current.summary.saveRate).toBe(0)
@@ -1648,7 +1649,7 @@ describe('useBudget — summary with no categorySums (line 313)', () => {
 })
 
 describe('useBudget — removedCategories when no removed group exists (line 290)', () => {
-  it('returns empty set when no "removed" group exists', () => {
+  it('returns empty set when no "removed" group exists', async () => {
     const year = new Date().getFullYear()
     mockStore = {
       csvs: {},
@@ -1656,13 +1657,13 @@ describe('useBudget — removedCategories when no removed group exists (line 290
       years: [year],
       categoryGroups: [{ id: 'others', name: 'Others', categories: [] }],
     }
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
     expect(result.current.removedCategories.size).toBe(0)
   })
 })
 
 describe('useBudget — incomeRemovedCategories', () => {
-  it('returns an empty set when no income removed group exists', () => {
+  it('returns an empty set when no income removed group exists', async () => {
     const year = new Date().getFullYear()
     mockStore = {
       csvs: {},
@@ -1671,7 +1672,7 @@ describe('useBudget — incomeRemovedCategories', () => {
       categoryGroups: DEFAULT_GROUPS,
     }
 
-    const { result } = renderHook(() => useBudget())
+    const { result } = await renderAndLoad()
 
     expect(result.current.incomeRemovedCategories.size).toBe(0)
   })

@@ -1,19 +1,26 @@
-import { BudgetStore, CategoryGroup, BudgetConfigData } from '../types'
-import { appStorage } from '../../../utils/appStorage'
+import { BudgetStore, CategoryGroup, BudgetConfigData, MonthCSV } from '../types'
+export type { BudgetStore }
+import type { FileStore } from '../../../utils/fileStoreTypes'
+import { parseCSV as parseCSVRows, serializeCSV } from '../../../utils/csvUtils'
 
-export function getBudgetSaveRate(): { annualSavings: number; saveRate: number; monthsOfData: number } | null {
-  return appStorage.getJSON<{ annualSavings: number; saveRate: number; monthsOfData: number } | null>(
-    'budget-summary',
+const CATEGORIES_PATH = 'budget/categories.json'
+const SUMMARY_PATH = 'budget/summary-cache.json'
+
+export async function getBudgetSaveRate(
+  fileStore: FileStore,
+): Promise<{ annualSavings: number; saveRate: number; monthsOfData: number } | null> {
+  return fileStore.readJSON<{ annualSavings: number; saveRate: number; monthsOfData: number } | null>(
+    SUMMARY_PATH,
     null,
   )
 }
 
-export function saveBudgetSummary(summary: { annualSavings: number; saveRate: number; monthsOfData: number }): void {
-  appStorage.setJSON('budget-summary', summary)
+export async function saveBudgetSummary(
+  fileStore: FileStore,
+  summary: { annualSavings: number; saveRate: number; monthsOfData: number },
+): Promise<void> {
+  await fileStore.writeJSON(SUMMARY_PATH, summary)
 }
-
-const STORAGE_KEY = 'budget-store'
-const CONFIG_KEY = 'budget-config'
 
 const DEFAULT_GROUPS: CategoryGroup[] = [
   { id: 'others', name: 'Others', categories: [] },
@@ -151,62 +158,14 @@ function migrateToGlobalGroups(store: BudgetStore): BudgetStore {
   return { ...store, categoryGroups: [...groupMap.values(), others, removed, DEFAULT_GROUPS[2]] }
 }
 
-export function loadBudgetStore(): BudgetStore {
-  try {
-    const parsed = appStorage.getJSON<(BudgetStore & { incomeCategoryGroups?: CategoryGroup[] }) | null>(
-      STORAGE_KEY,
-      null,
-    )
-    if (!parsed) return { ...EMPTY_STORE, categoryGroups: cloneGroups(DEFAULT_GROUPS) }
-
-    const config = loadBudgetConfig()
-    const mergedGroups = mergeGroupCollections([
-      config.categoryGroups || [],
-      parsed.categoryGroups || [],
-      getLegacyIncomeGroups(parsed.incomeCategoryGroups),
-    ])
-
-    const store: BudgetStore = {
-      csvs: parsed.csvs || {},
-      configs: parsed.configs || {},
-      years: config.years.length > 0 ? config.years : parsed.years || [],
-      categoryGroups: mergedGroups,
-    }
-
-    const migrated = migrateToGlobalGroups(store)
-    migrated.categoryGroups = normalizeGroups(migrated.categoryGroups || [])
-
-    saveBudgetConfig(getBudgetConfigData(migrated))
-
-    return migrated
-  } catch {
-    return { ...EMPTY_STORE, categoryGroups: cloneGroups(DEFAULT_GROUPS) }
-  }
-}
-
-export function saveBudgetStore(store: BudgetStore): void {
-  appStorage.setJSON(STORAGE_KEY, {
-    csvs: store.csvs,
-    configs: {},
-    years: [],
-  })
-  window.dispatchEvent(new Event('budget-changed'))
-  saveBudgetConfig(getBudgetConfigData(store))
-}
-
-export function loadBudgetConfig(): BudgetConfigData {
-  const config = appStorage.getJSON<(BudgetConfigData & { incomeCategoryGroups?: CategoryGroup[] }) | null>(
-    CONFIG_KEY,
+export async function loadBudgetConfig(fileStore: FileStore): Promise<BudgetConfigData> {
+  const config = await fileStore.readJSON<(BudgetConfigData & { incomeCategoryGroups?: CategoryGroup[] }) | null>(
+    CATEGORIES_PATH,
     null,
   )
   if (!config) {
-    return {
-      version: 1,
-      years: [],
-      categoryGroups: [],
-    }
+    return { version: 1, years: [], categoryGroups: [] }
   }
-
   return {
     version: config.version || 1,
     years: config.years || [],
@@ -217,12 +176,116 @@ export function loadBudgetConfig(): BudgetConfigData {
   }
 }
 
-export function saveBudgetConfig(config: BudgetConfigData): void {
-  appStorage.setJSON(CONFIG_KEY, {
+export async function saveBudgetConfig(fileStore: FileStore, config: BudgetConfigData): Promise<void> {
+  await fileStore.writeJSON(CATEGORIES_PATH, {
     ...config,
     categoryGroups: normalizeGroups(config.categoryGroups || []),
   })
   window.dispatchEvent(new Event('budget-changed'))
+}
+
+export async function loadBudgetStore(fileStore: FileStore): Promise<BudgetStore> {
+  try {
+    const config = await loadBudgetConfig(fileStore)
+
+    // Enumerate CSVs by year
+    const csvs: Record<string, MonthCSV> = {}
+    for (const year of config.years) {
+      const files = await fileStore.listFiles(`transactions/${year}`)
+      for (const filename of files) {
+        if (!filename.endsWith('.csv')) continue
+        const monthKey = filename.replace('.csv', '')
+        const path = `transactions/${year}/${filename}`
+        const rows = await fileStore.readCSV(path)
+        if (rows.length === 0) continue
+        csvs[monthKey] = {
+          month: monthKey,
+          csv: serializeCSV(rows),
+          uploadedAt: '',
+        }
+      }
+    }
+
+    const store: BudgetStore = {
+      csvs,
+      configs: {},
+      years: config.years,
+      categoryGroups: config.categoryGroups,
+    }
+
+    const migrated = migrateToGlobalGroups(store)
+    migrated.categoryGroups = normalizeGroups(migrated.categoryGroups || [])
+    return migrated
+  } catch {
+    return { ...EMPTY_STORE, categoryGroups: cloneGroups(DEFAULT_GROUPS) }
+  }
+}
+
+export async function saveBudgetStore(fileStore: FileStore, store: BudgetStore): Promise<void> {
+  // Compute all years from store.years + keys in store.csvs
+  const csvYears = Object.keys(store.csvs).map(k => parseInt(k.split('-')[0], 10))
+  const allYears = [...new Set([...store.years, ...csvYears])].sort((a, b) => a - b)
+
+  // Write all CSVs
+  for (const [monthKey, monthCSV] of Object.entries(store.csvs)) {
+    const year = parseInt(monthKey.split('-')[0], 10)
+    const path = `transactions/${year}/${monthKey}.csv`
+    await fileStore.writeCSV(path, parseCSVRows(monthCSV.csv))
+  }
+
+  // Delete CSVs on disk that are no longer in store.csvs
+  for (const year of allYears) {
+    const files = await fileStore.listFiles(`transactions/${year}`)
+    for (const filename of files) {
+      const monthKey = filename.replace('.csv', '')
+      if (!(monthKey in store.csvs)) {
+        await fileStore.delete(`transactions/${year}/${filename}`)
+      }
+    }
+  }
+
+  // Write categories.json
+  await fileStore.writeJSON(CATEGORIES_PATH, {
+    version: 1,
+    years: allYears,
+    categoryGroups: normalizeGroups(store.categoryGroups || []),
+  })
+
+  window.dispatchEvent(new Event('budget-changed'))
+}
+
+export async function saveCSVForMonth(
+  fileStore: FileStore,
+  store: BudgetStore,
+  monthKey: string,
+  csvText: string,
+): Promise<BudgetStore> {
+  const year = parseInt(monthKey.split('-')[0], 10)
+  const path = `transactions/${year}/${monthKey}.csv`
+  await fileStore.writeCSV(path, parseCSVRows(csvText))
+
+  const updated: BudgetStore = {
+    ...store,
+    csvs: {
+      ...store.csvs,
+      [monthKey]: { month: monthKey, csv: csvText, uploadedAt: '' },
+    },
+    years: store.years.includes(year) ? store.years : [...store.years, year].sort((a, b) => a - b),
+  }
+  return updated
+}
+
+export async function deleteCSVForMonth(
+  fileStore: FileStore,
+  store: BudgetStore,
+  monthKey: string,
+): Promise<BudgetStore> {
+  const year = parseInt(monthKey.split('-')[0], 10)
+  const path = `transactions/${year}/${monthKey}.csv`
+  await fileStore.delete(path)
+
+  const { [monthKey]: _, ...rest } = store.csvs
+  return { ...store, csvs: rest }
 }
 
 export function getBudgetConfigData(store: BudgetStore): BudgetConfigData {
@@ -253,29 +316,8 @@ export function updateGlobalCategoryGroups(store: BudgetStore, groups: CategoryG
   return { ...store, categoryGroups: groups }
 }
 
-export function saveCSVForMonth(store: BudgetStore, monthKey: string, csvText: string): BudgetStore {
-  const updated = { ...store }
-  updated.csvs = {
-    ...updated.csvs,
-    [monthKey]: {
-      month: monthKey,
-      csv: csvText,
-      uploadedAt: new Date().toISOString(),
-    },
-  }
-  const year = parseInt(monthKey.split('-')[0], 10)
-  if (!updated.years.includes(year)) {
-    updated.years = [...updated.years, year].sort()
-  }
-  return updated
-}
 
-export function deleteCSVForMonth(store: BudgetStore, monthKey: string): BudgetStore {
-  const updated = { ...store }
-  const { [monthKey]: _, ...rest } = updated.csvs
-  updated.csvs = rest
-  return updated
-}
+
 
 export function renameBudgetMonth(store: BudgetStore, oldKey: string, newKey: string): BudgetStore {
   if (oldKey === newKey) return store

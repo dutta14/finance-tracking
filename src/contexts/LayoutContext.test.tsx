@@ -1,7 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import { LayoutProvider, useLayout } from './LayoutContext'
+import { FileStoreContext } from './FileStoreContext'
+import { makeFileStoreValue } from '../test/fileStoreTestUtils'
+import { MemoryFileStore } from '../utils/memoryFileStore'
 import type { ReactNode } from 'react'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
@@ -203,35 +206,43 @@ describe('LayoutContext', () => {
     expect(screen.getByTestId('searchOpen').textContent).toBe('true')
   })
 
-  it('enters demo mode on Ctrl+D when demo is not active (line 48 falsy)', () => {
-    localStorage.removeItem('_demo-backup')
+  it('enters demo mode on Ctrl+D when demo is not active', () => {
+    localStorage.removeItem('_demoMode')
+    const enterDemo = vi.fn()
+    const exitDemo = vi.fn()
     render(
-      <LayoutProvider>
-        <LayoutConsumer />
-      </LayoutProvider>,
+      <FileStoreContext.Provider value={{ ...makeFileStoreValue(new MemoryFileStore()), enterDemo, exitDemo }}>
+        <LayoutProvider>
+          <LayoutConsumer />
+        </LayoutProvider>
+      </FileStoreContext.Provider>,
     )
 
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true }))
     })
 
-    // enterDemoMode sets the backup key
-    expect(localStorage.getItem('_demo-backup')).not.toBeNull()
+    expect(enterDemo).toHaveBeenCalledOnce()
+    expect(exitDemo).not.toHaveBeenCalled()
   })
 
-  it('exits demo mode on Ctrl+D when demo is active (line 48 truthy)', () => {
-    localStorage.setItem('_demo-backup', JSON.stringify({ 'data-accounts': null }))
+  it('exits demo mode on Ctrl+D when demo is active', () => {
+    localStorage.setItem('_demoMode', '1')
+    const enterDemo = vi.fn()
+    const exitDemo = vi.fn()
     render(
-      <LayoutProvider>
-        <LayoutConsumer />
-      </LayoutProvider>,
+      <FileStoreContext.Provider value={{ ...makeFileStoreValue(new MemoryFileStore()), enterDemo, exitDemo }}>
+        <LayoutProvider>
+          <LayoutConsumer />
+        </LayoutProvider>
+      </FileStoreContext.Provider>,
     )
 
     act(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', ctrlKey: true }))
     })
 
-    // exitDemoMode removes the backup key
-    expect(localStorage.getItem('_demo-backup')).toBeNull()
+    expect(exitDemo).toHaveBeenCalledOnce()
+    expect(enterDemo).not.toHaveBeenCalled()
   })
 })

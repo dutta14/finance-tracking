@@ -3,6 +3,7 @@ import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
 import { getFiTarget } from '../utils/goalCalculations'
 import { useGrowthSettings } from '../hooks/useGrowthSettings'
+import { useData } from '../../../contexts/DataContext'
 import '../../../styles/GoalCompareView.css'
 
 const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
@@ -60,9 +61,10 @@ const FI_ROWS: FiRow[] = [
 
 const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday }) => {
   const { settings: growthSettings } = useGrowthSettings()
+  const { accounts, balances } = useData()
   const inflation = growthSettings.inflation
   const colCount = goals.length + 1
-  const { fiTotal } = useMemo(() => getLatestGoalTotals(), [])
+  const { fiTotal } = useMemo(() => getLatestGoalTotals(accounts, balances), [accounts, balances])
   const fiTargets = useMemo(
     () =>
       new Map(

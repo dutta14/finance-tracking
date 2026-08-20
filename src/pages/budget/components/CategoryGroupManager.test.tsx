@@ -47,9 +47,9 @@ describe('CategoryGroupManager', () => {
   it('renders category count badges for each group', () => {
     render(<CategoryGroupManager {...defaultProps} />)
     // Essentials has 3, Lifestyle has 2, Others has 0, Removed has 0
-    expect(screen.getByText('3')).toBeInTheDocument()
-    expect(screen.getByText('2')).toBeInTheDocument()
-    const zeros = screen.getAllByText('0')
+    expect(screen.getByText('3 categories')).toBeInTheDocument()
+    expect(screen.getByText('2 categories')).toBeInTheDocument()
+    const zeros = screen.getAllByText('0 categories')
     expect(zeros.length).toBe(2)
   })
 

@@ -11,13 +11,17 @@ import {
 import { calcMonthlySaving, getRetirementMonth, monthsBetween as goalMonthsBetween } from '../utils/goalMath'
 import { useData } from '../../../contexts/DataContext'
 import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
+import type { BudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
 import TermAbbr from '../../../components/TermAbbr'
 import MonthPicker from '../../../components/MonthPicker'
 import YearNav from '../../../components/YearNav'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 import '../../../styles/GoalDetailedCard.css'
 import '../../../styles/Budget.css'
+
+const EMPTY_STORE: BudgetStore = { csvs: {}, categoryGroups: [], configs: {}, years: [] }
 
 interface EditFields {
   goalCreatedIn: string
@@ -172,6 +176,20 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   const lastSavingsOverrideRef = useRef<number | null | undefined>(undefined)
 
   const { accounts, balances, allMonths } = useData()
+  const { fileStore } = useFileStore()
+  const [budgetSaveRateData, setBudgetSaveRateData] = useState<Awaited<ReturnType<typeof getBudgetSaveRate>>>(null)
+  const [budgetStore, setBudgetStore] = useState<BudgetStore>(EMPTY_STORE)
+
+  useEffect(() => {
+    let cancelled = false
+    getBudgetSaveRate(fileStore)
+      .then(r => { if (!cancelled) setBudgetSaveRateData(r) })
+      .catch(console.error)
+    loadBudgetStore(fileStore)
+      .then(s => { if (!cancelled) setBudgetStore(s) })
+      .catch(console.error)
+    return () => { cancelled = true }
+  }, [fileStore])
 
   useEffect(() => {
     setEditFields(toEditFields(goal))
@@ -291,14 +309,14 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       .reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
   }, [accounts, balances, allMonths])
 
-  const budgetData = getBudgetSaveRate()
+  const budgetData = budgetSaveRateData
   const budgetSaveRateValue = budgetData?.saveRate ?? 0
   const hasBudgetData = budgetData !== null
 
   // Compute selected-year monthly savings from CSV data (not the stored budget-summary which may be stale)
   const selectedYear = summaryYear ?? new Date().getFullYear()
   const budgetBreakdown = useMemo(() => {
-    const store = loadBudgetStore()
+    const store = budgetStore
     const groups = getGlobalCategoryGroups(store)
     const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
     const year = selectedYear
@@ -340,7 +358,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     const annualExpense = (totalExpense / monthsWithData) * 12
     const annualSavings = annualIncome - annualExpense
     return { annualIncome, annualExpense, annualSavings }
-  }, [selectedYear])
+  }, [selectedYear, budgetStore])
 
   const budgetAnnualIncome = budgetBreakdown?.annualIncome ?? 0
   const budgetAnnualExpenseBase = budgetBreakdown?.annualExpense ?? 0

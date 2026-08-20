@@ -1,8 +1,14 @@
-import { FinancialGoal } from '../../../types'
-import { appStorage } from '../../../utils/appStorage'
+import { FinancialGoal, GwGoal } from '../../../types'
+import type { FileStore } from '../../../utils/fileStoreTypes'
 
-const STORAGE_KEY = 'financialGoals'
-const LEGACY_STORAGE_KEY = 'financialPlans'
+export const GOALS_PATH = 'goals.json'
+
+export interface GoalsFile {
+  financialGoals: FinancialGoal[]
+  gwGoals: GwGoal[]
+}
+
+const EMPTY_FILE: GoalsFile = { financialGoals: [], gwGoals: [] }
 
 // Migrate legacy field names (planName → goalName, etc.)
 const migrateFields = (items: Record<string, unknown>[]): FinancialGoal[] =>
@@ -27,38 +33,60 @@ const migrateFields = (items: Record<string, unknown>[]): FinancialGoal[] =>
     return migrated as unknown as FinancialGoal
   })
 
-export const loadGoalsFromStorage = (): FinancialGoal[] => {
+/** Migrate legacy GW field names (fiPlanId → fiGoalId) */
+export const migrateGwFields = (items: Record<string, unknown>[]): GwGoal[] =>
+  items.map(item => {
+    const migrated = { ...item }
+    if ('fiPlanId' in migrated) {
+      migrated.fiGoalId = migrated.fiPlanId
+      delete migrated.fiPlanId
+    }
+    return migrated as unknown as GwGoal
+  })
+
+/** Reads `goals.json`, normalizing both halves so callers always get arrays. */
+export const loadGoalsFile = async (fileStore: FileStore): Promise<GoalsFile> => {
   try {
-    const savedGoals = appStorage.getString(STORAGE_KEY)
-    if (savedGoals) {
-      const parsed = JSON.parse(savedGoals)
-      if (parsed.length > 0) return migrateFields(parsed as Record<string, unknown>[])
+    const raw = await fileStore.readJSON<Partial<GoalsFile>>(GOALS_PATH, EMPTY_FILE)
+    return {
+      financialGoals: Array.isArray(raw?.financialGoals) ? raw.financialGoals : [],
+      gwGoals: Array.isArray(raw?.gwGoals) ? raw.gwGoals : [],
     }
-
-    // Migrate from legacy key (also runs if new key held an empty array)
-    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
-    if (legacy) {
-      const parsed = migrateFields(JSON.parse(legacy) as Record<string, unknown>[])
-      if (parsed.length > 0) {
-        appStorage.setJSON(STORAGE_KEY, parsed)
-        localStorage.removeItem(LEGACY_STORAGE_KEY)
-        return parsed
-      }
-    }
-
-    return savedGoals ? [] : []
   } catch (err) {
-    console.error('Failed to load goals from localStorage:', err)
-    return []
+    console.error('Failed to load goals:', err)
+    return { financialGoals: [], gwGoals: [] }
   }
 }
 
-export const saveGoalsToStorage = (goals: FinancialGoal[]): void => {
-  try {
-    appStorage.setJSON(STORAGE_KEY, goals)
-  } catch (err) {
-    console.error('Failed to save goals to localStorage:', err)
-  }
+/** Writes both halves of `goals.json`. */
+export const saveGoalsFile = async (
+  fileStore: FileStore,
+  financialGoals: FinancialGoal[],
+  gwGoals: GwGoal[],
+): Promise<void> => {
+  await fileStore.writeJSON(GOALS_PATH, { financialGoals, gwGoals })
+}
+
+/*
+ * `financialGoals` and `gwGoals` share one file and are owned by two separate
+ * hooks. Serializing the read-modify-write cycle keeps one half from clobbering
+ * the other when both change in the same tick.
+ */
+let writeQueue: Promise<void> = Promise.resolve()
+
+/** Merges a partial update into `goals.json` without dropping the other half. */
+export const saveGoalsPart = (fileStore: FileStore, part: Partial<GoalsFile>): Promise<void> => {
+  writeQueue = writeQueue
+    .then(async () => {
+      const current = await loadGoalsFile(fileStore)
+      await saveGoalsFile(
+        fileStore,
+        part.financialGoals ?? current.financialGoals,
+        part.gwGoals ?? current.gwGoals,
+      )
+    })
+    .catch(err => console.error('Failed to save goals:', err))
+  return writeQueue
 }
 
 export const migrateGoals = (goalsToMigrate: FinancialGoal[]): FinancialGoal[] => {

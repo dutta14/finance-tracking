@@ -3,8 +3,7 @@ import { useProfile } from '../../hooks/useProfile'
 import { useData } from '../../contexts/DataContext'
 import { useTaxStore } from './useTaxStore'
 import type { TaxDocFile, TaxDocOwner, ChecklistCategory } from './types'
-import { getStorageEstimate } from '../../utils/taxFileDB'
-import { fileToBase64, nextFileId } from './utils/fileHelpers'
+import { nextFileId } from './utils/fileHelpers'
 import OwnerSection from './components/OwnerSection'
 import SuggestModal from './components/SuggestModal'
 import AddItemModal from './components/AddItemModal'
@@ -59,9 +58,8 @@ const Taxes: FC = () => {
   const [importTemplateModal, setImportTemplateModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  // Upload error + storage indicator
+  // Upload error
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [storageMB, setStorageMB] = useState<number | null>(null)
 
   // Auto-clear upload error after 5 seconds
   useEffect(() => {
@@ -69,16 +67,6 @@ const Taxes: FC = () => {
     const t = setTimeout(() => setUploadError(null), 5000)
     return () => clearTimeout(t)
   }, [uploadError])
-
-  // Refresh storage estimate on mount
-  const refreshStorage = useCallback(() => {
-    getStorageEstimate()
-      .then(est => setStorageMB(est.usedMB))
-      .catch(() => {})
-  }, [])
-  useEffect(() => {
-    refreshStorage()
-  }, [refreshStorage])
 
   // Items by owner
   const primaryItems = yearData.items.filter(i => i.owner === 'primary' && i.category !== 'tax-return')
@@ -107,10 +95,6 @@ const Taxes: FC = () => {
 
   const handleUpload = useCallback(
     async (itemId: string, files: FileList) => {
-      if (tax.migrating) {
-        setUploadError('Please wait — migrating existing files to new storage…')
-        return
-      }
       const item = yearData.items.find(i => i.id === itemId)
       for (const file of Array.from(files)) {
         // File size guard
@@ -119,7 +103,7 @@ const Taxes: FC = () => {
           continue
         }
 
-        const content = await fileToBase64(file)
+        const content = await file.arrayBuffer()
         const ext = file.name.split('.').pop() || ''
 
         // Build standardized name: Owner_Label.ext
@@ -132,19 +116,18 @@ const Taxes: FC = () => {
         const docFile: TaxDocFile = {
           id: nextFileId(),
           name: displayName,
-          content,
+          content: undefined,
           ext,
           uploadedAt: new Date().toISOString(),
         }
         try {
-          await tax.addFileToItemAsync(selectedYear, itemId, docFile)
+          await tax.addFileToItemAsync(selectedYear, itemId, docFile, content)
         } catch {
-          setUploadError(`Failed to save ${file.name}. Storage may be unavailable in private browsing.`)
+          setUploadError(`Failed to save ${file.name}. Check that the data folder is still connected.`)
         }
       }
-      refreshStorage()
     },
-    [selectedYear, tax, yearData, primaryName, partnerName, refreshStorage],
+    [selectedYear, tax, yearData, primaryName, partnerName],
   )
 
   const handleRemoveFile = useCallback(
@@ -219,7 +202,6 @@ const Taxes: FC = () => {
             <button className="action-btn action-btn--danger" onClick={() => setConfirmDelete(true)}>
               Delete Year
             </button>
-            {storageMB !== null && <span className="tax-storage-indicator">{storageMB} MB used</span>}
           </div>
         )}
       </div>

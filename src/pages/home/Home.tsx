@@ -1,4 +1,4 @@
-import { FC, useMemo, useState, useRef, useCallback, ReactNode } from 'react'
+import { FC, useMemo, useState, useRef, useCallback, ReactNode, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useData } from '../../contexts/DataContext'
@@ -10,6 +10,7 @@ import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
 import SetupProgress from './SetupProgress'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
+import { useFileStore } from '../../contexts/FileStoreContext'
 import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/storage'
 import '../../styles/Home.css'
 
@@ -33,11 +34,14 @@ const Home: FC = () => {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const { accounts, balances } = useData()
+  const { fileStore } = useFileStore()
 
-  const hasBudgetData = useMemo(() => {
-    const store = loadBudgetStore()
-    return Object.keys(store.csvs).length > 0
-  }, [])
+  const [hasBudgetData, setHasBudgetData] = useState(false)
+  useEffect(() => {
+    loadBudgetStore(fileStore)
+      .then(s => setHasBudgetData(Object.keys(s.csvs).length > 0))
+      .catch(() => setHasBudgetData(false))
+  }, [fileStore])
 
   const allComplete = accounts.length > 0 && balances.length > 0 && goals.length > 0 && hasBudgetData
   const [setupDismissed, setSetupDismissed] = useState(() => getStorageItem('onboarding-dismissed', '0') === '1')

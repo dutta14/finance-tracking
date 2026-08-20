@@ -4,7 +4,6 @@ import { Page, Locator, expect } from '@playwright/test'
  * Page object for the Settings modal — non-security panes (Profile,
  * Appearance, Advanced, Labs) plus the modal shell and Import/Export.
  *
- * The Security pane has its own page object (e2e/pages/security.page.ts).
  * This object only exposes nav items for the panes covered by #128.
  */
 export class SettingsPage {

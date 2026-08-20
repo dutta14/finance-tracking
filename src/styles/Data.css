@@ -1768,8 +1768,6 @@ body.dark .data-add-month-popover {
   white-space: nowrap;
   flex: 0 0 auto;
 }
-  flex: 0 0 auto;
-}
 
 .data-filter-toggle {
   display: inline-flex;

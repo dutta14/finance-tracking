@@ -1,4 +1,4 @@
-import { FC, FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { FC, FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -12,7 +12,7 @@ import { useData } from '../../../contexts/DataContext'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import type { Account } from '../../data/types'
 import { formatCurrency, formatMonth } from '../../data/types'
-import { appStorage } from '../../../utils/appStorage'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 import { useDateFilter } from '../../../hooks/useDateFilter'
 import { DateFilterBarFromHook } from '../../../components/DateFilterBar'
 import MonthPicker from '../../../components/MonthPicker'
@@ -48,7 +48,7 @@ interface ChartPoint {
   actual: number | null
 }
 
-const STORAGE_KEY = 'paydown-loans'
+const PAYDOWN_PATH = 'paydown-loans.json'
 
 // All months from 2050-12 down to 2010-01 (newest first) for the start date picker
 const ALL_PICKER_MONTHS: string[] = []
@@ -582,7 +582,8 @@ const PayDownCard: FC<{
 
 const PayDown: FC = () => {
   const { accounts, balances } = useData()
-  const [loans, setLoans] = useState<PaydownLoan[]>(() => appStorage.getJSON<PaydownLoan[]>(STORAGE_KEY, []))
+  const { fileStore } = useFileStore()
+  const [loans, setLoans] = useState<PaydownLoan[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form, setForm] = useState<LoanFormState>(emptyForm)
   const [error, setError] = useState('')
@@ -606,7 +607,31 @@ const PayDown: FC = () => {
     [accounts],
   )
 
-  useEffect(() => appStorage.subscribe(STORAGE_KEY, () => setLoans(appStorage.getJSON<PaydownLoan[]>(STORAGE_KEY, []))), [])
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => {
+      fileStore
+        .readJSON<PaydownLoan[]>(PAYDOWN_PATH, [])
+        .then(next => {
+          if (!cancelled) setLoans(next)
+        })
+        .catch(console.error)
+    }
+    refresh()
+    const unsubscribe = fileStore.subscribe(PAYDOWN_PATH, refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
+  const persistLoans = useCallback(
+    (next: PaydownLoan[]) => {
+      setLoans(next)
+      fileStore.writeJSON(PAYDOWN_PATH, next).catch(console.error)
+    },
+    [fileStore],
+  )
 
   const loanCards = useMemo(
     () =>
@@ -763,15 +788,12 @@ const PayDown: FC = () => {
     const nextLoans = editingLoanId
       ? loans.map(l => (l.id === editingLoanId ? nextLoan : l))
       : [...loans, nextLoan].sort((a, b) => a.name.localeCompare(b.name))
-    appStorage.setJSON(STORAGE_KEY, nextLoans)
+    persistLoans(nextLoans)
     closeModal()
   }
 
   const handleDelete = (loanId: number) => {
-    appStorage.setJSON(
-      STORAGE_KEY,
-      loans.filter(loan => loan.id !== loanId),
-    )
+    persistLoans(loans.filter(loan => loan.id !== loanId))
   }
 
   if (loanCards.length === 0) {

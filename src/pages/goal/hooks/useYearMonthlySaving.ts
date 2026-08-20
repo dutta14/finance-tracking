@@ -1,18 +1,30 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
+import { useFileStore } from '../../../contexts/FileStoreContext'
+import type { BudgetStore } from '../../budget/utils/budgetStorage'
+
+const EMPTY_STORE: BudgetStore = { csvs: {}, categoryGroups: [], configs: {}, years: [] }
 
 export function useYearMonthlySaving() {
   const currentYear = new Date().getFullYear()
   const [summaryYear, setSummaryYear] = useState(currentYear)
+  const { fileStore } = useFileStore()
+  const [store, setStore] = useState<BudgetStore>(EMPTY_STORE)
+
+  useEffect(() => {
+    let cancelled = false
+    loadBudgetStore(fileStore)
+      .then(s => { if (!cancelled) setStore(s) })
+      .catch(console.error)
+    return () => { cancelled = true }
+  }, [fileStore])
 
   const availableYears = useMemo(() => {
-    const store = loadBudgetStore()
     return store.years.filter((y: number) => y >= 2024 && y <= currentYear).sort((a: number, b: number) => b - a)
-  }, [currentYear])
+  }, [store, currentYear])
 
   const yearMonthlySaving = useMemo(() => {
-    const store = loadBudgetStore()
     const groups = getGlobalCategoryGroups(store)
     const removedCats = new Set(groups.find((g: { id: string }) => g.id === 'removed')?.categories || [])
 
@@ -52,7 +64,7 @@ export function useYearMonthlySaving() {
 
     const annualSavings = (totalIncome - totalExpense) * (12 / monthsWithData)
     return annualSavings / 12
-  }, [summaryYear])
+  }, [store, summaryYear])
 
   return { summaryYear, setSummaryYear, availableYears, yearMonthlySaving }
 }

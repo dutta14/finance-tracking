@@ -4,7 +4,7 @@ import { FinancialGoal, GwGoal } from '../../types'
 import { formatCurrency } from '../data/types'
 import { useGoalMetrics } from '../goal/hooks/useGoalMetrics'
 import TermAbbr from '../../components/TermAbbr'
-import { appStorage } from '../../utils/appStorage'
+import { useProfile } from '../../hooks/useProfile'
 
 interface GoalsPeekProps {
   goals: FinancialGoal[]
@@ -14,7 +14,8 @@ interface GoalsPeekProps {
 
 const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
   const navigate = useNavigate()
-  const profileBirthday = appStorage.getJSON<{ birthday?: string }>('user-profile', {}).birthday || '1990-01'
+  const { profile } = useProfile()
+  const profileBirthday = profile.birthday || '1990-01'
   const metricsMap = useGoalMetrics(goals, gwGoals, profileBirthday)
 
   if (goals.length === 0) {

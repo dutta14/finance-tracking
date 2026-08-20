@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { buildIndex, search, findMatchRange } from '../search/searchIndex'
-import type { SearchItem, SearchCategory } from '../search/searchIndex'
+import type { SearchItem, SearchCategory, SearchIndexData } from '../search/searchIndex'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import '../styles/SearchModal.css'
 
@@ -10,9 +10,12 @@ export interface SearchModalProps {
   onClose: () => void
   onNavigate: (path: string) => void
   onAction: (actionId: string) => void
+  indexData?: SearchIndexData
 }
 
-const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction }) => {
+const EMPTY_INDEX_DATA: SearchIndexData = {}
+
+const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction, indexData = EMPTY_INDEX_DATA }) => {
   const [query, setQuery] = useState('')
   const [activeIdx, setActiveIdx] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<SearchCategory>>(new Set())
@@ -22,7 +25,7 @@ const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate, onAction
   useFocusTrap(modalRef, open)
 
   // Build index on each open
-  const index = useMemo(() => (open ? buildIndex() : []), [open])
+  const index = useMemo(() => (open ? buildIndex(indexData) : []), [open, indexData])
 
   // Compute groups — run full search once, then truncate non-expanded groups
   const groups = useMemo(() => {

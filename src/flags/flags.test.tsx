@@ -7,15 +7,14 @@ import { defineFlag } from './flagSystem'
 import { FlagContext, FlagProvider, hashCode, type FlagContextValue, type RolloutConfig } from './FlagContext'
 import { useFlag } from './useFlag'
 
-/* ── Mock GitHubSyncContext ───────────────────────────────────────── */
+/* ── Admin token stand-in ─────────────────────────────────────────── */
 
 const mockActiveToken = vi.fn<() => string | null>(() => 'test-token')
 
-vi.mock('../contexts/GitHubSyncContext', () => ({
-  useGitHubSyncContext: () => ({
-    activeToken: mockActiveToken(),
-  }),
-}))
+/** FlagProvider wired to whatever token the current test wants. */
+const TestFlagProvider: FC<{ children: ReactNode }> = ({ children }) => (
+  <FlagProvider adminToken={mockActiveToken()}>{children}</FlagProvider>
+)
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
@@ -292,9 +291,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -319,9 +318,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -344,9 +343,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -379,9 +378,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -418,9 +417,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -527,9 +526,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -590,9 +589,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -622,9 +621,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -661,9 +660,9 @@ describe('FlagProvider integration', () => {
 
       await act(async () => {
         render(
-          <FlagProvider>
+          <TestFlagProvider>
             <Consumer />
-          </FlagProvider>,
+          </TestFlagProvider>,
         )
       })
 
@@ -699,9 +698,9 @@ describe('FlagProvider integration', () => {
 
       await act(async () => {
         render(
-          <FlagProvider>
+          <TestFlagProvider>
             <Consumer />
-          </FlagProvider>,
+          </TestFlagProvider>,
         )
       })
 
@@ -728,9 +727,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -755,9 +754,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       container = render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -765,9 +764,9 @@ describe('FlagProvider integration', () => {
 
     await act(async () => {
       container!.rerender(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -807,9 +806,9 @@ describe('error handling and edge cases', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -843,9 +842,9 @@ describe('error handling and edge cases', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -893,9 +892,9 @@ describe('error handling and edge cases', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -931,9 +930,9 @@ describe('error handling and edge cases', () => {
 
       await act(async () => {
         render(
-          <FlagProvider>
+          <TestFlagProvider>
             <Consumer />
-          </FlagProvider>,
+          </TestFlagProvider>,
         )
       })
 
@@ -991,9 +990,9 @@ describe('error handling and edge cases', () => {
 
       await act(async () => {
         render(
-          <FlagProvider>
+          <TestFlagProvider>
             <Consumer />
-          </FlagProvider>,
+          </TestFlagProvider>,
         )
       })
 
@@ -1055,9 +1054,9 @@ describe('error handling and edge cases', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 
@@ -1109,9 +1108,9 @@ describe('error handling and edge cases', () => {
 
     await act(async () => {
       render(
-        <FlagProvider>
+        <TestFlagProvider>
           <Consumer />
-        </FlagProvider>,
+        </TestFlagProvider>,
       )
     })
 

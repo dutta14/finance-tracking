@@ -49,26 +49,28 @@ const transactionFixtures = {
 }
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => store),
-  getGlobalCategoryGroups: vi.fn(() => store.categoryGroups),
-  saveBudgetStore: vi.fn((nextStore: typeof store) => {
+  loadBudgetStore: vi.fn(() => Promise.resolve(store)),
+  saveBudgetStore: vi.fn((_fs: unknown, nextStore: typeof store) => {
     store.csvs = nextStore.csvs
     store.configs = nextStore.configs
     store.years = nextStore.years
     store.categoryGroups = nextStore.categoryGroups
     window.dispatchEvent(new Event('budget-changed'))
+    return Promise.resolve()
   }),
-  saveCSVForMonth: vi.fn((nextStore: typeof store, monthKey: string, csv: string) => ({
-    ...nextStore,
-    csvs: {
-      ...nextStore.csvs,
-      [monthKey]: {
-        month: monthKey,
-        csv,
-        uploadedAt: '2026-08-03T00:00:00.000Z',
+  saveCSVForMonth: vi.fn((_fs: unknown, nextStore: typeof store, monthKey: string, csv: string) =>
+    Promise.resolve({
+      ...nextStore,
+      csvs: {
+        ...nextStore.csvs,
+        [monthKey]: {
+          month: monthKey,
+          csv,
+          uploadedAt: '2026-08-03T00:00:00.000Z',
+        },
       },
-    },
-  })),
+    }),
+  ),
 }))
 
 vi.mock('../budget/utils/csvParser', async () => {
@@ -171,7 +173,7 @@ describe('Transactions', () => {
     const user = userEvent.setup()
     renderTransactions()
 
-    await user.click(await screen.findByRole('button', { name: /Date/i }))
+    await user.click(await screen.findByRole('button', { name: /^Date/i }))
     fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-08-01' } })
     fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-08-02' } })
     await user.click(screen.getByRole('button', { name: 'Apply' }))

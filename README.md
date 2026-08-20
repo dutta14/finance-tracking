@@ -1,11 +1,11 @@
 # finance-tracking
 
-**Your money, in your browser, and nowhere else.**
+**Your money, on your own disk, and nowhere else.**
 
-This is a personal finance app for one person, and it lives entirely in your browser. It tracks your net worth, your budget, your transactions, your savings goals, your tax documents, and the little Sunday-morning habits that make all of that sustainable over time; the data can be encrypted on your device with a passphrase you choose, and never touches a server I run. If you want a backup, it can sync to a private GitHub repository of your own. Nothing else leaves your machine, and nothing about you is for sale.
+This is a personal finance app for one person, and it runs entirely in your browser with your data stored as plain files in a folder you choose on your own machine. It tracks your net worth, your budget, your transactions, your savings goals, your tax documents, and the little Sunday-morning habits that make all of that sustainable over time. Nothing ever touches a server I run, and nothing about you is for sale.
 
-- Browser only.
-- Encrypted on your device.
+- Browser only (Chrome or Edge).
+- Data lives in a folder you own.
 - No lock-in.
 
 ![Home dashboard, light and dark](./docs/screenshots/home-light.png)
@@ -18,33 +18,35 @@ It is a Sunday morning and I have a spreadsheet open that I have kept, on and of
 
 The pattern repeats. The good apps die or get bought and become something else; the subscriptions keep charging long after I have stopped opening them; the free ones want my bank credentials, and somewhere down in the terms of service is a sentence about how my data may be used to improve the product, which is the polite phrasing for sold. The spreadsheets survive in a quieter way, but they live in browser tabs I forget to close and folders I forget to back up, and the formulas drift, and one day a cell refers to a sheet that no longer exists. None of it ever felt like mine. It always felt borrowed. And there is a small embarrassment, after a while, in handing the keys to your financial life to a company that needs to grow every quarter to keep its lights on, and pretending the arrangement is normal.
 
-So this is small, on purpose. It runs in your browser. If you set a passphrase, the data is encrypted before it touches your disk, and the key stays with you; if you want a backup, you can sync to a private GitHub repository of your own, and that is the only place it ever leaves your machine. There is no account to create. There is no server I run. There is no analytics pixel sitting in the corner of the page, quietly counting how long you spent on the budget screen. It is a small app for one person to keep their own books, on a Sunday morning, in a green they did not quite pick on purpose.
+So this is small, on purpose. It runs in your browser. Your data is a folder of plain files on your own disk, open to any backup tool you already trust: Time Machine, Dropbox, iCloud Drive, git, rsync, whatever. There is no account to create. There is no server I run. There is no analytics pixel sitting in the corner of the page, quietly counting how long you spent on the budget screen. It is a small app for one person to keep their own books, on a Sunday morning, in a green they did not quite pick on purpose.
 
 ---
 
 ## Privacy & data
 
-What follows is the literal version of the promise above. Where your data lives, how it's encrypted, and what this app does not do.
+What follows is the literal version of the promise above. Where your data lives, and what this app does not do.
 
 ### Where your data lives
 
-Your browser. Not the cloud. Every account, balance, transaction, goal, tax checklist item, uploaded file, and budget record is stored in `localStorage` and `IndexedDB` on the device you're using right now. Close the tab, reopen it, the data is still there. Open it on a different device and you'll start from scratch unless you turn on GitHub Sync or import a backup.
+A folder on your own machine. Not the cloud. On first run the app shows a full-page screen asking you to choose a data folder. Once you pick one, every account, balance, transaction, goal, tax checklist item, uploaded file, and budget record is written there as plain files: JSON for most things, CSV for monthly balance and transaction data. The chosen folder handle is remembered in IndexedDB so the browser can reconnect on your next visit without asking again.
 
-### What "encrypted at rest" means
+The files are human-readable and directly editable. Open them in any text editor. Open the CSVs in Excel or Numbers. They are yours.
 
-When you set a passphrase, sensitive data is encrypted with AES-256-GCM before it's written to your browser. That includes account balances, transactions, goals, tax documents, sync credentials, and the rest of the app state that would be awkward to leave lying around in plaintext. If someone opens devtools and inspects your storage, they see ciphertext. The encryption key is derived from your passphrase using PBKDF2 with 600,000 iterations, and the key itself is never stored. It exists in memory only while the app is unlocked.
+A handful of UI preferences stay in `localStorage`: dark mode, accent theme, the CSV import toggle, and a few feature-flag seeds. Nothing sensitive lives there.
 
-### What GitHub Sync does
+### What "backups" means now
 
-GitHub Sync is opt-in. When you turn it on, the app pushes an encrypted snapshot of your data to a private GitHub repo that you create and own. You provide a personal access token with `repo` scope. The token is stored encrypted in your browser. The repo is yours, the data in it is already encrypted, and you can revoke the token from GitHub settings at any time.
+The data folder is ordinary files. Use whatever backup tool you already use: Time Machine, Dropbox, iCloud Drive, git, rsync. If you want to use this on two machines, point both at the same synced folder, or copy the folder from one machine to the other. The app has no built-in sync mechanism because it does not need one.
 
 ### What this app does not do
 
-No analytics. No third-party scripts. No accounts. No backend. No telemetry, no error reporting, no fingerprinting. No data ever leaves your browser unless you turn on GitHub Sync. You can verify this by opening the Network tab in devtools and watching the app do nothing.
+No analytics. No third-party scripts. No accounts. No backend. No telemetry, no error reporting, no fingerprinting. No data ever leaves your device. You can verify this by opening the Network tab in devtools and watching the app do nothing.
 
 ### The trade-off, stated honestly
 
-If you lose your passphrase, your encrypted data is unrecoverable. There is no password reset. There is no support team with a backdoor. There is no recovery email. This is by design.
+Your data is plain files with no encryption layer of its own. It is exactly as protected as your disk is. If you are on a shared machine or you store the folder somewhere accessible to others, that is a real concern. Use full-disk encryption (FileVault, BitLocker, or equivalent) if you need the data protected at rest. The app will not do that for you.
+
+The other constraint: this uses the File System Access API, which is available in Chrome and Edge but not in Firefox or Safari. The folder picker screen says so explicitly.
 
 ---
 
@@ -52,15 +54,15 @@ If you lose your passphrase, your encrypted data is unrecoverable. There is no p
 
 ### 1. Open the app
 
-Go to [anindya.dev/finance-tracking](https://anindya.dev/finance-tracking) in any modern browser. Nothing to install. No signup screen. You land on Home, and from there the rest of the app opens up gradually as you add real data.
+Go to [anindya.dev/finance-tracking](https://anindya.dev/finance-tracking) in Chrome or Edge. Nothing to install. No signup screen.
 
 ![Landing page on first open](./docs/screenshots/quickstart-1.png)
 
-### 2. Set a passphrase
+### 2. Choose your data folder
 
-Open Settings from the sidebar and set a passphrase before you get too far. This encrypts your data at rest. Pick something you'll remember, because there is no reset. You can skip it and come back later, but if you plan to use GitHub Sync, do it now.
+The first thing you see is a full-page screen asking you to pick a folder where the app will store your files. Click "Choose Folder", pick (or create) an empty folder somewhere on your machine, and grant read and write access when the browser asks. The app remembers that folder and reconnects on your next visit without asking again. You can change or disconnect it any time from Settings → Data Folder.
 
-![Passphrase setup in Settings](./docs/screenshots/quickstart-2.png)
+![Folder picker on first run](./docs/screenshots/quickstart-2.png)
 
 ### 3. Add your first account
 
@@ -209,18 +211,17 @@ Drive is the app's file browser for uploaded documents. It gives you one place t
 
 ### Settings
 
-![Settings page with sync and export options](./docs/screenshots/settings.png)
+![Settings page](./docs/screenshots/settings.png)
 
-Profile, sync, appearance, security, backups, and the slightly more dangerous switches all live here.
+Profile, data folder, appearance, and the slightly more dangerous switches all live here.
 
 **How to use it**
-- Set or change your passphrase in Security
-- Configure GitHub Sync with your repo and token when you want encrypted backups
+- Change or disconnect your data folder in Data Folder
 - Toggle dark mode and accent preferences in Appearance
-- Import, export, or reset data from Advanced
+- Toggle the "Allow CSV imports & resets" switch in Advanced when you want bulk data entry tools
 - Explore experimental features in Labs and Feature Flags when you are curious
 
-**One tip:** Turn on GitHub Sync only after export works for you locally. A manual backup you understand is a better safety net than an automated one you have not tested.
+**One tip:** If you move or rename the folder on disk, use Settings → Data Folder → Change Folder to reconnect it. Disconnecting only forgets the handle; your files stay exactly where they are.
 
 ---
 
@@ -232,27 +233,39 @@ Yes. Forever. No paid tier, no premium features, no upsell. The app is open sour
 
 ### Where does my data go?
 
-Your browser. It stays in `localStorage` and `IndexedDB` on the device you're using. If you turn on GitHub Sync, an encrypted copy also goes to a private GitHub repo that you own. That's it.
+A folder on your own machine. On first run you pick a folder; the app stores everything there as plain files. You can open the folder in Finder or Explorer right now and read the files. Nothing leaves your device.
 
-### What if I switch devices?
+### How do I use this on two devices?
 
-You have two options. Turn on GitHub Sync to keep devices in sync automatically, or use Export on one device and Import on the other. Without one of those, each device is independent.
+Point both at the same folder. If the folder is inside a synced directory (iCloud Drive, Dropbox, or similar) both devices see the same files automatically. If it is not synced, copy the folder manually from one machine to the other. The app has no built-in sync mechanism because plain files already have a thousand backup tools designed for them.
 
-### What if I lose my passphrase?
+### What if I move or rename the folder?
 
-Your encrypted data is unrecoverable. There is no reset, no backdoor. Store your passphrase in a password manager. See "The trade-off, stated honestly" above for the full reasoning.
+Open Settings → Data Folder and click "Change Folder". Pick the new location and grant access. Disconnecting only forgets the folder handle; your files stay on disk wherever you left them.
 
 ### Can I export my data?
 
-Yes. Settings has a one-click export as JSON. You can export encrypted or plaintext. Plaintext is portable and human-readable. Encrypted is safer to park in generic cloud storage.
+You already have it. Open the data folder in Finder or Explorer. The JSON files are readable as-is. The CSV files open in Excel or Numbers. There is nothing to export because the files are the data.
+
+### Does it work offline?
+
+Yes, once loaded. The app is a static bundle. After the first visit, your browser caches it and you can use it on a plane, in a tunnel, or with your wifi off.
+
+### What if I lose my passphrase?
+
+There is no passphrase. Your data is plain files with no application-level encryption. Your files are protected by whatever protects your disk, ideally full-disk encryption at the OS level.
+
+### Is this audited or production-grade?
+
+No formal audit. One person built it. It's used daily by its author. Treat it as a personal tool, not a bank.
+
+### Why should I trust this?
+
+You shouldn't blindly trust anything with your financial data. Here's what's true: the source code is public, the app makes no network calls at all, and your data is readable plain files on your own disk. Read the code. Or just try it with one account and see for yourself.
 
 ### Is this open source?
 
 Yes. MIT license. Source is at [github.com/dutta14/finance-tracking](https://github.com/dutta14/finance-tracking). Read it, fork it, run it yourself.
-
-### Does it work offline?
-
-Yes, once loaded. The app is a static bundle. After the first visit, your browser caches it and you can use it on a plane, in a tunnel, or with your wifi off. GitHub Sync just waits until you are back online.
 
 ### What's the difference between Budget and Transactions?
 
@@ -264,15 +277,7 @@ No. The app works fine as a net-worth tracker with goals. Or as a budget tool wi
 
 ### Why no mobile app?
 
-The web app works on mobile browsers, and a native app would require an account system, an app store, and a backend. The whole point of this app is that none of those exist. Add the site to your home screen on iOS or Android and it behaves like an app.
-
-### Is this audited or production-grade?
-
-No formal audit. One person built it. It's used daily by its author. The crypto uses standard Web Crypto primitives (AES-256-GCM, PBKDF2 at 600,000 iterations). Treat it as a personal tool, not a bank.
-
-### Why should I trust this?
-
-You shouldn't blindly trust anything with your financial data. Here's what's true: the source code is public, the app makes no network calls except optional GitHub Sync, which you can verify in devtools, and your data never leaves your browser. Read the code. Or just try it with one account and see for yourself.
+The web app works on mobile browsers, though the File System Access API is not available in mobile browsers yet, which means you cannot use the full app on a phone. Add the site to your home screen on iOS or Android if you want quick access to read-only views, but for data entry, a desktop browser is the right tool right now.
 
 ---
 

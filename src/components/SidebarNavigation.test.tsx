@@ -5,12 +5,8 @@ import { MemoryRouter } from 'react-router-dom'
 import SidebarNavigation from './SidebarNavigation'
 import { SettingsProvider } from '../contexts/SettingsContext'
 import { GoalsProvider } from '../contexts/GoalsContext'
-import { GitHubSyncProvider } from '../contexts/GitHubSyncContext'
-import { BudgetSyncProvider } from '../contexts/BudgetSyncContext'
-import { TaxSyncProvider } from '../contexts/TaxSyncContext'
-import { ImportExportProvider } from '../contexts/ImportExportContext'
 import { LayoutProvider } from '../contexts/LayoutContext'
-import { EncryptionProvider } from '../contexts/EncryptionContext'
+import { FileStoreTestProvider } from '../test/fileStoreTestUtils'
 import type { PageType } from '../types'
 
 const noop = () => {}
@@ -23,23 +19,15 @@ const defaultProps = {
 const renderSidebar = (overrides = {}) =>
   render(
     <MemoryRouter>
-      <EncryptionProvider>
+      <FileStoreTestProvider>
         <SettingsProvider>
           <GoalsProvider>
-            <GitHubSyncProvider>
-              <BudgetSyncProvider>
-                <TaxSyncProvider>
-                  <LayoutProvider>
-                    <ImportExportProvider>
-                      <SidebarNavigation {...defaultProps} {...overrides} />
-                    </ImportExportProvider>
-                  </LayoutProvider>
-                </TaxSyncProvider>
-              </BudgetSyncProvider>
-            </GitHubSyncProvider>
+            <LayoutProvider>
+              <SidebarNavigation {...defaultProps} {...overrides} />
+            </LayoutProvider>
           </GoalsProvider>
         </SettingsProvider>
-      </EncryptionProvider>
+      </FileStoreTestProvider>
     </MemoryRouter>,
   )
 

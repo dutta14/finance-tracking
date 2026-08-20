@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Data from './Data'
 import type { Account, BalanceEntry } from './types'
 import type { ReactNode } from 'react'
 
-const handleDataChangeSpy = vi.fn()
 const mockSetAccounts = vi.fn()
 const mockSetBalances = vi.fn()
 const parseCsvImportSpy = vi.fn()
@@ -30,16 +29,11 @@ vi.mock('../../contexts/SettingsContext', () => ({
   useSettings: () => ({ allowCsvImport: mockAllowCsvImport }),
 }))
 
-vi.mock('../../contexts/GitHubSyncContext', () => ({
-  useGitHubSyncContext: () => ({
-    handleDataChange: (...args: unknown[]) => handleDataChangeSpy(...args),
-  }),
-}))
-
 vi.mock('../../contexts/DataContext', () => ({
   useData: () => ({
     accounts: mockAccounts,
     balances: mockBalances,
+    allMonths: ['2026-09', '2026-08'],
     setAccounts: (...args: unknown[]) => mockSetAccounts(...args),
     setBalances: (...args: unknown[]) => mockSetBalances(...args),
   }),
@@ -134,7 +128,6 @@ const renderData = (initialRoute = '/net-worth/dashboard') =>
   )
 
 beforeEach(() => {
-  handleDataChangeSpy.mockClear()
   mockSetAccounts.mockClear()
   mockSetBalances.mockClear()
   parseCsvImportSpy.mockReset()
@@ -277,7 +270,11 @@ describe('Data branch coverage', () => {
     const user = userEvent.setup()
     renderData('/net-worth/dashboard/spreadsheet')
 
-    await user.click(screen.getByRole('button', { name: 'Copy balances from last month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
+    const dialog = screen.getByRole('dialog', { name: 'Add entry' })
+    fireEvent.change(within(dialog).getByLabelText('Month'), { target: { value: '2026-10' } })
+    await user.click(within(dialog).getByRole('radio', { name: 'Copy from last month' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
 
     expect(screen.getByTestId('inline-entry-state')).toHaveTextContent('"1":"5000"')
     expect(screen.getByTestId('inline-entry-state')).toHaveTextContent('"3":""')

@@ -1,24 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from 'recharts'
-import useLeverage, { type AssetBreakdown, type RatioDataPoint } from '../../../hooks/useLeverage'
+import useLeverage, {
+  useLeverageSettings,
+  type AssetBreakdown,
+  type RatioDataPoint,
+  type LeverageAllocation,
+  type LeverageScenario,
+} from '../../../hooks/useLeverage'
 import { useData } from '../../../contexts/DataContext'
 import '../../../styles/Leverage.css'
 
 type AllocationType = 'loan' | 'mortgage'
 
-interface ScenarioAllocation {
-  id: string
-  label: string
-  type: AllocationType
-  sharePct: string
-  downPaymentPct: string
-}
-
-interface ScenarioState {
-  id: string
-  name: string
-  allocations: ScenarioAllocation[]
-}
+type ScenarioAllocation = LeverageAllocation
+type ScenarioState = LeverageScenario
 
 interface AllocationResult {
   label: string
@@ -45,12 +40,6 @@ interface ScenarioView {
   remaining: number
 }
 
-const TARGET_STORAGE_KEY = 'al-ratio-target'
-const CHART_START_KEY = 'al-chart-start'
-const SCENARIOS_KEY = 'al-scenarios'
-const MAIN_ALLOC_KEY = 'al-main-allocations'
-const MAIN_NAME_KEY = 'al-main-name'
-
 const formatCurrency = (value: number) =>
   value.toLocaleString('en-US', {
     style: 'currency',
@@ -64,11 +53,6 @@ const formatRatio = (value: number | null) => (value === null ? '—' : `${value
 const parseNumber = (value: string) => {
   const parsed = Number.parseFloat(value)
   return Number.isFinite(parsed) ? parsed : null
-}
-
-const loadStoredTarget = () => {
-  if (typeof window === 'undefined') return ''
-  return window.localStorage.getItem(TARGET_STORAGE_KEY) ?? ''
 }
 
 const getPlannerError = ({
@@ -373,58 +357,41 @@ const LeverageGoal = () => {
     computeAcquisition,
     getRatioHistory,
   } = useLeverage()
-  const [targetInput, setTargetInput] = useState(loadStoredTarget)
+  const { settings, setSettings } = useLeverageSettings()
+  const { scenarios, mainAllocations, currentScenarioName } = settings
+  const targetInput = settings.target
+  const chartStartMonth = settings.chartStart || allMonths[0] || ''
   const [debouncedTargetInput, setDebouncedTargetInput] = useState(targetInput)
-  const [currentScenarioName, setCurrentScenarioName] = useState(
-    () => (typeof window !== 'undefined' && window.localStorage.getItem(MAIN_NAME_KEY)) || 'Current plan',
+
+  const setTargetInput = useCallback(
+    (value: string) => setSettings(prev => ({ ...prev, target: value })),
+    [setSettings],
   )
-  const [scenarios, setScenarios] = useState<ScenarioState[]>(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      const stored = window.localStorage.getItem(SCENARIOS_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  })
-  const [mainAllocations, setMainAllocations] = useState<ScenarioAllocation[]>(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      const stored = window.localStorage.getItem(MAIN_ALLOC_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  })
-  const [chartStartMonth, setChartStartMonth] = useState(
-    () => (typeof window !== 'undefined' && window.localStorage.getItem(CHART_START_KEY)) || allMonths[0] || '',
+  const setChartStartMonth = useCallback(
+    (value: string) => setSettings(prev => ({ ...prev, chartStart: value })),
+    [setSettings],
   )
-  const scenarioIdRef = useRef(scenarios.length + 1)
-  const allocationIdRef = useRef(
-    Math.max(
-      1,
-      ...mainAllocations.map((_, i) => i + 1),
-      ...scenarios.flatMap(s => s.allocations.map((_, i) => i + 1)),
-    ) + 1,
+  const setCurrentScenarioName = useCallback(
+    (value: string) => setSettings(prev => ({ ...prev, currentScenarioName: value })),
+    [setSettings],
+  )
+  const setMainAllocations = useCallback(
+    (value: ScenarioAllocation[]) => setSettings(prev => ({ ...prev, mainAllocations: value })),
+    [setSettings],
+  )
+  const setScenarios = useCallback(
+    (updater: (prev: ScenarioState[]) => ScenarioState[]) =>
+      setSettings(prev => ({ ...prev, scenarios: updater(prev.scenarios) })),
+    [setSettings],
   )
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(SCENARIOS_KEY, JSON.stringify(scenarios))
-    window.dispatchEvent(new Event('tools-changed'))
-  }, [scenarios])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(MAIN_ALLOC_KEY, JSON.stringify(mainAllocations))
-    window.dispatchEvent(new Event('tools-changed'))
-  }, [mainAllocations])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(MAIN_NAME_KEY, currentScenarioName)
-    window.dispatchEvent(new Event('tools-changed'))
-  }, [currentScenarioName])
+  const scenarioIdRef = useRef(1)
+  const allocationIdRef = useRef(1)
+  scenarioIdRef.current = Math.max(scenarioIdRef.current, scenarios.length + 1)
+  allocationIdRef.current = Math.max(
+    allocationIdRef.current,
+    mainAllocations.length + scenarios.reduce((sum, s) => sum + s.allocations.length, 0) + 1,
+  )
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -432,14 +399,6 @@ const LeverageGoal = () => {
     }, 150)
 
     return () => window.clearTimeout(timer)
-  }, [targetInput])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const next = targetInput.trim()
-    if (next) window.localStorage.setItem(TARGET_STORAGE_KEY, next)
-    else window.localStorage.removeItem(TARGET_STORAGE_KEY)
-    window.dispatchEvent(new Event('tools-changed'))
   }, [targetInput])
 
   const targetValue = useMemo(() => parseNumber(debouncedTargetInput), [debouncedTargetInput])
@@ -457,12 +416,6 @@ const LeverageGoal = () => {
     () => (plannerError ? null : computeAcquisition(targetValue as number, 0)),
     [computeAcquisition, plannerError, targetValue],
   )
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (chartStartMonth) window.localStorage.setItem(CHART_START_KEY, chartStartMonth)
-    else window.localStorage.removeItem(CHART_START_KEY)
-  }, [chartStartMonth])
 
   const ratioHistory = useMemo(() => getRatioHistory(chartStartMonth || undefined), [getRatioHistory, chartStartMonth])
   const latestMonth = allMonths[allMonths.length - 1]

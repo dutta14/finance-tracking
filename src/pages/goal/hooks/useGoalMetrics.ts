@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
 import { Account, BalanceEntry } from '../../data/types'
 import { getFiTarget, projectFIDate, projectFIDateWithDrawdown } from '../utils/goalCalculations'
 import { calcMonthlySaving, getRetirementMonth, monthsBetween } from '../utils/goalMath'
 import { getBudgetSaveRate } from '../../budget/utils/budgetStorage'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 export interface GoalMetrics {
   fiTarget: number
@@ -83,13 +84,22 @@ export function useGoalMetrics(
   profileBirthday: string,
 ): Map<number, GoalMetrics> {
   const { accounts, balances, allMonths } = useData()
+  const { fileStore } = useFileStore()
+  const [budgetSaveRate, setBudgetSaveRate] = useState<Awaited<ReturnType<typeof getBudgetSaveRate>>>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getBudgetSaveRate(fileStore)
+      .then(r => { if (!cancelled) setBudgetSaveRate(r) })
+      .catch(console.error)
+    return () => { cancelled = true }
+  }, [fileStore])
 
   return useMemo(() => {
     const settings = loadGrowthSettings()
     const latestMonth = allMonths[allMonths.length - 1] || ''
     const fiTotal = latestMonth ? getTotalForMonth(accounts, balances, latestMonth, 'fi') : 0
     const gwBal = latestMonth ? getTotalForMonth(accounts, balances, latestMonth, 'gw') : 0
-    const budgetSaveRate = getBudgetSaveRate()
     const annualSavings = budgetSaveRate?.annualSavings ?? null
 
     const map = new Map<number, GoalMetrics>()
@@ -188,5 +198,5 @@ export function useGoalMetrics(
     }
 
     return map
-  }, [goals, gwGoals, profileBirthday, accounts, balances, allMonths])
+  }, [goals, gwGoals, profileBirthday, accounts, balances, allMonths, budgetSaveRate])
 }

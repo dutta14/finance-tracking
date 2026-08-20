@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { FC } from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Home from './Home'
@@ -42,7 +42,7 @@ vi.mock('../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {} })),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {} })),
 }))
 
 vi.mock('../../hooks/useTouchDrag', () => ({
@@ -346,14 +346,14 @@ describe('Home setup guide link', () => {
     expect(screen.getByText('Setup guide')).toBeInTheDocument()
   })
 
-  it('does not show setup guide link when all sections are complete', () => {
+  it('does not show setup guide link when all sections are complete', async () => {
     localStorage.setItem('onboarding-dismissed', '1')
     mockedUseGoals.mockReturnValue({
       visibleGoals: [{ id: 1, goalName: 'FI' }],
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024': { csv: 'data', month: '2024', uploadedAt: '' } },
       configs: {},
       years: [],
@@ -362,7 +362,7 @@ describe('Home setup guide link', () => {
 
     renderHome()
 
-    expect(screen.queryByText('Setup guide')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Setup guide')).not.toBeInTheDocument())
   })
 
   it('restores setup progress when setup guide link is clicked', async () => {
@@ -374,7 +374,7 @@ describe('Home setup guide link', () => {
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+    vi.mocked(loadBudgetStore).mockResolvedValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
     renderHome()
 
@@ -508,7 +508,7 @@ describe('Home accessibility — live region', () => {
 describe('Home hasBudgetData flag', () => {
   it('shows setup guide when no budget data and dismissed', () => {
     localStorage.setItem('onboarding-dismissed', '1')
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+    vi.mocked(loadBudgetStore).mockResolvedValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
     mockedUseGoals.mockReturnValue({
       visibleGoals: [],
       gwGoals: [],

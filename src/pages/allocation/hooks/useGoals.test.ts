@@ -1,22 +1,45 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useGoals } from './useGoals'
-import { appStorage } from '../../../utils/appStorage'
 import type { RatioGoal } from '../types'
 
+vi.mock('../../../hooks/useProfile', () => ({
+  useProfile: vi.fn(() => ({ profile: { name: '', birthday: '', avatarDataUrl: '', partner: null }, updateProfile: vi.fn() })),
+}))
+
+import { useProfile } from '../../../hooks/useProfile'
+const mockedUseProfile = vi.mocked(useProfile)
+
+function setProfile(profile: { birthday?: string; partner?: { birthday?: string } | null }) {
+  const partnerVal = profile.partner === undefined
+    ? null
+    : profile.partner === null
+      ? null
+      : { name: '', avatarDataUrl: '', birthday: profile.partner.birthday ?? '' }
+  mockedUseProfile.mockReturnValue({
+    profile: {
+      name: '',
+      birthday: profile.birthday ?? '',
+      avatarDataUrl: '',
+      partner: partnerVal,
+    },
+    updateProfile: vi.fn(),
+  })
+}
+
 beforeEach(() => {
-  localStorage.clear()
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-04-17'))
+  // Default: no profile
+  mockedUseProfile.mockReturnValue({
+    profile: { name: '', birthday: '', avatarDataUrl: '', partner: null },
+    updateProfile: vi.fn(),
+  })
 })
 
 afterEach(() => {
   vi.useRealTimers()
 })
-
-function setProfile(profile: object) {
-  appStorage.setJSON('user-profile', profile)
-}
 
 describe('useGoals', () => {
   describe('getAge', () => {
@@ -85,12 +108,8 @@ describe('useGoals', () => {
       setProfile({ birthday: '1990-01-15' })
       const { result } = renderHook(() => useGoals())
       const goal: RatioGoal = {
-        type: 'gradual',
-        owner: 'primary',
-        startAge: 40,
-        endAge: 60,
-        startPcts: [80, 20],
-        endPcts: [40, 60],
+        type: 'gradual', owner: 'primary',
+        startAge: 40, endAge: 60, startPcts: [80, 20], endPcts: [40, 60],
       }
       expect(result.current.computeGoalPcts(goal, 2)).toEqual([80, 20])
     })
@@ -100,12 +119,8 @@ describe('useGoals', () => {
       setProfile({ birthday: '1990-01-15' })
       const { result } = renderHook(() => useGoals())
       const goal: RatioGoal = {
-        type: 'gradual',
-        owner: 'primary',
-        startAge: 20,
-        endAge: 30,
-        startPcts: [80, 20],
-        endPcts: [40, 60],
+        type: 'gradual', owner: 'primary',
+        startAge: 20, endAge: 30, startPcts: [80, 20], endPcts: [40, 60],
       }
       expect(result.current.computeGoalPcts(goal, 2)).toEqual([40, 60])
     })
@@ -115,12 +130,8 @@ describe('useGoals', () => {
       setProfile({ birthday: '1990-01-15' })
       const { result } = renderHook(() => useGoals())
       const goal: RatioGoal = {
-        type: 'gradual',
-        owner: 'primary',
-        startAge: 30,
-        endAge: 50,
-        startPcts: [80, 20],
-        endPcts: [40, 60],
+        type: 'gradual', owner: 'primary',
+        startAge: 30, endAge: 50, startPcts: [80, 20], endPcts: [40, 60],
       }
       const pcts = result.current.computeGoalPcts(goal, 2)
       // 80 + (40-80)*0.3 = 80 - 12 = 68
@@ -133,12 +144,8 @@ describe('useGoals', () => {
       setProfile({}) // no birthday
       const { result } = renderHook(() => useGoals())
       const goal: RatioGoal = {
-        type: 'gradual',
-        owner: 'primary',
-        startAge: 30,
-        endAge: 50,
-        startPcts: [80, 20],
-        endPcts: [40, 60],
+        type: 'gradual', owner: 'primary',
+        startAge: 30, endAge: 50, startPcts: [80, 20], endPcts: [40, 60],
       }
       expect(result.current.computeGoalPcts(goal, 2)).toBeNull()
     })
@@ -147,12 +154,8 @@ describe('useGoals', () => {
       setProfile({ birthday: '1990-01-15' })
       const { result } = renderHook(() => useGoals())
       const goal: RatioGoal = {
-        type: 'gradual',
-        owner: 'primary',
-        startAge: 30,
-        endAge: 50,
-        startPcts: [80, 20],
-        endPcts: [40, 60],
+        type: 'gradual', owner: 'primary',
+        startAge: 30, endAge: 50, startPcts: [80, 20], endPcts: [40, 60],
       }
       expect(result.current.computeGoalPcts(goal, 3)).toBeNull()
     })

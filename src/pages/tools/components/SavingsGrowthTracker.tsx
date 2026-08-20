@@ -1,10 +1,10 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo, useState, useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { loadBudgetStore, getIncomeGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
-import { appStorage } from '../../../utils/appStorage'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 import { delta } from '../utils/savingsCalc'
 import '../../../styles/SavingsGrowthTracker.css'
 
@@ -49,10 +49,10 @@ interface BudgetYearData {
   hasData: boolean
 }
 
-function getBudgetYearlyData(): Map<number, BudgetYearData> {
+async function getBudgetYearlyData(fileStore: import('../../../utils/fileStoreTypes').FileStore): Promise<Map<number, BudgetYearData>> {
   const result = new Map<number, BudgetYearData>()
   try {
-    const store = loadBudgetStore()
+    const store = await loadBudgetStore(fileStore)
     const groups = store.categoryGroups || []
     const removedCats = new Set(groups.find(g => g.id === REMOVED_GROUP_ID)?.categories || [])
 
@@ -111,26 +111,13 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
   return result
 }
 
-const OVERRIDES_KEY = 'sgt-overrides'
+const OVERRIDES_PATH = 'savings-tracker-overrides.json'
 
 interface YearOverrides {
   grossIncome?: number
   taxes?: number
   netIncome?: number
   savings?: number
-}
-
-function loadOverrides(): Record<number, YearOverrides> {
-  try {
-    return appStorage.getJSON<Record<number, YearOverrides>>(OVERRIDES_KEY, {})
-  } catch {
-    return {}
-  }
-}
-
-function saveOverrides(o: Record<number, YearOverrides>) {
-  appStorage.setJSON(OVERRIDES_KEY, o)
-  window.dispatchEvent(new Event('tools-changed'))
 }
 
 interface YearRow {
@@ -151,15 +138,36 @@ type TabMode = 'savings' | 'income'
 
 const SavingsGrowthTracker: FC = () => {
   const [showPct, setShowPct] = useState(false)
-  const [overrides, setOverrides] = useState<Record<number, YearOverrides>>(loadOverrides)
+  const [overrides, setOverrides] = useState<Record<number, YearOverrides>>({})
   const [editCell, setEditCell] = useState<{ year: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState('')
   const location = useLocation()
   const tab: TabMode = location.pathname.endsWith('/income') ? 'income' : 'savings'
+  const { fileStore } = useFileStore()
 
   const { accounts, balances } = useData()
   const nwByYear = useMemo(() => getYearEndNetWorths(accounts, balances), [accounts, balances])
-  const budgetData = useMemo(() => getBudgetYearlyData(), [])
+
+  const [budgetData, setBudgetData] = useState<Map<number, BudgetYearData>>(new Map())
+
+  useEffect(() => {
+    fileStore
+      .readJSON<Record<number, YearOverrides>>(OVERRIDES_PATH, {})
+      .then(setOverrides)
+      .catch(() => setOverrides({}))
+  }, [fileStore])
+
+  useEffect(() => {
+    getBudgetYearlyData(fileStore).then(setBudgetData).catch(() => setBudgetData(new Map()))
+  }, [fileStore])
+
+  const persistOverrides = useCallback(
+    (o: Record<number, YearOverrides>) => {
+      fileStore.writeJSON(OVERRIDES_PATH, o).catch(console.error)
+      window.dispatchEvent(new Event('tools-changed'))
+    },
+    [fileStore],
+  )
 
   const rows: YearRow[] = useMemo(() => {
     const allYears = new Set<number>()
@@ -222,7 +230,7 @@ const SavingsGrowthTracker: FC = () => {
     ;(updated[year] as Record<string, number | undefined>)[field] = val !== undefined && !isNaN(val) ? val : undefined
     if (Object.values(updated[year]).every(v => v === undefined)) delete updated[year]
     setOverrides(updated)
-    saveOverrides(updated)
+    persistOverrides(updated)
     setEditCell(null)
     setEditValue('')
   }

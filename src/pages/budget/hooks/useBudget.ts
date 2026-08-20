@@ -3,8 +3,6 @@ import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigDa
 import {
   loadBudgetStore,
   saveBudgetStore,
-  saveCSVForMonth,
-  deleteCSVForMonth,
   createYear,
   getGlobalCategoryGroups,
   getExpenseGroups,
@@ -13,6 +11,7 @@ import {
   saveBudgetSummary,
 } from '../utils/budgetStorage'
 import { parseCSV, buildMonthKey, parseCSVLine, getValidLineIndices } from '../utils/csvParser'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 const OTHERS_GROUP_ID = 'others'
 const REMOVED_GROUP_ID = 'removed'
@@ -68,18 +67,44 @@ const updateMergedGroups = (groups: CategoryGroup[], sourceSet: Set<string>, tar
   })
 }
 
+const EMPTY_STORE: BudgetStore = { csvs: {}, configs: {}, years: [], categoryGroups: [] }
+
 export function useBudget() {
-  const [store, setStore] = useState<BudgetStore>(loadBudgetStore)
+  const { fileStore } = useFileStore()
+  const [store, setStore] = useState<BudgetStore>(EMPTY_STORE)
   const storeRef = useRef(store)
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
   const [viewMode, setViewMode] = useState<BudgetViewMode>('spreadsheet')
   const [spreadsheetMode, setSpreadsheetMode] = useState<SpreadsheetMode>('detailed')
 
-  const persist = useCallback((next: BudgetStore) => {
-    storeRef.current = next
-    setStore(next)
-    saveBudgetStore(next)
-  }, [])
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => {
+      loadBudgetStore(fileStore)
+        .then(next => {
+          if (!cancelled) {
+            storeRef.current = next
+            setStore(next)
+          }
+        })
+        .catch(console.error)
+    }
+    refresh()
+    const unsubscribe = fileStore.subscribe('budget/categories.json', refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
+  const persist = useCallback(
+    (next: BudgetStore) => {
+      storeRef.current = next
+      setStore(next)
+      saveBudgetStore(fileStore, next).catch(console.error)
+    },
+    [fileStore],
+  )
 
   useEffect(() => {
     if (!store.years.includes(selectedYear)) {
@@ -97,7 +122,18 @@ export function useBudget() {
         if (transactions.length === 0) {
           return { ok: false, error: 'No valid transactions found. Check CSV format.' }
         }
-        let next = saveCSVForMonth(storeRef.current, monthKey, csvText)
+        // Pure in-memory update (disk write happens via persist → saveBudgetStore)
+        const year = parseInt(monthKey.split('-')[0], 10)
+        let next: BudgetStore = {
+          ...storeRef.current,
+          csvs: {
+            ...storeRef.current.csvs,
+            [monthKey]: { month: monthKey, csv: csvText, uploadedAt: '' },
+          },
+          years: storeRef.current.years.includes(year)
+            ? storeRef.current.years
+            : [...storeRef.current.years, year].sort((a, b) => a - b),
+        }
 
         // Discover new categories and add them to the right "Others" group if not already grouped
         const currentGroups = getExpenseGroups(next.categoryGroups || [])
@@ -167,7 +203,8 @@ export function useBudget() {
 
   const removeCSV = useCallback(
     (monthKey: string) => {
-      persist(deleteCSVForMonth(storeRef.current, monthKey))
+      const { [monthKey]: _, ...rest } = storeRef.current.csvs
+      persist({ ...storeRef.current, csvs: rest })
     },
     [persist],
   )
@@ -512,8 +549,10 @@ export function useBudget() {
   useEffect(() => {
     const annualSavings =
       monthsWithData.size > 0 ? (summary.totalIncome - summary.totalExpense) * (12 / monthsWithData.size) : 0
-    saveBudgetSummary({ annualSavings, saveRate: summary.saveRate, monthsOfData: monthsWithData.size })
-  }, [summary, monthsWithData])
+    saveBudgetSummary(fileStore, { annualSavings, saveRate: summary.saveRate, monthsOfData: monthsWithData.size }).catch(
+      console.error,
+    )
+  }, [summary, monthsWithData, fileStore])
 
   const years = store.years
 

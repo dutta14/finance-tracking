@@ -3,7 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import { loadBudgetStore, saveBudgetStore, saveCSVForMonth } from '../budget/utils/budgetStorage'
 import { parseCSV } from '../budget/utils/csvParser'
 import type { Transaction } from '../budget/types'
+import type { BudgetStore } from '../budget/types'
+import { useFileStore } from '../../contexts/FileStoreContext'
 import '../../styles/Transactions.css'
+
+import type { FileStore } from '../../utils/fileStoreTypes'
 
 type LoadedTransaction = Transaction & { monthKey: string; isRemoved: boolean }
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'category-asc' | 'category-desc'
@@ -116,7 +120,7 @@ type LoadResult = {
 
 // Cache parsed transactions — only re-parse when CSV data actually changes
 let cachedFingerprint = ''
-let cachedResult: LoadResult | null = null
+let cachedResult: (LoadResult & { store: BudgetStore }) | null = null
 
 const computeFingerprint = (store: {
   csvs: Record<string, { csv: string }>
@@ -135,8 +139,8 @@ export const resetTransactionCache = (): void => {
   cachedResult = null
 }
 
-const loadTransactionsAndGroups = (): LoadResult => {
-  const store = loadBudgetStore()
+const loadTransactionsAndGroups = async (fileStore: FileStore): Promise<LoadResult & { store: BudgetStore }> => {
+  const store = await loadBudgetStore(fileStore)
   const fingerprint = computeFingerprint(store)
 
   if (cachedResult && fingerprint === cachedFingerprint) {
@@ -167,7 +171,7 @@ const loadTransactionsAndGroups = (): LoadResult => {
     type: group.type,
   }))
 
-  const result = { transactions: allTransactions, budgetGroups }
+  const result = { transactions: allTransactions, budgetGroups, store }
   cachedFingerprint = fingerprint
   cachedResult = result
   return result
@@ -291,6 +295,8 @@ const Transactions: FC = () => {
   const [searchParams] = useSearchParams()
   const paramFrom = searchParams.get('from') ?? ''
   const paramTo = searchParams.get('to') ?? ''
+  const { fileStore } = useFileStore()
+  const budgetStoreRef = useRef<BudgetStore>({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
   const [allTransactions, setAllTransactions] = useState<LoadedTransaction[]>([])
   const [budgetGroups, setBudgetGroups] = useState<BudgetGroupData[]>([])
@@ -339,8 +345,12 @@ const Transactions: FC = () => {
   }
 
   useEffect(() => {
-    const refresh = () => {
-      const result = loadTransactionsAndGroups()
+    let cancelled = false
+
+    const refresh = async () => {
+      const result = await loadTransactionsAndGroups(fileStore)
+      if (cancelled) return
+      budgetStoreRef.current = result.store
       setAllTransactions(result.transactions)
       setBudgetGroups(result.budgetGroups)
       setEditingCategory(null)
@@ -359,19 +369,24 @@ const Transactions: FC = () => {
       }
     }
 
+    const handleRefresh = () => { refresh().catch(console.error) }
+
     // Defer heavy load to next frame so navigation isn't blocked
-    const frameId = requestAnimationFrame(refresh)
-    window.addEventListener('budget-changed', refresh)
-    window.addEventListener('storage', refresh)
+    const frameId = requestAnimationFrame(handleRefresh)
+    const unsubscribe = fileStore.subscribe('budget/categories.json', handleRefresh)
+    window.addEventListener('budget-changed', handleRefresh)
+    window.addEventListener('storage', handleRefresh)
 
     return () => {
+      cancelled = true
       cancelAnimationFrame(frameId)
-      window.removeEventListener('budget-changed', refresh)
-      window.removeEventListener('storage', refresh)
+      unsubscribe()
+      window.removeEventListener('budget-changed', handleRefresh)
+      window.removeEventListener('storage', handleRefresh)
     }
     // searchParams is intentionally read only on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fileStore])
 
   useEffect(() => {
     if (!searchOpen) return
@@ -815,14 +830,14 @@ const Transactions: FC = () => {
     setEditingCategory(current => (current?.key === key ? null : { key }))
   }
 
-  const reassignTransactionCategory = (transaction: LoadedTransaction, nextCategory: string): void => {
+  const reassignTransactionCategory = async (transaction: LoadedTransaction, nextCategory: string): Promise<void> => {
     if (transaction.category === nextCategory) {
       setEditingCategory(null)
       setCategoryEditSearch('')
       return
     }
 
-    const store = loadBudgetStore()
+    const store = budgetStoreRef.current
     const monthCsv = store.csvs[transaction.monthKey]
 
     if (!monthCsv) {
@@ -850,7 +865,7 @@ const Transactions: FC = () => {
     const updatedTransactions = parsedTransactions.map((parsedTransaction, index) =>
       index === targetIndex ? { ...parsedTransaction, category: nextCategory } : parsedTransaction,
     )
-    const nextStore = saveCSVForMonth(store, transaction.monthKey, buildCsv(updatedTransactions))
+    const nextStore = await saveCSVForMonth(fileStore, store, transaction.monthKey, buildCsv(updatedTransactions))
 
     setAllTransactions(currentTransactions =>
       currentTransactions.map(currentTransaction =>
@@ -865,16 +880,17 @@ const Transactions: FC = () => {
     )
     setEditingCategory(null)
     setCategoryEditSearch('')
-    saveBudgetStore(nextStore)
+    budgetStoreRef.current = nextStore
+    saveBudgetStore(fileStore, nextStore).catch(console.error)
   }
 
-  function reassignTransactionDate(transaction: LoadedTransaction, nextDate: string) {
+  async function reassignTransactionDate(transaction: LoadedTransaction, nextDate: string) {
     if (!nextDate || nextDate === transaction.date) {
       setEditingDate(null)
       return
     }
 
-    const store = loadBudgetStore()
+    const store = budgetStoreRef.current
     const monthCsv = store.csvs[transaction.monthKey]
     if (!monthCsv) {
       setEditingDate(null)
@@ -904,11 +920,16 @@ const Transactions: FC = () => {
       const updatedTransactions = parsedTransactions.map((parsedTransaction, index) =>
         index === targetIndex ? { ...parsedTransaction, date: nextDate } : parsedTransaction,
       )
-      updatedStore = saveCSVForMonth(updatedStore, transaction.monthKey, buildCsv(updatedTransactions))
+      updatedStore = await saveCSVForMonth(fileStore, updatedStore, transaction.monthKey, buildCsv(updatedTransactions))
     } else {
       // Different month — remove from old CSV, add to new CSV
       const updatedOldTransactions = parsedTransactions.filter((_, index) => index !== targetIndex)
-      updatedStore = saveCSVForMonth(updatedStore, transaction.monthKey, buildCsv(updatedOldTransactions))
+      updatedStore = await saveCSVForMonth(
+        fileStore,
+        updatedStore,
+        transaction.monthKey,
+        buildCsv(updatedOldTransactions),
+      )
 
       const newMonthCsv = updatedStore.csvs[nextMonthKey]
       const newMonthTransactions = newMonthCsv ? parseCSV(newMonthCsv.csv) : []
@@ -919,7 +940,7 @@ const Transactions: FC = () => {
         description: transaction.description,
       }
       newMonthTransactions.push(movedTransaction)
-      updatedStore = saveCSVForMonth(updatedStore, nextMonthKey, buildCsv(newMonthTransactions))
+      updatedStore = await saveCSVForMonth(fileStore, updatedStore, nextMonthKey, buildCsv(newMonthTransactions))
     }
 
     setAllTransactions(currentTransactions =>
@@ -930,7 +951,8 @@ const Transactions: FC = () => {
       ),
     )
     setEditingDate(null)
-    saveBudgetStore(updatedStore)
+    budgetStoreRef.current = updatedStore
+    saveBudgetStore(fileStore, updatedStore).catch(console.error)
   }
 
   if (loading) {

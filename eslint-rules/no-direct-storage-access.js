@@ -1,8 +1,8 @@
 /**
  * ESLint rule: no-direct-storage-access
  *
- * Prevents direct localStorage access for sensitive keys.
- * All sensitive key access must go through appStorage.
+ * User data lives in the user-selected data folder via FileStore, never in
+ * localStorage. This rule catches the legacy keys creeping back in.
  */
 
 const SENSITIVE_KEYS = [
@@ -19,16 +19,10 @@ const SENSITIVE_KEYS = [
   'fi-simulations',
   'allocation-custom-ratios',
   'sgt-overrides',
+  'paydown-loans',
 ]
 
-const EXEMPT_FILES = [
-  'src/utils/appStorage.ts',
-  'src/utils/encryptedStorage.ts',
-  'src/utils/storage.ts',
-  'src/utils/migratePlaintext.ts',
-  'src/contexts/EncryptionContext.tsx',
-  'src/pages/settings/demoMode.ts',
-]
+const EXEMPT_FILES = ['src/utils/storage.ts']
 
 const STORAGE_METHODS = ['getItem', 'setItem', 'removeItem']
 
@@ -37,13 +31,13 @@ const rule = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Disallow direct localStorage access for sensitive keys (use appStorage instead)',
+      description: 'Disallow storing user data in localStorage (use the FileStore instead)',
     },
     messages: {
       directAccess:
-        'Direct localStorage.{{method}}("{{key}}") for sensitive key "{{key}}" is not allowed. Use appStorage instead.',
+        'localStorage.{{method}}("{{key}}") stores user data in the browser. Write it through the FileStore instead.',
       dynamicAccess:
-        'localStorage.{{method}}() with a dynamic key may access sensitive data. Use appStorage for sensitive keys.',
+        'localStorage.{{method}}() with a dynamic key may store user data. Use the FileStore for user data.',
     },
     schema: [],
     hasSuggestions: false,

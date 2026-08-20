@@ -2,13 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { appStorage } from '../../utils/appStorage'
 import { FinancialGoal, GwGoal } from '../../types'
 import GoalsPeek from './GoalsPeek'
 import { getFiTarget } from '../goal/utils/goalCalculations'
 import { formatCurrency } from '../data/types'
 
 /* ─── Mock dependencies ─── */
+
+vi.mock('../../hooks/useProfile', () => ({
+  useProfile: vi.fn(() => ({
+    profile: { name: '', birthday: '1990-01', avatarDataUrl: '', partner: null },
+    updateProfile: vi.fn(),
+  })),
+}))
 
 vi.mock('../../contexts/DataContext', () => ({
   useData: vi.fn(() => ({
@@ -21,7 +27,7 @@ vi.mock('../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  getBudgetSaveRate: vi.fn(() => null),
+  getBudgetSaveRate: vi.fn(() => Promise.resolve(null)),
 }))
 
 vi.mock('../../components/TermAbbr', () => ({
@@ -36,9 +42,11 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
+import { useProfile } from '../../hooks/useProfile'
 import { useData } from '../../contexts/DataContext'
 import { getBudgetSaveRate } from '../budget/utils/budgetStorage'
 
+const mockedUseProfile = vi.mocked(useProfile)
 const mockedUseData = vi.mocked(useData)
 const mockedGetSaveRate = vi.mocked(getBudgetSaveRate)
 const getExpectedFiTarget = (goal: FinancialGoal, profileBirthday = '1990-01') => getFiTarget(goal, profileBirthday, 8)
@@ -109,7 +117,10 @@ function makeBalance(accountId: number, month: string, balance: number) {
 }
 
 function setProfileBirthday(birthday: string) {
-  appStorage.setJSON('user-profile', { birthday })
+  mockedUseProfile.mockReturnValue({
+    profile: { name: '', birthday, avatarDataUrl: '', partner: null },
+    updateProfile: vi.fn(),
+  })
 }
 
 const noop = vi.fn()
@@ -124,7 +135,6 @@ function renderPeek(goals: FinancialGoal[] = [makeGoal()], gwGoals: GwGoal[] = [
 
 beforeEach(() => {
   vi.clearAllMocks()
-  localStorage.clear()
   setProfileBirthday('1990-01')
   mockedUseData.mockReturnValue({
     accounts: [],
@@ -133,7 +143,7 @@ beforeEach(() => {
     setAccounts: () => {},
     setBalances: () => {},
   })
-  mockedGetSaveRate.mockReturnValue(null)
+  mockedGetSaveRate.mockResolvedValue(null)
 })
 
 /* ═══════════════════════════════════════════════════════════════
@@ -178,7 +188,7 @@ describe('GoalsPeek projection — no budget data', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue(null)
+    mockedGetSaveRate.mockResolvedValue(null)
     renderPeek()
     expect(screen.getByText('Add budget data →')).toBeInTheDocument()
   })
@@ -193,7 +203,7 @@ describe('GoalsPeek projection — no budget data', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue(null)
+    mockedGetSaveRate.mockResolvedValue(null)
     renderPeek()
 
     const link = screen.getByRole('link', { name: 'Add budget data →' })
@@ -216,7 +226,7 @@ describe('GoalsPeek projection — no budget data', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue(null)
+    mockedGetSaveRate.mockResolvedValue(null)
     renderPeek()
 
     const link = screen.getByRole('link', { name: 'Add budget data →' })
@@ -256,7 +266,7 @@ describe('GoalsPeek projection — goal reached', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek projection — not reachable', () => {
-  it('shows "Not reachable at current rate" when savings are zero', () => {
+  it('shows "Not reachable at current rate" when savings are zero', async () => {
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -265,12 +275,12 @@ describe('GoalsPeek projection — not reachable', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 0, saveRate: 0, monthsOfData: 12 })
+    mockedGetSaveRate.mockResolvedValue({ annualSavings: 0, saveRate: 0, monthsOfData: 12 })
     renderPeek()
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(await screen.findByText('Not reachable at current rate')).toBeInTheDocument()
   })
 
-  it('shows "Not reachable at current rate" when savings are negative', () => {
+  it('shows "Not reachable at current rate" when savings are negative', async () => {
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -279,9 +289,9 @@ describe('GoalsPeek projection — not reachable', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue({ annualSavings: -5000, saveRate: -10, monthsOfData: 6 })
+    mockedGetSaveRate.mockResolvedValue({ annualSavings: -5000, saveRate: -10, monthsOfData: 6 })
     renderPeek()
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(await screen.findByText('Not reachable at current rate')).toBeInTheDocument()
   })
 })
 
@@ -290,7 +300,7 @@ describe('GoalsPeek projection — not reachable', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek projection — FI date projected', () => {
-  it('shows "FI by {Mon YYYY}" when budget data projects a date', () => {
+  it('shows "FI by {Mon YYYY}" when budget data projects a date', async () => {
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -299,9 +309,9 @@ describe('GoalsPeek projection — FI date projected', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
+    mockedGetSaveRate.mockResolvedValue({ annualSavings: 60000, saveRate: 40, monthsOfData: 12 })
     renderPeek([makeGoal({ fiGoal: 2_000_000 })])
-    expect(screen.getByText(projectedTextMatcher)).toBeInTheDocument()
+    expect(await screen.findByText(projectedTextMatcher)).toBeInTheDocument()
   })
 })
 
@@ -320,7 +330,7 @@ describe('GoalsPeek projection — fiGoal is 0', () => {
 })
 
 describe('GoalsPeek projection — not reachable via projectFIDate null', () => {
-  it('shows "Not reachable" when fiGoal is astronomically high', () => {
+  it('shows "Not reachable" when fiGoal is astronomically high', async () => {
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -329,9 +339,9 @@ describe('GoalsPeek projection — not reachable via projectFIDate null', () => 
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 1, saveRate: 0.01, monthsOfData: 12 })
+    mockedGetSaveRate.mockResolvedValue({ annualSavings: 1, saveRate: 0.01, monthsOfData: 12 })
     renderPeek([makeGoal({ expenseValue: 10_000_000, goalEndYear: '2200-01' })])
-    expect(screen.getByText('Not reachable at current rate')).toBeInTheDocument()
+    expect(await screen.findByText('Not reachable at current rate')).toBeInTheDocument()
   })
 })
 
@@ -456,8 +466,11 @@ describe('GoalsPeek summary cards and progress', () => {
     expect(screen.getByText('50%')).toBeInTheDocument()
   })
 
-  it('renders without crashing when profile birthday is missing from appStorage', () => {
-    appStorage.remove('user-profile')
+  it('renders without crashing when profile birthday is missing', () => {
+    mockedUseProfile.mockReturnValue({
+      profile: { name: '', birthday: '', avatarDataUrl: '', partner: null },
+      updateProfile: vi.fn(),
+    })
     renderPeek([makeGoal()])
     expect(screen.getByText('Retire Early')).toBeInTheDocument()
   })
@@ -602,8 +615,7 @@ describe('GoalsPeek FI progress clamping', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek budget-changed subscription (#164)', () => {
-  it('re-reads getBudgetSaveRate and re-renders when the parent re-renders', () => {
-    // First render: no budget data → "Add budget data →"
+  it('shows projected FI date when getBudgetSaveRate returns annual savings', async () => {
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
       accounts: [fiAcct],
@@ -612,23 +624,13 @@ describe('GoalsPeek budget-changed subscription (#164)', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue(null)
+    mockedGetSaveRate.mockResolvedValue({ annualSavings: 60_000, saveRate: 40, monthsOfData: 12 })
     const goal = makeGoal({ fiGoal: 2_000_000 })
-    const { rerender } = renderPeek([goal])
-    expect(screen.getByText('Add budget data →')).toBeInTheDocument()
-    expect(screen.queryByText(projectedTextMatcher)).not.toBeInTheDocument()
+    renderPeek([goal])
 
-    // Budget data appears; the hook should pick it up on the next render.
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 60_000, saveRate: 40, monthsOfData: 12 })
-    rerender(
-      <MemoryRouter>
-        <GoalsPeek goals={[goal]} gwGoals={[]} onNavigate={noop} />
-      </MemoryRouter>,
-    )
-
-    expect(mockedGetSaveRate).toHaveBeenCalledTimes(2)
+    expect(await screen.findByText(projectedTextMatcher)).toBeInTheDocument()
     expect(screen.queryByText('Add budget data →')).not.toBeInTheDocument()
-    expect(screen.getByText(projectedTextMatcher)).toBeInTheDocument()
+    expect(mockedGetSaveRate).toHaveBeenCalledTimes(1)
   })
 
   it('does not subscribe to budget-changed directly', () => {
@@ -640,7 +642,7 @@ describe('GoalsPeek budget-changed subscription (#164)', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue(null)
+    mockedGetSaveRate.mockResolvedValue(null)
 
     const addSpy = vi.spyOn(window, 'addEventListener')
     const removeSpy = vi.spyOn(window, 'removeEventListener')
@@ -839,7 +841,7 @@ describe('GoalsPeek GW progress with zero totalNeeded', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('GoalsPeek projection FI date display', () => {
-  it('shows projected date when fiTotal < fiGoal and budget data exists (line 160-165)', () => {
+  it('shows projected date when fiTotal < fiGoal and budget data exists (line 160-165)', async () => {
     setProfileBirthday('1990-01')
     const fiAcct = makeAccount(1, 'fi')
     mockedUseData.mockReturnValue({
@@ -849,8 +851,8 @@ describe('GoalsPeek projection FI date display', () => {
       setAccounts: () => {},
       setBalances: () => {},
     })
-    mockedGetSaveRate.mockReturnValue({ annualSavings: 50_000, saveRate: 30, monthsOfData: 12 })
+    mockedGetSaveRate.mockResolvedValue({ annualSavings: 50_000, saveRate: 30, monthsOfData: 12 })
     renderPeek([makeGoal({ fiGoal: 2_000_000 })])
-    expect(screen.getByText(projectedTextMatcher)).toBeInTheDocument()
+    expect(await screen.findByText(projectedTextMatcher)).toBeInTheDocument()
   })
 })

@@ -116,19 +116,6 @@ describe('getStorageItem (JSON keys)', () => {
     expect(warn).toHaveBeenCalled()
   })
 
-  it('validates github-sync-config', () => {
-    const config = { owner: 'me', repo: 'test', filePath: 'f.json', autoSync: false }
-    localStorage.setItem('github-sync-config', JSON.stringify(config))
-    expect(getStorageItem('github-sync-config', { owner: '', repo: '', filePath: '', autoSync: false })).toEqual(config)
-  })
-
-  it('returns fallback for invalid github-sync-config', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
-    localStorage.setItem('github-sync-config', JSON.stringify({ owner: 123 }))
-    const fallback = { owner: '', repo: '', filePath: 'finance-goals.json', autoSync: false }
-    expect(getStorageItem('github-sync-config', fallback)).toEqual(fallback)
-  })
-
   it('validates flag-overrides as record', () => {
     const overrides = { 'test-flag': true }
     localStorage.setItem('flag-overrides', JSON.stringify(overrides))
@@ -161,11 +148,6 @@ describe('setStorageItem', () => {
     expect(localStorage.getItem('home-card-order')).toBe('[3,2,1,0]')
   })
 
-  it('serializes github-sync-config', () => {
-    const config = { owner: 'x', repo: 'y', filePath: 'z.json', autoSync: true }
-    setStorageItem('github-sync-config', config)
-    expect(JSON.parse(localStorage.getItem('github-sync-config')!)).toEqual(config)
-  })
 })
 
 // ── removeStorageItem ───────────────────────────────────────────
@@ -232,16 +214,6 @@ describe('getStorageItem (remaining key validators)', () => {
     localStorage.setItem('flag-overrides', JSON.stringify([1, 2, 3]))
     expect(getStorageItem('flag-overrides', {})).toEqual({})
   })
-
-  it('returns fallback for github-sync-config when autoSync is not boolean', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
-    localStorage.setItem(
-      'github-sync-config',
-      JSON.stringify({ owner: 'me', repo: 'r', filePath: 'f.json', autoSync: 'yes' }),
-    )
-    const fallback = { owner: '', repo: '', filePath: '', autoSync: false }
-    expect(getStorageItem('github-sync-config', fallback)).toEqual(fallback)
-  })
 })
 
 // ── initStorageSchema — edge cases ──────────────────────────────
@@ -292,8 +264,7 @@ describe('corrupt data recovery', () => {
 
   it('recovers from completely invalid JSON', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    localStorage.setItem('github-sync-config', '<<<corrupt>>>')
-    const result = getStorageItem('github-sync-config', { owner: '', repo: '', filePath: '', autoSync: false })
-    expect(result).toEqual({ owner: '', repo: '', filePath: '', autoSync: false })
+    localStorage.setItem('flag-rollout-cache', '<<<corrupt>>>')
+    expect(getStorageItem('flag-rollout-cache', null)).toBeNull()
   })
 })

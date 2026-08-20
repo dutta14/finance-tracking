@@ -1,9 +1,10 @@
-import { FC, useState, useMemo, useCallback, useRef } from 'react'
+import { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
-import { appStorage } from '../../../utils/appStorage'
+import { useFileStore } from '../../../contexts/FileStoreContext'
+import { useProfile } from '../../../hooks/useProfile'
 import { calculateFI } from '../utils/fiCalculations'
 import { useGrowthSettings } from '../../goal/hooks/useGrowthSettings'
 import '../../../styles/FICalculator.css'
@@ -11,9 +12,9 @@ import '../../../styles/FICalculator.css'
 const REMOVED_GROUP_ID = 'removed'
 
 /** Load last year's total expense from budget store */
-function getLastYearExpense(): number {
+async function getLastYearExpense(fileStore: import('../../../utils/fileStoreTypes').FileStore): Promise<number> {
   try {
-    const store = loadBudgetStore()
+    const store = await loadBudgetStore(fileStore)
     const lastYear = new Date().getFullYear() - 1
     const groups = store.categoryGroups || []
     const removedCats = new Set(groups.find(g => g.id === REMOVED_GROUP_ID)?.categories || [])
@@ -82,26 +83,6 @@ function getBirthYear(birthday: string): number | null {
   return null
 }
 
-interface ProfileData {
-  primaryBirthYear: number | null
-  partnerBirthYear: number | null
-  primaryName: string
-  partnerName: string
-}
-
-function loadProfile(): ProfileData {
-  const raw = appStorage.getJSON<{ birthday?: string; name?: string; partner?: { birthday?: string; name?: string } }>(
-    'user-profile',
-    {},
-  )
-  return {
-    primaryBirthYear: getBirthYear(raw.birthday || ''),
-    partnerBirthYear: raw.partner ? getBirthYear(raw.partner.birthday || '') : null,
-    primaryName: raw.name || 'Primary',
-    partnerName: raw.partner?.name || 'Partner',
-  }
-}
-
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
@@ -117,18 +98,7 @@ interface FISim {
   includeGwLiquid: boolean
 }
 
-const SIMS_KEY = 'fi-simulations'
-function loadSims(): FISim[] {
-  try {
-    return appStorage.getJSON<FISim[]>(SIMS_KEY, [])
-  } catch {
-    return []
-  }
-}
-function saveSims(sims: FISim[]) {
-  appStorage.setJSON(SIMS_KEY, sims)
-  window.dispatchEvent(new Event('tools-changed'))
-}
+const SIMS_PATH = 'fi-simulations.json'
 
 /** Button that fires once on click, then repeats (accelerating) while held */
 const StepBtn: FC<{ onStep: () => void; children: React.ReactNode }> = ({ onStep, children }) => {
@@ -174,10 +144,39 @@ const StepBtn: FC<{ onStep: () => void; children: React.ReactNode }> = ({ onStep
 
 const FICalculator: FC = () => {
   const thisYear = new Date().getFullYear()
-  const lastYearExpense = useMemo(() => getLastYearExpense(), [])
-  const profile = useMemo(() => loadProfile(), [])
+  const { fileStore } = useFileStore()
+  const { profile: rawProfile } = useProfile()
   const { accounts, balances } = useData()
   const { settings } = useGrowthSettings()
+
+  const [lastYearExpense, setLastYearExpense] = useState<number>(0)
+  const [savedSims, setSavedSims] = useState<FISim[]>([])
+
+  useEffect(() => {
+    getLastYearExpense(fileStore).then(setLastYearExpense).catch(() => setLastYearExpense(0))
+  }, [fileStore])
+
+  useEffect(() => {
+    fileStore.readJSON<FISim[]>(SIMS_PATH, []).then(setSavedSims).catch(() => setSavedSims([]))
+  }, [fileStore])
+
+  const saveSims = useCallback(
+    (sims: FISim[]) => {
+      fileStore.writeJSON(SIMS_PATH, sims).catch(console.error)
+      window.dispatchEvent(new Event('tools-changed'))
+    },
+    [fileStore],
+  )
+
+  const profile = useMemo(
+    () => ({
+      primaryBirthYear: getBirthYear(rawProfile.birthday || ''),
+      partnerBirthYear: rawProfile.partner ? getBirthYear(rawProfile.partner.birthday || '') : null,
+      primaryName: rawProfile.name || 'Primary',
+      partnerName: rawProfile.partner?.name || 'Partner',
+    }),
+    [rawProfile],
+  )
 
   // Derived defaults
   // defaultLastYear = max(primary+100, partner+100) — plan horizon runs
@@ -204,7 +203,6 @@ const FICalculator: FC = () => {
   const [partner401kYear, setPartner401kYear] = useState<number>(partner401kEarliestYear)
   const [includeGwLiquid, setIncludeGwLiquid] = useState<boolean>(false)
   const [showYearByYear, setShowYearByYear] = useState<boolean>(false)
-  const [savedSims, setSavedSims] = useState<FISim[]>(() => loadSims())
   const [activeSim, setActiveSim] = useState<string | null>(null)
   const [showSaveInput, setShowSaveInput] = useState(false)
   const [saveNameInput, setSaveNameInput] = useState('')
@@ -252,6 +250,7 @@ const FICalculator: FC = () => {
       partner401kYear,
       includeGwLiquid,
       savedSims,
+      saveSims,
     ],
   )
 
@@ -262,7 +261,7 @@ const FICalculator: FC = () => {
       saveSims(next)
       if (activeSim === name) setActiveSim(null)
     },
-    [savedSims, activeSim],
+    [savedSims, activeSim, saveSims],
   )
 
   // Current balances

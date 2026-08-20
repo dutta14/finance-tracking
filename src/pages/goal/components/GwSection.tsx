@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useRef, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
+import { useData } from '../../../contexts/DataContext'
 import '../../../styles/GwSection.css'
 
 interface GwSectionProps {
@@ -294,12 +295,13 @@ const GwSection: FC<GwSectionProps> = ({
   const [formError, setFormError] = useState('')
   const [dollarView, setDollarView] = useState<GwDollarView>('disbursement')
 
+  const { accounts, balances } = useData()
   const goalGoals = gwGoals.filter(g => g.fiGoalId === goal.id)
   const otherGoals = gwGoals.filter(g => g.fiGoalId !== goal.id)
   const currentAge = ageAtCreation(profileBirthday, goal.goalCreatedIn)
 
   const gwProgressPct = useMemo(() => {
-    const { gwTotal } = getLatestGoalTotals()
+    const { gwTotal } = getLatestGoalTotals(accounts, balances)
     if (goalGoals.length === 0) return 0
     const [by, bm] = profileBirthday.split('-').map(Number)
     const created = new Date(goal.goalCreatedIn)
@@ -312,7 +314,7 @@ const GwSection: FC<GwSectionProps> = ({
       return sum + pv
     }, 0)
     return totalNeeded > 0 ? Math.min(100, Math.max(0, (gwTotal / totalNeeded) * 100)) : 0
-  }, [goalGoals, profileBirthday, goal, gwGrowthRate, inflationRate])
+  }, [accounts, balances, goalGoals, profileBirthday, goal, gwGrowthRate, inflationRate])
 
   const handleImport = (gw: GwGoal) => {
     onCreateGwGoal({

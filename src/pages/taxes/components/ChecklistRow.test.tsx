@@ -80,7 +80,9 @@ describe('ChecklistRow', () => {
   it('calls onRemoveItem when remove button clicked', async () => {
     const onRemoveItem = vi.fn()
     render(<ChecklistRow {...baseProps} onRemoveItem={onRemoveItem} />)
-    await userEvent.click(screen.getByTitle('Remove item'))
+    // Open the overflow menu first, then click Delete
+    await userEvent.click(screen.getByTitle('More actions'))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
     expect(onRemoveItem).toHaveBeenCalledWith('item-1')
   })
 
@@ -96,11 +98,13 @@ describe('ChecklistRow', () => {
     expect(onRemoveFile).toHaveBeenCalledWith('item-1', 'f1')
   })
 
-  it('displays linked account names', () => {
+  it('renders the item with accountIds without crashing', () => {
     const item = makeTaxItem({ id: 'item-1', label: '1099', accountIds: [1, 2] })
     const accounts = [makeAccount({ id: 1, name: 'Fidelity' }), makeAccount({ id: 2, name: 'Vanguard' })]
     render(<ChecklistRow {...baseProps} item={item} accounts={accounts} />)
-    expect(screen.getByText('Fidelity, Vanguard')).toBeInTheDocument()
+    // Account names are no longer displayed inline in ChecklistRow
+    expect(screen.getByText('1099')).toBeInTheDocument()
+    expect(screen.queryByText('Fidelity, Vanguard')).not.toBeInTheDocument()
   })
 
   it('shows complete aria label when files present', () => {

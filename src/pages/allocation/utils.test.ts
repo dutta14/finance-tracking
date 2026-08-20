@@ -1,9 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { makeId, loadCustomRatios, saveCustomRatios, makeDefaultRatio } from './utils'
-import { appStorage } from '../../utils/appStorage'
+import { ALLOCATION_PATH } from './constants'
+import { MemoryFileStore } from '../../utils/memoryFileStore'
+
+let fileStore: MemoryFileStore
 
 beforeEach(() => {
-  localStorage.clear()
+  fileStore = new MemoryFileStore()
 })
 
 describe('makeId', () => {
@@ -20,38 +23,36 @@ describe('makeId', () => {
 })
 
 describe('loadCustomRatios', () => {
-  it('returns empty array when nothing stored', () => {
-    expect(loadCustomRatios()).toEqual([])
+  it('returns an empty array when nothing is stored', async () => {
+    await expect(loadCustomRatios(fileStore)).resolves.toEqual([])
   })
 
-  it('returns parsed ratios from localStorage', () => {
-    const ratio = { id: 'test', name: 'Test', scope: 'total', groups: [] }
-    appStorage.setJSON('allocation-custom-ratios', [ratio])
-    const result = loadCustomRatios()
+  it('returns the ratios written to allocation.json', async () => {
+    const ratio = { id: 'test', name: 'Test', scope: 'total' as const, groups: [] }
+    await fileStore.writeJSON(ALLOCATION_PATH, [ratio])
+    const result = await loadCustomRatios(fileStore)
     expect(result).toHaveLength(1)
     expect(result[0].name).toBe('Test')
   })
 
-  it('returns empty array on corrupt JSON', () => {
-    localStorage.setItem('allocation-custom-ratios', 'broken{')
-    expect(loadCustomRatios()).toEqual([])
+  it('returns an empty array when allocation.json is corrupt', async () => {
+    await fileStore.writeCSV(ALLOCATION_PATH, [['broken{']])
+    await expect(loadCustomRatios(fileStore)).resolves.toEqual([])
   })
 })
 
 describe('saveCustomRatios', () => {
-  it('dispatches allocation-changed event', () => {
+  it('dispatches allocation-changed event', async () => {
     const spy = vi.fn()
     window.addEventListener('allocation-changed', spy)
-    const ratio = { id: 'a', name: 'R1', scope: 'fi' as const, groups: [] }
-    saveCustomRatios([ratio])
+    await saveCustomRatios(fileStore, [{ id: 'a', name: 'R1', scope: 'fi' as const, groups: [] }])
     expect(spy).toHaveBeenCalledTimes(1)
     window.removeEventListener('allocation-changed', spy)
   })
 
-  it('persists ratios to localStorage', () => {
-    const ratio = { id: 'a', name: 'R1', scope: 'fi' as const, groups: [] }
-    saveCustomRatios([ratio])
-    const raw = appStorage.getJSON<Record<string, unknown>[]>('allocation-custom-ratios', [])
+  it('persists ratios to allocation.json', async () => {
+    await saveCustomRatios(fileStore, [{ id: 'a', name: 'R1', scope: 'fi' as const, groups: [] }])
+    const raw = await fileStore.readJSON<Record<string, unknown>[]>(ALLOCATION_PATH, [])
     expect(raw).toHaveLength(1)
     expect(raw[0].name).toBe('R1')
   })

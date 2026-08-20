@@ -373,6 +373,7 @@ describe('BalanceSpreadsheet', () => {
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
     const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Custom range' }))
     expect(within(dialog).getByText('From month')).toBeInTheDocument()
     expect(within(dialog).getByText('To month')).toBeInTheDocument()
     expect(within(dialog).getAllByRole('button', { name: 'Jan' }).length).toBeGreaterThan(0)
@@ -580,6 +581,7 @@ describe('BalanceSpreadsheet', () => {
 
     await user.click(screen.getByRole('button', { name: /Date/ }))
     const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Custom range' }))
     expect(within(dialog).getByText('From month')).toBeInTheDocument()
     expect(within(dialog).getByText('To month')).toBeInTheDocument()
   })
@@ -590,6 +592,7 @@ describe('BalanceSpreadsheet', () => {
 
     await user.click(screen.getByRole('button', { name: /Date/ }))
     const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Custom range' }))
     const fields = within(dialog).getAllByText(/month$/)
     const fromField = fields[0].closest('.txn-date-panel-field') as HTMLElement
     const toField = fields[1].closest('.txn-date-panel-field') as HTMLElement
@@ -746,6 +749,7 @@ describe('BalanceSpreadsheet', () => {
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
     const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Custom range' }))
     const toField = within(dialog).getByText('To month').closest('.txn-date-panel-field') as HTMLElement
     await user.click(within(toField).getByRole('button', { name: 'Feb' }))
     await user.click(within(dialog).getByRole('button', { name: 'Apply' }))
@@ -890,7 +894,8 @@ describe('BalanceSpreadsheet', () => {
     expect(avatarGroup).toBeInTheDocument()
   })
 
-  it('renders inactive accounts with inactive CSS class', () => {
+  it('renders inactive accounts with inactive CSS class', async () => {
+    const user = userEvent.setup()
     const inactiveAcct = makeAccount({ id: 3, name: 'Old Account', status: 'inactive', goalType: 'gw', type: 'liquid' })
     const map = buildBalanceMap([{ accountId: 3, month: '2024-01', balance: 500 }])
 
@@ -904,7 +909,15 @@ describe('BalanceSpreadsheet', () => {
         })}
       />,
     )
-    // Inactive account column header has inactive class (line 479/616)
+
+    // Default status filter is ['active']; open Filters to add 'Inactive'
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+    const filterDialog = screen.getByRole('dialog', { name: 'Filters' })
+    await user.click(within(filterDialog).getByRole('tab', { name: /Status/ }))
+    await user.click(within(filterDialog).getByRole('checkbox', { name: 'Inactive' }))
+    await user.click(within(filterDialog).getByRole('button', { name: 'Apply' }))
+
+    // Inactive account column header has inactive class
     const inactiveHeader = document.querySelector('.data-spreadsheet-inactive')
     expect(inactiveHeader).toBeInTheDocument()
   })
@@ -958,6 +971,7 @@ describe('BalanceSpreadsheet', () => {
 
     await user.click(screen.getByRole('button', { name: /^Date/ }))
     const dialog = screen.getByRole('dialog', { name: 'Month range picker' })
+    await user.click(within(dialog).getByRole('button', { name: 'Custom range' }))
     const fromField = within(dialog).getByText('From month').closest('.txn-date-panel-field') as HTMLElement
     await user.click(within(fromField).getByRole('button', { name: 'Feb' }))
     await user.click(within(fromField).getByRole('button', { name: 'Clear' }))
