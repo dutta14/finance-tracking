@@ -139,7 +139,7 @@ export class FileSystemFileStore implements FileStore {
     const names: string[] = []
     try {
       for await (const entry of handle.values()) {
-        if (entry.kind === 'file') names.push(entry.name)
+        names.push(entry.name)
       }
     } catch (error) {
       if (!isNotFound(error)) throw error

@@ -188,9 +188,16 @@ export async function loadBudgetStore(fileStore: FileStore): Promise<BudgetStore
   try {
     const config = await loadBudgetConfig(fileStore)
 
+    // Discover years from transactions folder + config
+    const txFolders = await fileStore.listFiles('transactions')
+    const discoveredYears = txFolders
+      .filter(f => /^\d{4}$/.test(f))
+      .map(Number)
+    const allYears = [...new Set([...config.years, ...discoveredYears])].sort()
+
     // Enumerate CSVs by year
     const csvs: Record<string, MonthCSV> = {}
-    for (const year of config.years) {
+    for (const year of allYears) {
       const files = await fileStore.listFiles(`transactions/${year}`)
       for (const filename of files) {
         if (!filename.endsWith('.csv')) continue
@@ -209,7 +216,7 @@ export async function loadBudgetStore(fileStore: FileStore): Promise<BudgetStore
     const store: BudgetStore = {
       csvs,
       configs: {},
-      years: config.years,
+      years: allYears,
       categoryGroups: config.categoryGroups,
     }
 
@@ -231,17 +238,6 @@ export async function saveBudgetStore(fileStore: FileStore, store: BudgetStore):
     const year = parseInt(monthKey.split('-')[0], 10)
     const path = `transactions/${year}/${monthKey}.csv`
     await fileStore.writeCSV(path, parseCSVRows(monthCSV.csv))
-  }
-
-  // Delete CSVs on disk that are no longer in store.csvs
-  for (const year of allYears) {
-    const files = await fileStore.listFiles(`transactions/${year}`)
-    for (const filename of files) {
-      const monthKey = filename.replace('.csv', '')
-      if (!(monthKey in store.csvs)) {
-        await fileStore.delete(`transactions/${year}/${filename}`)
-      }
-    }
   }
 
   // Write categories.json

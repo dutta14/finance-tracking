@@ -23,6 +23,7 @@ export const useFinancialGoals = () => {
         })
         .catch(err => {
           console.error('Failed to initialize goals:', err)
+          fromSyncRef.current = true
           loadedRef.current = true
         })
     }

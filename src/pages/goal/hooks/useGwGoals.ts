@@ -23,6 +23,7 @@ export const useGwGoals = () => {
         })
         .catch(err => {
           console.error('Failed to initialize general wealth goals:', err)
+          fromSyncRef.current = true
           loadedRef.current = true
         })
     }

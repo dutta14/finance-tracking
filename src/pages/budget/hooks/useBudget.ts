@@ -72,6 +72,7 @@ const EMPTY_STORE: BudgetStore = { csvs: {}, configs: {}, years: [], categoryGro
 export function useBudget() {
   const { fileStore } = useFileStore()
   const [store, setStore] = useState<BudgetStore>(EMPTY_STORE)
+  const [loaded, setLoaded] = useState(false)
   const storeRef = useRef(store)
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
   const [viewMode, setViewMode] = useState<BudgetViewMode>('spreadsheet')
@@ -85,6 +86,7 @@ export function useBudget() {
           if (!cancelled) {
             storeRef.current = next
             setStore(next)
+            setLoaded(true)
           }
         })
         .catch(console.error)
@@ -107,10 +109,10 @@ export function useBudget() {
   )
 
   useEffect(() => {
-    if (!store.years.includes(selectedYear)) {
+    if (loaded && !store.years.includes(selectedYear)) {
       persist(createYear(storeRef.current, selectedYear))
     }
-  }, [selectedYear, store.years, persist])
+  }, [selectedYear, store.years, persist, loaded])
 
   const uploadCSV = useCallback(
     (
