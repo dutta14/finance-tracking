@@ -100,7 +100,7 @@ const Goal: FC = () => {
                   Pay Down
                 </NavLink>
                 <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
-                  FI Calculator
+                  FIRE Calculator
                 </NavLink>
               </nav>
               {subPath === 'calculator' && (

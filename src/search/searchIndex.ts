@@ -244,7 +244,7 @@ const STATIC_TOOLS: SearchItem[] = [
   {
     id: 'tool-fi-calc',
     category: 'tool',
-    label: 'FI Calculator',
+    label: 'FIRE Calculator',
     hint: 'Estimate FI readiness',
     icon: 'calculator',
     keywords: ['fi calculator', 'financial independence', 'fire', 'retirement'],

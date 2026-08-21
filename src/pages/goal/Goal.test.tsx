@@ -147,10 +147,10 @@ describe('Goal page tab routing', () => {
     expect(screen.getByTestId('goals-section')).toBeInTheDocument()
   })
 
-  it('renders the FI Calculator tab when navigated to /goal/calculator', async () => {
+  it('renders the FIRE Calculator tab when navigated to /goal/calculator', async () => {
     renderGoal('/goal/calculator')
 
-    const calcLink = screen.getByRole('link', { name: 'FI Calculator' })
+    const calcLink = screen.getByRole('link', { name: 'FIRE Calculator' })
     expect(calcLink.className).toContain('active')
     expect(await screen.findByTestId('fi-calculator')).toBeInTheDocument()
   })
