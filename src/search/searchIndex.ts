@@ -1,12 +1,11 @@
 /**
- * Universal search index — reads all app data via appStorage,
+ * Universal search index — receives pre-loaded app data,
  * builds a flat list of searchable items, and filters/ranks by query.
  */
 
 import type { FinancialGoal, GwGoal } from '../types'
 import type { Account } from '../pages/data/types'
 import type { CategoryGroup } from '../pages/budget/types'
-import { appStorage } from '../utils/appStorage'
 
 /* ─── Types ─── */
 
@@ -39,6 +38,20 @@ export interface SearchGroup {
   label: string
   items: SearchItem[]
   total: number
+}
+
+export type TaxYearIndex = Record<string, { items?: { id: string; label: string; owner?: string }[] }>
+export type TaxTemplateIndex = { id: string; name: string }
+export type AllocationRatioIndex = { id: string; name: string; scope?: string }
+
+export interface SearchIndexData {
+  goals?: FinancialGoal[]
+  gwGoals?: GwGoal[]
+  accounts?: Account[]
+  categoryGroups?: CategoryGroup[]
+  taxYears?: TaxYearIndex
+  taxTemplates?: TaxTemplateIndex[]
+  allocationRatios?: AllocationRatioIndex[]
 }
 
 /* ─── Category display order & labels ─── */
@@ -312,10 +325,10 @@ const STATIC_SETTINGS: SearchItem[] = [
 
 /* ─── Dynamic index builders ─── */
 
-function indexGoals(): SearchItem[] {
+function indexGoals(data: SearchIndexData): SearchItem[] {
   const items: SearchItem[] = []
   try {
-    const goals: FinancialGoal[] = appStorage.getJSON<FinancialGoal[]>('financialGoals', [])
+    const goals = data.goals || []
     for (const g of goals) {
       items.push({
         id: `goal-${g.id}`,
@@ -328,7 +341,7 @@ function indexGoals(): SearchItem[] {
       })
     }
 
-    const gwGoals: GwGoal[] = appStorage.getJSON<GwGoal[]>('gw-goals', [])
+    const gwGoals = data.gwGoals || []
     for (const gw of gwGoals) {
       const parentGoal = goals.find(g => g.id === gw.fiGoalId)
       items.push({
@@ -347,10 +360,10 @@ function indexGoals(): SearchItem[] {
   return items
 }
 
-function indexAccounts(): SearchItem[] {
+function indexAccounts(data: SearchIndexData): SearchItem[] {
   const items: SearchItem[] = []
   try {
-    const accounts: Account[] = appStorage.getJSON<Account[]>('data-accounts', [])
+    const accounts = data.accounts || []
     for (const a of accounts) {
       items.push({
         id: `account-${a.id}`,
@@ -368,11 +381,10 @@ function indexAccounts(): SearchItem[] {
   return items
 }
 
-function indexBudgetCategories(): SearchItem[] {
+function indexBudgetCategories(data: SearchIndexData): SearchItem[] {
   const items: SearchItem[] = []
   try {
-    const config = appStorage.getJSON<{ categoryGroups?: CategoryGroup[] }>('budget-config', {})
-    const groups: CategoryGroup[] = config.categoryGroups || []
+    const groups = data.categoryGroups || []
     for (const g of groups) {
       if (g.id === 'removed') continue
       items.push({
@@ -402,15 +414,11 @@ function indexBudgetCategories(): SearchItem[] {
   return items
 }
 
-function indexTaxItems(): SearchItem[] {
+function indexTaxItems(data: SearchIndexData): SearchItem[] {
   const items: SearchItem[] = []
   try {
-    const store = appStorage.getJSON<{
-      years?: Record<string, { items?: { id: string; label: string; owner?: string }[] }>
-    }>('tax-store', {})
-    const years = store.years || {}
-    for (const [year, data] of Object.entries(years)) {
-      const yearData = data as { items?: { id: string; label: string; owner?: string }[] }
+    const years = data.taxYears || {}
+    for (const [year, yearData] of Object.entries(years)) {
       for (const item of yearData.items || []) {
         items.push({
           id: `tax-${year}-${item.id}`,
@@ -424,7 +432,7 @@ function indexTaxItems(): SearchItem[] {
       }
     }
 
-    const templates = appStorage.getJSON<{ id: string; name: string }[]>('tax-templates', [])
+    const templates = data.taxTemplates || []
     for (const tpl of templates) {
       items.push({
         id: `tax-tpl-${tpl.id}`,
@@ -442,10 +450,10 @@ function indexTaxItems(): SearchItem[] {
   return items
 }
 
-function indexAllocationRatios(): SearchItem[] {
+function indexAllocationRatios(data: SearchIndexData): SearchItem[] {
   const items: SearchItem[] = []
   try {
-    const ratios = appStorage.getJSON<{ id: string; name: string; scope?: string }[]>('allocation-custom-ratios', [])
+    const ratios = data.allocationRatios || []
     for (const r of ratios) {
       items.push({
         id: `ratio-${r.id}`,
@@ -465,15 +473,15 @@ function indexAllocationRatios(): SearchItem[] {
 
 /* ─── Build & Search ─── */
 
-export function buildIndex(): SearchItem[] {
+export function buildIndex(data: SearchIndexData = {}): SearchItem[] {
   return [
     ...STATIC_PAGES,
     ...STATIC_COMMANDS,
-    ...indexGoals(),
-    ...indexAccounts(),
-    ...indexBudgetCategories(),
-    ...indexTaxItems(),
-    ...indexAllocationRatios(),
+    ...indexGoals(data),
+    ...indexAccounts(data),
+    ...indexBudgetCategories(data),
+    ...indexTaxItems(data),
+    ...indexAllocationRatios(data),
     ...STATIC_TOOLS,
     ...STATIC_SETTINGS,
   ]
