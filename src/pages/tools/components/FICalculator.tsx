@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import React, { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { loadBudgetStore, getIncomeGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
@@ -84,7 +84,7 @@ function getBirthMonth(birthday: string): number {
   return 1
 }
 
-const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -114,39 +114,96 @@ interface ProjectionTooltipProps {
   active?: boolean
   payload?: Array<{ payload: ProjectionChartRow }>
   label?: string
+  chartData?: ProjectionChartRow[]
 }
 
-const ProjectionTooltip: FC<ProjectionTooltipProps> = ({ active, payload, label }) => {
+const ProjectionTooltip: FC<ProjectionTooltipProps> = ({ active, payload, label, chartData }) => {
   if (!active || !payload?.length) return null
 
   const row = payload[0].payload
 
+  // Compute deltas from previous data point
+  let prevRow: ProjectionChartRow | null = null
+  if (chartData) {
+    const idx = chartData.findIndex(r => r.month === row.month)
+    if (idx > 0) prevRow = chartData[idx - 1]
+  }
+
+  const getDelta = (curr: number, prev: number | undefined) => {
+    if (prev == null || prev === 0) return null
+    const d = curr - prev
+    const pct = (d / Math.abs(prev)) * 100
+    return { d, pct }
+  }
+
+  const fmtD = (d: number, pct: number) => `${d >= 0 ? '+' : ''}${fmt(d)} (${d >= 0 ? '+' : ''}${pct.toFixed(1)}%)`
+
+  const items: { label: string; value: number; delta: { d: number; pct: number } | null }[] = []
+
+  if (row.monthlySaved > 0) {
+    items.push({ label: 'Saved', value: row.monthlySaved, delta: getDelta(row.monthlySaved, prevRow?.monthlySaved) })
+  }
+  if (row.expense > 0) {
+    items.push({ label: 'Expense', value: row.expense, delta: getDelta(row.expense, prevRow?.expense) })
+  }
+  if (row.bonus > 0) {
+    items.push({ label: 'Bonus', value: row.bonus, delta: getDelta(row.bonus, prevRow?.bonus) })
+  }
+  items.push({ label: 'Balance', value: row.netWorth, delta: getDelta(row.netWorth, prevRow?.netWorth) })
+
   return (
-    <div className="projection-tooltip">
-      <div className="projection-tooltip-month">{label}</div>
-      <div className="projection-tooltip-row">
-        <span>Phase</span>
-        <span>{row.phase === 'saving' ? 'Saving' : 'Drawdown'}</span>
-      </div>
-      {row.monthlySaved > 0 && (
-        <div className="projection-tooltip-row">
-          <span>Saved</span>
-          <span>{fmt(row.monthlySaved)}</span>
-        </div>
-      )}
-      {row.expense > 0 && (
-        <div className="projection-tooltip-row negative">
-          <span>Expense</span>
-          <span>{fmt(row.expense)}</span>
-        </div>
-      )}
-      <div className="projection-tooltip-row">
-        <span>Balance</span>
-        <span>{fmt(row.netWorth)}</span>
-      </div>
-      <div className="projection-tooltip-row projection-tooltip-row--pct">
-        <span>Growth rate</span>
-        <span>{row.growthRate}%</span>
+    <div
+      style={{
+        backgroundColor: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 8,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        padding: '6px 10px',
+      }}
+    >
+      <div style={{ color: 'var(--color-text)', fontSize: 10, fontWeight: 500, marginBottom: 2 }}>{label}</div>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr 1fr',
+          alignItems: 'baseline',
+          columnGap: 14,
+          rowGap: 4,
+        }}
+      >
+        {items.map(item => (
+          <React.Fragment key={item.label}>
+            <div style={{ color: 'var(--color-text-heading)', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>
+              {item.label}
+            </div>
+            <div
+              style={{
+                color: 'var(--color-text-heading)',
+                fontSize: 11,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                textAlign: 'right',
+              }}
+            >
+              {fmt(item.value)}
+            </div>
+            {item.delta ? (
+              <div
+                style={{
+                  color: item.delta.d >= 0 ? '#16a34a' : '#dc2626',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  textAlign: 'right',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {fmtD(item.delta.d, item.delta.pct)}
+              </div>
+            ) : (
+              <div />
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   )
@@ -263,15 +320,11 @@ const FICalculator: FC = () => {
   }, [profile, thisYear])
 
   // 401(k) accessible at age 59.5 (birth + 59 years + 6 months)
-  const primary401kEarliestMonth = profile.primaryBirthYear
-    ? ((profile.primaryBirthMonth - 1 + 6) % 12) + 1
-    : 1
+  const primary401kEarliestMonth = profile.primaryBirthYear ? ((profile.primaryBirthMonth - 1 + 6) % 12) + 1 : 1
   const primary401kEarliestYear = profile.primaryBirthYear
     ? profile.primaryBirthYear + 59 + (profile.primaryBirthMonth - 1 + 6 >= 12 ? 1 : 0)
     : thisYear + 30
-  const partner401kEarliestMonth = profile.partnerBirthYear
-    ? ((profile.partnerBirthMonth - 1 + 6) % 12) + 1
-    : 1
+  const partner401kEarliestMonth = profile.partnerBirthYear ? ((profile.partnerBirthMonth - 1 + 6) % 12) + 1 : 1
   const partner401kEarliestYear = profile.partnerBirthYear
     ? profile.partnerBirthYear + 59 + (profile.partnerBirthMonth - 1 + 6 >= 12 ? 1 : 0)
     : thisYear + 30
@@ -321,24 +374,43 @@ const FICalculator: FC = () => {
     }
   }, [primary401kEarliestYear, partner401kEarliestYear])
   const [includeGwLiquid, setIncludeGwLiquid] = useState<boolean>(false)
-  const [savingView, setSavingView] = useState<'mo' | 'yr' | 'total'>('total')
+  const [savingView, setSavingView] = useState<'mo' | 'yr' | 'total'>('yr')
   const [interval, setInterval] = useState<ViewInterval>('yearly')
   const [viewMode, setViewMode] = useState<ViewMode>('chart')
   const [activeSim, setActiveSim] = useState<string | null>(null)
   const [showSaveInput, setShowSaveInput] = useState(false)
+  const [simMenuOpen, setSimMenuOpen] = useState<string | null>(null)
+  const [simToDelete, setSimToDelete] = useState<string | null>(null)
+  const [simRenaming, setSimRenaming] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
   const [saveNameInput, setSaveNameInput] = useState('')
 
-  const applySnapshot = useCallback((s: FISim) => {
-    setAnnualExpense(s.annualExpense)
-    setExpenseDisplay(Math.round(s.annualExpense).toLocaleString())
-    updateSettings({ inflation: s.inflationRate, preBoundaryGrowth: s.growthRate })
-    setLastYear(s.lastYear)
-    setRetireYear(s.retireYear)
-    setPrimary401kYear(s.primary401kYear)
-    setPartner401kYear(s.partner401kYear)
-    setIncludeGwLiquid(s.includeGwLiquid)
-    setActiveSim(s.name)
-  }, [updateSettings])
+  const applySnapshot = useCallback(
+    (s: FISim) => {
+      setAnnualExpense(s.annualExpense)
+      setExpenseDisplay(Math.round(s.annualExpense).toLocaleString())
+      updateSettings({ inflation: s.inflationRate, preBoundaryGrowth: s.growthRate })
+      setLastYear(s.lastYear)
+      setRetireYear(s.retireYear)
+      setPrimary401kYear(s.primary401kYear)
+      setPartner401kYear(s.partner401kYear)
+      setIncludeGwLiquid(s.includeGwLiquid)
+      setActiveSim(s.name)
+    },
+    [updateSettings],
+  )
+
+  const handleNewSim = useCallback(() => {
+    const defaultExpense = lastYearExpense || 60000
+    setAnnualExpense(defaultExpense)
+    setExpenseDisplay(Math.round(defaultExpense).toLocaleString())
+    setLastYear(defaultLastYear)
+    setRetireYear(thisYear + 1)
+    setPrimary401kYear(primary401kEarliestYear)
+    setPartner401kYear(partner401kEarliestYear)
+    setIncludeGwLiquid(false)
+    setActiveSim(null)
+  }, [lastYearExpense, defaultLastYear, thisYear, primary401kEarliestYear, partner401kEarliestYear])
 
   const handleSave = useCallback(
     (name: string) => {
@@ -380,6 +452,22 @@ const FICalculator: FC = () => {
       setSavedSims(next)
       saveSims(next)
       if (activeSim === name) setActiveSim(null)
+      setSimToDelete(null)
+    },
+    [savedSims, activeSim, saveSims],
+  )
+
+  const handleRenameSim = useCallback(
+    (oldName: string, newName: string) => {
+      if (!newName.trim() || oldName === newName) {
+        setSimRenaming(null)
+        return
+      }
+      const next = savedSims.map(s => (s.name === oldName ? { ...s, name: newName.trim() } : s))
+      setSavedSims(next)
+      saveSims(next)
+      if (activeSim === oldName) setActiveSim(newName.trim())
+      setSimRenaming(null)
     },
     [savedSims, activeSim, saveSims],
   )
@@ -547,432 +635,550 @@ const FICalculator: FC = () => {
 
   return (
     <>
-    <div className="fi-calc-layout">
-      <div className="fi-calc">
-        {/* Annual Expense — hero input */}
-        <div className="fi-calc-hero">
-          <label className="fi-calc-hero-label" htmlFor="fi-calc-annual-expense">
-            Annual Expense
-          </label>
-          <div className="fi-calc-hero-value">
-            <span className="fi-calc-hero-dollar">$</span>
-            <input
-              id="fi-calc-annual-expense"
-              type="text"
-              inputMode="numeric"
-              className="fi-calc-hero-input"
-              value={expenseDisplay}
-              onChange={e => {
-                const raw = e.target.value.replace(/[^0-9]/g, '')
-                const num = Number(raw)
-                setExpenseDisplay(raw ? num.toLocaleString() : '')
-                if (raw) setAnnualExpense(num)
-              }}
-              onKeyDown={e => {
-                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
-              }}
-              onBlur={() => setExpenseDisplay(Math.round(annualExpense).toLocaleString())}
-            />
+      <div className="fi-calc-layout">
+        <div className="fi-calc">
+          {activeSim && <div className="fi-calc-editing-banner">Editing "{activeSim}"</div>}
+          {/* Annual Expense — hero input */}
+          <div className="fi-calc-hero">
+            <label className="fi-calc-hero-label" htmlFor="fi-calc-annual-expense">
+              Annual Expense
+            </label>
+            <div className="fi-calc-hero-value">
+              <span className="fi-calc-hero-dollar">$</span>
+              <input
+                id="fi-calc-annual-expense"
+                type="text"
+                inputMode="numeric"
+                className="fi-calc-hero-input"
+                value={expenseDisplay}
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '')
+                  const num = Number(raw)
+                  setExpenseDisplay(raw ? num.toLocaleString() : '')
+                  if (raw) setAnnualExpense(num)
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                }}
+                onBlur={() => setExpenseDisplay(Math.round(annualExpense).toLocaleString())}
+              />
+            </div>
+            {lastYearExpense > 0 && annualExpense !== lastYearExpense && (
+              <button
+                className="fi-calc-link-btn"
+                onClick={() => {
+                  setAnnualExpense(lastYearExpense)
+                  setExpenseDisplay(Math.round(lastYearExpense).toLocaleString())
+                }}
+              >
+                Use last year's ({fmt(lastYearExpense)})
+              </button>
+            )}
           </div>
-          {lastYearExpense > 0 && annualExpense !== lastYearExpense && (
-            <button
-              className="fi-calc-link-btn"
-              onClick={() => {
-                setAnnualExpense(lastYearExpense)
-                setExpenseDisplay(Math.round(lastYearExpense).toLocaleString())
-              }}
-            >
-              Use last year's ({fmt(lastYearExpense)})
-            </button>
-          )}
-        </div>
 
-        {/* Year steppers — single row */}
-        <div className="fi-calc-years-row">
-          <div className="fi-calc-year-item">
-            <span className="fi-calc-year-label">Retire in</span>
-            <div className="fi-calc-year-control">
-              <StepBtn onStep={() => setRetireYear(v => Math.max(thisYear + 1, v - 1))}>‹</StepBtn>
-              <span className="fi-calc-year-val">
-                Jan {retireYear}
-                <span className="fi-calc-step-sub">({retireYear - thisYear} yr{retireYear - thisYear !== 1 ? 's' : ''})</span>
-              </span>
-              <StepBtn onStep={() => setRetireYear(v => Math.min(lastYear - 1, v + 1))}>›</StepBtn>
-            </div>
-          </div>
-          <div className="fi-calc-year-item">
-            <span className="fi-calc-year-label">Plan until</span>
-            <div className="fi-calc-year-control">
-              <StepBtn onStep={() => setLastYear(v => Math.max(retireYear + 1, v - 1))}>‹</StepBtn>
-              <span className="fi-calc-year-val">
-                Dec {lastYear}
-                <span className="fi-calc-step-sub">({lastYear - thisYear} yrs)</span>
-              </span>
-              <StepBtn onStep={() => setLastYear(v => Math.min(defaultLastYear + 20, v + 1))}>›</StepBtn>
-            </div>
-          </div>
-          <div className="fi-calc-year-item">
-            <span className="fi-calc-year-label">{profile.primaryName} 401(k)</span>
-            <div className="fi-calc-year-control">
-              <StepBtn onStep={() => setPrimary401kYear(v => Math.max(primary401kEarliestYear, v - 1))}>‹</StepBtn>
-              <span className="fi-calc-year-val">
-                {MONTH_ABBR[primary401kEarliestMonth - 1]} {primary401kYear}
-                <span className="fi-calc-step-sub">({primary401kYear - thisYear} yrs)</span>
-              </span>
-              <StepBtn onStep={() => setPrimary401kYear(v => Math.min(lastYear, v + 1))}>›</StepBtn>
-            </div>
-          </div>
-          {profile.partnerBirthYear && (
+          {/* Year steppers — single row */}
+          <div className="fi-calc-years-row">
             <div className="fi-calc-year-item">
-              <span className="fi-calc-year-label">{profile.partnerName} 401(k)</span>
+              <span className="fi-calc-year-label">Retire in</span>
               <div className="fi-calc-year-control">
-                <StepBtn onStep={() => setPartner401kYear(v => Math.max(partner401kEarliestYear, v - 1))}>‹</StepBtn>
+                <StepBtn onStep={() => setRetireYear(v => Math.max(thisYear + 1, v - 1))}>‹</StepBtn>
                 <span className="fi-calc-year-val">
-                  {MONTH_ABBR[partner401kEarliestMonth - 1]} {partner401kYear}
-                  <span className="fi-calc-step-sub">({partner401kYear - thisYear} yrs)</span>
+                  Jan {retireYear}
+                  <span className="fi-calc-step-sub">
+                    ({retireYear - thisYear} yr{retireYear - thisYear !== 1 ? 's' : ''})
+                  </span>
                 </span>
-                <StepBtn onStep={() => setPartner401kYear(v => Math.min(lastYear, v + 1))}>›</StepBtn>
+                <StepBtn onStep={() => setRetireYear(v => Math.min(lastYear - 1, v + 1))}>›</StepBtn>
               </div>
             </div>
-          )}
-        </div>
+            <div className="fi-calc-year-item">
+              <span className="fi-calc-year-label">Plan until</span>
+              <div className="fi-calc-year-control">
+                <StepBtn onStep={() => setLastYear(v => Math.max(retireYear + 1, v - 1))}>‹</StepBtn>
+                <span className="fi-calc-year-val">
+                  Dec {lastYear}
+                  <span className="fi-calc-step-sub">({lastYear - thisYear} yrs)</span>
+                </span>
+                <StepBtn onStep={() => setLastYear(v => Math.min(defaultLastYear + 20, v + 1))}>›</StepBtn>
+              </div>
+            </div>
+            <div className="fi-calc-year-item">
+              <span className="fi-calc-year-label">{profile.primaryName} 401(k)</span>
+              <div className="fi-calc-year-control">
+                <StepBtn onStep={() => setPrimary401kYear(v => Math.max(primary401kEarliestYear, v - 1))}>‹</StepBtn>
+                <span className="fi-calc-year-val">
+                  {MONTH_ABBR[primary401kEarliestMonth - 1]} {primary401kYear}
+                  <span className="fi-calc-step-sub">({primary401kYear - thisYear} yrs)</span>
+                </span>
+                <StepBtn onStep={() => setPrimary401kYear(v => Math.min(lastYear, v + 1))}>›</StepBtn>
+              </div>
+            </div>
+            {profile.partnerBirthYear && (
+              <div className="fi-calc-year-item">
+                <span className="fi-calc-year-label">{profile.partnerName} 401(k)</span>
+                <div className="fi-calc-year-control">
+                  <StepBtn onStep={() => setPartner401kYear(v => Math.max(partner401kEarliestYear, v - 1))}>‹</StepBtn>
+                  <span className="fi-calc-year-val">
+                    {MONTH_ABBR[partner401kEarliestMonth - 1]} {partner401kYear}
+                    <span className="fi-calc-step-sub">({partner401kYear - thisYear} yrs)</span>
+                  </span>
+                  <StepBtn onStep={() => setPartner401kYear(v => Math.min(lastYear, v + 1))}>›</StepBtn>
+                </div>
+              </div>
+            )}
+          </div>
 
-        {/* GW toggle */}
-        <div className="fi-calc-toggle-row">
-          <button
-            className={`fi-calc-toggle ${includeGwLiquid ? 'fi-calc-toggle--on' : ''}`}
-            onClick={() => setIncludeGwLiquid(v => !v)}
-          >
-            Include GW liquid ({fmt(gwLiquid)})
-            <span className="fi-calc-toggle-track">
-              <span className="fi-calc-toggle-thumb" />
-            </span>
-          </button>
-        </div>
+          {/* GW toggle */}
+          <div className="fi-calc-toggle-row">
+            <label className="fi-calc-checkbox">
+              <input type="checkbox" checked={includeGwLiquid} onChange={() => setIncludeGwLiquid(v => !v)} />
+              Include GW Liquid
+            </label>
+          </div>
 
-        {/* Holdings + Projections table */}
-        <div className="fi-calc-divider" />
-        <div className="fi-calc-holdings-table">
-          <div className="fi-calc-ht-header">
-            <span>Holdings</span>
-            <span>Today</span>
-            <span>At Retirement ({retireYear})</span>
-            <span>At 401(k) Access</span>
-          </div>
-          <div className="fi-calc-ht-row">
-            <span>FI Retirement ({profile.primaryName})</span>
-            <span>{fmt(fiRetirementPrimary)}</span>
-            <span className="fi-calc-ht-na">—</span>
-            <span>{result ? `${fmt(result.primary401kAtAccess)} (${primary401kYear})` : '—'}</span>
-          </div>
-          <div className="fi-calc-ht-row">
-            <span>FI Retirement ({profile.partnerName})</span>
-            <span>{fmt(fiRetirementPartner)}</span>
-            <span className="fi-calc-ht-na">—</span>
-            <span>{result ? `${fmt(result.partner401kAtAccess)} (${partner401kYear})` : '—'}</span>
-          </div>
-          <div className="fi-calc-ht-row">
-            <span>FI Non-Retirement</span>
-            <span>{fmt(fiNonRetirement)}</span>
-            <span>{result ? fmt(result.fiNonRetAtRetire) : '—'}</span>
-            <span className="fi-calc-ht-na">—</span>
-          </div>
-          {result && (
+          {/* Holdings + Projections table */}
+          <div className="fi-calc-divider" />
+          <div className="fi-calc-holdings-table">
+            <div className="fi-calc-ht-header">
+              <span>Holdings</span>
+              <span>Today</span>
+              <span>At Retirement ({retireYear})</span>
+              <span>At 401(k) Access</span>
+            </div>
             <div className="fi-calc-ht-row">
-              <span>FI Non-Retirement (required)</span>
-              <span className="fi-calc-ht-na">—</span>
-              <span>{fmt(result.corpusNeededFromNonRetirement)}</span>
+              <span>FI Retirement ({profile.primaryName})</span>
+              <span>{fmt(fiRetirementPrimary)}</span>
+              {primary401kYear <= retireYear && result ? (
+                <span>{fmt(result.primary401kAtAccess)}</span>
+              ) : (
+                <span className="fi-calc-ht-na">—</span>
+              )}
+              {primary401kYear > retireYear && result ? (
+                <span>{`${fmt(result.primary401kAtAccess)} (${primary401kYear})`}</span>
+              ) : primary401kYear > retireYear ? (
+                <span className="fi-calc-ht-na">—</span>
+              ) : (
+                <span className="fi-calc-ht-na">—</span>
+              )}
+            </div>
+            <div className="fi-calc-ht-row">
+              <span>FI Retirement ({profile.partnerName})</span>
+              <span>{fmt(fiRetirementPartner)}</span>
+              {partner401kYear <= retireYear && result ? (
+                <span>{fmt(result.partner401kAtAccess)}</span>
+              ) : (
+                <span className="fi-calc-ht-na">—</span>
+              )}
+              {partner401kYear > retireYear && result ? (
+                <span>{`${fmt(result.partner401kAtAccess)} (${partner401kYear})`}</span>
+              ) : partner401kYear > retireYear ? (
+                <span className="fi-calc-ht-na">—</span>
+              ) : (
+                <span className="fi-calc-ht-na">—</span>
+              )}
+            </div>
+            <div className="fi-calc-ht-row">
+              <span>FI Non-Retirement</span>
+              <span>{fmt(fiNonRetirement)}</span>
+              <span>{result ? fmt(result.fiNonRetAtRetire) : '—'}</span>
               <span className="fi-calc-ht-na">—</span>
             </div>
-          )}
-          {includeGwLiquid && (
-            <div className="fi-calc-ht-row">
+            <div className={`fi-calc-ht-row${!includeGwLiquid ? ' fi-calc-yby--locked' : ''}`}>
               <span>GW Liquid</span>
               <span>{fmt(gwLiquid)}</span>
               <span>{result ? fmt(result.gwLiquidAtRetire) : '—'}</span>
               <span className="fi-calc-ht-na">—</span>
             </div>
-          )}
-          {result && (
-            <div className="fi-calc-ht-row fi-calc-ht-row--total">
-              <span>Gap to close</span>
-              <span />
-              <span>{fmt(result.gap)}</span>
-              <span />
-            </div>
-          )}
-        </div>
-
-        {/* Results */}
-        {result && (
-          <>
-            <div className="fi-calc-divider" />
-            <div className="fi-calc-results">
-              <div className="fi-calc-result-main">
-                {result.gap > 0 ? (
-                  <>
-                    <span className="fi-calc-result-label">Save for {result.monthsToSave} months up to Dec {retireYear - 1}</span>
-                    <span className="fi-calc-result-value">
-                      {savingView === 'mo' && <>{fmt(result.monthlySaving)}/mo</>}
-                      {savingView === 'yr' && <>{fmt(result.monthlySaving * Math.min(12, result.monthsToSave))}/yr</>}
-                      {savingView === 'total' && <>{fmt(result.gap)} total</>}
-                    </span>
-                    <div className="fi-calc-result-pills">
-                      <button className={`fi-calc-result-pill${savingView === 'mo' ? ' active' : ''}`} onClick={() => setSavingView('mo')}>mo</button>
-                      <button className={`fi-calc-result-pill${savingView === 'yr' ? ' active' : ''}`} onClick={() => setSavingView('yr')}>yr</button>
-                      <button className={`fi-calc-result-pill${savingView === 'total' ? ' active' : ''}`} onClick={() => setSavingView('total')}>total</button>
-                    </div>
-                  </>
-                ) : (
-                  <span className="fi-calc-result-value fi-calc-result--ready">You're ready to FI! 🎉</span>
-                )}
+            {result && (
+              <div className="fi-calc-ht-row fi-calc-ht-row--total">
+                <span>Total</span>
+                <span className="fi-calc-ht-na">—</span>
+                <span>
+                  {fmt(
+                    result.fiNonRetAtRetire +
+                      (includeGwLiquid ? result.gwLiquidAtRetire : 0) +
+                      (primary401kYear <= retireYear ? result.primary401kAtAccess : 0) +
+                      (partner401kYear <= retireYear ? result.partner401kAtAccess : 0),
+                  )}
+                </span>
+                <span className="fi-calc-ht-na">—</span>
               </div>
-            </div>
-          </>
-        )}
-      </div>
+            )}
+            {result && (
+              <div className="fi-calc-ht-row">
+                <span>Required to FIRE</span>
+                <span className="fi-calc-ht-na">—</span>
+                <span>{fmt(result.corpusNeededFromNonRetirement)}</span>
+                <span className="fi-calc-ht-na">—</span>
+              </div>
+            )}
+            {result && (
+              <div className="fi-calc-ht-row fi-calc-ht-row--total">
+                <span>Gap to close</span>
+                <span />
+                <span>{fmt(result.gap)}</span>
+                <span />
+              </div>
+            )}
+          </div>
 
-      {/* Saved Simulations Panel */}
-      <div className="fi-sim-panel">
-        <h3 className="fi-sim-panel-title">Saved Simulations</h3>
-        <div className="fi-sim-panel-list">
-          {savedSims.map(s => (
-            <div
-              key={s.name}
-              className={`fi-sim-panel-item-row ${activeSim === s.name ? 'fi-sim-panel-item-row--active' : ''}`}
-            >
-              <button
-                type="button"
-                className={`fi-sim-panel-item ${activeSim === s.name ? 'fi-sim-panel-item--active' : ''}`}
-                onClick={() => applySnapshot(s)}
-              >
-                <span className="fi-sim-panel-item-name">{s.name}</span>
+          {/* Results */}
+          {result && (
+            <>
+              <div className="fi-calc-divider" />
+              <div className="fi-calc-results">
+                <div className="fi-calc-result-main">
+                  {result.gap > 0 ? (
+                    <>
+                      <span className="fi-calc-result-label">
+                        Save for {result.monthsToSave} months up to Dec {retireYear - 1}
+                      </span>
+                      <span className="fi-calc-result-value">
+                        {savingView === 'mo' && <>{fmt(result.monthlySaving)}/mo</>}
+                        {savingView === 'yr' && <>{fmt(result.monthlySaving * Math.min(12, result.monthsToSave))}/yr</>}
+                        {savingView === 'total' && <>{fmt(result.gap)} total</>}
+                      </span>
+                      <div className="fi-calc-result-pills">
+                        <button
+                          className={`fi-calc-result-pill${savingView === 'mo' ? ' active' : ''}`}
+                          onClick={() => setSavingView('mo')}
+                        >
+                          mo
+                        </button>
+                        <button
+                          className={`fi-calc-result-pill${savingView === 'yr' ? ' active' : ''}`}
+                          onClick={() => setSavingView('yr')}
+                        >
+                          yr
+                        </button>
+                        <button
+                          className={`fi-calc-result-pill${savingView === 'total' ? ' active' : ''}`}
+                          onClick={() => setSavingView('total')}
+                        >
+                          total
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <span className="fi-calc-result-value fi-calc-result--ready">Ready for F.I.R.E.</span>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Save/Update actions */}
+          {activeSim ? (
+            <div className="fi-calc-save-actions">
+              <button className="action-btn" onClick={() => handleSave(activeSim)}>
+                Update
               </button>
-              <button
-                className="fi-sim-panel-item-delete"
-                onClick={e => {
-                  e.stopPropagation()
-                  handleDeleteSim(s.name)
-                }}
-                aria-label={`Delete ${s.name}`}
-              >
-                ×
+              <button className="action-btn" onClick={() => setShowSaveInput(true)}>
+                Save as new…
               </button>
             </div>
-          ))}
-          {savedSims.length === 0 && (
-            <p className="fi-sim-panel-empty">
-              No saved simulations yet. Adjust parameters and save to compare scenarios.
-            </p>
-          )}
+          ) : null}
         </div>
-        {showSaveInput ? (
-          <form
-            className="fi-sim-save-form"
-            onSubmit={e => {
-              e.preventDefault()
-              if (saveNameInput.trim()) handleSave(saveNameInput.trim())
-            }}
-          >
-            <input
-              className="fi-sim-save-input"
-              placeholder="Simulation name"
-              value={saveNameInput}
-              onChange={e => setSaveNameInput(e.target.value)}
-              autoFocus
-            />
-            <button type="submit" className="fi-sim-save-btn" disabled={!saveNameInput.trim()}>
-              Save
-            </button>
-            <button
-              type="button"
-              className="fi-sim-cancel-btn"
-              onClick={() => {
-                setShowSaveInput(false)
-                setSaveNameInput('')
+        <div className="fi-sim-panel">
+          <h3 className="fi-sim-panel-title">Saved Simulations</h3>
+          <div className="fi-sim-panel-list">
+            {savedSims.map(s => (
+              <div
+                key={s.name}
+                className={`fi-sim-panel-item-row ${activeSim === s.name ? 'fi-sim-panel-item-row--active' : ''}`}
+              >
+                {simRenaming === s.name ? (
+                  <input
+                    className="fi-sim-rename-input"
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleRenameSim(s.name, renameValue)
+                      if (e.key === 'Escape') setSimRenaming(null)
+                    }}
+                    onBlur={() => handleRenameSim(s.name, renameValue)}
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className={`fi-sim-panel-item ${activeSim === s.name ? 'fi-sim-panel-item--active' : ''}`}
+                    onClick={() => applySnapshot(s)}
+                  >
+                    <span className="fi-sim-panel-item-name">{s.name}</span>
+                  </button>
+                )}
+                <div className="fi-sim-overflow-wrap">
+                  <button
+                    className="fi-sim-overflow-btn"
+                    onClick={e => {
+                      e.stopPropagation()
+                      setSimMenuOpen(simMenuOpen === s.name ? null : s.name)
+                    }}
+                    aria-label={`Options for ${s.name}`}
+                  >
+                    ⋯
+                  </button>
+                  {simMenuOpen === s.name && (
+                    <div className="fi-sim-overflow-menu">
+                      <button
+                        onClick={() => {
+                          setSimRenaming(s.name)
+                          setRenameValue(s.name)
+                          setSimMenuOpen(null)
+                        }}
+                      >
+                        Rename
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSimToDelete(s.name)
+                          setSimMenuOpen(null)
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {simToDelete && (
+              <div className="fi-sim-delete-confirm">
+                <span>Delete "{simToDelete}"?</span>
+                <button onClick={() => handleDeleteSim(simToDelete)}>Yes</button>
+                <button onClick={() => setSimToDelete(null)}>No</button>
+              </div>
+            )}
+            {savedSims.length === 0 && (
+              <p className="fi-sim-panel-empty">
+                No saved simulations yet. Adjust parameters and save to compare scenarios.
+              </p>
+            )}
+          </div>
+          {showSaveInput ? (
+            <form
+              className="fi-sim-save-form"
+              onSubmit={e => {
+                e.preventDefault()
+                if (saveNameInput.trim()) handleSave(saveNameInput.trim())
               }}
             >
-              ✕
-            </button>
-          </form>
-        ) : (
-          <button className="action-btn" onClick={() => setShowSaveInput(true)}>
-            + Save current
-          </button>
-        )}
-      </div>
-    </div>
-
-    {/* Month-by-month projection — full width below the layout */}
-    {result && (
-      <div className="fi-calc-projection-card">
-        <div className="projection-controls" role="toolbar">
-          <div className="tab-bar" role="group" aria-label="Time interval">
-            {INTERVAL_OPTIONS.map(option => (
-              <button
-                key={option.value}
-                className={`tab-btn tab-btn--sm${interval === option.value ? ' active' : ''}`}
-                onClick={() => setInterval(option.value)}
-                aria-pressed={interval === option.value}
-              >
-                {option.label}
+              <input
+                className="fi-sim-save-input"
+                placeholder="Simulation name"
+                value={saveNameInput}
+                onChange={e => setSaveNameInput(e.target.value)}
+                autoFocus
+              />
+              <button type="submit" className="fi-sim-save-btn" disabled={!saveNameInput.trim()}>
+                Save
               </button>
-            ))}
-          </div>
-          <div className="tab-bar" role="group" aria-label="View mode">
-            <button
-              className={`tab-btn tab-btn--sm${viewMode === 'chart' ? ' active' : ''}`}
-              onClick={() => setViewMode('chart')}
-              aria-pressed={viewMode === 'chart'}
-            >
-              Chart
+              <button
+                type="button"
+                className="fi-sim-cancel-btn"
+                onClick={() => {
+                  setShowSaveInput(false)
+                  setSaveNameInput('')
+                }}
+              >
+                ✕
+              </button>
+            </form>
+          ) : activeSim ? (
+            <button className="action-btn" onClick={handleNewSim}>
+              Reset
             </button>
-            <button
-              className={`tab-btn tab-btn--sm${viewMode === 'table' ? ' active' : ''}`}
-              onClick={() => setViewMode('table')}
-              aria-pressed={viewMode === 'table'}
-            >
-              Table
+          ) : (
+            <button className="action-btn" onClick={() => setShowSaveInput(true)}>
+              Save as new…
             </button>
-          </div>
+          )}
         </div>
-
-        {viewMode === 'chart' ? (
-          <div className="projection-chart-wrapper">
-            <ResponsiveContainer width="100%" height={320}>
-              <ComposedChart data={projectionChartData} margin={{ top: 28, right: 40, left: 16, bottom: 8 }}>
-                <defs>
-                  <linearGradient id="fiCalcAreaAccum" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent, #0f766e)" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="var(--accent, #0f766e)" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="fiCalcAreaDraw" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-warning, #d97706)" stopOpacity={0.14} />
-                    <stop offset="100%" stopColor="var(--color-warning, #d97706)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11 }}
-                  interval="preserveStartEnd"
-                  stroke="var(--projection-axis, var(--color-text-muted))"
-                />
-                <YAxis
-                  tickFormatter={abbreviateCurrency}
-                  tick={{ fontSize: 11 }}
-                  stroke="var(--projection-axis, var(--color-text-muted))"
-                  width={72}
-                />
-                <Tooltip content={<ProjectionTooltip />} />
-                <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
-
-                {projectionMilestones.map(milestone => (
-                  <ReferenceLine
-                    key={`${milestone.month}-${milestone.label}`}
-                    x={milestone.month}
-                    stroke={milestone.color}
-                    strokeDasharray="6 4"
-                    strokeWidth={2}
-                    label={{
-                      value: milestone.label,
-                      position: 'center',
-                      fontSize: 10,
-                      fill: milestone.color,
-                      fontWeight: 600,
-                      angle: -90,
-                      dx: milestone.dx,
-                      dy: milestone.dy,
-                    }}
-                  />
-                ))}
-
-                <Area
-                  type="monotone"
-                  dataKey="accum"
-                  fill="url(#fiCalcAreaAccum)"
-                  stroke="none"
-                  isAnimationActive={false}
-                  connectNulls={false}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="draw"
-                  fill="url(#fiCalcAreaDraw)"
-                  stroke="none"
-                  isAnimationActive={false}
-                  connectNulls={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="accum"
-                  stroke="var(--accent, #0f766e)"
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 5, stroke: 'var(--color-surface, #fff)', strokeWidth: 2 }}
-                  connectNulls={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="draw"
-                  stroke="var(--color-warning, #d97706)"
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 5, stroke: 'var(--color-surface, #fff)', strokeWidth: 2 }}
-                  connectNulls={false}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="fi-calc-yby">
-            <table className="fi-calc-yby-table">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>Phase</th>
-                  <th>Expense</th>
-                  <th>Available</th>
-                  <th>{profile.primaryName} 401(k)</th>
-                  <th>{profile.partnerName} 401(k)</th>
-                  <th>Net Worth</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {projectionRows.map(row => (
-                  <tr key={`${row.month}-${row.phase}`} className={row.netWorth < 0 ? 'fi-calc-yby--negative' : ''}>
-                    <td>{row.month}</td>
-                    <td>{row.phase === 'saving' ? 'Saving' : 'Drawdown'}</td>
-                    <td>{row.phase === 'saving' ? '—' : fmt(row.expense)}</td>
-                    <td>
-                      {fmt(row.nonRet)}
-                      {row.phase === 'saving' && row.monthlySaved > 0 ? (
-                        <span className="contrib-badge">+{fmt(row.monthlySaved)}</span>
-                      ) : null}
-                    </td>
-                    <td className={row.primaryRet ? 'fi-calc-yby--locked' : ''}>
-                      {row.primaryRet ? fmt(row.primaryRet) : '—'}
-                      {row.phase === 'saving' && row.primaryRetGrowth > 0 && row.primaryRet ? (
-                        <span className="contrib-badge">+{fmt(row.primaryRetGrowth)}</span>
-                      ) : null}
-                    </td>
-                    <td className={row.partnerRet ? 'fi-calc-yby--locked' : ''}>
-                      {row.partnerRet ? fmt(row.partnerRet) : '—'}
-                      {row.phase === 'saving' && row.partnerRetGrowth > 0 && row.partnerRet ? (
-                        <span className="contrib-badge">+{fmt(row.partnerRetGrowth)}</span>
-                      ) : null}
-                    </td>
-                    <td>{fmt(row.netWorth)}</td>
-                    <td className="fi-calc-yby-note">{row.injection ?? ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
-    )}
+
+      {/* Month-by-month projection — full width below the layout */}
+      {result && (
+        <div className="fi-calc-projection-card">
+          <div className="projection-controls" role="toolbar">
+            <div className="tab-bar" role="group" aria-label="Time interval">
+              {INTERVAL_OPTIONS.map(option => (
+                <button
+                  key={option.value}
+                  className={`tab-btn tab-btn--sm${interval === option.value ? ' active' : ''}`}
+                  onClick={() => setInterval(option.value)}
+                  aria-pressed={interval === option.value}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="tab-bar" role="group" aria-label="View mode">
+              <button
+                className={`tab-btn tab-btn--sm${viewMode === 'chart' ? ' active' : ''}`}
+                onClick={() => setViewMode('chart')}
+                aria-pressed={viewMode === 'chart'}
+              >
+                Chart
+              </button>
+              <button
+                className={`tab-btn tab-btn--sm${viewMode === 'table' ? ' active' : ''}`}
+                onClick={() => setViewMode('table')}
+                aria-pressed={viewMode === 'table'}
+              >
+                Table
+              </button>
+            </div>
+          </div>
+
+          {viewMode === 'chart' ? (
+            <div className="projection-chart-wrapper">
+              <ResponsiveContainer width="100%" height={320}>
+                <ComposedChart data={projectionChartData} margin={{ top: 28, right: 40, left: 16, bottom: 8 }}>
+                  <defs>
+                    <linearGradient id="fiCalcAreaAccum" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--accent, #0f766e)" stopOpacity={0.18} />
+                      <stop offset="100%" stopColor="var(--accent, #0f766e)" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="fiCalcAreaDraw" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-warning, #d97706)" stopOpacity={0.14} />
+                      <stop offset="100%" stopColor="var(--color-warning, #d97706)" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--projection-grid, #e5e7eb)" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11 }}
+                    interval="preserveStartEnd"
+                    stroke="var(--projection-axis, var(--color-text-muted))"
+                  />
+                  <YAxis
+                    tickFormatter={abbreviateCurrency}
+                    tick={{ fontSize: 11 }}
+                    stroke="var(--projection-axis, var(--color-text-muted))"
+                    width={72}
+                  />
+                  <Tooltip content={<ProjectionTooltip chartData={projectionChartData} />} />
+                  <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
+                  {result && result.corpusNeededFromNonRetirement > 0 && (
+                    <ReferenceLine
+                      y={result.corpusNeededFromNonRetirement}
+                      stroke="var(--color-text-muted)"
+                      strokeDasharray="4 2"
+                      strokeWidth={1}
+                      label={{
+                        value: abbreviateCurrency(result.corpusNeededFromNonRetirement),
+                        position: 'right',
+                        fontSize: 11,
+                        fill: 'var(--color-text-muted)',
+                      }}
+                    />
+                  )}
+
+                  {projectionMilestones.map(milestone => (
+                    <ReferenceLine
+                      key={`${milestone.month}-${milestone.label}`}
+                      x={milestone.month}
+                      stroke={milestone.color}
+                      strokeDasharray="6 4"
+                      strokeWidth={2}
+                      label={{
+                        value: milestone.label,
+                        position: 'center',
+                        fontSize: 10,
+                        fill: milestone.color,
+                        fontWeight: 600,
+                        angle: -90,
+                        dx: milestone.dx,
+                        dy: milestone.dy,
+                      }}
+                    />
+                  ))}
+
+                  <Area
+                    type="monotone"
+                    dataKey="accum"
+                    fill="url(#fiCalcAreaAccum)"
+                    stroke="none"
+                    isAnimationActive={false}
+                    connectNulls={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="draw"
+                    fill="url(#fiCalcAreaDraw)"
+                    stroke="none"
+                    isAnimationActive={false}
+                    connectNulls={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="accum"
+                    stroke="var(--accent, #0f766e)"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 5, stroke: 'var(--color-surface, #fff)', strokeWidth: 2 }}
+                    connectNulls={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="draw"
+                    stroke="var(--color-warning, #d97706)"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 5, stroke: 'var(--color-surface, #fff)', strokeWidth: 2 }}
+                    connectNulls={false}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="fi-calc-yby">
+              <table className="fi-calc-yby-table">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Phase</th>
+                    <th>Expense</th>
+                    <th>Bonus Expense</th>
+                    <th>Available</th>
+                    <th>{profile.primaryName} 401(k)</th>
+                    <th>{profile.partnerName} 401(k)</th>
+                    <th>Net Worth</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projectionRows.map(row => (
+                    <tr key={`${row.month}-${row.phase}`} className={row.netWorth < 0 ? 'fi-calc-yby--negative' : ''}>
+                      <td>{row.month}</td>
+                      <td>{row.phase === 'saving' ? 'Saving' : 'Drawdown'}</td>
+                      <td>{row.phase === 'saving' ? '—' : fmt(row.expense)}</td>
+                      <td>{row.bonus > 0 ? fmt(row.bonus) : '—'}</td>
+                      <td>
+                        {fmt(row.nonRet)}
+                        {row.phase === 'saving' && row.monthlySaved > 0 ? (
+                          <span className="contrib-badge">+{fmt(row.monthlySaved)}</span>
+                        ) : null}
+                      </td>
+                      <td className={row.primaryRet ? 'fi-calc-yby--locked' : ''}>
+                        {row.primaryRet ? fmt(row.primaryRet) : '—'}
+                        {row.phase === 'saving' && row.primaryRetGrowth > 0 && row.primaryRet ? null : null}
+                      </td>
+                      <td className={row.partnerRet ? 'fi-calc-yby--locked' : ''}>
+                        {row.partnerRet ? fmt(row.partnerRet) : '—'}
+                        {row.phase === 'saving' && row.partnerRetGrowth > 0 && row.partnerRet ? null : null}
+                      </td>
+                      <td>{fmt(row.netWorth)}</td>
+                      <td className="fi-calc-yby-note">{row.injection ?? ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </>
   )
 }

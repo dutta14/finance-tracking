@@ -30,6 +30,7 @@ export interface FICalcProjectionRow {
   month: string
   phase: 'saving' | 'drawdown'
   expense: number
+  bonus: number
   netWorth: number
   nonRet: number
   primaryRet: number
@@ -96,7 +97,7 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
   const monthsToRetire = yearsToRetire * MONTHS_PER_YEAR
 
   // Returns the monthly growth rate for a given calendar year
-  const growthForYear = (year: number) => year >= boundaryYear ? postMonthlyGrowth : preMonthlyGrowth
+  const growthForYear = (year: number) => (year >= boundaryYear ? postMonthlyGrowth : preMonthlyGrowth)
 
   if (yearsInRetirement <= 0) return null
 
@@ -112,13 +113,31 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
     while (year < targetYear || (year === targetYear && month < targetMonth - 1)) {
       value *= 1 + growthForYear(year)
       month++
-      if (month >= 12) { month = 0; year++ }
+      if (month >= 12) {
+        month = 0
+        year++
+      }
     }
     return value
   }
 
   const primary401kAtAccess = compoundFromNow(input.fiRetirementPrimary, input.primary401kYear, input.primary401kMonth)
   const partner401kAtAccess = compoundFromNow(input.fiRetirementPartner, input.partner401kYear, input.partner401kMonth)
+
+  // If 401(k) access is before retirement, compound it forward to retirement start
+  const primary401kEffectiveYear = Math.max(input.primary401kYear, input.retireYear)
+  const primary401kEffectiveMonth = input.primary401kYear >= input.retireYear ? input.primary401kMonth : 1
+  const primary401kEffective =
+    input.primary401kYear < input.retireYear
+      ? compoundFromNow(input.fiRetirementPrimary, input.retireYear, 1)
+      : primary401kAtAccess
+
+  const partner401kEffectiveYear = Math.max(input.partner401kYear, input.retireYear)
+  const partner401kEffectiveMonth = input.partner401kYear >= input.retireYear ? input.partner401kMonth : 1
+  const partner401kEffective =
+    input.partner401kYear < input.retireYear
+      ? compoundFromNow(input.fiRetirementPartner, input.retireYear, 1)
+      : partner401kAtAccess
 
   let corpus = 0
   for (let year = input.lastYear; year >= input.retireYear; year--) {
@@ -128,8 +147,10 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
 
       corpus = corpus / (1 + growthForYear(year)) + expenseThisMonth
 
-      if (monthIndex === input.primary401kMonth - 1 && year === input.primary401kYear) corpus -= primary401kAtAccess
-      if (monthIndex === input.partner401kMonth - 1 && year === input.partner401kYear) corpus -= partner401kAtAccess
+      if (monthIndex === primary401kEffectiveMonth - 1 && year === primary401kEffectiveYear)
+        corpus -= primary401kEffective
+      if (monthIndex === partner401kEffectiveMonth - 1 && year === partner401kEffectiveYear)
+        corpus -= partner401kEffective
 
       corpus = Math.max(0, corpus)
     }
@@ -142,7 +163,26 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
   const gap = Math.max(0, corpusNeededFromNonRetirement - existingAtRetire)
 
   const monthsToSave = monthsUntilJanuary(input.retireYear)
-  const monthlySaving = monthlySavingsNeeded(gap, input.growthRate, monthsToSave)
+
+  // Compute monthly saving with boundary-aware growth (variable-rate FV annuity)
+  let monthlySaving = 0
+  if (gap > 0 && monthsToSave > 0) {
+    // Walk backward from retirement to compute FV factor for each saving month
+    let fvFactor = 0
+    let cumGrowth = 1
+    let y = input.retireYear - 1
+    let m = 11 // Dec of year before retirement
+    for (let i = 0; i < monthsToSave; i++) {
+      fvFactor += cumGrowth
+      cumGrowth *= 1 + growthForYear(y)
+      m--
+      if (m < 0) {
+        m = 11
+        y--
+      }
+    }
+    monthlySaving = gap / fvFactor
+  }
 
   const monthByMonth: FICalcResult['monthByMonth'] = []
   const activeGrowthRateForYear = (year: number) => (year >= boundaryYear ? input.postBoundaryGrowth : input.growthRate)
@@ -162,7 +202,7 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
   const now = new Date()
   let savingYear = now.getFullYear()
   let savingMonthIndex = now.getMonth()
-  let savingNonRet = input.fiNonRetirement
+  let savingNonRet = input.fiNonRetirement + (input.includeGwLiquid ? input.gwLiquid : 0)
   let savingPrimaryRet = input.fiRetirementPrimary
   let savingPartnerRet = input.fiRetirementPartner
 
@@ -183,6 +223,7 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
       month: formatMonthLabel(new Date(savingYear, savingMonthIndex, 1)),
       phase: 'saving',
       expense: 0,
+      bonus: 0,
       netWorth: normalizeNetWorth(savingNonRet + savingPrimaryRet + savingPartnerRet),
       nonRet: normalizeNetWorth(savingNonRet),
       primaryRet: normalizeNetWorth(savingPrimaryRet),
@@ -202,65 +243,141 @@ export function calculateFI(input: FICalcInput): FICalcResult | null {
     }
   }
 
-  // Drawdown stays aligned to the required retirement corpus while still reflecting the saving path.
-  let nonRet = Math.max(corpusNeededFromNonRetirement, savingNonRet)
-  let primaryRet = savingPrimaryRet
-  let partnerRet = savingPartnerRet
+  // Drawdown starts from the actual accumulated saving values
+  let initNonRet = savingNonRet
+  let initPrimaryRet = savingPrimaryRet
+  let initPartnerRet = savingPartnerRet
 
   if (input.primary401kYear < input.retireYear) {
-    nonRet += primaryRet
-    primaryRet = 0
+    initNonRet += initPrimaryRet
+    initPrimaryRet = 0
   }
   if (input.partner401kYear < input.retireYear) {
-    nonRet += partnerRet
-    partnerRet = 0
+    initNonRet += initPartnerRet
+    initPartnerRet = 0
   }
 
-  for (let year = input.retireYear; year <= input.lastYear; year++) {
-    const mg = growthForYear(year)
-    for (let monthIndex = 0; monthIndex < MONTHS_PER_YEAR; monthIndex++) {
-      const monthsFromRetirementStart = (year - input.retireYear) * MONTHS_PER_YEAR + monthIndex
-      const expense = monthlyExpenseAtRetirement * Math.pow(1 + monthlyInflation, monthsFromRetirementStart)
-      const injections: string[] = []
+  // Simulate drawdown with an optional monthly bonus (at retirement start, grows with inflation)
+  // Bonus only applies after all 401(k) injections have occurred
+  const lastInjectionYear = Math.max(
+    input.primary401kYear <= input.lastYear ? input.primary401kYear : input.retireYear,
+    input.partner401kYear <= input.lastYear ? input.partner401kYear : input.retireYear,
+  )
+  const lastInjectionMonth = Math.max(
+    input.primary401kYear === lastInjectionYear ? input.primary401kMonth - 1 : -1,
+    input.partner401kYear === lastInjectionYear ? input.partner401kMonth - 1 : -1,
+  )
 
-      nonRet -= expense
+  function simulateDrawdown(bonusAtRetirement: number): { rows: FICalcProjectionRow[]; finalNetWorth: number } {
+    let nonRet = initNonRet
+    let primaryRet = initPrimaryRet
+    let partnerRet = initPartnerRet
+    const rows: FICalcProjectionRow[] = []
 
-      if (monthIndex === input.primary401kMonth - 1 && year === input.primary401kYear) {
-        nonRet += primaryRet
-        primaryRet = 0
+    for (let year = input.retireYear; year <= input.lastYear; year++) {
+      const mg = growthForYear(year)
+      for (let monthIndex = 0; monthIndex < MONTHS_PER_YEAR; monthIndex++) {
+        const monthsFromRetirementStart = (year - input.retireYear) * MONTHS_PER_YEAR + monthIndex
+        const inflationFactor = Math.pow(1 + monthlyInflation, monthsFromRetirementStart)
+        const expense = monthlyExpenseAtRetirement * inflationFactor
+        const pastLastInjection =
+          year > lastInjectionYear || (year === lastInjectionYear && monthIndex > lastInjectionMonth)
+        const bonus = pastLastInjection ? bonusAtRetirement * inflationFactor : 0
+        const injections: string[] = []
+
+        nonRet -= expense + bonus
+
+        if (monthIndex === input.primary401kMonth - 1 && year === input.primary401kYear) {
+          nonRet += primaryRet
+          primaryRet = 0
+        }
+        if (monthIndex === input.partner401kMonth - 1 && year === input.partner401kYear) {
+          nonRet += partnerRet
+          partnerRet = 0
+        }
+
+        appendMilestones(injections, year, monthIndex)
+
+        const nonRetGrowth = nonRet * mg
+        const primaryRetGrowth = primaryRet * mg
+        const partnerRetGrowth = partnerRet * mg
+
+        nonRet += nonRetGrowth
+        primaryRet += primaryRetGrowth
+        partnerRet += partnerRetGrowth
+
+        rows.push({
+          month: formatMonthLabel(new Date(year, monthIndex, 1)),
+          phase: 'drawdown',
+          expense,
+          bonus,
+          netWorth: normalizeNetWorth(nonRet + primaryRet + partnerRet),
+          nonRet: normalizeNetWorth(nonRet),
+          primaryRet: normalizeNetWorth(primaryRet),
+          partnerRet: normalizeNetWorth(partnerRet),
+          monthlySaved: 0,
+          growthRate: activeGrowthRateForYear(year),
+          injection: injections.length > 0 ? injections.join(' + ') : null,
+          nonRetGrowth: normalizeNetWorth(nonRetGrowth),
+          primaryRetGrowth: normalizeNetWorth(primaryRetGrowth),
+          partnerRetGrowth: normalizeNetWorth(partnerRetGrowth),
+        })
       }
-      if (monthIndex === input.partner401kMonth - 1 && year === input.partner401kYear) {
-        nonRet += partnerRet
-        partnerRet = 0
-      }
-
-      appendMilestones(injections, year, monthIndex)
-
-      const nonRetGrowth = nonRet * mg
-      const primaryRetGrowth = primaryRet * mg
-      const partnerRetGrowth = partnerRet * mg
-
-      nonRet += nonRetGrowth
-      primaryRet += primaryRetGrowth
-      partnerRet += partnerRetGrowth
-
-      monthByMonth.push({
-        month: formatMonthLabel(new Date(year, monthIndex, 1)),
-        phase: 'drawdown',
-        expense,
-        netWorth: normalizeNetWorth(nonRet + primaryRet + partnerRet),
-        nonRet: normalizeNetWorth(nonRet),
-        primaryRet: normalizeNetWorth(primaryRet),
-        partnerRet: normalizeNetWorth(partnerRet),
-        monthlySaved: 0,
-        growthRate: activeGrowthRateForYear(year),
-        injection: injections.length > 0 ? injections.join(' + ') : null,
-        nonRetGrowth: normalizeNetWorth(nonRetGrowth),
-        primaryRetGrowth: normalizeNetWorth(primaryRetGrowth),
-        partnerRetGrowth: normalizeNetWorth(partnerRetGrowth),
-      })
     }
+    return { rows, finalNetWorth: nonRet + primaryRet + partnerRet }
   }
+
+  // Lightweight simulation that only returns final net worth (no row allocation)
+  function simulateFinalNetWorth(bonusAtRetirement: number): number {
+    let nonRet = initNonRet
+    let primaryRet = initPrimaryRet
+    let partnerRet = initPartnerRet
+
+    for (let year = input.retireYear; year <= input.lastYear; year++) {
+      const mg = growthForYear(year)
+      for (let monthIndex = 0; monthIndex < MONTHS_PER_YEAR; monthIndex++) {
+        const monthsFromRetirementStart = (year - input.retireYear) * MONTHS_PER_YEAR + monthIndex
+        const inflationFactor = Math.pow(1 + monthlyInflation, monthsFromRetirementStart)
+        const expense = monthlyExpenseAtRetirement * inflationFactor
+        const pastLastInjection =
+          year > lastInjectionYear || (year === lastInjectionYear && monthIndex > lastInjectionMonth)
+        const bonus = pastLastInjection ? bonusAtRetirement * inflationFactor : 0
+
+        nonRet -= expense + bonus
+
+        if (monthIndex === input.primary401kMonth - 1 && year === input.primary401kYear) {
+          nonRet += primaryRet
+          primaryRet = 0
+        }
+        if (monthIndex === input.partner401kMonth - 1 && year === input.partner401kYear) {
+          nonRet += partnerRet
+          partnerRet = 0
+        }
+
+        nonRet *= 1 + mg
+        primaryRet *= 1 + mg
+        partnerRet *= 1 + mg
+      }
+    }
+    return nonRet + primaryRet + partnerRet
+  }
+
+  // Binary search for the bonus that depletes net worth to ~$0
+  let bonusAtRetirement = 0
+  const baseFinalNW = simulateFinalNetWorth(0)
+  if (baseFinalNW > 100) {
+    let lo = 0
+    let hi = baseFinalNW / ((input.lastYear - input.retireYear + 1) * MONTHS_PER_YEAR)
+    for (let i = 0; i < 30; i++) {
+      const mid = (lo + hi) / 2
+      if (simulateFinalNetWorth(mid) > 100) lo = mid
+      else hi = mid
+    }
+    bonusAtRetirement = (lo + hi) / 2
+  }
+
+  const drawdownResult = simulateDrawdown(bonusAtRetirement)
+  monthByMonth.push(...drawdownResult.rows)
 
   return {
     corpusNeededFromNonRetirement,

@@ -132,6 +132,18 @@ body.dark .projection-chart-wrapper {
   font-weight: var(--fw-bold);
   margin-bottom: 0.35rem;
   color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.projection-tooltip-phase {
+  font-size: var(--fs-xs, 0.7rem);
+  font-weight: var(--fw-semibold);
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius);
 }
 
 .projection-tooltip-row {
@@ -153,6 +165,16 @@ body.dark .projection-chart-wrapper {
   border-top: 1px solid var(--color-border);
   margin-top: 0.25rem;
   padding-top: 0.25rem;
+}
+
+.projection-tooltip-trend {
+  font-size: var(--fs-sm);
+}
+.projection-tooltip-delta.trend-up {
+  color: var(--color-positive, #16a34a);
+}
+.projection-tooltip-delta.trend-down {
+  color: var(--color-negative, #dc2626);
 }
 
 .projection-chart-wrapper:focus {

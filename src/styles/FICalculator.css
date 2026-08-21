@@ -24,6 +24,13 @@
   padding: 1.5rem;
 }
 
+.fi-calc-editing-banner {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-medium);
+  margin-bottom: 0.75rem;
+}
+
 /* Hero expense input */
 .fi-calc-hero {
   text-align: center;
@@ -143,7 +150,9 @@
   font-size: 1.1rem;
   font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
   flex-shrink: 0;
 }
 
@@ -230,43 +239,19 @@
   display: flex;
   justify-content: flex-end;
 }
-.fi-calc-toggle {
+.fi-calc-checkbox {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: none;
-  border: none;
+  gap: 0.4rem;
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0;
 }
-.fi-calc-toggle-track {
-  position: relative;
-  display: inline-block;
-  width: 32px;
-  height: 18px;
-  border-radius: var(--radius);
-  background: var(--color-border-light);
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.fi-calc-toggle--on .fi-calc-toggle-track {
-  background: var(--accent);
-}
-.fi-calc-toggle-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s;
-}
-.fi-calc-toggle--on .fi-calc-toggle-thumb {
-  transform: translateX(14px);
+.fi-calc-checkbox input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
 }
 
 /* Saved simulations bar */
@@ -349,6 +334,42 @@ body.dark .fi-sim-chip--active {
   border-color: var(--accent);
   color: var(--accent);
 }
+.fi-sim-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fi-sim-editing-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-medium);
+}
+
+.fi-sim-btn-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fi-sim-btn-row .action-btn {
+  flex: 1;
+  font-size: var(--fs-xs);
+  padding: 0.4rem 0.5rem;
+}
+
+.fi-calc-save-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.fi-calc-save-actions .action-btn {
+  font-size: var(--fs-sm);
+}
+
 .fi-sim-save-form {
   display: flex;
   align-items: center;
@@ -547,7 +568,9 @@ body.dark .fi-sim-chip--active {
   cursor: pointer;
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .fi-calc-result-pill:hover {
   background: var(--color-bg-hover);
@@ -682,7 +705,9 @@ body.dark .fi-sim-chip--active {
   padding: 1.25rem;
   position: sticky;
   top: 5rem;
-  align-self: start;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
 }
 
 .fi-sim-panel-title {
@@ -696,6 +721,9 @@ body.dark .fi-sim-chip--active {
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .fi-sim-panel-item-row {
@@ -747,20 +775,97 @@ button.fi-sim-panel-item:focus-visible {
   color: var(--color-text);
 }
 
-.fi-sim-panel-item-delete {
+.fi-sim-overflow-wrap {
+  position: relative;
+}
+
+.fi-sim-overflow-btn {
   background: none;
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 1rem;
-  padding: 0 0.25rem;
+  font-size: 1.1rem;
+  padding: 0 0.35rem;
   line-height: 1;
   border-radius: 4px;
-  transition: color 0.15s;
+  letter-spacing: 1px;
 }
 
-.fi-sim-panel-item-delete:hover {
+.fi-sim-overflow-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.fi-sim-overflow-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+  overflow: hidden;
+}
+
+.fi-sim-overflow-menu button {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.fi-sim-overflow-menu button:hover {
+  background: var(--color-surface-hover);
+}
+
+.fi-sim-rename-input {
+  flex: 1;
+  font-size: var(--fs-sm);
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+}
+
+.fi-sim-rename-input:focus {
+  border-color: var(--accent, #0f766e);
+}
+
+.fi-sim-delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+.fi-sim-delete-confirm button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.fi-sim-delete-confirm button:first-of-type {
+  border-color: var(--color-negative);
   color: var(--color-negative);
+}
+
+.fi-sim-delete-confirm button:hover {
+  background: var(--color-surface-hover);
 }
 
 .fi-sim-panel-empty {

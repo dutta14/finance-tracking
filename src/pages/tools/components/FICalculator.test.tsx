@@ -272,7 +272,9 @@ describe('FICalculator', () => {
     renderCalc()
     const retireRow = getYearItem('Retire in')
     const initialYear = readYearValue('Retire in')
-    const plusBtn = within(retireRow).getAllByRole('button').find(b => b.textContent === '›')!
+    const plusBtn = within(retireRow)
+      .getAllByRole('button')
+      .find(b => b.textContent === '›')!
     await user.click(plusBtn)
     expect(readYearValue('Retire in')).toBe(initialYear + 1)
     expect(within(retireRow).getByText(/\(2 yrs\)/)).toBeInTheDocument()
@@ -282,7 +284,9 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
     const planRow = getYearItem('Plan until')
-    const minusBtn = within(planRow).getAllByRole('button').find(b => b.textContent === '‹')!
+    const minusBtn = within(planRow)
+      .getAllByRole('button')
+      .find(b => b.textContent === '‹')!
     const initialText = planRow.querySelector('.fi-calc-year-val')!.textContent!
     await user.click(minusBtn)
     const afterText = planRow.querySelector('.fi-calc-year-val')!.textContent!
@@ -475,7 +479,9 @@ describe('FICalculator', () => {
     renderCalc()
     const row401k = getYearItem('Primary 401(k)')
     const initial = row401k.querySelector('.fi-calc-year-val')!.textContent!
-    const plusBtn = within(row401k).getAllByRole('button').find(b => b.textContent === '›')!
+    const plusBtn = within(row401k)
+      .getAllByRole('button')
+      .find(b => b.textContent === '›')!
     await user.click(plusBtn)
     const after = row401k.querySelector('.fi-calc-year-val')!.textContent!
     expect(extractYear(after)).toBe(extractYear(initial) + 1)
@@ -749,7 +755,9 @@ describe('FICalculator', () => {
     renderCalc()
     const row = getYearItem('Partner 401(k)')
     const initial = row.querySelector('.fi-calc-year-val')!.textContent!
-    const plusBtn = within(row).getAllByRole('button').find(b => b.textContent === '›')!
+    const plusBtn = within(row)
+      .getAllByRole('button')
+      .find(b => b.textContent === '›')!
     await user.click(plusBtn)
     const after = row.querySelector('.fi-calc-year-val')!.textContent!
     expect(extractYear(after)).toBe(extractYear(initial) + 1)
