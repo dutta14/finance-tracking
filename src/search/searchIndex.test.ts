@@ -196,7 +196,7 @@ describe('buildIndex', () => {
   })
 
   it('tolerates partially-supplied data without throwing', () => {
-    const partial: SearchIndexData = { goals: goalsOf(), taxYears: { '2025': undefined } }
+    const partial: SearchIndexData = { goals: goalsOf(), taxYears: { '2025': {} } }
 
     expect(() => buildIndex(partial)).not.toThrow()
 

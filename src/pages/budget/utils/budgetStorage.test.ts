@@ -135,12 +135,12 @@ describe('saveBudgetStore', () => {
     expect(config.years).toContain(2025)
   })
 
-  it('deletes stale CSV files no longer in store.csvs', async () => {
-    // Seed a stale file
+  it('preserves existing CSV files not in store.csvs', async () => {
+    // Seed a file that isn't in the store
     await seedCSV(ms, '2025-01', CSV_TEXT)
     await seedCategories(ms, { years: [2025], categoryGroups: DEFAULT_GROUPS })
 
-    // Save a store that no longer has 2025-01
+    // Save a store that only has 2025-02
     const store: BudgetStore = {
       csvs: { '2025-02': { month: '2025-02', csv: CSV_TEXT, uploadedAt: '' } },
       configs: {},
@@ -149,7 +149,8 @@ describe('saveBudgetStore', () => {
     }
     await saveBudgetStore(ms, store)
 
-    expect(await ms.exists('transactions/2025/2025-01.csv')).toBe(false)
+    // Both files should exist — saveBudgetStore does not delete files it didn't load
+    expect(await ms.exists('transactions/2025/2025-01.csv')).toBe(true)
     expect(await ms.exists('transactions/2025/2025-02.csv')).toBe(true)
   })
 

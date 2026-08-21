@@ -264,13 +264,13 @@ describe('FileSystemFileStore', () => {
     await expect(store.exists('missing/dir/file.json')).resolves.toBe(false)
   })
 
-  it('lists files in a directory and ignores subdirectories', async () => {
+  it('lists files and subdirectories in a directory', async () => {
     const { root, store } = await setup()
     const dir = await root.getDirectoryHandle('balances', { create: true })
     dir.contents.set('2024.csv', '')
     dir.contents.set('2023.csv', '')
     await dir.getDirectoryHandle('nested', { create: true })
-    await expect(store.listFiles('balances')).resolves.toEqual(['2023.csv', '2024.csv'])
+    await expect(store.listFiles('balances')).resolves.toEqual(['2023.csv', '2024.csv', 'nested'])
   })
 
   it('returns an empty list for a directory that does not exist', async () => {
