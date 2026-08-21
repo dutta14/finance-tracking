@@ -272,42 +272,54 @@ body.dark .fi-sim-chip--active {
 .fi-sim-save-form {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.5rem;
 }
 .fi-sim-save-input {
-  padding: 3px 8px;
-  font-size: var(--fs-xs);
-  border: 1px solid var(--color-border-light);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
   outline: none;
-  width: 120px;
+  flex: 1;
+  min-width: 0;
 }
 .fi-sim-save-input:focus {
   border-color: var(--accent);
 }
 .fi-sim-save-btn {
-  padding: 3px 10px;
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-semibold);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   border-radius: var(--radius);
-  border: none;
-  background: var(--accent);
-  color: var(--color-text-on-accent);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.fi-sim-save-btn:hover {
+  background: var(--accent-lighter);
+  border-color: var(--accent-light);
 }
 .fi-sim-save-btn:disabled {
   opacity: 0.4;
   cursor: default;
 }
 .fi-sim-cancel-btn {
-  padding: 2px 6px;
+  padding: 0 0.35rem;
+  height: 36px;
   font-size: var(--fs-sm);
   border: none;
   background: none;
   color: var(--color-text-muted);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 }
 .fi-sim-cancel-btn:hover {
   color: var(--color-negative);
@@ -473,16 +485,18 @@ body.dark .fi-sim-chip--active {
 .fi-sim-panel-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
 .fi-sim-panel-item-row {
   display: flex;
   align-items: center;
-  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  transition: all 0.15s;
+  transition: background 0.15s;
+}
+
+.fi-sim-panel-item-row + .fi-sim-panel-item-row {
+  border-top: 1px solid var(--color-border-light);
 }
 
 .fi-sim-panel-item-row:hover {
@@ -490,8 +504,8 @@ body.dark .fi-sim-chip--active {
 }
 
 .fi-sim-panel-item-row--active {
-  border-color: var(--color-text);
   background: var(--color-surface-alt);
+  font-weight: var(--fw-semibold);
 }
 
 button.fi-sim-panel-item {
@@ -499,6 +513,10 @@ button.fi-sim-panel-item {
   display: flex;
   width: 100%;
   cursor: pointer;
+  color: inherit;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.5rem;
 }
 
 button.fi-sim-panel-item:focus-visible {
@@ -510,7 +528,7 @@ button.fi-sim-panel-item:focus-visible {
 .fi-sim-panel-item {
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem 0.5rem;
 }
 
 .fi-sim-panel-item-name {

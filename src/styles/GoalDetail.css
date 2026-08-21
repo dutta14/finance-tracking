@@ -212,6 +212,7 @@
 button.goal-summary-toggleable {
   all: unset;
   cursor: pointer;
+  color: inherit;
   text-decoration: underline dashed var(--color-text-secondary, #6b7280);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;

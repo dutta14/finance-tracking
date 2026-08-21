@@ -661,7 +661,7 @@ const FICalculator: FC = () => {
             </button>
           </form>
         ) : (
-          <button className="fi-sim-add-btn" onClick={() => setShowSaveInput(true)}>
+          <button className="action-btn" onClick={() => setShowSaveInput(true)}>
             + Save current
           </button>
         )}
