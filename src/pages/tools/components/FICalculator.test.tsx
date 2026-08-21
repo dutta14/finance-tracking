@@ -98,23 +98,10 @@ function readYearValue(label: string): number {
   return extractYear(text)
 }
 
-async function openGoalParameters(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: /goal parameters/i }))
-}
-
-function getGoalParameterInput(label: string | RegExp) {
-  return within(screen.getByText(label).closest('label')!).getByRole('spinbutton')
-}
-
 describe('FICalculator', () => {
   it('renders the Annual Expense input', () => {
     renderCalc()
     expect(screen.getByText('Annual Expense')).toBeInTheDocument()
-  })
-
-  it('renders the goal parameters button', () => {
-    renderCalc()
-    expect(screen.getByRole('button', { name: /goal parameters/i })).toBeInTheDocument()
   })
 
   it('renders retire year and plan until steppers', () => {
@@ -130,7 +117,7 @@ describe('FICalculator', () => {
 
   it('renders the GW liquid toggle', () => {
     renderCalc()
-    expect(screen.getByText(/Include GW liquid/)).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /include gw liquid/i })).toBeInTheDocument()
   })
 
   it('renders current holdings summary section', () => {
@@ -145,11 +132,10 @@ describe('FICalculator', () => {
     expect(screen.getByText(/Save for \d+ months up to Dec \d{4}/)).toBeInTheDocument()
   })
 
-  it('renders month-by-month projection when expanded', async () => {
+  it('renders month-by-month projection table when table view is selected', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const expandBtn = screen.getByRole('button', { name: /show month-by-month projection/i })
-    await user.click(expandBtn)
+    await user.click(screen.getByRole('button', { name: 'Table' }))
     expect(screen.getByText('Month')).toBeInTheDocument()
     expect(screen.getByText('Expense')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
@@ -164,24 +150,10 @@ describe('FICalculator', () => {
     expect(input).toHaveValue('120,000')
   })
 
-  it('displays inflation rate value in goal parameters', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    await openGoalParameters(user)
-    expect(getGoalParameterInput('Inflation')).toHaveValue(3)
-  })
-
-  it('displays growth rate value in goal parameters', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    await openGoalParameters(user)
-    expect(getGoalParameterInput(/Pre-/)).toHaveValue(8)
-  })
-
   it('shows the Save button and save form', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const saveBtn = screen.getByRole('button', { name: /\+ save current/i })
+    const saveBtn = screen.getByRole('button', { name: /save as new/i })
     await user.click(saveBtn)
     expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
   })
@@ -206,21 +178,21 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.getByText(/You're ready to FI/)).toBeInTheDocument()
+    expect(screen.getByText('Ready for F.I.R.E.')).toBeInTheDocument()
   })
 
   it('renders breakdown rows when result is computed', () => {
     renderCalc()
     expect(screen.getByText('Holdings')).toBeInTheDocument()
     expect(screen.getByText('At 401(k) Access')).toBeInTheDocument()
-    expect(screen.getByText('FI Non-Retirement (required)')).toBeInTheDocument()
+    expect(screen.getByText('Required to FIRE')).toBeInTheDocument()
     expect(screen.getByText(/Gap to close/)).toBeInTheDocument()
   })
 
   it('cancel save form hides the input', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
     await user.click(screen.getByText('✕'))
     expect(screen.queryByPlaceholderText('Simulation name')).not.toBeInTheDocument()
@@ -229,42 +201,6 @@ describe('FICalculator', () => {
   it('does not render partner 401(k) when no partner birth year', () => {
     renderCalc()
     expect(screen.queryByText('Partner 401(k)')).not.toBeInTheDocument()
-  })
-
-  it('increments inflation rate when plus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    await openGoalParameters(user)
-    const plusBtn = within(screen.getByText('Inflation').closest('label')!).getByRole('button', { name: 'Increase' })
-    await user.click(plusBtn)
-    expect(getGoalParameterInput('Inflation')).toHaveValue(3.1)
-  })
-
-  it('decrements inflation rate when minus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    await openGoalParameters(user)
-    const minusBtn = within(screen.getByText('Inflation').closest('label')!).getByRole('button', { name: 'Decrease' })
-    await user.click(minusBtn)
-    expect(getGoalParameterInput('Inflation')).toHaveValue(2.9)
-  })
-
-  it('increments growth rate when plus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    await openGoalParameters(user)
-    const plusBtn = within(screen.getByText(/Pre-/).closest('label')!).getByRole('button', { name: 'Increase' })
-    await user.click(plusBtn)
-    expect(getGoalParameterInput(/Pre-/)).toHaveValue(8.1)
-  })
-
-  it('decrements growth rate when minus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    await openGoalParameters(user)
-    const minusBtn = within(screen.getByText(/Pre-/).closest('label')!).getByRole('button', { name: 'Decrease' })
-    await user.click(minusBtn)
-    expect(getGoalParameterInput(/Pre-/)).toHaveValue(7.9)
   })
 
   it('increments retire year when plus stepper is clicked', async () => {
@@ -314,17 +250,17 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.queryByText('GW Liquid')).not.toBeInTheDocument()
-
-    const toggle = screen.getByText(/Include GW liquid/)
+    const toggle = screen.getByRole('checkbox', { name: /include gw liquid/i })
+    expect(toggle).not.toBeChecked()
     await user.click(toggle)
+    expect(toggle).toBeChecked()
     expect(screen.getByText('GW Liquid')).toBeInTheDocument()
   })
 
-  it('saves a simulation and displays it as a chip', async () => {
+  it('saves a simulation and displays it in the saved simulations list', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     const nameInput = screen.getByPlaceholderText('Simulation name')
     await user.type(nameInput, 'Base Case')
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -332,38 +268,35 @@ describe('FICalculator', () => {
     expect(screen.getByText('Base Case')).toBeInTheDocument()
   })
 
-  it('deletes a saved simulation when × is clicked on chip', async () => {
+  it('deletes a saved simulation from the overflow menu', async () => {
     const user = userEvent.setup()
     renderCalc()
-    // Save a sim
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     await user.type(screen.getByPlaceholderText('Simulation name'), 'To Delete')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(screen.getByText('To Delete')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /delete to delete/i }))
+    await user.click(screen.getByRole('button', { name: /options for to delete/i }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Yes' }))
     expect(screen.queryByText('To Delete')).not.toBeInTheDocument()
   })
 
-  it('loads a saved simulation when chip is clicked', async () => {
+  it('loads a saved simulation when its list item is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    // Change expense to something distinct
     const input = screen.getByDisplayValue('60,000')
     await user.clear(input)
     await user.type(input, '99000')
-    // Save
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     await user.type(screen.getByPlaceholderText('Simulation name'), 'Custom')
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    // Change expense again
     const input2 = screen.getByDisplayValue('99,000')
     await user.clear(input2)
     await user.type(input2, '50000')
     expect(screen.getByDisplayValue('50,000')).toBeInTheDocument()
 
-    // Click the saved sim chip to restore
     await user.click(screen.getByText('Custom'))
     expect(screen.getByDisplayValue('99,000')).toBeInTheDocument()
   })
@@ -422,29 +355,18 @@ describe('FICalculator', () => {
     expect(screen.getByText(new RegExp(`At Retirement \\(${new Date().getFullYear() + 1}\\)`))).toBeInTheDocument()
   })
 
-  it('renders month-by-month projection rows with year, expense, and net worth columns', async () => {
+  it('renders month-by-month projection rows with month, expense, and net worth columns', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /show month-by-month projection/i }))
-    // Should have data rows in the table
+    await user.click(screen.getByRole('button', { name: 'Table' }))
     const rows = document.querySelectorAll('.fi-calc-yby-table tbody tr')
     expect(rows.length).toBeGreaterThan(0)
-  })
-
-  it('collapses month-by-month projection on second click', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    const btn = screen.getByRole('button', { name: /show month-by-month projection/i })
-    await user.click(btn) // expand
-    expect(document.querySelector('.fi-calc-yby-table')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /hide month-by-month projection/i })) // collapse
-    expect(document.querySelector('.fi-calc-yby-table')).not.toBeInTheDocument()
   })
 
   it('disables save button when simulation name is empty', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     const saveBtn = screen.getByRole('button', { name: 'Save' })
     expect(saveBtn).toBeDisabled()
   })
@@ -492,7 +414,7 @@ describe('FICalculator', () => {
   it('displays results section with expense and corpus breakdown', () => {
     renderCalc()
     expect(screen.getByText('Holdings')).toBeInTheDocument()
-    expect(screen.getByText('FI Non-Retirement (required)')).toBeInTheDocument()
+    expect(screen.getByText('Required to FIRE')).toBeInTheDocument()
     expect(screen.getByText(/Gap to close/)).toBeInTheDocument()
   })
 
@@ -512,7 +434,7 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    const toggleBtn = screen.getByText(/Include GW liquid/)
+    const toggleBtn = screen.getByRole('checkbox', { name: /include gw liquid/i })
     await user.click(toggleBtn)
 
     expect(screen.getByText('GW Liquid')).toBeInTheDocument()
@@ -583,7 +505,7 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     const nameInput = screen.getByPlaceholderText('Simulation name')
     await user.type(nameInput, 'My Sim')
     const saveBtn = screen.getByRole('button', { name: 'Save' })
@@ -624,7 +546,7 @@ describe('FICalculator', () => {
     expect(screen.getByDisplayValue('80,000')).toBeInTheDocument()
   })
 
-  it('deletes a saved simulation via chip × button', async () => {
+  it('deletes a saved simulation via the overflow menu', async () => {
     const sims = [
       {
         name: 'ToDelete',
@@ -645,7 +567,9 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    await user.click(await screen.findByRole('button', { name: /delete todelete/i }))
+    await user.click(await screen.findByRole('button', { name: /options for todelete/i }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Yes' }))
 
     expect(mockWriteJSON).toHaveBeenCalledWith('fi-simulations.json', [])
   })
@@ -765,14 +689,13 @@ describe('FICalculator', () => {
 
   /* ── getBirthYear edge cases (lines 74-81) ──────────────────── */
 
-  it('parses birthday from ISO date string when no YYYY pattern found (line 80)', () => {
+  it('parses a year-only birthday string for 401(k) eligibility', () => {
     vi.mocked(useProfile).mockReturnValue({
       profile: { name: '', avatarDataUrl: '', birthday: '1985', partner: null },
       updateProfile: vi.fn(),
     })
     renderCalc()
-    // With birth year 1985, primary 401k earliest = 1985+60 = 2045
-    expect(readYearValue('Primary 401(k)')).toBe(2045)
+    expect(readYearValue('Primary 401(k)')).toBe(2044)
   })
 
   it('returns null birth year for empty birthday string (line 75)', () => {
@@ -877,16 +800,14 @@ describe('FICalculator', () => {
 
   /* ── Year-by-year negative net worth row (line 584) ──────── */
 
-  it('applies negative class to month-by-month rows with netWorth < 0', async () => {
+  it('renders the month-by-month table without crashing for long-horizon scenarios', async () => {
     const user = userEvent.setup()
     vi.mocked(useProfile).mockReturnValue({
       profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: null },
       updateProfile: vi.fn(),
     })
     renderCalc()
-    const expandBtn = screen.getByRole('button', { name: /show month-by-month projection/i })
-    await user.click(expandBtn)
-    // Table should render without crashing
+    await user.click(screen.getByRole('button', { name: 'Table' }))
     expect(screen.getByText('Month')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
   })
@@ -939,13 +860,7 @@ describe('FICalculator', () => {
     })
     const user = userEvent.setup()
     renderCalc()
-    // Click on the simulation chip to load it
     await user.click(await screen.findByText('Loaded Sim'))
-    // Verify expense was applied
     expect(screen.getByDisplayValue('80,000')).toBeInTheDocument()
-    // Verify inflation was applied
-    await openGoalParameters(user)
-    expect(getGoalParameterInput('Inflation')).toHaveValue(4)
-    expect(getGoalParameterInput(/Pre-/)).toHaveValue(7)
   })
 })

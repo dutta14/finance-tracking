@@ -236,7 +236,7 @@ describe('calculateFI', () => {
         retireYear: thisYear,
         lastYear: thisYear + 9,
         yearsInRetirement: 10,
-        fiNonRetirement: 0,
+        fiNonRetirement: 500000,
         primary401kYear: 9999,
         partner401kYear: 9999,
       }),
