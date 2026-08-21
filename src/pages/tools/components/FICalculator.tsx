@@ -1,5 +1,5 @@
 import { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { loadBudgetStore } from '../../budget/utils/budgetStorage'
+import { loadBudgetStore, getIncomeGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
@@ -9,48 +9,30 @@ import { calculateFI } from '../utils/fiCalculations'
 import { useGrowthSettings } from '../../goal/hooks/useGrowthSettings'
 import '../../../styles/FICalculator.css'
 
-const REMOVED_GROUP_ID = 'removed'
-
-/** Load last year's total expense from budget store */
+/** Load last year's total expense from budget store, using group-membership classification (same as Budget page) */
 async function getLastYearExpense(fileStore: import('../../../utils/fileStoreTypes').FileStore): Promise<number> {
   try {
     const store = await loadBudgetStore(fileStore)
     const lastYear = new Date().getFullYear() - 1
     const groups = store.categoryGroups || []
-    const removedCats = new Set(groups.find(g => g.id === REMOVED_GROUP_ID)?.categories || [])
+    const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
+    const incomeCats = new Set(getIncomeGroups(groups).flatMap(g => g.id !== 'removed' ? g.categories : []))
 
-    // Parse all CSVs for last year
-    const txns: { category: string; amount: number; monthKey: string }[] = []
+    const catSums: Record<string, number> = {}
     for (let m = 1; m <= 12; m++) {
       const key = `${lastYear}-${String(m).padStart(2, '0')}`
       const csvData = store.csvs[key]
       if (!csvData) continue
       try {
         const parsed = parseCSV(csvData.csv)
-        txns.push(...parsed.map(t => ({ category: t.category, amount: t.amount, monthKey: key })))
-      } catch {
-        /* skip bad CSV */
-      }
+        for (const t of parsed) {
+          if (removedCats.has(t.category) || incomeCats.has(t.category)) continue
+          catSums[t.category] = (catSums[t.category] || 0) + t.amount
+        }
+      } catch { /* skip bad CSV */ }
     }
 
-    // Classify categories same as budget table: group by category+month, then
-    // a category is "expense" if any monthly sum is negative
-    const catMonthSums: Record<string, Record<string, number>> = {}
-    txns.forEach(t => {
-      if (removedCats.has(t.category)) return
-      if (!catMonthSums[t.category]) catMonthSums[t.category] = {}
-      catMonthSums[t.category][t.monthKey] = (catMonthSums[t.category][t.monthKey] || 0) + t.amount
-    })
-
-    let totalExpense = 0
-    Object.entries(catMonthSums).forEach(([, months]) => {
-      const monthVals = Object.values(months)
-      const hasNeg = monthVals.some(v => v < 0)
-      if (hasNeg) {
-        totalExpense += Math.abs(monthVals.reduce((s, v) => s + v, 0))
-      }
-    })
-    return totalExpense
+    return Math.abs(Object.values(catSums).reduce((s, v) => s + v, 0))
   } catch {
     return 0
   }
@@ -195,12 +177,45 @@ const FICalculator: FC = () => {
   // Inputs
   const [annualExpense, setAnnualExpense] = useState<number>(lastYearExpense || 60000)
   const [expenseDisplay, setExpenseDisplay] = useState<string>(Math.round(lastYearExpense || 60000).toLocaleString())
+
+  // Sync annual expense when last year's data loads asynchronously
+  const prevLastYearExpense = useRef(lastYearExpense)
+  useEffect(() => {
+    if (lastYearExpense > 0 && lastYearExpense !== prevLastYearExpense.current) {
+      setAnnualExpense(lastYearExpense)
+      setExpenseDisplay(Math.round(lastYearExpense).toLocaleString())
+      prevLastYearExpense.current = lastYearExpense
+    }
+  }, [lastYearExpense])
   const [inflationRate, setInflationRate] = useState<number>(settings.inflation)
   const [growthRate, setGrowthRate] = useState<number>(8)
   const [lastYear, setLastYear] = useState<number>(defaultLastYear)
+
+  // Sync plan-until when profile-derived default changes
+  const prevDefaultLastYear = useRef(defaultLastYear)
+  useEffect(() => {
+    if (defaultLastYear !== prevDefaultLastYear.current) {
+      setLastYear(defaultLastYear)
+      prevDefaultLastYear.current = defaultLastYear
+    }
+  }, [defaultLastYear])
   const [retireYear, setRetireYear] = useState<number>(thisYear + 1)
   const [primary401kYear, setPrimary401kYear] = useState<number>(primary401kEarliestYear)
   const [partner401kYear, setPartner401kYear] = useState<number>(partner401kEarliestYear)
+
+  // Sync 401(k) years when profile birth years load asynchronously
+  const prevPrimary401k = useRef(primary401kEarliestYear)
+  const prevPartner401k = useRef(partner401kEarliestYear)
+  useEffect(() => {
+    if (primary401kEarliestYear !== prevPrimary401k.current) {
+      setPrimary401kYear(primary401kEarliestYear)
+      prevPrimary401k.current = primary401kEarliestYear
+    }
+    if (partner401kEarliestYear !== prevPartner401k.current) {
+      setPartner401kYear(partner401kEarliestYear)
+      prevPartner401k.current = partner401kEarliestYear
+    }
+  }, [primary401kEarliestYear, partner401kEarliestYear])
   const [includeGwLiquid, setIncludeGwLiquid] = useState<boolean>(false)
   const [showYearByYear, setShowYearByYear] = useState<boolean>(false)
   const [activeSim, setActiveSim] = useState<string | null>(null)

@@ -8,8 +8,8 @@ const SUMMARY_PATH = 'budget/summary-cache.json'
 
 export async function getBudgetSaveRate(
   fileStore: FileStore,
-): Promise<{ annualSavings: number; saveRate: number; monthsOfData: number } | null> {
-  return fileStore.readJSON<{ annualSavings: number; saveRate: number; monthsOfData: number } | null>(
+): Promise<{ annualSavings: number; saveRate: number; monthsOfData: number; totalIncome?: number; totalExpense?: number } | null> {
+  return fileStore.readJSON<{ annualSavings: number; saveRate: number; monthsOfData: number; totalIncome?: number; totalExpense?: number } | null>(
     SUMMARY_PATH,
     null,
   )
@@ -17,7 +17,7 @@ export async function getBudgetSaveRate(
 
 export async function saveBudgetSummary(
   fileStore: FileStore,
-  summary: { annualSavings: number; saveRate: number; monthsOfData: number },
+  summary: { annualSavings: number; saveRate: number; monthsOfData: number; totalIncome?: number; totalExpense?: number },
 ): Promise<void> {
   await fileStore.writeJSON(SUMMARY_PATH, summary)
 }

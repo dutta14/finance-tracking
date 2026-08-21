@@ -37,10 +37,12 @@ const Home: FC = () => {
   const { fileStore } = useFileStore()
 
   const [hasBudgetData, setHasBudgetData] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
   useEffect(() => {
     loadBudgetStore(fileStore)
       .then(s => setHasBudgetData(Object.keys(s.csvs).length > 0))
       .catch(() => setHasBudgetData(false))
+      .finally(() => setDataLoaded(true))
   }, [fileStore])
 
   const allComplete = accounts.length > 0 && balances.length > 0 && goals.length > 0 && hasBudgetData
@@ -190,7 +192,7 @@ const Home: FC = () => {
     <div className="home-page">
       <div className="home-greeting">
         <h1>{greeting}</h1>
-        {setupDismissed && !allComplete && (
+        {setupDismissed && !allComplete && dataLoaded && (
           <button
             className="setup-guide-link"
             onClick={() => {
@@ -202,7 +204,7 @@ const Home: FC = () => {
           </button>
         )}
       </div>
-      {!setupDismissed && (
+      {!setupDismissed && dataLoaded && !allComplete && (
         <SetupProgress
           accounts={accounts}
           balances={balances}

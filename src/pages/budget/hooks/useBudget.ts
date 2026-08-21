@@ -547,11 +547,17 @@ export function useBudget() {
     return keys
   }, [store.csvs, selectedYear])
 
-  // Persist summary so other pages (Goals) can read savings data without this hook
+  // Persist summary so other pages (Goals, FI Calculator) can read without this hook
   useEffect(() => {
     const annualSavings =
       monthsWithData.size > 0 ? (summary.totalIncome - summary.totalExpense) * (12 / monthsWithData.size) : 0
-    saveBudgetSummary(fileStore, { annualSavings, saveRate: summary.saveRate, monthsOfData: monthsWithData.size }).catch(
+    saveBudgetSummary(fileStore, {
+      annualSavings,
+      saveRate: summary.saveRate,
+      monthsOfData: monthsWithData.size,
+      totalIncome: summary.totalIncome,
+      totalExpense: summary.totalExpense,
+    }).catch(
       console.error,
     )
   }, [summary, monthsWithData, fileStore])
