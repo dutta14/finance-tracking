@@ -706,7 +706,7 @@ body.dark .fi-sim-chip--active {
   background: var(--color-surface);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  padding: 1.25rem;
+  padding: 0.75rem;
   position: sticky;
   top: 5rem;
   align-self: stretch;
@@ -738,13 +738,16 @@ body.dark .fi-sim-chip--active {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  padding: 2px;
 }
 
 .fi-sim-card {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   background: var(--color-surface);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .fi-sim-card:hover {
@@ -754,6 +757,7 @@ body.dark .fi-sim-chip--active {
 .fi-sim-card--active {
   border-color: var(--accent, #0f766e);
   box-shadow: 0 0 0 1px var(--accent, #0f766e);
+  background: color-mix(in srgb, var(--accent, #0f766e) 6%, var(--color-surface));
 }
 
 .fi-sim-card-header {
@@ -824,6 +828,19 @@ body.dark .fi-sim-chip--active {
 
 .fi-sim-card-value--negative {
   color: var(--color-negative);
+}
+
+.fi-sim-card--drag-over {
+  border-top: 2px solid var(--accent, #0f766e);
+}
+
+.fi-sim-card[draggable] {
+  cursor: grab;
+}
+
+.fi-sim-card[draggable]:active {
+  cursor: grabbing;
+  opacity: 0.6;
 }
 
 .fi-sim-overflow-wrap {

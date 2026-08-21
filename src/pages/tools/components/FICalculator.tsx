@@ -388,6 +388,8 @@ const FICalculator: FC = () => {
   const [simRenaming, setSimRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [saveNameInput, setSaveNameInput] = useState('')
+  const dragIndexRef = useRef<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   const applySnapshot = useCallback(
     (s: FISim) => {
@@ -492,6 +494,18 @@ const FICalculator: FC = () => {
       setSimRenaming(null)
     },
     [savedSims, activeSim, saveSims],
+  )
+
+  const handleReorderSim = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (fromIndex === toIndex) return
+      const next = [...savedSims]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      setSavedSims(next)
+      saveSims(next)
+    },
+    [savedSims, saveSims],
   )
 
   // Current balances
@@ -931,14 +945,32 @@ const FICalculator: FC = () => {
         <div className="fi-sim-panel">
           <h3 className="fi-sim-panel-title">Saved Simulations</h3>
           <div className="fi-sim-panel-cards">
-            {savedSims.map(s => {
-              const retireAge = s.retireYear - (profile.primaryBirthYear ?? thisYear - 30)
+            {savedSims.map((s, idx) => {
               const isActive = activeSim === s.name
               const gapPositive = s.gap != null && s.gap > 0
               return (
                 <div
                   key={s.name}
-                  className={`fi-sim-card ${isActive ? 'fi-sim-card--active' : ''}`}
+                  className={`fi-sim-card ${isActive ? 'fi-sim-card--active' : ''}${dragOverIndex === idx ? ' fi-sim-card--drag-over' : ''}`}
+                  draggable
+                  onDragStart={() => {
+                    dragIndexRef.current = idx
+                  }}
+                  onDragOver={e => {
+                    e.preventDefault()
+                    setDragOverIndex(idx)
+                  }}
+                  onDragLeave={() => setDragOverIndex(null)}
+                  onDrop={e => {
+                    e.preventDefault()
+                    if (dragIndexRef.current != null) handleReorderSim(dragIndexRef.current, idx)
+                    dragIndexRef.current = null
+                    setDragOverIndex(null)
+                  }}
+                  onDragEnd={() => {
+                    dragIndexRef.current = null
+                    setDragOverIndex(null)
+                  }}
                 >
                   <div className="fi-sim-card-header">
                     {simRenaming === s.name ? (
@@ -955,11 +987,7 @@ const FICalculator: FC = () => {
                         autoFocus
                       />
                     ) : (
-                      <button
-                        type="button"
-                        className="fi-sim-card-name"
-                        onClick={() => applySnapshot(s)}
-                      >
+                      <button type="button" className="fi-sim-card-name" onClick={() => applySnapshot(s)}>
                         {s.name}
                       </button>
                     )}
@@ -997,14 +1025,10 @@ const FICalculator: FC = () => {
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="fi-sim-card-body"
-                    onClick={() => applySnapshot(s)}
-                  >
+                  <button type="button" className="fi-sim-card-body" onClick={() => applySnapshot(s)}>
                     <div className="fi-sim-card-stat">
                       <span className="fi-sim-card-label">Retire</span>
-                      <span className="fi-sim-card-value">Age {retireAge}</span>
+                      <span className="fi-sim-card-value">Jan {s.retireYear}</span>
                     </div>
                     <div className="fi-sim-card-stat">
                       <span className="fi-sim-card-label">FIRE #</span>
@@ -1014,7 +1038,9 @@ const FICalculator: FC = () => {
                     </div>
                     <div className="fi-sim-card-stat">
                       <span className="fi-sim-card-label">Gap</span>
-                      <span className={`fi-sim-card-value ${gapPositive ? 'fi-sim-card-value--negative' : 'fi-sim-card-value--positive'}`}>
+                      <span
+                        className={`fi-sim-card-value ${gapPositive ? 'fi-sim-card-value--negative' : 'fi-sim-card-value--positive'}`}
+                      >
                         {s.gap != null ? (s.gap <= 0 ? 'Ready' : abbreviateCurrency(s.gap)) : '—'}
                       </span>
                     </div>
