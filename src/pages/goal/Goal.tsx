@@ -10,6 +10,7 @@ import GoalDetail from './components/GoalDetail'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
 import { useGrowthSettings } from '../../hooks/useGrowthSettings'
+import GrowthSettingsPanel from '../../components/GrowthSettingsPanel'
 
 import FICalculator from '../tools/components/FICalculator'
 import LeverageGoal from './components/LeverageGoal'
@@ -102,6 +103,11 @@ const Goal: FC = () => {
                   FI Calculator
                 </NavLink>
               </nav>
+              {subPath === 'calculator' && (
+                <div className="goal-header-actions">
+                  <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
+                </div>
+              )}
             </div>
           </>
         )}

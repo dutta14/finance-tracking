@@ -84,16 +84,37 @@ function renderCalc() {
   return render(<FICalculator />)
 }
 
+function getYearItem(label: string): HTMLElement {
+  return screen.getByText(label).closest('.fi-calc-year-item')! as HTMLElement
+}
+
+function extractYear(text: string): number {
+  const match = text.match(/\d{4}/)
+  return match ? parseInt(match[0], 10) : NaN
+}
+
+function readYearValue(label: string): number {
+  const text = getYearItem(label).querySelector('.fi-calc-year-val')!.textContent || ''
+  return extractYear(text)
+}
+
+async function openGoalParameters(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /goal parameters/i }))
+}
+
+function getGoalParameterInput(label: string | RegExp) {
+  return within(screen.getByText(label).closest('label')!).getByRole('spinbutton')
+}
+
 describe('FICalculator', () => {
   it('renders the Annual Expense input', () => {
     renderCalc()
     expect(screen.getByText('Annual Expense')).toBeInTheDocument()
   })
 
-  it('renders inflation and growth rate steppers', () => {
+  it('renders the goal parameters button', () => {
     renderCalc()
-    expect(screen.getByText('Inflation')).toBeInTheDocument()
-    expect(screen.getByText('Growth')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /goal parameters/i })).toBeInTheDocument()
   })
 
   it('renders retire year and plan until steppers', () => {
@@ -121,16 +142,15 @@ describe('FICalculator', () => {
 
   it('displays result section with annual saving or FI ready message', () => {
     renderCalc()
-    // With no accounts/balances and default expense=60000, gap > 0 so "Save each year" should show
-    expect(screen.getByText(/Save each year until/)).toBeInTheDocument()
+    expect(screen.getByText(/Save for \d+ months up to Dec \d{4}/)).toBeInTheDocument()
   })
 
-  it('renders year-by-year projection when expanded', async () => {
+  it('renders month-by-month projection when expanded', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
+    const expandBtn = screen.getByRole('button', { name: /show month-by-month projection/i })
     await user.click(expandBtn)
-    expect(screen.getByText('Year')).toBeInTheDocument()
+    expect(screen.getByText('Month')).toBeInTheDocument()
     expect(screen.getByText('Expense')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
   })
@@ -144,18 +164,18 @@ describe('FICalculator', () => {
     expect(input).toHaveValue('120,000')
   })
 
-  it('displays inflation rate value and responds to stepper clicks', () => {
+  it('displays inflation rate value in goal parameters', async () => {
+    const user = userEvent.setup()
     renderCalc()
-    // Default inflation is 3%, scoped to the Inflation stepper row
-    const inflationRow = screen.getByText('Inflation').parentElement!
-    expect(within(inflationRow).getByText('3%')).toBeInTheDocument()
+    await openGoalParameters(user)
+    expect(getGoalParameterInput('Inflation')).toHaveValue(3)
   })
 
-  it('displays growth rate value', () => {
+  it('displays growth rate value in goal parameters', async () => {
+    const user = userEvent.setup()
     renderCalc()
-    // Default growth is 8%, scoped to the Growth stepper row
-    const growthRow = screen.getByText('Growth').parentElement!
-    expect(within(growthRow).getByText('8%')).toBeInTheDocument()
+    await openGoalParameters(user)
+    expect(getGoalParameterInput(/Pre-/)).toHaveValue(8)
   })
 
   it('shows the Save button and save form', async () => {
@@ -191,8 +211,9 @@ describe('FICalculator', () => {
 
   it('renders breakdown rows when result is computed', () => {
     renderCalc()
-    expect(screen.getByText(/Expense at retirement/)).toBeInTheDocument()
-    expect(screen.getByText(/Non-ret corpus needed/)).toBeInTheDocument()
+    expect(screen.getByText('Holdings')).toBeInTheDocument()
+    expect(screen.getByText('At 401(k) Access')).toBeInTheDocument()
+    expect(screen.getByText('FI Non-Retirement (required)')).toBeInTheDocument()
     expect(screen.getByText(/Gap to close/)).toBeInTheDocument()
   })
 
@@ -213,70 +234,59 @@ describe('FICalculator', () => {
   it('increments inflation rate when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
-    const plusBtn = within(inflationRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+    await openGoalParameters(user)
+    const plusBtn = within(screen.getByText('Inflation').closest('label')!).getByRole('button', { name: 'Increase' })
     await user.click(plusBtn)
-    expect(within(inflationRow).getByText('3.5%')).toBeInTheDocument()
+    expect(getGoalParameterInput('Inflation')).toHaveValue(3.1)
   })
 
   it('decrements inflation rate when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
-    const minusBtn = within(inflationRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '−')!
+    await openGoalParameters(user)
+    const minusBtn = within(screen.getByText('Inflation').closest('label')!).getByRole('button', { name: 'Decrease' })
     await user.click(minusBtn)
-    expect(within(inflationRow).getByText('2.5%')).toBeInTheDocument()
+    expect(getGoalParameterInput('Inflation')).toHaveValue(2.9)
   })
 
   it('increments growth rate when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')! as HTMLElement
-    const plusBtn = within(growthRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+    await openGoalParameters(user)
+    const plusBtn = within(screen.getByText(/Pre-/).closest('label')!).getByRole('button', { name: 'Increase' })
     await user.click(plusBtn)
-    expect(within(growthRow).getByText('8.5%')).toBeInTheDocument()
+    expect(getGoalParameterInput(/Pre-/)).toHaveValue(8.1)
   })
 
   it('decrements growth rate when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')! as HTMLElement
-    const minusBtn = within(growthRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '−')!
+    await openGoalParameters(user)
+    const minusBtn = within(screen.getByText(/Pre-/).closest('label')!).getByRole('button', { name: 'Decrease' })
     await user.click(minusBtn)
-    expect(within(growthRow).getByText('7.5%')).toBeInTheDocument()
+    expect(getGoalParameterInput(/Pre-/)).toHaveValue(7.9)
   })
 
   it('increments retire year when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const retireRow = screen.getByText('Retire in').closest('.fi-calc-stepper-item')! as HTMLElement
-    const plusBtn = within(retireRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+    const retireRow = getYearItem('Retire in')
+    const initialYear = readYearValue('Retire in')
+    const plusBtn = within(retireRow).getAllByRole('button').find(b => b.textContent === '›')!
     await user.click(plusBtn)
-    const thisYear = new Date().getFullYear()
-    expect(within(retireRow).getByText(`(${thisYear + 2 - thisYear}yr)`, { exact: false })).toBeInTheDocument()
+    expect(readYearValue('Retire in')).toBe(initialYear + 1)
+    expect(within(retireRow).getByText(/\(2 yrs\)/)).toBeInTheDocument()
   })
 
   it('decrements plan-until year when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
-    const minusBtn = within(planRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '−')!
-    const initialText = planRow.querySelector('.fi-calc-step-val')!.textContent!
+    const planRow = getYearItem('Plan until')
+    const minusBtn = within(planRow).getAllByRole('button').find(b => b.textContent === '‹')!
+    const initialText = planRow.querySelector('.fi-calc-year-val')!.textContent!
     await user.click(minusBtn)
-    const afterText = planRow.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(afterText)).toBeLessThan(parseInt(initialText))
+    const afterText = planRow.querySelector('.fi-calc-year-val')!.textContent!
+    expect(extractYear(afterText)).toBeLessThan(extractYear(initialText))
   })
 
   it('toggles GW liquid inclusion and shows GW Liquid row', async () => {
@@ -374,7 +384,8 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.getByText(/Primary 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Primary)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$200,000')).toBeInTheDocument()
   })
 
   it('shows partner 401k in breakdown when partner retirement accounts exist', () => {
@@ -397,30 +408,32 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.getByText(/Partner 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Partner)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$100,000')).toBeInTheDocument()
   })
 
   it('shows existing non-ret at retire year in breakdown', () => {
     renderCalc()
-    expect(screen.getByText(/Existing non-ret at/)).toBeInTheDocument()
+    expect(screen.getByText('FI Non-Retirement')).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(`At Retirement \\(${new Date().getFullYear() + 1}\\)`))).toBeInTheDocument()
   })
 
-  it('renders year-by-year projection rows with year, expense, and net worth columns', async () => {
+  it('renders month-by-month projection rows with year, expense, and net worth columns', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /show year-by-year projection/i }))
+    await user.click(screen.getByRole('button', { name: /show month-by-month projection/i }))
     // Should have data rows in the table
     const rows = document.querySelectorAll('.fi-calc-yby-table tbody tr')
     expect(rows.length).toBeGreaterThan(0)
   })
 
-  it('collapses year-by-year projection on second click', async () => {
+  it('collapses month-by-month projection on second click', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const btn = screen.getByRole('button', { name: /show year-by-year projection/i })
+    const btn = screen.getByRole('button', { name: /show month-by-month projection/i })
     await user.click(btn) // expand
     expect(document.querySelector('.fi-calc-yby-table')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /hide year-by-year projection/i })) // collapse
+    await user.click(screen.getByRole('button', { name: /hide month-by-month projection/i })) // collapse
     expect(document.querySelector('.fi-calc-yby-table')).not.toBeInTheDocument()
   })
 
@@ -460,30 +473,26 @@ describe('FICalculator', () => {
   it('increments primary 401k year when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const row401k = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const initial = row401k.querySelector('.fi-calc-step-val')!.textContent!
-    const plusBtn = within(row401k)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+    const row401k = getYearItem('Primary 401(k)')
+    const initial = row401k.querySelector('.fi-calc-year-val')!.textContent!
+    const plusBtn = within(row401k).getAllByRole('button').find(b => b.textContent === '›')!
     await user.click(plusBtn)
-    const after = row401k.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(after)).toBe(parseInt(initial) + 1)
+    const after = row401k.querySelector('.fi-calc-year-val')!.textContent!
+    expect(extractYear(after)).toBe(extractYear(initial) + 1)
   })
 
   /* ── Results display ──────────────────────────────────────────── */
 
   it('displays results section with expense and corpus breakdown', () => {
     renderCalc()
-    // Results section should render by default with default values
-    expect(screen.getByText(/Expense at retirement/)).toBeInTheDocument()
-    expect(screen.getByText(/Non-ret corpus needed/)).toBeInTheDocument()
+    expect(screen.getByText('Holdings')).toBeInTheDocument()
+    expect(screen.getByText('FI Non-Retirement (required)')).toBeInTheDocument()
     expect(screen.getByText(/Gap to close/)).toBeInTheDocument()
   })
 
-  it('shows Save each year message when gap is positive', () => {
+  it('shows Save for months message when gap is positive', () => {
     renderCalc()
-    // Default values should produce a positive gap
-    expect(screen.getByText(/Save each year until/)).toBeInTheDocument()
+    expect(screen.getByText(/Save for \d+ months up to Dec \d{4}/)).toBeInTheDocument()
   })
 
   it('displays current holdings summary', () => {
@@ -524,7 +533,8 @@ describe('FICalculator', () => {
     })
 
     renderCalc()
-    expect(screen.getByText(/Primary 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Primary)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$100,000')).toBeInTheDocument()
   })
 
   it('shows partner 401k breakdown when fiRetirementPartner > 0', () => {
@@ -557,7 +567,8 @@ describe('FICalculator', () => {
     })
 
     renderCalc()
-    expect(screen.getByText(/Partner 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Partner)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$80,000')).toBeInTheDocument()
   })
 
   /* ── Simulation save/load/delete ──────────────────────────────── */
@@ -668,14 +679,12 @@ describe('FICalculator', () => {
    * Pin the documented `defaultLastYear` rule (FICalculator.tsx lines 173-182):
    *   defaultLastYear = max(primary+100, partner+100), or thisYear+60 if neither.
    * The Plan-until stepper value at first render IS defaultLastYear, so we
-   * read the `.fi-calc-step-val` inside the "Plan until" row to assert it.
+   * read the `.fi-calc-year-val` inside the "Plan until" row to assert it.
    * A future refactor that breaks the rule must make these tests fail.
    */
   describe('defaultLastYear (regression: #163)', () => {
     function readPlanUntilYear(): number {
-      const row = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
-      const text = row.querySelector('.fi-calc-step-val')!.textContent!
-      return parseInt(text, 10)
+      return readYearValue('Plan until')
     }
 
     it('falls back to thisYear+60 when neither birth year is present', () => {
@@ -738,14 +747,12 @@ describe('FICalculator', () => {
 
     const user = userEvent.setup()
     renderCalc()
-    const row = screen.getByText('Partner 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const initial = row.querySelector('.fi-calc-step-val')!.textContent!
-    const plusBtn = within(row)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+    const row = getYearItem('Partner 401(k)')
+    const initial = row.querySelector('.fi-calc-year-val')!.textContent!
+    const plusBtn = within(row).getAllByRole('button').find(b => b.textContent === '›')!
     await user.click(plusBtn)
-    const after = row.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(after)).toBe(parseInt(initial) + 1)
+    const after = row.querySelector('.fi-calc-year-val')!.textContent!
+    expect(extractYear(after)).toBe(extractYear(initial) + 1)
   })
 
   /* ── getBirthYear edge cases (lines 74-81) ──────────────────── */
@@ -757,18 +764,14 @@ describe('FICalculator', () => {
     })
     renderCalc()
     // With birth year 1985, primary 401k earliest = 1985+60 = 2045
-    const row = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const val = row.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(val)).toBe(2045)
+    expect(readYearValue('Primary 401(k)')).toBe(2045)
   })
 
   it('returns null birth year for empty birthday string (line 75)', () => {
     renderCalc()
     // With null birth year, primary401kEarliestYear = thisYear + 30
     const thisYear = new Date().getFullYear()
-    const row = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const val = row.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(val)).toBe(thisYear + 30)
+    expect(readYearValue('Primary 401(k)')).toBe(thisYear + 30)
   })
 
   /* ── getLatestBalancesByFilter edge cases (lines 63-65) ───── */
@@ -825,9 +828,7 @@ describe('FICalculator', () => {
   it('defaults plan-until to thisYear+60 when no birth years are available', () => {
     renderCalc()
     const thisYear = new Date().getFullYear()
-    const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
-    const val = planRow.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(val)).toBe(thisYear + 60)
+    expect(readYearValue('Plan until')).toBe(thisYear + 60)
   })
 
   /* ── Annual expense input onKeyDown Enter (line 402) ────── */
@@ -868,17 +869,17 @@ describe('FICalculator', () => {
 
   /* ── Year-by-year negative net worth row (line 584) ──────── */
 
-  it('applies negative class to year-by-year rows with netWorth < 0', async () => {
+  it('applies negative class to month-by-month rows with netWorth < 0', async () => {
     const user = userEvent.setup()
     vi.mocked(useProfile).mockReturnValue({
       profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: null },
       updateProfile: vi.fn(),
     })
     renderCalc()
-    const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
+    const expandBtn = screen.getByRole('button', { name: /show month-by-month projection/i })
     await user.click(expandBtn)
     // Table should render without crashing
-    expect(screen.getByText('Year')).toBeInTheDocument()
+    expect(screen.getByText('Month')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
   })
 
@@ -935,7 +936,8 @@ describe('FICalculator', () => {
     // Verify expense was applied
     expect(screen.getByDisplayValue('80,000')).toBeInTheDocument()
     // Verify inflation was applied
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
-    expect(within(inflationRow).getByText('4%')).toBeInTheDocument()
+    await openGoalParameters(user)
+    expect(getGoalParameterInput('Inflation')).toHaveValue(4)
+    expect(getGoalParameterInput(/Pre-/)).toHaveValue(7)
   })
 })
