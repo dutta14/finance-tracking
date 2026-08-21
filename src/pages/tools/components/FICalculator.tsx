@@ -221,6 +221,8 @@ interface FISim {
   primary401kYear: number
   partner401kYear: number
   includeGwLiquid: boolean
+  corpusNeeded?: number
+  gap?: number
 }
 
 const SIMS_PATH = 'fi-simulations.json'
@@ -435,6 +437,8 @@ const FICalculator: FC = () => {
         primary401kYear,
         partner401kYear,
         includeGwLiquid,
+        corpusNeeded: resultRef.current?.corpusNeededFromNonRetirement,
+        gap: resultRef.current?.gap,
       }
       const next = [...savedSims.filter(s => s.name !== name), sim]
       setSavedSims(next)
@@ -567,6 +571,9 @@ const FICalculator: FC = () => {
     profile.primaryName,
     profile.partnerName,
   ])
+
+  const resultRef = useRef(result)
+  resultRef.current = result
 
   const intervalMonths = INTERVAL_OPTIONS.find(option => option.value === interval)?.months ?? 12
 
@@ -923,72 +930,101 @@ const FICalculator: FC = () => {
         </div>
         <div className="fi-sim-panel">
           <h3 className="fi-sim-panel-title">Saved Simulations</h3>
-          <div className="fi-sim-panel-list">
-            {savedSims.map(s => (
-              <div
-                key={s.name}
-                className={`fi-sim-panel-item-row ${activeSim === s.name ? 'fi-sim-panel-item-row--active' : ''}`}
-              >
-                {simRenaming === s.name ? (
-                  <input
-                    className="fi-sim-rename-input"
-                    aria-label={`Rename simulation ${s.name}`}
-                    value={renameValue}
-                    onChange={e => setRenameValue(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleRenameSim(s.name, renameValue)
-                      if (e.key === 'Escape') setSimRenaming(null)
-                    }}
-                    onBlur={() => handleRenameSim(s.name, renameValue)}
-                    autoFocus
-                  />
-                ) : (
+          <div className="fi-sim-panel-cards">
+            {savedSims.map(s => {
+              const retireAge = s.retireYear - (profile.primaryBirthYear ?? thisYear - 30)
+              const isActive = activeSim === s.name
+              const gapPositive = s.gap != null && s.gap > 0
+              return (
+                <div
+                  key={s.name}
+                  className={`fi-sim-card ${isActive ? 'fi-sim-card--active' : ''}`}
+                >
+                  <div className="fi-sim-card-header">
+                    {simRenaming === s.name ? (
+                      <input
+                        className="fi-sim-rename-input"
+                        aria-label={`Rename simulation ${s.name}`}
+                        value={renameValue}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleRenameSim(s.name, renameValue)
+                          if (e.key === 'Escape') setSimRenaming(null)
+                        }}
+                        onBlur={() => handleRenameSim(s.name, renameValue)}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="fi-sim-card-name"
+                        onClick={() => applySnapshot(s)}
+                      >
+                        {s.name}
+                      </button>
+                    )}
+                    <div className="fi-sim-overflow-wrap">
+                      <button
+                        className="fi-sim-overflow-btn"
+                        onClick={e => {
+                          e.stopPropagation()
+                          setSimMenuOpen(simMenuOpen === s.name ? null : s.name)
+                        }}
+                        aria-label={`Options for ${s.name}`}
+                      >
+                        ⋯
+                      </button>
+                      {simMenuOpen === s.name && (
+                        <div className="fi-sim-overflow-menu">
+                          <button
+                            onClick={() => {
+                              setSimRenaming(s.name)
+                              setRenameValue(s.name)
+                              setSimMenuOpen(null)
+                            }}
+                          >
+                            Rename
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSimToDelete(s.name)
+                              setSimMenuOpen(null)
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    className={`fi-sim-panel-item ${activeSim === s.name ? 'fi-sim-panel-item--active' : ''}`}
+                    className="fi-sim-card-body"
                     onClick={() => applySnapshot(s)}
                   >
-                    <span className="fi-sim-panel-item-name">{s.name}</span>
-                  </button>
-                )}
-                <div className="fi-sim-overflow-wrap">
-                  <button
-                    className="fi-sim-overflow-btn"
-                    onClick={e => {
-                      e.stopPropagation()
-                      setSimMenuOpen(simMenuOpen === s.name ? null : s.name)
-                    }}
-                    aria-label={`Options for ${s.name}`}
-                  >
-                    ⋯
-                  </button>
-                  {simMenuOpen === s.name && (
-                    <div className="fi-sim-overflow-menu">
-                      <button
-                        onClick={() => {
-                          setSimRenaming(s.name)
-                          setRenameValue(s.name)
-                          setSimMenuOpen(null)
-                        }}
-                      >
-                        Rename
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSimToDelete(s.name)
-                          setSimMenuOpen(null)
-                        }}
-                      >
-                        Delete
-                      </button>
+                    <div className="fi-sim-card-stat">
+                      <span className="fi-sim-card-label">Retire</span>
+                      <span className="fi-sim-card-value">Age {retireAge}</span>
                     </div>
-                  )}
+                    <div className="fi-sim-card-stat">
+                      <span className="fi-sim-card-label">FIRE #</span>
+                      <span className="fi-sim-card-value">
+                        {s.corpusNeeded != null ? abbreviateCurrency(s.corpusNeeded) : '—'}
+                      </span>
+                    </div>
+                    <div className="fi-sim-card-stat">
+                      <span className="fi-sim-card-label">Gap</span>
+                      <span className={`fi-sim-card-value ${gapPositive ? 'fi-sim-card-value--negative' : 'fi-sim-card-value--positive'}`}>
+                        {s.gap != null ? (s.gap <= 0 ? 'Ready' : abbreviateCurrency(s.gap)) : '—'}
+                      </span>
+                    </div>
+                  </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
             {simToDelete && (
               <div className="fi-sim-delete-confirm">
-                <span>Delete "{simToDelete}"?</span>
+                <span>Delete &quot;{simToDelete}&quot;?</span>
                 <button onClick={() => handleDeleteSim(simToDelete)}>Yes</button>
                 <button onClick={() => setSimToDelete(null)}>No</button>
               </div>

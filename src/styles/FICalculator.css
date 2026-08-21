@@ -730,53 +730,100 @@ body.dark .fi-sim-chip--active {
   min-height: 0;
 }
 
-.fi-sim-panel-item-row {
+.fi-sim-panel-cards {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.fi-sim-card {
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  transition: background 0.15s;
+  background: var(--color-surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.fi-sim-panel-item-row + .fi-sim-panel-item-row {
-  border-top: 1px solid var(--color-border-light);
+.fi-sim-card:hover {
+  border-color: var(--color-border);
 }
 
-.fi-sim-panel-item-row:hover {
-  background: var(--color-surface-alt);
+.fi-sim-card--active {
+  border-color: var(--accent, #0f766e);
+  box-shadow: 0 0 0 1px var(--accent, #0f766e);
 }
 
-.fi-sim-panel-item-row--active {
-  background: var(--color-surface-alt);
-  font-weight: var(--fw-semibold);
-}
-
-button.fi-sim-panel-item {
-  all: unset;
+.fi-sim-card-header {
   display: flex;
-  width: 100%;
-  cursor: pointer;
-  color: inherit;
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem 0.5rem;
+  padding: 0.5rem 0.6rem 0;
 }
 
-button.fi-sim-panel-item:focus-visible {
+.fi-sim-card-name {
+  all: unset;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fi-sim-card-name:focus-visible {
   outline: 2px solid var(--color-border-strong, #555);
   outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.fi-sim-card-body {
+  all: unset;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.5rem 0.6rem 0.6rem;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fi-sim-card-body:focus-visible {
+  outline: 2px solid var(--color-border-strong, #555);
+  outline-offset: -2px;
   border-radius: var(--radius);
 }
 
-.fi-sim-panel-item {
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.5rem;
+.fi-sim-card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 
-.fi-sim-panel-item-name {
+.fi-sim-card-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+
+.fi-sim-card-value {
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   color: var(--color-text);
+  line-height: 1.3;
+}
+
+.fi-sim-card-value--positive {
+  color: #15803d;
+}
+
+.fi-sim-card-value--negative {
+  color: var(--color-negative);
 }
 
 .fi-sim-overflow-wrap {
