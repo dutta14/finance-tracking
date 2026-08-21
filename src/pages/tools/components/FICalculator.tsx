@@ -6,7 +6,7 @@ import type { Account, BalanceEntry } from '../../data/types'
 import { useFileStore } from '../../../contexts/FileStoreContext'
 import { useProfile } from '../../../hooks/useProfile'
 import { calculateFI } from '../utils/fiCalculations'
-import { useGrowthSettings } from '../../goal/hooks/useGrowthSettings'
+import { useGrowthSettings } from '../../../hooks/useGrowthSettings'
 import '../../../styles/FICalculator.css'
 
 /** Load last year's total expense from budget store, using group-membership classification (same as Budget page) */

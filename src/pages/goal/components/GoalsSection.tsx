@@ -12,7 +12,7 @@ import { getStorageItem, setStorageItem } from '../../../utils/storage'
 const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
 const modKey = isMac ? '⌘' : 'Ctrl'
 
-import { useGrowthSettings } from '../hooks/useGrowthSettings'
+import { useGrowthSettings } from '../../../hooks/useGrowthSettings'
 
 interface GoalsSectionProps {
   goals: FinancialGoal[]

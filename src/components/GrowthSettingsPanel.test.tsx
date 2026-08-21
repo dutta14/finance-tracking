@@ -24,9 +24,10 @@ describe('GrowthSettingsPanel', () => {
   it('expands on toggle click', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
+    expect(screen.getByRole('dialog', { name: /goal parameters/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/pre-60/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/post-60/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/boundary/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/switch to conservative/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/gw/i)).toBeInTheDocument()
   })
 
@@ -40,30 +41,58 @@ describe('GrowthSettingsPanel', () => {
     expect(screen.getByLabelText(/non-retirement minimum/i)).toBeInTheDocument()
   })
 
-  it('collapses the growth settings panel when the user clicks outside the panel', () => {
+  it('closes the growth settings modal when the user clicks the backdrop', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
 
     const toggle = screen.getByRole('button', { name: /goal parameters/i })
     fireEvent.click(toggle)
     expect(screen.getByLabelText(/pre-60/i)).toBeInTheDocument()
 
-    fireEvent.mouseDown(document.body)
+    fireEvent.click(screen.getByRole('dialog').parentElement as HTMLElement)
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByLabelText(/pre-60/i)).not.toBeInTheDocument()
   })
 
-  it('calls onUpdate when a value changes', () => {
+  it('closes the growth settings modal when the user presses escape', () => {
+    render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
+
+    const toggle = screen.getByRole('button', { name: /goal parameters/i })
+    fireEvent.click(toggle)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('closes the growth settings modal when the user clicks cancel', () => {
+    render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
+
+    const toggle = screen.getByRole('button', { name: /goal parameters/i })
+    fireEvent.click(toggle)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('calls onUpdate with all settings when Save is clicked', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
     const preInput = screen.getByLabelText(/pre-60/i)
     fireEvent.change(preInput, { target: { value: '10' } })
     fireEvent.blur(preInput)
-    expect(onUpdate).toHaveBeenCalledWith({ preBoundaryGrowth: 10 })
+    expect(onUpdate).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ preBoundaryGrowth: 10 }))
   })
 
-  it('preserves a decimal value while editing and commits the exact decimal on blur', () => {
+  it('preserves a decimal value while editing and commits on save', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
 
@@ -76,11 +105,12 @@ describe('GrowthSettingsPanel', () => {
     expect(onUpdate).not.toHaveBeenCalled()
 
     fireEvent.blur(preInput)
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
 
-    expect(onUpdate).toHaveBeenCalledWith({ preBoundaryGrowth: 7.5 })
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ preBoundaryGrowth: 7.5 }))
   })
 
-  it('commits inflation, retirement cap, and non-retirement minimum changes on blur', () => {
+  it('commits multiple field changes on save', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
 
@@ -89,30 +119,28 @@ describe('GrowthSettingsPanel', () => {
     const inflationInput = screen.getByLabelText(/inflation/i)
     fireEvent.change(inflationInput, { target: { value: '4' } })
     fireEvent.blur(inflationInput)
-    expect(onUpdate).toHaveBeenNthCalledWith(1, { inflation: 4 })
 
     const retirementCapInput = screen.getByLabelText(/retirement cap/i)
     fireEvent.change(retirementCapInput, { target: { value: '7000' } })
     fireEvent.blur(retirementCapInput)
-    expect(onUpdate).toHaveBeenNthCalledWith(2, { retirementCap: 7000 })
 
-    const nonRetirementMinimumInput = screen.getByLabelText(/non-retirement minimum/i)
-    fireEvent.change(nonRetirementMinimumInput, { target: { value: '5000' } })
-    fireEvent.blur(nonRetirementMinimumInput)
-    expect(onUpdate).toHaveBeenNthCalledWith(3, { nonRetirementBase: 5000 })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ inflation: 4, retirementCap: 7000 }))
   })
 
-  it('falls back to boundary age 60 when the boundary input is cleared and blurred', () => {
+  it('does not call onUpdate when cancel is clicked after changes', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
 
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
-    const boundaryInput = screen.getByLabelText(/boundary/i)
+    const boundaryInput = screen.getByLabelText(/switch to conservative/i)
     fireEvent.change(boundaryInput, { target: { value: '' } })
     fireEvent.blur(boundaryInput)
 
-    expect(onUpdate).toHaveBeenCalledWith({ ageBoundary: 60 })
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+    expect(onUpdate).not.toHaveBeenCalled()
   })
 
   it('shows correct labels based on age boundary', () => {
