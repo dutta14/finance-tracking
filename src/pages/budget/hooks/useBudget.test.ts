@@ -78,11 +78,12 @@ beforeEach(() => {
   })
 })
 
-
 /** Render useBudget and wait for the initial async load to settle. */
 async function renderAndLoad() {
   const utils = renderHook(() => useBudget())
-  await act(async () => { await Promise.resolve() })
+  await act(async () => {
+    await Promise.resolve()
+  })
   return utils
 }
 describe('useBudget — initial state', () => {

@@ -79,11 +79,7 @@ export const saveGoalsPart = (fileStore: FileStore, part: Partial<GoalsFile>): P
   writeQueue = writeQueue
     .then(async () => {
       const current = await loadGoalsFile(fileStore)
-      await saveGoalsFile(
-        fileStore,
-        part.financialGoals ?? current.financialGoals,
-        part.gwGoals ?? current.gwGoals,
-      )
+      await saveGoalsFile(fileStore, part.financialGoals ?? current.financialGoals, part.gwGoals ?? current.gwGoals)
     })
     .catch(err => console.error('Failed to save goals:', err))
   return writeQueue

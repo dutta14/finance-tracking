@@ -123,15 +123,24 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
     fill: textColor,
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   }
-  const tooltipStyle = {
-    backgroundColor: tooltipBg,
-    border: `1px solid ${tooltipBorder}`,
-    borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-    padding: '8px 12px',
-  }
-  const tooltipLabelStyle = { color: textColor, fontSize: 11, fontWeight: 500, marginBottom: 4 }
-  const tooltipItemStyle = { color: tooltipText, fontSize: 12, fontWeight: 600, padding: 0 }
+  const tooltipStyle = useMemo(
+    () => ({
+      backgroundColor: tooltipBg,
+      border: `1px solid ${tooltipBorder}`,
+      borderRadius: 8,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+      padding: '8px 12px',
+    }),
+    [tooltipBg, tooltipBorder],
+  )
+  const tooltipLabelStyle = useMemo(
+    () => ({ color: textColor, fontSize: 11, fontWeight: 500, marginBottom: 4 }),
+    [textColor],
+  )
+  const tooltipItemStyle = useMemo(
+    () => ({ color: tooltipText, fontSize: 12, fontWeight: 600, padding: 0 }),
+    [tooltipText],
+  )
   const positiveDeltaColor = '#16a34a'
   const negativeDeltaColor = '#dc2626'
   const getRawTooltipValue = useCallback(

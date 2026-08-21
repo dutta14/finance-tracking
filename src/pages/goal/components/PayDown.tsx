@@ -1,13 +1,5 @@
 import { FC, FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useData } from '../../../contexts/DataContext'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import type { Account } from '../../data/types'
@@ -57,7 +49,6 @@ for (let y = 2050; y >= 2010; y--) {
     ALL_PICKER_MONTHS.push(`${y}-${String(m).padStart(2, '0')}`)
   }
 }
-
 
 const emptyForm: LoanFormState = {
   type: 'loan',
@@ -136,7 +127,13 @@ const tooltipStyle = {
   padding: '8px 12px',
 }
 const tooltipLabelStyle = { color: 'var(--color-text)', fontSize: 11, fontWeight: 500 as const, marginBottom: 4 }
-const tooltipItemStyle = { color: 'var(--color-text)', fontSize: 12, fontWeight: 600 as const, padding: 0, whiteSpace: 'nowrap' as const }
+const tooltipItemStyle = {
+  color: 'var(--color-text)',
+  fontSize: 12,
+  fontWeight: 600 as const,
+  padding: 0,
+  whiteSpace: 'nowrap' as const,
+}
 
 const PaydownTooltip: FC<{
   active?: boolean
@@ -154,7 +151,15 @@ const PaydownTooltip: FC<{
   return (
     <div style={tooltipStyle}>
       <div style={tooltipLabelStyle}>{label ? formatMonth(label) : ''}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', alignItems: 'baseline', columnGap: 14, rowGap: 4 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr 1fr',
+          alignItems: 'baseline',
+          columnGap: 14,
+          rowGap: 4,
+        }}
+      >
         {point.expected != null && (
           <>
             <div style={tooltipItemStyle}>Expected</div>
@@ -167,10 +172,21 @@ const PaydownTooltip: FC<{
             <div style={tooltipItemStyle}>Actual</div>
             <div style={{ ...tooltipItemStyle, textAlign: 'right' }}>{formatCurrency(point.actual)}</div>
             {diff != null && diff !== 0 ? (
-              <div style={{ fontSize: 11, fontWeight: 500, textAlign: 'right', whiteSpace: 'nowrap', color: diffColor ?? undefined }}>
-                {diff > 0 ? '+' : ''}{formatCurrency(diff)}
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  textAlign: 'right',
+                  whiteSpace: 'nowrap',
+                  color: diffColor ?? undefined,
+                }}
+              >
+                {diff > 0 ? '+' : ''}
+                {formatCurrency(diff)}
               </div>
-            ) : <div />}
+            ) : (
+              <div />
+            )}
           </>
         )}
       </div>
@@ -179,7 +195,10 @@ const PaydownTooltip: FC<{
 }
 
 /* ── Custom Select (styled dropdown) ── */
-interface CustomSelectOption { value: string; label: string }
+interface CustomSelectOption {
+  value: string
+  label: string
+}
 const CustomSelect: FC<{
   value: string
   onChange: (value: string) => void
@@ -211,7 +230,16 @@ const CustomSelect: FC<{
         aria-expanded={open}
       >
         <span className={selected ? '' : 'custom-select__placeholder'}>{selected ? selected.label : placeholder}</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
           <path d="M3 5L6 8L9 5" />
         </svg>
       </button>
@@ -223,7 +251,10 @@ const CustomSelect: FC<{
               role="option"
               aria-selected={opt.value === value}
               className={`custom-select__option${opt.value === value ? ' custom-select__option--selected' : ''}`}
-              onClick={() => { onChange(opt.value); setOpen(false) }}
+              onClick={() => {
+                onChange(opt.value)
+                setOpen(false)
+              }}
             >
               {opt.label}
             </li>
@@ -277,7 +308,11 @@ const PayDownModal: FC<{
         onClick={event => event.stopPropagation()}
       >
         <div className="paydown-modal__header">
-          <h2>{editingLoanId ? `Edit ${form.type === 'credit-card' ? 'credit card' : 'loan'}` : `Add ${form.type === 'credit-card' ? 'credit card' : 'loan'}`}</h2>
+          <h2>
+            {editingLoanId
+              ? `Edit ${form.type === 'credit-card' ? 'credit card' : 'loan'}`
+              : `Add ${form.type === 'credit-card' ? 'credit card' : 'loan'}`}
+          </h2>
         </div>
 
         <form className="paydown-form" onSubmit={onSubmit}>
@@ -413,10 +448,14 @@ const PayDownCard: FC<{
   const { loan, chartData, linkedAccount, endDate, hasActualData } = card
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const historicalMonths = useMemo(() => chartData.map(p => p.month).filter(m => m <= currentMonth), [chartData, currentMonth])
+  const historicalMonths = useMemo(
+    () => chartData.map(p => p.month).filter(m => m <= currentMonth),
+    [chartData, currentMonth],
+  )
   const dateFilter = useDateFilter(historicalMonths)
   const filteredData = useMemo(
-    () => dateFilter.dateFilter === 'all' ? chartData : chartData.filter(p => dateFilter.filteredMonths.includes(p.month)),
+    () =>
+      dateFilter.dateFilter === 'all' ? chartData : chartData.filter(p => dateFilter.filteredMonths.includes(p.month)),
     [chartData, dateFilter.dateFilter, dateFilter.filteredMonths],
   )
 
@@ -434,9 +473,11 @@ const PayDownCard: FC<{
       return { monthlyPayment: loan.principal / (loan.termMonths || 1), totalInterest: 0, totalCost: loan.principal }
     }
     const monthlyRate = loan.annualRate / 100 / 12
-    const payment = loan.type === 'credit-card'
-      ? (loan.monthlyPayment ?? 0)
-      : (loan.principal * (monthlyRate * (1 + monthlyRate) ** loan.termMonths)) / ((1 + monthlyRate) ** loan.termMonths - 1)
+    const payment =
+      loan.type === 'credit-card'
+        ? (loan.monthlyPayment ?? 0)
+        : (loan.principal * (monthlyRate * (1 + monthlyRate) ** loan.termMonths)) /
+          ((1 + monthlyRate) ** loan.termMonths - 1)
     const totalMonths = loan.type === 'credit-card' ? chartData.length - 1 : loan.termMonths
     const totalCost = payment * totalMonths
     return { monthlyPayment: payment, totalInterest: totalCost - loan.principal, totalCost }
@@ -470,10 +511,13 @@ const PayDownCard: FC<{
         </div>
         <div className="paydown-metric">
           <span>Term</span>
-          <strong>{loan.type === 'credit-card'
-            ? `${chartData.length} mo`
-            : loan.termMonths % 12 === 0 ? `${loan.termMonths / 12} yr` : `${Math.floor(loan.termMonths / 12)} yr ${loan.termMonths % 12} mo`
-          }</strong>
+          <strong>
+            {loan.type === 'credit-card'
+              ? `${chartData.length} mo`
+              : loan.termMonths % 12 === 0
+                ? `${loan.termMonths / 12} yr`
+                : `${Math.floor(loan.termMonths / 12)} yr ${loan.termMonths % 12} mo`}
+          </strong>
         </div>
         <div className="paydown-metric">
           <span>Start</span>
@@ -485,13 +529,18 @@ const PayDownCard: FC<{
         </div>
         <div className="paydown-metric">
           <span>Progress</span>
-          <strong>{(() => {
-            const actuals = chartData.filter(p => p.actual != null && p.month <= currentMonth)
-            if (actuals.length === 0) return '—'
-            const latestBalance = actuals[actuals.length - 1].actual!
-            const pct = Math.min(100, Math.max(0, Math.round(((loan.principal - latestBalance) / loan.principal) * 100)))
-            return `${pct}%`
-          })()}</strong>
+          <strong>
+            {(() => {
+              const actuals = chartData.filter(p => p.actual != null && p.month <= currentMonth)
+              if (actuals.length === 0) return '—'
+              const latestBalance = actuals[actuals.length - 1].actual!
+              const pct = Math.min(
+                100,
+                Math.max(0, Math.round(((loan.principal - latestBalance) / loan.principal) * 100)),
+              )
+              return `${pct}%`
+            })()}
+          </strong>
         </div>
       </div>
 
@@ -545,15 +594,17 @@ const PayDownCard: FC<{
           <div className="paydown-metrics">
             <div className="paydown-metric">
               <span>Paid to date</span>
-              <strong>{(() => {
-                if (loan.annualRate === 0) return '$0'
-                const actuals = chartData.filter(p => p.actual != null && p.month <= currentMonth)
-                if (actuals.length === 0) return '—'
-                const monthsElapsed = actuals.length - 1
-                const principalPaidDown = loan.principal - (actuals[actuals.length - 1].actual ?? 0)
-                const totalPaidToDate = loanCosts.monthlyPayment * monthsElapsed
-                return formatCurrency(totalPaidToDate - principalPaidDown)
-              })()}</strong>
+              <strong>
+                {(() => {
+                  if (loan.annualRate === 0) return '$0'
+                  const actuals = chartData.filter(p => p.actual != null && p.month <= currentMonth)
+                  if (actuals.length === 0) return '—'
+                  const monthsElapsed = actuals.length - 1
+                  const principalPaidDown = loan.principal - (actuals[actuals.length - 1].actual ?? 0)
+                  const totalPaidToDate = loanCosts.monthlyPayment * monthsElapsed
+                  return formatCurrency(totalPaidToDate - principalPaidDown)
+                })()}
+              </strong>
             </div>
             <div className="paydown-metric">
               <span>Total interest</span>
@@ -669,15 +720,21 @@ const PayDown: FC = () => {
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
   const ongoingCards = useMemo(
-    () => loanCards.filter(({ endDate }) => endDate > currentMonth).sort((a, b) => b.loan.startDate.localeCompare(a.loan.startDate)),
+    () =>
+      loanCards
+        .filter(({ endDate }) => endDate > currentMonth)
+        .sort((a, b) => b.loan.startDate.localeCompare(a.loan.startDate)),
     [loanCards, currentMonth],
   )
   const completedCards = useMemo(
-    () => loanCards.filter(({ endDate }) => endDate <= currentMonth).sort((a, b) => {
-      const lastActualA = [...a.chartData].reverse().find(p => p.actual != null)?.month ?? a.endDate
-      const lastActualB = [...b.chartData].reverse().find(p => p.actual != null)?.month ?? b.endDate
-      return lastActualB.localeCompare(lastActualA)
-    }),
+    () =>
+      loanCards
+        .filter(({ endDate }) => endDate <= currentMonth)
+        .sort((a, b) => {
+          const lastActualA = [...a.chartData].reverse().find(p => p.actual != null)?.month ?? a.endDate
+          const lastActualB = [...b.chartData].reverse().find(p => p.actual != null)?.month ?? b.endDate
+          return lastActualB.localeCompare(lastActualA)
+        }),
     [loanCards, currentMonth],
   )
 
@@ -802,18 +859,44 @@ const PayDown: FC = () => {
         <section className="paydown-page">
           <div className="paydown-empty-state">
             <h2>Track loan payoff progress</h2>
-          <p>Add a loan or credit card to compare its expected amortization against the actual balance history.</p>
-          <div className="paydown-add-menu" ref={addMenuRef}>
-            <button className="action-btn" type="button" onClick={() => setAddMenuOpen(o => !o)}>
-              Add <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 5L6 8L9 5" /></svg>
-            </button>
-            {addMenuOpen ? (
-              <ul className="paydown-add-menu__list">
-                <li onClick={() => { openModal('loan'); setAddMenuOpen(false) }}>Add loan</li>
-                <li onClick={() => { openModal('credit-card'); setAddMenuOpen(false) }}>Add credit card</li>
-              </ul>
-            ) : null}
-          </div>
+            <p>Add a loan or credit card to compare its expected amortization against the actual balance history.</p>
+            <div className="paydown-add-menu" ref={addMenuRef}>
+              <button className="action-btn" type="button" onClick={() => setAddMenuOpen(o => !o)}>
+                Add{' '}
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 5L6 8L9 5" />
+                </svg>
+              </button>
+              {addMenuOpen ? (
+                <ul className="paydown-add-menu__list">
+                  <li
+                    onClick={() => {
+                      openModal('loan')
+                      setAddMenuOpen(false)
+                    }}
+                  >
+                    Add loan
+                  </li>
+                  <li
+                    onClick={() => {
+                      openModal('credit-card')
+                      setAddMenuOpen(false)
+                    }}
+                  >
+                    Add credit card
+                  </li>
+                </ul>
+              ) : null}
+            </div>
           </div>
         </section>
         <PayDownModal
@@ -850,12 +933,38 @@ const PayDown: FC = () => {
           </div>
           <div className="paydown-add-menu" ref={addMenuRef}>
             <button className="action-btn" type="button" onClick={() => setAddMenuOpen(o => !o)}>
-              Add <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 5L6 8L9 5" /></svg>
+              Add{' '}
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M3 5L6 8L9 5" />
+              </svg>
             </button>
             {addMenuOpen ? (
               <ul className="paydown-add-menu__list">
-                <li onClick={() => { openModal('loan'); setAddMenuOpen(false) }}>Add loan</li>
-                <li onClick={() => { openModal('credit-card'); setAddMenuOpen(false) }}>Add credit card</li>
+                <li
+                  onClick={() => {
+                    openModal('loan')
+                    setAddMenuOpen(false)
+                  }}
+                >
+                  Add loan
+                </li>
+                <li
+                  onClick={() => {
+                    openModal('credit-card')
+                    setAddMenuOpen(false)
+                  }}
+                >
+                  Add credit card
+                </li>
               </ul>
             ) : null}
           </div>
@@ -864,23 +973,14 @@ const PayDown: FC = () => {
         <div className="paydown-list">
           {paydownTab === 'ongoing' ? (
             <>
-              {ongoingCards.length === 0 && (
-                <div className="paydown-empty-tab">No ongoing loans.</div>
-              )}
+              {ongoingCards.length === 0 && <div className="paydown-empty-tab">No ongoing loans.</div>}
               {ongoingCards.map(card => (
-                <PayDownCard
-                  key={card.loan.id}
-                  card={card}
-                  onEdit={openEditModal}
-                  onDelete={handleDelete}
-                />
+                <PayDownCard key={card.loan.id} card={card} onEdit={openEditModal} onDelete={handleDelete} />
               ))}
             </>
           ) : (
             <>
-              {completedCards.length === 0 && (
-                <div className="paydown-empty-tab">No completed loans.</div>
-              )}
+              {completedCards.length === 0 && <div className="paydown-empty-tab">No completed loans.</div>}
               {completedCards.length > 0 && (
                 <div className="paydown-completed-list">
                   {completedCards.map(card => {
@@ -894,20 +994,32 @@ const PayDown: FC = () => {
                         >
                           <span className="paydown-completed-name">{card.loan.name}</span>
                           <span className="paydown-completed-principal">{formatCurrency(card.loan.principal)}</span>
-                          <span className="paydown-completed-dates">{formatMonth(card.loan.startDate)} – {formatMonth(card.endDate)}</span>
-                          <span className="paydown-completed-paidoff">{(() => {
-                            const lastActual = [...card.chartData].reverse().find(p => p.actual != null && p.actual === 0)
-                            return lastActual ? formatMonth(lastActual.month) : formatMonth(card.endDate)
-                          })()}</span>
-                          <svg className={`paydown-completed-chevron${isSelected ? ' paydown-completed-chevron--open' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M3 5L6 8L9 5" /></svg>
+                          <span className="paydown-completed-dates">
+                            {formatMonth(card.loan.startDate)} – {formatMonth(card.endDate)}
+                          </span>
+                          <span className="paydown-completed-paidoff">
+                            {(() => {
+                              const lastActual = [...card.chartData]
+                                .reverse()
+                                .find(p => p.actual != null && p.actual === 0)
+                              return lastActual ? formatMonth(lastActual.month) : formatMonth(card.endDate)
+                            })()}
+                          </span>
+                          <svg
+                            className={`paydown-completed-chevron${isSelected ? ' paydown-completed-chevron--open' : ''}`}
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M3 5L6 8L9 5" />
+                          </svg>
                         </button>
-                        {isSelected && (
-                          <PayDownCard
-                            card={card}
-                            onEdit={openEditModal}
-                            onDelete={handleDelete}
-                          />
-                        )}
+                        {isSelected && <PayDownCard card={card} onEdit={openEditModal} onDelete={handleDelete} />}
                       </div>
                     )
                   })}

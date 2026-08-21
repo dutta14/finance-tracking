@@ -15,9 +15,13 @@ export function useYearMonthlySaving() {
   useEffect(() => {
     let cancelled = false
     loadBudgetStore(fileStore)
-      .then(s => { if (!cancelled) setStore(s) })
+      .then(s => {
+        if (!cancelled) setStore(s)
+      })
       .catch(console.error)
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [fileStore])
 
   const availableYears = useMemo(() => {

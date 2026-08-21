@@ -394,7 +394,10 @@ export async function seedDemoData(store: FileStore): Promise<void> {
   })
   for (const [monthKey, csv] of Object.entries(budget.csvs)) {
     const year = monthKey.slice(0, 4)
-    await store.writeCSV(`transactions/${year}/${monthKey}.csv`, csv.split('\n').map(line => line.split(',')))
+    await store.writeCSV(
+      `transactions/${year}/${monthKey}.csv`,
+      csv.split('\n').map(line => line.split(',')),
+    )
   }
 
   for (const [year, data] of Object.entries(demoTaxYears())) {

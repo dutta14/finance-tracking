@@ -174,8 +174,7 @@ describe('Taxes', () => {
     })
 
     it('shows empty state when navigating to year without data', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs" })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs" })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByTitle('Previous year'))
@@ -186,10 +185,9 @@ describe('Taxes', () => {
   describe('checklist display', () => {
     it('renders items grouped by owner sections', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
-                makeTaxItem({ id: '2', label: 'Joint Docs', owner: 'joint', category: 'custom' }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
+        makeTaxItem({ id: '2', label: 'Joint Docs', owner: 'joint', category: 'custom' }),
+      ])
       renderTaxes()
       expect(await screen.findByText("Alice's Paystubs")).toBeInTheDocument()
       expect(await screen.findByText('Joint Docs')).toBeInTheDocument()
@@ -197,43 +195,39 @@ describe('Taxes', () => {
 
     it('shows tick mark for items with files', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({
-                  id: '1',
-                  label: 'W-2',
-                  files: [makeFile()],
-                }),
-              ],
-            )
+        makeTaxItem({
+          id: '1',
+          label: 'W-2',
+          files: [makeFile()],
+        }),
+      ])
       renderTaxes()
       expect(await screen.findByText('✓')).toBeInTheDocument()
     })
 
     it('displays file names in chips for uploaded files', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({
-                  id: '1',
-                  label: 'W-2',
-                  files: [makeFile({ name: 'Alice_W2.pdf' })],
-                }),
-              ],
-            )
+        makeTaxItem({
+          id: '1',
+          label: 'W-2',
+          files: [makeFile({ name: 'Alice_W2.pdf' })],
+        }),
+      ])
       renderTaxes()
       expect(await screen.findByText('Alice_W2.pdf')).toBeInTheDocument()
     })
 
     it('shows completion count per section', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [makeFile()] }),
-                makeTaxItem({ id: '2', label: '1099', owner: 'primary', files: [] }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [makeFile()] }),
+        makeTaxItem({ id: '2', label: '1099', owner: 'primary', files: [] }),
+      ])
       renderTaxes()
       expect(await screen.findByText('1/2')).toBeInTheDocument()
     })
 
     it('shows "No items yet" for empty owner sections', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       renderTaxes()
       // Primary section has 1 item (paystub), joint section has 0 items
       const noItemsTexts = await screen.findAllByText('No items yet')
@@ -243,8 +237,7 @@ describe('Taxes', () => {
 
   describe('add custom item', () => {
     it('opens add item modal and adds custom item', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       // Click the first "+ Add Item" button (primary section)
@@ -263,8 +256,7 @@ describe('Taxes', () => {
     })
 
     it('disables Add button when input is empty', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       const addButtons = await screen.findAllByText('+ Add Item')
@@ -274,8 +266,7 @@ describe('Taxes', () => {
     })
 
     it('enables Add button when input has content', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       const addButtons = await screen.findAllByText('+ Add Item')
@@ -290,8 +281,7 @@ describe('Taxes', () => {
 
   describe('rename item', () => {
     it('renames checklist item via More actions menu', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       // Open More actions menu for the item
@@ -311,10 +301,9 @@ describe('Taxes', () => {
   describe('remove item', () => {
     it('removes a checklist item when remove button is clicked', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' }),
-                makeTaxItem({ id: '2', label: '1099-INT', owner: 'primary' }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' }),
+        makeTaxItem({ id: '2', label: '1099-INT', owner: 'primary' }),
+      ])
       const user = userEvent.setup()
       renderTaxes()
       // Click More actions for the first item and delete it
@@ -330,14 +319,13 @@ describe('Taxes', () => {
   describe('remove file', () => {
     it('removes a file from an item when remove file button is clicked', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({
-                  id: '1',
-                  label: 'W-2',
-                  owner: 'primary',
-                  files: [makeFile({ id: 'f1', name: 'W2_2024.pdf' }), makeFile({ id: 'f2', name: 'W2_extra.pdf' })],
-                }),
-              ],
-            )
+        makeTaxItem({
+          id: '1',
+          label: 'W-2',
+          owner: 'primary',
+          files: [makeFile({ id: 'f1', name: 'W2_2024.pdf' }), makeFile({ id: 'f2', name: 'W2_extra.pdf' })],
+        }),
+      ])
       const user = userEvent.setup()
       renderTaxes()
       // Should see both files
@@ -354,22 +342,20 @@ describe('Taxes', () => {
 
   describe('file upload', () => {
     it('shows Upload button for items without files', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [] })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [] })])
       renderTaxes()
       expect(await screen.findByText('Upload')).toBeInTheDocument()
     })
 
     it('shows Add button for items that already have files', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({
-                  id: '1',
-                  label: 'W-2',
-                  owner: 'primary',
-                  files: [makeFile()],
-                }),
-              ],
-            )
+        makeTaxItem({
+          id: '1',
+          label: 'W-2',
+          owner: 'primary',
+          files: [makeFile()],
+        }),
+      ])
       renderTaxes()
       // "Add" button in item actions for item with files
       const addBtns = await screen.findAllByText('Add')
@@ -377,8 +363,7 @@ describe('Taxes', () => {
     })
 
     it('rejects files larger than 10 MB', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [] })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [] })])
       renderTaxes()
       // Wait for item to load so file input is in the DOM
       await screen.findByText('Upload')
@@ -402,15 +387,14 @@ describe('Taxes', () => {
         setBalances: vi.fn(),
       })
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({
-                  id: '1',
-                  label: '1099-INT',
-                  owner: 'primary',
-                  accountIds: [10],
-                  category: 'account',
-                }),
-              ],
-            )
+        makeTaxItem({
+          id: '1',
+          label: '1099-INT',
+          owner: 'primary',
+          accountIds: [10],
+          category: 'account',
+        }),
+      ])
       renderTaxes()
       // Item label should still be visible; account names are no longer shown inline
       expect(await screen.findByText('1099-INT')).toBeInTheDocument()
@@ -423,8 +407,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '1990-01-01' } }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       renderTaxes()
       // Partner section title
       expect(await screen.findByText('Bob')).toBeInTheDocument()
@@ -435,8 +418,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: null }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       renderTaxes()
       // Only Alice and Joint sections, no partner
       const sectionTitles = await screen.findAllByRole('heading', { level: 3 })
@@ -449,8 +431,9 @@ describe('Taxes', () => {
     it('hides Add Paystub button when owner already has a paystub item', async () => {
       // The component auto-backfills paystub items via useEffect, so when
       // we seed with a paystub already present, the button should be hidden.
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' })],
-            )
+      await seedYear(CURRENT_YEAR, [
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
+      ])
       renderTaxes()
       // Wait for any effects to settle
       await waitFor(() => {
@@ -468,10 +451,9 @@ describe('Taxes', () => {
         updateProfile: vi.fn(),
       })
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
-                makeTaxItem({ id: '2', label: "Bob's Paystubs", owner: 'partner', category: 'paystub' }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
+        makeTaxItem({ id: '2', label: "Bob's Paystubs", owner: 'partner', category: 'paystub' }),
+      ])
       renderTaxes()
       // Both sections have paystubs, so no Add Paystub buttons visible for primary/partner
       await waitFor(() => {
@@ -490,8 +472,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       renderTaxes()
       expect(await screen.findByText('+ From Accounts')).toBeInTheDocument()
     })
@@ -504,8 +485,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText('+ From Accounts'))
@@ -523,8 +503,7 @@ describe('Taxes', () => {
 
   describe('delete year', () => {
     it('shows confirmation dialog and deletes year', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       // Click Delete Year button
@@ -537,8 +516,7 @@ describe('Taxes', () => {
     })
 
     it('cancels delete when Cancel is clicked', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Delete Year/))
@@ -551,8 +529,7 @@ describe('Taxes', () => {
 
   describe('templates', () => {
     it('opens save template modal', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -586,15 +563,13 @@ describe('Taxes', () => {
 
   describe('tax return section', () => {
     it('renders Tax Returns section header', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       renderTaxes()
       expect(await screen.findByText('Tax Returns')).toBeInTheDocument()
     })
 
     it('shows empty message when no return is uploaded', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       renderTaxes()
       expect(await screen.findByText('No return uploaded yet. Use the menu to add.')).toBeInTheDocument()
     })
@@ -603,8 +578,7 @@ describe('Taxes', () => {
   describe('upload error auto-clear', () => {
     it('clears upload error after 5 seconds', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [] })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary', files: [] })])
       renderTaxes()
       // Flush pending microtasks so the async store load completes
       await act(async () => {})
@@ -624,8 +598,7 @@ describe('Taxes', () => {
 
   describe('add custom item via Enter key', () => {
     it('adds custom item when Enter is pressed in the input', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       const addButtons = await screen.findAllByText('+ Add Item')
@@ -637,8 +610,7 @@ describe('Taxes', () => {
     })
 
     it('does not add item via Enter when input is empty', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       const addButtons = await screen.findAllByText('+ Add Item')
@@ -652,8 +624,7 @@ describe('Taxes', () => {
 
   describe('add item modal cancel', () => {
     it('closes add item modal when Cancel is clicked', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       const addButtons = await screen.findAllByText('+ Add Item')
@@ -666,8 +637,7 @@ describe('Taxes', () => {
 
   describe('rename item via double-click and keyboard', () => {
     it('renames checklist item on Enter key in rename input', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByTitle('More actions'))
@@ -682,8 +652,7 @@ describe('Taxes', () => {
     })
 
     it('cancels rename on Escape key', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByTitle('More actions'))
@@ -700,8 +669,7 @@ describe('Taxes', () => {
     })
 
     it('commits rename on blur with changed value', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2', owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByTitle('More actions'))
@@ -720,8 +688,7 @@ describe('Taxes', () => {
 
   describe('save template modal', () => {
     it('saves new template with name', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -736,8 +703,7 @@ describe('Taxes', () => {
     })
 
     it('disables Save New button when template name is empty', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -746,8 +712,7 @@ describe('Taxes', () => {
     })
 
     it('saves template via Enter key in name input', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -761,8 +726,7 @@ describe('Taxes', () => {
       await seedTemplates([
         { id: 't1', name: 'Existing Template', items: [{ label: 'W-2', owner: 'primary', category: 'paystub' }] },
       ])
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -777,8 +741,7 @@ describe('Taxes', () => {
       await seedTemplates([
         { id: 't1', name: 'Existing Template', items: [{ label: 'W-2', owner: 'primary', category: 'paystub' }] },
       ])
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -791,8 +754,7 @@ describe('Taxes', () => {
       await seedTemplates([
         { id: 't1', name: 'Existing Template', items: [{ label: 'W-2', owner: 'primary', category: 'paystub' }] },
       ])
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -804,8 +766,7 @@ describe('Taxes', () => {
     })
 
     it('cancels save template modal', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -861,8 +822,7 @@ describe('Taxes', () => {
     }
 
     it('adds joint return entry via menu', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await openReturnMenu(user)
@@ -873,8 +833,7 @@ describe('Taxes', () => {
     })
 
     it('adds primary single return entry via menu', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await openReturnMenu(user)
@@ -887,8 +846,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '1990-01-01' } }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await openReturnMenu(user)
@@ -898,16 +856,15 @@ describe('Taxes', () => {
 
     it('shows return item with uploaded file and upload button', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' }),
-                makeTaxItem({
-                  id: 'r1',
-                  label: 'Joint Tax Return',
-                  owner: 'joint',
-                  category: 'tax-return',
-                  files: [makeFile({ id: 'rf1', name: 'return_2024.pdf' })],
-                }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' }),
+        makeTaxItem({
+          id: 'r1',
+          label: 'Joint Tax Return',
+          owner: 'joint',
+          category: 'tax-return',
+          files: [makeFile({ id: 'rf1', name: 'return_2024.pdf' })],
+        }),
+      ])
       renderTaxes()
       expect(await screen.findByText('Joint Tax Return')).toBeInTheDocument()
       expect(await screen.findByText('return_2024.pdf')).toBeInTheDocument()
@@ -915,10 +872,9 @@ describe('Taxes', () => {
 
     it('hides Upload Joint Return when joint return already exists', async () => {
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' }),
-                makeTaxItem({ id: 'r1', label: 'Joint Tax Return', owner: 'joint', category: 'tax-return' }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' }),
+        makeTaxItem({ id: 'r1', label: 'Joint Tax Return', owner: 'joint', category: 'tax-return' }),
+      ])
       const user = userEvent.setup()
       renderTaxes()
       await openReturnMenu(user)
@@ -933,10 +889,9 @@ describe('Taxes', () => {
         updateProfile: vi.fn(),
       })
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
-                // No partner paystub
-              ],
-            )
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary', category: 'paystub' }),
+        // No partner paystub
+      ])
       renderTaxes()
       // Wait for backfill to add Bob's Paystubs automatically
       await waitFor(() => {
@@ -954,8 +909,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText('+ From Accounts'))
@@ -972,8 +926,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText('+ From Accounts'))
@@ -992,10 +945,9 @@ describe('Taxes', () => {
         setBalances: vi.fn(),
       })
       await seedYear(CURRENT_YEAR, [
-                makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' }),
-                makeTaxItem({ id: '2', label: 'Brokerage', owner: 'primary', category: 'account', accountIds: [10] }),
-              ],
-            )
+        makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' }),
+        makeTaxItem({ id: '2', label: 'Brokerage', owner: 'primary', category: 'account', accountIds: [10] }),
+      ])
       renderTaxes()
       // From Accounts button should be hidden since all accounts linked
       expect(screen.queryByText('+ From Accounts')).not.toBeInTheDocument()
@@ -1012,8 +964,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText('+ From Accounts'))
@@ -1031,8 +982,7 @@ describe('Taxes', () => {
 
   describe('confirm delete modal', () => {
     it('closes confirm dialog when clicking overlay', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Delete Year/))
@@ -1054,8 +1004,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText('+ From Accounts'))
@@ -1070,8 +1019,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: "Alice's Paystubs", owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText('+ From Accounts'))
@@ -1103,8 +1051,7 @@ describe('Taxes', () => {
 
   describe('double-click rename', () => {
     it('enters editing mode on double-click', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })])
       renderTaxes()
       const label = await screen.findByText('W-2 Forms')
       fireEvent.doubleClick(label)
@@ -1114,8 +1061,7 @@ describe('Taxes', () => {
     })
 
     it('reverts rename on Escape key', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })])
       renderTaxes()
       const label = await screen.findByText('W-2 Forms')
       fireEvent.doubleClick(label)
@@ -1126,8 +1072,7 @@ describe('Taxes', () => {
     })
 
     it('commits rename on blur when text changes', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })])
       renderTaxes()
       const label = await screen.findByText('W-2 Forms')
       fireEvent.doubleClick(label)
@@ -1138,8 +1083,7 @@ describe('Taxes', () => {
     })
 
     it('reverts to original label on blur when trimmed text is empty', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })])
       renderTaxes()
       fireEvent.doubleClick(await screen.findByText('W-2 Forms'))
       const input = await screen.findByDisplayValue('W-2 Forms')
@@ -1151,8 +1095,7 @@ describe('Taxes', () => {
 
   describe('save template modal', () => {
     it('opens and saves a new template', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })])
       const user = userEvent.setup()
       renderTaxes()
       await user.click(await screen.findByText(/Save as Template/))
@@ -1164,8 +1107,7 @@ describe('Taxes', () => {
     })
 
     it('shows update/create options when templates exist', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: '1', label: 'W-2 Forms', owner: 'primary' })])
       // Templates are stored separately from the tax store
       await seedTemplates([
         { id: 'tpl1', name: 'Existing', items: [{ label: 'Item', owner: 'primary', category: 'w2' }] },
@@ -1197,8 +1139,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', avatarDataUrl: 'data:image/png;base64,abc', partner: null }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'p1', label: 'W-2', owner: 'primary', category: 'paystub' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'p1', label: 'W-2', owner: 'primary', category: 'paystub' })])
       const { container } = renderTaxes()
       await screen.findByText('W-2') // wait for async load
       const avatarImg = container.querySelector('.tax-owner-primary img')
@@ -1214,8 +1155,7 @@ describe('Taxes', () => {
         }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'p1', label: '1099', owner: 'partner', category: 'account' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'p1', label: '1099', owner: 'partner', category: 'account' })])
       const { container } = renderTaxes()
       await screen.findByText('1099') // wait for async load
       const avatarImg = container.querySelector('.tax-owner-partner img')
@@ -1228,8 +1168,9 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'j1', label: 'Joint 1099', owner: 'joint', category: 'account' })],
-            )
+      await seedYear(CURRENT_YEAR, [
+        makeTaxItem({ id: 'j1', label: 'Joint 1099', owner: 'joint', category: 'account' }),
+      ])
       const { container } = renderTaxes()
       await screen.findByText('Joint 1099') // wait for async load
       const jointBadge = container.querySelector('.tax-owner-group')
@@ -1247,8 +1188,7 @@ describe('Taxes', () => {
         }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'j1', label: 'Joint Doc', owner: 'joint', category: 'account' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'j1', label: 'Joint Doc', owner: 'joint', category: 'account' })])
       const { container } = renderTaxes()
       await screen.findByText('Joint Doc') // wait for async load
       const primaryImg = container.querySelector('.tax-owner-group .tax-owner-primary img')
@@ -1262,8 +1202,9 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 's1', label: 'Partner 1099', owner: 'partner', category: 'account' })],
-            )
+      await seedYear(CURRENT_YEAR, [
+        makeTaxItem({ id: 's1', label: 'Partner 1099', owner: 'partner', category: 'account' }),
+      ])
       const { container } = renderTaxes()
       await screen.findByText('Partner 1099') // wait for async load
       const partnerBadge = container.querySelector('.tax-owner-partner')
@@ -1277,8 +1218,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: '', partner: null }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'p2', label: 'W-2', owner: 'primary', category: 'paystub' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'p2', label: 'W-2', owner: 'primary', category: 'paystub' })])
       const { container } = renderTaxes()
       await screen.findByText('W-2') // wait for async load
       const primaryBadge = container.querySelector('.tax-owner-primary')
@@ -1291,8 +1231,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: { name: '', avatarDataUrl: '', birthday: '' } }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 's2', label: 'Doc', owner: 'partner', category: 'account' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 's2', label: 'Doc', owner: 'partner', category: 'account' })])
       const { container } = renderTaxes()
       await screen.findByText('Doc') // wait for async load
       // partner.name is '' → partnerName = profile.partner?.name || 'Partner' = 'Partner' → initial = 'P'
@@ -1317,8 +1256,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'x1', label: 'W-2', owner: 'primary', category: 'paystub' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'x1', label: 'W-2', owner: 'primary', category: 'paystub' })])
       renderTaxes()
       // Button text is "+ From Accounts"
       const suggestBtns = await screen.findAllByText('+ From Accounts')
@@ -1348,8 +1286,7 @@ describe('Taxes', () => {
         setAccounts: vi.fn(),
         setBalances: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'x1', label: 'W-2', owner: 'primary', category: 'paystub' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'x1', label: 'W-2', owner: 'primary', category: 'paystub' })])
       renderTaxes()
       // Open suggest modal for joint section
       const suggestBtns = await screen.findAllByText('+ From Accounts')
@@ -1365,8 +1302,7 @@ describe('Taxes', () => {
 
   describe('handleUpload branches', () => {
     it('shows error when file exceeds 10MB (line 751-752)', async () => {
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'up1', label: 'W-2', owner: 'primary', category: 'paystub' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'up1', label: 'W-2', owner: 'primary', category: 'paystub' })])
       renderTaxes()
       // Wait for async data to load so the file input is rendered
       await screen.findByText('W-2')
@@ -1390,8 +1326,7 @@ describe('Taxes', () => {
         profile: makeProfile({ name: 'Alice', partner: { name: 'Bob', avatarDataUrl: '', birthday: '' } }),
         updateProfile: vi.fn(),
       })
-      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'pp1', label: 'W-2', owner: 'partner', category: 'account' })],
-            )
+      await seedYear(CURRENT_YEAR, [makeTaxItem({ id: 'pp1', label: 'W-2', owner: 'partner', category: 'account' })])
       renderTaxes()
       // Look for "Add Paystub" button in the partner section
       const paystubBtns = screen.queryAllByText(/Add Paystub/)

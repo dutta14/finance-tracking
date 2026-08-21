@@ -369,7 +369,9 @@ const Transactions: FC = () => {
       }
     }
 
-    const handleRefresh = () => { refresh().catch(console.error) }
+    const handleRefresh = () => {
+      refresh().catch(console.error)
+    }
 
     // Defer heavy load to next frame so navigation isn't blocked
     const frameId = requestAnimationFrame(handleRefresh)

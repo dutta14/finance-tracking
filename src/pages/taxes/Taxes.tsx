@@ -230,33 +230,11 @@ const Taxes: FC = () => {
       ) : (
         <div className="tax-body">
           <div className="tax-owners-grid">
-          {/* Primary section */}
-          <OwnerSection
-            owner="primary"
-            title={primaryName}
-            items={primaryItems}
-            year={selectedYear}
-            onUpload={handleUpload}
-            onRemoveFile={handleRemoveFile}
-            onRemoveItem={handleRemoveItem}
-            onRename={handleRename}
-            onAddItem={handleAddItem}
-            onAddPaystub={handleAddPaystub}
-            onSuggestAccounts={handleSuggestAccounts}
-            primaryName={primaryName}
-            partnerName={partnerName}
-            primaryAvatar={primaryAvatar}
-            partnerAvatar={partnerAvatar}
-            accounts={accounts}
-            hasSuggestions={hasSuggestionsFor('primary')}
-          />
-
-          {/* Partner section */}
-          {hasPartner && (
+            {/* Primary section */}
             <OwnerSection
-              owner="partner"
-              title={partnerName}
-              items={partnerItems}
+              owner="primary"
+              title={primaryName}
+              items={primaryItems}
               year={selectedYear}
               onUpload={handleUpload}
               onRemoveFile={handleRemoveFile}
@@ -270,30 +248,52 @@ const Taxes: FC = () => {
               primaryAvatar={primaryAvatar}
               partnerAvatar={partnerAvatar}
               accounts={accounts}
-              hasSuggestions={hasSuggestionsFor('partner')}
+              hasSuggestions={hasSuggestionsFor('primary')}
             />
-          )}
 
-          {/* Joint section */}
-          <OwnerSection
-            owner="joint"
-            title="Joint"
-            items={jointItems}
-            year={selectedYear}
-            onUpload={handleUpload}
-            onRemoveFile={handleRemoveFile}
-            onRemoveItem={handleRemoveItem}
-            onRename={handleRename}
-            onAddItem={handleAddItem}
-            onAddPaystub={handleAddPaystub}
-            onSuggestAccounts={handleSuggestAccounts}
-            primaryName={primaryName}
-            partnerName={partnerName}
-            primaryAvatar={primaryAvatar}
-            partnerAvatar={partnerAvatar}
-            accounts={accounts}
-            hasSuggestions={hasSuggestionsFor('joint')}
-          />
+            {/* Partner section */}
+            {hasPartner && (
+              <OwnerSection
+                owner="partner"
+                title={partnerName}
+                items={partnerItems}
+                year={selectedYear}
+                onUpload={handleUpload}
+                onRemoveFile={handleRemoveFile}
+                onRemoveItem={handleRemoveItem}
+                onRename={handleRename}
+                onAddItem={handleAddItem}
+                onAddPaystub={handleAddPaystub}
+                onSuggestAccounts={handleSuggestAccounts}
+                primaryName={primaryName}
+                partnerName={partnerName}
+                primaryAvatar={primaryAvatar}
+                partnerAvatar={partnerAvatar}
+                accounts={accounts}
+                hasSuggestions={hasSuggestionsFor('partner')}
+              />
+            )}
+
+            {/* Joint section */}
+            <OwnerSection
+              owner="joint"
+              title="Joint"
+              items={jointItems}
+              year={selectedYear}
+              onUpload={handleUpload}
+              onRemoveFile={handleRemoveFile}
+              onRemoveItem={handleRemoveItem}
+              onRename={handleRename}
+              onAddItem={handleAddItem}
+              onAddPaystub={handleAddPaystub}
+              onSuggestAccounts={handleSuggestAccounts}
+              primaryName={primaryName}
+              partnerName={partnerName}
+              primaryAvatar={primaryAvatar}
+              partnerAvatar={partnerAvatar}
+              accounts={accounts}
+              hasSuggestions={hasSuggestionsFor('joint')}
+            />
           </div>
 
           {/* Tax Returns */}

@@ -8,16 +8,31 @@ const SUMMARY_PATH = 'budget/summary-cache.json'
 
 export async function getBudgetSaveRate(
   fileStore: FileStore,
-): Promise<{ annualSavings: number; saveRate: number; monthsOfData: number; totalIncome?: number; totalExpense?: number } | null> {
-  return fileStore.readJSON<{ annualSavings: number; saveRate: number; monthsOfData: number; totalIncome?: number; totalExpense?: number } | null>(
-    SUMMARY_PATH,
-    null,
-  )
+): Promise<{
+  annualSavings: number
+  saveRate: number
+  monthsOfData: number
+  totalIncome?: number
+  totalExpense?: number
+} | null> {
+  return fileStore.readJSON<{
+    annualSavings: number
+    saveRate: number
+    monthsOfData: number
+    totalIncome?: number
+    totalExpense?: number
+  } | null>(SUMMARY_PATH, null)
 }
 
 export async function saveBudgetSummary(
   fileStore: FileStore,
-  summary: { annualSavings: number; saveRate: number; monthsOfData: number; totalIncome?: number; totalExpense?: number },
+  summary: {
+    annualSavings: number
+    saveRate: number
+    monthsOfData: number
+    totalIncome?: number
+    totalExpense?: number
+  },
 ): Promise<void> {
   await fileStore.writeJSON(SUMMARY_PATH, summary)
 }
@@ -190,9 +205,7 @@ export async function loadBudgetStore(fileStore: FileStore): Promise<BudgetStore
 
     // Discover years from transactions folder + config
     const txFolders = await fileStore.listFiles('transactions')
-    const discoveredYears = txFolders
-      .filter(f => /^\d{4}$/.test(f))
-      .map(Number)
+    const discoveredYears = txFolders.filter(f => /^\d{4}$/.test(f)).map(Number)
     const allYears = [...new Set([...config.years, ...discoveredYears])].sort()
 
     // Enumerate CSVs by year
@@ -311,9 +324,6 @@ export function getGlobalCategoryGroups(store: BudgetStore): CategoryGroup[] {
 export function updateGlobalCategoryGroups(store: BudgetStore, groups: CategoryGroup[]): BudgetStore {
   return { ...store, categoryGroups: groups }
 }
-
-
-
 
 export function renameBudgetMonth(store: BudgetStore, oldKey: string, newKey: string): BudgetStore {
   if (oldKey === newKey) return store

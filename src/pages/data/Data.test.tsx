@@ -199,7 +199,9 @@ describe('Data page integration', () => {
 
     await openAccountsManage(user)
 
-    expect(within(screen.getByRole('tablist', { name: 'Data view' })).getByRole('tab', { name: /^Accounts$/ })).toHaveAttribute('aria-selected', 'true')
+    expect(
+      within(screen.getByRole('tablist', { name: 'Data view' })).getByRole('tab', { name: /^Accounts$/ }),
+    ).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('+ Add Account')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })

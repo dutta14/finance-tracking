@@ -316,7 +316,6 @@ body.dark .gw-goal-undo-msg {
   gap: 0.25rem;
 }
 
-
 .gw-goal-label--editing {
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);

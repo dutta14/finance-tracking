@@ -147,7 +147,6 @@ describe('setStorageItem', () => {
     setStorageItem('home-card-order', [3, 2, 1, 0])
     expect(localStorage.getItem('home-card-order')).toBe('[3,2,1,0]')
   })
-
 })
 
 // ── removeStorageItem ───────────────────────────────────────────

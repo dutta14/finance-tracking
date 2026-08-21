@@ -353,7 +353,13 @@ const Data: FC = () => {
                           aria-label="More data actions"
                         >
                           <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path
+                              d="M4 6l4 4 4-4"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         </button>
                       )}
@@ -362,7 +368,10 @@ const Data: FC = () => {
                           {allowCsvImport && (
                             <button
                               className="data-add-entry-split-dropdown-item"
-                              onClick={() => { setAddMenuOpen(false); csvInputRef.current?.click() }}
+                              onClick={() => {
+                                setAddMenuOpen(false)
+                                csvInputRef.current?.click()
+                              }}
                             >
                               Import from CSV
                             </button>
@@ -370,7 +379,10 @@ const Data: FC = () => {
                           {allowCsvImport && hasAccounts && balances.length > 0 && (
                             <button
                               className="data-add-entry-split-dropdown-item"
-                              onClick={() => { setAddMenuOpen(false); exportCsv(accounts, balances) }}
+                              onClick={() => {
+                                setAddMenuOpen(false)
+                                exportCsv(accounts, balances)
+                              }}
                             >
                               Export CSV
                             </button>

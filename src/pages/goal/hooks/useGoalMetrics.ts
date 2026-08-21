@@ -90,9 +90,13 @@ export function useGoalMetrics(
   useEffect(() => {
     let cancelled = false
     getBudgetSaveRate(fileStore)
-      .then(r => { if (!cancelled) setBudgetSaveRate(r) })
+      .then(r => {
+        if (!cancelled) setBudgetSaveRate(r)
+      })
       .catch(console.error)
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [fileStore])
 
   return useMemo(() => {

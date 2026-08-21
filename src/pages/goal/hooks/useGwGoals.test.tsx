@@ -45,7 +45,15 @@ describe('useGwGoals hook', () => {
   })
 
   it('migrates legacy fiPlanId → fiGoalId fields on load', async () => {
-    const legacy = { id: 1, fiPlanId: 100, label: 'Car', createdAt: '2025-01-01', disburseAge: 35, disburseAmount: 30000, growthRate: 5 }
+    const legacy = {
+      id: 1,
+      fiPlanId: 100,
+      label: 'Car',
+      createdAt: '2025-01-01',
+      disburseAge: 35,
+      disburseAmount: 30000,
+      growthRate: 5,
+    }
     await store.writeJSON('goals.json', { financialGoals: [], gwGoals: [legacy] })
     const { result } = renderHook(() => useGwGoals(), { wrapper: makeWrapper(store) })
     await waitFor(() => expect(result.current.gwGoals).toHaveLength(1))
@@ -76,7 +84,10 @@ describe('GwGoal field migration logic (pure)', () => {
     const expected = { id: 1, fiGoalId: 42, label: 'Test' }
     const result = input.map(item => {
       const m = { ...item } as Record<string, unknown>
-      if ('fiPlanId' in m) { m.fiGoalId = m.fiPlanId; delete m.fiPlanId }
+      if ('fiPlanId' in m) {
+        m.fiGoalId = m.fiPlanId
+        delete m.fiPlanId
+      }
       return m
     })
     expect(result[0]).toMatchObject(expected)
@@ -87,7 +98,10 @@ describe('GwGoal field migration logic (pure)', () => {
     const input = [{ id: 1, fiGoalId: 42, label: 'Test' }]
     const result = input.map(item => {
       const m = { ...item } as Record<string, unknown>
-      if ('fiPlanId' in m) { m.fiGoalId = m.fiPlanId; delete m.fiPlanId }
+      if ('fiPlanId' in m) {
+        m.fiGoalId = m.fiPlanId
+        delete m.fiPlanId
+      }
       return m
     })
     expect(result[0].fiGoalId).toBe(42)

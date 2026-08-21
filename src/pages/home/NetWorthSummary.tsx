@@ -224,11 +224,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           </span>
         </div>
       </div>
-      <MonthPicker
-        allMonths={allMonths}
-        selectedMonth={selectedMonth}
-        onMonthChange={handleMonthChange}
-      />
+      <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
       <p className="nw-prose">
         {proseParts.diff !== null && proseParts.diff !== 0 && (
           <span className="nw-prose-line">

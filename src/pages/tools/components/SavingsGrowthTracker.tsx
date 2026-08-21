@@ -49,7 +49,9 @@ interface BudgetYearData {
   hasData: boolean
 }
 
-async function getBudgetYearlyData(fileStore: import('../../../utils/fileStoreTypes').FileStore): Promise<Map<number, BudgetYearData>> {
+async function getBudgetYearlyData(
+  fileStore: import('../../../utils/fileStoreTypes').FileStore,
+): Promise<Map<number, BudgetYearData>> {
   const result = new Map<number, BudgetYearData>()
   try {
     const store = await loadBudgetStore(fileStore)
@@ -158,7 +160,9 @@ const SavingsGrowthTracker: FC = () => {
   }, [fileStore])
 
   useEffect(() => {
-    getBudgetYearlyData(fileStore).then(setBudgetData).catch(() => setBudgetData(new Map()))
+    getBudgetYearlyData(fileStore)
+      .then(setBudgetData)
+      .catch(() => setBudgetData(new Map()))
   }, [fileStore])
 
   const persistOverrides = useCallback(

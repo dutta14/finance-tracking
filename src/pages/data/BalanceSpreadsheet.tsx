@@ -445,7 +445,13 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
                         onClick={() => onEditMonth(month)}
                       >
                         <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                          <path d="M13.5 3.5l3 3M4 13l-1 4 4-1L15.5 7.5l-3-3L4 13z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path
+                            d="M13.5 3.5l3 3M4 13l-1 4 4-1L15.5 7.5l-3-3L4 13z"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </button>
                     )}

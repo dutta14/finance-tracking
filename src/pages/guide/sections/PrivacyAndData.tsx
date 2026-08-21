@@ -17,7 +17,11 @@ const PrivacyAndData: FC = () => (
       </p>
       <p>
         The app uses the{' '}
-        <a href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           File System Access API
         </a>{' '}
         (Chrome and Edge) to read and write directly to this folder. Your browser remembers which folder you picked so

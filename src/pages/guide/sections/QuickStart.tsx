@@ -23,7 +23,7 @@ const QuickStart: FC<QuickStartProps> = ({ screenshots }) => {
     {
       id: 'quick-start-folder',
       title: 'Pick a data folder',
-      body: "When you first open the app, it asks you to select a folder on your computer. This is where all your data will be stored as plain JSON and CSV files. Create a new folder or pick an existing one. Your browser will remember the choice, though it may ask for permission again after a restart.",
+      body: 'When you first open the app, it asks you to select a folder on your computer. This is where all your data will be stored as plain JSON and CSV files. Create a new folder or pick an existing one. Your browser will remember the choice, though it may ask for permission again after a restart.',
       image: screenshots.step2,
       alt: 'Folder picker on first open',
     },

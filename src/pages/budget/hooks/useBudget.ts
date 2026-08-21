@@ -557,9 +557,7 @@ export function useBudget() {
       monthsOfData: monthsWithData.size,
       totalIncome: summary.totalIncome,
       totalExpense: summary.totalExpense,
-    }).catch(
-      console.error,
-    )
+    }).catch(console.error)
   }, [summary, monthsWithData, fileStore])
 
   const years = store.years

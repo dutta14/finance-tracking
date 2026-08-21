@@ -10,7 +10,7 @@ const questions = [
     id: 'faq-data',
     question: 'Where does my data go?',
     answer:
-      "A folder on your computer that you choose. The app reads and writes plain JSON and CSV files using the File System Access API. Your data never leaves your machine.",
+      'A folder on your computer that you choose. The app reads and writes plain JSON and CSV files using the File System Access API. Your data never leaves your machine.',
   },
   {
     id: 'faq-switch-devices',

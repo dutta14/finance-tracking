@@ -43,7 +43,10 @@ vi.mock('../../budget/utils/csvParser', () => ({
 }))
 
 vi.mock('../../../hooks/useProfile', () => ({
-  useProfile: vi.fn(() => ({ profile: { name: 'Primary', avatarDataUrl: "", birthday: '', partner: null }, updateProfile: vi.fn() })),
+  useProfile: vi.fn(() => ({
+    profile: { name: 'Primary', avatarDataUrl: '', birthday: '', partner: null },
+    updateProfile: vi.fn(),
+  })),
 }))
 
 vi.mock('../../../contexts/FileStoreContext', () => ({
@@ -441,7 +444,12 @@ describe('FICalculator', () => {
 
   it('renders partner 401(k) stepper when profile has partner birth year', () => {
     vi.mocked(useProfile).mockReturnValue({
-      profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: { name: '', avatarDataUrl: "", birthday: '1992-06-15' } },
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
       updateProfile: vi.fn(),
     })
 
@@ -521,7 +529,12 @@ describe('FICalculator', () => {
 
   it('shows partner 401k breakdown when fiRetirementPartner > 0', () => {
     vi.mocked(useProfile).mockReturnValue({
-      profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: { name: '', avatarDataUrl: "", birthday: '1992-06-15' } },
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
       updateProfile: vi.fn(),
     })
     mockUseData.mockReturnValue({
@@ -686,7 +699,7 @@ describe('FICalculator', () => {
           name: '',
           avatarDataUrl: '',
           birthday: '1990-01-01',
-          partner: { name: '', avatarDataUrl: "", birthday: '1995-06-15' },
+          partner: { name: '', avatarDataUrl: '', birthday: '1995-06-15' },
         },
         updateProfile: vi.fn(),
       })
@@ -701,7 +714,7 @@ describe('FICalculator', () => {
           name: '',
           avatarDataUrl: '',
           birthday: '1990-01-01',
-          partner: { name: '', avatarDataUrl: "", birthday: '1985-06-15' },
+          partner: { name: '', avatarDataUrl: '', birthday: '1985-06-15' },
         },
         updateProfile: vi.fn(),
       })
@@ -714,7 +727,12 @@ describe('FICalculator', () => {
 
   it('increments partner 401k year when plus stepper is clicked', async () => {
     vi.mocked(useProfile).mockReturnValue({
-      profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: { name: '', avatarDataUrl: "", birthday: '1992-06-15' } },
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
       updateProfile: vi.fn(),
     })
 
@@ -906,7 +924,7 @@ describe('FICalculator', () => {
         name: '',
         avatarDataUrl: '',
         birthday: '1990-01-01',
-        partner: { name: '', avatarDataUrl: "", birthday: '1992-01-01' },
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-01-01' },
       },
       updateProfile: vi.fn(),
     })

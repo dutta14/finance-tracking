@@ -9,7 +9,14 @@ interface YearNavProps {
   size?: 'sm' | 'default'
 }
 
-const YearNav: FC<YearNavProps> = ({ selectedYear, onPrevYear, onNextYear, disablePrev, disableNext, size = 'default' }) => (
+const YearNav: FC<YearNavProps> = ({
+  selectedYear,
+  onPrevYear,
+  onNextYear,
+  disablePrev,
+  disableNext,
+  size = 'default',
+}) => (
   <div className={`budget-year-nav${size === 'sm' ? ' budget-year-nav--sm' : ''}`}>
     <button className="budget-year-btn" onClick={onPrevYear} disabled={disablePrev} title="Previous year">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

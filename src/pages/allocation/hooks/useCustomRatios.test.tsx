@@ -48,10 +48,17 @@ describe('useCustomRatios', () => {
     })
 
     it('loads existing ratios from storage', async () => {
-      const existing: CustomRatio[] = [{
-        id: 'r1', name: 'My Ratio', scope: 'total',
-        groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }],
-      }]
+      const existing: CustomRatio[] = [
+        {
+          id: 'r1',
+          name: 'My Ratio',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
+      ]
       await seedStorage(store, existing)
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -95,10 +102,17 @@ describe('useCustomRatios', () => {
     })
 
     it('appends to existing ratios', async () => {
-      await seedStorage(store, [{
-        id: 'existing', name: 'Existing', scope: 'fi',
-        groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }],
-      }])
+      await seedStorage(store, [
+        {
+          id: 'existing',
+          name: 'Existing',
+          scope: 'fi',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
+      ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
       act(() => result.current.createRatio())
@@ -110,7 +124,9 @@ describe('useCustomRatios', () => {
 
   describe('createFromPreset', () => {
     const preset: RatioPreset = {
-      id: 'stock-bond', name: 'Stock vs Bond', scope: 'fi',
+      id: 'stock-bond',
+      name: 'Stock vs Bond',
+      scope: 'fi',
       groups: [
         { label: 'Stocks', classes: ['us-stock', 'intl-stock'], color: '#6366f1' },
         { label: 'Bonds', classes: ['bonds'], color: '#0ea5e9' },
@@ -142,8 +158,24 @@ describe('useCustomRatios', () => {
   describe('requestDeleteRatio', () => {
     it('deletes a ratio without goals immediately', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'A', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
-        { id: 'r2', name: 'B', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'A',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
+        {
+          id: 'r2',
+          name: 'B',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(2))
@@ -153,11 +185,18 @@ describe('useCustomRatios', () => {
     })
 
     it('sets confirmDeleteId when ratio has goals', async () => {
-      await seedStorage(store, [{
-        id: 'r1', name: 'A', scope: 'total',
-        groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }],
-        goals: { total: { type: 'constant', pcts: [60, 40] } },
-      }])
+      await seedStorage(store, [
+        {
+          id: 'r1',
+          name: 'A',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+          goals: { total: { type: 'constant', pcts: [60, 40] } },
+        },
+      ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
       act(() => result.current.requestDeleteRatio('r1'))
@@ -167,8 +206,24 @@ describe('useCustomRatios', () => {
 
     it('switches active ratio when deleting the active one', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'A', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
-        { id: 'r2', name: 'B', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'A',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
+        {
+          id: 'r2',
+          name: 'B',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(2))
@@ -179,7 +234,15 @@ describe('useCustomRatios', () => {
 
     it('sets activeRatioId to null when deleting the last ratio', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'A', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'A',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -191,11 +254,18 @@ describe('useCustomRatios', () => {
 
   describe('doDeleteRatio', () => {
     it('deletes a ratio with goals when confirmed', async () => {
-      await seedStorage(store, [{
-        id: 'r1', name: 'A', scope: 'total',
-        groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }],
-        goals: { total: { type: 'constant', pcts: [60, 40] } },
-      }])
+      await seedStorage(store, [
+        {
+          id: 'r1',
+          name: 'A',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+          goals: { total: { type: 'constant', pcts: [60, 40] } },
+        },
+      ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
       act(() => result.current.requestDeleteRatio('r1'))
@@ -207,7 +277,15 @@ describe('useCustomRatios', () => {
 
     it('persists deletion to storage', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'A', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'A',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -222,7 +300,15 @@ describe('useCustomRatios', () => {
   describe('updateRatioName', () => {
     it('updates the name of the active ratio', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'Old Name', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'Old Name',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -241,7 +327,15 @@ describe('useCustomRatios', () => {
   describe('updateRatioScope', () => {
     it('updates the scope of the active ratio', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -251,7 +345,15 @@ describe('useCustomRatios', () => {
 
     it('clears active preset when scope changes', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -264,7 +366,15 @@ describe('useCustomRatios', () => {
   describe('updateGroupLabel', () => {
     it('updates a group label by index', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -277,7 +387,15 @@ describe('useCustomRatios', () => {
   describe('toggleClass', () => {
     it('adds a class to a group', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -287,7 +405,15 @@ describe('useCustomRatios', () => {
 
     it('removes a class from a group when already present', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: ['us-stock'] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: ['us-stock'] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -297,7 +423,15 @@ describe('useCustomRatios', () => {
 
     it('removes a class from other groups when added to one', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: ['us-stock'] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: ['us-stock'] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -310,7 +444,15 @@ describe('useCustomRatios', () => {
   describe('addGroup', () => {
     it('adds a new group with a sequential label', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -339,7 +481,16 @@ describe('useCustomRatios', () => {
   describe('removeGroup', () => {
     it('removes a group by index', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }, { label: 'C', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+            { label: 'C', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -350,7 +501,15 @@ describe('useCustomRatios', () => {
 
     it('does not remove a group when only 2 remain', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -362,10 +521,20 @@ describe('useCustomRatios', () => {
   describe('applyPreset', () => {
     it('applies preset values to the active ratio', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const preset: RatioPreset = {
-        id: 'equity-fixed', name: 'Equity vs Fixed', scope: 'fi',
+        id: 'equity-fixed',
+        name: 'Equity vs Fixed',
+        scope: 'fi',
         groups: [
           { label: 'Equity', classes: ['us-stock', 'intl-stock'], color: '#6366f1' },
           { label: 'Fixed', classes: ['bonds', 'cash'], color: '#0ea5e9' },
@@ -384,7 +553,15 @@ describe('useCustomRatios', () => {
   describe('setGoalForScope', () => {
     it('sets a constant goal for a scope', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'R', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
@@ -393,11 +570,18 @@ describe('useCustomRatios', () => {
     })
 
     it('removes a goal when null is passed', async () => {
-      await seedStorage(store, [{
-        id: 'r1', name: 'R', scope: 'total',
-        groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }],
-        goals: { total: { type: 'constant', pcts: [50, 50] } },
-      }])
+      await seedStorage(store, [
+        {
+          id: 'r1',
+          name: 'R',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+          goals: { total: { type: 'constant', pcts: [50, 50] } },
+        },
+      ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
       act(() => result.current.setGoalForScope('total', null))
@@ -424,13 +608,21 @@ describe('useCustomRatios', () => {
 
   describe('guard branches', () => {
     it('addGroup does nothing when already at 6 groups', async () => {
-      await seedStorage(store, [{
-        id: 'r1', name: 'Full', scope: 'total',
-        groups: [
-          { label: 'A', classes: [] }, { label: 'B', classes: [] }, { label: 'C', classes: [] },
-          { label: 'D', classes: [] }, { label: 'E', classes: [] }, { label: 'F', classes: [] },
-        ],
-      }])
+      await seedStorage(store, [
+        {
+          id: 'r1',
+          name: 'Full',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+            { label: 'C', classes: [] },
+            { label: 'D', classes: [] },
+            { label: 'E', classes: [] },
+            { label: 'F', classes: [] },
+          ],
+        },
+      ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.activeRatio!.groups).toHaveLength(6))
       act(() => result.current.addGroup())
@@ -439,7 +631,15 @@ describe('useCustomRatios', () => {
 
     it('removeGroup does nothing when only 2 groups remain', async () => {
       await seedStorage(store, [
-        { id: 'r1', name: 'Min', scope: 'total', groups: [{ label: 'A', classes: [] }, { label: 'B', classes: [] }] },
+        {
+          id: 'r1',
+          name: 'Min',
+          scope: 'total',
+          groups: [
+            { label: 'A', classes: [] },
+            { label: 'B', classes: [] },
+          ],
+        },
       ])
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.activeRatio!.groups).toHaveLength(2))

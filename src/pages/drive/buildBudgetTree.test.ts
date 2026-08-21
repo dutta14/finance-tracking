@@ -26,9 +26,18 @@ describe('buildDriveTree', () => {
         { id: 'removed', name: 'Remove from Budget', categories: [] },
       ],
     })
-    await fs.writeCSV('transactions/2025/2025-01.csv', [['date', 'amount'], ['a', '1']])
-    await fs.writeCSV('transactions/2025/2025-02.csv', [['date', 'amount'], ['b', '2']])
-    await fs.writeCSV('transactions/2024/2024-12.csv', [['date', 'amount'], ['c', '3']])
+    await fs.writeCSV('transactions/2025/2025-01.csv', [
+      ['date', 'amount'],
+      ['a', '1'],
+    ])
+    await fs.writeCSV('transactions/2025/2025-02.csv', [
+      ['date', 'amount'],
+      ['b', '2'],
+    ])
+    await fs.writeCSV('transactions/2024/2024-12.csv', [
+      ['date', 'amount'],
+      ['c', '3'],
+    ])
 
     const tree = await buildDriveTree(fs, NO_ACCOUNTS, EMPTY_PROFILE)
     const budget = tree.folders.find(f => f.slug === 'budget')!
@@ -86,7 +95,10 @@ describe('buildDriveTree', () => {
         { id: 'removed', name: 'Remove from Budget', categories: [] },
       ],
     })
-    await fs.writeCSV('transactions/2025/2025-01.csv', [['date', 'amount'], ['a', '1']])
+    await fs.writeCSV('transactions/2025/2025-01.csv', [
+      ['date', 'amount'],
+      ['a', '1'],
+    ])
 
     const tree2 = await buildDriveTree(fs, NO_ACCOUNTS, EMPTY_PROFILE)
     const budget = tree2.folders.find(f => f.slug === 'budget')

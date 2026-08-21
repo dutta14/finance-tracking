@@ -60,10 +60,7 @@ describe('loadBudgetStore', () => {
   it('loads CSVs from file store and categories from categories.json', async () => {
     await seedCategories(ms, {
       years: [2025],
-      categoryGroups: [
-        { id: 'food', name: 'Food', categories: ['Groceries'] },
-        ...DEFAULT_GROUPS,
-      ],
+      categoryGroups: [{ id: 'food', name: 'Food', categories: ['Groceries'] }, ...DEFAULT_GROUPS],
     })
     await seedCSV(ms, '2025-01', CSV_TEXT)
 
@@ -168,10 +165,7 @@ describe('saveBudgetStore', () => {
       csvs: { '2025-05': { month: '2025-05', csv: CSV_TEXT, uploadedAt: '' } },
       configs: {},
       years: [2025],
-      categoryGroups: [
-        { id: 'food', name: 'Food', categories: ['Groceries'] },
-        ...DEFAULT_GROUPS,
-      ],
+      categoryGroups: [{ id: 'food', name: 'Food', categories: ['Groceries'] }, ...DEFAULT_GROUPS],
     }
     await saveBudgetStore(ms, original)
     const loaded = await loadBudgetStore(ms)

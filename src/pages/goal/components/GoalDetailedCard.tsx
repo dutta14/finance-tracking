@@ -183,12 +183,18 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   useEffect(() => {
     let cancelled = false
     getBudgetSaveRate(fileStore)
-      .then(r => { if (!cancelled) setBudgetSaveRateData(r) })
+      .then(r => {
+        if (!cancelled) setBudgetSaveRateData(r)
+      })
       .catch(console.error)
     loadBudgetStore(fileStore)
-      .then(s => { if (!cancelled) setBudgetStore(s) })
+      .then(s => {
+        if (!cancelled) setBudgetStore(s)
+      })
       .catch(console.error)
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [fileStore])
 
   useEffect(() => {
@@ -735,7 +741,8 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                   </button>
                 </div>
                 {availableYears && availableYears.length > 1 && onSummaryYearChange ? (
-                  <YearNav size="sm"
+                  <YearNav
+                    size="sm"
                     selectedYear={summaryYear ?? new Date().getFullYear()}
                     disablePrev={summaryYear === availableYears[availableYears.length - 1]}
                     disableNext={summaryYear === availableYears[0]}

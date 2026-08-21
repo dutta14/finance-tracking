@@ -13,7 +13,9 @@ interface PendingWrite {
 }
 
 const isNotFound = (error: unknown): boolean =>
-  error instanceof DOMException ? error.name === 'NotFoundError' : (error as { name?: string })?.name === 'NotFoundError'
+  error instanceof DOMException
+    ? error.name === 'NotFoundError'
+    : (error as { name?: string })?.name === 'NotFoundError'
 
 const splitPath = (path: string): { dirs: string[]; name: string } => {
   const segments = path.split('/').filter(Boolean)

@@ -122,15 +122,24 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
     fill: textColor,
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   }
-  const tooltipStyle = {
-    backgroundColor: tooltipBg,
-    border: `1px solid ${tooltipBorder}`,
-    borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-    padding: '6px 10px',
-  }
-  const tooltipLabelStyle = { color: textColor, fontSize: 10, fontWeight: 500, marginBottom: 2 }
-  const tooltipItemStyle = { color: tooltipText, fontSize: 11, fontWeight: 600, padding: 0 }
+  const tooltipStyle = useMemo(
+    () => ({
+      backgroundColor: tooltipBg,
+      border: `1px solid ${tooltipBorder}`,
+      borderRadius: 8,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+      padding: '6px 10px',
+    }),
+    [tooltipBg, tooltipBorder],
+  )
+  const tooltipLabelStyle = useMemo(
+    () => ({ color: textColor, fontSize: 10, fontWeight: 500, marginBottom: 2 }),
+    [textColor],
+  )
+  const tooltipItemStyle = useMemo(
+    () => ({ color: tooltipText, fontSize: 11, fontWeight: 600, padding: 0 }),
+    [tooltipText],
+  )
   const positiveDeltaColor = '#16a34a'
   const negativeDeltaColor = '#dc2626'
   const getRawTooltipValue = useCallback(

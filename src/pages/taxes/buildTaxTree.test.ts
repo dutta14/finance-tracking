@@ -79,20 +79,38 @@ describe('buildTaxTree', () => {
       years: {
         2022: {
           items: [
-            { id: '1', label: 'A', owner: 'primary', category: 'custom', accountIds: [],
-              files: [{ id: 'f1', name: 'a', content: 'x', ext: 'csv', uploadedAt: 't' }] },
+            {
+              id: '1',
+              label: 'A',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'a', content: 'x', ext: 'csv', uploadedAt: 't' }],
+            },
           ],
         },
         2024: {
           items: [
-            { id: '2', label: 'B', owner: 'primary', category: 'custom', accountIds: [],
-              files: [{ id: 'f2', name: 'b', content: 'x', ext: 'csv', uploadedAt: 't' }] },
+            {
+              id: '2',
+              label: 'B',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f2', name: 'b', content: 'x', ext: 'csv', uploadedAt: 't' }],
+            },
           ],
         },
         2023: {
           items: [
-            { id: '3', label: 'C', owner: 'primary', category: 'custom', accountIds: [],
-              files: [{ id: 'f3', name: 'c', content: 'x', ext: 'csv', uploadedAt: 't' }] },
+            {
+              id: '3',
+              label: 'C',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f3', name: 'c', content: 'x', ext: 'csv', uploadedAt: 't' }],
+            },
           ],
         },
       },
@@ -107,8 +125,14 @@ describe('buildTaxTree', () => {
         2024: { items: [{ id: '1', label: 'Empty', owner: 'primary', category: 'custom', accountIds: [], files: [] }] },
         2025: {
           items: [
-            { id: '2', label: 'Has File', owner: 'primary', category: 'custom', accountIds: [],
-              files: [{ id: 'f1', name: 'doc.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] },
+            {
+              id: '2',
+              label: 'Has File',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'doc.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
           ],
         },
       },
@@ -123,8 +147,14 @@ describe('buildTaxTree', () => {
       years: {
         2024: {
           items: [
-            { id: '1', label: 'W-2', owner: 'partner', category: 'paystub', accountIds: [],
-              files: [{ id: 'f1', name: 'w2.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] },
+            {
+              id: '1',
+              label: 'W-2',
+              owner: 'partner',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'w2.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
           ],
         },
       },
@@ -138,8 +168,14 @@ describe('buildTaxTree', () => {
       years: {
         2024: {
           items: [
-            { id: '1', label: 'Doc', owner: 'primary', category: 'custom', accountIds: [],
-              files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] },
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'primary',
+              category: 'custom',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
           ],
         },
       },
@@ -153,8 +189,14 @@ describe('buildTaxTree', () => {
       years: {
         2024: {
           items: [
-            { id: '1', label: 'Doc', owner: 'primary', category: 'unknown-category' as never, accountIds: [],
-              files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] },
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'primary',
+              category: 'unknown-category' as never,
+              accountIds: [],
+              files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
           ],
         },
       },
@@ -168,8 +210,14 @@ describe('buildTaxTree', () => {
       years: {
         2024: {
           items: [
-            { id: '1', label: 'Joint Doc', owner: 'joint', category: 'paystub', accountIds: [],
-              files: [{ id: 'f1', name: 'joint.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] },
+            {
+              id: '1',
+              label: 'Joint Doc',
+              owner: 'joint',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'joint.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
           ],
         },
       },
@@ -183,8 +231,14 @@ describe('buildTaxTree', () => {
       years: {
         2024: {
           items: [
-            { id: '1', label: 'Doc', owner: 'partner', category: 'paystub', accountIds: [],
-              files: [{ id: 'f1', name: 'a.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }] },
+            {
+              id: '1',
+              label: 'Doc',
+              owner: 'partner',
+              category: 'paystub',
+              accountIds: [],
+              files: [{ id: 'f1', name: 'a.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
+            },
           ],
         },
       },

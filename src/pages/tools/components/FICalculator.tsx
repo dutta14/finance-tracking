@@ -16,7 +16,7 @@ async function getLastYearExpense(fileStore: import('../../../utils/fileStoreTyp
     const lastYear = new Date().getFullYear() - 1
     const groups = store.categoryGroups || []
     const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
-    const incomeCats = new Set(getIncomeGroups(groups).flatMap(g => g.id !== 'removed' ? g.categories : []))
+    const incomeCats = new Set(getIncomeGroups(groups).flatMap(g => (g.id !== 'removed' ? g.categories : [])))
 
     const catSums: Record<string, number> = {}
     for (let m = 1; m <= 12; m++) {
@@ -29,7 +29,9 @@ async function getLastYearExpense(fileStore: import('../../../utils/fileStoreTyp
           if (removedCats.has(t.category) || incomeCats.has(t.category)) continue
           catSums[t.category] = (catSums[t.category] || 0) + t.amount
         }
-      } catch { /* skip bad CSV */ }
+      } catch {
+        /* skip bad CSV */
+      }
     }
 
     return Math.abs(Object.values(catSums).reduce((s, v) => s + v, 0))
@@ -135,11 +137,16 @@ const FICalculator: FC = () => {
   const [savedSims, setSavedSims] = useState<FISim[]>([])
 
   useEffect(() => {
-    getLastYearExpense(fileStore).then(setLastYearExpense).catch(() => setLastYearExpense(0))
+    getLastYearExpense(fileStore)
+      .then(setLastYearExpense)
+      .catch(() => setLastYearExpense(0))
   }, [fileStore])
 
   useEffect(() => {
-    fileStore.readJSON<FISim[]>(SIMS_PATH, []).then(setSavedSims).catch(() => setSavedSims([]))
+    fileStore
+      .readJSON<FISim[]>(SIMS_PATH, [])
+      .then(setSavedSims)
+      .catch(() => setSavedSims([]))
   }, [fileStore])
 
   const saveSims = useCallback(

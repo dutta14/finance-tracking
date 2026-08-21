@@ -156,9 +156,18 @@ describe('useTaxStore', () => {
       const bytes = new ArrayBuffer(8)
       new Uint8Array(bytes).set([112, 100, 102, 45, 98, 121, 116, 101]) // 'pdf-byte'
       await act(async () => {
-        await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'f1', name: 'w2.pdf', ext: 'pdf', content: undefined, uploadedAt: '2025-01-15',
-        }, bytes)
+        await result.current.addFileToItemAsync(
+          2025,
+          itemId!,
+          {
+            id: 'f1',
+            name: 'w2.pdf',
+            ext: 'pdf',
+            content: undefined,
+            uploadedAt: '2025-01-15',
+          },
+          bytes,
+        )
       })
 
       const files = result.current.getYear(2025).items[0].files
@@ -187,7 +196,11 @@ describe('useTaxStore', () => {
 
       await act(async () => {
         await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'f-no-content', name: 'w2.pdf', ext: 'pdf', content: undefined, uploadedAt: '2025-01-15',
+          id: 'f-no-content',
+          name: 'w2.pdf',
+          ext: 'pdf',
+          content: undefined,
+          uploadedAt: '2025-01-15',
         })
       })
 
@@ -206,9 +219,18 @@ describe('useTaxStore', () => {
       })
       const bytes = new ArrayBuffer(8)
       await act(async () => {
-        await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'f-meta', name: 'doc.pdf', ext: 'pdf', content: undefined, uploadedAt: '2025-06-01',
-        }, bytes)
+        await result.current.addFileToItemAsync(
+          2025,
+          itemId!,
+          {
+            id: 'f-meta',
+            name: 'doc.pdf',
+            ext: 'pdf',
+            content: undefined,
+            uploadedAt: '2025-06-01',
+          },
+          bytes,
+        )
       })
 
       await waitFor(async () => {
@@ -232,9 +254,18 @@ describe('useTaxStore', () => {
 
       const bytes = new ArrayBuffer(8)
       await act(async () => {
-        await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'rm-file', name: 'w2.pdf', ext: 'pdf', content: undefined, uploadedAt: '2025-01-15',
-        }, bytes)
+        await result.current.addFileToItemAsync(
+          2025,
+          itemId!,
+          {
+            id: 'rm-file',
+            name: 'w2.pdf',
+            ext: 'pdf',
+            content: undefined,
+            uploadedAt: '2025-01-15',
+          },
+          bytes,
+        )
       })
 
       const files = result.current.getYear(2025).items[0].files
@@ -272,9 +303,18 @@ describe('useTaxStore', () => {
 
       const bytes = new ArrayBuffer(8)
       await act(async () => {
-        await result.current.addFileToItemAsync(2025, itemId!, {
-          id: 'del-file', name: 'w2.pdf', ext: 'pdf', content: undefined, uploadedAt: '2025-01-15',
-        }, bytes)
+        await result.current.addFileToItemAsync(
+          2025,
+          itemId!,
+          {
+            id: 'del-file',
+            name: 'w2.pdf',
+            ext: 'pdf',
+            content: undefined,
+            uploadedAt: '2025-01-15',
+          },
+          bytes,
+        )
       })
 
       const files = result.current.getYear(2025).items[0].files
@@ -297,9 +337,7 @@ describe('useTaxStore', () => {
     })
 
     it('loads templates from file store', async () => {
-      await store.writeJSON('taxes/templates.json', [
-        { id: 't1', name: 'Standard', items: [] },
-      ])
+      await store.writeJSON('taxes/templates.json', [{ id: 't1', name: 'Standard', items: [] }])
       const { result } = renderHook(() => useTaxStore(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.templates).toHaveLength(1))
       expect(result.current.templates[0].name).toBe('Standard')
@@ -322,9 +360,9 @@ describe('useTaxStore', () => {
     it('creates a year from a template', async () => {
       await store.writeJSON('taxes/templates.json', [
         {
-          id: 't1', name: 'Tmpl', items: [
-            { id: 'ti1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [] },
-          ],
+          id: 't1',
+          name: 'Tmpl',
+          items: [{ id: 'ti1', label: 'W-2', owner: 'primary', category: 'paystub', accountIds: [] }],
         },
       ])
       const { result } = renderHook(() => useTaxStore(), { wrapper: makeWrapper(store) })

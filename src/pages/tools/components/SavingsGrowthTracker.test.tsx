@@ -23,7 +23,6 @@ const mockUseData = vi.fn(() => ({
   setBalances: vi.fn(),
 }))
 
-
 vi.mock('../../../contexts/DataContext', () => ({
   useData: () => mockUseData(),
 }))
@@ -42,7 +41,12 @@ vi.mock('../../budget/utils/csvParser', () => ({
 vi.mock('../../../contexts/FileStoreContext', () => ({
   useFileStore: vi.fn(() => ({
     fileStore: stableFileStore,
-    isReady: true, folderName: 'test', disconnect: vi.fn(), pickFolder: vi.fn(), enterDemo: vi.fn(), exitDemo: vi.fn(),
+    isReady: true,
+    folderName: 'test',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: vi.fn(),
+    exitDemo: vi.fn(),
   })),
 }))
 

@@ -39,15 +39,10 @@ function SetterConsumer() {
     <div>
       <span data-testid="accounts">{JSON.stringify(accounts)}</span>
       <span data-testid="balances">{JSON.stringify(balances)}</span>
-      <button
-        data-testid="set-accounts"
-        onClick={() => setAccounts([makeAccount()])}
-      />
+      <button data-testid="set-accounts" onClick={() => setAccounts([makeAccount()])} />
       <button
         data-testid="set-balances"
-        onClick={() =>
-          setBalances([{ id: 1, accountId: 1, month: '2024-01', balance: 1000 }])
-        }
+        onClick={() => setBalances([{ id: 1, accountId: 1, month: '2024-01', balance: 1000 }])}
       />
     </div>
   )

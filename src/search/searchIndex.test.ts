@@ -3,8 +3,7 @@ import type { SearchItem, SearchCategory, SearchIndexData } from './searchIndex'
 import type { FinancialGoal, GwGoal } from '../types'
 import type { Account } from '../pages/data/types'
 
-const goalsOf = (...goals: { id: number; goalName: string; progress?: number }[]) =>
-  goals as unknown as FinancialGoal[]
+const goalsOf = (...goals: { id: number; goalName: string; progress?: number }[]) => goals as unknown as FinancialGoal[]
 const gwOf = (...gwGoals: { id: number; fiGoalId: number; label: string }[]) => gwGoals as unknown as GwGoal[]
 const accountsOf = (...accounts: Partial<Account>[]) => accounts as Account[]
 
@@ -288,7 +287,9 @@ describe('search', () => {
   it('respects maxPerGroup cap', () => {
     // Add many goals to test the cap
     const bigIndex = buildIndex({
-      goals: goalsOf(...Array.from({ length: 10 }, (_, i) => ({ id: i + 100, goalName: `TestGoal ${i}`, progress: i * 10 }))),
+      goals: goalsOf(
+        ...Array.from({ length: 10 }, (_, i) => ({ id: i + 100, goalName: `TestGoal ${i}`, progress: i * 10 })),
+      ),
     })
     const groups = search(bigIndex, 'TestGoal', 3)
     const goalGroup = groups.find(g => g.category === 'goal')!
