@@ -131,7 +131,7 @@ const CustomTooltip: FC<CustomTooltipProps> = ({
               {item.delta ? (
                 <div
                   style={{
-                    color: item.delta.d >= 0 ? '#16a34a' : '#dc2626',
+                    color: item.delta.d >= 0 ? '#15803d' : '#dc2626',
                     fontSize: 11,
                     fontWeight: 500,
                     textAlign: 'right',
@@ -237,13 +237,13 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal, goalLabel = 'FI
         })
       }
       if (prev.primaryLocked && !row.primaryLocked) {
-        result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
+        result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #15803d)', dx: -10, dy: 0 })
       }
       if ((prev.phase === 'accumulation' || prev.phase === 'coasting') && row.phase === 'drawdown') {
         result.push({ month: row.month, label: 'F.I.R.E.', color: 'var(--accent, #0f766e)', dx: -10, dy: 0 })
       }
       if (prev.partnerLocked && !row.partnerLocked) {
-        result.push({ month: row.month, label: 'Partner', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
+        result.push({ month: row.month, label: 'Partner', color: 'var(--color-success, #15803d)', dx: -10, dy: 0 })
       }
     }
     const byMonth = new Map<string, number>()

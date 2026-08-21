@@ -15,12 +15,15 @@ interface NumericInputProps {
   max?: string
   onChange: (n: number) => void
   eager?: boolean
+  fieldName?: string
 }
 
-const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange, eager }) => {
+const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange, eager, fieldName }) => {
   const [local, setLocal] = useState(String(value))
   const committed = useRef(value)
   const stepNum = parseFloat(step)
+  const decrementLabel = fieldName ? `Decrease ${fieldName}` : 'Decrease'
+  const incrementLabel = fieldName ? `Increase ${fieldName}` : 'Increase'
 
   useEffect(() => {
     if (value !== committed.current) {
@@ -41,7 +44,7 @@ const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange, 
 
   return (
     <div className="growth-numeric">
-      <button type="button" className="growth-numeric-btn" onClick={() => nudge(-1)} aria-label="Decrease">
+      <button type="button" className="growth-numeric-btn" onClick={() => nudge(-1)} aria-label={decrementLabel}>
         −
       </button>
       <input
@@ -49,6 +52,7 @@ const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange, 
         step={step}
         min={min}
         max={max}
+        aria-label={fieldName}
         value={local}
         onChange={e => {
           setLocal(e.target.value)
@@ -65,7 +69,7 @@ const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange, 
           onChange(result)
         }}
       />
-      <button type="button" className="growth-numeric-btn" onClick={() => nudge(1)} aria-label="Increase">
+      <button type="button" className="growth-numeric-btn" onClick={() => nudge(1)} aria-label={incrementLabel}>
         +
       </button>
     </div>
@@ -75,6 +79,9 @@ const NumericInput: FC<NumericInputProps> = ({ value, step, min, max, onChange, 
 const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate }) => {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<GrowthSettings>(settings)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const wasOpenRef = useRef(false)
 
   const handleOpen = () => {
     setDraft(settings)
@@ -103,11 +110,28 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
     return () => document.removeEventListener('keydown', handler)
   }, [open])
 
+  useEffect(() => {
+    if (open) {
+      const firstInput = dialogRef.current?.querySelector<HTMLElement>('input, select, textarea')
+      const firstFocusable =
+        firstInput ?? dialogRef.current?.querySelector<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')
+      ;(firstFocusable ?? dialogRef.current)?.focus()
+      wasOpenRef.current = true
+      return
+    }
+
+    if (wasOpenRef.current) {
+      triggerRef.current?.focus()
+      wasOpenRef.current = false
+    }
+  }, [open])
+
   return (
     <div className="growth-settings">
       <button
         type="button"
         className="growth-settings-toggle"
+        ref={triggerRef}
         onClick={handleOpen}
         aria-expanded={open}
         aria-controls="growth-settings-modal"
@@ -126,9 +150,11 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
             <div
               id="growth-settings-modal"
               className="growth-modal"
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="growth-settings-modal-title"
+              tabIndex={-1}
             >
               <div className="growth-modal-header">
                 <h2 className="growth-modal-title" id="growth-settings-modal-title">
@@ -140,7 +166,12 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                 <label className="growth-settings-label">
                   Inflation
                   <div className="growth-settings-input-wrap">
-                    <NumericInput value={draft.inflation} step="0.1" onChange={v => update({ inflation: v })} />
+                    <NumericInput
+                      value={draft.inflation}
+                      step="0.1"
+                      fieldName="inflation"
+                      onChange={v => update({ inflation: v })}
+                    />
                     <span className="growth-settings-unit">%</span>
                   </div>
                 </label>
@@ -159,6 +190,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                           min="40"
                           max="80"
                           eager
+                          fieldName="switch to conservative age"
                           onChange={v => update({ ageBoundary: v || 60 })}
                         />
                         <span className="growth-settings-unit">yrs</span>
@@ -171,6 +203,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                         <NumericInput
                           value={draft.preBoundaryGrowth}
                           step="0.1"
+                          fieldName={`pre-${draft.ageBoundary} growth`}
                           onChange={v => update({ preBoundaryGrowth: v })}
                         />
                         <span className="growth-settings-unit">%</span>
@@ -183,6 +216,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                         <NumericInput
                           value={draft.postBoundaryGrowth}
                           step="0.1"
+                          fieldName={`post-${draft.ageBoundary} growth`}
                           onChange={v => update({ postBoundaryGrowth: v })}
                         />
                         <span className="growth-settings-unit">%</span>
@@ -192,7 +226,12 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                     <label className="growth-settings-label">
                       GW Growth
                       <div className="growth-settings-input-wrap">
-                        <NumericInput value={draft.gwGrowth} step="0.1" onChange={v => update({ gwGrowth: v })} />
+                        <NumericInput
+                          value={draft.gwGrowth}
+                          step="0.1"
+                          fieldName="GW growth"
+                          onChange={v => update({ gwGrowth: v })}
+                        />
                         <span className="growth-settings-unit">%</span>
                       </div>
                     </label>
@@ -212,6 +251,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                           value={draft.retirementCap}
                           step="500"
                           min="0"
+                          fieldName="retirement cap"
                           onChange={v => update({ retirementCap: v })}
                         />
                         <span className="growth-settings-unit">/mo</span>
@@ -226,6 +266,7 @@ const GrowthSettingsPanel: FC<GrowthSettingsPanelProps> = ({ settings, onUpdate 
                           value={draft.nonRetirementBase}
                           step="500"
                           min="0"
+                          fieldName="non-retirement minimum"
                           onChange={v => update({ nonRetirementBase: v })}
                         />
                         <span className="growth-settings-unit">/mo</span>

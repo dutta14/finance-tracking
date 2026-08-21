@@ -18,17 +18,30 @@ describe('GrowthSettingsPanel', () => {
   it('renders collapsed by default', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
     expect(screen.getByRole('button', { name: /goal parameters/i })).toBeInTheDocument()
-    expect(screen.queryByLabelText(/pre-60/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton', { name: /pre-60/i })).not.toBeInTheDocument()
   })
 
   it('expands on toggle click', () => {
     render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
     expect(screen.getByRole('dialog', { name: /goal parameters/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/pre-60/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/post-60/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/switch to conservative/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/gw/i)).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /pre-60/i })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /post-60/i })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /switch to conservative/i })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /gw growth/i })).toBeInTheDocument()
+  })
+
+  it('focuses the first input on open and restores focus to the trigger on close', () => {
+    render(<GrowthSettingsPanel settings={defaults} onUpdate={vi.fn()} />)
+
+    const trigger = screen.getByRole('button', { name: /goal parameters/i })
+    fireEvent.click(trigger)
+
+    expect(screen.getByRole('spinbutton', { name: /inflation/i })).toHaveFocus()
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(trigger).toHaveFocus()
   })
 
   it('renders inflation and allocation inputs when the growth settings panel is expanded', () => {
@@ -36,9 +49,9 @@ describe('GrowthSettingsPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
-    expect(screen.getByLabelText(/inflation/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/retirement cap/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/non-retirement minimum/i)).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /inflation/i })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /retirement cap/i })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /non-retirement minimum/i })).toBeInTheDocument()
   })
 
   it('closes the growth settings modal when the user clicks the backdrop', () => {
@@ -46,12 +59,12 @@ describe('GrowthSettingsPanel', () => {
 
     const toggle = screen.getByRole('button', { name: /goal parameters/i })
     fireEvent.click(toggle)
-    expect(screen.getByLabelText(/pre-60/i)).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /pre-60/i })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('dialog').parentElement as HTMLElement)
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByLabelText(/pre-60/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton', { name: /pre-60/i })).not.toBeInTheDocument()
   })
 
   it('closes the growth settings modal when the user presses escape', () => {
@@ -87,7 +100,9 @@ describe('GrowthSettingsPanel', () => {
     // Use the + button to nudge preBoundaryGrowth from 8 to 10 (2 clicks × 0.1 step = wrong, use 20 clicks)
     // Actually, nudge changes by step (0.1). Let's just test the nudge.
     const preLabel = screen.getByText(/pre-60/i).closest('label')!
-    const increaseBtn = within(preLabel).getAllByRole('button').find(b => b.textContent === '+')!
+    const increaseBtn = within(preLabel)
+      .getAllByRole('button')
+      .find(b => b.textContent === '+')!
     // Nudge from 8.0 → 8.1
     fireEvent.click(increaseBtn)
     expect(onUpdate).not.toHaveBeenCalled()
@@ -101,7 +116,9 @@ describe('GrowthSettingsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
     const preLabel = screen.getByText(/pre-60/i).closest('label')!
-    const decreaseBtn = within(preLabel).getAllByRole('button').find(b => b.textContent === '−')!
+    const decreaseBtn = within(preLabel)
+      .getAllByRole('button')
+      .find(b => b.textContent === '−')!
     // Nudge from 8.0 → 7.5 (5 clicks × 0.1)
     for (let i = 0; i < 5; i++) fireEvent.click(decreaseBtn)
 
@@ -116,13 +133,14 @@ describe('GrowthSettingsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
     // Nudge inflation from 3 → 4 (10 clicks × 0.1)
-    const inflationLabel = screen.getByText(/inflation/i).closest('label')!
-    const inflationIncrease = within(inflationLabel).getAllByRole('button').find(b => b.textContent === '+')!
+    const inflationIncrease = screen.getByRole('button', { name: /increase inflation/i })
     for (let i = 0; i < 10; i++) fireEvent.click(inflationIncrease)
 
     // Nudge retirementCap from 6000 → 7000 (2 clicks × 500)
     const retCapLabel = screen.getByText(/retirement cap/i).closest('label')!
-    const retCapIncrease = within(retCapLabel).getAllByRole('button').find(b => b.textContent === '+')!
+    const retCapIncrease = within(retCapLabel)
+      .getAllByRole('button')
+      .find(b => b.textContent === '+')!
     for (let i = 0; i < 2; i++) fireEvent.click(retCapIncrease)
 
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
@@ -136,7 +154,7 @@ describe('GrowthSettingsPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
-    const boundaryInput = screen.getByLabelText(/switch to conservative/i)
+    const boundaryInput = screen.getByRole('spinbutton', { name: /switch to conservative/i })
     fireEvent.change(boundaryInput, { target: { value: '' } })
     fireEvent.blur(boundaryInput)
 
@@ -147,7 +165,7 @@ describe('GrowthSettingsPanel', () => {
   it('shows correct labels based on age boundary', () => {
     render(<GrowthSettingsPanel settings={{ ...defaults, ageBoundary: 55 }} onUpdate={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
-    expect(screen.getByLabelText(/pre-55/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/post-55/i)).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /pre-55/i })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: /post-55/i })).toBeInTheDocument()
   })
 })

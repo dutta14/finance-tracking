@@ -190,7 +190,7 @@ const ProjectionTooltip: FC<ProjectionTooltipProps> = ({ active, payload, label,
             {item.delta ? (
               <div
                 style={{
-                  color: item.delta.d >= 0 ? '#16a34a' : '#dc2626',
+                  color: item.delta.d >= 0 ? '#15803d' : '#dc2626',
                   fontSize: 11,
                   fontWeight: 500,
                   textAlign: 'right',
@@ -391,7 +391,14 @@ const FICalculator: FC = () => {
     (s: FISim) => {
       setAnnualExpense(s.annualExpense)
       setExpenseDisplay(Math.round(s.annualExpense).toLocaleString())
-      updateSettings({ inflation: s.inflationRate, preBoundaryGrowth: s.growthRate, postBoundaryGrowth: s.postBoundaryGrowth ?? settings.postBoundaryGrowth, ageBoundary: s.boundaryYear ? s.boundaryYear - (profile.primaryBirthYear ?? thisYear - 30) : settings.ageBoundary })
+      updateSettings({
+        inflation: s.inflationRate,
+        preBoundaryGrowth: s.growthRate,
+        postBoundaryGrowth: s.postBoundaryGrowth ?? settings.postBoundaryGrowth,
+        ageBoundary: s.boundaryYear
+          ? s.boundaryYear - (profile.primaryBirthYear ?? thisYear - 30)
+          : settings.ageBoundary,
+      })
       setLastYear(s.lastYear)
       setRetireYear(s.retireYear)
       setPrimary401kYear(s.primary401kYear)
@@ -617,7 +624,7 @@ const FICalculator: FC = () => {
         milestones.push({
           month: row.month,
           label: `${profile.primaryName} 401(k)`,
-          color: 'var(--color-success, #16a34a)',
+          color: 'var(--color-success, #15803d)',
           dx: -10,
           dy: 0,
         })
@@ -627,7 +634,7 @@ const FICalculator: FC = () => {
         milestones.push({
           month: row.month,
           label: `${profile.partnerName} 401(k)`,
-          color: 'var(--color-success, #16a34a)',
+          color: 'var(--color-success, #15803d)',
           dx: -10,
           dy: 0,
         })
@@ -749,62 +756,80 @@ const FICalculator: FC = () => {
 
           {/* Holdings + Projections table */}
           <div className="fi-calc-divider" />
-          <div className="fi-calc-holdings-table">
-            <div className="fi-calc-ht-header">
-              <span>Holdings</span>
-              <span>Today</span>
-              <span>At Retirement ({retireYear})</span>
-              <span>At 401(k) Access</span>
+          <div className="fi-calc-holdings-table" role="table" aria-label="Holdings summary">
+            <div className="fi-calc-ht-header" role="row">
+              <span role="columnheader">Holdings</span>
+              <span role="columnheader">Today</span>
+              <span role="columnheader">At Retirement ({retireYear})</span>
+              <span role="columnheader">At 401(k) Access</span>
             </div>
-            <div className="fi-calc-ht-row">
-              <span>FI Retirement ({profile.primaryName})</span>
-              <span>{fmt(fiRetirementPrimary)}</span>
+            <div className="fi-calc-ht-row" role="row">
+              <span role="cell">FI Retirement ({profile.primaryName})</span>
+              <span role="cell">{fmt(fiRetirementPrimary)}</span>
               {primary401kYear <= retireYear && result ? (
-                <span>{fmt(result.primary401kAtAccess)}</span>
+                <span role="cell">{fmt(result.primary401kAtAccess)}</span>
               ) : (
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               )}
               {primary401kYear > retireYear && result ? (
-                <span>{`${fmt(result.primary401kAtAccess)} (${primary401kYear})`}</span>
+                <span role="cell">{`${fmt(result.primary401kAtAccess)} (${primary401kYear})`}</span>
               ) : primary401kYear > retireYear ? (
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               ) : (
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               )}
             </div>
-            <div className="fi-calc-ht-row">
-              <span>FI Retirement ({profile.partnerName})</span>
-              <span>{fmt(fiRetirementPartner)}</span>
+            <div className="fi-calc-ht-row" role="row">
+              <span role="cell">FI Retirement ({profile.partnerName})</span>
+              <span role="cell">{fmt(fiRetirementPartner)}</span>
               {partner401kYear <= retireYear && result ? (
-                <span>{fmt(result.partner401kAtAccess)}</span>
+                <span role="cell">{fmt(result.partner401kAtAccess)}</span>
               ) : (
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               )}
               {partner401kYear > retireYear && result ? (
-                <span>{`${fmt(result.partner401kAtAccess)} (${partner401kYear})`}</span>
+                <span role="cell">{`${fmt(result.partner401kAtAccess)} (${partner401kYear})`}</span>
               ) : partner401kYear > retireYear ? (
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               ) : (
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               )}
             </div>
-            <div className="fi-calc-ht-row">
-              <span>FI Non-Retirement</span>
-              <span>{fmt(fiNonRetirement)}</span>
-              <span>{result ? fmt(result.fiNonRetAtRetire) : '—'}</span>
-              <span className="fi-calc-ht-na">—</span>
+            <div className="fi-calc-ht-row" role="row">
+              <span role="cell">FI Non-Retirement</span>
+              <span role="cell">{fmt(fiNonRetirement)}</span>
+              <span role="cell">{result ? fmt(result.fiNonRetAtRetire) : '—'}</span>
+              <span role="cell" className="fi-calc-ht-na">
+                —
+              </span>
             </div>
-            <div className={`fi-calc-ht-row${!includeGwLiquid ? ' fi-calc-yby--locked' : ''}`}>
-              <span>GW Liquid</span>
-              <span>{fmt(gwLiquid)}</span>
-              <span>{result ? fmt(result.gwLiquidAtRetire) : '—'}</span>
-              <span className="fi-calc-ht-na">—</span>
+            <div className={`fi-calc-ht-row${!includeGwLiquid ? ' fi-calc-yby--locked' : ''}`} role="row">
+              <span role="cell">GW Liquid</span>
+              <span role="cell">{fmt(gwLiquid)}</span>
+              <span role="cell">{result ? fmt(result.gwLiquidAtRetire) : '—'}</span>
+              <span role="cell" className="fi-calc-ht-na">
+                —
+              </span>
             </div>
             {result && (
-              <div className="fi-calc-ht-row fi-calc-ht-row--total">
-                <span>Total</span>
-                <span className="fi-calc-ht-na">—</span>
-                <span>
+              <div className="fi-calc-ht-row fi-calc-ht-row--total" role="row">
+                <span role="cell">Total</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
+                <span role="cell">
                   {fmt(
                     result.fiNonRetAtRetire +
                       (includeGwLiquid ? result.gwLiquidAtRetire : 0) +
@@ -812,23 +837,29 @@ const FICalculator: FC = () => {
                       (partner401kYear <= retireYear ? result.partner401kAtAccess : 0),
                   )}
                 </span>
-                <span className="fi-calc-ht-na">—</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               </div>
             )}
             {result && (
-              <div className="fi-calc-ht-row">
-                <span>Required to FIRE</span>
-                <span className="fi-calc-ht-na">—</span>
-                <span>{fmt(result.corpusNeededFromNonRetirement)}</span>
-                <span className="fi-calc-ht-na">—</span>
+              <div className="fi-calc-ht-row" role="row">
+                <span role="cell">Required to FIRE</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
+                <span role="cell">{fmt(result.corpusNeededFromNonRetirement)}</span>
+                <span role="cell" className="fi-calc-ht-na">
+                  —
+                </span>
               </div>
             )}
             {result && (
-              <div className="fi-calc-ht-row fi-calc-ht-row--total">
-                <span>Gap to close</span>
-                <span />
-                <span>{fmt(result.gap)}</span>
-                <span />
+              <div className="fi-calc-ht-row fi-calc-ht-row--total" role="row">
+                <span role="cell">Gap to close</span>
+                <span role="cell" />
+                <span role="cell">{fmt(result.gap)}</span>
+                <span role="cell" />
               </div>
             )}
           </div>
@@ -901,6 +932,7 @@ const FICalculator: FC = () => {
                 {simRenaming === s.name ? (
                   <input
                     className="fi-sim-rename-input"
+                    aria-label={`Rename simulation ${s.name}`}
                     value={renameValue}
                     onChange={e => setRenameValue(e.target.value)}
                     onKeyDown={e => {
@@ -977,6 +1009,7 @@ const FICalculator: FC = () => {
             >
               <input
                 className="fi-sim-save-input"
+                aria-label="New simulation name"
                 placeholder="Simulation name"
                 value={saveNameInput}
                 onChange={e => setSaveNameInput(e.target.value)}

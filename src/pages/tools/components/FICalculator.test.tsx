@@ -155,7 +155,7 @@ describe('FICalculator', () => {
     renderCalc()
     const saveBtn = screen.getByRole('button', { name: /save as new/i })
     await user.click(saveBtn)
-    expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /new simulation name/i })).toBeInTheDocument()
   })
 
   it('shows FI ready when existing balances exceed corpus need', () => {
@@ -183,6 +183,8 @@ describe('FICalculator', () => {
 
   it('renders breakdown rows when result is computed', () => {
     renderCalc()
+    expect(screen.getByRole('table', { name: /holdings summary/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /holdings/i })).toBeInTheDocument()
     expect(screen.getByText('Holdings')).toBeInTheDocument()
     expect(screen.getByText('At 401(k) Access')).toBeInTheDocument()
     expect(screen.getByText('Required to FIRE')).toBeInTheDocument()
