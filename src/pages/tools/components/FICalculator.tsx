@@ -214,6 +214,8 @@ interface FISim {
   annualExpense: number
   inflationRate: number
   growthRate: number
+  postBoundaryGrowth: number
+  boundaryYear: number
   lastYear: number
   retireYear: number
   primary401kYear: number
@@ -389,7 +391,7 @@ const FICalculator: FC = () => {
     (s: FISim) => {
       setAnnualExpense(s.annualExpense)
       setExpenseDisplay(Math.round(s.annualExpense).toLocaleString())
-      updateSettings({ inflation: s.inflationRate, preBoundaryGrowth: s.growthRate })
+      updateSettings({ inflation: s.inflationRate, preBoundaryGrowth: s.growthRate, postBoundaryGrowth: s.postBoundaryGrowth ?? settings.postBoundaryGrowth, ageBoundary: s.boundaryYear ? s.boundaryYear - (profile.primaryBirthYear ?? thisYear - 30) : settings.ageBoundary })
       setLastYear(s.lastYear)
       setRetireYear(s.retireYear)
       setPrimary401kYear(s.primary401kYear)
@@ -397,7 +399,7 @@ const FICalculator: FC = () => {
       setIncludeGwLiquid(s.includeGwLiquid)
       setActiveSim(s.name)
     },
-    [updateSettings],
+    [updateSettings, settings.postBoundaryGrowth, settings.ageBoundary, profile.primaryBirthYear, thisYear],
   )
 
   const handleNewSim = useCallback(() => {
@@ -419,6 +421,8 @@ const FICalculator: FC = () => {
         annualExpense,
         inflationRate,
         growthRate,
+        postBoundaryGrowth: settings.postBoundaryGrowth,
+        boundaryYear,
         lastYear,
         retireYear,
         primary401kYear,
@@ -436,6 +440,8 @@ const FICalculator: FC = () => {
       annualExpense,
       inflationRate,
       growthRate,
+      settings.postBoundaryGrowth,
+      boundaryYear,
       lastYear,
       retireYear,
       primary401kYear,
@@ -459,14 +465,19 @@ const FICalculator: FC = () => {
 
   const handleRenameSim = useCallback(
     (oldName: string, newName: string) => {
-      if (!newName.trim() || oldName === newName) {
+      const trimmed = newName.trim()
+      if (!trimmed || oldName === trimmed) {
         setSimRenaming(null)
         return
       }
-      const next = savedSims.map(s => (s.name === oldName ? { ...s, name: newName.trim() } : s))
+      if (savedSims.some(s => s.name === trimmed && s.name !== oldName)) {
+        setSimRenaming(null)
+        return
+      }
+      const next = savedSims.map(s => (s.name === oldName ? { ...s, name: trimmed } : s))
       setSavedSims(next)
       saveSims(next)
-      if (activeSim === oldName) setActiveSim(newName.trim())
+      if (activeSim === oldName) setActiveSim(trimmed)
       setSimRenaming(null)
     },
     [savedSims, activeSim, saveSims],
