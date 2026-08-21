@@ -22,12 +22,11 @@ const WhyThisExists: FC = () => (
       is normal.
     </p>
     <p>
-      So this is small, on purpose. It runs in your browser. If you set a passphrase, the data is encrypted before it
-      touches your disk, and the key stays with you; if you want a backup, you can sync to a private GitHub repository
-      of your own, and that is the only place it ever leaves your machine. There is no account to create. There is no
-      server I run. There is no analytics pixel sitting in the corner of the page, quietly counting how long you spent
-      on the budget screen. It is a small app for one person to keep their own books, on a Sunday morning, in a green
-      they did not quite pick on purpose.
+      So this is small, on purpose. It runs in your browser and stores everything in a folder you choose, as plain
+      files you can open in any text editor. There is no account to create. There is no server I run. There is no
+      analytics pixel sitting in the corner of the page, quietly counting how long you spent on the budget screen. It is
+      a small app for one person to keep their own books, on a Sunday morning, in a green they did not quite pick on
+      purpose.
     </p>
   </section>
 )

@@ -16,14 +16,14 @@ const HeroContent: FC<HeroContentProps> = ({ heroLightSrc, heroDarkSrc }) => {
         <p className="guide-eyebrow">Finance Tracker</p>
         <h1>Your money, in your browser, and nowhere else.</h1>
         <p>
-          This is a personal finance app for one person, and it lives entirely in your browser. It tracks your net
+          This is a personal finance app for one person, and it lives entirely on your computer. It tracks your net
           worth, your budget, your transactions, your savings goals, your tax documents, and the little Sunday-morning
-          habits that make all of that sustainable over time; the data can be encrypted on your device with a passphrase
-          you choose, and never touches a server I run.
+          habits that make all of that sustainable over time; your data stays in a folder you choose, as plain files you
+          can read, and never touches a server I run.
         </p>
         <ul className="guide-bullet-list guide-bullet-list--hero">
-          <li>Browser only.</li>
-          <li>Encrypted on your device.</li>
+          <li>Your folder, your files.</li>
+          <li>Plain JSON and CSV.</li>
           <li>No lock-in.</li>
         </ul>
       </div>

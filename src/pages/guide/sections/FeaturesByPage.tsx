@@ -172,19 +172,17 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
 
     <section className="guide-subsection" id="feature-settings">
       <h3>Settings</h3>
-      <GuideFigure src={screenshots.settings} alt="Settings page with sync and export options" />
-      <p>Profile, sync, appearance, security, backups, and the slightly more dangerous switches all live here.</p>
+      <GuideFigure src={screenshots.settings} alt="Settings page with data folder and appearance options" />
+      <p>Profile, data folder, appearance, and the slightly more dangerous switches all live here.</p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
-        <li>Set or change your passphrase in Security.</li>
-        <li>Configure GitHub Sync with your repo and token when you want encrypted backups.</li>
+        <li>See and change your connected data folder in Data Folder.</li>
         <li>Toggle dark mode and accent preferences in Appearance.</li>
-        <li>Import, export, or reset data from Advanced.</li>
         <li>Explore experimental features in Labs and Feature Flags when you are curious.</li>
       </ul>
       <p>
-        <strong>One tip:</strong> Turn on GitHub Sync only after export works for you locally. A manual backup you
-        understand is a better safety net than an automated one you have not tested.
+        <strong>One tip:</strong> Back up your data folder regularly. Copy it to an external drive or a synced cloud
+        folder. A backup you understand is a better safety net than one you have not tested.
       </p>
     </section>
   </section>
