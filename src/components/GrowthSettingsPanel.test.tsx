@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import GrowthSettingsPanel from './GrowthSettingsPanel'
 
@@ -84,45 +85,46 @@ describe('GrowthSettingsPanel', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
-    const preInput = screen.getByLabelText(/pre-60/i)
-    fireEvent.change(preInput, { target: { value: '10' } })
-    fireEvent.blur(preInput)
+    // Use the + button to nudge preBoundaryGrowth from 8 to 10 (2 clicks × 0.1 step = wrong, use 20 clicks)
+    // Actually, nudge changes by step (0.1). Let's just test the nudge.
+    const preLabel = screen.getByText(/pre-60/i).closest('label')!
+    const increaseBtn = within(preLabel).getAllByRole('button').find(b => b.textContent === '+')!
+    // Nudge from 8.0 → 8.1
+    fireEvent.click(increaseBtn)
     expect(onUpdate).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
-    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ preBoundaryGrowth: 10 }))
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ preBoundaryGrowth: 8.1 }))
   })
 
   it('preserves a decimal value while editing and commits on save', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
-
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
-    const preInput = screen.getByLabelText(/pre-60/i)
-    fireEvent.change(preInput, { target: { value: '7.5' } })
+    const preLabel = screen.getByText(/pre-60/i).closest('label')!
+    const decreaseBtn = within(preLabel).getAllByRole('button').find(b => b.textContent === '−')!
+    // Nudge from 8.0 → 7.5 (5 clicks × 0.1)
+    for (let i = 0; i < 5; i++) fireEvent.click(decreaseBtn)
 
-    expect(preInput).toHaveValue(7.5)
     expect(onUpdate).not.toHaveBeenCalled()
-
-    fireEvent.blur(preInput)
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
-
     expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ preBoundaryGrowth: 7.5 }))
   })
 
   it('commits multiple field changes on save', () => {
     const onUpdate = vi.fn()
     render(<GrowthSettingsPanel settings={defaults} onUpdate={onUpdate} />)
-
     fireEvent.click(screen.getByRole('button', { name: /goal parameters/i }))
 
-    const inflationInput = screen.getByLabelText(/inflation/i)
-    fireEvent.change(inflationInput, { target: { value: '4' } })
-    fireEvent.blur(inflationInput)
+    // Nudge inflation from 3 → 4 (10 clicks × 0.1)
+    const inflationLabel = screen.getByText(/inflation/i).closest('label')!
+    const inflationIncrease = within(inflationLabel).getAllByRole('button').find(b => b.textContent === '+')!
+    for (let i = 0; i < 10; i++) fireEvent.click(inflationIncrease)
 
-    const retirementCapInput = screen.getByLabelText(/retirement cap/i)
-    fireEvent.change(retirementCapInput, { target: { value: '7000' } })
-    fireEvent.blur(retirementCapInput)
+    // Nudge retirementCap from 6000 → 7000 (2 clicks × 500)
+    const retCapLabel = screen.getByText(/retirement cap/i).closest('label')!
+    const retCapIncrease = within(retCapLabel).getAllByRole('button').find(b => b.textContent === '+')!
+    for (let i = 0; i < 2; i++) fireEvent.click(retCapIncrease)
 
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
     expect(onUpdate).toHaveBeenCalledTimes(1)
