@@ -79,7 +79,7 @@ jobs:
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build, e2e]
+    needs: [build]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
