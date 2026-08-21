@@ -1,12 +1,20 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import SavingsGrowthTracker from './SavingsGrowthTracker'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
-import { appStorage } from '../../../utils/appStorage'
 
+const { mockReadJSON, mockWriteJSON, stableFileStore } = vi.hoisted(() => {
+  const r = vi.fn((_p: string, fb: unknown) => Promise.resolve(fb))
+  const w = vi.fn(() => Promise.resolve())
+  return {
+    mockReadJSON: r,
+    mockWriteJSON: w,
+    stableFileStore: { readJSON: r, writeJSON: w, subscribe: vi.fn(() => () => {}) },
+  }
+})
 const mockUseData = vi.fn(() => ({
   accounts: [] as ReturnType<typeof import('../../../contexts/DataContext').useData>['accounts'],
   balances: [] as ReturnType<typeof import('../../../contexts/DataContext').useData>['balances'],
@@ -20,18 +28,26 @@ vi.mock('../../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  getIncomeGroups: vi.fn((groups: Array<{ type?: string; id?: string }>) =>
+    groups.filter(g => g.type === 'income' || g.id === 'income-others'),
+  ),
 }))
 
 vi.mock('../../budget/utils/csvParser', () => ({
   parseCSV: vi.fn(() => []),
 }))
 
-vi.mock('../../../utils/appStorage', () => ({
-  appStorage: {
-    getJSON: vi.fn(() => ({})),
-    setJSON: vi.fn(),
-  },
+vi.mock('../../../contexts/FileStoreContext', () => ({
+  useFileStore: vi.fn(() => ({
+    fileStore: stableFileStore,
+    isReady: true,
+    folderName: 'test',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: vi.fn(),
+    exitDemo: vi.fn(),
+  })),
 }))
 
 vi.mock('../../../styles/SavingsGrowthTracker.css', () => ({}))
@@ -39,9 +55,10 @@ vi.mock('../../../styles/SavingsGrowthTracker.css', () => ({}))
 beforeEach(() => {
   localStorage.clear()
   vi.clearAllMocks()
-  vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
+  mockReadJSON.mockImplementation((_p: string, fb: unknown) => Promise.resolve(fb))
+  mockWriteJSON.mockResolvedValue(undefined)
+  vi.mocked(loadBudgetStore).mockResolvedValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
   vi.mocked(parseCSV).mockReturnValue([])
-  vi.mocked(appStorage.getJSON).mockReturnValue({})
   mockUseData.mockReturnValue({
     accounts: [],
     balances: [],
@@ -98,10 +115,10 @@ describe('SavingsGrowthTracker', () => {
     expect(cards[2]).toHaveAttribute('data-testid', 'year-card-2022')
   })
 
-  it('renders savings metrics and net worth in each year card', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
+  it('renders savings metrics and net worth in each year card', async () => {
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2024],
     })
@@ -130,7 +147,7 @@ describe('SavingsGrowthTracker', () => {
 
     renderTracker()
 
-    const card = screen.getByTestId('year-card-2024')
+    const card = await screen.findByTestId('year-card-2024')
     expect(within(card).getByText('Net Worth')).toBeInTheDocument()
     expect(within(card).getByText('$50,000')).toBeInTheDocument()
     expect(within(card).getByText('Net Income')).toBeInTheDocument()
@@ -142,7 +159,8 @@ describe('SavingsGrowthTracker', () => {
     expect(within(card).getByText('$3,000')).toBeInTheDocument()
   })
 
-  it('renders income metrics on the income route', () => {
+  it('renders income metrics on the income route', async () => {
+    mockReadJSON.mockResolvedValue({ 2023: { grossIncome: 400000, taxes: 120000 } })
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -161,28 +179,29 @@ describe('SavingsGrowthTracker', () => {
       setAccounts: vi.fn(),
       setBalances: vi.fn(),
     })
-    vi.mocked(appStorage.getJSON).mockReturnValue({ 2023: { grossIncome: 400000, taxes: 120000 } })
 
     renderTracker('/net-worth/growth/income')
 
-    const card = screen.getByTestId('year-card-2023')
+    const card = await screen.findByTestId('year-card-2023')
     expect(within(card).getByText('Gross Income')).toBeInTheDocument()
     expect(within(card).getByText('Taxes')).toBeInTheDocument()
     expect(within(card).getByText('Tax Rate')).toBeInTheDocument()
     expect(within(card).getByText('Net Income')).toBeInTheDocument()
-    expect(within(card).getByText('$400,000')).toBeInTheDocument()
-    expect(within(card).getByText('$120,000')).toBeInTheDocument()
-    expect(within(card).getByText('30.0%')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(within(card).getByText('$400,000')).toBeInTheDocument()
+      expect(within(card).getByText('$120,000')).toBeInTheDocument()
+      expect(within(card).getByText('30.0%')).toBeInTheDocument()
+    })
   })
 
   it('toggles YoY change format between dollars and percentages', async () => {
     const user = userEvent.setup()
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: {
         '2022-06': { csv: '2022-csv', month: '2022-06', uploadedAt: '' },
         '2023-06': { csv: '2023-csv', month: '2023-06', uploadedAt: '' },
       },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2022, 2023],
     })
@@ -222,10 +241,10 @@ describe('SavingsGrowthTracker', () => {
 
     renderTracker()
 
-    const toggleBtn = screen.getByRole('button', { name: /Show YoY change/i })
-    expect(toggleBtn).toHaveTextContent('$')
-    await user.click(toggleBtn)
-    expect(toggleBtn).toHaveTextContent('%')
+    const dollarBtn = screen.getByRole('button', { name: /Show YoY change in dollars/i })
+    const pctBtn = screen.getByRole('button', { name: /Show YoY change as percentage/i })
+    expect(dollarBtn).toHaveTextContent('$')
+    await user.click(pctBtn)
     expect(screen.getByText('▲ 16.7%')).toBeInTheDocument()
   })
 
@@ -339,7 +358,7 @@ describe('SavingsGrowthTracker', () => {
     await user.type(editInput, '150000')
     await user.tab()
 
-    expect(vi.mocked(appStorage.setJSON)).toHaveBeenCalled()
+    expect(mockWriteJSON).toHaveBeenCalled()
   })
 
   it('cancels edit when Escape is pressed', async () => {
@@ -405,7 +424,7 @@ describe('SavingsGrowthTracker', () => {
 
   it('opens edit when Enter or Space is pressed on an editable value', async () => {
     const user = userEvent.setup()
-    vi.mocked(appStorage.getJSON).mockReturnValue({ 2024: { grossIncome: 250000 } })
+    mockReadJSON.mockResolvedValue({ 2024: { grossIncome: 250000 } })
     mockUseData.mockReturnValue({
       accounts: [
         {
@@ -427,7 +446,7 @@ describe('SavingsGrowthTracker', () => {
 
     renderTracker('/net-worth/growth/income')
 
-    const editableValue = screen.getByRole('button', { name: '$250,000' })
+    const editableValue = await screen.findByRole('button', { name: '$250,000' })
     editableValue.focus()
     await user.keyboard('{Enter}')
     expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
@@ -439,10 +458,13 @@ describe('SavingsGrowthTracker', () => {
     expect(document.querySelector('.sgt-edit-input')).toBeInTheDocument()
   })
 
-  it('excludes removed categories from budget calculations', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
+  it('excludes removed categories from budget calculations', async () => {
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-01': { csv: 'csv-data', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [{ id: 'removed', name: 'Removed', categories: ['OldCat'] }],
+      categoryGroups: [
+        { id: 'removed', name: 'Removed', categories: ['OldCat'] },
+        { id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' },
+      ],
       configs: {},
       years: [2024],
     })
@@ -471,7 +493,7 @@ describe('SavingsGrowthTracker', () => {
 
     renderTracker()
 
-    const card = screen.getByTestId('year-card-2024')
+    const card = await screen.findByTestId('year-card-2024')
     expect(card.querySelector('[data-sgt-field="netIncome"]')).toHaveTextContent('$5,000')
     expect(card.querySelector('[data-sgt-field="expense"]')).toHaveTextContent('$0')
   })

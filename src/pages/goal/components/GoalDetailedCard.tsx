@@ -1,12 +1,7 @@
 import { FC, useState, useMemo, useEffect, useRef } from 'react'
 import { FinancialGoal } from '../../../types'
 import GoalCardActions from './GoalCardActions'
-import {
-  calculateGoalMetrics,
-  computeRequiredCorpus,
-  projectFIDate,
-  projectFIDateWithDrawdown,
-} from '../utils/goalCalculations'
+import { calculateGoalMetrics, getFiTarget, projectFIDate, projectFIDateWithDrawdown } from '../utils/goalCalculations'
 import {
   formatTimeUntilYearMonth,
   formatYearMonthLong,
@@ -16,11 +11,17 @@ import {
 import { calcMonthlySaving, getRetirementMonth, monthsBetween as goalMonthsBetween } from '../utils/goalMath'
 import { useData } from '../../../contexts/DataContext'
 import { getBudgetSaveRate, loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
+import type { BudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV, buildMonthKey } from '../../budget/utils/csvParser'
 import TermAbbr from '../../../components/TermAbbr'
 import MonthPicker from '../../../components/MonthPicker'
+import YearNav from '../../../components/YearNav'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 import '../../../styles/GoalDetailedCard.css'
+import '../../../styles/Budget.css'
+
+const EMPTY_STORE: BudgetStore = { csvs: {}, categoryGroups: [], configs: {}, years: [] }
 
 interface EditFields {
   goalCreatedIn: string
@@ -105,7 +106,7 @@ const findDepletionMonth = (
   ageBoundary: number,
   fiGoalOverride?: number,
 ): string | null => {
-  const fiGoalVal = fiGoalOverride ?? goal.fiGoal
+  const fiGoalVal = fiGoalOverride ?? 0
   if (!profileBirthday || !goal.goalEndYear || !fiGoalVal) return null
   const [by, bm, bd] = profileBirthday.split('-').map(Number)
   const retirementDate = new Date(by + goal.retirementAge, bm - 1, bd)
@@ -113,7 +114,7 @@ const findDepletionMonth = (
   if (retirementDate >= endDate) return null
   const annualInflation = inflationRate / 100
   const boundaryDate = new Date(by + ageBoundary, bm - 1, 1)
-  const baseExpense = goal.monthlyExpense2047
+  const baseExpense = goal.monthlyExpenseRetirement
   const fiYear = retirementDate.getFullYear()
   let expense = baseExpense
   let lastExpenseYear = fiYear
@@ -175,6 +176,26 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   const lastSavingsOverrideRef = useRef<number | null | undefined>(undefined)
 
   const { accounts, balances, allMonths } = useData()
+  const { fileStore } = useFileStore()
+  const [budgetSaveRateData, setBudgetSaveRateData] = useState<Awaited<ReturnType<typeof getBudgetSaveRate>>>(null)
+  const [budgetStore, setBudgetStore] = useState<BudgetStore>(EMPTY_STORE)
+
+  useEffect(() => {
+    let cancelled = false
+    getBudgetSaveRate(fileStore)
+      .then(r => {
+        if (!cancelled) setBudgetSaveRateData(r)
+      })
+      .catch(console.error)
+    loadBudgetStore(fileStore)
+      .then(s => {
+        if (!cancelled) setBudgetStore(s)
+      })
+      .catch(console.error)
+    return () => {
+      cancelled = true
+    }
+  }, [fileStore])
 
   useEffect(() => {
     setEditFields(toEditFields(goal))
@@ -229,7 +250,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       expenseValue: annualExpense,
       monthlyExpenseValue: metrics.monthlyExpenseAtCreation,
       expenseValue2047: metrics.annualExpenseAtRetirement,
-      monthlyExpense2047: metrics.monthlyExpenseAtRetirement,
+      monthlyExpenseRetirement: metrics.monthlyExpenseAtRetirement,
       safeWithdrawalRate: 0,
       growth: preBoundaryGrowth,
       retirement: metrics.retirementDateFormatted,
@@ -251,39 +272,9 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   }, [profileBirthday, goal.retirementAge])
   const retirementDateLabel = useMemo(() => formatRetirementDate(retirementDate), [retirementDate])
 
-  // Dynamically recompute fiGoal from current settings (inflation, growth rates)
   const fiGoal = useMemo(() => {
-    if (!goal.goalEndYear || !goal.expenseValue || goal.expenseValue <= 0) return goal.fiGoal
-    const bd = parseDate(profileBirthday)
-    const rd = new Date(bd.getFullYear() + goal.retirementAge, bd.getMonth(), bd.getDate())
-    const endYear = new Date(goal.goalEndYear).getFullYear()
-    const endOfLife = new Date(endYear, 11, 1)
-    const ageBoundaryDate = new Date(bd.getFullYear() + ageBoundary, bd.getMonth(), 1)
-    const [gcYear] = (goal.goalCreatedIn || '').split('-').map(Number)
-    const yearsToRetirement = rd.getFullYear() - (gcYear || new Date().getFullYear())
-    const annualExpenseAtRetirement = goal.expenseValue * Math.pow(1 + inflation / 100, yearsToRetirement)
-    const monthlyExpenseAtRetirement = annualExpenseAtRetirement / 12
-    return computeRequiredCorpus(
-      rd,
-      endOfLife,
-      ageBoundaryDate,
-      monthlyExpenseAtRetirement,
-      inflation,
-      preBoundaryGrowth,
-      postBoundaryGrowth,
-    )
-  }, [
-    goal.goalEndYear,
-    goal.expenseValue,
-    goal.goalCreatedIn,
-    goal.retirementAge,
-    goal.fiGoal,
-    profileBirthday,
-    inflation,
-    preBoundaryGrowth,
-    postBoundaryGrowth,
-    ageBoundary,
-  ])
+    return getFiTarget(goal, profileBirthday, preBoundaryGrowth, postBoundaryGrowth, ageBoundary, inflation)
+  }, [goal, profileBirthday, preBoundaryGrowth, postBoundaryGrowth, ageBoundary, inflation])
 
   const depletionMonth = useMemo(
     () =>
@@ -324,14 +315,14 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
       .reduce((sum, a) => sum + (balMap.get(a.id) ?? 0), 0)
   }, [accounts, balances, allMonths])
 
-  const budgetData = getBudgetSaveRate()
+  const budgetData = budgetSaveRateData
   const budgetSaveRateValue = budgetData?.saveRate ?? 0
   const hasBudgetData = budgetData !== null
 
   // Compute selected-year monthly savings from CSV data (not the stored budget-summary which may be stale)
   const selectedYear = summaryYear ?? new Date().getFullYear()
   const budgetBreakdown = useMemo(() => {
-    const store = loadBudgetStore()
+    const store = budgetStore
     const groups = getGlobalCategoryGroups(store)
     const removedCats = new Set(groups.find(g => g.id === 'removed')?.categories || [])
     const year = selectedYear
@@ -373,7 +364,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     const annualExpense = (totalExpense / monthsWithData) * 12
     const annualSavings = annualIncome - annualExpense
     return { annualIncome, annualExpense, annualSavings }
-  }, [selectedYear])
+  }, [selectedYear, budgetStore])
 
   const budgetAnnualIncome = budgetBreakdown?.annualIncome ?? 0
   const budgetAnnualExpenseBase = budgetBreakdown?.annualExpense ?? 0
@@ -416,8 +407,8 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     // End of life from goalEndYear
     const endOfLife = goal.goalEndYear ? new Date(goal.goalEndYear) : null
     // Monthly expense today (from goal creation expenses, inflated to now)
-    const monthlyExpenseNow = goal.monthlyExpense2047
-      ? goal.monthlyExpense2047 /
+    const monthlyExpenseNow = goal.monthlyExpenseRetirement
+      ? goal.monthlyExpenseRetirement /
         Math.pow(
           1 + inflation / 100,
           (() => {
@@ -510,7 +501,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     fiGoal,
     goal.retirementAge,
     goal.goalEndYear,
-    goal.monthlyExpense2047,
+    goal.monthlyExpenseRetirement,
     goal.expenseValue,
     inflation,
     preBoundaryGrowth,
@@ -605,7 +596,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
         {/* ── Edit Button (Solo Page) ── */}
         {!showActions && onUpdateGoal && !editing && (
           <div className="fi-card-edit-row">
-            <button className="fi-card-action-btn" onClick={() => setEditing(true)}>
+            <button className="action-btn" onClick={() => setEditing(true)}>
               Edit
             </button>
           </div>
@@ -735,48 +726,35 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
             <div className="fi-card-section-header">
               <h3 className="fi-card-section-title">Projected</h3>
               <div className="fi-projection-controls">
-                <div className="fi-projection-period-toggle">
+                <div className="tab-bar">
                   <button
-                    className={`fi-projection-period-btn${!showYearly ? ' fi-projection-period-btn--active' : ''}`}
+                    className={`tab-btn tab-btn--sm${!showYearly ? ' active' : ''}`}
                     onClick={() => showYearly && onTogglePeriod?.()}
                   >
                     /mo
                   </button>
                   <button
-                    className={`fi-projection-period-btn${showYearly ? ' fi-projection-period-btn--active' : ''}`}
+                    className={`tab-btn tab-btn--sm${showYearly ? ' active' : ''}`}
                     onClick={() => !showYearly && onTogglePeriod?.()}
                   >
                     /yr
                   </button>
                 </div>
                 {availableYears && availableYears.length > 1 && onSummaryYearChange ? (
-                  <div className="fi-projection-year-toggle">
-                    <button
-                      className="fi-projection-year-chevron"
-                      type="button"
-                      aria-label="Previous year"
-                      disabled={summaryYear === availableYears[availableYears.length - 1]}
-                      onClick={() => {
-                        const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
-                        if (idx < availableYears.length - 1) onSummaryYearChange(availableYears[idx + 1])
-                      }}
-                    >
-                      ‹
-                    </button>
-                    <span className="fi-projection-year-value">{summaryYear ?? new Date().getFullYear()}</span>
-                    <button
-                      className="fi-projection-year-chevron"
-                      type="button"
-                      aria-label="Next year"
-                      disabled={summaryYear === availableYears[0]}
-                      onClick={() => {
-                        const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
-                        if (idx > 0) onSummaryYearChange(availableYears[idx - 1])
-                      }}
-                    >
-                      ›
-                    </button>
-                  </div>
+                  <YearNav
+                    size="sm"
+                    selectedYear={summaryYear ?? new Date().getFullYear()}
+                    disablePrev={summaryYear === availableYears[availableYears.length - 1]}
+                    disableNext={summaryYear === availableYears[0]}
+                    onPrevYear={() => {
+                      const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
+                      if (idx < availableYears.length - 1) onSummaryYearChange(availableYears[idx + 1])
+                    }}
+                    onNextYear={() => {
+                      const idx = availableYears.indexOf(summaryYear ?? new Date().getFullYear())
+                      if (idx > 0) onSummaryYearChange(availableYears[idx - 1])
+                    }}
+                  />
                 ) : (
                   <span className="fi-projection-year-label">{summaryYear ?? new Date().getFullYear()}</span>
                 )}

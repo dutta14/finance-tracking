@@ -1,5 +1,6 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState, SetStateAction } from 'react'
 import { useData } from '../contexts/DataContext'
+import { useFileStore } from '../contexts/FileStoreContext'
 import type { AssetAllocation } from '../pages/data/types'
 
 export type AssetBreakdown = Record<AssetAllocation, number>
@@ -204,3 +205,85 @@ export function useLeverage() {
 }
 
 export default useLeverage
+
+/* ── Leverage planner persistence ──────────────────────────── */
+
+export const LEVERAGE_PATH = 'leverage.json'
+
+export type LeverageAllocationType = 'loan' | 'mortgage'
+
+export interface LeverageAllocation {
+  id: string
+  label: string
+  type: LeverageAllocationType
+  sharePct: string
+  downPaymentPct: string
+}
+
+export interface LeverageScenario {
+  id: string
+  name: string
+  allocations: LeverageAllocation[]
+}
+
+export interface LeverageSettings {
+  target: string
+  scenarios: LeverageScenario[]
+  mainAllocations: LeverageAllocation[]
+  currentScenarioName: string
+  chartStart: string
+}
+
+export const EMPTY_LEVERAGE_SETTINGS: LeverageSettings = {
+  target: '',
+  scenarios: [],
+  mainAllocations: [],
+  currentScenarioName: 'Current plan',
+  chartStart: '',
+}
+
+/** Reads and writes the whole leverage planner state as a single `leverage.json`. */
+export function useLeverageSettings() {
+  const { fileStore } = useFileStore()
+  const [settings, setSettingsState] = useState<LeverageSettings>(EMPTY_LEVERAGE_SETTINGS)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const refresh = () => {
+      fileStore
+        .readJSON<Partial<LeverageSettings>>(LEVERAGE_PATH, EMPTY_LEVERAGE_SETTINGS)
+        .then(next => {
+          if (cancelled) return
+          setSettingsState({ ...EMPTY_LEVERAGE_SETTINGS, ...next })
+          setLoaded(true)
+        })
+        .catch(err => {
+          console.error('Failed to load leverage settings:', err)
+          setLoaded(true)
+        })
+    }
+
+    refresh()
+    const unsubscribe = fileStore.subscribe(LEVERAGE_PATH, refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
+  const setSettings = useCallback(
+    (update: SetStateAction<LeverageSettings>) => {
+      setSettingsState(prev => {
+        const next = typeof update === 'function' ? update(prev) : update
+        fileStore.writeJSON(LEVERAGE_PATH, next).catch(console.error)
+        return next
+      })
+      window.dispatchEvent(new Event('tools-changed'))
+    },
+    [fileStore],
+  )
+
+  return { settings, setSettings, loaded }
+}

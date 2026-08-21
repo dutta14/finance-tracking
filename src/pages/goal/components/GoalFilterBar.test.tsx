@@ -1,15 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import GoalFilterBar, { DEFAULT_FILTERS, GoalFilters, applyFilters } from './GoalFilterBar'
+import GoalFilterBar, { DEFAULT_FILTERS, GoalFilters, FI_GOAL_BUCKETS, applyFilters } from './GoalFilterBar'
 import { makeGoal } from '../../../test/factories'
 import { FinancialGoal } from '../../../types'
+import { getFiTarget } from '../utils/goalCalculations'
 
 const goalAge50Low = makeGoal({
   id: 1,
   goalName: 'Low FI',
   retirementAge: 50,
   fiGoal: 2_000_000,
+  goalEndYear: '2080-01',
   expenseValue: 40_000,
 })
 const goalAge55Mid = makeGoal({
@@ -17,6 +19,7 @@ const goalAge55Mid = makeGoal({
   goalName: 'Mid FI',
   retirementAge: 55,
   fiGoal: 7_000_000,
+  goalEndYear: '2100-01',
   expenseValue: 80_000,
 })
 const goalAge60High = makeGoal({
@@ -24,13 +27,25 @@ const goalAge60High = makeGoal({
   goalName: 'High FI',
   retirementAge: 60,
   fiGoal: 12_000_000,
+  goalEndYear: '2150-01',
   expenseValue: 150_000,
 })
 
 const goals = [goalAge50Low, goalAge55Mid, goalAge60High]
+const profileBirthday = '1990-01-15'
+const getBucketLabel = (goal: FinancialGoal) =>
+  FI_GOAL_BUCKETS.find(bucket => {
+    const fiTarget = getFiTarget(goal, profileBirthday, 8)
+    return fiTarget >= bucket.min && fiTarget < bucket.max
+  })?.label
 
 function renderFilterBar(
-  overrides: Partial<{ goals: FinancialGoal[]; filters: GoalFilters; onChange: () => void }> = {},
+  overrides: Partial<{
+    goals: FinancialGoal[]
+    filters: GoalFilters
+    onChange: () => void
+    profileBirthday: string
+  }> = {},
 ) {
   const onChange = overrides.onChange ?? vi.fn()
   return {
@@ -38,6 +53,7 @@ function renderFilterBar(
     ...render(
       <GoalFilterBar
         goals={overrides.goals ?? goals}
+        profileBirthday={overrides.profileBirthday ?? profileBirthday}
         filters={overrides.filters ?? DEFAULT_FILTERS}
         onChange={onChange}
       />,
@@ -205,8 +221,10 @@ describe('applyFilters', () => {
   })
 
   it('filters goals by FI goal bucket', () => {
-    const filters: GoalFilters = { retirementAges: [], fiGoalBuckets: ['$10M – $15M'], expenseBuckets: [] }
-    const result = applyFilters(goals, filters)
+    const highBucket = getBucketLabel(goalAge60High)
+    expect(highBucket).toBe('$10M – $15M')
+    const filters: GoalFilters = { retirementAges: [], fiGoalBuckets: [highBucket!], expenseBuckets: [] }
+    const result = applyFilters(goals, filters, profileBirthday)
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('High FI')
   })
@@ -219,7 +237,7 @@ describe('applyFilters', () => {
   })
 
   it('combines multiple filter dimensions with AND logic', () => {
-    const filters: GoalFilters = { retirementAges: [50, 55], fiGoalBuckets: ['< $5M'], expenseBuckets: [] }
+    const filters: GoalFilters = { retirementAges: [50], fiGoalBuckets: ['< $5M'], expenseBuckets: [] }
     const result = applyFilters(goals, filters)
     expect(result).toHaveLength(1)
     expect(result[0].goalName).toBe('Low FI')

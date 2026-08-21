@@ -3,15 +3,16 @@ import { useProfile } from '../../hooks/useProfile'
 import { useData } from '../../contexts/DataContext'
 import { useTaxStore } from './useTaxStore'
 import type { TaxDocFile, TaxDocOwner, ChecklistCategory } from './types'
-import { getStorageEstimate } from '../../utils/taxFileDB'
-import { fileToBase64, nextFileId } from './utils/fileHelpers'
+import { nextFileId } from './utils/fileHelpers'
 import OwnerSection from './components/OwnerSection'
 import SuggestModal from './components/SuggestModal'
 import AddItemModal from './components/AddItemModal'
 import SaveTemplateModal from './components/SaveTemplateModal'
 import ImportTemplateModal from './components/ImportTemplateModal'
 import TaxReturnSection from './components/TaxReturnSection'
+import YearNav from '../../components/YearNav'
 import '../../styles/Taxes.css'
+import '../../styles/Budget.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
@@ -57,9 +58,8 @@ const Taxes: FC = () => {
   const [importTemplateModal, setImportTemplateModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  // Upload error + storage indicator
+  // Upload error
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [storageMB, setStorageMB] = useState<number | null>(null)
 
   // Auto-clear upload error after 5 seconds
   useEffect(() => {
@@ -67,16 +67,6 @@ const Taxes: FC = () => {
     const t = setTimeout(() => setUploadError(null), 5000)
     return () => clearTimeout(t)
   }, [uploadError])
-
-  // Refresh storage estimate on mount
-  const refreshStorage = useCallback(() => {
-    getStorageEstimate()
-      .then(est => setStorageMB(est.usedMB))
-      .catch(() => {})
-  }, [])
-  useEffect(() => {
-    refreshStorage()
-  }, [refreshStorage])
 
   // Items by owner
   const primaryItems = yearData.items.filter(i => i.owner === 'primary' && i.category !== 'tax-return')
@@ -105,10 +95,6 @@ const Taxes: FC = () => {
 
   const handleUpload = useCallback(
     async (itemId: string, files: FileList) => {
-      if (tax.migrating) {
-        setUploadError('Please wait — migrating existing files to new storage…')
-        return
-      }
       const item = yearData.items.find(i => i.id === itemId)
       for (const file of Array.from(files)) {
         // File size guard
@@ -117,7 +103,7 @@ const Taxes: FC = () => {
           continue
         }
 
-        const content = await fileToBase64(file)
+        const content = await file.arrayBuffer()
         const ext = file.name.split('.').pop() || ''
 
         // Build standardized name: Owner_Label.ext
@@ -130,19 +116,18 @@ const Taxes: FC = () => {
         const docFile: TaxDocFile = {
           id: nextFileId(),
           name: displayName,
-          content,
+          content: undefined,
           ext,
           uploadedAt: new Date().toISOString(),
         }
         try {
-          await tax.addFileToItemAsync(selectedYear, itemId, docFile)
+          await tax.addFileToItemAsync(selectedYear, itemId, docFile, content)
         } catch {
-          setUploadError(`Failed to save ${file.name}. Storage may be unavailable in private browsing.`)
+          setUploadError(`Failed to save ${file.name}. Check that the data folder is still connected.`)
         }
       }
-      refreshStorage()
     },
-    [selectedYear, tax, yearData, primaryName, partnerName, refreshStorage],
+    [selectedYear, tax, yearData, primaryName, partnerName],
   )
 
   const handleRemoveFile = useCallback(
@@ -203,20 +188,22 @@ const Taxes: FC = () => {
     <div className="tax-page">
       <div className="tax-header">
         <h1 className="tax-heading">Taxes</h1>
-        {storageMB !== null && <span className="tax-storage-indicator">{storageMB} MB used</span>}
-        <div className="tax-year-nav">
-          <button className="tax-year-btn" onClick={() => setSelectedYear(y => y - 1)}>
-            ←
-          </button>
-          <span className="tax-year-label">{selectedYear}</span>
-          <button
-            className="tax-year-btn"
-            onClick={() => setSelectedYear(y => y + 1)}
-            disabled={selectedYear >= CURRENT_YEAR}
-          >
-            →
-          </button>
-        </div>
+        <YearNav
+          selectedYear={selectedYear}
+          onPrevYear={() => setSelectedYear(y => y - 1)}
+          onNextYear={() => setSelectedYear(y => y + 1)}
+          disableNext={selectedYear >= CURRENT_YEAR}
+        />
+        {exists && (
+          <div className="tax-header-actions">
+            <button className="action-btn" onClick={() => setSaveTemplateModal(true)}>
+              Save as Template
+            </button>
+            <button className="action-btn action-btn--danger" onClick={() => setConfirmDelete(true)}>
+              Delete Year
+            </button>
+          </div>
+        )}
       </div>
 
       {uploadError && (
@@ -230,11 +217,11 @@ const Taxes: FC = () => {
           <h2>No tax prep for {selectedYear}</h2>
           <p>Create a checklist to start tracking documents for this tax year.</p>
           <div className="tax-empty-actions">
-            <button className="tax-btn tax-btn--primary" onClick={createYear}>
+            <button className="action-btn" onClick={createYear}>
               Create {selectedYear} Tax Prep
             </button>
             {tax.templates.length > 0 && (
-              <button className="tax-btn tax-btn--outline" onClick={() => setImportTemplateModal(true)}>
+              <button className="action-btn" onClick={() => setImportTemplateModal(true)}>
                 Import from Template
               </button>
             )}
@@ -242,57 +229,12 @@ const Taxes: FC = () => {
         </div>
       ) : (
         <div className="tax-body">
-          {/* Save as Template / Delete year */}
-          <div className="tax-template-bar">
-            <button className="tax-btn tax-btn--outline tax-btn--template" onClick={() => setSaveTemplateModal(true)}>
-              💾 Save as Template
-            </button>
-            <button className="tax-btn tax-btn--template tax-btn--danger" onClick={() => setConfirmDelete(true)}>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="tax-icon-align"
-              >
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-              </svg>{' '}
-              Delete Year
-            </button>
-          </div>
-
-          {/* Primary section */}
-          <OwnerSection
-            owner="primary"
-            title={primaryName}
-            items={primaryItems}
-            year={selectedYear}
-            onUpload={handleUpload}
-            onRemoveFile={handleRemoveFile}
-            onRemoveItem={handleRemoveItem}
-            onRename={handleRename}
-            onAddItem={handleAddItem}
-            onAddPaystub={handleAddPaystub}
-            onSuggestAccounts={handleSuggestAccounts}
-            primaryName={primaryName}
-            partnerName={partnerName}
-            primaryAvatar={primaryAvatar}
-            partnerAvatar={partnerAvatar}
-            accounts={accounts}
-            hasSuggestions={hasSuggestionsFor('primary')}
-          />
-
-          {/* Partner section */}
-          {hasPartner && (
+          <div className="tax-owners-grid">
+            {/* Primary section */}
             <OwnerSection
-              owner="partner"
-              title={partnerName}
-              items={partnerItems}
+              owner="primary"
+              title={primaryName}
+              items={primaryItems}
               year={selectedYear}
               onUpload={handleUpload}
               onRemoveFile={handleRemoveFile}
@@ -306,30 +248,53 @@ const Taxes: FC = () => {
               primaryAvatar={primaryAvatar}
               partnerAvatar={partnerAvatar}
               accounts={accounts}
-              hasSuggestions={hasSuggestionsFor('partner')}
+              hasSuggestions={hasSuggestionsFor('primary')}
             />
-          )}
 
-          {/* Joint section */}
-          <OwnerSection
-            owner="joint"
-            title="Joint"
-            items={jointItems}
-            year={selectedYear}
-            onUpload={handleUpload}
-            onRemoveFile={handleRemoveFile}
-            onRemoveItem={handleRemoveItem}
-            onRename={handleRename}
-            onAddItem={handleAddItem}
-            onAddPaystub={handleAddPaystub}
-            onSuggestAccounts={handleSuggestAccounts}
-            primaryName={primaryName}
-            partnerName={partnerName}
-            primaryAvatar={primaryAvatar}
-            partnerAvatar={partnerAvatar}
-            accounts={accounts}
-            hasSuggestions={hasSuggestionsFor('joint')}
-          />
+            {/* Partner section */}
+            {hasPartner && (
+              <OwnerSection
+                owner="partner"
+                title={partnerName}
+                items={partnerItems}
+                year={selectedYear}
+                onUpload={handleUpload}
+                onRemoveFile={handleRemoveFile}
+                onRemoveItem={handleRemoveItem}
+                onRename={handleRename}
+                onAddItem={handleAddItem}
+                onAddPaystub={handleAddPaystub}
+                onSuggestAccounts={handleSuggestAccounts}
+                primaryName={primaryName}
+                partnerName={partnerName}
+                primaryAvatar={primaryAvatar}
+                partnerAvatar={partnerAvatar}
+                accounts={accounts}
+                hasSuggestions={hasSuggestionsFor('partner')}
+              />
+            )}
+
+            {/* Joint section */}
+            <OwnerSection
+              owner="joint"
+              title="Joint"
+              items={jointItems}
+              year={selectedYear}
+              onUpload={handleUpload}
+              onRemoveFile={handleRemoveFile}
+              onRemoveItem={handleRemoveItem}
+              onRename={handleRename}
+              onAddItem={handleAddItem}
+              onAddPaystub={handleAddPaystub}
+              onSuggestAccounts={handleSuggestAccounts}
+              primaryName={primaryName}
+              partnerName={partnerName}
+              primaryAvatar={primaryAvatar}
+              partnerAvatar={partnerAvatar}
+              accounts={accounts}
+              hasSuggestions={hasSuggestionsFor('joint')}
+            />
+          </div>
 
           {/* Tax Returns */}
           <TaxReturnSection
@@ -337,6 +302,7 @@ const Taxes: FC = () => {
             year={selectedYear}
             onUpload={handleUpload}
             onRemoveFile={handleRemoveFile}
+            onRemoveItem={handleRemoveItem}
             onAddReturnEntry={handleAddReturnEntry}
             primaryName={primaryName}
             partnerName={partnerName}
@@ -390,11 +356,11 @@ const Taxes: FC = () => {
               This will remove all checklist items and uploaded documents for {selectedYear}. This cannot be undone.
             </p>
             <div className="tax-modal-actions">
-              <button className="tax-btn tax-btn--outline" onClick={() => setConfirmDelete(false)}>
+              <button className="action-btn" onClick={() => setConfirmDelete(false)}>
                 Cancel
               </button>
               <button
-                className="tax-btn tax-btn--danger"
+                className="action-btn action-btn--danger"
                 onClick={() => {
                   tax.deleteYear(selectedYear)
                   setConfirmDelete(false)

@@ -58,19 +58,92 @@
   justify-content: center;
   flex-shrink: 0;
 }
+
 .mixer-close-btn:hover {
   color: var(--color-text);
   background: var(--color-surface-hover);
 }
 
-/* ── Body (two columns) ── */
+/* ── Body ── */
 .mixer-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mixer-template-strip {
+  padding: 1rem 1.2rem 0;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.mixer-template-strip-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-heading);
+  margin-bottom: 0.6rem;
+}
+
+.mixer-template-chip-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+.mixer-template-chip {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.65rem 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mixer-template-chip:hover {
+  border-color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+}
+
+.mixer-template-chip.selected {
+  border-color: var(--color-text);
+  background: var(--color-surface-alt);
+}
+
+.mixer-template-chip.partial {
+  border-color: var(--color-text-muted);
+  border-style: dashed;
+  background: var(--color-surface);
+}
+
+.mixer-template-chip-name {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.mixer-template-chip-meta {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+
+.mixer-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
   flex: 1;
   overflow: hidden;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .mixer-col {
@@ -97,6 +170,10 @@
   flex-shrink: 0;
 }
 
+.mixer-col-title--params {
+  margin-bottom: 0.6rem;
+}
+
 .mixer-col-hint {
   font-size: var(--fs-sm);
   font-weight: var(--fw-normal);
@@ -115,16 +192,31 @@
   border-radius: var(--radius);
   flex-shrink: 0;
 }
+
 .mixer-badge--fi {
-  background: var(--color-bg-hover, #f3f4f6);
+  background: var(--color-surface-alt);
   color: var(--color-text);
   border: 1px solid var(--color-border);
 }
+
 .mixer-badge--gw {
-  background: var(--color-positive-light);
-  color: var(--color-positive);
-  border: 1px solid var(--color-positive-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
+
+.mixer-badge--template {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.mixer-badge--goal {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
 .mixer-badge--sm {
   font-size: var(--fs-xs);
   padding: 0 4px;
@@ -134,9 +226,27 @@
 .mixer-goal-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
+}
+
+.mixer-goal-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mixer-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
 .mixer-goal-item {
@@ -158,12 +268,12 @@
 
 .mixer-goal-item:hover {
   border-color: var(--color-text-muted);
-  background: var(--color-surface);
+  background: var(--color-surface-hover);
 }
 
 .mixer-goal-item.selected {
-  border-color: var(--color-text-secondary, #6b7280);
-  background: var(--color-surface);
+  border-color: var(--color-text);
+  background: var(--color-surface-alt);
 }
 
 .mixer-goal-name {
@@ -180,6 +290,54 @@
 .mixer-goal-stat strong {
   color: var(--color-text);
   font-weight: var(--fw-semibold);
+}
+
+/* ── Base parameters ── */
+.mixer-params {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.mixer-param-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.mixer-param-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mixer-param-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.mixer-param-input {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.6rem 0.75rem;
+  font-size: var(--fs-sm);
+}
+
+.mixer-param-input:focus {
+  outline: 1px solid var(--color-text-muted);
+  outline-offset: 1px;
+  border-color: var(--color-text-muted);
+}
+
+.mixer-param-attribution {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 /* ── GW goal list ── */
@@ -220,17 +378,17 @@
 }
 
 .mixer-gw-item:hover {
-  border-color: var(--color-positive);
-  background: var(--color-positive-light);
+  border-color: var(--color-text-muted);
+  background: var(--color-surface-hover);
 }
 
 .mixer-gw-item.checked {
-  border-color: var(--color-positive);
-  background: var(--color-positive-light);
+  border-color: var(--color-text-muted);
+  background: var(--color-surface-alt);
 }
 
 .mixer-gw-checkbox {
-  accent-color: var(--color-positive);
+  accent-color: var(--color-text);
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -256,7 +414,7 @@
 .mixer-gw-pv {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
-  color: var(--color-positive);
+  color: var(--color-text);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -309,7 +467,7 @@
 }
 
 .mixer-preview-amount--gw {
-  color: var(--color-positive);
+  color: var(--color-text);
 }
 
 .mixer-preview-row--total {
@@ -330,6 +488,10 @@
   margin: 0;
 }
 
+.mixer-empty--hint {
+  margin-bottom: 0.9rem;
+}
+
 /* ── Footer ── */
 .mixer-footer {
   display: flex;
@@ -342,7 +504,7 @@
 
 .mixer-btn-cancel {
   background: none;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border-light, var(--color-border));
   border-radius: var(--radius);
   padding: 0.5rem 1.1rem;
   font-size: var(--fs-md);
@@ -350,25 +512,27 @@
   cursor: pointer;
   transition: background 0.15s;
 }
+
 .mixer-btn-cancel:hover {
   background: var(--color-surface-hover);
 }
 
 .mixer-btn-create {
-  background: var(--color-text-secondary, #6b7280);
-  color: #fff;
+  background: var(--color-text);
+  color: var(--color-surface);
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1.3rem;
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
 }
+
 .mixer-btn-create:hover:not(:disabled) {
-  background: var(--accent-hover, var(--color-text-secondary, #6b7280));
-  filter: brightness(1.1);
+  opacity: 0.85;
 }
+
 .mixer-btn-create:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -381,7 +545,7 @@
   justify-content: center;
   gap: 0.35rem;
   background: none;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border-light, var(--color-border));
   border-radius: var(--radius);
   width: 130px;
   padding: 0.35rem 0;
@@ -396,26 +560,43 @@
     background 0.15s,
     color 0.15s;
 }
+
 .btn-mix-match:hover:not(:disabled) {
   border-color: var(--color-text-muted);
   background: var(--color-bg);
   color: var(--color-text);
 }
+
 .btn-mix-match:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* ── Dark mode ── */
+@media (max-width: 900px) {
+  .mixer-grid {
+    grid-template-columns: 1fr;
+  }
 
-body.dark .mixer-gw-item.checked {
-  background: var(--color-positive-light);
-  border-color: var(--color-positive);
+  .mixer-col + .mixer-col {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .mixer-param-grid {
+    grid-template-columns: 1fr;
+  }
 }
+
+/* ── Dark mode ── */
+body.dark .mixer-gw-item.checked {
+  background: var(--color-surface-alt);
+  border-color: var(--color-text);
+}
+
 body.dark .mixer-gw-pv {
-  color: var(--color-positive);
+  color: var(--color-text);
 }
 
 body.dark .mixer-preview-amount--gw {
-  color: var(--color-positive);
+  color: var(--color-text);
 }

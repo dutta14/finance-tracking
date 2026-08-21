@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ALLOC_COLORS, ALL_CLASSES, PRESETS, GROUP_COLORS, STORAGE_KEY } from './constants'
+import { ALLOC_COLORS, ALL_CLASSES, PRESETS, GROUP_COLORS, ALLOCATION_PATH } from './constants'
 
 describe('ALLOC_COLORS', () => {
   it('has a color for every allocation class', () => {
@@ -70,8 +70,8 @@ describe('GROUP_COLORS', () => {
   })
 })
 
-describe('STORAGE_KEY', () => {
-  it('is a non-empty string', () => {
-    expect(STORAGE_KEY).toBe('allocation-custom-ratios')
+describe('ALLOCATION_PATH', () => {
+  it('points at the allocation JSON file', () => {
+    expect(ALLOCATION_PATH).toBe('allocation.json')
   })
 })

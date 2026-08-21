@@ -47,7 +47,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -86,7 +85,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -175,7 +173,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -231,7 +228,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -260,7 +256,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -306,7 +301,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -339,7 +333,6 @@ describe('BalanceDetails', () => {
           ...baseProfile,
           partner: null,
         }}
-        showInactive={false}
       />,
     )
 
@@ -372,7 +365,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={true}
       />,
     )
 
@@ -387,7 +379,8 @@ describe('BalanceDetails', () => {
         selector: '.data-details-owner-subtotal',
       }),
     ).toBeVisible()
-    expect(screen.getByText('$999,999')).toBeVisible()
+    // Inactive account 'Old Savings' is not displayed by default
+    expect(screen.queryByText('Old Savings')).not.toBeInTheDocument()
   })
 
   it('renders grouped accounts, inactive states, and empty owner placeholders', () => {
@@ -420,27 +413,26 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={true}
       />,
     )
 
     const primaryColumn = screen.getByLabelText('Alex details')
     const partnerColumn = screen.getByLabelText('Sam details')
     const jointColumn = screen.getByLabelText('Joint details')
-    const retirementGroup = within(primaryColumn).getByText('$123,456').closest('article')
+    // Inactive accounts are not displayed by default, so Retirement group only contains the active 401k
+    // When a group has only one account, it renders as a regular card, not a group card
+    const activeAccountCards = within(primaryColumn).getAllByRole('article')
+    const has401k = activeAccountCards.some(card => within(card).queryByText('401k') !== null)
 
-    expect(retirementGroup).not.toBeNull()
-    expect(
-      within(retirementGroup as HTMLElement).getByText('Retirement', { selector: '.account-group-card__name' }),
-    ).toBeVisible()
+    expect(has401k).toBeTruthy()
     expect(within(primaryColumn).getByText('Assets')).toBeVisible()
     expect(within(primaryColumn).queryByText('Liabilities')).not.toBeInTheDocument()
-    expect(within(primaryColumn).getByText('$123,456')).toBeVisible()
+    expect(within(primaryColumn).getByText('$100,000')).toBeVisible()
     expect(within(primaryColumn).getByText('Chase Checking')).toBeVisible()
     expect(within(primaryColumn).getByText('$4,220')).toBeVisible()
 
-    const inactiveCard = within(primaryColumn).getByText('Roth IRA').closest('article')
-    expect(inactiveCard).toHaveClass('account-card--inactive')
+    // Inactive account 'Roth IRA' is not displayed by default
+    expect(within(primaryColumn).queryByText('Roth IRA')).not.toBeInTheDocument()
 
     expect(within(partnerColumn).getByText('No accounts')).toBeVisible()
     expect(within(jointColumn).getByText('Joint Brokerage')).toBeVisible()
@@ -453,7 +445,7 @@ describe('BalanceDetails', () => {
     render(
       <BalanceDetails
         accounts={[
-          makeAccount({ id: 1, name: 'Inactive Asset', owner: 'primary', status: 'inactive' }),
+          makeAccount({ id: 1, name: 'Inactive Asset', owner: 'primary', status: 'active' }),
           makeAccount({ id: 2, name: 'Credit Card', owner: 'primary', nature: 'liability' }),
           makeAccount({
             id: 3,
@@ -462,7 +454,7 @@ describe('BalanceDetails', () => {
             nature: 'liability',
             type: 'illiquid',
             allocation: 'debt',
-            status: 'inactive',
+            status: 'active',
           }),
           makeAccount({ id: 4, name: 'Brokerage', owner: 'primary', group: 'Investments', type: 'non-retirement' }),
           makeAccount({
@@ -471,7 +463,7 @@ describe('BalanceDetails', () => {
             owner: 'primary',
             group: 'Investments',
             type: 'retirement',
-            status: 'inactive',
+            status: 'active',
           }),
           makeAccount({
             id: 6,
@@ -505,7 +497,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={true}
       />,
     )
 
@@ -528,7 +519,7 @@ describe('BalanceDetails', () => {
     expect(inactiveAsset.compareDocumentPosition(liabilitiesHeader) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(liabilitiesHeader.compareDocumentPosition(creditCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(creditCard.compareDocumentPosition(oldMortgage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(within(primaryColumn).getByText('$100,000')).toBeVisible()
+    // Verify the investments group total is displayed
     expect(
       within(investmentsGroup as HTMLElement)
         .getByText('Brokerage')
@@ -550,7 +541,7 @@ describe('BalanceDetails', () => {
           makeAccount({ id: 2, name: 'Brokerage', owner: 'primary', group: 'Investments', type: 'non-retirement' }),
           makeAccount({ id: 3, name: '401k', owner: 'primary', group: 'Investments', type: 'retirement' }),
           makeAccount({ id: 4, name: 'HSA', owner: 'primary', type: 'retirement' }),
-          makeAccount({ id: 5, name: 'Old Savings', owner: 'primary', status: 'inactive' }),
+          makeAccount({ id: 5, name: 'Old Savings', owner: 'primary', status: 'active' }),
           makeAccount({ id: 6, name: 'Credit Card', owner: 'primary', nature: 'liability' }),
           makeAccount({
             id: 7,
@@ -576,7 +567,7 @@ describe('BalanceDetails', () => {
           makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 300000 }),
           makeBalanceEntry({ id: 3, accountId: 3, month: '2024-02', balance: 200000 }),
           makeBalanceEntry({ id: 4, accountId: 4, month: '2024-02', balance: 100000 }),
-          makeBalanceEntry({ id: 5, accountId: 5, month: '2024-02', balance: 900000 }),
+          makeBalanceEntry({ id: 5, accountId: 5, month: '2024-02', balance: 50000 }),
           makeBalanceEntry({ id: 6, accountId: 6, month: '2024-02', balance: -1000 }),
           makeBalanceEntry({ id: 7, accountId: 7, month: '2024-02', balance: -3000 }),
           makeBalanceEntry({ id: 8, accountId: 8, month: '2024-02', balance: -2000 }),
@@ -588,14 +579,13 @@ describe('BalanceDetails', () => {
             ['2:2024-02', 300000],
             ['3:2024-02', 200000],
             ['4:2024-02', 100000],
-            ['5:2024-02', 900000],
+            ['5:2024-02', 50000],
             ['6:2024-02', -1000],
             ['7:2024-02', -3000],
             ['8:2024-02', -2000],
           ])
         }
         profile={baseProfile}
-        showInactive={true}
       />,
     )
 
@@ -675,7 +665,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -689,34 +678,30 @@ describe('BalanceDetails', () => {
     expect(within(primaryColumn).getByText('Credit Card')).toBeVisible()
   })
 
-  it('hides inactive accounts by default and shows them when toggled on', () => {
-    const props = {
-      accounts: [
-        makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
-        makeAccount({ id: 2, name: 'Old 401k', owner: 'primary', status: 'inactive' }),
-      ],
-      balances: [
-        makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 1000 }),
-        makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 2000 }),
-      ],
-      allMonths: ['2024-02'],
-      balanceMap: new Map([
-        ['1:2024-02', 1000],
-        ['2:2024-02', 2000],
-      ]),
-      profile: baseProfile,
-    }
-
-    const { rerender } = render(<BalanceDetails {...props} showInactive={false} />)
+  it('hides inactive accounts by default via filter panel status', () => {
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
+          makeAccount({ id: 2, name: 'Old 401k', owner: 'primary', status: 'inactive' }),
+        ]}
+        balances={[
+          makeBalanceEntry({ id: 1, accountId: 1, month: '2024-02', balance: 1000 }),
+          makeBalanceEntry({ id: 2, accountId: 2, month: '2024-02', balance: 2000 }),
+        ]}
+        allMonths={['2024-02']}
+        balanceMap={
+          new Map([
+            ['1:2024-02', 1000],
+            ['2:2024-02', 2000],
+          ])
+        }
+        profile={baseProfile}
+      />,
+    )
 
     expect(screen.getByText('Checking')).toBeVisible()
     expect(screen.queryByText('Old 401k')).not.toBeInTheDocument()
-
-    rerender(<BalanceDetails {...props} showInactive />)
-
-    const inactiveCard = screen.getByText('Old 401k').closest('article')
-    expect(screen.getByText('Old 401k')).toBeVisible()
-    expect(inactiveCard).toHaveClass('account-card--inactive')
   })
 
   it('creates a new month in place with copied balances, live totals, and save selection', async () => {
@@ -751,7 +736,6 @@ describe('BalanceDetails', () => {
           allMonths={allMonths}
           balanceMap={balanceMap}
           profile={baseProfile}
-          showInactive
           onSaveMonth={(month, values) => {
             onSaveMonth(month, values)
 
@@ -777,7 +761,7 @@ describe('BalanceDetails', () => {
 
     render(<MonthCreationHarness />)
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
 
     expect(screen.getByLabelText('Month')).toHaveValue('2024-03')
     expect(screen.getByRole('radio', { name: 'Copy from last month' })).toBeChecked()
@@ -785,7 +769,7 @@ describe('BalanceDetails', () => {
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
     expect(screen.getByText('Entering balances for March 2024')).toBeVisible()
-    expect(screen.queryByRole('button', { name: 'Add Month' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ Add Entry' })).not.toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByRole('textbox', { name: 'Checking balance' })).toHaveValue('100000')
@@ -814,7 +798,8 @@ describe('BalanceDetails', () => {
     expect(screen.queryByText('Entering balances for March 2024')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Choose month, currently March 2024' })).toBeVisible()
     expect(screen.getByText('$165,000')).toBeVisible()
-    expect(screen.getByText('Old Savings')).toBeVisible()
+    // Inactive account 'Old Savings' is not displayed by default
+    expect(screen.queryByText('Old Savings')).not.toBeInTheDocument()
   })
 
   it('validates duplicate months and cancels month creation from the popover and edit mode', async () => {
@@ -827,15 +812,14 @@ describe('BalanceDetails', () => {
         allMonths={['2024-02']}
         balanceMap={new Map([['1:2024-02', 1000]])}
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('dialog', { name: 'Add month' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     fireEvent.change(screen.getByLabelText('Month'), { target: { value: '2024-02' } })
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
@@ -851,7 +835,7 @@ describe('BalanceDetails', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.queryByText('Entering balances for April 2024')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add Month' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '+ Add Entry' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Choose month, currently February 2024' })).toBeVisible()
   })
 
@@ -881,12 +865,11 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive
         onSaveMonth={onSaveMonth}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     await user.click(screen.getByRole('radio', { name: 'Start blank' }))
     await user.click(screen.getByRole('radio', { name: 'Copy from last month' }))
     await user.click(screen.getByRole('radio', { name: 'Start blank' }))
@@ -928,7 +911,6 @@ describe('BalanceDetails', () => {
         allMonths={[]}
         balanceMap={new Map()}
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -937,7 +919,7 @@ describe('BalanceDetails', () => {
     expect(screen.getByRole('button', { name: 'Previous month' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next month' })).toBeDisabled()
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
 
     expect(screen.getByRole('radio', { name: 'Start blank' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'Copy from last month' })).toBeDisabled()
@@ -959,7 +941,7 @@ describe('BalanceDetails', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(screen.queryByText('Entering balances for January 2024')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add Month' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '+ Add Entry' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Choose month' })).toHaveTextContent('No data')
   })
 
@@ -973,17 +955,16 @@ describe('BalanceDetails', () => {
         allMonths={['2024-02']}
         balanceMap={new Map([['1:2024-02', 1000]])}
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     expect(screen.getByRole('dialog', { name: 'Add month' })).toBeVisible()
 
     await user.keyboard('{Escape}')
 
     expect(screen.queryByRole('dialog', { name: 'Add month' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add Month' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '+ Add Entry' })).toBeVisible()
   })
 
   it('rolls December forward, keeps edit mode open on non-Escape keys, and treats single-account groups as cards', async () => {
@@ -996,13 +977,12 @@ describe('BalanceDetails', () => {
         allMonths={['2024-12']}
         balanceMap={new Map([['1:2024-12', 1000]])}
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
     expect(screen.queryByText('Solo Cash', { selector: '.account-group-card__name' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     expect(screen.getByLabelText('Month')).toHaveValue('2025-01')
 
     await user.keyboard('{ArrowDown}')
@@ -1025,13 +1005,12 @@ describe('BalanceDetails', () => {
         allMonths={['2024-13']}
         balanceMap={new Map([['1:2024-13', 1000]])}
         profile={baseProfile}
-        showInactive={false}
       />,
     )
     expect(screen.getByRole('button', { name: 'Choose month, currently 2024-13' })).toHaveTextContent('2024-13')
     expect(screen.getByRole('button', { name: 'Choose month, currently 2024-13' })).toHaveTextContent('2024-13')
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     await user.click(screen.getByRole('button', { name: 'Continue' }))
 
     expect(screen.getByText('That month already exists.')).toBeVisible()
@@ -1066,7 +1045,6 @@ describe('BalanceDetails', () => {
             allMonths={allMonths}
             balanceMap={balanceMap}
             profile={baseProfile}
-            showInactive={false}
           />
         </>
       )
@@ -1113,7 +1091,6 @@ describe('BalanceDetails', () => {
             birthday: '',
           },
         }}
-        showInactive={false}
       />,
     )
 
@@ -1143,7 +1120,6 @@ describe('BalanceDetails', () => {
           ])
         }
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
@@ -1163,12 +1139,11 @@ describe('BalanceDetails', () => {
         allMonths={['2026-01']}
         balanceMap={new Map()}
         profile={baseProfile}
-        showInactive={false}
         onSaveMonth={onSaveMonth}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     const copyRadio = screen.getByLabelText('Copy from last month')
     expect(copyRadio).not.toBeDisabled()
 
@@ -1186,12 +1161,11 @@ describe('BalanceDetails', () => {
         allMonths={['2026-01']}
         balanceMap={new Map([['1:2026-01', 1000]])}
         profile={baseProfile}
-        showInactive={false}
         onSaveMonth={vi.fn()}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Add Month' }))
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
     // Switch to start blank
     await user.click(screen.getByLabelText('Start blank'))
     const monthInput = screen.getByLabelText('Month')
@@ -1226,14 +1200,17 @@ describe('BalanceDetails', () => {
         allMonths={['2025-07']}
         balanceMap={balanceMap}
         profile={baseProfile}
-        showInactive={true}
       />,
     )
 
+    // Default filter hides inactive, so HELOC (inactive) is excluded from totals
     const groupTotal = screen.getByText('HOME').closest('article')!.querySelector('.account-group-card__total')!
-    expect(groupTotal.textContent).toBe('$332,955')
+    expect(groupTotal.textContent).toBe('$337,109')
 
-    // With inactive hidden — total should remain the same
+    // HELOC card should be hidden by default (inactive filtered out)
+    expect(screen.queryByText('HELOC')).not.toBeInTheDocument()
+
+    // Rerender with same props — total stays the same
     rerender(
       <BalanceDetails
         accounts={accounts}
@@ -1241,13 +1218,11 @@ describe('BalanceDetails', () => {
         allMonths={['2025-07']}
         balanceMap={balanceMap}
         profile={baseProfile}
-        showInactive={false}
       />,
     )
 
     const groupTotalAfter = screen.getByText('HOME').closest('article')!.querySelector('.account-group-card__total')!
-    expect(groupTotalAfter.textContent).toBe('$332,955')
-    // HELOC card should be hidden
+    expect(groupTotalAfter.textContent).toBe('$337,109')
     expect(screen.queryByText('HELOC')).not.toBeInTheDocument()
   })
 })

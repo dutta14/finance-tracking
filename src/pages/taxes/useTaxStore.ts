@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import type {
   TaxStore,
   TaxYear,
@@ -9,136 +9,69 @@ import type {
   TaxTemplate,
   TaxTemplateItem,
 } from './types'
-import { EMPTY_STORE, getEmptyYear, loadTemplates, saveTemplates } from './types'
-import { saveFileContent, deleteFileContent, deleteMultipleFiles } from '../../utils/taxFileDB'
-import { useEncryption } from '../../contexts/EncryptionContext'
-import { appStorage } from '../../utils/appStorage'
-
-const STORAGE_KEY = 'tax-store'
-
-function load(): TaxStore {
-  // Guard against malformed shapes. `appStorage.getJSON` only returns
-  // the fallback when the key is ABSENT, so a stored `{}` (or any
-  // object missing `years`) flows through and crashes the mount
-  // effect at `Object.values(initial.years).some(...)` below. Reachable
-  // from real users via prior `buildV2Export()` revisions that wrote
-  // `taxStore: {}` and via hand-edited / partial-migration storage —
-  // `importValidator` only checks `isRecord(parsed.taxStore)` and
-  // accepts any object. Normalize here so consumers always see a
-  // well-formed store. Arrays are explicitly rejected: `typeof [] ===
-  // 'object'`, so `{years: []}` would otherwise pass and let numeric
-  // array indices masquerade as year keys downstream. (#176)
-  const s = appStorage.getJSON<TaxStore>(STORAGE_KEY, EMPTY_STORE)
-  return s &&
-    typeof s === 'object' &&
-    !Array.isArray(s) &&
-    s.years &&
-    typeof s.years === 'object' &&
-    !Array.isArray(s.years)
-    ? s
-    : EMPTY_STORE
-}
-
-function save(store: TaxStore) {
-  appStorage.setJSON(STORAGE_KEY, store)
-}
+import {
+  EMPTY_STORE,
+  getEmptyYear,
+  loadTaxStore,
+  loadTemplates,
+  saveTaxYear,
+  saveTemplates,
+  deleteTaxYear,
+  taxFilePath,
+  uniqueTaxFileName,
+} from './types'
+import { useFileStore } from '../../contexts/FileStoreContext'
 
 let uid = Date.now()
 function nextId(): string {
   return String(++uid)
 }
 
-/** One-time migration: move base64 content from localStorage to IndexedDB */
-async function migrateContentToIndexedDB(store: TaxStore): Promise<TaxStore> {
-  let migrated = false
-  const next: TaxStore = JSON.parse(JSON.stringify(store))
-  for (const [, yearData] of Object.entries(next.years)) {
-    for (const item of yearData.items) {
-      for (const file of item.files) {
-        if (file.content) {
-          await saveFileContent(file.id, file.content)
-          file.content = undefined
-          migrated = true
-        }
-      }
-    }
-  }
-  if (migrated) {
-    appStorage.setJSON(STORAGE_KEY, next)
-  }
-  return next
-}
-
-/** Collect all file IDs for a given year */
-function collectFileIds(yearData: TaxYear): string[] {
-  const ids: string[] = []
-  for (const item of yearData.items) {
-    for (const file of item.files) ids.push(file.id)
-  }
-  return ids
-}
-
 export function useTaxStore() {
-  const [store, setStore] = useState<TaxStore>(load)
-  const [migrating, setMigrating] = useState(false)
-  const { cryptoKey } = useEncryption()
+  const { fileStore } = useFileStore()
+  const [store, setStore] = useState<TaxStore>(EMPTY_STORE)
+  const [templates, setTemplates] = useState<TaxTemplate[]>([])
 
-  // Run one-time migration on mount
   useEffect(() => {
     let cancelled = false
-    const initial = load()
-    const hasContent = Object.values(initial.years).some(yr => yr.items.some(item => item.files.some(f => !!f.content)))
-    if (!hasContent) return
-    setMigrating(true)
-    migrateContentToIndexedDB(initial)
-      .then(() => {
-        if (!cancelled) {
-          // Use functional update: re-read from localStorage to pick up any
-          // concurrent writes (e.g. user uploaded a file during migration),
-          // then strip content fields that were migrated to IndexedDB.
-          setStore(() => {
-            const current = load()
-            for (const yearData of Object.values(current.years)) {
-              for (const item of yearData.items) {
-                for (const file of item.files) {
-                  if (file.content) file.content = undefined
-                }
-              }
-            }
-            save(current)
-            return current
-          })
-          setMigrating(false)
-        }
+
+    loadTaxStore(fileStore)
+      .then(next => {
+        if (!cancelled) setStore(next)
       })
-      .catch(() => {
-        if (!cancelled) setMigrating(false)
+      .catch(console.error)
+
+    loadTemplates(fileStore)
+      .then(next => {
+        if (!cancelled) setTemplates(next)
       })
+      .catch(console.error)
+
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [fileStore])
 
-  const persist = useCallback((next: TaxStore) => {
-    setStore(next)
-    save(next)
-    window.dispatchEvent(new Event('tax-store-changed'))
-  }, [])
-
-  const getYear = useCallback(
-    (year: number): TaxYear => {
-      return store.years[year] ?? getEmptyYear()
+  /** Writes a single year file and mirrors it into local state. */
+  const persistYear = useCallback(
+    (year: number, yearData: TaxYear) => {
+      setStore(prev => ({ ...prev, years: { ...prev.years, [year]: yearData } }))
+      saveTaxYear(fileStore, year, yearData).catch(console.error)
+      window.dispatchEvent(new Event('tax-store-changed'))
     },
-    [store],
+    [fileStore],
   )
+
+  const getYear = useCallback((year: number): TaxYear => store.years[year] ?? getEmptyYear(), [store])
+
+  const yearExists = useCallback((year: number): boolean => !!store.years[year], [store])
 
   const ensureYear = useCallback(
     (year: number) => {
       if (store.years[year]) return
-      const next = { ...store, years: { ...store.years, [year]: getEmptyYear() } }
-      persist(next)
+      persistYear(year, getEmptyYear())
     },
-    [store, persist],
+    [store, persistYear],
   )
 
   const createYearWithDefaults = useCallback(
@@ -152,136 +85,98 @@ export function useTaxStore() {
         accountIds: [],
         files: [],
       }))
-      const next = { ...store, years: { ...store.years, [year]: { items } } }
-      persist(next)
+      persistYear(year, { items })
     },
-    [store, persist],
-  )
-
-  const yearExists = useCallback(
-    (year: number): boolean => {
-      return !!store.years[year]
-    },
-    [store],
+    [store, persistYear],
   )
 
   const addItem = useCallback(
     (year: number, label: string, owner: TaxDocOwner, category: ChecklistCategory, accountIds: number[] = []) => {
       const yr = store.years[year] ?? getEmptyYear()
       const item: TaxChecklistItem = { id: nextId(), label, owner, category, accountIds, files: [] }
-      const next = { ...store, years: { ...store.years, [year]: { ...yr, items: [...yr.items, item] } } }
-      persist(next)
+      persistYear(year, { ...yr, items: [...yr.items, item] })
       return item
     },
-    [store, persist],
+    [store, persistYear],
   )
 
   const removeItem = useCallback(
     (year: number, itemId: string) => {
       const yr = store.years[year]
       if (!yr) return
-      const next = {
-        ...store,
-        years: { ...store.years, [year]: { ...yr, items: yr.items.filter(i => i.id !== itemId) } },
-      }
-      persist(next)
+      persistYear(year, { ...yr, items: yr.items.filter(i => i.id !== itemId) })
     },
-    [store, persist],
+    [store, persistYear],
   )
 
   const updateItem = useCallback(
     (year: number, itemId: string, updates: Partial<Pick<TaxChecklistItem, 'label' | 'owner' | 'accountIds'>>) => {
       const yr = store.years[year]
       if (!yr) return
-      const next = {
-        ...store,
-        years: {
-          ...store.years,
-          [year]: { ...yr, items: yr.items.map(i => (i.id === itemId ? { ...i, ...updates } : i)) },
-        },
-      }
-      persist(next)
+      persistYear(year, { ...yr, items: yr.items.map(i => (i.id === itemId ? { ...i, ...updates } : i)) })
     },
-    [store, persist],
+    [store, persistYear],
   )
 
-  const addFileToItem = useCallback(
-    (year: number, itemId: string, file: TaxDocFile) => {
-      const yr = store.years[year]
-      if (!yr) return
-      // Strip content from the metadata stored in localStorage
-      const metadataFile: TaxDocFile = { ...file, content: undefined }
-      const next = {
-        ...store,
-        years: {
-          ...store.years,
-          [year]: {
-            ...yr,
-            items: yr.items.map(i => (i.id === itemId ? { ...i, files: [...i.files, metadataFile] } : i)),
-          },
-        },
-      }
-      persist(next)
-    },
-    [store, persist],
-  )
-
-  /** Async version: saves content to IndexedDB, then persists metadata to localStorage */
+  /** Writes the document bytes into `taxes/{year}/files/` and records the metadata. */
   const addFileToItemAsync = useCallback(
-    async (year: number, itemId: string, file: TaxDocFile) => {
+    async (year: number, itemId: string, file: TaxDocFile, content?: ArrayBuffer) => {
       const yr = store.years[year]
       if (!yr) return
-      if (file.content) {
-        await saveFileContent(file.id, file.content, cryptoKey)
+      let storedName = file.storedName
+      if (content) {
+        storedName = await uniqueTaxFileName(fileStore, year, file.name)
+        await fileStore.writeBinary(taxFilePath(year, storedName), content)
       }
-      const metadataFile: TaxDocFile = { ...file, content: undefined }
-      const next = {
-        ...store,
-        years: {
-          ...store.years,
-          [year]: {
-            ...yr,
-            items: yr.items.map(i => (i.id === itemId ? { ...i, files: [...i.files, metadataFile] } : i)),
-          },
-        },
-      }
-      persist(next)
+      const metadataFile: TaxDocFile = { ...file, content: undefined, storedName }
+      persistYear(year, {
+        ...yr,
+        items: yr.items.map(i => (i.id === itemId ? { ...i, files: [...i.files, metadataFile] } : i)),
+      })
     },
-    [store, persist, cryptoKey],
+    [store, persistYear, fileStore],
+  )
+
+  /** Reads a stored document back as raw bytes. */
+  const getFileContent = useCallback(
+    (year: number, file: TaxDocFile): Promise<ArrayBuffer | null> =>
+      fileStore.readBinary(taxFilePath(year, file.storedName || file.name)),
+    [fileStore],
   )
 
   const removeFileFromItem = useCallback(
     (year: number, itemId: string, fileId: string) => {
       const yr = store.years[year]
       if (!yr) return
-      const next = {
-        ...store,
-        years: {
-          ...store.years,
-          [year]: {
-            ...yr,
-            items: yr.items.map(i => (i.id === itemId ? { ...i, files: i.files.filter(f => f.id !== fileId) } : i)),
-          },
-        },
+      const target = yr.items.find(i => i.id === itemId)?.files.find(f => f.id === fileId)
+      persistYear(year, {
+        ...yr,
+        items: yr.items.map(i => (i.id === itemId ? { ...i, files: i.files.filter(f => f.id !== fileId) } : i)),
+      })
+      if (target) {
+        fileStore.delete(taxFilePath(year, target.storedName || target.name)).catch(() => {})
       }
-      persist(next)
-      // Clean up IndexedDB (fire-and-forget)
-      deleteFileContent(fileId).catch(() => {})
     },
-    [store, persist],
+    [store, persistYear, fileStore],
   )
 
-  const allYears = Object.keys(store.years)
-    .map(Number)
-    .sort((a, b) => b - a)
+  const allYears = useMemo(
+    () =>
+      Object.keys(store.years)
+        .map(Number)
+        .sort((a, b) => b - a),
+    [store],
+  )
 
   /* ── Template operations ──────────────────────────────────── */
-  const [templates, setTemplates] = useState<TaxTemplate[]>(loadTemplates)
 
-  const persistTemplates = useCallback((next: TaxTemplate[]) => {
-    setTemplates(next)
-    saveTemplates(next)
-  }, [])
+  const persistTemplates = useCallback(
+    (next: TaxTemplate[]) => {
+      setTemplates(next)
+      saveTemplates(fileStore, next).catch(console.error)
+    },
+    [fileStore],
+  )
 
   const saveAsTemplate = useCallback(
     (name: string, year: number) => {
@@ -331,23 +226,22 @@ export function useTaxStore() {
         accountIds: [],
         files: [],
       }))
-      const next = { ...store, years: { ...store.years, [year]: { items } } }
-      persist(next)
+      persistYear(year, { items })
     },
-    [store, persist],
+    [store, persistYear],
   )
 
   const deleteYear = useCallback(
     (year: number) => {
       const yearData = store.years[year]
-      if (yearData) {
-        const fileIds = collectFileIds(yearData)
-        deleteMultipleFiles(fileIds).catch(() => {})
-      }
-      const { [year]: _, ...rest } = store.years
-      persist({ ...store, years: rest })
+      setStore(prev => {
+        const { [year]: _removed, ...rest } = prev.years
+        return { ...prev, years: rest }
+      })
+      deleteTaxYear(fileStore, year, yearData).catch(console.error)
+      window.dispatchEvent(new Event('tax-store-changed'))
     },
-    [store, persist],
+    [store, fileStore],
   )
 
   return {
@@ -360,8 +254,8 @@ export function useTaxStore() {
     addItem,
     removeItem,
     updateItem,
-    addFileToItem,
     addFileToItemAsync,
+    getFileContent,
     removeFileFromItem,
     templates,
     saveAsTemplate,
@@ -369,6 +263,5 @@ export function useTaxStore() {
     deleteTemplate,
     createYearFromTemplate,
     deleteYear,
-    migrating,
   }
 }

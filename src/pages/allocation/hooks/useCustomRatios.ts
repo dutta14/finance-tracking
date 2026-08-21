@@ -2,13 +2,13 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { Scope, CustomRatio, RatioPreset, RatioGoal } from '../types'
 import { AssetAllocation } from '../../data/types'
 import { loadCustomRatios, saveCustomRatios, makeDefaultRatio, makeId } from '../utils'
+import { ALLOCATION_PATH } from '../constants'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 export function useCustomRatios() {
-  const [customRatios, setCustomRatios] = useState<CustomRatio[]>(loadCustomRatios)
-  const [activeRatioId, setActiveRatioId] = useState<string | null>(() => {
-    const saved = loadCustomRatios()
-    return saved.length > 0 ? saved[0].id : null
-  })
+  const { fileStore } = useFileStore()
+  const [customRatios, setCustomRatios] = useState<CustomRatio[]>([])
+  const [activeRatioId, setActiveRatioId] = useState<string | null>(null)
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
@@ -16,10 +16,34 @@ export function useCustomRatios() {
 
   const activeRatio = customRatios.find(r => r.id === activeRatioId) ?? null
 
-  const persist = useCallback((next: CustomRatio[]) => {
-    setCustomRatios(next)
-    saveCustomRatios(next)
-  }, [])
+  useEffect(() => {
+    let cancelled = false
+
+    const refresh = () => {
+      loadCustomRatios(fileStore)
+        .then(saved => {
+          if (cancelled) return
+          setCustomRatios(saved)
+          setActiveRatioId(prev => prev ?? (saved.length > 0 ? saved[0].id : null))
+        })
+        .catch(console.error)
+    }
+
+    refresh()
+    const unsubscribe = fileStore.subscribe(ALLOCATION_PATH, refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
+  const persist = useCallback(
+    (next: CustomRatio[]) => {
+      setCustomRatios(next)
+      saveCustomRatios(fileStore, next).catch(console.error)
+    },
+    [fileStore],
+  )
 
   const updateActiveRatio = useCallback(
     (updater: (r: CustomRatio) => CustomRatio) => {
@@ -27,11 +51,11 @@ export function useCustomRatios() {
       setActivePreset(null)
       setCustomRatios(prev => {
         const next = prev.map(r => (r.id === activeRatioId ? updater(r) : r))
-        saveCustomRatios(next)
+        saveCustomRatios(fileStore, next).catch(console.error)
         return next
       })
     },
-    [activeRatioId],
+    [activeRatioId, fileStore],
   )
 
   const createRatio = () => {

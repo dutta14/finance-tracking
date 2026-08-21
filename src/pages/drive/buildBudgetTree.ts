@@ -1,10 +1,17 @@
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
 import { formatMonthKey } from '../budget/utils/csvParser'
+import { loadTaxStore } from '../taxes/types'
 import { buildTaxTree } from '../taxes/buildTaxTree'
+import type { FileStore } from '../../utils/fileStoreTypes'
 import type { DriveFolder, DriveFile } from './types'
+import type { Account } from '../data/types'
 
-export function buildDriveTree(): DriveFolder {
-  const store = loadBudgetStore()
+export async function buildDriveTree(
+  fileStore: FileStore,
+  accounts: Account[],
+  profile: { name?: string; partner?: { name?: string } | null },
+): Promise<DriveFolder> {
+  const [store, taxStore] = await Promise.all([loadBudgetStore(fileStore), loadTaxStore(fileStore)])
   const byYear = new Map<number, DriveFile[]>()
 
   for (const [key, m] of Object.entries(store.csvs)) {
@@ -36,7 +43,7 @@ export function buildDriveTree(): DriveFolder {
     })
   }
 
-  const taxFolder = buildTaxTree()
+  const taxFolder = buildTaxTree(taxStore, accounts, profile)
   if (taxFolder.folders.length > 0 || taxFolder.files.length > 0) {
     topFolders.push(taxFolder)
   }

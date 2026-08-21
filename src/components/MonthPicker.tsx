@@ -39,12 +39,14 @@ const buildMonthKey = (year: number, monthValue: string) => `${year}-${monthValu
 
 const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthChange }) => {
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
+  const [isYearGridOpen, setIsYearGridOpen] = useState(false)
   const [pickerYear, setPickerYear] = useState(
     () => getMonthYear(selectedMonth || allMonths[0]) ?? new Date().getFullYear(),
   )
   const monthPickerRef = useRef<HTMLDivElement>(null)
   const monthTriggerRef = useRef<HTMLButtonElement>(null)
   const monthButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const yearGridRef = useRef<HTMLDivElement>(null)
 
   const selectedMonthIndex = allMonths.indexOf(selectedMonth)
   const selectedYear = getMonthYear(selectedMonth)
@@ -79,6 +81,7 @@ const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthCh
 
   const closeMonthPicker = useCallback((focusTrigger = false) => {
     setIsMonthPickerOpen(false)
+    setIsYearGridOpen(false)
 
     if (focusTrigger) {
       monthTriggerRef.current?.focus()
@@ -283,7 +286,24 @@ const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthCh
                   <path d="M9 2L4 7L9 12" />
                 </svg>
               </button>
-              <span aria-live="polite">{displayedYear}</span>
+              <span aria-live="polite">
+                <button
+                  type="button"
+                  className="details-month-picker-year-btn"
+                  aria-label={`Select year, currently ${displayedYear}`}
+                  onClick={() => {
+                    setIsYearGridOpen(open => !open)
+                    if (!isYearGridOpen) {
+                      requestAnimationFrame(() => {
+                        const selected = yearGridRef.current?.querySelector('[aria-pressed="true"]')
+                        if (selected) (selected as HTMLElement).scrollIntoView({ block: 'center' })
+                      })
+                    }
+                  }}
+                >
+                  {displayedYear}
+                </button>
+              </span>
               <button
                 className="details-month-chevron"
                 type="button"
@@ -310,6 +330,24 @@ const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthCh
                 </svg>
               </button>
             </div>
+            {isYearGridOpen ? (
+              <div ref={yearGridRef} className="details-year-grid" role="grid" aria-label="Select year">
+                {availableYears.map(year => (
+                  <button
+                    key={year}
+                    type="button"
+                    className={`details-year-grid-cell${year === displayedYear ? ' details-year-grid-cell--selected' : ''}`}
+                    aria-pressed={year === displayedYear}
+                    onClick={() => {
+                      setPickerYear(year)
+                      setIsYearGridOpen(false)
+                    }}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="details-month-picker-grid" role="grid" aria-label={`Months for ${displayedYear}`}>
               {MONTH_PICKER_MONTHS.map(({ value, shortLabel, longLabel }, monthGridIndex) => {
                 const monthKey = buildMonthKey(displayedYear, value)

@@ -114,7 +114,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // Cross-check: the projected-date pill should also render a
       // valid "MMM YYYY" string driven by the same budget-derived path,
       // confirming the full goals card committed before assertion.
-      const projected = page.locator('.home-card--goals .goals-peek-projected-date').first()
+      const projected = page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()
       await expect(projected).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
     })
   })
@@ -303,7 +303,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await page.waitForLoadState('domcontentloaded')
       await expect(page.locator('.home-card--goals')).toBeVisible()
 
-      const projected = page.locator('.home-card--goals .goals-peek-projected-date').first()
+      const projected = page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()
       await expect(projected).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
       const baseline = (await projected.textContent())?.trim() ?? ''
       const baselineYear = Number(baseline.split(' ')[1])
@@ -335,7 +335,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await page.reload()
       await page.waitForLoadState('load')
       await expect(page.locator('.home-card--goals')).toBeVisible()
-      const projectedAfter = page.locator('.home-card--goals .goals-peek-projected-date').first()
+      const projectedAfter = page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()
       await expect(projectedAfter).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
       const after = (await projectedAfter.textContent())?.trim() ?? ''
       const afterYear = Number(after.split(' ')[1])

@@ -1,81 +1,21 @@
 import { Profile } from '../../hooks/useProfile'
-import {
-  GitHubSyncConfig,
-  SyncStatus,
-  SyncDomain,
-  SyncProgress,
-  CommitEntry,
-  ConnectionTestResult,
-  RestoreResult,
-} from '../../hooks/useGitHubSync'
 
-export type SettingsSection = 'profile' | 'github' | 'appearance' | 'security' | 'advanced' | 'labs' | 'flags'
+export type SettingsSection = 'profile' | 'folder' | 'appearance' | 'advanced' | 'labs' | 'flags'
 
 export interface SettingsModalProps {
   darkMode: boolean
   onToggleDarkMode: () => void
   profile: Profile
   onUpdateProfile: (updates: Partial<Profile>) => void
-  hasPendingChanges: boolean
   initialSection?: SettingsSection
-
-  ghConfig?: GitHubSyncConfig
-  ghIsConfigured?: boolean
-  ghSyncStatus?: SyncStatus
-  ghLastSyncAt?: string | null
-  ghLastError?: string | null
-  ghHistory?: CommitEntry[]
-  ghHasStoredToken?: boolean
-  ghTokenUnlocked?: boolean
-  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
-  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhLockToken?: () => void
-  onGhSyncNow?: (data: object, message?: string, forceFull?: boolean) => Promise<void>
-  onGhFetchHistory?: () => Promise<void>
-  onGhTestConnection?: () => Promise<ConnectionTestResult>
-  onGhRestoreLatest?: () => Promise<RestoreResult>
-  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
-  onGhApplyRestore?: (data: unknown) => Promise<void>
-  ghData?: object
-  ghSyncProgress?: SyncProgress | null
-  ghDirtyFlags?: Record<SyncDomain, boolean>
-  onFactoryReset?: () => void
   allowCsvImport?: boolean
   onToggleAllowCsvImport?: () => void
-  onExport?: () => void
-  onImport?: (file: File) => void
   onClose?: () => void
 }
 
 export interface ProfilePaneProps {
   profile: Profile
   onUpdateProfile: (updates: Partial<Profile>) => void
-}
-
-export interface GitHubSyncPaneProps {
-  hasPendingChanges: boolean
-  ghConfig?: GitHubSyncConfig
-  ghIsConfigured?: boolean
-  ghSyncStatus?: SyncStatus
-  ghLastSyncAt?: string | null
-  ghLastError?: string | null
-  ghHistory?: CommitEntry[]
-  ghHasStoredToken?: boolean
-  ghTokenUnlocked?: boolean
-  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
-  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhLockToken?: () => void
-  onGhSyncNow?: (data: object, message?: string, forceFull?: boolean) => Promise<void>
-  onGhFetchHistory?: () => Promise<void>
-  onGhTestConnection?: () => Promise<ConnectionTestResult>
-  onGhRestoreLatest?: () => Promise<RestoreResult>
-  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
-  onGhApplyRestore?: (data: unknown) => Promise<void>
-  ghData?: object
-  ghSyncProgress?: SyncProgress | null
-  ghDirtyFlags?: Record<SyncDomain, boolean>
 }
 
 export interface AppearancePaneProps {
@@ -88,8 +28,4 @@ export interface AppearancePaneProps {
 export interface AdvancedPaneProps {
   allowCsvImport: boolean
   onToggleAllowCsvImport: () => void
-  onExport: () => void
-  onImport: (file: File) => void
-  onFactoryReset: () => void
-  onClose: () => void
 }

@@ -16,6 +16,30 @@ body.modern-design {
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   font-variant-numeric: tabular-nums;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+body.modern-design *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+body.modern-design *::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.modern-design *::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+body.modern-design::-webkit-scrollbar {
+  width: 6px;
+}
+body.modern-design::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.modern-design::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
 }
 
 body.modern-design {
@@ -234,59 +258,59 @@ body.modern-design.dark .main-content {
 
 /* ── #27: Pill tabs replace underline tabs ────────────────────── */
 
-body.modern-design .goal-tab-bar,
-body.modern-design .nw-tab-bar,
-body.modern-design .data-view-tabs,
-body.modern-design .goal-sub-tab-bar,
-body.modern-design .budget-view-toggle {
+/* ── Unified tab bar ── */
+body.modern-design .tab-bar {
   display: flex;
   gap: 2px;
   padding: 3px;
-  background: var(--color-surface-alt);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius);
-  border: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   overflow: visible;
+  box-shadow: none;
+  width: fit-content;
 }
 
-body.modern-design .goal-tab,
-body.modern-design .goal-sub-tab,
-body.modern-design .nw-tab,
-body.modern-design .data-view-tab,
-body.modern-design .budget-view-btn {
+body.modern-design .tab-btn {
   flex: 0 1 auto;
   padding: 7px 16px;
   border-radius: calc(var(--radius) - 2px);
   border: none;
-  border-bottom: none;
   background: transparent;
   color: var(--color-text-muted);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
+  cursor: pointer;
+  text-decoration: none;
   transition:
     background var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
 }
 
-body.modern-design .goal-tab:hover,
-body.modern-design .goal-sub-tab:hover,
-body.modern-design .nw-tab:hover,
-body.modern-design .data-view-tab:hover,
-body.modern-design .budget-view-btn:not(.active):hover {
+body.modern-design .tab-btn:hover {
   color: var(--color-text);
 }
 
-body.modern-design .goal-tab.active,
-body.modern-design .goal-sub-tab.active,
-body.modern-design .nw-tab.active,
-body.modern-design .data-view-tab.active,
-body.modern-design .budget-view-btn.active {
+body.modern-design .tab-btn.active {
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-xs);
   font-weight: var(--fw-semibold);
-  border-bottom: none;
+}
+
+/* Small variant */
+body.modern-design .tab-btn--sm {
+  padding: 5px 10px;
+  font-size: var(--fs-xs);
+}
+
+/* Dark mode glass */
+body.modern-design.dark .tab-bar {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── #28: Dark mode accent glow ───────────────────────────────── */
@@ -375,6 +399,9 @@ body.modern-design .budget-th {
   text-transform: none;
   letter-spacing: normal;
 }
+body.modern-design .budget-th--category {
+  text-align: left;
+}
 
 /* ─── Page Title Typography (Kai spec) ─── */
 body.modern-design .budget-title,
@@ -387,6 +414,7 @@ body.modern-design .alloc-page-title,
 body.modern-design .data-header h1,
 body.modern-design .drive-title,
 body.modern-design .settings-section h3 {
+  font-size: var(--fs-xl);
   font-weight: 600;
   letter-spacing: -0.025em;
   color: var(--color-text);
@@ -394,4 +422,37 @@ body.modern-design .settings-section h3 {
   -webkit-background-clip: unset;
   -webkit-text-fill-color: unset;
   background-clip: unset;
+}
+
+/* ─── Shared Action Button ─── */
+.action-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  color: var(--color-text);
+  font-weight: var(--fw-medium);
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.action-btn:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+}
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.action-btn--danger {
+  color: var(--color-negative);
+}
+.action-btn--danger:hover {
+  background: var(--color-negative-light);
+  border-color: var(--color-negative-border);
 }

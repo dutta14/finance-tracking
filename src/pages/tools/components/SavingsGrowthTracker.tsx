@@ -1,10 +1,10 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo, useState, useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import { loadBudgetStore } from '../../budget/utils/budgetStorage'
+import { loadBudgetStore, getIncomeGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
 import { useData } from '../../../contexts/DataContext'
 import type { Account, BalanceEntry } from '../../data/types'
-import { appStorage } from '../../../utils/appStorage'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 import { delta } from '../utils/savingsCalc'
 import '../../../styles/SavingsGrowthTracker.css'
 
@@ -49,12 +49,18 @@ interface BudgetYearData {
   hasData: boolean
 }
 
-function getBudgetYearlyData(): Map<number, BudgetYearData> {
+async function getBudgetYearlyData(
+  fileStore: import('../../../utils/fileStoreTypes').FileStore,
+): Promise<Map<number, BudgetYearData>> {
   const result = new Map<number, BudgetYearData>()
   try {
-    const store = loadBudgetStore()
+    const store = await loadBudgetStore(fileStore)
     const groups = store.categoryGroups || []
     const removedCats = new Set(groups.find(g => g.id === REMOVED_GROUP_ID)?.categories || [])
+
+    // Use income group membership as source of truth (same as Budget page)
+    const incomeGroups = getIncomeGroups(groups)
+    const incomeCatSet = new Set(incomeGroups.flatMap(g => (g.id !== REMOVED_GROUP_ID ? g.categories : [])))
 
     const yearSet = new Set<number>()
     for (const key of Object.keys(store.csvs)) {
@@ -85,14 +91,12 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
 
       let totalIncome = 0
       let totalExpense = 0
-      Object.entries(catMonthSums).forEach(([, months]) => {
-        const monthVals = Object.values(months)
-        const hasNeg = monthVals.some(v => v < 0)
-        const sum = monthVals.reduce((s, v) => s + v, 0)
-        if (hasNeg) {
-          totalExpense += Math.abs(sum)
-        } else {
+      Object.entries(catMonthSums).forEach(([cat, months]) => {
+        const sum = Object.values(months).reduce((s, v) => s + v, 0)
+        if (incomeCatSet.has(cat)) {
           totalIncome += sum
+        } else {
+          totalExpense += Math.abs(sum)
         }
       })
 
@@ -109,26 +113,13 @@ function getBudgetYearlyData(): Map<number, BudgetYearData> {
   return result
 }
 
-const OVERRIDES_KEY = 'sgt-overrides'
+const OVERRIDES_PATH = 'savings-tracker-overrides.json'
 
 interface YearOverrides {
   grossIncome?: number
   taxes?: number
   netIncome?: number
   savings?: number
-}
-
-function loadOverrides(): Record<number, YearOverrides> {
-  try {
-    return appStorage.getJSON<Record<number, YearOverrides>>(OVERRIDES_KEY, {})
-  } catch {
-    return {}
-  }
-}
-
-function saveOverrides(o: Record<number, YearOverrides>) {
-  appStorage.setJSON(OVERRIDES_KEY, o)
-  window.dispatchEvent(new Event('tools-changed'))
 }
 
 interface YearRow {
@@ -149,15 +140,38 @@ type TabMode = 'savings' | 'income'
 
 const SavingsGrowthTracker: FC = () => {
   const [showPct, setShowPct] = useState(false)
-  const [overrides, setOverrides] = useState<Record<number, YearOverrides>>(loadOverrides)
+  const [overrides, setOverrides] = useState<Record<number, YearOverrides>>({})
   const [editCell, setEditCell] = useState<{ year: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState('')
   const location = useLocation()
   const tab: TabMode = location.pathname.endsWith('/income') ? 'income' : 'savings'
+  const { fileStore } = useFileStore()
 
   const { accounts, balances } = useData()
   const nwByYear = useMemo(() => getYearEndNetWorths(accounts, balances), [accounts, balances])
-  const budgetData = useMemo(() => getBudgetYearlyData(), [])
+
+  const [budgetData, setBudgetData] = useState<Map<number, BudgetYearData>>(new Map())
+
+  useEffect(() => {
+    fileStore
+      .readJSON<Record<number, YearOverrides>>(OVERRIDES_PATH, {})
+      .then(setOverrides)
+      .catch(() => setOverrides({}))
+  }, [fileStore])
+
+  useEffect(() => {
+    getBudgetYearlyData(fileStore)
+      .then(setBudgetData)
+      .catch(() => setBudgetData(new Map()))
+  }, [fileStore])
+
+  const persistOverrides = useCallback(
+    (o: Record<number, YearOverrides>) => {
+      fileStore.writeJSON(OVERRIDES_PATH, o).catch(console.error)
+      window.dispatchEvent(new Event('tools-changed'))
+    },
+    [fileStore],
+  )
 
   const rows: YearRow[] = useMemo(() => {
     const allYears = new Set<number>()
@@ -220,7 +234,7 @@ const SavingsGrowthTracker: FC = () => {
     ;(updated[year] as Record<string, number | undefined>)[field] = val !== undefined && !isNaN(val) ? val : undefined
     if (Object.values(updated[year]).every(v => v === undefined)) delete updated[year]
     setOverrides(updated)
-    saveOverrides(updated)
+    persistOverrides(updated)
     setEditCell(null)
     setEditValue('')
   }
@@ -357,13 +371,22 @@ const SavingsGrowthTracker: FC = () => {
       <div className="sgt-toolbar">
         <div className="sgt-toggle-row">
           <span className="sgt-toggle-label">YoY change</span>
-          <button
-            className="sgt-toggle-btn"
-            onClick={() => setShowPct(!showPct)}
-            aria-label={showPct ? 'Show YoY change in dollars' : 'Show YoY change as percentage'}
-          >
-            {showPct ? '%' : '$'}
-          </button>
+          <div className="tab-bar">
+            <button
+              className={`tab-btn tab-btn--sm${!showPct ? ' active' : ''}`}
+              onClick={() => setShowPct(false)}
+              aria-label="Show YoY change in dollars"
+            >
+              $
+            </button>
+            <button
+              className={`tab-btn tab-btn--sm${showPct ? ' active' : ''}`}
+              onClick={() => setShowPct(true)}
+              aria-label="Show YoY change as percentage"
+            >
+              %
+            </button>
+          </div>
         </div>
       </div>
 

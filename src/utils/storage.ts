@@ -4,15 +4,13 @@
  * Provides `getStorageItem()` / `setStorageItem()` for non-sensitive keys
  * with type safety, validation, and safe fallbacks.
  *
- * Sensitive keys (the 13 SENSITIVE_KEYS) continue to flow through
- * appStorage.ts which handles encryption and in-memory caching.
- * This module is for the non-sensitive keys that live in plain localStorage.
+ * User data (accounts, balances, goals, budgets, taxes) lives in the
+ * user-selected data folder via FileStore. This module is only for the
+ * small UI-preference keys that stay in plain localStorage.
  *
  * A `storage-schema-version` key is written on first load for future
  * migration support.
  */
-
-import type { GitHubSyncConfig } from '../hooks/useGitHubSync'
 
 // ── Schema version ────────────────────────────────────────────
 
@@ -43,7 +41,6 @@ interface StorageSchema {
   'goal-view-mode': string // 'grid' | 'list'
   'home-card-order': number[]
   'onboarding-dismissed': string // '0' | '1'
-  'github-sync-config': GitHubSyncConfig
   'lab-pdf-to-csv': string // '0' | '1'
   'flag-client-id': string
   'flag-overrides': Record<string, unknown>
@@ -66,17 +63,6 @@ function isCardOrder(v: unknown): boolean {
   return Array.isArray(v) && v.length === 4 && v.every((n: unknown) => typeof n === 'number' && n >= 0 && n <= 3)
 }
 
-function isGitHubSyncConfig(v: unknown): boolean {
-  if (typeof v !== 'object' || v === null) return false
-  const obj = v as Record<string, unknown>
-  return (
-    typeof obj.owner === 'string' &&
-    typeof obj.repo === 'string' &&
-    typeof obj.filePath === 'string' &&
-    typeof obj.autoSync === 'boolean'
-  )
-}
-
 function isRecord(v: unknown): boolean {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
@@ -96,7 +82,6 @@ const validators: Partial<Record<keyof StorageSchema, Validator>> = {
   accentTheme: isNonEmptyString,
   fiTheme: isNonEmptyString,
   'home-card-order': isCardOrder,
-  'github-sync-config': isGitHubSyncConfig,
   'flag-client-id': isNonEmptyString,
   'flag-overrides': isRecord,
   'flag-rollout-cache': isFlagCache,
@@ -104,9 +89,9 @@ const validators: Partial<Record<keyof StorageSchema, Validator>> = {
 
 // ── Which keys store JSON vs raw strings ──────────────────────
 
-type JsonKey = 'home-card-order' | 'github-sync-config' | 'flag-overrides' | 'flag-rollout-cache'
+type JsonKey = 'home-card-order' | 'flag-overrides' | 'flag-rollout-cache'
 
-const JSON_KEYS = new Set<string>(['home-card-order', 'github-sync-config', 'flag-overrides', 'flag-rollout-cache'])
+const JSON_KEYS = new Set<string>(['home-card-order', 'flag-overrides', 'flag-rollout-cache'])
 
 function isJsonKey(key: string): key is JsonKey {
   return JSON_KEYS.has(key)

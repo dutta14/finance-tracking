@@ -36,7 +36,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   goals,
   profileBirthday,
   gwGoals,
-  growthSettings,
+  growthSettings: _growthSettings,
   onUpdateGoal: _onUpdateGoal,
   onCopyGoal,
   onDeleteGoal,
@@ -60,7 +60,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
   })
   const [filters, setFilters] = useState<GoalFilters>(DEFAULT_FILTERS)
 
-  const filteredGoals = applyFilters(goals, filters)
+  const filteredGoals = applyFilters(goals, filters, profileBirthday)
   const isFiltered = filteredGoals.length !== goals.length
 
   const handleSelectGoal = (goalId: number, multi: boolean): void => {
@@ -102,7 +102,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
     <div className="goal-results-section">
       <div className="goal-toolbar">
         <div className="goal-toolbar-left">
-          <GoalFilterBar goals={goals} filters={filters} onChange={setFilters} />
+          <GoalFilterBar goals={goals} profileBirthday={profileBirthday} filters={filters} onChange={setFilters} />
           {goals.length >= 2 && (
             <button
               ref={compareBtnRef}
@@ -133,13 +133,13 @@ const GoalsSection: FC<GoalsSectionProps> = ({
           {compareMode && selectedGoalIds.length > 0 && (
             <>
               <span className="goal-selection-count">{selectedGoalIds.length} selected</span>
-              <button className="goal-action-btn goal-action-btn--danger" onClick={handleDeleteSelected}>
+              <button className="action-btn action-btn--danger" onClick={handleDeleteSelected}>
                 Delete
               </button>
             </>
           )}
           {onMixMatch && goals.length > 0 && gwGoals.length > 0 && (
-            <button className="goal-action-btn" onClick={onMixMatch} title="Mix & Match goals">
+            <button className="action-btn" onClick={onMixMatch} title="Mix & Match goals">
               <svg
                 width="12"
                 height="12"
@@ -160,16 +160,16 @@ const GoalsSection: FC<GoalsSectionProps> = ({
             </button>
           )}
           {onNewGoal && (
-            <button className="goal-action-btn goal-action-btn--accent" onClick={onNewGoal} title="Create new goal">
+            <button className="action-btn action-btn--accent" onClick={onNewGoal} title="Create new goal">
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               New Goal
             </button>
           )}
-          <div className="view-mode-toggle">
+          <div className="tab-bar">
             <button
-              className={`view-mode-btn${viewMode === 'grid' ? ' active' : ''}`}
+              className={`tab-btn tab-btn--sm${viewMode === 'grid' ? ' active' : ''}`}
               onClick={() => {
                 setViewMode('grid')
                 setStorageItem('goal-view-mode', 'grid')
@@ -185,7 +185,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               </svg>
             </button>
             <button
-              className={`view-mode-btn${viewMode === 'list' ? ' active' : ''}`}
+              className={`tab-btn tab-btn--sm${viewMode === 'list' ? ' active' : ''}`}
               onClick={() => {
                 setViewMode('list')
                 setStorageItem('goal-view-mode', 'list')
@@ -239,16 +239,10 @@ const GoalsSection: FC<GoalsSectionProps> = ({
               onDeleteGoal={onDeleteGoal}
               gwGoals={gwGoals}
               profileBirthday={profileBirthday}
-              inflation={growthSettings.settings.inflation}
             />
           </div>
           {selectedGoals.length > 1 && (
-            <GoalCompareView
-              goals={selectedGoals}
-              gwGoals={gwGoals}
-              profileBirthday={profileBirthday}
-              inflation={growthSettings.settings.inflation}
-            />
+            <GoalCompareView goals={selectedGoals} gwGoals={gwGoals} profileBirthday={profileBirthday} />
           )}
         </>
       )}

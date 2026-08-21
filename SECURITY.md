@@ -4,9 +4,11 @@
 
 Finance Tracking is a fully client-side React application hosted on GitHub Pages. There is no backend server, no database, and no server-side data collection.
 
-- All financial data is stored in the browser's `localStorage`, encrypted at rest with AES-256-GCM using PBKDF2 key derivation.
-- Optional GitHub sync uses a Personal Access Token (PAT) stored encrypted in `localStorage`.
-- No cookies, analytics, or PII leave the browser.
+- All financial data is stored as plain files in a folder the user chooses on their own disk, using the browser's File System Access API.
+- The folder handle (not the files themselves) is persisted in IndexedDB so the browser can reconnect on the next visit.
+- Small UI preferences (dark mode, accent theme, feature-flag seeds) stay in `localStorage`. No financial data lives there.
+- The app has no application-level encryption. Data is as protected as the user's disk is. Users who need at-rest protection should use full-disk encryption at the OS level (FileVault, BitLocker, or equivalent).
+- No cookies, analytics, or PII leave the browser. The app makes no outbound network requests for user data.
 
 Your data never touches our servers because there are no servers.
 
@@ -35,25 +37,24 @@ We will acknowledge your report within **48 hours** and aim to ship a fix within
 
 The following are considered security issues:
 
-- **Encryption bypass or weakness** — flaws in the AES-256-GCM implementation, weak key derivation, or plaintext data exposure in `localStorage`
-- **XSS vectors** — injection through import/export flows (CSV, JSON) or user-supplied input that executes in the DOM
-- **Token exposure** — PATs or sensitive data leaked in network requests, console logs, or error messages
+- **XSS vectors** — injection through CSV or JSON import flows, or user-supplied input (file names, account names, category labels) that executes in the DOM
 - **Data leakage** — financial data exposed through URLs, clipboard operations, browser history, or screen-sharing-visible UI states
+- **File System Access boundary violations** — the app requesting or retaining access outside the user-chosen directory
 - **Vulnerable dependencies** — third-party packages with known CVEs that are reachable in the app
 
 ## Out of Scope
 
 The following are **not** considered security issues:
 
-- **Physical access to the browser** — if someone has access to your unlocked device, they can read `localStorage` directly. This is the user's responsibility.
-- **Browser extensions reading `localStorage`** — extensions with storage permissions operate outside our security boundary. This is part of the browser security model.
-- **Social engineering** — tricking a user into exporting and sharing their data is not a vulnerability in the application.
+- **Physical access to the data folder** — if someone has access to your unlocked device and your data folder, they can read the files directly. This is the user's responsibility. Use full-disk encryption if this is a concern.
+- **Plaintext storage** — the app intentionally stores data as plain files. There is no encryption layer in the app. This is a deliberate design choice, not a bug.
+- **Social engineering** — tricking a user into sharing their data folder is not a vulnerability in the application.
 
 ## Response Expectations
 
 | Severity | Acknowledgement | Target Fix |
 | -------- | --------------- | ---------- |
-| Critical (data exposure, encryption bypass) | 48 hours | 7 days |
-| High (XSS, token leakage) | 48 hours | 14 days |
+| Critical (XSS, data exposure beyond chosen folder) | 48 hours | 7 days |
+| High (File System Access boundary issues) | 48 hours | 14 days |
 | Medium (dependency CVEs, minor leakage) | 48 hours | 30 days |
 | Low (hardening improvements) | 48 hours | Next release |

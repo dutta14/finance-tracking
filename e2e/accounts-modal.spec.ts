@@ -19,16 +19,16 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(rows).toHaveCount(5)
 
     // Step 3: Filter by active → only 4 rows
-    await nw.modal.locator('button.data-filter-btn', { hasText: /^Active/ }).click()
+    await nw.modal.locator('button.tab-btn', { hasText: /^Active/ }).click()
     await expect(rows).toHaveCount(4)
 
     // Filter by inactive → only 1 row (Old Savings)
-    await nw.modal.locator('button.data-filter-btn', { hasText: 'Inactive' }).click()
+    await nw.modal.locator('button.tab-btn', { hasText: 'Inactive' }).click()
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText('Old Savings')
 
     // Back to all
-    await nw.modal.locator('button.data-filter-btn', { hasText: 'All' }).click()
+    await nw.modal.locator('button.tab-btn', { hasText: 'All' }).click()
     await expect(rows).toHaveCount(5)
 
     // Step 4: Sort by name — click sort button, verify order changes
@@ -48,7 +48,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(bulkCount).toContainText('3 selected')
 
     // Step 6: Switch to groups tab
-    const groupsBtn = nw.modal.locator('button.data-filter-btn', { hasText: /^Groups/ })
+    const groupsBtn = nw.modal.locator('button.tab-btn', { hasText: /^Groups/ })
     await groupsBtn.click()
     // Verify group cards render (Retirement, Taxable, Cash + Ungrouped)
     const groupCards = nw.modal.locator('.data-group-card')
@@ -78,7 +78,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(nw.modal.locator('.data-group-card-name', { hasText: /^Retirement$/ })).toHaveCount(0)
 
     // Step 9: Leave the inline accounts manager
-    await nw.modal.locator('button.data-filter-btn', { hasText: /^All/ }).click()
+    await nw.modal.locator('button.tab-btn', { hasText: /^All/ }).click()
     await nw.chartsTab.click()
     await expect(nw.modal).toBeHidden()
   })

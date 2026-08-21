@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import { SettingsProvider, useSettings } from './SettingsContext'
-import { appStorage } from '../utils/appStorage'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
@@ -177,39 +176,18 @@ describe('SettingsContext', () => {
 })
 
 describe('SettingsContext cross-tab sync', () => {
-  let subscribeSpy: ReturnType<typeof vi.spyOn>
-  let capturedCallbacks: Map<string, (value: string | null) => void>
-  let unsubs: ReturnType<typeof vi.fn>[]
+  const fireStorage = (key: string, newValue: string | null) => {
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key, newValue }))
+    })
+  }
 
   beforeEach(() => {
     localStorage.clear()
     document.body.classList.remove('dark')
-    capturedCallbacks = new Map()
-    unsubs = []
-    subscribeSpy = vi.spyOn(appStorage, 'subscribe').mockImplementation((key, cb) => {
-      capturedCallbacks.set(key, cb)
-      const unsub = vi.fn()
-      unsubs.push(unsub)
-      return unsub
-    })
   })
 
-  afterEach(() => {
-    subscribeSpy.mockRestore()
-  })
-
-  it('subscribes to darkMode, accentTheme, and allowCsvImport on mount', () => {
-    render(
-      <SettingsProvider>
-        <Consumer />
-      </SettingsProvider>,
-    )
-    expect(subscribeSpy).toHaveBeenCalledWith('darkMode', expect.any(Function))
-    expect(subscribeSpy).toHaveBeenCalledWith('accentTheme', expect.any(Function))
-    expect(subscribeSpy).toHaveBeenCalledWith('allowCsvImport', expect.any(Function))
-  })
-
-  it('updates darkMode when subscriber fires with 1', () => {
+  it('turns dark mode on when another tab writes darkMode=1', () => {
     render(
       <SettingsProvider>
         <Consumer />
@@ -217,14 +195,12 @@ describe('SettingsContext cross-tab sync', () => {
     )
     expect(screen.getByTestId('darkMode').textContent).toBe('false')
 
-    act(() => {
-      capturedCallbacks.get('darkMode')!('1')
-    })
+    fireStorage('darkMode', '1')
 
     expect(screen.getByTestId('darkMode').textContent).toBe('true')
   })
 
-  it('updates darkMode to false when subscriber fires with 0', () => {
+  it('turns dark mode off when another tab writes darkMode=0', () => {
     localStorage.setItem('darkMode', '1')
     render(
       <SettingsProvider>
@@ -233,14 +209,24 @@ describe('SettingsContext cross-tab sync', () => {
     )
     expect(screen.getByTestId('darkMode').textContent).toBe('true')
 
-    act(() => {
-      capturedCallbacks.get('darkMode')!('0')
-    })
+    fireStorage('darkMode', '0')
 
     expect(screen.getByTestId('darkMode').textContent).toBe('false')
   })
 
-  it('updates accentTheme when subscriber fires with new theme', () => {
+  it('leaves dark mode unchanged for a value that is neither 0 nor 1', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+
+    fireStorage('darkMode', 'invalid')
+
+    expect(screen.getByTestId('darkMode').textContent).toBe('false')
+  })
+
+  it('adopts the accent theme written by another tab', () => {
     render(
       <SettingsProvider>
         <Consumer />
@@ -248,14 +234,24 @@ describe('SettingsContext cross-tab sync', () => {
     )
     expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
 
-    act(() => {
-      capturedCallbacks.get('accentTheme')!('purple')
-    })
+    fireStorage('accentTheme', 'purple')
 
     expect(screen.getByTestId('accentTheme').textContent).toBe('purple')
   })
 
-  it('updates allowCsvImport when subscriber fires with 1', () => {
+  it('keeps the current accent theme when the storage event carries no value', () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+
+    fireStorage('accentTheme', null)
+
+    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
+  })
+
+  it('enables CSV imports when another tab writes allowCsvImport=1', () => {
     render(
       <SettingsProvider>
         <Consumer />
@@ -263,56 +259,12 @@ describe('SettingsContext cross-tab sync', () => {
     )
     expect(screen.getByTestId('allowCsvImport').textContent).toBe('false')
 
-    act(() => {
-      capturedCallbacks.get('allowCsvImport')!('1')
-    })
+    fireStorage('allowCsvImport', '1')
 
     expect(screen.getByTestId('allowCsvImport').textContent).toBe('true')
   })
 
-  it('unsubscribes all on unmount', () => {
-    const { unmount } = render(
-      <SettingsProvider>
-        <Consumer />
-      </SettingsProvider>,
-    )
-    unsubs.forEach(fn => expect(fn).not.toHaveBeenCalled())
-    unmount()
-    unsubs.forEach(fn => expect(fn).toHaveBeenCalled())
-  })
-
-  it('sets darkMode to false when subscriber fires with 0', () => {
-    localStorage.setItem('darkMode', '1')
-    render(
-      <SettingsProvider>
-        <Consumer />
-      </SettingsProvider>,
-    )
-    expect(screen.getByTestId('darkMode').textContent).toBe('true')
-
-    act(() => {
-      capturedCallbacks.get('darkMode')!('0')
-    })
-
-    expect(screen.getByTestId('darkMode').textContent).toBe('false')
-  })
-
-  it('does not update accentTheme when subscriber fires with null', () => {
-    render(
-      <SettingsProvider>
-        <Consumer />
-      </SettingsProvider>,
-    )
-    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
-
-    act(() => {
-      capturedCallbacks.get('accentTheme')!(null as unknown as string)
-    })
-
-    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
-  })
-
-  it('sets allowCsvImport to false when subscriber fires with 0', () => {
+  it('disables CSV imports when another tab writes allowCsvImport=0', () => {
     localStorage.setItem('allowCsvImport', '1')
     render(
       <SettingsProvider>
@@ -321,27 +273,34 @@ describe('SettingsContext cross-tab sync', () => {
     )
     expect(screen.getByTestId('allowCsvImport').textContent).toBe('true')
 
-    act(() => {
-      capturedCallbacks.get('allowCsvImport')!('0')
-    })
+    fireStorage('allowCsvImport', '0')
 
     expect(screen.getByTestId('allowCsvImport').textContent).toBe('false')
   })
 
-  it('does not update darkMode when subscriber fires with non-0/1 value', () => {
+  it('ignores storage events for unrelated keys', () => {
     render(
       <SettingsProvider>
         <Consumer />
       </SettingsProvider>,
     )
-    expect(screen.getByTestId('darkMode').textContent).toBe('false')
 
-    act(() => {
-      capturedCallbacks.get('darkMode')!('invalid')
-    })
+    fireStorage('some-other-key', '1')
 
-    // Neither "1" nor "0" — neither branch executes, state unchanged
     expect(screen.getByTestId('darkMode').textContent).toBe('false')
+    expect(screen.getByTestId('accentTheme').textContent).toBe('blue')
+    expect(screen.getByTestId('allowCsvImport').textContent).toBe('false')
+  })
+
+  it('stops listening after unmount', () => {
+    const { unmount } = render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>,
+    )
+    unmount()
+
+    expect(() => fireStorage('darkMode', '1')).not.toThrow()
   })
 })
 

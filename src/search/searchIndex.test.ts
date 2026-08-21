@@ -1,15 +1,16 @@
 import { buildIndex, search, findMatchRange, getCategoryLabel } from './searchIndex'
-import { appStorage } from '../utils/appStorage'
-import type { SearchItem, SearchCategory } from './searchIndex'
+import type { SearchItem, SearchCategory, SearchIndexData } from './searchIndex'
+import type { FinancialGoal, GwGoal } from '../types'
+import type { Account } from '../pages/data/types'
 
-beforeEach(() => {
-  localStorage.clear()
-})
+const goalsOf = (...goals: { id: number; goalName: string; progress?: number }[]) => goals as unknown as FinancialGoal[]
+const gwOf = (...gwGoals: { id: number; fiGoalId: number; label: string }[]) => gwGoals as unknown as GwGoal[]
+const accountsOf = (...accounts: Partial<Account>[]) => accounts as Account[]
 
 /* ─── buildIndex ─── */
 
 describe('buildIndex', () => {
-  it('returns static pages, commands, tools, settings when localStorage is empty', () => {
+  it('returns static pages, commands, tools and settings when no data is supplied', () => {
     const items = buildIndex()
 
     const pages = items.filter(i => i.category === 'page')
@@ -28,12 +29,15 @@ describe('buildIndex', () => {
       'Budget',
       'Drive',
       'Goals',
+      'Growth',
       'Home',
       'Net Worth',
       'Taxes',
+      'Transactions',
+      'User Guide',
     ])
 
-    // No dynamic items when localStorage is empty
+    // No dynamic items without supplied data
     expect(items.filter(i => i.category === 'goal')).toHaveLength(0)
     expect(items.filter(i => i.category === 'account')).toHaveLength(0)
     expect(items.filter(i => i.category === 'budget')).toHaveLength(0)
@@ -41,13 +45,10 @@ describe('buildIndex', () => {
     expect(items.filter(i => i.category === 'allocation')).toHaveLength(0)
   })
 
-  it('includes FI goals from localStorage', () => {
-    appStorage.setJSON('financialGoals', [
-      { id: 1, goalName: 'Retire Early', progress: 42 },
-      { id: 2, goalName: 'Coast FI', progress: 80 },
-    ])
-
-    const items = buildIndex()
+  it('includes the FI goals it is given', () => {
+    const items = buildIndex({
+      goals: goalsOf({ id: 1, goalName: 'Retire Early', progress: 42 }, { id: 2, goalName: 'Coast FI', progress: 80 }),
+    })
     const goals = items.filter(i => i.category === 'goal')
 
     expect(goals).toHaveLength(2)
@@ -65,22 +66,17 @@ describe('buildIndex', () => {
     })
   })
 
-  it('shows 0% progress when progress field is missing', () => {
-    appStorage.setJSON('financialGoals', [{ id: 1, goalName: 'No Progress' }])
-
-    const items = buildIndex()
+  it('shows 0% progress when the progress field is missing', () => {
+    const items = buildIndex({ goals: goalsOf({ id: 1, goalName: 'No Progress' }) })
     const goal = items.find(i => i.id === 'goal-1')
     expect(goal?.hint).toBe('FI Goal · 0% progress')
   })
 
   it('includes GW goals with parent goal hints', () => {
-    appStorage.setJSON('financialGoals', [{ id: 10, goalName: 'Main Plan', progress: 50 }])
-    appStorage.setJSON('gw-goals', [
-      { id: 100, fiGoalId: 10, label: 'New Car Fund' },
-      { id: 101, fiGoalId: 999, label: 'Orphan GW' },
-    ])
-
-    const items = buildIndex()
+    const items = buildIndex({
+      goals: goalsOf({ id: 10, goalName: 'Main Plan', progress: 50 }),
+      gwGoals: gwOf({ id: 100, fiGoalId: 10, label: 'New Car Fund' }, { id: 101, fiGoalId: 999, label: 'Orphan GW' }),
+    })
     const gwItems = items.filter(i => i.id.startsWith('gw-'))
 
     expect(gwItems).toHaveLength(2)
@@ -96,12 +92,12 @@ describe('buildIndex', () => {
   })
 
   it('includes accounts', () => {
-    appStorage.setJSON('data-accounts', [
-      { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
-      { id: 2, name: 'Chase Checking', institution: '', group: '', type: '' },
-    ])
-
-    const items = buildIndex()
+    const items = buildIndex({
+      accounts: accountsOf(
+        { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
+        { id: 2, name: 'Chase Checking', institution: '', group: '', type: undefined },
+      ),
+    })
     const accounts = items.filter(i => i.category === 'account')
 
     expect(accounts).toHaveLength(2)
@@ -116,15 +112,13 @@ describe('buildIndex', () => {
   })
 
   it('includes budget categories and groups', () => {
-    appStorage.setJSON('budget-config', {
+    const items = buildIndex({
       categoryGroups: [
         { id: 'housing', name: 'Housing', categories: ['Rent', 'Utilities'] },
         { id: 'food', name: 'Food', categories: ['Groceries'] },
         { id: 'removed', name: 'Removed', categories: ['Deleted Stuff'] },
       ],
     })
-
-    const items = buildIndex()
     const budgetItems = items.filter(i => i.category === 'budget')
 
     // Should have 2 groups + 3 categories (removed group is skipped)
@@ -149,8 +143,8 @@ describe('buildIndex', () => {
   })
 
   it('includes tax items and templates', () => {
-    appStorage.setJSON('tax-store', {
-      years: {
+    const items = buildIndex({
+      taxYears: {
         '2025': {
           items: [
             { id: 'w2-main', label: 'W-2 from Employer', owner: 'primary' },
@@ -158,10 +152,8 @@ describe('buildIndex', () => {
           ],
         },
       },
+      taxTemplates: [{ id: 'tpl-1', name: 'Basic Filing' }],
     })
-    appStorage.setJSON('tax-templates', [{ id: 'tpl-1', name: 'Basic Filing' }])
-
-    const items = buildIndex()
     const taxItems = items.filter(i => i.category === 'tax')
 
     expect(taxItems).toHaveLength(3) // 2 items + 1 template
@@ -184,12 +176,12 @@ describe('buildIndex', () => {
   })
 
   it('includes allocation custom ratios', () => {
-    appStorage.setJSON('allocation-custom-ratios', [
-      { id: 'r1', name: 'Aggressive Growth', scope: 'retirement' },
-      { id: 'r2', name: 'Conservative', scope: undefined },
-    ])
-
-    const items = buildIndex()
+    const items = buildIndex({
+      allocationRatios: [
+        { id: 'r1', name: 'Aggressive Growth', scope: 'retirement' },
+        { id: 'r2', name: 'Conservative', scope: undefined },
+      ],
+    })
     const allocs = items.filter(i => i.category === 'allocation')
 
     expect(allocs).toHaveLength(2)
@@ -202,18 +194,12 @@ describe('buildIndex', () => {
     expect(allocs[1].hint).toBe('Custom ratio · total')
   })
 
-  it('handles corrupt/invalid JSON gracefully (does not throw)', () => {
-    localStorage.setItem('financialGoals', '{broken json')
-    localStorage.setItem('gw-goals', 'not json')
-    localStorage.setItem('data-accounts', '[{invalid}]')
-    localStorage.setItem('budget-config', '!@#$%')
-    localStorage.setItem('tax-store', '<xml/>')
-    localStorage.setItem('tax-templates', '---')
-    localStorage.setItem('allocation-custom-ratios', '42')
+  it('tolerates partially-supplied data without throwing', () => {
+    const partial: SearchIndexData = { goals: goalsOf(), taxYears: { '2025': {} } }
 
-    expect(() => buildIndex()).not.toThrow()
+    expect(() => buildIndex(partial)).not.toThrow()
 
-    const items = buildIndex()
+    const items = buildIndex(partial)
     // Static items still returned
     expect(items.filter(i => i.category === 'page').length).toBeGreaterThan(0)
     // Dynamic items are empty (corrupt data ignored)
@@ -241,14 +227,16 @@ describe('search', () => {
   let index: SearchItem[]
 
   beforeEach(() => {
-    appStorage.setJSON('financialGoals', [
-      { id: 1, goalName: 'Retire Early', progress: 50 },
-      { id: 2, goalName: 'Coast FI', progress: 80 },
-    ])
-    appStorage.setJSON('data-accounts', [
-      { id: 1, name: 'Vanguard 401k', institution: 'Vanguard', group: 'Retirement', type: 'retirement' },
-    ])
-    index = buildIndex()
+    index = buildIndex({
+      goals: goalsOf({ id: 1, goalName: 'Retire Early', progress: 50 }, { id: 2, goalName: 'Coast FI', progress: 80 }),
+      accounts: accountsOf({
+        id: 1,
+        name: 'Vanguard 401k',
+        institution: 'Vanguard',
+        group: 'Retirement',
+        type: 'retirement',
+      }),
+    })
   })
 
   it('returns pages + commands for empty query', () => {
@@ -298,15 +286,11 @@ describe('search', () => {
 
   it('respects maxPerGroup cap', () => {
     // Add many goals to test the cap
-    appStorage.setJSON(
-      'financialGoals',
-      Array.from({ length: 10 }, (_, i) => ({
-        id: i + 100,
-        goalName: `TestGoal ${i}`,
-        progress: i * 10,
-      })),
-    )
-    const bigIndex = buildIndex()
+    const bigIndex = buildIndex({
+      goals: goalsOf(
+        ...Array.from({ length: 10 }, (_, i) => ({ id: i + 100, goalName: `TestGoal ${i}`, progress: i * 10 })),
+      ),
+    })
     const groups = search(bigIndex, 'TestGoal', 3)
     const goalGroup = groups.find(g => g.category === 'goal')!
 
@@ -330,8 +314,7 @@ describe('search', () => {
   it('groups results in correct category order', () => {
     // Search for something that hits multiple categories
     // "retirement" appears in FI calculator keywords and in account hint
-    appStorage.setJSON('financialGoals', [{ id: 1, goalName: 'Retirement Plan', progress: 30 }])
-    const multiIndex = buildIndex()
+    const multiIndex = buildIndex({ goals: goalsOf({ id: 1, goalName: 'Retirement Plan', progress: 30 }) })
     const groups = search(multiIndex, 'retirement')
     const categories = groups.map(g => g.category)
 
@@ -359,15 +342,9 @@ describe('search', () => {
   })
 
   it('maxPerGroup defaults to 5', () => {
-    appStorage.setJSON(
-      'financialGoals',
-      Array.from({ length: 10 }, (_, i) => ({
-        id: i + 200,
-        goalName: `Alpha ${i}`,
-        progress: 0,
-      })),
-    )
-    const bigIndex = buildIndex()
+    const bigIndex = buildIndex({
+      goals: goalsOf(...Array.from({ length: 10 }, (_, i) => ({ id: i + 200, goalName: `Alpha ${i}`, progress: 0 }))),
+    })
     const groups = search(bigIndex, 'Alpha')
     const goalGroup = groups.find(g => g.category === 'goal')!
 

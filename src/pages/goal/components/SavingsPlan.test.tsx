@@ -172,7 +172,7 @@ describe('SavingsPlan', () => {
   })
 
   it('does not render FI block when fiGoal is zero', () => {
-    const zeroGoal = makeGoal({ ...baseGoal, fiGoal: 0 })
+    const zeroGoal = makeGoal({ ...baseGoal, expenseValue: 0, monthlyExpenseRetirement: 0 })
     mockDataCtx.accounts = [makeAccount({ id: 1, goalType: 'fi' })]
     mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 })]
     mockDataCtx.allMonths = ['2024-01']
@@ -296,7 +296,7 @@ describe('FiSavingsPlan', () => {
     mockDataCtx.balances = [makeBalanceEntry({ accountId: 1, month: '2024-01', balance: 100_000 })]
     mockDataCtx.allMonths = ['2024-01']
 
-    const zeroTargetGoal = makeGoal({ ...baseGoal, fiGoal: 0 })
+    const zeroTargetGoal = makeGoal({ ...baseGoal, expenseValue: 0, monthlyExpenseRetirement: 0 })
     const { container } = render(<FiSavingsPlan goal={zeroTargetGoal} gwGoals={[]} profileBirthday={profileBirthday} />)
 
     expect(container.firstChild).toBeNull()

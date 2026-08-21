@@ -98,6 +98,20 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
   const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
   const gwGrowth = growthCtx.settings.gwGrowth
+  const fiTarget = useMemo(
+    () =>
+      goal
+        ? getFiTarget(
+            goal,
+            profileBirthday,
+            fiGrowth,
+            growthCtx.settings.postBoundaryGrowth,
+            growthCtx.settings.ageBoundary,
+            growthCtx.settings.inflation,
+          )
+        : 0,
+    [goal, profileBirthday, fiGrowth, growthCtx.settings],
+  )
 
   const currentIndex = goals.findIndex(g => g.id === goalId)
   const total = goals.length
@@ -138,13 +152,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const n = monthsBetween(currentMonth, retMonth)
 
     const fiBal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
-    const fiTarget = getFiTarget(
-      goal,
-      profileBirthday,
-      fiGrowth,
-      growthCtx.settings.postBoundaryGrowth,
-      growthCtx.settings.ageBoundary,
-    )
     const fiMonthly = fiTarget > 0 ? calcMonthlySaving(fiBal, fiTarget, fiGrowth, n) : 0
 
     const gwTarget = getGwTarget(goal, gwGoals, profileBirthday, growthCtx.settings.inflation)
@@ -156,7 +163,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
     const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
     return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown, gwMonthly, gwBal, gwTarget, retMonth }
-  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
+  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings, fiTarget])
 
   // GW Projection: how much to save for GW if FIRE happens at projected FI date
   const gwProjection = useMemo(() => {
@@ -391,7 +398,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
               onTogglePeriod={() => setShowYearly(v => !v)}
               inflation={growthCtx.settings.inflation}
             />
-            {goal.fiGoal > 0 && (
+            {fiTarget > 0 && (
               <GwSection
                 goal={goal}
                 goals={goals}

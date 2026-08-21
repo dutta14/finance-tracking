@@ -140,7 +140,7 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     monthlyExpenseValue: 5000,
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
-    monthlyExpense2047: 8333,
+    monthlyExpenseRetirement: 8333,
     safeWithdrawalRate: 3,
     growth: 12,
     retirement: '2050-01',
@@ -300,7 +300,7 @@ describe('GoalDetail rendering', () => {
   })
 
   it('does not render GwSection when fiGoal is 0', () => {
-    const zeroGoal = makeGoal({ id: 1, goalName: 'Zero', fiGoal: 0 })
+    const zeroGoal = makeGoal({ id: 1, goalName: 'Zero', fiGoal: 0, expenseValue: 0, monthlyExpenseRetirement: 0 })
     renderDetail('/goal/1', { goals: [zeroGoal] })
     expect(screen.queryByTestId('gw-section')).not.toBeInTheDocument()
   })

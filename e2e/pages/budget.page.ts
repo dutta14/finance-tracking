@@ -71,13 +71,13 @@ export class BudgetPage {
     this.nextYearBtn = page.locator('.budget-year-btn[title="Next year"]')
     this.yearLabel = page.locator('.budget-year-label')
 
-    this.cashflowBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', {
+    this.cashflowBtn = page.locator('.budget-header-left .tab-bar .tab-btn', {
       hasText: /^Cashflow$/,
     })
-    this.spreadsheetBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', {
+    this.spreadsheetBtn = page.locator('.budget-header-left .tab-bar .tab-btn', {
       hasText: /^Spreadsheet$/,
     })
-    this.groupsBtn = page.locator('.budget-header-left .budget-view-toggle .budget-view-btn', { hasText: /^Groups$/ })
+    this.groupsBtn = page.locator('.budget-header-left .tab-bar .tab-btn', { hasText: /^Groups$/ })
 
     this.uploadDropDown = page.locator('.budget-split-drop')
     this.uploadMenu = page.locator('.budget-upload-menu')
@@ -135,22 +135,22 @@ export class BudgetPage {
       groups: 'Groups',
     }
     await this.page
-      .locator('.budget-header-left .budget-view-toggle')
-      .locator('.budget-view-btn', { hasText: labels[mode] })
+      .locator('.budget-header-left .tab-bar')
+      .locator('.tab-btn', { hasText: labels[mode] })
       .click()
   }
 
   async setSpreadsheetMode(mode: 'aggregated' | 'detailed') {
     await this.page
-      .locator('.budget-action-bar .budget-view-toggle--secondary')
-      .locator('.budget-view-btn', { hasText: mode === 'aggregated' ? 'Aggregated' : 'Detailed' })
+      .locator('.budget-action-bar > .tab-bar')
+      .locator('.tab-btn', { hasText: mode === 'aggregated' ? 'Aggregated' : 'Detailed' })
       .click()
   }
 
   async setTimePeriod(period: 'M' | 'Q' | 'H') {
     await this.page
-      .locator('.budget-header-right .budget-view-toggle')
-      .locator('.budget-view-btn', { hasText: period })
+      .locator('.budget-header-right .tab-bar')
+      .locator('.tab-btn', { hasText: period })
       .click()
   }
 

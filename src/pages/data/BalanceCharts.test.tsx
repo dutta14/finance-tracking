@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import BalanceCharts from './BalanceCharts'
 import { makeAccount } from '../../test/factories'
@@ -48,6 +48,17 @@ function makeProps(overrides: Partial<React.ComponentProps<typeof BalanceCharts>
     allMonths: months,
     balanceMap,
     ...overrides,
+  }
+}
+
+function getCustomRangeSections() {
+  const fromSection = screen.getByText('From').closest('.date-flyout-section')
+  const toSection = screen.getByText('To').closest('.date-flyout-section')
+  expect(fromSection).not.toBeNull()
+  expect(toSection).not.toBeNull()
+  return {
+    fromSection: fromSection as HTMLElement,
+    toSection: toSection as HTMLElement,
   }
 }
 
@@ -113,7 +124,8 @@ describe('BalanceCharts', () => {
     render(<BalanceCharts {...makeProps()} />)
 
     await user.click(screen.getByRole('button', { name: 'Custom' }))
-    expect(screen.getByText('to')).toBeInTheDocument()
+    expect(screen.getByText('From')).toBeInTheDocument()
+    expect(screen.getByText('To')).toBeInTheDocument()
   })
 
   it('filters to Year-End months only', async () => {
@@ -199,25 +211,11 @@ describe('BalanceCharts', () => {
 
     await user.click(screen.getByRole('button', { name: 'Custom' }))
 
-    // Should show From and To selectors
-    expect(screen.getByText('to')).toBeInTheDocument()
-    // Year select options
-    const yearOptions = screen.getAllByRole('option', { name: '2024' })
-    expect(yearOptions.length).toBeGreaterThan(0)
-  })
-
-  it('filters data by custom from-year selection', async () => {
-    const user = userEvent.setup()
-    render(<BalanceCharts {...makeProps()} />)
-
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
-
-    // Select year in the first "From" year dropdown
-    const yearSelects = screen.getAllByRole('combobox')
-    await user.selectOptions(yearSelects[0], '2024')
-
-    // Chart should render with filtered data
-    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+    const { fromSection, toSection } = getCustomRangeSections()
+    expect(within(fromSection).getAllByText('2024').length).toBeGreaterThan(0)
+    expect(within(toSection).getAllByText('2024').length).toBeGreaterThan(0)
+    expect(within(fromSection).getByRole('button', { name: 'Jan' })).toBeInTheDocument()
+    expect(within(toSection).getByRole('button', { name: 'Mar' })).toBeInTheDocument()
   })
 
   it('filters data by custom from-month selection', async () => {
@@ -226,50 +224,57 @@ describe('BalanceCharts', () => {
 
     await user.click(screen.getByRole('button', { name: 'Custom' }))
 
-    // First set from year, then from month
-    const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[0], '2024')
-    await user.selectOptions(selects[1], '02')
-
+    const { fromSection } = getCustomRangeSections()
+    await user.click(within(fromSection).getByRole('button', { name: 'Feb' }))
     expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
   })
 
-  it('filters data by custom to-year and to-month selection', async () => {
+  it('filters data by custom year navigation', async () => {
+    const user = userEvent.setup()
+    const spanningMonths = ['2025-03', '2024-03', '2024-01']
+    const spanningMap = buildBalanceMap([
+      { accountId: 1, month: '2024-01', balance: 5000 },
+      { accountId: 1, month: '2024-03', balance: 5500 },
+      { accountId: 1, month: '2025-03', balance: 6000 },
+    ])
+    render(<BalanceCharts {...makeProps({ allMonths: spanningMonths, balanceMap: spanningMap })} />)
+
+    await user.click(screen.getByRole('button', { name: 'Custom' }))
+
+    const { fromSection } = getCustomRangeSections()
+    const chevrons = within(fromSection).getAllByRole('button')
+    await user.click(chevrons[0])
+    expect(within(fromSection).getAllByText('2024').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
+  })
+
+  it('filters data by custom to-month selection', async () => {
     const user = userEvent.setup()
     render(<BalanceCharts {...makeProps()} />)
 
     await user.click(screen.getByRole('button', { name: 'Custom' }))
 
-    const selects = screen.getAllByRole('combobox')
-    // To year (3rd select) and To month (4th select)
-    await user.selectOptions(selects[2], '2024')
-    await user.selectOptions(selects[3], '02')
-
+    const { toSection } = getCustomRangeSections()
+    await user.click(within(toSection).getByRole('button', { name: 'Feb' }))
     expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
   })
 
   it('shows empty message when custom range excludes all data', async () => {
     const user = userEvent.setup()
-    // allMonths are 2024-01 to 2024-03, set custom range to 2025
-    const props = makeProps({ allMonths: ['2024-01'] })
-    render(<BalanceCharts {...props} />)
+    render(<BalanceCharts {...makeProps()} />)
 
     await user.click(screen.getByRole('button', { name: 'Custom' }))
 
-    const selects = screen.getAllByRole('combobox')
-    // Set from year to later than any data
-    await user.selectOptions(selects[0], '2024')
-    await user.selectOptions(selects[1], '12')
-
-    // Depending on data, may show empty or chart
-    // With just 2024-01 data and from=2024-12, should be empty
+    const { fromSection, toSection } = getCustomRangeSections()
+    await user.click(within(fromSection).getByRole('button', { name: 'Mar' }))
+    await user.click(within(toSection).getByRole('button', { name: 'Jan' }))
     expect(screen.getByText('No data for the selected range')).toBeInTheDocument()
   })
 
   it('marks the active chart type button as aria-pressed', () => {
     render(<BalanceCharts {...makeProps()} />)
-    expect(screen.getByRole('button', { name: 'FI vs GW' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Net Worth' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Net Worth' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'FI vs GW' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Assets vs Liabilities' })).toHaveAttribute('aria-pressed', 'false')
   })
 

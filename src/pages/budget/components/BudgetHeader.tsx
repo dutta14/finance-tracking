@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { TimePeriod, BudgetViewMode } from '../types'
+import YearNav from '../../../components/YearNav'
 
 interface BudgetHeaderProps {
   selectedYear: number
@@ -23,69 +24,48 @@ const BudgetHeader: FC<BudgetHeaderProps> = ({
   <div className="budget-header">
     <div className="budget-header-left">
       <h1 className="budget-title">Budget</h1>
-      <div className="budget-view-toggle">
+      <div className="tab-bar">
         <button
-          className={`budget-view-btn${viewMode === 'cashflow' ? ' active' : ''}`}
+          className={`tab-btn${viewMode === 'cashflow' ? ' active' : ''}`}
           onClick={() => onSetViewMode('cashflow')}
         >
           Cashflow
         </button>
         <button
-          className={`budget-view-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
+          className={`tab-btn${viewMode === 'spreadsheet' ? ' active' : ''}`}
           onClick={() => onSetViewMode('spreadsheet')}
         >
           Spreadsheet
         </button>
-        <button
-          className={`budget-view-btn${viewMode === 'groups' ? ' active' : ''}`}
-          onClick={() => onSetViewMode('groups')}
-        >
+        <button className={`tab-btn${viewMode === 'groups' ? ' active' : ''}`} onClick={() => onSetViewMode('groups')}>
           Groups
         </button>
       </div>
     </div>
     <div className="budget-header-right">
       {viewMode !== 'groups' && (
-        <div className="budget-view-toggle">
+        <div className="tab-bar">
           <button
-            className={`budget-view-btn${timePeriod === 'month' ? ' active' : ''}`}
+            className={`tab-btn${timePeriod === 'month' ? ' active' : ''}`}
             onClick={() => onSetTimePeriod('month')}
           >
             M
           </button>
           <button
-            className={`budget-view-btn${timePeriod === 'quarter' ? ' active' : ''}`}
+            className={`tab-btn${timePeriod === 'quarter' ? ' active' : ''}`}
             onClick={() => onSetTimePeriod('quarter')}
           >
             Q
           </button>
           <button
-            className={`budget-view-btn${timePeriod === 'half' ? ' active' : ''}`}
+            className={`tab-btn${timePeriod === 'half' ? ' active' : ''}`}
             onClick={() => onSetTimePeriod('half')}
           >
             H
           </button>
         </div>
       )}
-      <div className="budget-year-nav">
-        <button className="budget-year-btn" onClick={onPrevYear} title="Previous year">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M10 3L5 8l5 5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <span className="budget-year-label">{selectedYear}</span>
-        <button className="budget-year-btn" onClick={onNextYear} title="Next year">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      <YearNav selectedYear={selectedYear} onPrevYear={onPrevYear} onNextYear={onNextYear} />
     </div>
   </div>
 )

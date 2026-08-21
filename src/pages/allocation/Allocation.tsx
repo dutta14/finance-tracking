@@ -16,7 +16,8 @@ interface AllocationProps {
 }
 
 const Allocation: FC<AllocationProps> = ({ tab }) => {
-  const { allocMap, getSlices, computeRatio, getAccountsForClass } = useAllocationData()
+  const { allocMap, getSlices, computeRatio, getAccountsForClass, getClassHistory, getAccountHistory, allMonths } =
+    useAllocationData()
   const {
     customRatios,
     activeRatioId,
@@ -47,7 +48,15 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
 
   return (
     <div className="alloc-page">
-      {tab === 'breakdown' && <BreakdownSection getSlices={getSlices} getAccountsForClass={getAccountsForClass} />}
+      {tab === 'breakdown' && (
+        <BreakdownSection
+          getSlices={getSlices}
+          getAccountsForClass={getAccountsForClass}
+          getClassHistory={getClassHistory}
+          getAccountHistory={getAccountHistory}
+          allMonths={allMonths}
+        />
+      )}
 
       {tab === 'ratios' && (
         <section className="alloc-page-section">
@@ -83,11 +92,11 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
                 aria-label="Ratio name"
               />
               <span className="alloc-ratio-builder-label alloc-ratio-builder-label--spaced">Scope</span>
-              <div className="alloc-page-scope-tabs">
+              <div className="tab-bar">
                 {(['total', 'fi', 'gw'] as Scope[]).map(s => (
                   <button
                     key={s}
-                    className={`alloc-page-tab${activeRatio.scope === s ? ' active' : ''}`}
+                    className={`tab-btn${activeRatio.scope === s ? ' active' : ''}`}
                     onClick={() => updateRatioScope(s)}
                     aria-pressed={activeRatio.scope === s}
                   >

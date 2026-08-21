@@ -1,4 +1,4 @@
-import { FC, useMemo, useState, useRef, useCallback, ReactNode } from 'react'
+import { FC, useMemo, useState, useRef, useCallback, ReactNode, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useData } from '../../contexts/DataContext'
@@ -10,7 +10,7 @@ import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
 import SetupProgress from './SetupProgress'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
-import { useGrowthSettings } from '../goal/hooks/useGrowthSettings'
+import { useFileStore } from '../../contexts/FileStoreContext'
 import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/storage'
 import '../../styles/Home.css'
 
@@ -34,12 +34,16 @@ const Home: FC = () => {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const { accounts, balances } = useData()
-  const growthSettings = useGrowthSettings()
+  const { fileStore } = useFileStore()
 
-  const hasBudgetData = useMemo(() => {
-    const store = loadBudgetStore()
-    return Object.keys(store.csvs).length > 0
-  }, [])
+  const [hasBudgetData, setHasBudgetData] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  useEffect(() => {
+    loadBudgetStore(fileStore)
+      .then(s => setHasBudgetData(Object.keys(s.csvs).length > 0))
+      .catch(() => setHasBudgetData(false))
+      .finally(() => setDataLoaded(true))
+  }, [fileStore])
 
   const allComplete = accounts.length > 0 && balances.length > 0 && goals.length > 0 && hasBudgetData
   const [setupDismissed, setSetupDismissed] = useState(() => getStorageItem('onboarding-dismissed', '0') === '1')
@@ -160,7 +164,7 @@ const Home: FC = () => {
         accounts={accounts}
         balances={balances}
         allMonths={allMonths}
-        onNavigate={() => navigate('/net-worth')}
+        onNavigate={() => navigate('/net-worth/dashboard/details')}
       />
     </ErrorBoundary>,
     <ErrorBoundary key="charts" variant="card">
@@ -169,16 +173,11 @@ const Home: FC = () => {
         balances={balances}
         balanceMap={balanceMap}
         allMonths={allMonths}
-        onNavigate={() => navigate('/net-worth')}
+        onNavigate={() => navigate('/net-worth/dashboard')}
       />
     </ErrorBoundary>,
     <ErrorBoundary key="goals" variant="card">
-      <GoalsPeek
-        goals={goals}
-        gwGoals={gwGoals}
-        inflation={growthSettings.settings.inflation}
-        onNavigate={() => navigate('/goal')}
-      />
+      <GoalsPeek goals={goals} gwGoals={gwGoals} onNavigate={() => navigate('/goal')} />
     </ErrorBoundary>,
     <ErrorBoundary key="alloc" variant="card">
       <AllocationBreakdown
@@ -193,7 +192,7 @@ const Home: FC = () => {
     <div className="home-page">
       <div className="home-greeting">
         <h1>{greeting}</h1>
-        {setupDismissed && !allComplete && (
+        {setupDismissed && !allComplete && dataLoaded && (
           <button
             className="setup-guide-link"
             onClick={() => {
@@ -205,7 +204,7 @@ const Home: FC = () => {
           </button>
         )}
       </div>
-      {!setupDismissed && (
+      {!setupDismissed && dataLoaded && !allComplete && (
         <SetupProgress
           accounts={accounts}
           balances={balances}

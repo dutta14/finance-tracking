@@ -103,7 +103,7 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
 
   return (
     <div className="budget-table-section">
-      <h3 className="budget-table-title">{type === 'income' ? 'Income' : 'Expenses'} — Aggregated</h3>
+      <h3 className="budget-table-title">{type === 'income' ? 'Income' : 'Expenses'}</h3>
       <div className="budget-table-wrapper">
         <table className="budget-table">
           <thead>
@@ -125,7 +125,7 @@ const BudgetAggregatedView: FC<BudgetAggregatedViewProps> = ({
           </thead>
           <tbody>
             {[...relevantGroups]
-              .sort((a, b) => a.name.localeCompare(b.name))
+              .sort((a, b) => Math.abs(getGroupYearTotal(b)) - Math.abs(getGroupYearTotal(a)))
               .map(group => {
                 const yearTotal = getGroupYearTotal(group)
                 return (

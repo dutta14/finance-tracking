@@ -4,10 +4,6 @@ import {
   Account,
   BalanceEntry,
   AccountOwner,
-  AccountGoalType,
-  AccountType,
-  AccountNature,
-  AssetAllocation,
   ACCOUNT_TYPE_LABELS,
   GOAL_TYPE_LABELS,
   NATURE_LABELS,
@@ -17,9 +13,8 @@ import {
   formatMonth,
   formatCurrency,
 } from './types'
-
-type DateFilter = 'all' | 'ytd' | 'last-12' | 'eoy' | 'custom'
-type L1Filter = 'date' | 'owner' | 'goal' | 'type' | 'nature' | 'allocation'
+import FilterPanel, { FilterCategory, FilterState } from '../../components/FilterPanel'
+import MonthDatePanel, { PresetKey } from '../../components/MonthDatePanel'
 
 interface BalanceSpreadsheetProps {
   spreadsheetAccounts: Account[]
@@ -34,6 +29,7 @@ interface BalanceSpreadsheetProps {
   onSaveInlineEntry: () => void
   onCancelInlineEntry: () => void
   onDeleteMonth: (month: string) => void
+  onEditMonth?: (month: string) => void
 }
 
 const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
@@ -48,59 +44,87 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
   onSaveInlineEntry,
   onCancelInlineEntry,
   onDeleteMonth,
+  onEditMonth,
 }) => {
-  const [activeL1, setActiveL1] = useState<L1Filter | null>(null)
-  const [dateFilter, setDateFilter] = useState<DateFilter>('all')
-  const [customFrom, setCustomFrom] = useState('')
-  const [customTo, setCustomTo] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [datePreset, setDatePreset] = useState<PresetKey>('all')
   const [pendingDeleteMonth, setPendingDeleteMonth] = useState<string | null>(null)
-  const [ownerFilter, setOwnerFilter] = useState<Set<AccountOwner>>(new Set())
-  const [goalFilter, setGoalFilter] = useState<Set<AccountGoalType>>(new Set())
-  const [typeFilter, setTypeFilter] = useState<Set<AccountType>>(new Set())
-  const [natureFilter, setNatureFilter] = useState<Set<AccountNature>>(new Set())
-  const [allocationFilter, setAllocationFilter] = useState<Set<AssetAllocation>>(new Set())
+  const [columnFilters, setColumnFilters] = useState<FilterState>({
+    status: ['active'],
+    owner: [],
+    goal: [],
+    type: [],
+    nature: [],
+    allocation: [],
+  })
 
   const ownerLabels = useMemo(() => getOwnerLabels(profile), [profile])
 
-  const toggleL1 = (f: L1Filter) => setActiveL1(prev => (prev === f ? null : f))
+  const filterCategories = useMemo(
+    (): FilterCategory[] => [
+      {
+        key: 'owner',
+        label: 'Owner',
+        options: (['primary', 'partner', 'joint'] as const).map(k => ({ value: k, label: ownerLabels[k] })),
+      },
+      {
+        key: 'goal',
+        label: 'Goal',
+        options: (['fi', 'gw'] as const).map(k => ({ value: k, label: GOAL_TYPE_LABELS[k] })),
+      },
+      {
+        key: 'type',
+        label: 'Type',
+        options: (['retirement', 'non-retirement', 'liquid', 'illiquid'] as const).map(k => ({
+          value: k,
+          label: ACCOUNT_TYPE_LABELS[k],
+        })),
+      },
+      {
+        key: 'nature',
+        label: 'Asset/Liability',
+        options: (['asset', 'liability'] as const).map(k => ({ value: k, label: NATURE_LABELS[k] })),
+      },
+      {
+        key: 'allocation',
+        label: 'Allocation',
+        options: (['cash', 'us-stock', 'intl-stock', 'bonds', 'real-estate', 'others', 'debt'] as const).map(k => ({
+          value: k,
+          label: ALLOCATION_LABELS[k],
+        })),
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        options: [
+          { value: 'active', label: 'Active' },
+          { value: 'inactive', label: 'Inactive' },
+        ],
+      },
+    ],
+    [ownerLabels],
+  )
 
-  const toggleSet = <T,>(setter: React.Dispatch<React.SetStateAction<Set<T>>>, value: T) => {
-    setter(prev => {
-      const next = new Set(prev)
-      next.has(value) ? next.delete(value) : next.add(value)
-      return next
-    })
-  }
-
-  const hasDateFilter = dateFilter !== 'all'
-  const hasOwnerFilter = ownerFilter.size > 0
-  const hasGoalFilter = goalFilter.size > 0
-  const hasTypeFilter = typeFilter.size > 0
-  const hasNatureFilter = natureFilter.size > 0
-  const hasAllocationFilter = allocationFilter.size > 0
-  const hasAnyFilter =
-    hasDateFilter || hasOwnerFilter || hasGoalFilter || hasTypeFilter || hasNatureFilter || hasAllocationFilter
-
-  const clearAllFilters = () => {
-    setDateFilter('all')
-    setCustomFrom('')
-    setCustomTo('')
-    setOwnerFilter(new Set())
-    setGoalFilter(new Set())
-    setTypeFilter(new Set())
-    setNatureFilter(new Set())
-    setAllocationFilter(new Set())
-    setActiveL1(null)
+  const handleDateApply = (preset: PresetKey, from: string, to: string) => {
+    setDatePreset(preset)
+    setDateFrom(from)
+    setDateTo(to)
   }
 
   const matchesFilters = useCallback(
-    (a: Account) =>
-      (ownerFilter.size === 0 || ownerFilter.has(a.owner)) &&
-      (goalFilter.size === 0 || goalFilter.has(a.goalType)) &&
-      (typeFilter.size === 0 || typeFilter.has(a.type)) &&
-      (natureFilter.size === 0 || natureFilter.has(a.nature || 'asset')) &&
-      (allocationFilter.size === 0 || allocationFilter.has(a.allocation || getDefaultAllocation(a.nature || 'asset'))),
-    [ownerFilter, goalFilter, typeFilter, natureFilter, allocationFilter],
+    (a: Account) => {
+      const { status, owner, goal, type, nature, allocation } = columnFilters
+      return (
+        (status.length === 0 || status.includes(a.status || 'active')) &&
+        (owner.length === 0 || owner.includes(a.owner)) &&
+        (goal.length === 0 || goal.includes(a.goalType)) &&
+        (type.length === 0 || type.includes(a.type)) &&
+        (nature.length === 0 || nature.includes(a.nature || 'asset')) &&
+        (allocation.length === 0 || allocation.includes(a.allocation || getDefaultAllocation(a.nature || 'asset')))
+      )
+    },
+    [columnFilters],
   )
 
   /* Column filtering */
@@ -186,213 +210,37 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
     children.some(c => balanceMap.has(`${c.id}:${month}`))
 
   /* Date filtering */
-  const availableYears = useMemo(() => {
-    const years = new Set(allMonths.map(m => m.slice(0, 4)))
-    return [...years].sort()
-  }, [allMonths])
-
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, i) => {
-        const val = String(i + 1).padStart(2, '0')
-        const label = new Date(2000, i).toLocaleString('default', { month: 'short' })
-        return { val, label }
-      }),
-    [],
-  )
-
   const filteredMonths = useMemo(() => {
-    if (dateFilter === 'all') return allMonths
-    const now = new Date()
-    const yr = now.getFullYear().toString()
-    const cur = `${yr}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    switch (dateFilter) {
-      case 'ytd':
-        return allMonths.filter(m => m >= `${yr}-01` && m <= cur)
-      case 'last-12':
-        return allMonths.slice(0, 12)
-      case 'eoy':
-        return allMonths.filter(m => m.endsWith('-12'))
-      case 'custom':
-        return allMonths.filter(m => (!customFrom || m >= customFrom) && (!customTo || m <= customTo))
-      default:
-        return allMonths
+    if (datePreset === 'all') return allMonths
+    if (datePreset === 'eoy') return allMonths.filter(m => m.endsWith('-12'))
+    const ascending = [...allMonths].sort()
+    let result: string[]
+    if (datePreset === 'ytd') {
+      const yr = new Date().getFullYear().toString()
+      const cur = `${yr}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+      result = ascending.filter(m => m >= `${yr}-01` && m <= cur)
+    } else if (datePreset === 'last-12') {
+      result = ascending.slice(-12)
+    } else {
+      // custom
+      result = ascending.filter(m => (!dateFrom || m >= dateFrom) && (!dateTo || m <= dateTo))
     }
-  }, [dateFilter, allMonths, customFrom, customTo])
-
-  const setCustomMonth = (which: 'from' | 'to', part: 'year' | 'month', value: string) => {
-    const setter = which === 'from' ? setCustomFrom : setCustomTo
-    const current = which === 'from' ? customFrom : customTo
-    const [y, m] = current ? current.split('-') : ['', '']
-    if (part === 'year') setter(value ? `${value}-${m || '01'}` : '')
-    else setter(y ? `${y}-${value}` : '')
-  }
-
-  const renderMonthPicker = (value: string, which: 'from' | 'to') => {
-    const [y, m] = value ? value.split('-') : ['', '']
-    return (
-      <div className="data-range-picker">
-        <select className="data-range-select" value={y} onChange={e => setCustomMonth(which, 'year', e.target.value)}>
-          <option value="">Year</option>
-          {availableYears.map(yr => (
-            <option key={yr} value={yr}>
-              {yr}
-            </option>
-          ))}
-        </select>
-        <select className="data-range-select" value={m} onChange={e => setCustomMonth(which, 'month', e.target.value)}>
-          <option value="">Month</option>
-          {monthOptions.map(({ val, label }) => (
-            <option key={val} value={val}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
-    )
-  }
+    // Return in descending order (newest first) to match allMonths
+    return result.reverse()
+  }, [datePreset, dateFrom, dateTo, allMonths])
 
   return (
     <>
       <div className="data-filter-bar">
-        <div className="data-filter-l1">
-          {(
-            [
-              ['date', 'Date', hasDateFilter],
-              ['owner', 'Owner', hasOwnerFilter],
-              ['goal', 'Goal', hasGoalFilter],
-              ['type', 'Type', hasTypeFilter],
-              ['nature', 'Asset/Liability', hasNatureFilter],
-              ['allocation', 'Allocation', hasAllocationFilter],
-            ] as [L1Filter, string, boolean][]
-          ).map(([key, label, active]) => (
-            <button
-              key={key}
-              className={`data-filter-l1-btn${activeL1 === key ? ' expanded' : ''}${active ? ' filtered' : ''}`}
-              onClick={() => toggleL1(key)}
-            >
-              {label}
-              {active && <span className="data-filter-dot" />}
-            </button>
-          ))}
-          {hasAnyFilter && (
-            <button className="data-filter-clear-btn" onClick={clearAllFilters}>
-              Clear all
-            </button>
-          )}
-          {toolbarActions && <div className="data-toolbar-actions">{toolbarActions}</div>}
-        </div>
-
-        {activeL1 === 'date' && (
-          <div className="data-filter-l2">
-            <div className="data-filter-group">
-              {(
-                [
-                  ['all', 'All'],
-                  ['ytd', 'YTD'],
-                  ['last-12', 'Last 12 mo'],
-                  ['eoy', 'Year-End'],
-                  ['custom', 'Custom'],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`data-filter-btn${dateFilter === key ? ' active' : ''}`}
-                  onClick={() => setDateFilter(key as DateFilter)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {dateFilter === 'custom' && (
-              <div className="data-custom-range">
-                {renderMonthPicker(customFrom, 'from')}
-                <span className="data-range-sep">to</span>
-                {renderMonthPicker(customTo, 'to')}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeL1 === 'owner' && (
-          <div className="data-filter-l2">
-            <div className="data-filter-group">
-              {(['primary', 'partner', 'joint'] as const).map(key => (
-                <button
-                  key={key}
-                  className={`data-filter-btn${ownerFilter.has(key) ? ' active' : ''}`}
-                  onClick={() => toggleSet(setOwnerFilter, key)}
-                >
-                  {ownerLabels[key]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeL1 === 'goal' && (
-          <div className="data-filter-l2">
-            <div className="data-filter-group">
-              {(['fi', 'gw'] as const).map(key => (
-                <button
-                  key={key}
-                  className={`data-filter-btn${goalFilter.has(key) ? ' active' : ''}`}
-                  onClick={() => toggleSet(setGoalFilter, key)}
-                >
-                  {GOAL_TYPE_LABELS[key]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeL1 === 'type' && (
-          <div className="data-filter-l2">
-            <div className="data-filter-group">
-              {(['retirement', 'non-retirement', 'liquid', 'illiquid'] as const).map(key => (
-                <button
-                  key={key}
-                  className={`data-filter-btn${typeFilter.has(key) ? ' active' : ''}`}
-                  onClick={() => toggleSet(setTypeFilter, key)}
-                >
-                  {ACCOUNT_TYPE_LABELS[key]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeL1 === 'nature' && (
-          <div className="data-filter-l2">
-            <div className="data-filter-group">
-              {(['asset', 'liability'] as const).map(key => (
-                <button
-                  key={key}
-                  className={`data-filter-btn${natureFilter.has(key) ? ' active' : ''}`}
-                  onClick={() => toggleSet(setNatureFilter, key)}
-                >
-                  {NATURE_LABELS[key]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeL1 === 'allocation' && (
-          <div className="data-filter-l2">
-            <div className="data-filter-group">
-              {(['cash', 'us-stock', 'intl-stock', 'bonds', 'real-estate', 'others', 'debt'] as const).map(key => (
-                <button
-                  key={key}
-                  className={`data-filter-btn${allocationFilter.has(key) ? ' active' : ''}`}
-                  onClick={() => toggleSet(setAllocationFilter, key)}
-                >
-                  {ALLOCATION_LABELS[key]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {toolbarActions && <div className="data-toolbar-actions">{toolbarActions}</div>}
+        <FilterPanel categories={filterCategories} filters={columnFilters} onChange={setColumnFilters} />
+        <MonthDatePanel
+          allMonths={allMonths}
+          fromMonth={dateFrom}
+          toMonth={dateTo}
+          preset={datePreset}
+          onApply={handleDateApply}
+        />
       </div>
 
       <div className="data-spreadsheet-wrap">
@@ -590,6 +438,23 @@ const BalanceSpreadsheet: FC<BalanceSpreadsheetProps> = ({
                 <tr key={month}>
                   <td className="data-spreadsheet-row-header">
                     <span className="data-spreadsheet-month-label">{formatMonth(month)}</span>
+                    {onEditMonth && (
+                      <button
+                        className="data-edit-row-btn"
+                        title={`Edit ${formatMonth(month)}`}
+                        onClick={() => onEditMonth(month)}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                          <path
+                            d="M13.5 3.5l3 3M4 13l-1 4 4-1L15.5 7.5l-3-3L4 13z"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       className="data-delete-row-btn"
                       title={`Delete ${formatMonth(month)}`}

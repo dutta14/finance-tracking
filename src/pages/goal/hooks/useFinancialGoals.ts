@@ -1,43 +1,49 @@
 import { useState, useEffect, useRef } from 'react'
 import { FinancialGoal } from '../../../types'
-import { loadGoalsFromStorage, saveGoalsToStorage, migrateGoals } from '../utils/localStorageService'
-import { appStorage } from '../../../utils/appStorage'
+import { GOALS_PATH, loadGoalsFile, migrateGoals, saveGoalsPart } from '../utils/localStorageService'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 export const useFinancialGoals = () => {
-  const [goals, setGoals] = useState<FinancialGoal[]>(() => {
-    try {
-      const loadedGoals = loadGoalsFromStorage()
-      return migrateGoals(loadedGoals)
-    } catch (err) {
-      console.error('Failed to initialize goals:', err)
-      return []
-    }
-  })
+  const { fileStore } = useFileStore()
+  const [goals, setGoals] = useState<FinancialGoal[]>([])
 
+  const loadedRef = useRef(false)
   const fromSyncRef = useRef(false)
 
-  // Cross-tab sync: reload goals when another tab writes to storage
   useEffect(() => {
-    const unsub = appStorage.subscribe('financialGoals', () => {
-      try {
-        const loaded = loadGoalsFromStorage()
-        fromSyncRef.current = true
-        setGoals(migrateGoals(loaded))
-      } catch {
-        /* load failed — don't set fromSyncRef so next local save proceeds normally */
-      }
-    })
-    return unsub
-  }, [])
+    let cancelled = false
 
-  // Save goals to localStorage whenever they change
+    const refresh = () => {
+      loadGoalsFile(fileStore)
+        .then(file => {
+          if (cancelled) return
+          fromSyncRef.current = true
+          setGoals(migrateGoals(file.financialGoals))
+          loadedRef.current = true
+        })
+        .catch(err => {
+          console.error('Failed to initialize goals:', err)
+          fromSyncRef.current = true
+          loadedRef.current = true
+        })
+    }
+
+    refresh()
+    const unsubscribe = fileStore.subscribe(GOALS_PATH, refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
   useEffect(() => {
+    if (!loadedRef.current) return
     if (fromSyncRef.current) {
       fromSyncRef.current = false
       return
     }
-    saveGoalsToStorage(goals)
-  }, [goals])
+    saveGoalsPart(fileStore, { financialGoals: goals })
+  }, [goals, fileStore])
 
   const createGoal = (goal: FinancialGoal): void => {
     setGoals(prev => [goal, ...prev])

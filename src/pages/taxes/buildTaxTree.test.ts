@@ -1,30 +1,28 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { buildTaxTree } from './buildTaxTree'
-import type { TaxYear } from './types'
+import type { TaxStore, TaxYear } from './types'
+import type { Account } from '../data/types'
 
-// buildTaxTree reads from localStorage, so we set up the data there
+// buildTaxTree is now a pure function: buildTaxTree(store, accounts, profile)
 
-beforeEach(() => {
-  localStorage.clear()
-})
+const EMPTY_STORE: TaxStore = { years: {} }
 
 describe('buildTaxTree', () => {
   it('returns empty tree when no tax data stored', () => {
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(EMPTY_STORE, [], {})
     expect(tree.name).toBe('Taxes')
     expect(tree.slug).toBe('taxes')
     expect(tree.folders).toEqual([])
     expect(tree.files).toEqual([])
   })
 
-  it('returns empty tree when tax store is empty object', () => {
-    localStorage.setItem('tax-store', '{}')
-    const tree = buildTaxTree()
+  it('returns empty tree when tax store has no years', () => {
+    const tree = buildTaxTree({ years: {} }, [], {})
     expect(tree.folders).toEqual([])
   })
 
   it('builds year folders with files from checklist items', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -40,10 +38,7 @@ describe('buildTaxTree', () => {
         } as TaxYear,
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', JSON.stringify({ name: 'Jane' }))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], { name: 'Jane' })
     expect(tree.folders).toHaveLength(1)
     expect(tree.folders[0].name).toBe('2024')
     expect(tree.folders[0].files).toHaveLength(1)
@@ -57,8 +52,8 @@ describe('buildTaxTree', () => {
     const accounts = [
       { id: 1, name: 'Fidelity 401k' },
       { id: 2, name: 'Vanguard IRA' },
-    ]
-    const store = {
+    ] as Account[]
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -74,16 +69,13 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('data-accounts', JSON.stringify(accounts))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, accounts, {})
     const file = tree.folders[0].files[0]
     expect(file.meta?.accounts).toBe('Fidelity 401k, Vanguard IRA')
   })
 
   it('sorts year folders in descending order', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2022: {
           items: [
@@ -123,14 +115,12 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], {})
     expect(tree.folders.map(f => f.name)).toEqual(['2024', '2023', '2022'])
   })
 
   it('skips years with no files (only empty checklist items)', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2024: { items: [{ id: '1', label: 'Empty', owner: 'primary', category: 'custom', accountIds: [], files: [] }] },
         2025: {
@@ -147,15 +137,13 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], {})
     expect(tree.folders).toHaveLength(1)
     expect(tree.folders[0].name).toBe('2025')
   })
 
   it('maps partner owner correctly', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -171,15 +159,12 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', JSON.stringify({ name: 'Jane', partner: { name: 'John' } }))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], { name: 'Jane', partner: { name: 'John' } })
     expect(tree.folders[0].files[0].meta?.owner).toBe('John')
   })
 
   it('falls back to "Primary" if profile has no name', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -195,15 +180,12 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', '{}')
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], {})
     expect(tree.folders[0].files[0].meta?.owner).toBe('Primary')
   })
 
   it('returns undefined category for unknown category values', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -211,7 +193,7 @@ describe('buildTaxTree', () => {
               id: '1',
               label: 'Doc',
               owner: 'primary',
-              category: 'unknown-category',
+              category: 'unknown-category' as never,
               accountIds: [],
               files: [{ id: 'f1', name: 'x.pdf', content: 'x', ext: 'pdf', uploadedAt: 't' }],
             },
@@ -219,15 +201,12 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', '{}')
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], {})
     expect(tree.folders[0].files[0].meta?.category).toBeUndefined()
   })
 
   it('returns "Joint" for owner values that are neither primary nor partner', () => {
-    const store = {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -243,15 +222,12 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', JSON.stringify({ name: 'Test' }))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], { name: 'Test' })
     expect(tree.folders[0].files[0].meta?.owner).toBe('Joint')
   })
 
-  it('falls back to "Partner" when partner name is empty (line 17)', () => {
-    const store = {
+  it('falls back to "Partner" when partner name is empty', () => {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -267,15 +243,12 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', JSON.stringify({ partner: { name: '' } }))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], { partner: { name: '' } })
     expect(tree.folders[0].files[0].meta?.owner).toBe('Partner')
   })
 
-  it('defaults content to empty string when file.content is undefined (line 39)', () => {
-    const store = {
+  it('defaults content to empty string when file.content is undefined', () => {
+    const store: TaxStore = {
       years: {
         2024: {
           items: [
@@ -284,7 +257,7 @@ describe('buildTaxTree', () => {
               label: 'Doc',
               owner: 'primary',
               category: 'paystub',
-              accountIds: [] as string[],
+              accountIds: [],
               files: [
                 { id: 'f1', name: 'a.pdf', ext: 'pdf', uploadedAt: 't', content: undefined as unknown as string },
               ],
@@ -293,23 +266,13 @@ describe('buildTaxTree', () => {
         },
       },
     }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', JSON.stringify({ name: 'Me' }))
-
-    const tree = buildTaxTree()
+    const tree = buildTaxTree(store, [], { name: 'Me' })
     expect(tree.folders[0].files[0].content).toBe('')
   })
 
-  it('handles year with no items array (line 56 falsy branch)', () => {
-    const store = {
-      years: {
-        2024: {},
-      },
-    }
-    localStorage.setItem('tax-store', JSON.stringify(store))
-    localStorage.setItem('user-profile', JSON.stringify({ name: 'Me' }))
-
-    const tree = buildTaxTree()
+  it('handles year with no items array (falsy branch)', () => {
+    const store = { years: { 2024: {} as TaxYear } }
+    const tree = buildTaxTree(store, [], { name: 'Me' })
     expect(tree.folders).toHaveLength(0)
   })
 })

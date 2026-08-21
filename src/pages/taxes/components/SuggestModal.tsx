@@ -52,10 +52,10 @@ const SuggestModal: FC<SuggestModalProps> = ({ accounts, alreadyLinked, owner, o
           ))}
         </div>
         <div className="tax-modal-actions">
-          <button className="tax-btn tax-btn--outline" onClick={onClose}>
+          <button className="action-btn" onClick={onClose}>
             Cancel
           </button>
-          <button className="tax-btn tax-btn--primary" onClick={handleAdd} disabled={selected.size === 0}>
+          <button className="action-btn" onClick={handleAdd} disabled={selected.size === 0}>
             Add {selected.size > 1 ? `(${selected.size} accounts)` : selected.size === 1 ? '1 account' : ''}
           </button>
         </div>

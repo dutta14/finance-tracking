@@ -1,8 +1,9 @@
 import { FC, useState } from 'react'
-import { isDemoActive, enterDemoMode, exitDemoMode } from '../demoMode'
+import { isDemoActive, useFileStore } from '../../../contexts/FileStoreContext'
 import { getStorageItem, setStorageItem } from '../../../utils/storage'
 
 const LabsPane: FC = () => {
+  const { enterDemo, exitDemo } = useFileStore()
   const [labPdfToCsv, setLabPdfToCsv] = useState(() => getStorageItem('lab-pdf-to-csv', '0') === '1')
   const [demoActive] = useState(isDemoActive)
 
@@ -42,14 +43,14 @@ const LabsPane: FC = () => {
             <span className="settings-toggle-label">Demo Mode</span>
             <span className="settings-toggle-hint">
               {demoActive
-                ? 'Currently active — your real data is safely backed up. Turn off to restore.'
-                : 'Replace your data with realistic sample data for demos. Your real data is backed up and restored when you turn it off.'}
+                ? 'Currently active — sample data only. Turn off to return to your data folder.'
+                : 'Explore the app with realistic sample data. Nothing is written to your data folder while demo mode is on.'}
             </span>
           </div>
           <button
             className={`settings-toggle-switch${demoActive ? ' on' : ''}`}
             onClick={() => {
-              demoActive ? exitDemoMode() : enterDemoMode()
+              demoActive ? exitDemo() : enterDemo()
             }}
             role="switch"
             aria-checked={demoActive}

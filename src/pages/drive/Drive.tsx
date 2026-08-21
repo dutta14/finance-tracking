@@ -10,6 +10,11 @@ import { resolvePathSegments } from './types'
 import { loadBudgetStore, saveBudgetStore, renameBudgetMonth } from '../budget/utils/budgetStorage'
 import { formatMonthKey } from '../budget/utils/csvParser'
 import type { DriveFolder, DriveFile } from './types'
+import { useFileStore } from '../../contexts/FileStoreContext'
+import { useData } from '../../contexts/DataContext'
+import { useProfile } from '../../hooks/useProfile'
+
+const EMPTY_ROOT: DriveFolder = { name: 'Drive', slug: '', folders: [], files: [] }
 
 function segmentsFromUrl(pathname: string): string[] {
   const raw = pathname.replace(/^\/drive\/?/, '').replace(/\/$/, '')
@@ -24,9 +29,17 @@ function urlFromSegments(segments: string[]): string {
 const Drive: FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { fileStore } = useFileStore()
+  const { accounts } = useData()
+  const { profile } = useProfile()
 
-  const [root, setRoot] = useState<DriveFolder>(() => buildDriveTree())
-  const refreshTree = useCallback(() => setRoot(buildDriveTree()), [])
+  const [root, setRoot] = useState<DriveFolder>(EMPTY_ROOT)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const refreshTree = useCallback(() => setRefreshKey(k => k + 1), [])
+
+  useEffect(() => {
+    buildDriveTree(fileStore, accounts, profile).then(setRoot).catch(console.error)
+  }, [fileStore, accounts, profile, refreshKey])
 
   const [segments, setSegmentsState] = useState<string[]>(() => segmentsFromUrl(location.pathname))
   const [ownerFilter, setOwnerFilter] = useState<string | null>(null)
@@ -88,16 +101,16 @@ const Drive: FC = () => {
       cancelRename()
       return
     }
-    const store = loadBudgetStore()
+    const store = await loadBudgetStore(fileStore)
     if (store.csvs[renameValue] && !renameWarning) {
       setRenameWarning(`${formatMonthKey(renameValue)} already has data. Replace it?`)
       return
     }
     const updated = renameBudgetMonth(store, renameSlug, renameValue)
-    saveBudgetStore(updated)
+    await saveBudgetStore(fileStore, updated)
     cancelRename()
     refreshTree()
-  }, [renameSlug, renameValue, renameWarning, cancelRename, refreshTree])
+  }, [fileStore, renameSlug, renameValue, renameWarning, cancelRename, refreshTree])
 
   // ── Folder / root view ──────────────────────────────────────
   const folder: DriveFolder =
@@ -193,11 +206,11 @@ const Drive: FC = () => {
 
       {/* Year tabs (shown when inside a year-level folder with sibling folders) */}
       {siblingYearFolders && siblingYearFolders.length > 1 && (
-        <div className="drive-year-tabs">
+        <div className="tab-bar drive-year-tabs">
           {siblingYearFolders.map(sib => (
             <button
               key={sib.slug}
-              className={`drive-year-tab${sib.slug === currentSlug ? ' active' : ''}`}
+              className={`tab-btn tab-btn--sm${sib.slug === currentSlug ? ' active' : ''}`}
               onClick={() => goTo([...segments.slice(0, -1), sib.slug])}
             >
               {sib.name}

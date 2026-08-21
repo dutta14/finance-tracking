@@ -957,7 +957,7 @@ test.describe('Budget Page E2E', () => {
       await expect(projected).not.toContainText('Add budget data')
       await expect(projected).not.toContainText('Not reachable')
       // The projection renders a "FI by <Mon YYYY>" string in its date span
-      await expect(page.locator('.goals-peek-projected-date').first()).toHaveText(/[A-Z][a-z]{2} \d{4}/)
+      await expect(page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()).toHaveText(/[A-Z][a-z]{2} \d{4}/)
     })
   })
 

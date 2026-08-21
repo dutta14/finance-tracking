@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, waitFor } from '@testing-library/react'
 import { DataProvider, useData } from './DataContext'
+import { FileStoreTestProvider } from '../test/fileStoreTestUtils'
+import { MemoryFileStore } from '../utils/memoryFileStore'
 import type { Account, BalanceEntry } from '../pages/data/types'
+import { ReactNode } from 'react'
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
@@ -14,14 +17,6 @@ const makeAccount = (overrides: Partial<Account> = {}): Account => ({
   goalType: 'gw',
   nature: 'asset',
   allocation: 'cash',
-  ...overrides,
-})
-
-const makeBalance = (overrides: Partial<BalanceEntry> = {}): BalanceEntry => ({
-  id: 1,
-  accountId: 1,
-  month: '2024-01',
-  balance: 1000,
   ...overrides,
 })
 
@@ -45,194 +40,173 @@ function SetterConsumer() {
       <span data-testid="accounts">{JSON.stringify(accounts)}</span>
       <span data-testid="balances">{JSON.stringify(balances)}</span>
       <button data-testid="set-accounts" onClick={() => setAccounts([makeAccount()])} />
-      <button data-testid="set-balances" onClick={() => setBalances([makeBalance()])} />
+      <button
+        data-testid="set-balances"
+        onClick={() => setBalances([{ id: 1, accountId: 1, month: '2024-01', balance: 1000 }])}
+      />
     </div>
+  )
+}
+
+function renderWithStore(ui: ReactNode, store: MemoryFileStore) {
+  return render(
+    <FileStoreTestProvider store={store}>
+      <DataProvider>{ui}</DataProvider>
+    </FileStoreTestProvider>,
   )
 }
 
 /* ── setup ───────────────────────────────────────────────────────── */
 
+let store: MemoryFileStore
+
 beforeEach(() => {
-  localStorage.clear()
+  store = new MemoryFileStore()
 })
 
 /* ── tests ───────────────────────────────────────────────────────── */
 
 describe('DataContext', () => {
-  it('renders children and provides default empty values when localStorage is empty', () => {
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
+  it('renders children and provides default empty values when file store is empty', async () => {
+    renderWithStore(<Consumer />, store)
 
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([])
-    expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual([])
-    expect(JSON.parse(screen.getByTestId('allMonths').textContent!)).toEqual([])
+    await waitFor(() => {
+      expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([])
+      expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual([])
+      expect(JSON.parse(screen.getByTestId('allMonths').textContent!)).toEqual([])
+    })
   })
 
-  it('loads initial accounts and balances from localStorage', () => {
+  it('loads initial accounts and balances from file store', async () => {
     const acct = [makeAccount()]
-    const bal = [makeBalance()]
-    localStorage.setItem('data-accounts', JSON.stringify(acct))
-    localStorage.setItem('data-balances', JSON.stringify(bal))
+    await store.writeJSON('accounts.json', acct)
+    await store.writeCSV('balances/2024.csv', [
+      ['month', 'accountId', 'balance'],
+      ['2024-01', '1', '1000'],
+    ])
 
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
+    renderWithStore(<Consumer />, store)
 
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual(acct)
-    expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual(bal)
+    await waitFor(() => {
+      const accounts = JSON.parse(screen.getByTestId('accounts').textContent!)
+      expect(accounts).toHaveLength(1)
+      expect(accounts[0].name).toBe('Checking')
+    })
+
+    const balances: BalanceEntry[] = JSON.parse(screen.getByTestId('balances').textContent!)
+    expect(balances).toHaveLength(1)
+    expect(balances[0].accountId).toBe(1)
+    expect(balances[0].month).toBe('2024-01')
+    expect(balances[0].balance).toBe(1000)
   })
 
-  it('setAccounts updates state and writes to localStorage', () => {
-    render(
-      <DataProvider>
-        <SetterConsumer />
-      </DataProvider>,
-    )
+  it('setAccounts updates state and writes to accounts.json', async () => {
+    renderWithStore(<SetterConsumer />, store)
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([]))
 
     act(() => {
       screen.getByTestId('set-accounts').click()
     })
 
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([makeAccount()])
-    expect(JSON.parse(localStorage.getItem('data-accounts')!)).toEqual([makeAccount()])
+    await waitFor(() => {
+      const accounts = JSON.parse(screen.getByTestId('accounts').textContent!)
+      expect(accounts).toHaveLength(1)
+      expect(accounts[0].name).toBe('Checking')
+    })
+
+    // Also verify it was persisted to the file store
+    await waitFor(async () => {
+      const stored = await store.readJSON<Account[]>('accounts.json', [])
+      expect(stored).toHaveLength(1)
+    })
   })
 
-  it('setBalances updates state and writes to localStorage', () => {
-    render(
-      <DataProvider>
-        <SetterConsumer />
-      </DataProvider>,
-    )
+  it('setBalances updates state and writes to balances CSV files', async () => {
+    renderWithStore(<SetterConsumer />, store)
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual([]))
 
     act(() => {
       screen.getByTestId('set-balances').click()
     })
 
-    expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual([makeBalance()])
-    expect(JSON.parse(localStorage.getItem('data-balances')!)).toEqual([makeBalance()])
+    await waitFor(() => {
+      const balances: BalanceEntry[] = JSON.parse(screen.getByTestId('balances').textContent!)
+      expect(balances).toHaveLength(1)
+      expect(balances[0].accountId).toBe(1)
+    })
+
+    // Verify CSV was written
+    await waitFor(async () => {
+      const exists = await store.exists('balances/2024.csv')
+      expect(exists).toBe(true)
+    })
   })
 
-  it('derives allMonths sorted and deduplicated from balances', () => {
-    const balances = [
-      makeBalance({ id: 1, month: '2024-03' }),
-      makeBalance({ id: 2, month: '2024-01' }),
-      makeBalance({ id: 3, month: '2024-03' }),
-      makeBalance({ id: 4, month: '2024-02' }),
-    ]
-    localStorage.setItem('data-balances', JSON.stringify(balances))
+  it('derives allMonths sorted and deduplicated from balances', async () => {
+    await store.writeCSV('balances/2024.csv', [
+      ['month', 'accountId', 'balance'],
+      ['2024-03', '1', '3000'],
+      ['2024-01', '1', '1000'],
+      ['2024-03', '1', '3000'], // duplicate month
+      ['2024-02', '1', '2000'],
+    ])
 
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
+    renderWithStore(<Consumer />, store)
 
-    expect(JSON.parse(screen.getByTestId('allMonths').textContent!)).toEqual(['2024-01', '2024-02', '2024-03'])
+    await waitFor(() => {
+      const allMonths = JSON.parse(screen.getByTestId('allMonths').textContent!)
+      expect(allMonths).toEqual(['2024-01', '2024-02', '2024-03'])
+    })
   })
 
-  it('refreshes when a storage event fires from another tab (accounts)', () => {
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
-
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([])
+  it('refreshes accounts when file store subscriber callback fires', async () => {
+    renderWithStore(<Consumer />, store)
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([]))
 
     const newAccounts = [makeAccount()]
-    localStorage.setItem('data-accounts', JSON.stringify(newAccounts))
-
-    act(() => {
-      window.dispatchEvent(new StorageEvent('storage', { key: 'data-accounts', newValue: JSON.stringify(newAccounts) }))
+    await act(async () => {
+      await store.writeJSON('accounts.json', newAccounts)
     })
 
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual(newAccounts)
-  })
-
-  it('refreshes when a storage event fires from another tab (balances)', () => {
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
-
-    const newBalances = [makeBalance({ month: '2025-06' })]
-    localStorage.setItem('data-balances', JSON.stringify(newBalances))
-
-    act(() => {
-      window.dispatchEvent(new StorageEvent('storage', { key: 'data-balances', newValue: JSON.stringify(newBalances) }))
+    await waitFor(() => {
+      const accounts = JSON.parse(screen.getByTestId('accounts').textContent!)
+      expect(accounts).toHaveLength(1)
+      expect(accounts[0].name).toBe('Checking')
     })
-
-    expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual(newBalances)
-    expect(JSON.parse(screen.getByTestId('allMonths').textContent!)).toEqual(['2025-06'])
   })
 
-  it('refreshes when a custom data-changed event fires', () => {
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
-
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([])
+  it('refreshes when a custom data-changed event fires', async () => {
+    renderWithStore(<Consumer />, store)
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([]))
 
     const acct = [makeAccount()]
-    const bal = [makeBalance()]
-    localStorage.setItem('data-accounts', JSON.stringify(acct))
-    localStorage.setItem('data-balances', JSON.stringify(bal))
+    await store.writeJSON('accounts.json', acct)
 
     act(() => {
       window.dispatchEvent(new Event('data-changed'))
     })
 
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual(acct)
-    expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual(bal)
-  })
-
-  it('falls back to empty arrays when localStorage has corrupt JSON for accounts', () => {
-    localStorage.setItem('data-accounts', '{not valid json!!!')
-
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
-
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual([])
-  })
-
-  it('falls back to empty arrays when localStorage has corrupt JSON for balances', () => {
-    localStorage.setItem('data-balances', '{{bad}}')
-
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
-
-    expect(JSON.parse(screen.getByTestId('balances').textContent!)).toEqual([])
-  })
-
-  it('ignores storage events for unrelated keys', () => {
-    const acct = [makeAccount()]
-    localStorage.setItem('data-accounts', JSON.stringify(acct))
-
-    render(
-      <DataProvider>
-        <Consumer />
-      </DataProvider>,
-    )
-
-    act(() => {
-      window.dispatchEvent(new StorageEvent('storage', { key: 'unrelated-key', newValue: 'whatever' }))
+    await waitFor(() => {
+      const accounts = JSON.parse(screen.getByTestId('accounts').textContent!)
+      expect(accounts).toHaveLength(1)
     })
+  })
 
-    // accounts should remain unchanged
-    expect(JSON.parse(screen.getByTestId('accounts').textContent!)).toEqual(acct)
+  it('ignores balance rows with invalid data', async () => {
+    await store.writeCSV('balances/2024.csv', [
+      ['month', 'accountId', 'balance'],
+      ['2024-01', 'notanumber', '1000'],
+      ['2024-02', '1', 'notanumber'],
+      ['2024-03', '1', '500'],
+    ])
+
+    renderWithStore(<Consumer />, store)
+
+    await waitFor(() => {
+      const balances: BalanceEntry[] = JSON.parse(screen.getByTestId('balances').textContent!)
+      expect(balances).toHaveLength(1)
+      expect(balances[0].month).toBe('2024-03')
+      expect(balances[0].balance).toBe(500)
+    })
   })
 })

@@ -98,7 +98,7 @@ describe('AccountList', () => {
   it('calls onEdit when AccountRow edit button is clicked', () => {
     const onEdit = vi.fn()
     renderList({ onEdit })
-    const editButtons = screen.getAllByTitle('Edit')
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' })
     fireEvent.click(editButtons[0])
     expect(onEdit).toHaveBeenCalledWith(1)
   })

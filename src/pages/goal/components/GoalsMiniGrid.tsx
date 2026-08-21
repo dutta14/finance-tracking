@@ -1,8 +1,8 @@
 import { FC, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
-import { getLatestGoalTotals } from '../../data/types'
 import { useTouchDrag } from '../../../hooks/useTouchDrag'
 import GoalMiniCard from './GoalMiniCard'
+import { useGoalMetrics } from '../hooks/useGoalMetrics'
 
 type SortField = 'name' | 'retire' | 'progress' | 'fi' | 'gw' | 'total'
 type SortDir = 'asc' | 'desc'
@@ -25,7 +25,6 @@ interface GoalsMiniGridProps {
   onDeleteGoal: (goalId: number) => void
   gwGoals: GwGoal[]
   profileBirthday: string
-  inflation?: number
 }
 
 const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
@@ -40,7 +39,6 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
   onDeleteGoal,
   gwGoals,
   profileBirthday,
-  inflation = 3,
 }) => {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -72,69 +70,46 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
     [sortField],
   )
 
-  const calcGwTotalForGoal = useCallback(
-    (goal: FinancialGoal): number => {
-      const matched = gwGoals.filter(g => g.fiGoalId === goal.id)
-      if (!matched.length || !profileBirthday) return 0
-      const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
-      const created = new Date(goal.goalCreatedIn)
-      return matched.reduce((sum, gw) => {
-        const disburseYear = birthYear + gw.disburseAge
-        const monthsToDisburse = Math.max(
-          0,
-          (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
-        )
-        const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
-        const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-        const pv =
-          monthsRetToDisburse > 0
-            ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
-            : disbursementTarget
-        return sum + pv
-      }, 0)
-    },
-    [gwGoals, profileBirthday, inflation],
-  )
+  // Compute metrics once for all goals via shared hook
+  const metricsMap = useGoalMetrics(goals, gwGoals, profileBirthday)
 
   const sortedGoals = useMemo(() => {
     if (!sortField || viewMode !== 'list') return goals
-    const { fiTotal } = getLatestGoalTotals()
     const sorted = [...goals].sort((a, b) => {
       let av: number | string = 0
       let bv: number | string = 0
+      const am = metricsMap.get(a.id)!
+      const bm = metricsMap.get(b.id)!
       switch (sortField) {
         case 'name':
           av = a.goalName.toLowerCase()
           bv = b.goalName.toLowerCase()
           return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : av > bv ? -1 : av < bv ? 1 : 0
-        case 'retire': {
-          const bday = (g: FinancialGoal) => g.birthday || profileBirthday
-          av = parseInt(bday(a).split('-')[0]) + a.retirementAge
-          bv = parseInt(bday(b).split('-')[0]) + b.retirementAge
+        case 'retire':
+          av = am.retirementYear
+          bv = bm.retirementYear
           break
-        }
-        case 'progress': {
-          av = a.fiGoal > 0 ? fiTotal / a.fiGoal : 0
-          bv = b.fiGoal > 0 ? fiTotal / b.fiGoal : 0
+        case 'progress':
+          av = am.fiProgress
+          bv = bm.fiProgress
           break
-        }
         case 'fi':
-          av = a.fiGoal
-          bv = b.fiGoal
+          av = am.fiTarget
+          bv = bm.fiTarget
           break
         case 'gw':
-          av = calcGwTotalForGoal(a)
-          bv = calcGwTotalForGoal(b)
+          av = am.gwTotal
+          bv = bm.gwTotal
           break
         case 'total':
-          av = a.fiGoal + calcGwTotalForGoal(a)
-          bv = b.fiGoal + calcGwTotalForGoal(b)
+          av = am.fiTarget + am.gwTotal
+          bv = bm.fiTarget + bm.gwTotal
           break
       }
       return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number)
     })
     return sorted
-  }, [goals, sortField, sortDir, viewMode, profileBirthday, calcGwTotalForGoal])
+  }, [goals, sortField, sortDir, viewMode, metricsMap])
 
   useEffect(() => {
     if (!contextMenu) return
@@ -496,14 +471,15 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
                 </div>
               ) : (
                 <GoalMiniCard
-                  goal={goal}
+                  goalName={goal.goalName}
+                  retirementYear={metricsMap.get(goal.id)!.retirementYear}
+                  fiTarget={metricsMap.get(goal.id)!.fiTarget}
+                  fiProgress={metricsMap.get(goal.id)!.fiProgress}
+                  gwTotal={metricsMap.get(goal.id)!.gwTotal}
                   isSelected={selectedGoalIds.includes(goal.id)}
                   onClick={e => onSelectGoal(goal.id, e.metaKey || e.ctrlKey)}
                   viewMode={viewMode}
                   compareMode={compareMode}
-                  gwGoals={gwGoals}
-                  profileBirthday={profileBirthday}
-                  inflation={inflation}
                 />
               )}
             </div>

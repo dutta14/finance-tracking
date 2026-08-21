@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import GoalCompareView from './GoalCompareView'
 import { makeGoal, makeGwGoal } from '../../../test/factories'
+import { getFiTarget } from '../utils/goalCalculations'
 
 vi.mock('../../../styles/GoalCompareView.css', () => ({}))
 // #47: getLatestGoalTotals is mocked because the real function reads from
@@ -16,12 +17,12 @@ const goalA = makeGoal({
   goalName: 'Plan A',
   retirementAge: 45,
   fiGoal: 1500000,
+  goalEndYear: '2050-01',
   safeWithdrawalRate: 4,
   growth: 7,
   expenseValue: 60000,
   expenseValue2047: 120000,
   goalCreatedIn: '2024-01',
-  goalEndYear: '2050-01',
   retirement: '2035-01-15',
 })
 const goalB = makeGoal({
@@ -29,14 +30,17 @@ const goalB = makeGoal({
   goalName: 'Plan B',
   retirementAge: 50,
   fiGoal: 2000000,
+  goalEndYear: '2055-01',
   safeWithdrawalRate: 3.5,
   growth: 8,
   expenseValue: 70000,
   expenseValue2047: 130000,
   goalCreatedIn: '2023-06',
-  goalEndYear: '2055-01',
   retirement: '2040-01-15',
 })
+const profileBirthday = '1990-01-15'
+const progressText = (goal: typeof goalA, fiTotal: number) =>
+  `${Math.min(100, Math.max(0, (fiTotal / getFiTarget(goal, profileBirthday, 8)) * 100)).toFixed(1)}%`
 
 describe('GoalCompareView', () => {
   beforeEach(() => {
@@ -65,15 +69,13 @@ describe('GoalCompareView', () => {
   })
 
   it('displays progress row with correct percentage', () => {
-    render(<GoalCompareView goals={[goalA, goalB]} gwGoals={[]} profileBirthday="1990-01-15" />)
+    render(<GoalCompareView goals={[goalA, goalB]} gwGoals={[]} profileBirthday={profileBirthday} />)
 
-    // fiTotal=600000, goalA.fiGoal=1500000 → 40.0%, goalB.fiGoal=2000000 → 30.0%
     expect(screen.getByText('Progress')).toBeInTheDocument()
-    // #46: Use header-based cell lookup instead of hardcoded indices
     const progressRow = screen.getByText('Progress').closest('tr')!
     const progressCells = within(progressRow).getAllByRole('cell')
-    expect(progressCells[0]).toHaveTextContent('40.0%')
-    expect(progressCells[1]).toHaveTextContent('30.0%')
+    expect(progressCells[0]).toHaveTextContent(progressText(goalA, 600000))
+    expect(progressCells[1]).toHaveTextContent(progressText(goalB, 600000))
   })
 
   it('renders a single goal comparison correctly', () => {

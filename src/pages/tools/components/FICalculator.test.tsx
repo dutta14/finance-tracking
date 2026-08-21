@@ -2,7 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FICalculator from './FICalculator'
-import { appStorage } from '../../../utils/appStorage'
+import { useProfile } from '../../../hooks/useProfile'
+
+/* ─── Hoisted mock refs ─── */
+
+const { mockReadJSON, mockWriteJSON, stableFileStore } = vi.hoisted(() => {
+  const mockReadJSON = vi.fn((_p: string, fb: unknown) => Promise.resolve(fb))
+  const mockWriteJSON = vi.fn(() => Promise.resolve())
+  return {
+    mockReadJSON,
+    mockWriteJSON,
+    stableFileStore: {
+      readJSON: mockReadJSON,
+      writeJSON: mockWriteJSON,
+      subscribe: vi.fn(() => () => {}),
+    },
+  }
+})
 
 /* ─── Mock dependencies ─── */
 
@@ -19,35 +35,48 @@ vi.mock('../../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
 }))
 
 vi.mock('../../budget/utils/csvParser', () => ({
   parseCSV: vi.fn(() => []),
 }))
 
-vi.mock('../../../utils/appStorage', () => ({
-  appStorage: {
-    getJSON: vi.fn((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations') return []
-      if (key === 'user-profile') return {}
-      return fallback ?? {}
-    }),
-    setJSON: vi.fn(),
-  },
+vi.mock('../../../hooks/useProfile', () => ({
+  useProfile: vi.fn(() => ({
+    profile: { name: 'Primary', avatarDataUrl: '', birthday: '', partner: null },
+    updateProfile: vi.fn(),
+  })),
+}))
+
+vi.mock('../../../contexts/FileStoreContext', () => ({
+  useFileStore: vi.fn(() => ({
+    fileStore: stableFileStore,
+    isReady: true,
+    folderName: 'test',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: vi.fn(),
+    exitDemo: vi.fn(),
+  })),
 }))
 
 vi.mock('../../../styles/FICalculator.css', () => ({}))
 
 beforeEach(() => {
-  localStorage.clear()
   vi.clearAllMocks()
+  mockReadJSON.mockImplementation((_p: string, fb: unknown) => Promise.resolve(fb))
+  mockWriteJSON.mockResolvedValue(undefined)
   mockUseData.mockReturnValue({
     accounts: [],
     balances: [],
     allMonths: [],
     setAccounts: vi.fn(),
     setBalances: vi.fn(),
+  })
+  vi.mocked(useProfile).mockReturnValue({
+    profile: { name: 'Primary', avatarDataUrl: '', birthday: '', partner: null },
+    updateProfile: vi.fn(),
   })
 })
 
@@ -414,10 +443,14 @@ describe('FICalculator', () => {
   })
 
   it('renders partner 401(k) stepper when profile has partner birth year', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-06-15' } }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
+      updateProfile: vi.fn(),
     })
 
     renderCalc()
@@ -495,10 +528,14 @@ describe('FICalculator', () => {
   })
 
   it('shows partner 401k breakdown when fiRetirementPartner > 0', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-06-15' } }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
+      updateProfile: vi.fn(),
     })
     mockUseData.mockReturnValue({
       accounts: [
@@ -535,37 +572,35 @@ describe('FICalculator', () => {
     const saveBtn = screen.getByRole('button', { name: 'Save' })
     await user.click(saveBtn)
 
-    expect(appStorage.setJSON).toHaveBeenCalledWith(
-      'fi-simulations',
+    expect(mockWriteJSON).toHaveBeenCalledWith(
+      'fi-simulations.json',
       expect.arrayContaining([expect.objectContaining({ name: 'My Sim' })]),
     )
   })
 
   it('loads a saved simulation', async () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations')
-        return [
-          {
-            name: 'Saved Sim',
-            annualExpense: 80000,
-            inflationRate: 3,
-            growthRate: 7,
-            lastYear: 2070,
-            retireYear: 2040,
-            primary401kYear: 2050,
-            partner401kYear: 2050,
-            includeGwLiquid: false,
-          },
-        ]
-      if (key === 'user-profile') return {}
-      return fallback ?? {}
-    })
+    const sims = [
+      {
+        name: 'Saved Sim',
+        annualExpense: 80000,
+        inflationRate: 3,
+        growthRate: 7,
+        lastYear: 2070,
+        retireYear: 2040,
+        primary401kYear: 2050,
+        partner401kYear: 2050,
+        includeGwLiquid: false,
+      },
+    ]
+    mockReadJSON.mockImplementation((key: string, fb: unknown) =>
+      key === 'fi-simulations.json' ? Promise.resolve(sims) : Promise.resolve(fb),
+    )
 
     const user = userEvent.setup()
     renderCalc()
 
-    // The saved sim should appear as a button
-    const simBtn = screen.getByText('Saved Sim')
+    // Wait for sims to load
+    const simBtn = await screen.findByText('Saved Sim')
     await user.click(simBtn)
 
     // Expense should update to saved value
@@ -573,31 +608,29 @@ describe('FICalculator', () => {
   })
 
   it('deletes a saved simulation via chip × button', async () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations')
-        return [
-          {
-            name: 'ToDelete',
-            annualExpense: 60000,
-            inflationRate: 2.5,
-            growthRate: 7,
-            lastYear: 2065,
-            retireYear: 2040,
-            primary401kYear: 2050,
-            partner401kYear: 2050,
-            includeGwLiquid: false,
-          },
-        ]
-      if (key === 'user-profile') return {}
-      return fallback ?? {}
-    })
+    const sims = [
+      {
+        name: 'ToDelete',
+        annualExpense: 60000,
+        inflationRate: 2.5,
+        growthRate: 7,
+        lastYear: 2065,
+        retireYear: 2040,
+        primary401kYear: 2050,
+        partner401kYear: 2050,
+        includeGwLiquid: false,
+      },
+    ]
+    mockReadJSON.mockImplementation((key: string, fb: unknown) =>
+      key === 'fi-simulations.json' ? Promise.resolve(sims) : Promise.resolve(fb),
+    )
 
     const user = userEvent.setup()
     renderCalc()
 
-    await user.click(screen.getByRole('button', { name: /delete todelete/i }))
+    await user.click(await screen.findByRole('button', { name: /delete todelete/i }))
 
-    expect(appStorage.setJSON).toHaveBeenCalledWith('fi-simulations', [])
+    expect(mockWriteJSON).toHaveBeenCalledWith('fi-simulations.json', [])
   })
 
   /* ── Expense from budget ──────────────────────────────────────── */
@@ -613,7 +646,7 @@ describe('FICalculator', () => {
       csvs[key] = { csv: 'test', month: key, uploadedAt: '' }
     }
 
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs,
       categoryGroups: [],
       configs: {},
@@ -646,31 +679,29 @@ describe('FICalculator', () => {
     }
 
     it('falls back to thisYear+60 when neither birth year is present', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return {}
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
-      })
       renderCalc()
       const thisYear = new Date().getFullYear()
       expect(readPlanUntilYear()).toBe(thisYear + 60)
     })
 
     it('uses primary+100 when only primary birthday is set', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return { birthday: '1990-05-15' }
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
+      vi.mocked(useProfile).mockReturnValue({
+        profile: { name: '', avatarDataUrl: '', birthday: '1990-05-15', partner: null },
+        updateProfile: vi.fn(),
       })
       renderCalc()
       expect(readPlanUntilYear()).toBe(2090)
     })
 
     it('uses partner+100 (NOT primary+100) when partner is younger — the #163 case', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1995-06-15' } }
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
+      vi.mocked(useProfile).mockReturnValue({
+        profile: {
+          name: '',
+          avatarDataUrl: '',
+          birthday: '1990-01-01',
+          partner: { name: '', avatarDataUrl: '', birthday: '1995-06-15' },
+        },
+        updateProfile: vi.fn(),
       })
       renderCalc()
       expect(readPlanUntilYear()).toBe(2095)
@@ -678,10 +709,14 @@ describe('FICalculator', () => {
     })
 
     it('uses primary+100 when partner is older than primary', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1985-06-15' } }
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
+      vi.mocked(useProfile).mockReturnValue({
+        profile: {
+          name: '',
+          avatarDataUrl: '',
+          birthday: '1990-01-01',
+          partner: { name: '', avatarDataUrl: '', birthday: '1985-06-15' },
+        },
+        updateProfile: vi.fn(),
       })
       renderCalc()
       expect(readPlanUntilYear()).toBe(2090)
@@ -691,10 +726,14 @@ describe('FICalculator', () => {
   /* ── Partner 401k stepper decrement ───────────────────────────── */
 
   it('increments partner 401k year when plus stepper is clicked', async () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-06-15' } }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
+      updateProfile: vi.fn(),
     })
 
     const user = userEvent.setup()
@@ -712,13 +751,9 @@ describe('FICalculator', () => {
   /* ── getBirthYear edge cases (lines 74-81) ──────────────────── */
 
   it('parses birthday from ISO date string when no YYYY pattern found (line 80)', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      // Use a date format that doesn't match /(\d{4})/ regex directly
-      // Actually any ISO date contains 4 digits so the regex match branch (line 76-77) fires
-      // Test with a plain year string
-      if (key === 'user-profile') return { birthday: '1985' }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: { name: '', avatarDataUrl: '', birthday: '1985', partner: null },
+      updateProfile: vi.fn(),
     })
     renderCalc()
     // With birth year 1985, primary 401k earliest = 1985+60 = 2045
@@ -728,11 +763,6 @@ describe('FICalculator', () => {
   })
 
   it('returns null birth year for empty birthday string (line 75)', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '' }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
-    })
     renderCalc()
     // With null birth year, primary401kEarliestYear = thisYear + 30
     const thisYear = new Date().getFullYear()
@@ -793,11 +823,6 @@ describe('FICalculator', () => {
   /* ── defaultLastYear with no birth years (line 181) ──────── */
 
   it('defaults plan-until to thisYear+60 when no birth years are available', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return {} // no birthday at all
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
-    })
     renderCalc()
     const thisYear = new Date().getFullYear()
     const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
@@ -809,10 +834,6 @@ describe('FICalculator', () => {
 
   it('blurs the annual expense input on Enter key', async () => {
     const user = userEvent.setup()
-    // Reset mocks that prior tests may have set
-    vi.mocked(appStorage.getJSON).mockImplementation((_key: string, fallback: unknown) => fallback ?? {})
-    const { loadBudgetStore } = await import('../../budget/utils/budgetStorage')
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
     renderCalc()
     const input = screen.getByDisplayValue('60,000')
     await user.click(input)
@@ -827,7 +848,7 @@ describe('FICalculator', () => {
     // We need getLastYearExpense to return > 0
     const { loadBudgetStore } = await import('../../budget/utils/budgetStorage')
     const { parseCSV } = await import('../../budget/utils/csvParser')
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-01': { month: '2024-01', csv: 'data', uploadedAt: '' } },
       categoryGroups: [],
       configs: {},
@@ -849,18 +870,9 @@ describe('FICalculator', () => {
 
   it('applies negative class to year-by-year rows with netWorth < 0', async () => {
     const user = userEvent.setup()
-    // Set up scenario where net worth goes negative (high expenses, low savings)
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01' }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
-    })
-    mockUseData.mockReturnValue({
-      accounts: [],
-      balances: [],
-      allMonths: [],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
+    vi.mocked(useProfile).mockReturnValue({
+      profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: null },
+      updateProfile: vi.fn(),
     })
     renderCalc()
     const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
@@ -875,7 +887,7 @@ describe('FICalculator', () => {
   it('excludes transactions from removed category group', async () => {
     const { loadBudgetStore } = await import('../../budget/utils/budgetStorage')
     const { parseCSV } = await import('../../budget/utils/csvParser')
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-06': { month: '2024-06', csv: 'data', uploadedAt: '' } },
       categoryGroups: [{ id: 'removed', name: 'Removed', categories: ['Excluded'] }],
       configs: {},
@@ -904,15 +916,22 @@ describe('FICalculator', () => {
       partner401kYear: 2062,
       includeGwLiquid: true,
     }
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations') return [sim]
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-01-01' } }
-      return fallback ?? {}
+    mockReadJSON.mockImplementation((key: string, fb: unknown) =>
+      key === 'fi-simulations.json' ? Promise.resolve([sim]) : Promise.resolve(fb),
+    )
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-01-01' },
+      },
+      updateProfile: vi.fn(),
     })
     const user = userEvent.setup()
     renderCalc()
     // Click on the simulation chip to load it
-    await user.click(screen.getByText('Loaded Sim'))
+    await user.click(await screen.findByText('Loaded Sim'))
     // Verify expense was applied
     expect(screen.getByDisplayValue('80,000')).toBeInTheDocument()
     // Verify inflation was applied

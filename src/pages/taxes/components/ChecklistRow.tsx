@@ -27,19 +27,13 @@ const ChecklistRow: FC<ChecklistRowProps> = ({
   partnerName: _partnerName,
   primaryAvatar: _primaryAvatar,
   partnerAvatar: _partnerAvatar,
-  accounts,
+  accounts: _accounts,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.label)
+  const [menuOpen, setMenuOpen] = useState(false)
   const hasFiles = item.files.length > 0
-  const linkedAccts =
-    item.accountIds.length > 0
-      ? item.accountIds
-          .map(id => accounts.find(a => a.id === id)?.name)
-          .filter(Boolean)
-          .join(', ')
-      : null
 
   const commitRename = () => {
     const trimmed = draft.trim()
@@ -75,29 +69,16 @@ const ChecklistRow: FC<ChecklistRowProps> = ({
               autoFocus
             />
           ) : (
-            <>
-              <span
-                className="tax-item-label-text"
-                onDoubleClick={() => {
-                  setDraft(item.label)
-                  setEditing(true)
-                }}
-              >
-                {item.label}
-              </span>
-              <button
-                className="tax-rename-btn"
-                onClick={() => {
-                  setDraft(item.label)
-                  setEditing(true)
-                }}
-                title="Rename"
-              >
-                ✎
-              </button>
-            </>
+            <span
+              className="tax-item-label-text"
+              onDoubleClick={() => {
+                setDraft(item.label)
+                setEditing(true)
+              }}
+            >
+              {item.label}
+            </span>
           )}
-          {!editing && linkedAccts && <span className="tax-item-acct">{linkedAccts}</span>}
         </div>
         {item.files.length > 0 && (
           <div className="tax-item-files">
@@ -128,13 +109,38 @@ const ChecklistRow: FC<ChecklistRowProps> = ({
             }
           }}
         />
-        <button
-          className="tax-btn tax-btn--sm tax-btn--muted"
-          onClick={() => onRemoveItem(item.id)}
-          title="Remove item"
-        >
-          ×
-        </button>
+        <div className="tax-overflow-menu">
+          <button
+            className="tax-btn tax-btn--sm tax-btn--muted"
+            onClick={() => setMenuOpen(o => !o)}
+            title="More actions"
+          >
+            ⋯
+          </button>
+          {menuOpen && (
+            <div className="tax-overflow-dropdown">
+              <button
+                className="tax-overflow-item"
+                onClick={() => {
+                  setMenuOpen(false)
+                  setDraft(item.label)
+                  setEditing(true)
+                }}
+              >
+                Rename
+              </button>
+              <button
+                className="tax-overflow-item tax-overflow-item--danger"
+                onClick={() => {
+                  setMenuOpen(false)
+                  onRemoveItem(item.id)
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

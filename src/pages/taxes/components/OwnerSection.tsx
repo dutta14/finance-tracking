@@ -79,16 +79,16 @@ const OwnerSection: FC<OwnerSectionProps> = ({
         />
       ))}
       <div className="tax-section-actions">
-        <button className="tax-btn tax-btn--outline" onClick={() => onAddItem(owner)}>
+        <button className="action-btn" onClick={() => onAddItem(owner)}>
           + Add Item
         </button>
         {showPaystubBtn && (
-          <button className="tax-btn tax-btn--outline" onClick={() => onAddPaystub(owner)}>
+          <button className="action-btn" onClick={() => onAddPaystub(owner)}>
             + Add Paystub
           </button>
         )}
         {hasSuggestions && (
-          <button className="tax-btn tax-btn--outline" onClick={() => onSuggestAccounts(owner)}>
+          <button className="action-btn" onClick={() => onSuggestAccounts(owner)}>
             + From Accounts
           </button>
         )}

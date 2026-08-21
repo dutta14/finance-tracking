@@ -51,8 +51,8 @@
 ### Preserve tool data in backups
 - **Start:** Use saved FI scenarios or edit Growth Tracker override values.
 - **User intent:** Keep tool data included with the rest of the app's backup and restore flows.
-- **Steps:** Save scenarios or edits, then use export, GitHub sync, or restore flows elsewhere in the app.
-- **End state:** Tool-specific saved data participates in the app's broader backup model.
+- **Steps:** Save scenarios or edits. Tool data is written to the data folder (e.g. `fi-simulations.json`, `savings-tracker-overrides.json`) and backed up as part of the ordinary file folder.
+- **End state:** Tool-specific saved data is in plain files alongside the rest of the app's data.
 - **Notes:** The PDF → CSV tool itself does not keep its own saved workspace.
 
 ## Exhaustive feature inventory

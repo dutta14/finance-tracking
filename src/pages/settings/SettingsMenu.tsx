@@ -1,14 +1,5 @@
 import { FC, useState, useEffect } from 'react'
 import { Profile } from '../../hooks/useProfile'
-import {
-  GitHubSyncConfig,
-  SyncStatus,
-  SyncDomain,
-  SyncProgress,
-  CommitEntry,
-  ConnectionTestResult,
-  RestoreResult,
-} from '../../hooks/useGitHubSync'
 import SettingsModal from './SettingsModal'
 import type { SettingsSection } from './types'
 
@@ -17,33 +8,8 @@ interface SettingsMenuProps {
   onToggleDarkMode: () => void
   profile?: Profile
   onUpdateProfile?: (updates: Partial<Profile>) => void
-  hasPendingChanges?: boolean
-  ghConfig?: GitHubSyncConfig
-  ghIsConfigured?: boolean
-  ghSyncStatus?: SyncStatus
-  ghLastSyncAt?: string | null
-  ghLastError?: string | null
-  ghHistory?: CommitEntry[]
-  ghHasStoredToken?: boolean
-  ghTokenUnlocked?: boolean
-  onGhUpdateConfig?: (updates: Partial<GitHubSyncConfig>) => void
-  onGhSaveEncryptedToken?: (token: string, passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhUnlockToken?: (passphrase: string) => Promise<{ ok: boolean; message: string }>
-  onGhLockToken?: () => void
-  onGhSyncNow?: (data: object, message?: string, forceFull?: boolean) => Promise<void>
-  onGhFetchHistory?: () => Promise<void>
-  onGhTestConnection?: () => Promise<ConnectionTestResult>
-  onGhRestoreLatest?: () => Promise<RestoreResult>
-  onGhRestoreFromCommit?: (commitSha: string) => Promise<RestoreResult>
-  ghData?: object
-  onGhApplyRestore?: (data: unknown) => Promise<void>
-  ghSyncProgress?: SyncProgress | null
-  ghDirtyFlags?: Record<SyncDomain, boolean>
-  onFactoryReset?: () => void
   allowCsvImport?: boolean
   onToggleAllowCsvImport?: () => void
-  onExport?: () => void
-  onImport?: (file: File) => void
   externalOpen?: boolean
   externalSection?: SettingsSection
   onExternalClose?: () => void
@@ -95,33 +61,8 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
           onToggleDarkMode={onToggleDarkMode}
           profile={profile}
           onUpdateProfile={onUpdateProfile}
-          hasPendingChanges={rest.hasPendingChanges ?? false}
-          ghConfig={rest.ghConfig}
-          ghIsConfigured={rest.ghIsConfigured}
-          ghSyncStatus={rest.ghSyncStatus}
-          ghLastSyncAt={rest.ghLastSyncAt}
-          ghLastError={rest.ghLastError}
-          ghHistory={rest.ghHistory}
-          ghHasStoredToken={rest.ghHasStoredToken}
-          ghTokenUnlocked={rest.ghTokenUnlocked}
-          onGhUpdateConfig={rest.onGhUpdateConfig}
-          onGhSaveEncryptedToken={rest.onGhSaveEncryptedToken}
-          onGhUnlockToken={rest.onGhUnlockToken}
-          onGhLockToken={rest.onGhLockToken}
-          onGhSyncNow={rest.onGhSyncNow}
-          onGhFetchHistory={rest.onGhFetchHistory}
-          onGhTestConnection={rest.onGhTestConnection}
-          onGhRestoreLatest={rest.onGhRestoreLatest}
-          onGhRestoreFromCommit={rest.onGhRestoreFromCommit}
-          ghData={rest.ghData}
-          onGhApplyRestore={rest.onGhApplyRestore}
-          ghSyncProgress={rest.ghSyncProgress}
-          ghDirtyFlags={rest.ghDirtyFlags}
-          onFactoryReset={rest.onFactoryReset}
           allowCsvImport={rest.allowCsvImport}
           onToggleAllowCsvImport={rest.onToggleAllowCsvImport}
-          onExport={rest.onExport}
-          onImport={rest.onImport}
           initialSection={initialSection}
           onClose={handleClose}
         />

@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════════════════
+   Folder Picker — first-run data folder selection
+   ═══════════════════════════════════════════════════ */
+
+.folder-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: 1.5rem;
+}
+
+.folder-picker-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.folder-picker-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.folder-picker-icon {
+  color: var(--accent);
+}
+
+.folder-picker-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.folder-picker-copy {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.folder-picker-button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.folder-picker-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.folder-picker-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.folder-picker-button:focus-visible,
+.folder-picker-secondary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.folder-picker-secondary {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.folder-picker-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-danger, #dc2626);
+}

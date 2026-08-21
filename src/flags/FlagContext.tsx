@@ -1,5 +1,4 @@
 import { createContext, useContext, FC, ReactNode, useState, useCallback, useEffect, useRef, useMemo } from 'react'
-import { useGitHubSyncContext } from '../contexts/GitHubSyncContext'
 import type { FlagDefinition, FlagType } from './flagSystem'
 import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/storage'
 
@@ -108,10 +107,16 @@ function loadOverrides(): Record<string, unknown> {
 
 interface FlagProviderProps {
   children: ReactNode
+  /**
+   * Optional GitHub token used to read/write the rollout config as an admin.
+   * The app itself no longer stores one, so flags normally resolve from the
+   * public endpoint.
+   */
+  adminToken?: string | null
 }
 
-export const FlagProvider: FC<FlagProviderProps> = ({ children }) => {
-  const { activeToken } = useGitHubSyncContext()
+export const FlagProvider: FC<FlagProviderProps> = ({ children, adminToken = null }) => {
+  const activeToken = adminToken
 
   const clientIdRef = useRef(getOrCreateClientId())
   const [overrides, setOverrides] = useState<Record<string, unknown>>(loadOverrides)

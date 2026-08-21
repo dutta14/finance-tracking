@@ -178,7 +178,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
     const ageBoundaryDate = new Date(by + boundary, bm - 1, 1)
     const retirementYear = new Date(by + goal.retirementAge, bm - 1, 1).getFullYear()
     const monthlyExpenseToday =
-      goal.monthlyExpense2047 / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
+      goal.monthlyExpenseRetirement / Math.pow(1 + inflationRate / 100, retirementYear - now.getFullYear())
 
     // What expense will be at target FIRE date
     const fiYear = forcedFireDate.getFullYear()
@@ -448,16 +448,16 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
             ? `FI Analysis — ${scenario === 'projected' ? 'Projected' : 'Planned'}`
             : `GW Analysis — ${scenario === 'projected' ? 'Projected' : 'Planned'}`}
         </h3>
-        <div className="projection-interval-toggle" role="group" aria-label="Analysis type">
+        <div className="tab-bar" role="group" aria-label="Analysis type">
           <button
-            className={`projection-interval-btn${analysisType === 'fi' ? ' active' : ''}`}
+            className={`tab-btn tab-btn--sm${analysisType === 'fi' ? ' active' : ''}`}
             onClick={() => setAnalysisType('fi')}
             aria-pressed={analysisType === 'fi'}
           >
             FI
           </button>
           <button
-            className={`projection-interval-btn${analysisType === 'gw' ? ' active' : ''}`}
+            className={`tab-btn tab-btn--sm${analysisType === 'gw' ? ' active' : ''}`}
             onClick={() => setAnalysisType('gw')}
             aria-pressed={analysisType === 'gw'}
           >
@@ -473,16 +473,16 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
           ) : (
             <>
               <div className="projection-controls" role="toolbar" aria-label="Projection controls">
-                <div className="projection-scenario-toggle" role="group" aria-label="Scenario selection">
+                <div className="tab-bar" role="group" aria-label="Scenario selection">
                   <button
-                    className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
+                    className={`tab-btn tab-btn--sm${scenario === 'planned' ? ' active' : ''}`}
                     onClick={() => setScenario('planned')}
                     aria-pressed={scenario === 'planned'}
                   >
                     Planned ({dollars(showYearly ? plannedMonthly * 12 : plannedMonthly)}/{showYearly ? 'yr' : 'mo'})
                   </button>
                   <button
-                    className={`projection-interval-btn${scenario === 'projected' ? ' active' : ''}`}
+                    className={`tab-btn tab-btn--sm${scenario === 'projected' ? ' active' : ''}`}
                     onClick={() => setScenario('projected')}
                     aria-pressed={scenario === 'projected'}
                   >
@@ -495,11 +495,11 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                     /{showYearly ? 'yr' : 'mo'})
                   </button>
                 </div>
-                <div className="projection-interval-toggle" role="group" aria-label="Time interval">
+                <div className="tab-bar" role="group" aria-label="Time interval">
                   {INTERVAL_LABELS.map(opt => (
                     <button
                       key={opt.value}
-                      className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
+                      className={`tab-btn tab-btn--sm${interval === opt.value ? ' active' : ''}`}
                       onClick={() => setInterval(opt.value)}
                       aria-pressed={interval === opt.value}
                     >
@@ -507,16 +507,16 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                     </button>
                   ))}
                 </div>
-                <div className="projection-interval-toggle" role="group" aria-label="View mode">
+                <div className="tab-bar" role="group" aria-label="View mode">
                   <button
-                    className={`projection-interval-btn${viewMode === 'chart' ? ' active' : ''}`}
+                    className={`tab-btn tab-btn--sm${viewMode === 'chart' ? ' active' : ''}`}
                     onClick={() => setViewMode('chart')}
                     aria-pressed={viewMode === 'chart'}
                   >
                     Chart
                   </button>
                   <button
-                    className={`projection-interval-btn${viewMode === 'table' ? ' active' : ''}`}
+                    className={`tab-btn tab-btn--sm${viewMode === 'table' ? ' active' : ''}`}
                     onClick={() => setViewMode('table')}
                     aria-pressed={viewMode === 'table'}
                   >
@@ -543,9 +543,9 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
         ) : (
           <>
             <div className="projection-controls" role="toolbar" aria-label="GW Projection controls">
-              <div className="projection-scenario-toggle" role="group" aria-label="Scenario selection">
+              <div className="tab-bar" role="group" aria-label="Scenario selection">
                 <button
-                  className={`projection-interval-btn${scenario === 'planned' ? ' active' : ''}`}
+                  className={`tab-btn tab-btn--sm${scenario === 'planned' ? ' active' : ''}`}
                   onClick={() => setScenario('planned')}
                   aria-pressed={scenario === 'planned'}
                 >
@@ -553,7 +553,7 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                   {showYearly ? 'yr' : 'mo'})
                 </button>
                 <button
-                  className={`projection-interval-btn${scenario === 'projected' ? ' active' : ''}`}
+                  className={`tab-btn tab-btn--sm${scenario === 'projected' ? ' active' : ''}`}
                   onClick={() => setScenario('projected')}
                   aria-pressed={scenario === 'projected'}
                 >
@@ -562,11 +562,11 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                   {showYearly ? 'yr' : 'mo'})
                 </button>
               </div>
-              <div className="projection-interval-toggle" role="group" aria-label="Time interval">
+              <div className="tab-bar" role="group" aria-label="Time interval">
                 {INTERVAL_LABELS.map(opt => (
                   <button
                     key={opt.value}
-                    className={`projection-interval-btn${interval === opt.value ? ' active' : ''}`}
+                    className={`tab-btn tab-btn--sm${interval === opt.value ? ' active' : ''}`}
                     onClick={() => setInterval(opt.value)}
                     aria-pressed={interval === opt.value}
                   >
@@ -574,16 +574,16 @@ const GoalDiveDeep: FC<GoalDiveDeepProps> = ({
                   </button>
                 ))}
               </div>
-              <div className="projection-interval-toggle" role="group" aria-label="View mode">
+              <div className="tab-bar" role="group" aria-label="View mode">
                 <button
-                  className={`projection-interval-btn${viewMode === 'chart' ? ' active' : ''}`}
+                  className={`tab-btn tab-btn--sm${viewMode === 'chart' ? ' active' : ''}`}
                   onClick={() => setViewMode('chart')}
                   aria-pressed={viewMode === 'chart'}
                 >
                   Chart
                 </button>
                 <button
-                  className={`projection-interval-btn${viewMode === 'table' ? ' active' : ''}`}
+                  className={`tab-btn tab-btn--sm${viewMode === 'table' ? ' active' : ''}`}
                   onClick={() => setViewMode('table')}
                   aria-pressed={viewMode === 'table'}
                 >

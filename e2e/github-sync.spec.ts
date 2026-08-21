@@ -172,7 +172,7 @@ test.describe('GitHub Sync — Refactor Regression (#180)', () => {
     await expect(dialog.locator('.ghsync-status-dot--success')).toBeVisible({ timeout: 10_000 })
 
     // Step 5: History tab → Restore Latest
-    await dialog.locator('.ghsync-tab-btn').filter({ hasText: 'History' }).click()
+    await dialog.locator('.tab-btn').filter({ hasText: 'History' }).click()
     const restoreBtn = dialog.getByRole('button', { name: 'Restore Latest' })
     await expect(restoreBtn).toBeVisible()
     await restoreBtn.click()
@@ -251,7 +251,7 @@ test.describe('GitHub Sync — Refactor Regression (#180)', () => {
     await configureSync(page)
 
     // History tab
-    await dialog.locator('.ghsync-tab-btn').filter({ hasText: 'History' }).click()
+    await dialog.locator('.tab-btn').filter({ hasText: 'History' }).click()
 
     // Mocked commit visible
     await expect(dialog.locator('.ghsync-commit-message')).toContainText('Synced user data on Jan 1, 2025')

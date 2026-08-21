@@ -27,7 +27,7 @@ const baseGoal = makeGoal({
   goalEndYear: '2080-01-01',
   retirementAge: 45,
   growth: 7,
-  monthlyExpense2047: 10000,
+  monthlyExpenseRetirement: 10000,
   fiGoal: 3_000_000,
 })
 
@@ -139,7 +139,7 @@ describe('GoalDiveDeep', () => {
   })
 
   it('remaining balance decreases during drawdown with low growth', () => {
-    const depletingGoal = makeGoal({ ...baseGoal, growth: 1, monthlyExpense2047: 15000, fiGoal: 1_000_000 })
+    const depletingGoal = makeGoal({ ...baseGoal, growth: 1, monthlyExpenseRetirement: 15000, fiGoal: 1_000_000 })
     renderDiveDeep({ goal: depletingGoal, currentBalance: 1_500_000, monthlyContribution: 1000 })
     fireEvent.click(screen.getByRole('button', { name: 'Table' }))
     const table = screen.getByRole('table')

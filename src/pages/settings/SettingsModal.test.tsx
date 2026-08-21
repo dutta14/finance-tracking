@@ -22,8 +22,8 @@ vi.mock('./components/ProfilePane', () => ({
   default: () => <div data-testid="profile-pane">Profile</div>,
 }))
 
-vi.mock('./components/GitHubSyncPane', () => ({
-  default: () => <div data-testid="github-pane">GitHub</div>,
+vi.mock('./components/DataFolderPane', () => ({
+  default: () => <div data-testid="folder-pane">Data Folder</div>,
 }))
 
 vi.mock('./components/AppearancePane', () => ({
@@ -42,10 +42,6 @@ vi.mock('./components/FlagAdminPane', () => ({
   default: () => <div data-testid="flag-admin-pane">FlagAdmin</div>,
 }))
 
-vi.mock('./components/SecurityPane', () => ({
-  default: () => <div data-testid="security-pane">Security</div>,
-}))
-
 vi.mock('../../contexts/SettingsContext', () => ({
   useSettings: () => ({ accentTheme: 'blue', setAccentTheme: vi.fn() }),
 }))
@@ -59,7 +55,6 @@ const defaultProps = {
   onToggleDarkMode: vi.fn(),
   profile: { name: 'Test User', avatarDataUrl: '', birthday: '' },
   onUpdateProfile: vi.fn(),
-  hasPendingChanges: false,
   onClose: vi.fn(),
 }
 
@@ -102,11 +97,11 @@ describe('SettingsModal tab navigation', () => {
     expect(screen.getByTestId('profile-pane')).toBeInTheDocument()
   })
 
-  it('switches to GitHub Sync pane when tab is clicked', async () => {
+  it('switches to Data Folder pane when tab is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('tab', { name: /github sync/i }))
-    expect(screen.getByTestId('github-pane')).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /data folder/i }))
+    expect(screen.getByTestId('folder-pane')).toBeInTheDocument()
     expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
   })
 
@@ -209,27 +204,21 @@ describe('SettingsModal structure', () => {
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 
-  it('renders all 6 nav tabs when not admin', () => {
+  it('renders all 5 nav tabs when not admin', () => {
     render(<SettingsModal {...defaultProps} />)
     expect(screen.getByRole('tab', { name: /profile/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /github sync/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /data folder/i })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /appearance/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /advanced/i })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /labs/i })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /security/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /github sync/i })).not.toBeInTheDocument()
   })
 })
 
 /* ── Tab navigation (coverage for uncovered onClick callbacks) ─── */
 
 describe('SettingsModal tab navigation coverage', () => {
-  it('switches to Security pane when Security tab is clicked', async () => {
-    const user = userEvent.setup()
-    render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('tab', { name: /security/i }))
-    expect(screen.getByTestId('security-pane')).toBeInTheDocument()
-  })
-
   it('switches back to Profile pane after navigating away', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
@@ -268,11 +257,11 @@ describe('SettingsModal tab navigation coverage', () => {
     expect(screen.getByTestId('advanced-pane')).toBeInTheDocument()
   })
 
-  it('switches to Security pane', async () => {
+  it('switches to Data Folder pane', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)
-    await user.click(screen.getByRole('tab', { name: /security/i }))
-    expect(screen.getByTestId('security-pane')).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /data folder/i }))
+    expect(screen.getByTestId('folder-pane')).toBeInTheDocument()
   })
 
   it('switches to Labs pane', async () => {

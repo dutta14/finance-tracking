@@ -15,9 +15,9 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-const mockBuildDriveTree = vi.fn<() => DriveFolder>()
+const mockBuildDriveTree = vi.fn<() => Promise<DriveFolder>>()
 vi.mock('./buildBudgetTree', () => ({
-  buildDriveTree: () => mockBuildDriveTree(),
+  buildDriveTree: (...args: Parameters<typeof mockBuildDriveTree>) => mockBuildDriveTree(...args),
 }))
 
 vi.mock('./CSVViewer', () => ({
@@ -52,13 +52,21 @@ vi.mock('./useDriveUpload', () => ({
 }))
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {} })),
-  saveBudgetStore: vi.fn(),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {} })),
+  saveBudgetStore: vi.fn(() => Promise.resolve()),
   renameBudgetMonth: vi.fn(),
 }))
 
 vi.mock('../budget/utils/csvParser', () => ({
   formatMonthKey: vi.fn((k: string) => k),
+}))
+
+vi.mock('../../contexts/DataContext', () => ({
+  useData: vi.fn(() => ({ accounts: [], balances: [], allMonths: [], setAccounts: vi.fn(), setBalances: vi.fn() })),
+}))
+
+vi.mock('../../hooks/useProfile', () => ({
+  useProfile: vi.fn(() => ({ profile: {}, updateProfile: vi.fn() })),
 }))
 
 /* ─── Helpers ─── */
@@ -165,8 +173,7 @@ function makeTreeWithMetaFiles(): DriveFolder {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  localStorage.clear()
-  mockBuildDriveTree.mockReturnValue(makeTreeWithFiles())
+  mockBuildDriveTree.mockResolvedValue(makeTreeWithFiles())
 })
 
 function renderDrive(initialEntry = '/drive') {
@@ -199,14 +206,14 @@ describe('Drive — basic rendering', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — folder listing', () => {
-  it('renders subfolders at root', () => {
+  it('renders subfolders at root', async () => {
     renderDrive()
-    expect(screen.getByText('Budget')).toBeInTheDocument()
+    expect(await screen.findByText('Budget')).toBeInTheDocument()
   })
 
   it('navigates into a folder on click', async () => {
     renderDrive()
-    await userEvent.click(screen.getByText('Budget'))
+    await userEvent.click(await screen.findByText('Budget'))
     expect(mockNavigate).toHaveBeenCalledWith('/drive/budget')
   })
 })
@@ -216,15 +223,15 @@ describe('Drive — folder listing', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — file listing', () => {
-  it('renders files when navigated into a year folder', () => {
+  it('renders files when navigated into a year folder', async () => {
     renderDrive('/drive/budget/2025')
-    expect(screen.getByText('January 2025')).toBeInTheDocument()
+    expect(await screen.findByText('January 2025')).toBeInTheDocument()
     expect(screen.getByText('February 2025')).toBeInTheDocument()
   })
 
   it('navigates to a file on click', async () => {
     renderDrive('/drive/budget/2025')
-    await userEvent.click(screen.getByText('January 2025'))
+    await userEvent.click(await screen.findByText('January 2025'))
     expect(mockNavigate).toHaveBeenCalledWith('/drive/budget/2025/2025-01')
   })
 })
@@ -234,10 +241,10 @@ describe('Drive — file listing', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — CSV viewer', () => {
-  it('shows CSV viewer when navigated to a CSV file', () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithCsvFile())
+  it('shows CSV viewer when navigated to a CSV file', async () => {
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithCsvFile())
     renderDrive('/drive/report.csv')
-    expect(screen.getByTestId('csv-viewer')).toBeInTheDocument()
+    expect(await screen.findByTestId('csv-viewer')).toBeInTheDocument()
     expect(screen.getByText('report.csv')).toBeInTheDocument()
   })
 })
@@ -247,10 +254,10 @@ describe('Drive — CSV viewer', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — empty state', () => {
-  it('shows empty message when root has no folders or files', () => {
-    mockBuildDriveTree.mockReturnValue(makeEmptyRoot())
+  it('shows empty message when root has no folders or files', async () => {
+    mockBuildDriveTree.mockResolvedValue(makeEmptyRoot())
     renderDrive()
-    expect(screen.getByText(/No budget files yet/)).toBeInTheDocument()
+    expect(await screen.findByText(/No budget files yet/)).toBeInTheDocument()
   })
 })
 
@@ -281,18 +288,18 @@ describe('Drive — back navigation', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — sort by date', () => {
-  it('renders sort controls when files have owner metadata', () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+  it('renders sort controls when files have owner metadata', async () => {
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
-    expect(screen.getByText('Sort:')).toBeInTheDocument()
+    expect(await screen.findByText('Sort:')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Date' })).toBeInTheDocument()
   })
 
   it('sorts files by date when Date sort button is clicked', async () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Date' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Date' }))
 
     // Most recent first: File B (Mar), File C (Feb), File A (Jan)
     const fileNames = screen.getAllByText(/^File [ABC]$/).map(el => el.textContent)
@@ -322,10 +329,10 @@ describe('Drive — drop zone', () => {
 
 describe('Drive — owner filter', () => {
   it('filters files by owner when a filter button is clicked', async () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Partner' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Partner' }))
 
     expect(screen.getByText('File B')).toBeInTheDocument()
     expect(screen.queryByText('File A')).not.toBeInTheDocument()
@@ -333,10 +340,11 @@ describe('Drive — owner filter', () => {
   })
 
   it('clears owner filter when clicking the active owner button again', async () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Partner' }))
+    const partnerBtn = await screen.findByRole('button', { name: 'Partner' })
+    await userEvent.click(partnerBtn)
     expect(screen.queryByText('File A')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Partner' }))
@@ -345,10 +353,10 @@ describe('Drive — owner filter', () => {
   })
 
   it('resets to all files when "All" button is clicked', async () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Partner' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Partner' }))
     await userEvent.click(screen.getByRole('button', { name: 'All' }))
 
     expect(screen.getByText('File A')).toBeInTheDocument()
@@ -363,10 +371,10 @@ describe('Drive — owner filter', () => {
 
 describe('Drive — sort by owner', () => {
   it('sorts files by owner when Owner sort button is clicked', async () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Owner' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Owner' }))
 
     const fileNames = screen.getAllByText(/^File [ABC]$/).map(el => el.textContent)
     // Partner before Primary alphabetically
@@ -381,7 +389,7 @@ describe('Drive — sort by owner', () => {
 describe('Drive — rename flow', () => {
   it('shows rename popover when rename button is clicked on a budget file', async () => {
     renderDrive('/drive/budget/2025')
-    const renameBtn = screen.getByRole('button', { name: /Rename January 2025/i })
+    const renameBtn = await screen.findByRole('button', { name: /Rename January 2025/i })
     await userEvent.click(renameBtn)
 
     expect(screen.getByLabelText('Move to month:')).toBeInTheDocument()
@@ -391,7 +399,7 @@ describe('Drive — rename flow', () => {
 
   it('closes rename popover when Cancel is clicked', async () => {
     renderDrive('/drive/budget/2025')
-    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /Rename January 2025/i }))
 
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByLabelText('Move to month:')).not.toBeInTheDocument()
@@ -403,7 +411,7 @@ describe('Drive — rename flow', () => {
     mockedRename.mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
     renderDrive('/drive/budget/2025')
-    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /Rename January 2025/i }))
 
     const input = screen.getByLabelText('Move to month:')
     await userEvent.clear(input)
@@ -416,7 +424,7 @@ describe('Drive — rename flow', () => {
 
   it('shows warning when target month already has data', async () => {
     const { loadBudgetStore } = await import('../budget/utils/budgetStorage')
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2025-02': { csv: 'existing', month: '2025-02', uploadedAt: '' } },
       configs: {},
       years: [],
@@ -424,7 +432,7 @@ describe('Drive — rename flow', () => {
     })
 
     renderDrive('/drive/budget/2025')
-    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /Rename January 2025/i }))
 
     const input = screen.getByLabelText('Move to month:')
     await userEvent.clear(input)
@@ -435,9 +443,10 @@ describe('Drive — rename flow', () => {
     expect(screen.getByRole('button', { name: 'Replace' })).toBeInTheDocument()
   })
 
-  it('does not show rename button when not on a budget path', () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+  it('does not show rename button when not on a budget path', async () => {
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
+    await screen.findByText('File A')
     expect(screen.queryByRole('button', { name: /Rename/i })).not.toBeInTheDocument()
   })
 })
@@ -447,7 +456,7 @@ describe('Drive — rename flow', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — PDF viewer', () => {
-  it('renders a PDF viewer with iframe when navigating to a PDF file', () => {
+  it('renders a PDF viewer with iframe when navigating to a PDF file', async () => {
     const tree: DriveFolder = {
       name: 'Drive',
       slug: '',
@@ -469,9 +478,9 @@ describe('Drive — PDF viewer', () => {
       ],
       files: [],
     }
-    mockBuildDriveTree.mockReturnValue(tree)
+    mockBuildDriveTree.mockResolvedValue(tree)
     renderDrive('/drive/docs/w2.pdf')
-    expect(screen.getByTitle('W2 Form')).toBeInTheDocument()
+    expect(await screen.findByTitle('W2 Form')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: 'W2 Form' })).toBeInTheDocument()
   })
 
@@ -497,9 +506,9 @@ describe('Drive — PDF viewer', () => {
       ],
       files: [],
     }
-    mockBuildDriveTree.mockReturnValue(tree)
+    mockBuildDriveTree.mockResolvedValue(tree)
     renderDrive('/drive/docs/w2.pdf')
-    await userEvent.click(screen.getByText('Back'))
+    await userEvent.click(await screen.findByText('Back'))
     expect(mockNavigate).toHaveBeenCalledWith('/drive/docs')
   })
 })
@@ -510,9 +519,9 @@ describe('Drive — PDF viewer', () => {
 
 describe('Drive — CSV viewer back navigation', () => {
   it('navigates back when clicking Back in CSV viewer', async () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithCsvFile())
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithCsvFile())
     renderDrive('/drive/report.csv')
-    await userEvent.click(screen.getByText('Back'))
+    await userEvent.click(await screen.findByText('Back'))
     expect(mockNavigate).toHaveBeenCalledWith('/drive')
   })
 })
@@ -522,17 +531,17 @@ describe('Drive — CSV viewer back navigation', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — breadcrumb navigation', () => {
-  it('renders breadcrumb segments when navigated into nested folders', () => {
+  it('renders breadcrumb segments when navigated into nested folders', async () => {
     renderDrive('/drive/budget/2025')
     const nav = screen.getByRole('navigation')
-    expect(within(nav).getByText('Budget')).toBeInTheDocument()
+    expect(await within(nav).findByText('Budget')).toBeInTheDocument()
     expect(within(nav).getByText('2025')).toBeInTheDocument()
   })
 
   it('navigates to an intermediate breadcrumb on click', async () => {
     renderDrive('/drive/budget/2025')
     const nav = screen.getByRole('navigation')
-    await userEvent.click(within(nav).getByText('Budget'))
+    await userEvent.click(await within(nav).findByText('Budget'))
     expect(mockNavigate).toHaveBeenCalledWith('/drive/budget')
   })
 
@@ -549,16 +558,16 @@ describe('Drive — breadcrumb navigation', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — folder item count', () => {
-  it('displays the item count for subfolders', () => {
+  it('displays the item count for subfolders', async () => {
     renderDrive()
     // Budget folder has 1 subfolder (2025) and 0 files = 1 item
-    expect(screen.getByText('1 item')).toBeInTheDocument()
+    expect(await screen.findByText('1 item')).toBeInTheDocument()
   })
 
-  it('displays plural item count for folders with multiple children', () => {
+  it('displays plural item count for folders with multiple children', async () => {
     renderDrive('/drive/budget')
     // The 2025 folder has 0 subfolders + 2 files = 2 items
-    expect(screen.getByText('2 items')).toBeInTheDocument()
+    expect(await screen.findByText('2 items')).toBeInTheDocument()
   })
 })
 
@@ -567,7 +576,7 @@ describe('Drive — folder item count', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — year tabs', () => {
-  it('renders year tabs when there are sibling year folders', () => {
+  it('renders year tabs when there are sibling year folders', async () => {
     const tree: DriveFolder = {
       name: 'Drive',
       slug: '',
@@ -584,12 +593,12 @@ describe('Drive — year tabs', () => {
       ],
       files: [],
     }
-    mockBuildDriveTree.mockReturnValue(tree)
+    mockBuildDriveTree.mockResolvedValue(tree)
     renderDrive('/drive/budget/2025')
 
     // Year tabs and breadcrumbs both render these as buttons.
     // Just verify both year labels appear at least once.
-    expect(screen.getAllByRole('button', { name: '2024' }).length).toBeGreaterThanOrEqual(1)
+    expect((await screen.findAllByRole('button', { name: '2024' })).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByRole('button', { name: '2025' }).length).toBeGreaterThanOrEqual(1)
   })
 
@@ -610,10 +619,10 @@ describe('Drive — year tabs', () => {
       ],
       files: [],
     }
-    mockBuildDriveTree.mockReturnValue(tree)
+    mockBuildDriveTree.mockResolvedValue(tree)
     renderDrive('/drive/budget/2025')
 
-    await userEvent.click(screen.getByRole('button', { name: '2024' }))
+    await userEvent.click(await screen.findByRole('button', { name: '2024' }))
     expect(mockNavigate).toHaveBeenCalledWith('/drive/budget/2024')
   })
 })
@@ -623,7 +632,7 @@ describe('Drive — year tabs', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — file metadata tags', () => {
-  it('renders owner, category, and accounts tags on files', () => {
+  it('renders owner, category, and accounts tags on files', async () => {
     const tree: DriveFolder = {
       name: 'Drive',
       slug: '',
@@ -646,11 +655,11 @@ describe('Drive — file metadata tags', () => {
       ],
       files: [],
     }
-    mockBuildDriveTree.mockReturnValue(tree)
+    mockBuildDriveTree.mockResolvedValue(tree)
     renderDrive('/drive/data')
 
     // Owner appears in both filter bar and file row
-    expect(screen.getAllByText('Joint').length).toBeGreaterThanOrEqual(1)
+    expect((await screen.findAllByText('Joint')).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Paystub')).toBeInTheDocument()
     expect(screen.getByText('Fidelity 401k')).toBeInTheDocument()
   })
@@ -695,7 +704,7 @@ describe('Drive — rename edge cases', () => {
     mockedRename.mockClear()
 
     renderDrive('/drive/budget/2025')
-    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /Rename January 2025/i }))
 
     // Don't change the value (it defaults to the slug), just confirm
     await userEvent.click(screen.getByRole('button', { name: 'Move' }))
@@ -707,7 +716,7 @@ describe('Drive — rename edge cases', () => {
 
   it('proceeds with replace after warning confirmation', async () => {
     const { loadBudgetStore, renameBudgetMonth, saveBudgetStore } = await import('../budget/utils/budgetStorage')
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2025-03': { csv: 'existing', month: '2025-03', uploadedAt: '' } },
       configs: {},
       years: [],
@@ -716,7 +725,7 @@ describe('Drive — rename edge cases', () => {
     vi.mocked(renameBudgetMonth).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
     renderDrive('/drive/budget/2025')
-    await userEvent.click(screen.getByRole('button', { name: /Rename January 2025/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /Rename January 2025/i }))
 
     const input = screen.getByLabelText('Move to month:')
     await userEvent.clear(input)
@@ -738,12 +747,12 @@ describe('Drive — rename edge cases', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Drive — sort by name (default)', () => {
-  it('sorts files alphabetically by name by default', () => {
-    mockBuildDriveTree.mockReturnValue(makeTreeWithMetaFiles())
+  it('sorts files alphabetically by name by default', async () => {
+    mockBuildDriveTree.mockResolvedValue(makeTreeWithMetaFiles())
     renderDrive('/drive/data')
 
     // Default sort is 'name': File A, File B, File C
-    const fileNames = screen.getAllByText(/^File [ABC]$/).map(el => el.textContent)
+    const fileNames = (await screen.findAllByText(/^File [ABC]$/)).map(el => el.textContent)
     expect(fileNames).toEqual(['File A', 'File B', 'File C'])
   })
 })

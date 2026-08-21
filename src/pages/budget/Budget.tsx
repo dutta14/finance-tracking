@@ -39,6 +39,7 @@ const Budget: FC = () => {
     incomeCategoryGroups,
     removedCategories,
     incomeRemovedCategories,
+    incomeCatSet,
     categorySums,
     summary,
     monthsWithData,
@@ -99,6 +100,14 @@ const Budget: FC = () => {
   }, [timePeriod])
 
   useEffect(() => {
+    const state = location.state as { scrollTo?: string } | null
+    if (state?.scrollTo) {
+      const el = document.getElementById(state.scrollTo)
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+    }
+  }, [location.state])
+
+  useEffect(() => {
     if (!showFormatHelp) return
 
     const handler = (e: MouseEvent) => {
@@ -132,16 +141,16 @@ const Budget: FC = () => {
       <div className="budget-content">
         {viewMode === 'spreadsheet' && (
           <div className="budget-action-bar">
-            <div className="budget-view-toggle budget-view-toggle--secondary">
+            <div className="tab-bar">
               <button
-                className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
+                className={`tab-btn tab-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
                 onClick={() => setSpreadsheetMode('aggregated')}
                 aria-pressed={spreadsheetMode === 'aggregated'}
               >
                 Aggregated
               </button>
               <button
-                className={`budget-view-btn budget-view-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
+                className={`tab-btn tab-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
                 onClick={() => setSpreadsheetMode('detailed')}
                 aria-pressed={spreadsheetMode === 'detailed'}
               >
@@ -351,7 +360,7 @@ const Budget: FC = () => {
                   yearTransactions={yearTransactions}
                   timePeriod={timePeriod}
                   removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
-                  categorySums={categorySums}
+                  incomeCatSet={incomeCatSet}
                   selectedPeriod={selectedPeriod}
                   onSelectPeriod={setSelectedPeriod}
                 />
@@ -361,6 +370,7 @@ const Budget: FC = () => {
                   categoryGroups={categoryGroups}
                   removedCategories={new Set([...removedCategories, ...incomeRemovedCategories])}
                   categorySums={categorySums}
+                  incomeCatSet={incomeCatSet}
                   selectedPeriod={selectedPeriod}
                   timePeriod={timePeriod}
                 />
