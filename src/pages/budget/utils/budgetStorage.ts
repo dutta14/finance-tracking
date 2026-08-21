@@ -6,9 +6,7 @@ import { parseCSV as parseCSVRows, serializeCSV } from '../../../utils/csvUtils'
 const CATEGORIES_PATH = 'budget/categories.json'
 const SUMMARY_PATH = 'budget/summary-cache.json'
 
-export async function getBudgetSaveRate(
-  fileStore: FileStore,
-): Promise<{
+export async function getBudgetSaveRate(fileStore: FileStore): Promise<{
   annualSavings: number
   saveRate: number
   monthsOfData: number
