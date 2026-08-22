@@ -3,7 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import { loadBudgetStore, saveBudgetStore, saveCSVForMonth } from '../budget/utils/budgetStorage'
 import { parseCSV } from '../budget/utils/csvParser'
 import type { Transaction } from '../budget/types'
+import type { BudgetStore } from '../budget/types'
+import { useFileStore } from '../../contexts/FileStoreContext'
 import '../../styles/Transactions.css'
+
+import type { FileStore } from '../../utils/fileStoreTypes'
 
 type LoadedTransaction = Transaction & { monthKey: string; isRemoved: boolean }
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'category-asc' | 'category-desc'
@@ -20,6 +24,10 @@ type CategoryFilterGroup = {
 }
 type EditingCategoryState = {
   key: string
+}
+type EditingDateState = {
+  key: string
+  value: string
 }
 
 const sortOptions: Array<{ value: SortOption; label: string }> = [
@@ -112,7 +120,7 @@ type LoadResult = {
 
 // Cache parsed transactions — only re-parse when CSV data actually changes
 let cachedFingerprint = ''
-let cachedResult: LoadResult | null = null
+let cachedResult: (LoadResult & { store: BudgetStore }) | null = null
 
 const computeFingerprint = (store: {
   csvs: Record<string, { csv: string }>
@@ -131,8 +139,8 @@ export const resetTransactionCache = (): void => {
   cachedResult = null
 }
 
-const loadTransactionsAndGroups = (): LoadResult => {
-  const store = loadBudgetStore()
+const loadTransactionsAndGroups = async (fileStore: FileStore): Promise<LoadResult & { store: BudgetStore }> => {
+  const store = await loadBudgetStore(fileStore)
   const fingerprint = computeFingerprint(store)
 
   if (cachedResult && fingerprint === cachedFingerprint) {
@@ -163,7 +171,7 @@ const loadTransactionsAndGroups = (): LoadResult => {
     type: group.type,
   }))
 
-  const result = { transactions: allTransactions, budgetGroups }
+  const result = { transactions: allTransactions, budgetGroups, store }
   cachedFingerprint = fingerprint
   cachedResult = result
   return result
@@ -180,10 +188,115 @@ const getEmptySummary = () => ({
   lastTransaction: null as string | null,
 })
 
+// --- DatePickerFlyout ---
+
+type DatePickerFlyoutProps = {
+  value: string
+  onSelect: (date: string) => void
+  onCancel: () => void
+}
+
+const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel }) => {
+  const initialDate = new Date(`${value}T00:00:00`)
+  const [viewYear, setViewYear] = useState(initialDate.getFullYear())
+  const [viewMonth, setViewMonth] = useState(initialDate.getMonth())
+
+  const selectedDay = initialDate.getDate()
+  const selectedYear = initialDate.getFullYear()
+  const selectedMonth = initialDate.getMonth()
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewYear(y => y - 1)
+      setViewMonth(11)
+    } else setViewMonth(m => m - 1)
+  }
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewYear(y => y + 1)
+      setViewMonth(0)
+    } else setViewMonth(m => m + 1)
+  }
+
+  const handleDayClick = (day: number) => {
+    const mm = String(viewMonth + 1).padStart(2, '0')
+    const dd = String(day).padStart(2, '0')
+    onSelect(`${viewYear}-${mm}-${dd}`)
+  }
+
+  return (
+    <div
+      className="txn-date-flyout"
+      role="dialog"
+      aria-label="Pick a date"
+      onKeyDown={e => {
+        if (e.key === 'Escape') onCancel()
+      }}
+    >
+      <div className="txn-date-flyout-header">
+        <button type="button" className="txn-date-flyout-nav" onClick={prevMonth} aria-label="Previous month">
+          ‹
+        </button>
+        <span className="txn-date-flyout-title">
+          {MONTH_NAMES[viewMonth]} {viewYear}
+        </span>
+        <button type="button" className="txn-date-flyout-nav" onClick={nextMonth} aria-label="Next month">
+          ›
+        </button>
+      </div>
+      <div className="txn-date-flyout-grid">
+        {DAYS_OF_WEEK.map(d => (
+          <span key={d} className="txn-date-flyout-dow">
+            {d}
+          </span>
+        ))}
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+          <span key={`e${i}`} />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1
+          const isSelected = day === selectedDay && viewMonth === selectedMonth && viewYear === selectedYear
+          return (
+            <button
+              key={day}
+              type="button"
+              className={`txn-date-flyout-day${isSelected ? ' txn-date-flyout-day--selected' : ''}`}
+              onClick={() => handleDayClick(day)}
+            >
+              {day}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const Transactions: FC = () => {
   const [searchParams] = useSearchParams()
   const paramFrom = searchParams.get('from') ?? ''
   const paramTo = searchParams.get('to') ?? ''
+  const { fileStore } = useFileStore()
+  const budgetStoreRef = useRef<BudgetStore>({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
   const [allTransactions, setAllTransactions] = useState<LoadedTransaction[]>([])
   const [budgetGroups, setBudgetGroups] = useState<BudgetGroupData[]>([])
@@ -199,6 +312,7 @@ const Transactions: FC = () => {
   const [filterOpen, setFilterOpen] = useState(false)
   const [filterSearch, setFilterSearch] = useState('')
   const [editingCategory, setEditingCategory] = useState<EditingCategoryState | null>(null)
+  const [editingDate, setEditingDate] = useState<EditingDateState | null>(null)
   const [categoryEditSearch, setCategoryEditSearch] = useState('')
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [draftFromDate, setDraftFromDate] = useState(paramFrom)
@@ -213,6 +327,7 @@ const Transactions: FC = () => {
   const datePickerRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const categoryEditorRef = useRef<HTMLDivElement>(null)
+  const dateEditorRef = useRef<HTMLDivElement>(null)
   const groupCheckboxRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const sectionCheckboxRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
@@ -230,8 +345,12 @@ const Transactions: FC = () => {
   }
 
   useEffect(() => {
-    const refresh = () => {
-      const result = loadTransactionsAndGroups()
+    let cancelled = false
+
+    const refresh = async () => {
+      const result = await loadTransactionsAndGroups(fileStore)
+      if (cancelled) return
+      budgetStoreRef.current = result.store
       setAllTransactions(result.transactions)
       setBudgetGroups(result.budgetGroups)
       setEditingCategory(null)
@@ -250,19 +369,26 @@ const Transactions: FC = () => {
       }
     }
 
+    const handleRefresh = () => {
+      refresh().catch(console.error)
+    }
+
     // Defer heavy load to next frame so navigation isn't blocked
-    const frameId = requestAnimationFrame(refresh)
-    window.addEventListener('budget-changed', refresh)
-    window.addEventListener('storage', refresh)
+    const frameId = requestAnimationFrame(handleRefresh)
+    const unsubscribe = fileStore.subscribe('budget/categories.json', handleRefresh)
+    window.addEventListener('budget-changed', handleRefresh)
+    window.addEventListener('storage', handleRefresh)
 
     return () => {
+      cancelled = true
       cancelAnimationFrame(frameId)
-      window.removeEventListener('budget-changed', refresh)
-      window.removeEventListener('storage', refresh)
+      unsubscribe()
+      window.removeEventListener('budget-changed', handleRefresh)
+      window.removeEventListener('storage', handleRefresh)
     }
     // searchParams is intentionally read only on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fileStore])
 
   useEffect(() => {
     if (!searchOpen) return
@@ -328,6 +454,19 @@ const Transactions: FC = () => {
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [editingCategory])
+
+  useEffect(() => {
+    if (!editingDate) return
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (dateEditorRef.current && !dateEditorRef.current.contains(event.target as Node)) {
+        setEditingDate(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [editingDate])
 
   const categories = useMemo(
     () => Array.from(new Set(allTransactions.map(transaction => transaction.category))).sort(compareText),
@@ -693,14 +832,14 @@ const Transactions: FC = () => {
     setEditingCategory(current => (current?.key === key ? null : { key }))
   }
 
-  const reassignTransactionCategory = (transaction: LoadedTransaction, nextCategory: string): void => {
+  const reassignTransactionCategory = async (transaction: LoadedTransaction, nextCategory: string): Promise<void> => {
     if (transaction.category === nextCategory) {
       setEditingCategory(null)
       setCategoryEditSearch('')
       return
     }
 
-    const store = loadBudgetStore()
+    const store = budgetStoreRef.current
     const monthCsv = store.csvs[transaction.monthKey]
 
     if (!monthCsv) {
@@ -728,7 +867,7 @@ const Transactions: FC = () => {
     const updatedTransactions = parsedTransactions.map((parsedTransaction, index) =>
       index === targetIndex ? { ...parsedTransaction, category: nextCategory } : parsedTransaction,
     )
-    const nextStore = saveCSVForMonth(store, transaction.monthKey, buildCsv(updatedTransactions))
+    const nextStore = await saveCSVForMonth(fileStore, store, transaction.monthKey, buildCsv(updatedTransactions))
 
     setAllTransactions(currentTransactions =>
       currentTransactions.map(currentTransaction =>
@@ -743,7 +882,79 @@ const Transactions: FC = () => {
     )
     setEditingCategory(null)
     setCategoryEditSearch('')
-    saveBudgetStore(nextStore)
+    budgetStoreRef.current = nextStore
+    saveBudgetStore(fileStore, nextStore).catch(console.error)
+  }
+
+  async function reassignTransactionDate(transaction: LoadedTransaction, nextDate: string) {
+    if (!nextDate || nextDate === transaction.date) {
+      setEditingDate(null)
+      return
+    }
+
+    const store = budgetStoreRef.current
+    const monthCsv = store.csvs[transaction.monthKey]
+    if (!monthCsv) {
+      setEditingDate(null)
+      return
+    }
+
+    const parsedTransactions = parseCSV(monthCsv.csv)
+    const targetIndex = parsedTransactions.findIndex(parsedTransaction => {
+      return (
+        parsedTransaction.date === transaction.date &&
+        parsedTransaction.amount === transaction.amount &&
+        parsedTransaction.category === transaction.category &&
+        getTransactionDescription(parsedTransaction.description) === getTransactionDescription(transaction.description)
+      )
+    })
+
+    if (targetIndex === -1) {
+      setEditingDate(null)
+      return
+    }
+
+    const nextMonthKey = nextDate.slice(0, 7)
+    let updatedStore = store
+
+    if (nextMonthKey === transaction.monthKey) {
+      // Same month — just update the date in place
+      const updatedTransactions = parsedTransactions.map((parsedTransaction, index) =>
+        index === targetIndex ? { ...parsedTransaction, date: nextDate } : parsedTransaction,
+      )
+      updatedStore = await saveCSVForMonth(fileStore, updatedStore, transaction.monthKey, buildCsv(updatedTransactions))
+    } else {
+      // Different month — remove from old CSV, add to new CSV
+      const updatedOldTransactions = parsedTransactions.filter((_, index) => index !== targetIndex)
+      updatedStore = await saveCSVForMonth(
+        fileStore,
+        updatedStore,
+        transaction.monthKey,
+        buildCsv(updatedOldTransactions),
+      )
+
+      const newMonthCsv = updatedStore.csvs[nextMonthKey]
+      const newMonthTransactions = newMonthCsv ? parseCSV(newMonthCsv.csv) : []
+      const movedTransaction: Transaction = {
+        date: nextDate,
+        category: transaction.category,
+        amount: transaction.amount,
+        description: transaction.description,
+      }
+      newMonthTransactions.push(movedTransaction)
+      updatedStore = await saveCSVForMonth(fileStore, updatedStore, nextMonthKey, buildCsv(newMonthTransactions))
+    }
+
+    setAllTransactions(currentTransactions =>
+      currentTransactions.map(currentTransaction =>
+        currentTransaction === transaction
+          ? { ...currentTransaction, date: nextDate, monthKey: nextMonthKey }
+          : currentTransaction,
+      ),
+    )
+    setEditingDate(null)
+    budgetStoreRef.current = updatedStore
+    saveBudgetStore(fileStore, updatedStore).catch(console.error)
   }
 
   if (loading) {
@@ -1103,12 +1314,37 @@ const Transactions: FC = () => {
                       const description = transaction.description?.trim() || 'No description'
                       const rowKey = `${transaction.monthKey}-${transaction.date}-${transaction.category}-${transaction.amount}-${description}-${index}`
                       const isEditingCategory = editingCategory?.key === rowKey
+                      const isEditingDateRow = editingDate?.key === rowKey
 
                       return (
                         <li key={rowKey} className={`txn-row${transaction.isRemoved ? ' txn-row--removed' : ''}`}>
                           <span className="txn-row-description" title={description}>
                             {description}
                           </span>
+                          <div className="txn-row-date-cell" ref={isEditingDateRow ? dateEditorRef : undefined}>
+                            <button
+                              type="button"
+                              className={`txn-row-date-button${isEditingDateRow ? ' txn-row-date-button--active' : ''}`}
+                              aria-label={`Edit date for ${description}`}
+                              onClick={() =>
+                                isEditingDateRow
+                                  ? setEditingDate(null)
+                                  : setEditingDate({ key: rowKey, value: transaction.date })
+                              }
+                            >
+                              {new Date(`${transaction.date}T00:00:00`).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </button>
+                            {isEditingDateRow && (
+                              <DatePickerFlyout
+                                value={editingDate.value}
+                                onSelect={nextDate => reassignTransactionDate(transaction, nextDate)}
+                                onCancel={() => setEditingDate(null)}
+                              />
+                            )}
+                          </div>
                           <div
                             className={`txn-row-category-cell${isEditingCategory ? ' txn-row-category-cell--open' : ''}`}
                             ref={isEditingCategory ? categoryEditorRef : undefined}
@@ -1220,7 +1456,7 @@ const Transactions: FC = () => {
                 <dd>{summary.totalTransactions}</dd>
               </div>
               <div className="txn-summary-item">
-                <dt>Largest transaction</dt>
+                <dt>Largest income</dt>
                 <dd className={summary.largestIncome !== null ? 'txn-amount-positive' : ''}>
                   {summary.largestIncome !== null ? formatSignedCurrency(summary.largestIncome) : '—'}
                 </dd>
@@ -1236,22 +1472,26 @@ const Transactions: FC = () => {
                 </dd>
               </div>
               <div className="txn-summary-item">
-                <dt>Total income</dt>
-                <dd className={summary.totalIncome > 0 ? 'txn-amount-positive' : ''}>
-                  {formatSignedCurrency(summary.totalIncome)}
-                </dd>
-              </div>
-              <div className="txn-summary-item">
-                <dt>Total spending</dt>
-                <dd>{formatCurrency(summary.totalSpending)}</dd>
-              </div>
-              <div className="txn-summary-item">
                 <dt>First transaction</dt>
                 <dd>{summary.firstTransaction ? formatDate(summary.firstTransaction) : '—'}</dd>
               </div>
               <div className="txn-summary-item">
                 <dt>Last transaction</dt>
                 <dd>{summary.lastTransaction ? formatDate(summary.lastTransaction) : '—'}</dd>
+              </div>
+              <div className="txn-summary-item">
+                <dt>Total income</dt>
+                <dd className={summary.totalIncome > 0 ? 'txn-amount-positive' : ''}>
+                  {formatCurrency(summary.totalIncome)}
+                </dd>
+              </div>
+              <div className="txn-summary-item">
+                <dt>Total spending</dt>
+                <dd>{formatCurrency(summary.totalSpending)}</dd>
+              </div>
+              <div className="txn-summary-item txn-summary-item--net">
+                <dt>{summary.totalIncome >= summary.totalSpending ? 'Net income' : 'Net spending'}</dt>
+                <dd>{formatCurrency(Math.abs(summary.totalSpending - summary.totalIncome))}</dd>
               </div>
             </dl>
           </div>

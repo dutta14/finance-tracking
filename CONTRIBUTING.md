@@ -41,11 +41,8 @@ src/
 │   └── UndoToast            # 10-second undo notification
 ├── contexts/                # React context providers (see Contexts section)
 │   ├── SettingsContext      # Dark mode, appearance, labs
-│   ├── GitHubSyncContext    # Encrypted backup engine
+│   ├── FileStoreContext     # File System Access API integration and demo mode
 │   ├── GoalsContext         # FI + GW goal CRUD and state
-│   ├── BudgetSyncContext    # Budget GitHub sync coordination
-│   ├── TaxSyncContext       # Tax document sync coordination
-│   ├── ImportExportContext  # Data import/export logic
 │   ├── LayoutContext        # Sidebar, mobile, search modal state
 │   └── DataContext          # Accounts and balances
 ├── flags/                   # Feature flag system (see Feature Flags section)
@@ -58,7 +55,6 @@ src/
 │   └── searchIndex.ts       # Indexes pages, goals, accounts for SearchModal
 ├── hooks/
 │   ├── useProfile.ts        # Profile state (name, birthday, avatar, partner)
-│   ├── useGitHubSync.ts     # GitHub sync engine (encrypted tokens, auto-sync)
 │   └── useFocusTrap.ts      # Focus trap for modals
 ├── pages/
 │   ├── home/                # Dashboard with draggable cards
@@ -84,52 +80,54 @@ src/
 │   ├── colorThemes.css      # Base :root + body.dark variables
 │   └── modern-design.css    # Modern design system (scoped under body.modern-design)
 ├── utils/
-│   └── taxFileDB.ts         # IndexedDB for tax file blobs
+│   ├── fileStoreTypes.ts    # FileStore interface (the contract every store must satisfy)
+│   ├── fileStore.ts         # FileSystemFileStore — File System Access API implementation
+│   ├── memoryFileStore.ts   # MemoryFileStore — in-memory implementation for tests and demo mode
+│   ├── csvUtils.ts          # CSV serialization / deserialization helpers
+│   ├── balanceStorage.ts    # Balance read/write against the FileStore
+│   ├── handlePersistence.ts # Saves and loads the FileSystemDirectoryHandle in IndexedDB
+│   └── storage.ts           # Thin localStorage wrapper for UI preferences only
 └── test/
-    └── setup.ts             # Vitest global setup (jsdom, testing-library matchers)
+    ├── setup.ts             # Vitest global setup (jsdom, testing-library matchers)
+    └── fileStoreTestUtils.tsx  # FileStoreTestProvider and makeFileStoreValue helpers
 ```
 
 ## Architecture Notes
 
 ### Data Storage
 
-All state is persisted to `localStorage`. There is no backend. Key storage keys:
+All financial data is stored as plain files in a folder the user chooses on their own disk, using the browser's File System Access API. The central abstraction is the `FileStore` interface in `src/utils/fileStoreTypes.ts`. There are two implementations:
 
-| Key                        | Content                                                        |
-| -------------------------- | -------------------------------------------------------------- |
-| `fi-goals`                 | Financial independence goals                                   |
-| `gw-goals`                 | Generational wealth goals                                      |
-| `user-profile`             | Profile (name, birthday, avatar, partner)                      |
-| `data-accounts`            | Account definitions                                            |
-| `data-balances`            | Monthly balance entries                                        |
-| `budget-store`             | Budget CSVs and category config                                |
-| `tax-store`                | Tax checklist items with embedded file content                 |
-| `tax-templates`            | Saved tax checklist templates                                  |
-| `allocation-custom-ratios` | Custom allocation ratio sets                                   |
-| `fi-simulations`           | Saved FI calculator simulations                                |
-| `sgt-overrides`            | Savings/growth tracker manual overrides                        |
-| `gh-sync-config`           | GitHub sync configuration                                      |
-| `gh-encrypted-token`       | AES-256 encrypted GitHub PAT                                   |
-| `accentTheme`              | Selected accent color theme (legacy, kept for backward compat) |
-| `flag-rollout-cache`       | Cached feature flag rollout config                             |
-| `flag-overrides`           | Local feature flag overrides (dev/testing)                     |
-| `flag-user-seed`           | Stable random seed for percentage rollout                      |
+- `FileSystemFileStore` (`src/utils/fileStore.ts`) — the production implementation. Backed by a `FileSystemDirectoryHandle`. Writes are debounced 300ms and guarded with `navigator.locks` so concurrent tabs never interleave. Cross-tab cache invalidation uses a `BroadcastChannel`.
+- `MemoryFileStore` (`src/utils/memoryFileStore.ts`) — an in-memory implementation used for tests and Demo Mode.
 
-### GitHub Sync
+`FileStoreContext` (`src/contexts/FileStoreContext.tsx`) owns the active store instance and exposes `pickFolder`, `disconnect`, `enterDemo`, and `exitDemo`. Components get the store via `useFileStore()`.
 
-The sync engine in `useGitHubSync.ts` pushes data to a private GitHub repo via the Contents API:
+The chosen folder handle is persisted in IndexedDB via `src/utils/handlePersistence.ts` so the browser can reconnect on the next visit without re-prompting.
 
-- **Main file** (`finance-backup.json`) — goals, profile, settings
-- **Data file** (`-data.json`) — accounts and balances
-- **Tools file** (`-tools.json`) — FI simulations, SGT overrides
-- **Allocation file** (`-allocation.json`) — custom ratios
-- **Taxes file** (`-taxes.json`) — tax checklist metadata + templates
-- **Tax documents** (`taxes/<year>/<name>.pdf`) — individual files via `taxGitHubSync.ts`
-- **Budget CSVs** (`budget/<month>.csv`) — individual files via `budgetGitHubSync.ts`
+**File layout inside the chosen folder:**
 
-Auto-sync uses a 60-second debounce. Change detection strips `exportedAt` timestamps to avoid false positives.
+| Path | Content |
+| ---- | ------- |
+| `profile.json` | Name, birthday, partner |
+| `accounts.json` | Account definitions |
+| `balances/{year}.csv` | Monthly balances (columns: `month,accountId,balance`) |
+| `transactions/{year}/{yyyy-mm}.csv` | Budget transactions per month |
+| `budget/categories.json` | Category groups and tracked years |
+| `budget/summary-cache.json` | Derived savings-rate summary |
+| `goals.json` | `{ financialGoals, gwGoals }` |
+| `taxes/{year}.json` | Tax checklist for that year |
+| `taxes/templates.json` | Reusable tax checklists |
+| `taxes/{year}/files/{filename}` | Uploaded tax documents |
+| `allocation.json` | Custom allocation ratios |
+| `fi-simulations.json` | Saved FI calculator simulations |
+| `leverage.json` | Leverage tool data |
+| `savings-tracker-overrides.json` | Savings/growth tracker manual overrides |
+| `paydown-loans.json` | Loan paydown tool data |
 
-Token encryption uses AES-256-GCM with PBKDF2 key derivation (100k iterations, random salt and IV per encryption).
+**UI preferences in `localStorage` (not financial data):**
+
+`darkMode`, `accentTheme`, `allowCsvImport`, `goal-view-mode`, `home-card-order`, `onboarding-dismissed`, `lab-pdf-to-csv`, and the feature-flag keys (`flag-rollout-cache`, `flag-overrides`, `flag-user-seed`).
 
 ### Styling
 
@@ -146,7 +144,6 @@ Custom DOM events for cross-component communication:
 
 | Event               | Source                  | Purpose                            |
 | ------------------- | ----------------------- | ---------------------------------- |
-| `tax-store-changed` | `useTaxStore.persist()` | Triggers auto-sync of tax data     |
 | `labs-changed`      | LabsPane                | Refreshes Tools page feature gates |
 
 ## Scripts
@@ -170,12 +167,11 @@ Custom DOM events for cross-component communication:
 `App.tsx` composes all providers in a fixed nesting order:
 
 ```
-FlagProvider → SettingsProvider → DataProvider → GoalsProvider →
-GitHubSyncProvider → BudgetSyncProvider → TaxSyncProvider →
-ImportExportProvider → LayoutProvider → AppShell
+FlagProvider → SettingsProvider → FileStoreProvider → DataProvider →
+GoalsProvider → LayoutProvider → AppShell
 ```
 
-Each context lives in `src/contexts/` and exports a provider + a `useXxx()` hook. Components consume state via the hooks (e.g., `useSettings()`, `useGoals()`, `useLayout()`). Never access context values directly — always use the exported hook.
+Each context lives in `src/contexts/` and exports a provider + a `useXxx()` hook. Components consume state via the hooks (e.g., `useSettings()`, `useGoals()`, `useFileStore()`, `useLayout()`). Never access context values directly — always use the exported hook.
 
 ## Feature Flags
 
@@ -213,8 +209,24 @@ npm run test:coverage  # With coverage report
 - Co-locate test files with source: `Component.test.tsx` next to `Component.tsx`.
 - Use `@testing-library/react` queries (`getByRole`, `getByText`, `getByLabelText`).
 - Global setup in `src/test/setup.ts` (jsdom, `@testing-library/jest-dom` matchers).
-- Mock network requests with `msw` when testing GitHub sync or flag fetching.
+- Mock network requests with `msw` when testing flag fetching.
 - Test file naming: `*.test.ts` or `*.test.tsx`.
+
+**Seeding data in tests:** Do not seed `localStorage` for financial data. Use a `MemoryFileStore` and wrap the component under test with `FileStoreTestProvider`:
+
+```tsx
+import { FileStoreTestProvider, makeFileStoreValue } from '../test/fileStoreTestUtils'
+
+const store = new MemoryFileStore()
+// write your seed data into store before rendering
+render(
+  <FileStoreTestProvider value={makeFileStoreValue({ fileStore: store })}>
+    <ComponentUnderTest />
+  </FileStoreTestProvider>
+)
+```
+
+`makeFileStoreValue` accepts partial overrides and fills in sensible defaults for `isReady`, `folderName`, and the callback functions.
 
 ## CI/CD
 
@@ -253,7 +265,7 @@ The `docs/screenshots/` directory contains 12 PNGs that are embedded in the user
 
 ### When to regenerate
 
-- Any UI change that affects a captured screen (Home, Net Worth, Goals, Budget, Taxes, Settings → GitHub Sync, or the empty / unlock / add-account onboarding states)
+- Any UI change that affects a captured screen (Home, Net Worth, Goals, Budget, Taxes, Drive, Settings, or the folder picker / add-account onboarding states)
 - Any change to the README that surfaces a different feature or flow
 - New release builds where the screenshots have drifted from the current visual design
 
@@ -264,6 +276,4 @@ npm run dev          # in one terminal
 npm run screenshots  # in another terminal
 ```
 
-`scripts/capture-screenshots.ts` seeds a fixed fake persona ("Avery Chen") into localStorage and uses Playwright to capture each screen at 1440×900 @ 2× device scale. The browser clock is pinned to June 1, 2025 so the seeded May-2025 data is "last month" regardless of when the script is run. All 12 PNGs land in `docs/screenshots/`.
-
-The script disables encryption (`encryption-enabled=0`) so the seed lands as plaintext. No real credentials are stored anywhere in the captured images.
+`scripts/capture-screenshots.ts` seeds a fixed fake persona ("Avery Chen") into a `MemoryFileStore` and uses Playwright to capture each screen at 1440×900 @ 2× device scale. The browser clock is pinned to June 1, 2025 so the seeded May-2025 data is "last month" regardless of when the script is run. All 12 PNGs land in `docs/screenshots/`.

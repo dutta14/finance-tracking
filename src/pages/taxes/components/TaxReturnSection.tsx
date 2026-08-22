@@ -7,6 +7,7 @@ export interface TaxReturnSectionProps {
   year: number
   onUpload: (itemId: string, files: FileList) => void
   onRemoveFile: (itemId: string, fileId: string) => void
+  onRemoveItem: (itemId: string) => void
   onAddReturnEntry: (owner: TaxDocOwner) => void
   primaryName: string
   partnerName: string
@@ -20,6 +21,7 @@ const TaxReturnSection: FC<TaxReturnSectionProps> = ({
   year: _year,
   onUpload,
   onRemoveFile,
+  onRemoveItem,
   onAddReturnEntry,
   primaryName,
   partnerName,
@@ -29,6 +31,7 @@ const TaxReturnSection: FC<TaxReturnSectionProps> = ({
 }) => {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [menuOpen, setMenuOpen] = useState(false)
+  const [rowMenuOpen, setRowMenuOpen] = useState<string | null>(null)
 
   const jointReturn = items.find(i => i.owner === 'joint' && i.category === 'tax-return')
   const primaryReturn = items.find(i => i.owner === 'primary' && i.category === 'tax-return')
@@ -132,6 +135,28 @@ const TaxReturnSection: FC<TaxReturnSectionProps> = ({
                 }
               }}
             />
+            <div className="tax-overflow-menu">
+              <button
+                className="tax-btn tax-btn--sm tax-btn--muted"
+                onClick={() => setRowMenuOpen(rowMenuOpen === item!.id ? null : item!.id)}
+                title="More actions"
+              >
+                ⋯
+              </button>
+              {rowMenuOpen === item!.id && (
+                <div className="tax-overflow-dropdown">
+                  <button
+                    className="tax-overflow-item tax-overflow-item--danger"
+                    onClick={() => {
+                      setRowMenuOpen(null)
+                      onRemoveItem(item!.id)
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ))}

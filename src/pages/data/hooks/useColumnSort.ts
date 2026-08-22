@@ -131,6 +131,21 @@ export function useColumnSort(
         const vb = getColValue(b, sortCol).toLowerCase()
         return va < vb ? -dir : va > vb ? dir : 0
       })
+    } else {
+      // Default order: active before inactive, FI before GW, joint → primary → partner
+      const goalOrder: Record<string, number> = { fi: 0, gw: 1, both: 2, '': 3 }
+      const ownerOrder: Record<string, number> = { joint: 0, primary: 1, partner: 2 }
+      list = [...list].sort((a, b) => {
+        const sa = a.status === 'active' ? 0 : 1
+        const sb = b.status === 'active' ? 0 : 1
+        if (sa !== sb) return sa - sb
+        const ga = goalOrder[a.goalType ?? ''] ?? 3
+        const gb = goalOrder[b.goalType ?? ''] ?? 3
+        if (ga !== gb) return ga - gb
+        const oa = ownerOrder[a.owner ?? ''] ?? 3
+        const ob = ownerOrder[b.owner ?? ''] ?? 3
+        return oa - ob
+      })
     }
 
     return list

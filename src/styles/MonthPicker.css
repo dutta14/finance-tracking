@@ -83,6 +83,48 @@
   font-weight: var(--fw-medium);
 }
 
+.details-month-picker-year-btn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.details-month-picker-year-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--accent);
+}
+
+.details-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+.details-year-grid-cell {
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+}
+.details-year-grid-cell:hover {
+  background: var(--color-surface-hover);
+}
+.details-year-grid-cell--selected {
+  background: var(--accent);
+  color: var(--color-text-on-accent);
+}
+
 .details-month-picker-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -119,4 +161,119 @@
 
 body.dark .details-month-picker {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Date Filter Range Flyout ── */
+.date-filter-custom-wrap {
+  position: relative;
+}
+.date-filter-range-flyout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  gap: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem;
+  max-width: calc(100vw - 24px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  isolation: isolate;
+}
+.date-flyout-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+}
+.date-flyout-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.date-flyout-divider {
+  width: 1px;
+  background: var(--color-border);
+  align-self: stretch;
+}
+body.dark .date-filter-range-flyout {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Month Range Picker (standalone) ── */
+.month-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.month-range-trigger {
+  min-width: 80px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  text-align: center;
+}
+.month-range-trigger:hover {
+  background: var(--color-surface-hover);
+}
+.month-range-sep {
+  font-size: var(--fs-md);
+  color: var(--color-text-muted);
+}
+
+/* DateFilterBar styles (must be co-located to avoid lazy-load issues) */
+.tab-bar {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 3px;
+  width: fit-content;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.date-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.tab-btn {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.tab-btn:hover {
+  color: var(--color-text-heading);
+}
+
+.tab-btn.active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.tab-btn--sm {
+  padding: 0.3rem 0.6rem;
+  font-size: var(--fs-sm);
 }

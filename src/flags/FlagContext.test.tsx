@@ -6,11 +6,7 @@ import type { FlagDefinition } from './flagSystem'
 
 /* ─── Mocks ─── */
 
-vi.mock('../contexts/GitHubSyncContext', () => ({
-  useGitHubSyncContext: vi.fn(() => ({ activeToken: null })),
-}))
-import { useGitHubSyncContext } from '../contexts/GitHubSyncContext'
-const mockedUseGitHubSync = vi.mocked(useGitHubSyncContext)
+let adminToken: string | null = null
 
 vi.mock('../utils/storage', () => ({
   getStorageItem: vi.fn((_key: string, fallback: unknown) => {
@@ -49,12 +45,14 @@ const stringFlag = (id: string, defaultVal: string): FlagDefinition<'string'> =>
 // Suppress fetch errors in tests
 const mockFetch = vi.fn()
 
-const wrapper: FC<{ children: ReactNode }> = ({ children }) => <FlagProvider>{children}</FlagProvider>
+const wrapper: FC<{ children: ReactNode }> = ({ children }) => (
+  <FlagProvider adminToken={adminToken}>{children}</FlagProvider>
+)
 
 beforeEach(() => {
   localStorage.clear()
   vi.restoreAllMocks()
-  mockedUseGitHubSync.mockReturnValue({ activeToken: null } as ReturnType<typeof useGitHubSyncContext>)
+  adminToken = null
   // Default: fetch returns 404 (no config file)
   mockFetch.mockResolvedValue({ ok: false, status: 404 })
   vi.stubGlobal('fetch', mockFetch)
@@ -374,7 +372,7 @@ describe('FlagProvider', () => {
     })
 
     it('fetches authenticated config when token is present and cache is fresh', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const cachedConfig = {
         version: 1,
@@ -405,7 +403,7 @@ describe('FlagProvider', () => {
     })
 
     it('sets isAdmin true when authenticated fetch returns 404', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -420,7 +418,7 @@ describe('FlagProvider', () => {
     })
 
     it('falls back to public fetch when authenticated fetch returns 403', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       // First call (auth) returns 403
       mockFetch.mockResolvedValueOnce({
@@ -447,7 +445,7 @@ describe('FlagProvider', () => {
     })
 
     it('handles network error on authenticated fetch by falling back to public', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       // Auth fetch throws
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
@@ -475,7 +473,7 @@ describe('FlagProvider', () => {
     })
 
     it('handles invalid rollout config with missing flags object', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const badConfig = { version: 1, updatedAt: '2024-01-01', flags: [] }
       mockFetch.mockResolvedValueOnce({
@@ -594,7 +592,7 @@ describe('FlagProvider', () => {
     })
 
     it('throws when save API returns error', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       // Initial fetch returns 404
       mockFetch.mockResolvedValueOnce({ ok: false, status: 404 })
@@ -621,7 +619,7 @@ describe('FlagProvider', () => {
     })
 
     it('refetches config on 409 conflict', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       // Initial fetch returns 404
       mockFetch.mockResolvedValueOnce({ ok: false, status: 404 })
@@ -741,7 +739,7 @@ describe('FlagProvider', () => {
 
   describe('auth fetch with valid config and missing content', () => {
     it('throws when authenticated fetch returns ok but missing content field', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       mockFetch
         .mockResolvedValueOnce({
@@ -764,7 +762,7 @@ describe('FlagProvider', () => {
 
   describe('auth fetch with invalid flags in response', () => {
     it('resets to empty config when authenticated fetch returns invalid flags', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const badConfig = { version: 1, updatedAt: '2024-01-01', flags: 'not-an-object' }
       mockFetch.mockResolvedValueOnce({
@@ -789,7 +787,7 @@ describe('FlagProvider', () => {
 
   describe('network error on both auth and public fetch', () => {
     it('sets error when both fetches fail', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       mockFetch.mockRejectedValueOnce(new Error('Auth failed'))
       mockFetch.mockRejectedValueOnce(new Error('Public also failed'))
@@ -805,7 +803,7 @@ describe('FlagProvider', () => {
 
   describe('cached config with token — auth fetch error branches', () => {
     it('sets isAdmin true and empty config when fresh cache + token + auth fetch returns 404', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const cachedConfig = {
         version: 1,
@@ -828,7 +826,7 @@ describe('FlagProvider', () => {
     })
 
     it('sets isAdmin false when fresh cache + token + auth fetch returns 403', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const cachedConfig = {
         version: 1,
@@ -851,7 +849,7 @@ describe('FlagProvider', () => {
     })
 
     it('sets isAdmin false when fresh cache + token + auth fetch throws', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const cachedConfig = {
         version: 1,
@@ -871,7 +869,7 @@ describe('FlagProvider', () => {
     })
 
     it('handles invalid flags in auth response when cache is fresh', async () => {
-      mockedUseGitHubSync.mockReturnValue({ activeToken: 'ghp_test123' } as ReturnType<typeof useGitHubSyncContext>)
+      adminToken = 'ghp_test123'
 
       const cachedConfig = {
         version: 1,

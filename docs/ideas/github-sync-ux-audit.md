@@ -1,4 +1,7 @@
 # GitHub Sync UX Audit
+
+> **SUPERSEDED.** GitHub Sync was removed during the File System Access migration. Data is now stored as plain files in a folder the user chooses on their own disk; backups are handled by whatever tool the user already uses (Time Machine, Dropbox, git, etc.). This audit is kept for historical reference only.
+
 **Parker, PM — Drive & Settings**
 **Date: 2026-05-10 | Scope: Full sync setup, operation, and recovery flows**
 

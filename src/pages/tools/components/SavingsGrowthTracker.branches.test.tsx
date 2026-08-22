@@ -1,11 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SavingsGrowthTracker from './SavingsGrowthTracker'
 import { loadBudgetStore } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
-import { appStorage } from '../../../utils/appStorage'
+
+const { mockReadJSON, mockWriteJSON, stableFileStore } = vi.hoisted(() => {
+  const r = vi.fn((_p: string, fb: unknown) => Promise.resolve(fb))
+  const w = vi.fn(() => Promise.resolve())
+  return {
+    mockReadJSON: r,
+    mockWriteJSON: w,
+    stableFileStore: { readJSON: r, writeJSON: w, subscribe: vi.fn(() => () => {}) },
+  }
+})
 
 const mockUseData = vi.fn(() => ({
   accounts: [] as Array<{
@@ -29,18 +38,26 @@ vi.mock('../../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  getIncomeGroups: vi.fn((groups: Array<{ type?: string; id?: string }>) =>
+    groups.filter(g => g.type === 'income' || g.id === 'income-others'),
+  ),
 }))
 
 vi.mock('../../budget/utils/csvParser', () => ({
   parseCSV: vi.fn(() => []),
 }))
 
-vi.mock('../../../utils/appStorage', () => ({
-  appStorage: {
-    getJSON: vi.fn(() => ({})),
-    setJSON: vi.fn(),
-  },
+vi.mock('../../../contexts/FileStoreContext', () => ({
+  useFileStore: vi.fn(() => ({
+    fileStore: stableFileStore,
+    isReady: true,
+    folderName: 'test',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: vi.fn(),
+    exitDemo: vi.fn(),
+  })),
 }))
 
 vi.mock('../../../styles/SavingsGrowthTracker.css', () => ({}))
@@ -65,9 +82,10 @@ const renderTracker = (initialRoute = '/net-worth/growth') =>
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
+  mockReadJSON.mockImplementation((_p: string, fb: unknown) => Promise.resolve(fb))
+  mockWriteJSON.mockResolvedValue(undefined)
+  vi.mocked(loadBudgetStore).mockResolvedValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
   vi.mocked(parseCSV).mockReturnValue([])
-  vi.mocked(appStorage.getJSON).mockReturnValue({})
   mockUseData.mockReturnValue({
     accounts: [baseAccount],
     balances: [],
@@ -95,8 +113,8 @@ describe('SavingsGrowthTracker branch coverage', () => {
     expect(within(screen.getByTestId('year-card-2024')).getByText('$95,000')).toBeInTheDocument()
   })
 
-  it('swallows budget parsing failures and still renders a net-worth-only savings row', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
+  it('swallows budget parsing failures and still renders a net-worth-only savings row', async () => {
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-01': { csv: 'bad-csv', month: '2024-01', uploadedAt: '' } },
       categoryGroups: [],
       configs: {},
@@ -115,15 +133,13 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
     renderTracker()
 
-    const card = screen.getByTestId('year-card-2024')
+    const card = await screen.findByTestId('year-card-2024')
     expect(within(card).getByText('$42,000')).toBeInTheDocument()
     expect(card.querySelector('[data-sgt-field="netIncome"]')).toHaveTextContent('—')
   })
 
-  it('falls back to empty overrides when stored override data throws during load', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation(() => {
-      throw new Error('broken storage')
-    })
+  it('falls back to empty overrides when fileStore readJSON rejects', async () => {
+    mockReadJSON.mockRejectedValue(new Error('broken storage'))
     mockUseData.mockReturnValue({
       accounts: [baseAccount],
       balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 42000 }],
@@ -134,24 +150,28 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
     renderTracker('/net-worth/growth/income')
 
-    expect(screen.getByTestId('year-card-2024')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('year-card-2024')).toBeInTheDocument()
+    })
     expect(screen.queryByText('$100,000')).not.toBeInTheDocument()
   })
 
-  it('renders a savings row from overrides alone and shows N/A net worth', () => {
-    vi.mocked(appStorage.getJSON).mockReturnValue({ 2025: { netIncome: 90000, savings: 30000 } })
+  it('renders a savings row from overrides alone and shows N/A net worth', async () => {
+    mockReadJSON.mockResolvedValue({ 2025: { netIncome: 90000, savings: 30000 } })
 
     renderTracker()
 
-    const card = screen.getByTestId('year-card-2025')
+    const card = await screen.findByTestId('year-card-2025')
     expect(within(card).getByText('Net Worth')).toBeInTheDocument()
     expect(card.querySelector('[data-sgt-field="netWorth"]')).toHaveTextContent('N/A')
-    expect(card.querySelector('[data-sgt-field="netIncome"]')).toHaveTextContent('$90,000')
+    await waitFor(() => {
+      expect(card.querySelector('[data-sgt-field="netIncome"]')).toHaveTextContent('$90,000')
+    })
   })
 
   it('clears a saved override when the edited value is blank', async () => {
     const user = userEvent.setup()
-    vi.mocked(appStorage.getJSON).mockReturnValue({ 2024: { grossIncome: 100000 } })
+    mockReadJSON.mockResolvedValue({ 2024: { grossIncome: 100000 } })
     mockUseData.mockReturnValue({
       accounts: [baseAccount],
       balances: [{ id: 1, accountId: 1, month: '2024-12', balance: 10000 }],
@@ -162,22 +182,23 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
     renderTracker('/net-worth/growth/income')
 
-    await user.click(screen.getByRole('button', { name: '$100,000' }))
+    const btn = await screen.findByRole('button', { name: '$100,000' })
+    await user.click(btn)
     const input = document.querySelector('.sgt-edit-input') as HTMLInputElement
     await user.clear(input)
     await user.tab()
 
-    expect(vi.mocked(appStorage.setJSON)).toHaveBeenCalledWith('sgt-overrides', {})
+    expect(mockWriteJSON).toHaveBeenCalledWith('savings-tracker-overrides.json', {})
   })
 
   it('shows zero deltas as dashes on the savings tab even after switching to percentage mode', async () => {
     const user = userEvent.setup()
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: {
         '2023-01': { csv: '2023-csv', month: '2023-01', uploadedAt: '' },
         '2024-01': { csv: '2024-csv', month: '2024-01', uploadedAt: '' },
       },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2023, 2024],
     })
@@ -203,7 +224,7 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
     renderTracker()
 
-    const card = screen.getByTestId('year-card-2024')
+    const card = await screen.findByTestId('year-card-2024')
     expect(within(card).getAllByText('—').length).toBeGreaterThanOrEqual(2)
 
     await user.click(screen.getByRole('button', { name: /Show YoY change as percentage/i }))
@@ -212,7 +233,7 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
   it('renders tax-rate deltas in points and percentages for falling tax rates', async () => {
     const user = userEvent.setup()
-    vi.mocked(appStorage.getJSON).mockReturnValue({
+    mockReadJSON.mockResolvedValue({
       2023: { grossIncome: 100000, taxes: 30000 },
       2024: { grossIncome: 100000, taxes: 20000 },
     })
@@ -229,17 +250,19 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
     renderTracker('/net-worth/growth/income')
 
-    const card = screen.getByTestId('year-card-2024')
-    expect(within(card).getByText('▼ 10.0 pts')).toBeInTheDocument()
+    const card = await screen.findByTestId('year-card-2024')
+    await waitFor(() => {
+      expect(within(card).getByText('▼ 10.0 pts')).toBeInTheDocument()
+    })
 
     await user.click(screen.getByRole('button', { name: /Show YoY change as percentage/i }))
     expect(within(card).getAllByText('▼ 33.3%').length).toBeGreaterThanOrEqual(2)
   })
 
-  it('does not make budget-derived net income editable on the savings tab', () => {
-    vi.mocked(loadBudgetStore).mockReturnValue({
+  it('does not make budget-derived net income editable on the savings tab', async () => {
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-01': { csv: '2024-csv', month: '2024-01', uploadedAt: '' } },
-      categoryGroups: [],
+      categoryGroups: [{ id: 'income-others', name: 'Income', categories: ['Salary'], type: 'income' }],
       configs: {},
       years: [2024],
     })
@@ -257,6 +280,7 @@ describe('SavingsGrowthTracker branch coverage', () => {
 
     renderTracker()
 
+    await screen.findByTestId('year-card-2024')
     expect(screen.queryByRole('button', { name: '$5,000' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '$3,000' })).not.toBeInTheDocument()
   })

@@ -9,6 +9,7 @@ import {
   GW_GOALS,
   MOBILE_VIEWPORT,
 } from './fixtures/goals.fixtures'
+import { readJsonFile, writeJsonFile } from './fixtures/filestore-helpers'
 
 test.describe('Goals Page E2E', () => {
   test.describe('Goal Creation', () => {
@@ -162,12 +163,8 @@ test.describe('Goals Page E2E', () => {
       await goals.openDetailActions()
       await goals.detailDeleteBtn.click()
 
-      // After deleting goal 1, navigates to next goal (goal 2) or back to grid
-      // Navigate back to grid to verify
-      await goals.detailBackLink.waitFor({ state: 'visible', timeout: 5000 })
-      if (await goals.detailBackLink.isVisible()) {
-        await goals.detailBackLink.click()
-      }
+      await page.goto('/finance-tracking/#/goal')
+      await page.waitForLoadState('domcontentloaded')
       await expect(goals.miniCards).toHaveCount(2)
       await expect(goals.getMiniCardByName(GOALS[0].goalName)).not.toBeVisible()
     })
@@ -361,7 +358,6 @@ test.describe('Goals Page E2E', () => {
       const goals = new GoalsPage(page)
       await goals.gotoDetail(1)
 
-      await expect(goals.detailBackLink).toBeVisible()
       await expect(goals.detailTitle).toHaveText(GOALS[0].goalName)
       await expect(goals.goalDetail).toBeVisible()
     })
@@ -599,37 +595,11 @@ test.describe('Goals Page E2E', () => {
       const initialCount = await goals.miniCards.count()
       expect(initialCount).toBeGreaterThan(0)
 
-      // Simulate another tab adding a goal by writing directly to localStorage
-      // and dispatching a storage event
-      await page.evaluate(() => {
-        const key = 'financialGoals'
-        const existing = JSON.parse(localStorage.getItem(key) || '[]')
-        const newGoal = {
-          id: 99999,
-          goalName: 'Cross-Tab Test Goal',
-          fiTarget: 500000,
-          goalCreatedIn: '2024-01',
-          goalEndYear: '2060',
-          currentAge: 30,
-          retirementAge: 55,
-          preReturnRate: 8,
-          postReturnRate: 4,
-          withdrawalRate: 4,
-          monthlyContribution: 2000,
-          currentSavings: 50000,
-        }
-        existing.push(newGoal)
-        const newValue = JSON.stringify(existing)
-        localStorage.setItem(key, newValue)
-        // Dispatch storage event to simulate cross-tab change
-        window.dispatchEvent(
-          new StorageEvent('storage', {
-            key,
-            newValue,
-            oldValue: null,
-            storageArea: localStorage,
-          }),
-        )
+      const goalStore = await readJsonFile(page, 'goals.json', { financialGoals: [], gwGoals: [] })
+      const newGoal = { ...GOALS[0], id: 99999, goalName: 'Cross-Tab Test Goal' }
+      await writeJsonFile(page, 'goals.json', {
+        ...(goalStore as { financialGoals: unknown[]; gwGoals: unknown[] }),
+        financialGoals: [...(goalStore as { financialGoals: unknown[] }).financialGoals, newGoal],
       })
 
       // Wait for UI to update with the new goal
@@ -667,7 +637,8 @@ test.describe('Goals Page E2E', () => {
       await goals.miniCards.first().click()
       await expect(goals.goalDetail).toBeVisible()
 
-      await goals.detailBackLink.click()
+      await page.goto('/finance-tracking/#/goal')
+      await page.waitForLoadState('domcontentloaded')
 
       // Should still be in list mode
       await expect(goals.miniList).toBeVisible()

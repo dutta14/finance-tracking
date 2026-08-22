@@ -27,13 +27,13 @@ describe('BudgetAggregatedView', () => {
 
   it('renders the title for expense type', () => {
     render(<BudgetAggregatedView {...baseProps} />)
-    expect(screen.getByText('Expenses — Aggregated')).toBeInTheDocument()
+    expect(screen.getByText('Expenses')).toBeInTheDocument()
   })
 
   it('renders the title for income type', () => {
     const incomeSums = { Salary: { '2024-01': 5000, '2024-02': 5000 } }
     render(<BudgetAggregatedView {...baseProps} type="income" categorySums={incomeSums} />)
-    expect(screen.getByText('Income — Aggregated')).toBeInTheDocument()
+    expect(screen.getByText('Income')).toBeInTheDocument()
   })
 
   it('renders group names sorted alphabetically for expenses', () => {
@@ -69,7 +69,7 @@ describe('BudgetAggregatedView', () => {
   it('handles empty category sums gracefully', () => {
     render(<BudgetAggregatedView {...baseProps} categorySums={{}} categoryGroups={[]} />)
     // Should render the title but no data rows and no Grand Total
-    expect(screen.getByText('Expenses — Aggregated')).toBeInTheDocument()
+    expect(screen.getByText('Expenses')).toBeInTheDocument()
     expect(screen.queryByText('Grand Total')).not.toBeInTheDocument()
   })
 

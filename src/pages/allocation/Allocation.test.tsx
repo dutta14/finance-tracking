@@ -74,7 +74,7 @@ describe('Allocation', () => {
     await user.click(screen.getByText('+'))
     await user.click(screen.getByText('Blank'))
     // Click the first ratio tab — the tabs render ratio names
-    const tabs = document.querySelectorAll('.alloc-ratio-tab')
+    const tabs = document.querySelectorAll('.alloc-ratio-tabs .tab-btn')
     await user.click(tabs[0] as HTMLElement)
     expect(tabs[0]).toHaveClass('active')
   })

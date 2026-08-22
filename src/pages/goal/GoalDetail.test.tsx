@@ -140,7 +140,7 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     monthlyExpenseValue: 5000,
     expenseValueMar2026: 65000,
     expenseValue2047: 100000,
-    monthlyExpense2047: 8333,
+    monthlyExpenseRetirement: 8333,
     safeWithdrawalRate: 3,
     growth: 12,
     retirement: '2050-01',
@@ -180,7 +180,7 @@ const defaultProps = {
   goals: threeGoals,
   profileBirthday: '1990-01-01',
   gwGoals: [] as GwGoal[],
-  growthSettings: mockGrowthSettings as ReturnType<typeof import('./hooks/useGrowthSettings').useGrowthSettings>,
+  growthSettings: mockGrowthSettings as ReturnType<typeof import('../../hooks/useGrowthSettings').useGrowthSettings>,
   onUpdateGoal: noop as (goalId: number, g: FinancialGoal) => void,
   onCopyGoal: vi.fn(),
   onDeleteGoal: vi.fn(),
@@ -300,7 +300,7 @@ describe('GoalDetail rendering', () => {
   })
 
   it('does not render GwSection when fiGoal is 0', () => {
-    const zeroGoal = makeGoal({ id: 1, goalName: 'Zero', fiGoal: 0 })
+    const zeroGoal = makeGoal({ id: 1, goalName: 'Zero', fiGoal: 0, expenseValue: 0, monthlyExpenseRetirement: 0 })
     renderDetail('/goal/1', { goals: [zeroGoal] })
     expect(screen.queryByTestId('gw-section')).not.toBeInTheDocument()
   })
@@ -342,23 +342,6 @@ describe('GoalDetail not-found state', () => {
 /* ═══════════════════════════════════════════════════════════════
    3. Back link
    ═══════════════════════════════════════════════════════════════ */
-
-describe('GoalDetail back link', () => {
-  it('renders a "Goals" back link in the header', () => {
-    renderDetail('/goal/1')
-    const link = screen.getByRole('link', { name: /goals/i })
-    expect(link).toHaveClass('goal-detail-back-link')
-  })
-
-  it('navigates to /goal when the back link is clicked', async () => {
-    const user = userEvent.setup()
-    renderDetail('/goal/1')
-
-    await user.click(screen.getByRole('link', { name: /goals/i }))
-
-    expect(screen.getByTestId('goals-list')).toBeInTheDocument()
-  })
-})
 
 /* ═══════════════════════════════════════════════════════════════
    4. Stepper prev/next

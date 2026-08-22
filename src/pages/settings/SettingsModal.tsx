@@ -2,27 +2,18 @@ import { FC, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { SettingsModalProps, SettingsSection } from './types'
 import ProfilePane from './components/ProfilePane'
-import GitHubSyncPane from './components/GitHubSyncPane'
+import DataFolderPane from './components/DataFolderPane'
 import AppearancePane from './components/AppearancePane'
 import AdvancedPane from './components/AdvancedPane'
 import LabsPane from './components/LabsPane'
 import FlagAdminPane from './components/FlagAdminPane'
-import SecurityPane from './components/SecurityPane'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { useFlagContext } from '../../flags/FlagContext'
 import { useSettings } from '../../contexts/SettingsContext'
 import '../../styles/SettingsModal.css'
 
 const SettingsModal: FC<SettingsModalProps> = props => {
-  const {
-    darkMode,
-    onToggleDarkMode,
-    profile,
-    onUpdateProfile,
-    hasPendingChanges = false,
-    onClose = () => {},
-    initialSection = 'profile',
-  } = props
+  const { darkMode, onToggleDarkMode, profile, onUpdateProfile, onClose = () => {}, initialSection = 'profile' } = props
 
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
   const modalRef = useRef<HTMLDivElement>(null)
@@ -81,17 +72,16 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               Profile
             </button>
             <button
-              className={`settings-modal-nav-item${activeSection === 'github' ? ' active' : ''}`}
+              className={`settings-modal-nav-item${activeSection === 'folder' ? ' active' : ''}`}
               role="tab"
-              id="settings-tab-github"
-              aria-selected={activeSection === 'github'}
-              onClick={() => setActiveSection('github')}
+              id="settings-tab-folder"
+              aria-selected={activeSection === 'folder'}
+              onClick={() => setActiveSection('folder')}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M1.5 4a1 1 0 0 1 1-1h3l1.2 1.5H13.5a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V4z" />
               </svg>
-              GitHub Sync
-              {hasPendingChanges && <span className="settings-modal-badge" />}
+              Data Folder
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'appearance' ? ' active' : ''}`}
@@ -117,18 +107,6 @@ const SettingsModal: FC<SettingsModalProps> = props => {
                 )}
               </svg>
               Appearance
-            </button>
-            <button
-              className={`settings-modal-nav-item${activeSection === 'security' ? ' active' : ''}`}
-              role="tab"
-              id="settings-tab-security"
-              aria-selected={activeSection === 'security'}
-              onClick={() => setActiveSection('security')}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 1L2 4v3.5c0 3.7 2.56 7.16 6 8 3.44-.84 6-4.3 6-8V4L8 1zm0 1.18L13 5v2.5c0 3.14-2.18 6.1-5 6.87-2.82-.77-5-3.73-5-6.87V5l5-2.82z" />
-              </svg>
-              Security
             </button>
             <button
               className={`settings-modal-nav-item${activeSection === 'advanced' ? ' active' : ''}`}
@@ -172,32 +150,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
 
           <div className="settings-modal-detail" role="tabpanel" aria-labelledby={`settings-tab-${activeSection}`}>
             {activeSection === 'profile' && <ProfilePane profile={profile} onUpdateProfile={onUpdateProfile} />}
-            {activeSection === 'github' && (
-              <GitHubSyncPane
-                hasPendingChanges={hasPendingChanges}
-                ghConfig={props.ghConfig}
-                ghIsConfigured={props.ghIsConfigured}
-                ghSyncStatus={props.ghSyncStatus}
-                ghLastSyncAt={props.ghLastSyncAt}
-                ghLastError={props.ghLastError}
-                ghHistory={props.ghHistory}
-                ghHasStoredToken={props.ghHasStoredToken}
-                ghTokenUnlocked={props.ghTokenUnlocked}
-                onGhUpdateConfig={props.onGhUpdateConfig}
-                onGhSaveEncryptedToken={props.onGhSaveEncryptedToken}
-                onGhUnlockToken={props.onGhUnlockToken}
-                onGhLockToken={props.onGhLockToken}
-                onGhSyncNow={props.onGhSyncNow}
-                onGhFetchHistory={props.onGhFetchHistory}
-                onGhTestConnection={props.onGhTestConnection}
-                onGhRestoreLatest={props.onGhRestoreLatest}
-                onGhRestoreFromCommit={props.onGhRestoreFromCommit}
-                onGhApplyRestore={props.onGhApplyRestore}
-                ghData={props.ghData}
-                ghSyncProgress={props.ghSyncProgress}
-                ghDirtyFlags={props.ghDirtyFlags}
-              />
-            )}
+            {activeSection === 'folder' && <DataFolderPane />}
             {activeSection === 'appearance' && (
               <AppearancePane
                 darkMode={darkMode}
@@ -206,15 +159,10 @@ const SettingsModal: FC<SettingsModalProps> = props => {
                 onChangeAccent={setAccentTheme}
               />
             )}
-            {activeSection === 'security' && <SecurityPane />}
             {activeSection === 'advanced' && (
               <AdvancedPane
                 allowCsvImport={props.allowCsvImport ?? false}
                 onToggleAllowCsvImport={props.onToggleAllowCsvImport ?? (() => {})}
-                onExport={props.onExport ?? (() => {})}
-                onImport={props.onImport ?? (() => {})}
-                onFactoryReset={props.onFactoryReset ?? (() => {})}
-                onClose={onClose}
               />
             )}
             {activeSection === 'labs' && <LabsPane />}

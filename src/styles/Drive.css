@@ -3,7 +3,7 @@
 .drive-page {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 1.25rem 1.5rem 4rem;
 }
 
 /* header */
@@ -54,34 +54,8 @@
 
 /* year tabs */
 .drive-year-tabs {
-  display: flex;
-  gap: 0.4rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
-}
-.drive-year-tab {
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.35rem 0.9rem;
-  font: inherit;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  cursor: pointer;
-  color: var(--color-text);
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-.drive-year-tab:hover {
-  background: var(--accent-lighter);
-  border-color: var(--accent-border);
-}
-.drive-year-tab.active {
-  background: var(--accent-light);
-  border-color: var(--accent-icon-subtle);
-  color: var(--accent-text-dark);
-  font-weight: var(--fw-semibold);
 }
 
 /* file / folder list */

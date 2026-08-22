@@ -5,12 +5,8 @@ import { MemoryRouter } from 'react-router-dom'
 import SidebarNavigation from './SidebarNavigation'
 import { SettingsProvider } from '../contexts/SettingsContext'
 import { GoalsProvider } from '../contexts/GoalsContext'
-import { GitHubSyncProvider } from '../contexts/GitHubSyncContext'
-import { BudgetSyncProvider } from '../contexts/BudgetSyncContext'
-import { TaxSyncProvider } from '../contexts/TaxSyncContext'
-import { ImportExportProvider } from '../contexts/ImportExportContext'
 import { LayoutProvider } from '../contexts/LayoutContext'
-import { EncryptionProvider } from '../contexts/EncryptionContext'
+import { FileStoreTestProvider } from '../test/fileStoreTestUtils'
 import type { PageType } from '../types'
 
 const noop = () => {}
@@ -23,23 +19,15 @@ const defaultProps = {
 const renderSidebar = (overrides = {}) =>
   render(
     <MemoryRouter>
-      <EncryptionProvider>
+      <FileStoreTestProvider>
         <SettingsProvider>
           <GoalsProvider>
-            <GitHubSyncProvider>
-              <BudgetSyncProvider>
-                <TaxSyncProvider>
-                  <LayoutProvider>
-                    <ImportExportProvider>
-                      <SidebarNavigation {...defaultProps} {...overrides} />
-                    </ImportExportProvider>
-                  </LayoutProvider>
-                </TaxSyncProvider>
-              </BudgetSyncProvider>
-            </GitHubSyncProvider>
+            <LayoutProvider>
+              <SidebarNavigation {...defaultProps} {...overrides} />
+            </LayoutProvider>
           </GoalsProvider>
         </SettingsProvider>
-      </EncryptionProvider>
+      </FileStoreTestProvider>
     </MemoryRouter>,
   )
 
@@ -54,9 +42,9 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Transactions')).toBeInTheDocument()
     expect(screen.getByText('Taxes')).toBeInTheDocument()
 
-    // Drive and Settings are now icon buttons in the footer
     expect(screen.getByRole('button', { name: 'Drive' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'User Guide' })).toBeInTheDocument()
 
     expect(screen.queryByText('Tools')).not.toBeInTheDocument()
   })
@@ -78,7 +66,7 @@ describe('SidebarNavigation', () => {
     expect(navLabels).not.toContain('Drive')
   })
 
-  it('calls setCurrentPage with "drive" when the Drive icon button is clicked', async () => {
+  it('calls setCurrentPage with "drive" when the Drive button is clicked', async () => {
     const setCurrentPage = vi.fn()
     const user = userEvent.setup()
     renderSidebar({ setCurrentPage })
@@ -87,6 +75,17 @@ describe('SidebarNavigation', () => {
 
     expect(setCurrentPage).toHaveBeenCalledTimes(1)
     expect(setCurrentPage).toHaveBeenCalledWith('drive')
+  })
+
+  it('calls setCurrentPage with "guide" when the User Guide button is clicked', async () => {
+    const setCurrentPage = vi.fn()
+    const user = userEvent.setup()
+    renderSidebar({ setCurrentPage })
+
+    await user.click(screen.getByRole('button', { name: 'User Guide' }))
+
+    expect(setCurrentPage).toHaveBeenCalledTimes(1)
+    expect(setCurrentPage).toHaveBeenCalledWith('guide')
   })
 
   it('opens the settings modal when the Settings icon button is clicked', async () => {
@@ -105,6 +104,13 @@ describe('SidebarNavigation', () => {
 
     const driveBtn = screen.getByRole('button', { name: 'Drive' })
     expect(driveBtn).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('applies aria-current to Guide button when currentPage is "guide"', () => {
+    renderSidebar({ currentPage: 'guide' })
+
+    const guideBtn = screen.getByRole('button', { name: 'User Guide' })
+    expect(guideBtn).toHaveAttribute('aria-current', 'page')
   })
 
   it('does not apply aria-current to Drive button when currentPage is not "drive"', () => {
@@ -157,32 +163,16 @@ describe('SidebarNavigation', () => {
     expect(group).toHaveClass('sidebar-footer-menu')
 
     const buttons = within(group).getAllByRole('button')
-    expect(buttons.length).toBeGreaterThanOrEqual(2)
+    expect(buttons.length).toBeGreaterThanOrEqual(3)
   })
 
   describe('User guide link', () => {
-    it('renders the User guide link in the sidebar footer', () => {
+    it('renders the User guide button in the sidebar footer', () => {
       renderSidebar()
 
       const group = screen.getByRole('group', { name: 'Utilities' })
-      const link = within(group).getByRole('link', { name: /user guide/i })
-      expect(link).toBeInTheDocument()
-    })
-
-    it('points to the GitHub README and opens in a new tab', () => {
-      renderSidebar()
-
-      const link = screen.getByRole('link', { name: /user guide/i })
-      expect(link).toHaveAttribute('href', 'https://github.com/dutta14/finance-tracking#readme')
-      expect(link).toHaveAttribute('target', '_blank')
-      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
-    })
-
-    it('exposes a "(opens in new tab)" affordance in its accessible name', () => {
-      renderSidebar()
-
-      const link = screen.getByRole('link', { name: /user guide/i })
-      expect(link).toBeInTheDocument()
+      const button = within(group).getByRole('button', { name: /user guide/i })
+      expect(button).toBeInTheDocument()
     })
 
     it('is not rendered when the sidebar is collapsed', async () => {
@@ -191,7 +181,7 @@ describe('SidebarNavigation', () => {
 
       await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
 
-      expect(screen.queryByRole('link', { name: /user guide/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /user guide/i })).not.toBeInTheDocument()
     })
   })
 
@@ -238,8 +228,6 @@ describe('SidebarNavigation', () => {
     })
   })
 
-  /* ── Bug 2 regression: combinedSyncNow dep-array correctness ──── */
-
   describe('sync integration renders correctly (regression)', () => {
     it('renders without errors when consuming all sync contexts including budget and tax', () => {
       expect(() => renderSidebar()).not.toThrow()
@@ -267,6 +255,7 @@ describe('SidebarNavigation', () => {
       expect(screen.getByText('Budget')).toBeInTheDocument()
       expect(screen.getByText('Transactions')).toBeInTheDocument()
       expect(screen.getByText('Taxes')).toBeInTheDocument()
+      expect(screen.getByText('User Guide')).toBeInTheDocument()
     })
   })
 

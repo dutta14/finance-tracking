@@ -2,7 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FICalculator from './FICalculator'
-import { appStorage } from '../../../utils/appStorage'
+import { useProfile } from '../../../hooks/useProfile'
+
+/* ─── Hoisted mock refs ─── */
+
+const { mockReadJSON, mockWriteJSON, stableFileStore } = vi.hoisted(() => {
+  const mockReadJSON = vi.fn((_p: string, fb: unknown) => Promise.resolve(fb))
+  const mockWriteJSON = vi.fn(() => Promise.resolve())
+  return {
+    mockReadJSON,
+    mockWriteJSON,
+    stableFileStore: {
+      readJSON: mockReadJSON,
+      writeJSON: mockWriteJSON,
+      subscribe: vi.fn(() => () => {}),
+    },
+  }
+})
 
 /* ─── Mock dependencies ─── */
 
@@ -19,29 +35,38 @@ vi.mock('../../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {}, categoryGroups: [], configs: {}, years: [] })),
 }))
 
 vi.mock('../../budget/utils/csvParser', () => ({
   parseCSV: vi.fn(() => []),
 }))
 
-vi.mock('../../../utils/appStorage', () => ({
-  appStorage: {
-    getJSON: vi.fn((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations') return []
-      if (key === 'user-profile') return {}
-      return fallback ?? {}
-    }),
-    setJSON: vi.fn(),
-  },
+vi.mock('../../../hooks/useProfile', () => ({
+  useProfile: vi.fn(() => ({
+    profile: { name: 'Primary', avatarDataUrl: '', birthday: '', partner: null },
+    updateProfile: vi.fn(),
+  })),
+}))
+
+vi.mock('../../../contexts/FileStoreContext', () => ({
+  useFileStore: vi.fn(() => ({
+    fileStore: stableFileStore,
+    isReady: true,
+    folderName: 'test',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: vi.fn(),
+    exitDemo: vi.fn(),
+  })),
 }))
 
 vi.mock('../../../styles/FICalculator.css', () => ({}))
 
 beforeEach(() => {
-  localStorage.clear()
   vi.clearAllMocks()
+  mockReadJSON.mockImplementation((_p: string, fb: unknown) => Promise.resolve(fb))
+  mockWriteJSON.mockResolvedValue(undefined)
   mockUseData.mockReturnValue({
     accounts: [],
     balances: [],
@@ -49,22 +74,34 @@ beforeEach(() => {
     setAccounts: vi.fn(),
     setBalances: vi.fn(),
   })
+  vi.mocked(useProfile).mockReturnValue({
+    profile: { name: 'Primary', avatarDataUrl: '', birthday: '', partner: null },
+    updateProfile: vi.fn(),
+  })
 })
 
 function renderCalc() {
   return render(<FICalculator />)
 }
 
+function getYearItem(label: string): HTMLElement {
+  return screen.getByText(label).closest('.fi-calc-year-item')! as HTMLElement
+}
+
+function extractYear(text: string): number {
+  const match = text.match(/\d{4}/)
+  return match ? parseInt(match[0], 10) : NaN
+}
+
+function readYearValue(label: string): number {
+  const text = getYearItem(label).querySelector('.fi-calc-year-val')!.textContent || ''
+  return extractYear(text)
+}
+
 describe('FICalculator', () => {
   it('renders the Annual Expense input', () => {
     renderCalc()
     expect(screen.getByText('Annual Expense')).toBeInTheDocument()
-  })
-
-  it('renders inflation and growth rate steppers', () => {
-    renderCalc()
-    expect(screen.getByText('Inflation')).toBeInTheDocument()
-    expect(screen.getByText('Growth')).toBeInTheDocument()
   })
 
   it('renders retire year and plan until steppers', () => {
@@ -80,7 +117,7 @@ describe('FICalculator', () => {
 
   it('renders the GW liquid toggle', () => {
     renderCalc()
-    expect(screen.getByText(/Include GW liquid/)).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /include gw liquid/i })).toBeInTheDocument()
   })
 
   it('renders current holdings summary section', () => {
@@ -92,16 +129,14 @@ describe('FICalculator', () => {
 
   it('displays result section with annual saving or FI ready message', () => {
     renderCalc()
-    // With no accounts/balances and default expense=60000, gap > 0 so "Save each year" should show
-    expect(screen.getByText(/Save each year until/)).toBeInTheDocument()
+    expect(screen.getByText(/Save for \d+ months up to Dec \d{4}/)).toBeInTheDocument()
   })
 
-  it('renders year-by-year projection when expanded', async () => {
+  it('renders month-by-month projection table when table view is selected', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
-    await user.click(expandBtn)
-    expect(screen.getByText('Year')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Table' }))
+    expect(screen.getByText('Month')).toBeInTheDocument()
     expect(screen.getByText('Expense')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
   })
@@ -115,26 +150,12 @@ describe('FICalculator', () => {
     expect(input).toHaveValue('120,000')
   })
 
-  it('displays inflation rate value and responds to stepper clicks', () => {
-    renderCalc()
-    // Default inflation is 3%, scoped to the Inflation stepper row
-    const inflationRow = screen.getByText('Inflation').parentElement!
-    expect(within(inflationRow).getByText('3%')).toBeInTheDocument()
-  })
-
-  it('displays growth rate value', () => {
-    renderCalc()
-    // Default growth is 8%, scoped to the Growth stepper row
-    const growthRow = screen.getByText('Growth').parentElement!
-    expect(within(growthRow).getByText('8%')).toBeInTheDocument()
-  })
-
   it('shows the Save button and save form', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const saveBtn = screen.getByRole('button', { name: /\+ save current/i })
+    const saveBtn = screen.getByRole('button', { name: /save as new/i })
     await user.click(saveBtn)
-    expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /new simulation name/i })).toBeInTheDocument()
   })
 
   it('shows FI ready when existing balances exceed corpus need', () => {
@@ -157,20 +178,23 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.getByText(/You're ready to FI/)).toBeInTheDocument()
+    expect(screen.getByText('Ready for F.I.R.E.')).toBeInTheDocument()
   })
 
   it('renders breakdown rows when result is computed', () => {
     renderCalc()
-    expect(screen.getByText(/Expense at retirement/)).toBeInTheDocument()
-    expect(screen.getByText(/Non-ret corpus needed/)).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: /holdings summary/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /holdings/i })).toBeInTheDocument()
+    expect(screen.getByText('Holdings')).toBeInTheDocument()
+    expect(screen.getByText('At 401(k) Access')).toBeInTheDocument()
+    expect(screen.getByText('Required to FIRE')).toBeInTheDocument()
     expect(screen.getByText(/Gap to close/)).toBeInTheDocument()
   })
 
   it('cancel save form hides the input', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     expect(screen.getByPlaceholderText('Simulation name')).toBeInTheDocument()
     await user.click(screen.getByText('✕'))
     expect(screen.queryByPlaceholderText('Simulation name')).not.toBeInTheDocument()
@@ -181,73 +205,30 @@ describe('FICalculator', () => {
     expect(screen.queryByText('Partner 401(k)')).not.toBeInTheDocument()
   })
 
-  it('increments inflation rate when plus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
-    const plusBtn = within(inflationRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
-    await user.click(plusBtn)
-    expect(within(inflationRow).getByText('3.5%')).toBeInTheDocument()
-  })
-
-  it('decrements inflation rate when minus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
-    const minusBtn = within(inflationRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '−')!
-    await user.click(minusBtn)
-    expect(within(inflationRow).getByText('2.5%')).toBeInTheDocument()
-  })
-
-  it('increments growth rate when plus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')! as HTMLElement
-    const plusBtn = within(growthRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '+')!
-    await user.click(plusBtn)
-    expect(within(growthRow).getByText('8.5%')).toBeInTheDocument()
-  })
-
-  it('decrements growth rate when minus stepper is clicked', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    const growthRow = screen.getByText('Growth').closest('.fi-calc-stepper-item')! as HTMLElement
-    const minusBtn = within(growthRow)
-      .getAllByRole('button')
-      .find(b => b.textContent === '−')!
-    await user.click(minusBtn)
-    expect(within(growthRow).getByText('7.5%')).toBeInTheDocument()
-  })
-
   it('increments retire year when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const retireRow = screen.getByText('Retire in').closest('.fi-calc-stepper-item')! as HTMLElement
+    const retireRow = getYearItem('Retire in')
+    const initialYear = readYearValue('Retire in')
     const plusBtn = within(retireRow)
       .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+      .find(b => b.textContent === '›')!
     await user.click(plusBtn)
-    const thisYear = new Date().getFullYear()
-    expect(within(retireRow).getByText(`(${thisYear + 2 - thisYear}yr)`, { exact: false })).toBeInTheDocument()
+    expect(readYearValue('Retire in')).toBe(initialYear + 1)
+    expect(within(retireRow).getByText(/\(2 yrs\)/)).toBeInTheDocument()
   })
 
   it('decrements plan-until year when minus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
+    const planRow = getYearItem('Plan until')
     const minusBtn = within(planRow)
       .getAllByRole('button')
-      .find(b => b.textContent === '−')!
-    const initialText = planRow.querySelector('.fi-calc-step-val')!.textContent!
+      .find(b => b.textContent === '‹')!
+    const initialText = planRow.querySelector('.fi-calc-year-val')!.textContent!
     await user.click(minusBtn)
-    const afterText = planRow.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(afterText)).toBeLessThan(parseInt(initialText))
+    const afterText = planRow.querySelector('.fi-calc-year-val')!.textContent!
+    expect(extractYear(afterText)).toBeLessThan(extractYear(initialText))
   })
 
   it('toggles GW liquid inclusion and shows GW Liquid row', async () => {
@@ -271,17 +252,17 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.queryByText('GW Liquid')).not.toBeInTheDocument()
-
-    const toggle = screen.getByText(/Include GW liquid/)
+    const toggle = screen.getByRole('checkbox', { name: /include gw liquid/i })
+    expect(toggle).not.toBeChecked()
     await user.click(toggle)
+    expect(toggle).toBeChecked()
     expect(screen.getByText('GW Liquid')).toBeInTheDocument()
   })
 
-  it('saves a simulation and displays it as a chip', async () => {
+  it('saves a simulation and displays it in the saved simulations list', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     const nameInput = screen.getByPlaceholderText('Simulation name')
     await user.type(nameInput, 'Base Case')
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -289,38 +270,35 @@ describe('FICalculator', () => {
     expect(screen.getByText('Base Case')).toBeInTheDocument()
   })
 
-  it('deletes a saved simulation when × is clicked on chip', async () => {
+  it('deletes a saved simulation from the overflow menu', async () => {
     const user = userEvent.setup()
     renderCalc()
-    // Save a sim
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     await user.type(screen.getByPlaceholderText('Simulation name'), 'To Delete')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(screen.getByText('To Delete')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /delete to delete/i }))
+    await user.click(screen.getByRole('button', { name: /options for to delete/i }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Yes' }))
     expect(screen.queryByText('To Delete')).not.toBeInTheDocument()
   })
 
-  it('loads a saved simulation when chip is clicked', async () => {
+  it('loads a saved simulation when its list item is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    // Change expense to something distinct
     const input = screen.getByDisplayValue('60,000')
     await user.clear(input)
     await user.type(input, '99000')
-    // Save
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     await user.type(screen.getByPlaceholderText('Simulation name'), 'Custom')
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    // Change expense again
     const input2 = screen.getByDisplayValue('99,000')
     await user.clear(input2)
     await user.type(input2, '50000')
     expect(screen.getByDisplayValue('50,000')).toBeInTheDocument()
 
-    // Click the saved sim chip to restore
     await user.click(screen.getByText('Custom'))
     expect(screen.getByDisplayValue('99,000')).toBeInTheDocument()
   })
@@ -345,7 +323,8 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.getByText(/Primary 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Primary)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$200,000')).toBeInTheDocument()
   })
 
   it('shows partner 401k in breakdown when partner retirement accounts exist', () => {
@@ -368,37 +347,28 @@ describe('FICalculator', () => {
       setBalances: vi.fn(),
     })
     renderCalc()
-    expect(screen.getByText(/Partner 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Partner)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$100,000')).toBeInTheDocument()
   })
 
   it('shows existing non-ret at retire year in breakdown', () => {
     renderCalc()
-    expect(screen.getByText(/Existing non-ret at/)).toBeInTheDocument()
+    expect(screen.getByText('FI Non-Retirement')).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(`At Retirement \\(${new Date().getFullYear() + 1}\\)`))).toBeInTheDocument()
   })
 
-  it('renders year-by-year projection rows with year, expense, and net worth columns', async () => {
+  it('renders month-by-month projection rows with month, expense, and net worth columns', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /show year-by-year projection/i }))
-    // Should have data rows in the table
+    await user.click(screen.getByRole('button', { name: 'Table' }))
     const rows = document.querySelectorAll('.fi-calc-yby-table tbody tr')
     expect(rows.length).toBeGreaterThan(0)
-  })
-
-  it('collapses year-by-year projection on second click', async () => {
-    const user = userEvent.setup()
-    renderCalc()
-    const btn = screen.getByRole('button', { name: /show year-by-year projection/i })
-    await user.click(btn) // expand
-    expect(document.querySelector('.fi-calc-yby-table')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /hide year-by-year projection/i })) // collapse
-    expect(document.querySelector('.fi-calc-yby-table')).not.toBeInTheDocument()
   })
 
   it('disables save button when simulation name is empty', async () => {
     const user = userEvent.setup()
     renderCalc()
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     const saveBtn = screen.getByRole('button', { name: 'Save' })
     expect(saveBtn).toBeDisabled()
   })
@@ -414,10 +384,14 @@ describe('FICalculator', () => {
   })
 
   it('renders partner 401(k) stepper when profile has partner birth year', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-06-15' } }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
+      updateProfile: vi.fn(),
     })
 
     renderCalc()
@@ -427,30 +401,28 @@ describe('FICalculator', () => {
   it('increments primary 401k year when plus stepper is clicked', async () => {
     const user = userEvent.setup()
     renderCalc()
-    const row401k = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const initial = row401k.querySelector('.fi-calc-step-val')!.textContent!
+    const row401k = getYearItem('Primary 401(k)')
+    const initial = row401k.querySelector('.fi-calc-year-val')!.textContent!
     const plusBtn = within(row401k)
       .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+      .find(b => b.textContent === '›')!
     await user.click(plusBtn)
-    const after = row401k.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(after)).toBe(parseInt(initial) + 1)
+    const after = row401k.querySelector('.fi-calc-year-val')!.textContent!
+    expect(extractYear(after)).toBe(extractYear(initial) + 1)
   })
 
   /* ── Results display ──────────────────────────────────────────── */
 
   it('displays results section with expense and corpus breakdown', () => {
     renderCalc()
-    // Results section should render by default with default values
-    expect(screen.getByText(/Expense at retirement/)).toBeInTheDocument()
-    expect(screen.getByText(/Non-ret corpus needed/)).toBeInTheDocument()
+    expect(screen.getByText('Holdings')).toBeInTheDocument()
+    expect(screen.getByText('Required to FIRE')).toBeInTheDocument()
     expect(screen.getByText(/Gap to close/)).toBeInTheDocument()
   })
 
-  it('shows Save each year message when gap is positive', () => {
+  it('shows Save for months message when gap is positive', () => {
     renderCalc()
-    // Default values should produce a positive gap
-    expect(screen.getByText(/Save each year until/)).toBeInTheDocument()
+    expect(screen.getByText(/Save for \d+ months up to Dec \d{4}/)).toBeInTheDocument()
   })
 
   it('displays current holdings summary', () => {
@@ -464,7 +436,7 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    const toggleBtn = screen.getByText(/Include GW liquid/)
+    const toggleBtn = screen.getByRole('checkbox', { name: /include gw liquid/i })
     await user.click(toggleBtn)
 
     expect(screen.getByText('GW Liquid')).toBeInTheDocument()
@@ -491,14 +463,19 @@ describe('FICalculator', () => {
     })
 
     renderCalc()
-    expect(screen.getByText(/Primary 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Primary)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$100,000')).toBeInTheDocument()
   })
 
   it('shows partner 401k breakdown when fiRetirementPartner > 0', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-06-15' } }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
+      updateProfile: vi.fn(),
     })
     mockUseData.mockReturnValue({
       accounts: [
@@ -520,7 +497,8 @@ describe('FICalculator', () => {
     })
 
     renderCalc()
-    expect(screen.getByText(/Partner 401\(k\) at/)).toBeInTheDocument()
+    const row = screen.getByText('FI Retirement (Partner)').closest('.fi-calc-ht-row')! as HTMLElement
+    expect(within(row).getByText('$80,000')).toBeInTheDocument()
   })
 
   /* ── Simulation save/load/delete ──────────────────────────────── */
@@ -529,75 +507,73 @@ describe('FICalculator', () => {
     const user = userEvent.setup()
     renderCalc()
 
-    await user.click(screen.getByRole('button', { name: /\+ save current/i }))
+    await user.click(screen.getByRole('button', { name: /save as new/i }))
     const nameInput = screen.getByPlaceholderText('Simulation name')
     await user.type(nameInput, 'My Sim')
     const saveBtn = screen.getByRole('button', { name: 'Save' })
     await user.click(saveBtn)
 
-    expect(appStorage.setJSON).toHaveBeenCalledWith(
-      'fi-simulations',
+    expect(mockWriteJSON).toHaveBeenCalledWith(
+      'fi-simulations.json',
       expect.arrayContaining([expect.objectContaining({ name: 'My Sim' })]),
     )
   })
 
   it('loads a saved simulation', async () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations')
-        return [
-          {
-            name: 'Saved Sim',
-            annualExpense: 80000,
-            inflationRate: 3,
-            growthRate: 7,
-            lastYear: 2070,
-            retireYear: 2040,
-            primary401kYear: 2050,
-            partner401kYear: 2050,
-            includeGwLiquid: false,
-          },
-        ]
-      if (key === 'user-profile') return {}
-      return fallback ?? {}
-    })
+    const sims = [
+      {
+        name: 'Saved Sim',
+        annualExpense: 80000,
+        inflationRate: 3,
+        growthRate: 7,
+        lastYear: 2070,
+        retireYear: 2040,
+        primary401kYear: 2050,
+        partner401kYear: 2050,
+        includeGwLiquid: false,
+      },
+    ]
+    mockReadJSON.mockImplementation((key: string, fb: unknown) =>
+      key === 'fi-simulations.json' ? Promise.resolve(sims) : Promise.resolve(fb),
+    )
 
     const user = userEvent.setup()
     renderCalc()
 
-    // The saved sim should appear as a button
-    const simBtn = screen.getByText('Saved Sim')
+    // Wait for sims to load
+    const simBtn = await screen.findByText('Saved Sim')
     await user.click(simBtn)
 
     // Expense should update to saved value
     expect(screen.getByDisplayValue('80,000')).toBeInTheDocument()
   })
 
-  it('deletes a saved simulation via chip × button', async () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations')
-        return [
-          {
-            name: 'ToDelete',
-            annualExpense: 60000,
-            inflationRate: 2.5,
-            growthRate: 7,
-            lastYear: 2065,
-            retireYear: 2040,
-            primary401kYear: 2050,
-            partner401kYear: 2050,
-            includeGwLiquid: false,
-          },
-        ]
-      if (key === 'user-profile') return {}
-      return fallback ?? {}
-    })
+  it('deletes a saved simulation via the overflow menu', async () => {
+    const sims = [
+      {
+        name: 'ToDelete',
+        annualExpense: 60000,
+        inflationRate: 2.5,
+        growthRate: 7,
+        lastYear: 2065,
+        retireYear: 2040,
+        primary401kYear: 2050,
+        partner401kYear: 2050,
+        includeGwLiquid: false,
+      },
+    ]
+    mockReadJSON.mockImplementation((key: string, fb: unknown) =>
+      key === 'fi-simulations.json' ? Promise.resolve(sims) : Promise.resolve(fb),
+    )
 
     const user = userEvent.setup()
     renderCalc()
 
-    await user.click(screen.getByRole('button', { name: /delete todelete/i }))
+    await user.click(await screen.findByRole('button', { name: /options for todelete/i }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Yes' }))
 
-    expect(appStorage.setJSON).toHaveBeenCalledWith('fi-simulations', [])
+    expect(mockWriteJSON).toHaveBeenCalledWith('fi-simulations.json', [])
   })
 
   /* ── Expense from budget ──────────────────────────────────────── */
@@ -613,7 +589,7 @@ describe('FICalculator', () => {
       csvs[key] = { csv: 'test', month: key, uploadedAt: '' }
     }
 
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs,
       categoryGroups: [],
       configs: {},
@@ -635,42 +611,38 @@ describe('FICalculator', () => {
    * Pin the documented `defaultLastYear` rule (FICalculator.tsx lines 173-182):
    *   defaultLastYear = max(primary+100, partner+100), or thisYear+60 if neither.
    * The Plan-until stepper value at first render IS defaultLastYear, so we
-   * read the `.fi-calc-step-val` inside the "Plan until" row to assert it.
+   * read the `.fi-calc-year-val` inside the "Plan until" row to assert it.
    * A future refactor that breaks the rule must make these tests fail.
    */
   describe('defaultLastYear (regression: #163)', () => {
     function readPlanUntilYear(): number {
-      const row = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
-      const text = row.querySelector('.fi-calc-step-val')!.textContent!
-      return parseInt(text, 10)
+      return readYearValue('Plan until')
     }
 
     it('falls back to thisYear+60 when neither birth year is present', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return {}
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
-      })
       renderCalc()
       const thisYear = new Date().getFullYear()
       expect(readPlanUntilYear()).toBe(thisYear + 60)
     })
 
     it('uses primary+100 when only primary birthday is set', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return { birthday: '1990-05-15' }
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
+      vi.mocked(useProfile).mockReturnValue({
+        profile: { name: '', avatarDataUrl: '', birthday: '1990-05-15', partner: null },
+        updateProfile: vi.fn(),
       })
       renderCalc()
       expect(readPlanUntilYear()).toBe(2090)
     })
 
     it('uses partner+100 (NOT primary+100) when partner is younger — the #163 case', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1995-06-15' } }
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
+      vi.mocked(useProfile).mockReturnValue({
+        profile: {
+          name: '',
+          avatarDataUrl: '',
+          birthday: '1990-01-01',
+          partner: { name: '', avatarDataUrl: '', birthday: '1995-06-15' },
+        },
+        updateProfile: vi.fn(),
       })
       renderCalc()
       expect(readPlanUntilYear()).toBe(2095)
@@ -678,10 +650,14 @@ describe('FICalculator', () => {
     })
 
     it('uses primary+100 when partner is older than primary', () => {
-      vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-        if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1985-06-15' } }
-        if (key === 'fi-simulations') return []
-        return fallback ?? {}
+      vi.mocked(useProfile).mockReturnValue({
+        profile: {
+          name: '',
+          avatarDataUrl: '',
+          birthday: '1990-01-01',
+          partner: { name: '', avatarDataUrl: '', birthday: '1985-06-15' },
+        },
+        updateProfile: vi.fn(),
       })
       renderCalc()
       expect(readPlanUntilYear()).toBe(2090)
@@ -691,54 +667,44 @@ describe('FICalculator', () => {
   /* ── Partner 401k stepper decrement ───────────────────────────── */
 
   it('increments partner 401k year when plus stepper is clicked', async () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-06-15' } }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-06-15' },
+      },
+      updateProfile: vi.fn(),
     })
 
     const user = userEvent.setup()
     renderCalc()
-    const row = screen.getByText('Partner 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const initial = row.querySelector('.fi-calc-step-val')!.textContent!
+    const row = getYearItem('Partner 401(k)')
+    const initial = row.querySelector('.fi-calc-year-val')!.textContent!
     const plusBtn = within(row)
       .getAllByRole('button')
-      .find(b => b.textContent === '+')!
+      .find(b => b.textContent === '›')!
     await user.click(plusBtn)
-    const after = row.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(after)).toBe(parseInt(initial) + 1)
+    const after = row.querySelector('.fi-calc-year-val')!.textContent!
+    expect(extractYear(after)).toBe(extractYear(initial) + 1)
   })
 
   /* ── getBirthYear edge cases (lines 74-81) ──────────────────── */
 
-  it('parses birthday from ISO date string when no YYYY pattern found (line 80)', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      // Use a date format that doesn't match /(\d{4})/ regex directly
-      // Actually any ISO date contains 4 digits so the regex match branch (line 76-77) fires
-      // Test with a plain year string
-      if (key === 'user-profile') return { birthday: '1985' }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
+  it('parses a year-only birthday string for 401(k) eligibility', () => {
+    vi.mocked(useProfile).mockReturnValue({
+      profile: { name: '', avatarDataUrl: '', birthday: '1985', partner: null },
+      updateProfile: vi.fn(),
     })
     renderCalc()
-    // With birth year 1985, primary 401k earliest = 1985+60 = 2045
-    const row = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const val = row.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(val)).toBe(2045)
+    expect(readYearValue('Primary 401(k)')).toBe(2044)
   })
 
   it('returns null birth year for empty birthday string (line 75)', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '' }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
-    })
     renderCalc()
     // With null birth year, primary401kEarliestYear = thisYear + 30
     const thisYear = new Date().getFullYear()
-    const row = screen.getByText('Primary 401(k)').closest('.fi-calc-stepper-item')! as HTMLElement
-    const val = row.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(val)).toBe(thisYear + 30)
+    expect(readYearValue('Primary 401(k)')).toBe(thisYear + 30)
   })
 
   /* ── getLatestBalancesByFilter edge cases (lines 63-65) ───── */
@@ -793,26 +759,15 @@ describe('FICalculator', () => {
   /* ── defaultLastYear with no birth years (line 181) ──────── */
 
   it('defaults plan-until to thisYear+60 when no birth years are available', () => {
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return {} // no birthday at all
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
-    })
     renderCalc()
     const thisYear = new Date().getFullYear()
-    const planRow = screen.getByText('Plan until').closest('.fi-calc-stepper-item')! as HTMLElement
-    const val = planRow.querySelector('.fi-calc-step-val')!.textContent!
-    expect(parseInt(val)).toBe(thisYear + 60)
+    expect(readYearValue('Plan until')).toBe(thisYear + 60)
   })
 
   /* ── Annual expense input onKeyDown Enter (line 402) ────── */
 
   it('blurs the annual expense input on Enter key', async () => {
     const user = userEvent.setup()
-    // Reset mocks that prior tests may have set
-    vi.mocked(appStorage.getJSON).mockImplementation((_key: string, fallback: unknown) => fallback ?? {})
-    const { loadBudgetStore } = await import('../../budget/utils/budgetStorage')
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, categoryGroups: [], configs: {}, years: [] })
     renderCalc()
     const input = screen.getByDisplayValue('60,000')
     await user.click(input)
@@ -827,7 +782,7 @@ describe('FICalculator', () => {
     // We need getLastYearExpense to return > 0
     const { loadBudgetStore } = await import('../../budget/utils/budgetStorage')
     const { parseCSV } = await import('../../budget/utils/csvParser')
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-01': { month: '2024-01', csv: 'data', uploadedAt: '' } },
       categoryGroups: [],
       configs: {},
@@ -847,26 +802,15 @@ describe('FICalculator', () => {
 
   /* ── Year-by-year negative net worth row (line 584) ──────── */
 
-  it('applies negative class to year-by-year rows with netWorth < 0', async () => {
+  it('renders the month-by-month table without crashing for long-horizon scenarios', async () => {
     const user = userEvent.setup()
-    // Set up scenario where net worth goes negative (high expenses, low savings)
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'user-profile') return { birthday: '1990-01-01' }
-      if (key === 'fi-simulations') return []
-      return fallback ?? {}
-    })
-    mockUseData.mockReturnValue({
-      accounts: [],
-      balances: [],
-      allMonths: [],
-      setAccounts: vi.fn(),
-      setBalances: vi.fn(),
+    vi.mocked(useProfile).mockReturnValue({
+      profile: { name: '', avatarDataUrl: '', birthday: '1990-01-01', partner: null },
+      updateProfile: vi.fn(),
     })
     renderCalc()
-    const expandBtn = screen.getByRole('button', { name: /show year-by-year projection/i })
-    await user.click(expandBtn)
-    // Table should render without crashing
-    expect(screen.getByText('Year')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Table' }))
+    expect(screen.getByText('Month')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
   })
 
@@ -875,7 +819,7 @@ describe('FICalculator', () => {
   it('excludes transactions from removed category group', async () => {
     const { loadBudgetStore } = await import('../../budget/utils/budgetStorage')
     const { parseCSV } = await import('../../budget/utils/csvParser')
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024-06': { month: '2024-06', csv: 'data', uploadedAt: '' } },
       categoryGroups: [{ id: 'removed', name: 'Removed', categories: ['Excluded'] }],
       configs: {},
@@ -904,19 +848,21 @@ describe('FICalculator', () => {
       partner401kYear: 2062,
       includeGwLiquid: true,
     }
-    vi.mocked(appStorage.getJSON).mockImplementation((key: string, fallback: unknown) => {
-      if (key === 'fi-simulations') return [sim]
-      if (key === 'user-profile') return { birthday: '1990-01-01', partner: { birthday: '1992-01-01' } }
-      return fallback ?? {}
+    mockReadJSON.mockImplementation((key: string, fb: unknown) =>
+      key === 'fi-simulations.json' ? Promise.resolve([sim]) : Promise.resolve(fb),
+    )
+    vi.mocked(useProfile).mockReturnValue({
+      profile: {
+        name: '',
+        avatarDataUrl: '',
+        birthday: '1990-01-01',
+        partner: { name: '', avatarDataUrl: '', birthday: '1992-01-01' },
+      },
+      updateProfile: vi.fn(),
     })
     const user = userEvent.setup()
     renderCalc()
-    // Click on the simulation chip to load it
-    await user.click(screen.getByText('Loaded Sim'))
-    // Verify expense was applied
+    await user.click(await screen.findByText('Loaded Sim'))
     expect(screen.getByDisplayValue('80,000')).toBeInTheDocument()
-    // Verify inflation was applied
-    const inflationRow = screen.getByText('Inflation').closest('.fi-calc-stepper-item')! as HTMLElement
-    expect(within(inflationRow).getByText('4%')).toBeInTheDocument()
   })
 })

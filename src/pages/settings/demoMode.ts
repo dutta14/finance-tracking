@@ -1,111 +1,26 @@
 /**
- * Demo Mode — temporarily replaces all user data with realistic fake data.
- * No existing code is modified. On enter: backup → seed → reload.
- * On exit: restore → reload.
+ * Demo Mode seed data.
+ *
+ * Demo mode swaps the disk-backed FileStore for an in-memory one seeded with
+ * realistic sample data, so nothing on the user's disk is ever touched.
  */
 
 import type { FinancialGoal, GwGoal } from '../../types'
 import type { Account, BalanceEntry } from '../data/types'
 import type { CategoryGroup } from '../budget/types'
+import type { FileStore } from '../../utils/fileStoreTypes'
 
-const BACKUP_KEY = '_demo-backup'
-
-// Keys to backup & replace (user data)
-const DATA_KEYS = [
-  'user-profile',
-  'financialGoals',
-  'gw-goals',
-  'data-accounts',
-  'data-balances',
-  'budget-store',
-  'budget-config',
-  'tax-store',
-  'tax-templates',
-  'allocation-custom-ratios',
-  'fi-simulations',
-  'sgt-overrides',
-]
-
-// Keys to never touch (settings, credentials)
-// darkMode, accentTheme, allowCsvImport, github-sync-config, goal-view-mode, home-card-order, lab-pdf-to-csv
-
-export const isDemoActive = (): boolean => localStorage.getItem(BACKUP_KEY) !== null
-
-export function enterDemoMode(): void {
-  if (isDemoActive()) return
-
-  // 1. Backup all data keys
-  const backup: Record<string, string | null> = {}
-  for (const key of DATA_KEYS) {
-    backup[key] = localStorage.getItem(key)
+function demoProfile() {
+  return {
+    name: 'Alex',
+    avatarDataUrl: '',
+    birthday: '1992-03-15',
+    partner: { name: 'Sam', avatarDataUrl: '', birthday: '1994-07-22' },
   }
-  localStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
-
-  // 2. Clear data keys
-  for (const key of DATA_KEYS) {
-    localStorage.removeItem(key)
-  }
-
-  // 3. Seed fake data
-  seedProfile()
-  seedGoals()
-  seedAccounts()
-  seedBalances()
-  seedBudget()
-  seedTaxes()
-  seedAllocation()
-  seedToolsData()
-
-  // 4. Reload
-  window.location.reload()
 }
 
-export function exitDemoMode(): void {
-  if (!isDemoActive()) return
-
-  const raw = localStorage.getItem(BACKUP_KEY)
-  if (!raw) return
-
-  // 1. Remove all demo data
-  for (const key of DATA_KEYS) {
-    localStorage.removeItem(key)
-  }
-
-  // 2. Restore original data
-  try {
-    const backup: Record<string, string | null> = JSON.parse(raw)
-    for (const [key, value] of Object.entries(backup)) {
-      if (value !== null) {
-        localStorage.setItem(key, value)
-      }
-    }
-  } catch {
-    /* corrupt backup — just clear */
-  }
-
-  // 3. Remove backup key
-  localStorage.removeItem(BACKUP_KEY)
-
-  // 4. Reload
-  window.location.reload()
-}
-
-/* ─── Seed Functions ─────────────────────────────────────────── */
-
-function seedProfile(): void {
-  localStorage.setItem(
-    'user-profile',
-    JSON.stringify({
-      name: 'Alex',
-      avatarDataUrl: '',
-      birthday: '1992-03-15',
-      partner: { name: 'Sam', avatarDataUrl: '', birthday: '1994-07-22' },
-    }),
-  )
-}
-
-function seedGoals(): void {
-  const goals: FinancialGoal[] = [
+function demoGoals(): { financialGoals: FinancialGoal[]; gwGoals: GwGoal[] } {
+  const financialGoals: FinancialGoal[] = [
     {
       id: 1,
       goalName: 'Early Retirement',
@@ -120,7 +35,7 @@ function seedGoals(): void {
       monthlyExpenseValue: 5000,
       expenseValueMar2026: 68000,
       expenseValue2047: 120000,
-      monthlyExpense2047: 10000,
+      monthlyExpenseRetirement: 10000,
       safeWithdrawalRate: 3.5,
       growth: 8,
       retirement: '2042-03',
@@ -141,7 +56,7 @@ function seedGoals(): void {
       monthlyExpenseValue: 4000,
       expenseValueMar2026: 53000,
       expenseValue2047: 95000,
-      monthlyExpense2047: 7917,
+      monthlyExpenseRetirement: 7917,
       safeWithdrawalRate: 4,
       growth: 7,
       retirement: '2047-03',
@@ -162,7 +77,7 @@ function seedGoals(): void {
       monthlyExpenseValue: 3750,
       expenseValueMar2026: 50000,
       expenseValue2047: 85000,
-      monthlyExpense2047: 7083,
+      monthlyExpenseRetirement: 7083,
       safeWithdrawalRate: 4,
       growth: 7,
       retirement: '2046-07',
@@ -170,7 +85,6 @@ function seedGoals(): void {
       progress: 28,
     },
   ]
-  localStorage.setItem('financialGoals', JSON.stringify(goals))
 
   const gwGoals: GwGoal[] = [
     {
@@ -214,11 +128,12 @@ function seedGoals(): void {
       currentSavings: 22000,
     },
   ]
-  localStorage.setItem('gw-goals', JSON.stringify(gwGoals))
+
+  return { financialGoals, gwGoals }
 }
 
-function seedAccounts(): void {
-  const accounts: Account[] = [
+function demoAccounts(): Account[] {
+  return [
     {
       id: 1,
       name: '401(k)',
@@ -280,26 +195,24 @@ function seedAccounts(): void {
       group: 'Retirement',
     },
   ]
-  localStorage.setItem('data-accounts', JSON.stringify(accounts))
 }
 
-function seedBalances(): void {
+function demoBalances(): BalanceEntry[] {
   const balances: BalanceEntry[] = []
   let nextId = 1
 
-  // Generate ~10 years of monthly data (Jan 2016 → current month)
   const startYear = 2016
   const now = new Date()
   const endYear = now.getFullYear()
   const endMonth = now.getMonth() + 1
 
-  // Account growth profiles: [startBalance, monthlyContribution, annualGrowthPct, volatility]
+  // [startBalance, monthlyContribution, annualGrowthPct, volatility]
   const profiles: Record<number, [number, number, number, number]> = {
-    1: [25000, 1800, 9, 0.03], // 401k — aggressive growth
-    2: [8000, 500, 8, 0.025], // Roth IRA
-    3: [15000, 1000, 7.5, 0.035], // Brokerage
-    4: [10000, 800, 4.5, 0.005], // HYSA — low volatility
-    5: [12000, 1200, 8.5, 0.03], // Partner 401k
+    1: [25000, 1800, 9, 0.03],
+    2: [8000, 500, 8, 0.025],
+    3: [15000, 1000, 7.5, 0.035],
+    4: [10000, 800, 4.5, 0.005],
+    5: [12000, 1200, 8.5, 0.03],
   }
 
   for (const [accountId, [startBal, monthlyAdd, annualGrowth, vol]] of Object.entries(profiles)) {
@@ -309,12 +222,9 @@ function seedBalances(): void {
     for (let y = startYear; y <= endYear; y++) {
       const maxMonth = y === endYear ? endMonth : 12
       for (let m = 1; m <= maxMonth; m++) {
-        // Simulate: contribution + growth + noise
         balance += monthlyAdd
         balance *= 1 + monthlyGrowth
-        // Add some realistic noise
-        const noise = 1 + (Math.random() - 0.5) * vol * 2
-        balance *= noise
+        balance *= 1 + (Math.random() - 0.5) * vol * 2
         balance = Math.round(balance)
 
         balances.push({
@@ -327,10 +237,10 @@ function seedBalances(): void {
     }
   }
 
-  localStorage.setItem('data-balances', JSON.stringify(balances))
+  return balances
 }
 
-function seedBudget(): void {
+function demoBudget(): { groups: CategoryGroup[]; years: number[]; csvs: Record<string, string> } {
   const categories = {
     income: ['Salary', 'Side Income', 'Interest'],
     housing: ['Rent', 'Utilities', 'Internet'],
@@ -340,7 +250,7 @@ function seedBudget(): void {
   }
 
   const groups: CategoryGroup[] = [
-    { id: 'income', name: 'Income', categories: categories.income },
+    { id: 'income', name: 'Income', categories: categories.income, type: 'income' },
     { id: 'housing', name: 'Housing', categories: categories.housing },
     { id: 'food', name: 'Food', categories: categories.food },
     { id: 'transport', name: 'Transport', categories: categories.transport },
@@ -349,87 +259,75 @@ function seedBudget(): void {
     { id: 'removed', name: 'Remove from Budget', categories: [] },
   ]
 
-  const csvs: Record<string, { month: string; csv: string; uploadedAt: string }> = {}
+  const csvs: Record<string, string> = {}
   const years: number[] = []
   const now = new Date()
 
-  // Generate 3 years of budget data
   for (let y = now.getFullYear() - 2; y <= now.getFullYear(); y++) {
     years.push(y)
     const maxMonth = y === now.getFullYear() ? now.getMonth() + 1 : 12
 
     for (let m = 1; m <= maxMonth; m++) {
-      const monthKey = `${y}-${String(m).padStart(2, '0')}`
+      const mm = String(m).padStart(2, '0')
+      const monthKey = `${y}-${mm}`
       const lines = ['Date,Category,Amount']
 
-      // Income
-      lines.push(`${y}-${String(m).padStart(2, '0')}-01,Salary,${8500 + Math.round(Math.random() * 500)}`)
-      if (Math.random() > 0.6)
-        lines.push(`${y}-${String(m).padStart(2, '0')}-15,Side Income,${300 + Math.round(Math.random() * 700)}`)
-      lines.push(`${y}-${String(m).padStart(2, '0')}-28,Interest,${20 + Math.round(Math.random() * 30)}`)
+      lines.push(`${y}-${mm}-01,Salary,${8500 + Math.round(Math.random() * 500)}`)
+      if (Math.random() > 0.6) lines.push(`${y}-${mm}-15,Side Income,${300 + Math.round(Math.random() * 700)}`)
+      lines.push(`${y}-${mm}-28,Interest,${20 + Math.round(Math.random() * 30)}`)
 
-      // Expenses (negative amounts)
-      lines.push(`${y}-${String(m).padStart(2, '0')}-01,Rent,${-(1800 + Math.round(Math.random() * 200))}`)
-      lines.push(`${y}-${String(m).padStart(2, '0')}-05,Utilities,${-(120 + Math.round(Math.random() * 80))}`)
-      lines.push(`${y}-${String(m).padStart(2, '0')}-05,Internet,-79`)
+      lines.push(`${y}-${mm}-01,Rent,${-(1800 + Math.round(Math.random() * 200))}`)
+      lines.push(`${y}-${mm}-05,Utilities,${-(120 + Math.round(Math.random() * 80))}`)
+      lines.push(`${y}-${mm}-05,Internet,-79`)
 
-      // Food — multiple entries per month
       for (let w = 0; w < 4; w++) {
         const day = String(3 + w * 7).padStart(2, '0')
-        lines.push(`${y}-${String(m).padStart(2, '0')}-${day},Groceries,${-(80 + Math.round(Math.random() * 60))}`)
+        lines.push(`${y}-${mm}-${day},Groceries,${-(80 + Math.round(Math.random() * 60))}`)
       }
-      if (Math.random() > 0.3)
-        lines.push(`${y}-${String(m).padStart(2, '0')}-12,Restaurants,${-(40 + Math.round(Math.random() * 80))}`)
-      if (Math.random() > 0.5)
-        lines.push(`${y}-${String(m).padStart(2, '0')}-20,Coffee,${-(15 + Math.round(Math.random() * 25))}`)
+      if (Math.random() > 0.3) lines.push(`${y}-${mm}-12,Restaurants,${-(40 + Math.round(Math.random() * 80))}`)
+      if (Math.random() > 0.5) lines.push(`${y}-${mm}-20,Coffee,${-(15 + Math.round(Math.random() * 25))}`)
 
-      // Transport
-      lines.push(`${y}-${String(m).padStart(2, '0')}-10,Gas,${-(45 + Math.round(Math.random() * 35))}`)
-      if (m % 6 === 1) lines.push(`${y}-${String(m).padStart(2, '0')}-15,Car Insurance,-650`)
-      if (Math.random() > 0.85)
-        lines.push(`${y}-${String(m).padStart(2, '0')}-18,Maintenance,${-(100 + Math.round(Math.random() * 400))}`)
+      lines.push(`${y}-${mm}-10,Gas,${-(45 + Math.round(Math.random() * 35))}`)
+      if (m % 6 === 1) lines.push(`${y}-${mm}-15,Car Insurance,-650`)
+      if (Math.random() > 0.85) lines.push(`${y}-${mm}-18,Maintenance,${-(100 + Math.round(Math.random() * 400))}`)
 
-      // Personal
-      if (Math.random() > 0.4)
-        lines.push(`${y}-${String(m).padStart(2, '0')}-08,Shopping,${-(30 + Math.round(Math.random() * 120))}`)
-      lines.push(`${y}-${String(m).padStart(2, '0')}-01,Subscriptions,-45`)
-      lines.push(`${y}-${String(m).padStart(2, '0')}-01,Gym,-50`)
+      if (Math.random() > 0.4) lines.push(`${y}-${mm}-08,Shopping,${-(30 + Math.round(Math.random() * 120))}`)
+      lines.push(`${y}-${mm}-01,Subscriptions,-45`)
+      lines.push(`${y}-${mm}-01,Gym,-50`)
 
-      csvs[monthKey] = { month: monthKey, csv: lines.join('\n'), uploadedAt: new Date().toISOString() }
+      csvs[monthKey] = lines.join('\n')
     }
   }
 
-  localStorage.setItem('budget-store', JSON.stringify({ csvs, configs: {}, years: [] }))
-  localStorage.setItem('budget-config', JSON.stringify({ version: 1, years, categoryGroups: groups }))
+  return { groups, years, csvs }
 }
 
-function seedTaxes(): void {
+function demoTaxYears(): Record<number, { items: unknown[] }> {
   const currentYear = new Date().getFullYear()
-  const store = {
-    years: {
-      [currentYear - 1]: {
-        items: [
-          { id: '1', label: 'W-2 (Alex)', owner: 'primary', category: 'paystub', accountIds: [], files: [] },
-          { id: '2', label: 'W-2 (Sam)', owner: 'partner', category: 'paystub', accountIds: [], files: [] },
-          { id: '3', label: '1099-INT', owner: 'joint', category: 'account', accountIds: [4], files: [] },
-          { id: '4', label: '1099-DIV', owner: 'primary', category: 'account', accountIds: [3], files: [] },
-          { id: '5', label: 'Tax Return (Federal)', owner: 'joint', category: 'tax-return', accountIds: [], files: [] },
-          { id: '6', label: 'Tax Return (State)', owner: 'joint', category: 'tax-return', accountIds: [], files: [] },
-        ],
-      },
-      [currentYear]: {
-        items: [
-          { id: '7', label: 'W-2 (Alex)', owner: 'primary', category: 'paystub', accountIds: [], files: [] },
-          { id: '8', label: 'W-2 (Sam)', owner: 'partner', category: 'paystub', accountIds: [], files: [] },
-          { id: '9', label: '1099-INT', owner: 'joint', category: 'account', accountIds: [4], files: [] },
-          { id: '10', label: '1099-DIV', owner: 'primary', category: 'account', accountIds: [3], files: [] },
-        ],
-      },
+  return {
+    [currentYear - 1]: {
+      items: [
+        { id: '1', label: 'W-2 (Alex)', owner: 'primary', category: 'paystub', accountIds: [], files: [] },
+        { id: '2', label: 'W-2 (Sam)', owner: 'partner', category: 'paystub', accountIds: [], files: [] },
+        { id: '3', label: '1099-INT', owner: 'joint', category: 'account', accountIds: [4], files: [] },
+        { id: '4', label: '1099-DIV', owner: 'primary', category: 'account', accountIds: [3], files: [] },
+        { id: '5', label: 'Tax Return (Federal)', owner: 'joint', category: 'tax-return', accountIds: [], files: [] },
+        { id: '6', label: 'Tax Return (State)', owner: 'joint', category: 'tax-return', accountIds: [], files: [] },
+      ],
+    },
+    [currentYear]: {
+      items: [
+        { id: '7', label: 'W-2 (Alex)', owner: 'primary', category: 'paystub', accountIds: [], files: [] },
+        { id: '8', label: 'W-2 (Sam)', owner: 'partner', category: 'paystub', accountIds: [], files: [] },
+        { id: '9', label: '1099-INT', owner: 'joint', category: 'account', accountIds: [4], files: [] },
+        { id: '10', label: '1099-DIV', owner: 'primary', category: 'account', accountIds: [3], files: [] },
+      ],
     },
   }
-  localStorage.setItem('tax-store', JSON.stringify(store))
+}
 
-  const templates = [
+function demoTaxTemplates() {
+  return [
     {
       id: 'tpl-1',
       name: 'Standard Filing',
@@ -443,11 +341,10 @@ function seedTaxes(): void {
       ],
     },
   ]
-  localStorage.setItem('tax-templates', JSON.stringify(templates))
 }
 
-function seedAllocation(): void {
-  const ratios = [
+function demoAllocationRatios() {
+  return [
     {
       id: 'demo-1',
       name: 'Stock vs Bond',
@@ -467,11 +364,49 @@ function seedAllocation(): void {
       ],
     },
   ]
-  localStorage.setItem('allocation-custom-ratios', JSON.stringify(ratios))
 }
 
-function seedToolsData(): void {
-  const sims = [
+/** Writes the full demo dataset into the given (in-memory) store. */
+export async function seedDemoData(store: FileStore): Promise<void> {
+  await store.writeJSON('profile.json', demoProfile())
+  await store.writeJSON('goals.json', demoGoals())
+  await store.writeJSON('accounts.json', demoAccounts())
+
+  const byYear = new Map<string, BalanceEntry[]>()
+  for (const entry of demoBalances()) {
+    const year = entry.month.slice(0, 4)
+    const list = byYear.get(year)
+    if (list) list.push(entry)
+    else byYear.set(year, [entry])
+  }
+  for (const [year, entries] of byYear) {
+    await store.writeCSV(`balances/${year}.csv`, [
+      ['month', 'accountId', 'balance'],
+      ...entries.map(e => [e.month, String(e.accountId), String(e.balance)]),
+    ])
+  }
+
+  const budget = demoBudget()
+  await store.writeJSON('budget/categories.json', {
+    version: 1,
+    years: budget.years,
+    categoryGroups: budget.groups,
+  })
+  for (const [monthKey, csv] of Object.entries(budget.csvs)) {
+    const year = monthKey.slice(0, 4)
+    await store.writeCSV(
+      `transactions/${year}/${monthKey}.csv`,
+      csv.split('\n').map(line => line.split(',')),
+    )
+  }
+
+  for (const [year, data] of Object.entries(demoTaxYears())) {
+    await store.writeJSON(`taxes/${year}.json`, data)
+  }
+  await store.writeJSON('taxes/templates.json', demoTaxTemplates())
+
+  await store.writeJSON('allocation.json', demoAllocationRatios())
+  await store.writeJSON('fi-simulations.json', [
     {
       name: 'Base Case',
       annualExpense: 60000,
@@ -482,7 +417,6 @@ function seedToolsData(): void {
       partner401kYear: 2054,
       includeGwLiquid: false,
     },
-  ]
-  localStorage.setItem('fi-simulations', JSON.stringify(sims))
-  localStorage.setItem('sgt-overrides', '{}')
+  ])
+  await store.writeJSON('savings-tracker-overrides.json', {})
 }

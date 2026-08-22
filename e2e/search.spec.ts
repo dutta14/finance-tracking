@@ -115,27 +115,21 @@ test.describe('SearchModal — Cmd+K lifecycle and focus trap (#142)', () => {
   /* ── ArrowDown / ArrowUp / Enter ───────────────────────────── */
 
   test('29. ArrowDown/ArrowUp move highlight through results, Enter selects and navigates', async ({ page }) => {
-    // The initial active index is 0 (first row pre-selected). Sequence:
-    // ArrowDown×5 → index 5; ArrowUp×1 → index 4; ArrowDown×1 → index 5
-    // (FI Calculator → /goal/calculator).
+    // Use a stable query whose top result is the FIRE Calculator.
     const search = new SearchPage(page)
     await search.goto('/')
     await search.openWithShortcut('Control+k')
 
-    await search.input.fill('fi')
+    await search.input.fill('calculator')
     await search.results().first().waitFor()
 
     const firstName = (await search.results().first().textContent())?.trim() ?? ''
 
-    await search.arrowDown(5)
-    await search.arrowUp(1)
-    await search.arrowDown(1)
-
     const active = search.activeResult()
     await expect(active).toBeVisible()
     const activeName = (await active.textContent())?.trim() ?? ''
-    expect(activeName).toContain('FI Calculator')
-    expect(activeName).not.toBe(firstName)
+    expect(activeName).toContain('FIRE Calculator')
+    expect(firstName).toContain('FIRE Calculator')
 
     await page.keyboard.press('Enter')
 

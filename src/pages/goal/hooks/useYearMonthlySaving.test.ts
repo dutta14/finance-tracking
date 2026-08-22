@@ -1,8 +1,14 @@
-import { renderHook } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useYearMonthlySaving } from './useYearMonthlySaving'
 import { loadBudgetStore, getGlobalCategoryGroups } from '../../budget/utils/budgetStorage'
 import { parseCSV } from '../../budget/utils/csvParser'
+
+const { stableFileStore } = vi.hoisted(() => {
+  const r = vi.fn((_p: unknown, fb: unknown) => Promise.resolve(fb))
+  const w = vi.fn(() => Promise.resolve())
+  return { stableFileStore: { readJSON: r, writeJSON: w, subscribe: vi.fn(() => () => {}) } }
+})
 
 vi.mock('../../budget/utils/budgetStorage', () => ({
   loadBudgetStore: vi.fn(),
@@ -14,13 +20,25 @@ vi.mock('../../budget/utils/csvParser', () => ({
   buildMonthKey: vi.fn((year: number, month: number) => `${year}-${String(month + 1).padStart(2, '0')}`),
 }))
 
+vi.mock('../../../contexts/FileStoreContext', () => ({
+  useFileStore: vi.fn(() => ({
+    fileStore: stableFileStore,
+    isReady: true,
+    folderName: 'test',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: vi.fn(),
+    exitDemo: vi.fn(),
+  })),
+}))
+
 describe('useYearMonthlySaving', () => {
   const mockedLoadBudgetStore = vi.mocked(loadBudgetStore)
   const mockedGetGlobalCategoryGroups = vi.mocked(getGlobalCategoryGroups)
   const mockedParseCSV = vi.mocked(parseCSV)
 
   beforeEach(() => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 5, 1))
 
     mockedLoadBudgetStore.mockReset()
@@ -34,8 +52,8 @@ describe('useYearMonthlySaving', () => {
     vi.useRealTimers()
   })
 
-  it('returns null when no months have csv data', () => {
-    mockedLoadBudgetStore.mockReturnValue({
+  it('returns null when no months have csv data', async () => {
+    mockedLoadBudgetStore.mockResolvedValue({
       years: [2023, 2024, 2026],
       csvs: {},
       configs: {},
@@ -44,14 +62,16 @@ describe('useYearMonthlySaving', () => {
 
     const { result } = renderHook(() => useYearMonthlySaving())
 
-    expect(result.current.availableYears).toEqual([2026, 2024])
+    await waitFor(() => {
+      expect(result.current.availableYears).toEqual([2026, 2024])
+    })
     expect(result.current.summaryYear).toBe(2026)
     expect(result.current.yearMonthlySaving).toBeNull()
     expect(mockedParseCSV).not.toHaveBeenCalled()
   })
 
-  it('computes positive monthly savings when income exceeds expenses', () => {
-    mockedLoadBudgetStore.mockReturnValue({
+  it('computes positive monthly savings when income exceeds expenses', async () => {
+    mockedLoadBudgetStore.mockResolvedValue({
       years: [2026],
       csvs: {
         '2026-01': { month: '2026-01', csv: 'jan', uploadedAt: '2026-01-01T00:00:00.000Z' },
@@ -78,11 +98,13 @@ describe('useYearMonthlySaving', () => {
 
     const { result } = renderHook(() => useYearMonthlySaving())
 
-    expect(result.current.yearMonthlySaving).toBe(2500)
+    await waitFor(() => {
+      expect(result.current.yearMonthlySaving).toBe(2500)
+    })
   })
 
-  it('categorizes positive totals as income and negative totals as expenses', () => {
-    mockedLoadBudgetStore.mockReturnValue({
+  it('categorizes positive totals as income and negative totals as expenses', async () => {
+    mockedLoadBudgetStore.mockResolvedValue({
       years: [2026],
       csvs: {
         '2026-01': { month: '2026-01', csv: 'mixed', uploadedAt: '2026-01-01T00:00:00.000Z' },
@@ -97,11 +119,13 @@ describe('useYearMonthlySaving', () => {
 
     const { result } = renderHook(() => useYearMonthlySaving())
 
-    expect(result.current.yearMonthlySaving).toBe(60)
+    await waitFor(() => {
+      expect(result.current.yearMonthlySaving).toBe(60)
+    })
   })
 
-  it('excludes categories in the removed group', () => {
-    mockedLoadBudgetStore.mockReturnValue({
+  it('excludes categories in the removed group', async () => {
+    mockedLoadBudgetStore.mockResolvedValue({
       years: [2026],
       csvs: {
         '2026-01': { month: '2026-01', csv: 'removed', uploadedAt: '2026-01-01T00:00:00.000Z' },
@@ -118,11 +142,13 @@ describe('useYearMonthlySaving', () => {
 
     const { result } = renderHook(() => useYearMonthlySaving())
 
-    expect(result.current.yearMonthlySaving).toBe(2000)
+    await waitFor(() => {
+      expect(result.current.yearMonthlySaving).toBe(2000)
+    })
   })
 
-  it('handles a parseCSV throw gracefully and skips the bad month', () => {
-    mockedLoadBudgetStore.mockReturnValue({
+  it('handles a parseCSV throw gracefully and skips the bad month', async () => {
+    mockedLoadBudgetStore.mockResolvedValue({
       years: [2026],
       csvs: {
         '2026-01': { month: '2026-01', csv: 'good', uploadedAt: '2026-01-01T00:00:00.000Z' },
@@ -144,12 +170,14 @@ describe('useYearMonthlySaving', () => {
 
     const { result } = renderHook(() => useYearMonthlySaving())
 
-    expect(result.current.yearMonthlySaving).toBe(750)
+    await waitFor(() => {
+      expect(result.current.yearMonthlySaving).toBe(750)
+    })
     expect(mockedParseCSV).toHaveBeenCalledTimes(2)
   })
 
-  it('ignores categories whose totals net to zero', () => {
-    mockedLoadBudgetStore.mockReturnValue({
+  it('ignores categories whose totals net to zero', async () => {
+    mockedLoadBudgetStore.mockResolvedValue({
       years: [2026],
       csvs: {
         '2026-01': { month: '2026-01', csv: 'zeroed', uploadedAt: '2026-01-01T00:00:00.000Z' },
@@ -164,6 +192,8 @@ describe('useYearMonthlySaving', () => {
 
     const { result } = renderHook(() => useYearMonthlySaving())
 
-    expect(result.current.yearMonthlySaving).toBe(0)
+    await waitFor(() => {
+      expect(result.current.yearMonthlySaving).toBe(0)
+    })
   })
 })

@@ -76,13 +76,13 @@ describe('GoalForm', () => {
     expect(screen.getByText('Coast FI')).toBeInTheDocument()
   })
 
-  it('hides TemplatePicker when "Hide Templates" is clicked', async () => {
+  it('hides TemplatePicker when the close button is clicked', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     render(<GoalForm {...defaultProps} />)
     await user.click(screen.getByRole('button', { name: 'Use Template' }))
     expect(screen.getByText('Early Retirement')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Hide Templates' }))
+    await user.click(screen.getByRole('button', { name: 'Close template picker' }))
     expect(screen.queryByText('Early Retirement')).not.toBeInTheDocument()
   })
 

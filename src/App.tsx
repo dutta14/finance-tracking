@@ -12,21 +12,18 @@ const Budget = lazy(() => import('./pages/budget/Budget'))
 const Transactions = lazy(() => import('./pages/transactions/Transactions'))
 const Drive = lazy(() => import('./pages/drive/Drive'))
 const Taxes = lazy(() => import('./pages/taxes/Taxes'))
+const Guide = lazy(() => import('./pages/guide/Guide'))
 import { DataProvider } from './contexts/DataContext'
 import { SettingsProvider, useSettings } from './contexts/SettingsContext'
-import { EncryptionProvider, useEncryption } from './contexts/EncryptionContext'
-import { GitHubSyncProvider } from './contexts/GitHubSyncContext'
-import { BudgetSyncProvider } from './contexts/BudgetSyncContext'
-import { TaxSyncProvider } from './contexts/TaxSyncContext'
+import { FileStoreProvider, useFileStore, isDemoActive } from './contexts/FileStoreContext'
 import { GoalsProvider, useGoals } from './contexts/GoalsContext'
-import { ImportExportProvider, useImportExport } from './contexts/ImportExportContext'
 import { LayoutProvider, useLayout } from './contexts/LayoutContext'
 import { FlagProvider } from './flags/FlagContext'
 import ErrorBoundary from './components/ErrorBoundary'
-import UnlockScreen from './components/UnlockScreen'
+import FolderPicker from './components/FolderPicker'
 import UndoToast from './components/UndoToast'
 import SearchModal from './components/SearchModal'
-import { isDemoActive, enterDemoMode, exitDemoMode } from './pages/settings/demoMode'
+import { useSearchIndexData } from './search/useSearchIndexData'
 import './styles/ErrorBoundary.css'
 import './styles/colorThemes.css'
 import './styles/modern-design.css'
@@ -37,41 +34,31 @@ import { composeProviders } from './utils/composeProviders'
 /*
  * Provider dependency order (outermost → innermost):
  *
+ * FileStoreProvider – owns the connected data folder; everything that reads
+ *   or writes user data depends on it.
+ *
  * Tier 1 – independent (no context dependencies):
- *   SettingsProvider, EncryptionProvider, LayoutProvider
+ *   SettingsProvider, LayoutProvider
  *
- * (AppGate checks EncryptionProvider.isLocked before rendering Tier 2+)
+ * (FileStoreGate blocks Tier 2 until a folder is connected)
  *
- * Tier 2 – independent within the authenticated tree:
+ * Tier 2 – need a ready FileStore:
  *   GoalsProvider (uses useProfile hook, not a context)
  *   DataProvider
- *
- * Tier 3 – depends on Tier 1 + 2 contexts:
- *   GitHubSyncProvider  → useGoals, useSettings
- *   FlagProvider         → useGitHubSyncContext
- *   BudgetSyncProvider   → useGitHubSyncContext
- *   TaxSyncProvider      → useGitHubSyncContext, useEncryption
- *   ImportExportProvider → useGoals, useSettings
+ *   FlagProvider
  */
-const OuterProviders = composeProviders(SettingsProvider, EncryptionProvider, LayoutProvider)
+const OuterProviders = composeProviders(SettingsProvider, LayoutProvider)
 
-const InnerProviders = composeProviders(
-  GoalsProvider,
-  DataProvider,
-  GitHubSyncProvider,
-  FlagProvider,
-  BudgetSyncProvider,
-  TaxSyncProvider,
-  ImportExportProvider,
-)
+const InnerProviders = composeProviders(GoalsProvider, DataProvider, FlagProvider)
 
 const AppShell: FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { setDarkMode } = useSettings()
   const { pendingDelete, handleUndoDelete, dismissPendingDelete } = useGoals()
-  const { handleExport } = useImportExport()
+  const { enterDemo, exitDemo } = useFileStore()
   const { sidebarOpen, setSidebarOpen, isMobile, searchOpen, setSearchOpen, setSettingsOpenSection } = useLayout()
+  const searchIndexData = useSearchIndexData(searchOpen)
   const currentPage: PageType =
     location.pathname === '/goal' || location.pathname.startsWith('/goal/')
       ? 'goal'
@@ -85,7 +72,9 @@ const AppShell: FC = () => {
               ? 'drive'
               : location.pathname === '/taxes'
                 ? 'taxes'
-                : 'home'
+                : location.pathname === '/guide'
+                  ? 'guide'
+                  : 'home'
   const setCurrentPage = (page: PageType): void => {
     navigate(
       {
@@ -96,6 +85,7 @@ const AppShell: FC = () => {
         transactions: '/transactions',
         drive: '/drive',
         taxes: '/taxes',
+        guide: '/guide',
       }[page] || '/',
     )
   }
@@ -113,8 +103,8 @@ const AppShell: FC = () => {
         case 'open-settings-profile':
           setSettingsOpenSection('profile')
           break
-        case 'open-settings-github':
-          setSettingsOpenSection('github')
+        case 'open-settings-folder':
+          setSettingsOpenSection('folder')
           break
         case 'open-settings-appearance':
           setSettingsOpenSection('appearance')
@@ -126,14 +116,11 @@ const AppShell: FC = () => {
           navigate('/goal')
           break
         case 'toggle-demo':
-          isDemoActive() ? exitDemoMode() : enterDemoMode()
-          break
-        case 'export-data':
-          handleExport()
+          isDemoActive() ? exitDemo() : enterDemo()
           break
       }
     },
-    [navigate, setDarkMode, setSettingsOpenSection, handleExport],
+    [navigate, setDarkMode, setSettingsOpenSection, enterDemo, exitDemo],
   )
   return (
     <div className="app-layout">
@@ -162,7 +149,7 @@ const AppShell: FC = () => {
         {isDemoActive() && (
           <div className="demo-banner">
             <span>Demo Mode — showing sample data</span>
-            <button onClick={exitDemoMode}>Exit Demo</button>
+            <button onClick={exitDemo}>Exit Demo</button>
           </div>
         )}
         <Suspense
@@ -232,6 +219,14 @@ const AppShell: FC = () => {
                 </ErrorBoundary>
               }
             />
+            <Route
+              path="/guide"
+              element={
+                <ErrorBoundary variant="card" resetKey={location.pathname}>
+                  <Guide />
+                </ErrorBoundary>
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
@@ -249,14 +244,15 @@ const AppShell: FC = () => {
         onClose={() => setSearchOpen(false)}
         onNavigate={path => navigate(path)}
         onAction={handleSearchAction}
+        indexData={searchIndexData}
       />
     </div>
   )
 }
-const AppGate: FC = () => {
-  const { isLocked } = useEncryption()
+const FileStoreGate: FC = () => {
+  const { isReady } = useFileStore()
 
-  if (isLocked) return <UnlockScreen />
+  if (!isReady) return <FolderPicker />
 
   return (
     <InnerProviders>
@@ -267,9 +263,11 @@ const AppGate: FC = () => {
 
 const App: FC = () => (
   <ErrorBoundary variant="page">
-    <OuterProviders>
-      <AppGate />
-    </OuterProviders>
+    <FileStoreProvider>
+      <OuterProviders>
+        <FileStoreGate />
+      </OuterProviders>
+    </FileStoreProvider>
   </ErrorBoundary>
 )
 export default App

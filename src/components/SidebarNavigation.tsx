@@ -1,11 +1,7 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC } from 'react'
 import { NavigationProps } from '../types'
 import { useGoals } from '../contexts/GoalsContext'
 import { useSettings } from '../contexts/SettingsContext'
-import { useGitHubSyncContext } from '../contexts/GitHubSyncContext'
-import { useBudgetSync } from '../contexts/BudgetSyncContext'
-import { useTaxSync } from '../contexts/TaxSyncContext'
-import { useImportExport } from '../contexts/ImportExportContext'
 import { useLayout } from '../contexts/LayoutContext'
 import SidebarToggle from './SidebarToggle'
 import { SettingsMenu } from '../pages/settings'
@@ -15,31 +11,6 @@ import '../styles/SidebarNavigation.css'
 const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
   const { darkMode, setDarkMode, allowCsvImport, setAllowCsvImport } = useSettings()
   const { profile, updateProfile } = useGoals()
-  const ghContext = useGitHubSyncContext()
-  const { handleSyncNow, dirtyFlags } = ghContext
-  const gh = useMemo(() => ghContext, [ghContext])
-  const { taxes: taxesDirty } = dirtyFlags
-  const budgetSync = useBudgetSync()
-  const taxSync = useTaxSync()
-  const combinedSyncNow = useCallback(
-    async (data: object, message?: string, forceFull?: boolean) => {
-      await Promise.allSettled([
-        handleSyncNow(data, message, forceFull),
-        ...(forceFull || taxesDirty ? [taxSync.syncTaxNow(message)] : []),
-      ])
-    },
-    [handleSyncNow, taxesDirty, taxSync],
-  )
-  const combinedRestore = useCallback(
-    async (data: unknown) => {
-      await gh.applyRestoredSnapshot(data)
-      await budgetSync.restoreBudgetFromGitHub()
-      await taxSync.restoreTaxFromGitHub()
-      setTimeout(() => window.location.reload(), 100)
-    },
-    [gh, budgetSync, taxSync],
-  )
-  const { handleExport, handleImport, handleFactoryReset } = useImportExport()
   const { sidebarOpen, setSidebarOpen, settingsOpenSection, setSettingsOpenSection, setSearchOpen } = useLayout()
 
   return (
@@ -130,47 +101,21 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
               onToggleDarkMode={() => setDarkMode(!darkMode)}
               profile={profile}
               onUpdateProfile={updateProfile}
-              hasPendingChanges={gh.hasPendingChanges}
-              ghConfig={gh.config}
-              ghIsConfigured={gh.isConfigured}
-              ghSyncStatus={gh.syncStatus}
-              ghLastSyncAt={gh.lastSyncAt}
-              ghLastError={gh.lastError}
-              ghHistory={gh.history}
-              ghHasStoredToken={gh.hasStoredToken}
-              ghTokenUnlocked={gh.tokenUnlocked}
-              onGhUpdateConfig={gh.updateConfig}
-              onGhSaveEncryptedToken={gh.saveEncryptedToken}
-              onGhUnlockToken={gh.unlockToken}
-              onGhLockToken={gh.lockToken}
-              onGhSyncNow={combinedSyncNow}
-              onGhFetchHistory={gh.fetchHistory}
-              onGhTestConnection={gh.testConnection}
-              onGhRestoreLatest={gh.restoreLatest}
-              onGhRestoreFromCommit={gh.restoreFromCommit}
-              ghData={gh.ghDataToSync}
-              onGhApplyRestore={combinedRestore}
-              ghSyncProgress={gh.syncProgress}
-              ghDirtyFlags={gh.dirtyFlags}
-              onFactoryReset={handleFactoryReset}
               allowCsvImport={allowCsvImport}
               onToggleAllowCsvImport={() => setAllowCsvImport(v => !v)}
-              onExport={handleExport}
-              onImport={handleImport}
               externalOpen={!!settingsOpenSection}
               externalSection={settingsOpenSection as SettingsSection | undefined}
               onExternalClose={() => setSettingsOpenSection(undefined)}
             />
           </li>
           <li className="sidebar-item">
-            <a
-              className="sidebar-link"
-              href="https://github.com/dutta14/finance-tracking#readme"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              className={`sidebar-link${currentPage === 'guide' ? ' active' : ''}`}
+              onClick={() => setCurrentPage('guide')}
+              aria-current={currentPage === 'guide' ? 'page' : undefined}
             >
               User Guide
-            </a>
+            </button>
           </li>
         </ul>
       )}

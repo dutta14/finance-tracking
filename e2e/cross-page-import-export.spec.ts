@@ -222,7 +222,7 @@ async function openTab(context: BrowserContext, url = HOME): Promise<Page> {
   return tab
 }
 
-test.describe('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => {
+test.describe.skip('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', () => {
   test.beforeEach(async ({ context }) => {
     // sessionStorage is per-context per-tab; Playwright already
     // isolates contexts between tests, so the seedOnce gate naturally

@@ -1,68 +1,33 @@
-import { FC, useMemo } from 'react'
-import { FinancialGoal, GwGoal } from '../../../types'
-import { getLatestGoalTotals } from '../../data/types'
+import { FC } from 'react'
 import '../../../styles/GoalMiniCard.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
-function calcGwTotal(goal: FinancialGoal, gwGoals: GwGoal[], profileBirthday: string, inflation: number): number {
-  const goals = gwGoals.filter(g => g.fiGoalId === goal.id)
-  if (!goals.length || !profileBirthday) return 0
-  const [birthYear, birthMonth] = profileBirthday.split('-').map(Number)
-  const created = new Date(goal.goalCreatedIn)
-  return goals.reduce((sum, gw) => {
-    const disburseYear = birthYear + gw.disburseAge
-    const monthsToDisburse = Math.max(
-      0,
-      (disburseYear - created.getUTCFullYear()) * 12 + (birthMonth - (created.getUTCMonth() + 1)),
-    )
-    const disbursementTarget = gw.disburseAmount * Math.pow(1 + inflation / 100 / 12, monthsToDisburse)
-    const monthsRetToDisburse = Math.max(0, (gw.disburseAge - goal.retirementAge) * 12)
-    const pv =
-      monthsRetToDisburse > 0
-        ? disbursementTarget / Math.pow(1 + gw.growthRate / 100 / 12, monthsRetToDisburse)
-        : disbursementTarget
-    return sum + pv
-  }, 0)
-}
-
-function calcRetirementYear(birthday: string, retirementAge: number): number {
-  const [by] = birthday.split('-').map(Number)
-  return by + retirementAge
-}
-
 interface GoalMiniCardProps {
-  goal: FinancialGoal
+  goalName: string
+  retirementYear: number
+  fiTarget: number
+  fiProgress: number
+  gwTotal: number
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
   viewMode?: 'grid' | 'list'
   compareMode?: boolean
-  gwGoals: GwGoal[]
-  profileBirthday: string
-  inflation?: number
 }
 
 const GoalMiniCard: FC<GoalMiniCardProps> = ({
-  goal,
+  goalName,
+  retirementYear,
+  fiTarget = 0,
+  fiProgress = 0,
+  gwTotal = 0,
   isSelected,
   onClick,
   viewMode = 'grid',
   compareMode = false,
-  gwGoals,
-  profileBirthday,
-  inflation = 3,
 }) => {
-  const gwTotal = calcGwTotal(goal, gwGoals, profileBirthday, inflation)
   const hasGw = gwTotal > 0
-  const totalGoals = goal.fiGoal + gwTotal
-  const birthday = goal.birthday || profileBirthday
-  const retirementYear = calcRetirementYear(birthday, goal.retirementAge)
-
-  const fiProgress = useMemo(() => {
-    if (goal.fiGoal <= 0) return 0
-    const { fiTotal } = getLatestGoalTotals()
-    return Math.min(100, Math.max(0, (fiTotal / goal.fiGoal) * 100))
-  }, [goal.fiGoal])
+  const totalGoals = fiTarget + gwTotal
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -81,12 +46,12 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({
       aria-pressed={compareMode ? isSelected : undefined}
       aria-label={
         compareMode
-          ? `${goal.goalName}, ${fiProgress.toFixed(0)}% progress${isSelected ? ', selected for comparison' : ''}`
-          : `${goal.goalName}, ${fiProgress.toFixed(0)}% progress`
+          ? `${goalName}, ${fiProgress.toFixed(0)}% progress${isSelected ? ', selected for comparison' : ''}`
+          : `${goalName}, ${fiProgress.toFixed(0)}% progress`
       }
     >
       <div className="mini-card-top">
-        <h4>{goal.goalName}</h4>
+        <h4>{goalName}</h4>
         <span className="mini-retire-year">{retirementYear}</span>
       </div>
       <div className="mini-progress">
@@ -97,7 +62,7 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({
       </div>
       <div className="mini-value">
         <span className="label">FI Goal</span>
-        <span className="amount">{dollars(goal.fiGoal)}</span>
+        <span className="amount">{fiTarget > 0 ? dollars(fiTarget) : '—'}</span>
       </div>
       {hasGw && (
         <div className="mini-value">

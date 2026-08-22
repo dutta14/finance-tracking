@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { balanceEntriesToEntries, budgetCsvsToEntries, goalsToEntry, seedFileStore } from './seed-filestore'
 
 /**
  * Seed data helpers for Home Dashboard E2E tests.
@@ -172,46 +173,46 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
     customBalances,
   } = options
 
-  await page.addInitScript(
-    ({ accounts, balances, goals, budget, profile, cardOrder, onboardingDismissed, darkMode, data }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
+  const data = {
+    accounts: ACCOUNTS,
+    balances: customBalances ?? BALANCES,
+    goals: GOALS,
+    gwGoals: GW_GOALS,
+    budgetStore: BUDGET_STORE,
+    profile: PROFILE,
+  }
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
 
-      if (accounts) localStorage.setItem('data-accounts', JSON.stringify(data.accounts))
-      if (balances) localStorage.setItem('data-balances', JSON.stringify(data.balances))
-      if (goals) {
-        localStorage.setItem('financialGoals', JSON.stringify(data.goals))
-        localStorage.setItem('gw-goals', JSON.stringify(data.gwGoals))
-      }
-      if (budget) localStorage.setItem('budget-store', JSON.stringify(data.budgetStore))
-      if (profile) localStorage.setItem('user-profile', JSON.stringify(data.profile))
-      if (cardOrder) localStorage.setItem('home-card-order', JSON.stringify(cardOrder))
-      if (onboardingDismissed !== undefined) {
-        localStorage.setItem('onboarding-dismissed', onboardingDismissed ? '1' : '0')
-      }
-      if (darkMode !== undefined) {
-        localStorage.setItem('darkMode', darkMode ? '1' : '0')
-      }
-    },
-    {
-      accounts,
-      balances,
-      goals,
-      budget,
-      profile,
-      cardOrder,
-      onboardingDismissed,
-      darkMode,
+  if (accounts) entries.push({ path: 'accounts.json', data: data.accounts, type: 'json' })
+  if (balances) entries.push(...balanceEntriesToEntries(data.balances))
+  if (goals) entries.push(goalsToEntry(data.goals, data.gwGoals))
+  if (budget) {
+    entries.push(...budgetCsvsToEntries(data.budgetStore.csvs))
+    entries.push({
+      path: 'budget/categories.json',
       data: {
-        accounts: ACCOUNTS,
-        balances: customBalances ?? BALANCES,
-        goals: GOALS,
-        gwGoals: GW_GOALS,
-        budgetStore: BUDGET_STORE,
-        profile: PROFILE,
+        version: 1,
+        years: data.budgetStore.years,
+        categoryGroups: data.budgetStore.categoryGroups ?? [],
       },
-    },
-  )
+      type: 'json',
+    })
+  }
+  if (profile) entries.push({ path: 'profile.json', data: data.profile, type: 'json' })
+
+  await seedFileStore(page, entries)
+  await page.addInitScript(({ cardOrder, onboardingDismissed, darkMode }) => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    if (cardOrder) localStorage.setItem('home-card-order', JSON.stringify(cardOrder))
+    if (onboardingDismissed !== undefined) {
+      localStorage.setItem('onboarding-dismissed', onboardingDismissed ? '1' : '0')
+    }
+    if (darkMode !== undefined) {
+      localStorage.setItem('darkMode', darkMode ? '1' : '0')
+    }
+  }, { cardOrder, onboardingDismissed, darkMode })
 }
 
 /**
@@ -220,6 +221,7 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
 export async function seedEmptyState(page: Page) {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
   })
 }

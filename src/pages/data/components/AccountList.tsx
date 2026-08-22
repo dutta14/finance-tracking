@@ -76,6 +76,17 @@ const AccountList: FC<AccountListProps> = ({
   return (
     <div className="data-table-wrap">
       <table className="data-table">
+        <colgroup>
+          {showMultiSelect && <col style={{ width: '32px' }} />}
+          <col style={{ width: '28%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '12%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '9%' }} />
+          <col style={{ width: '60px' }} />
+        </colgroup>
         <thead>
           <tr>
             {showMultiSelect && (

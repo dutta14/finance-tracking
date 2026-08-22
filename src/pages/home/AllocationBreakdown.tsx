@@ -186,69 +186,67 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     <div className="home-card home-card--alloc">
       <div className="home-card-header">
         <h3>Asset Allocation</h3>
-        <div className="alloc-header-right">
-          {onNavigate && (
-            <button className="home-card-link" onClick={onNavigate}>
-              View Allocation →
-            </button>
-          )}
-          <div className="alloc-toggles">
-            <div className="alloc-toggle">
-              <button
-                className={`alloc-toggle-btn${chartMode === 'bar' ? ' active' : ''}`}
-                onClick={() => setChartMode('bar')}
-                title="Stacked bar"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14">
-                  <rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6" />
-                  <rect x="1" y="8" width="8" height="3" rx="1" fill="currentColor" />
-                </svg>
-              </button>
-              <button
-                className={`alloc-toggle-btn${chartMode === 'pie' ? ' active' : ''}`}
-                onClick={() => setChartMode('pie')}
-                title="Donut chart"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14">
-                  <circle
-                    cx="7"
-                    cy="7"
-                    r="5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeDasharray="10 21.4"
-                    strokeDashoffset="0"
-                  />
-                  <circle
-                    cx="7"
-                    cy="7"
-                    r="5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeDasharray="8 23.4"
-                    strokeDashoffset="-10"
-                    opacity=".5"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="alloc-toggle">
-              <button
-                className={`alloc-toggle-btn${legendMode === 'pct' ? ' active' : ''}`}
-                onClick={() => setLegendMode('pct')}
-              >
-                %
-              </button>
-              <button
-                className={`alloc-toggle-btn${legendMode === 'val' ? ' active' : ''}`}
-                onClick={() => setLegendMode('val')}
-              >
-                $
-              </button>
-            </div>
-          </div>
+        {onNavigate && (
+          <button className="home-card-link" onClick={onNavigate}>
+            View Allocation →
+          </button>
+        )}
+      </div>
+      <div className="alloc-toggles">
+        <div className="tab-bar">
+          <button
+            className={`tab-btn tab-btn--sm${chartMode === 'bar' ? ' active' : ''}`}
+            onClick={() => setChartMode('bar')}
+            title="Stacked bar"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14">
+              <rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6" />
+              <rect x="1" y="8" width="8" height="3" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+          <button
+            className={`tab-btn tab-btn--sm${chartMode === 'pie' ? ' active' : ''}`}
+            onClick={() => setChartMode('pie')}
+            title="Donut chart"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14">
+              <circle
+                cx="7"
+                cy="7"
+                r="5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeDasharray="10 21.4"
+                strokeDashoffset="0"
+              />
+              <circle
+                cx="7"
+                cy="7"
+                r="5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeDasharray="8 23.4"
+                strokeDashoffset="-10"
+                opacity=".5"
+              />
+            </svg>
+          </button>
+        </div>
+        <div className="tab-bar">
+          <button
+            className={`tab-btn tab-btn--sm${legendMode === 'pct' ? ' active' : ''}`}
+            onClick={() => setLegendMode('pct')}
+          >
+            %
+          </button>
+          <button
+            className={`tab-btn tab-btn--sm${legendMode === 'val' ? ' active' : ''}`}
+            onClick={() => setLegendMode('val')}
+          >
+            $
+          </button>
         </div>
       </div>
       {balances.length === 0 ? (

@@ -56,14 +56,14 @@ describe('Goal tab bar', () => {
     expect(link).toHaveAttribute('href', '/goal/plans')
   })
 
-  it('renders a "FI Calculator" tab inside the nav', () => {
+  it('renders a "FIRE Calculator" tab inside the nav', () => {
     renderGoal()
-    expect(screen.getByRole('link', { name: 'FI Calculator' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FIRE Calculator' })).toBeInTheDocument()
   })
 
-  it('the "FI Calculator" tab links to /goal/calculator', () => {
+  it('the "FIRE Calculator" tab links to /goal/calculator', () => {
     renderGoal()
-    const link = screen.getByRole('link', { name: 'FI Calculator' })
+    const link = screen.getByRole('link', { name: 'FIRE Calculator' })
     expect(link).toHaveAttribute('href', '/goal/calculator')
   })
 })
@@ -77,9 +77,9 @@ describe('Goal tab active state', () => {
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('sets aria-current="page" on the FI Calculator tab when active', () => {
+  it('sets aria-current="page" on the FIRE Calculator tab when active', () => {
     renderGoal('/goal/calculator')
-    const link = screen.getByRole('link', { name: 'FI Calculator' })
+    const link = screen.getByRole('link', { name: 'FIRE Calculator' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
@@ -89,9 +89,9 @@ describe('Goal tab active state', () => {
     expect(link).not.toHaveAttribute('aria-current')
   })
 
-  it('does not mark "FI Calculator" as active when on /goal', () => {
+  it('does not mark "FIRE Calculator" as active when on /goal', () => {
     renderGoal('/goal')
-    const link = screen.getByRole('link', { name: 'FI Calculator' })
+    const link = screen.getByRole('link', { name: 'FIRE Calculator' })
     expect(link).not.toHaveAttribute('aria-current')
   })
 })

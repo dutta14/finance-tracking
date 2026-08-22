@@ -1,6 +1,5 @@
-import { Page } from '@playwright/test'
-import { SecurityPage } from '../pages/security.page'
-import { assertAllKeysAreEnvelopes } from './encryption.fixtures'
+import type { Page } from '@playwright/test'
+import { balanceEntriesToEntries, budgetCsvsToEntries, goalsToEntry, seedFileStore, taxStoreToEntries } from './seed-filestore'
 
 /**
  * Shared seed for the cross-page integration suites (#151 + future
@@ -8,11 +7,6 @@ import { assertAllKeysAreEnvelopes } from './encryption.fixtures'
  * baseline so each spec can layer overrides on top without re-declaring
  * 100 lines of localStorage seeding. The feature-flags mock is handled
  * globally by the base fixture (`e2e/fixtures/base.ts`).
- *
- * Encryption is intentionally disabled (`encryption-enabled: '0'`),
- * which makes `appStorage.getJSON` read plaintext JSON directly out
- * of localStorage — matching demoMode.ts and the existing nav-data /
- * home.fixtures patterns.
  */
 
 export interface CrossPageSeed {
@@ -201,7 +195,65 @@ export async function seedCrossPage(page: Page, overrides: SeedOverrides = {}): 
     taxTemplates: 'taxTemplates' in overrides ? overrides.taxTemplates : CROSS_PAGE_SEED.taxTemplates,
   }
 
-  await page.addInitScript(data => {
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
+
+  if (resolved.profile !== null && resolved.profile !== undefined) {
+    entries.push({ path: 'profile.json', data: resolved.profile, type: 'json' })
+  }
+  if (resolved.accounts !== null && resolved.accounts !== undefined) {
+    entries.push({ path: 'accounts.json', data: resolved.accounts, type: 'json' })
+  }
+  if (resolved.balances !== null && resolved.balances !== undefined) {
+    entries.push(...balanceEntriesToEntries(resolved.balances as Array<{ month: string; accountId: number; balance: number }>))
+  }
+  if (resolved.goals !== null || resolved.gwGoals !== null) {
+    entries.push(
+      goalsToEntry(
+        Array.isArray(resolved.goals) ? resolved.goals : [],
+        Array.isArray(resolved.gwGoals) ? resolved.gwGoals : [],
+      ),
+    )
+  }
+  if (resolved.budgetSummary !== null && resolved.budgetSummary !== undefined) {
+    entries.push({ path: 'budget/summary-cache.json', data: resolved.budgetSummary, type: 'json' })
+  }
+  if (resolved.budgetStore && typeof resolved.budgetStore === 'object') {
+    const budgetStore = resolved.budgetStore as {
+      csvs?: Record<string, { csv: string }>
+      years?: number[]
+      categoryGroups?: unknown[]
+    }
+    if (budgetStore.csvs) entries.push(...budgetCsvsToEntries(budgetStore.csvs))
+    const categoriesData =
+      resolved.budgetConfig && typeof resolved.budgetConfig === 'object'
+        ? resolved.budgetConfig
+        : {
+            version: 1,
+            years: budgetStore.years ?? [],
+            categoryGroups: budgetStore.categoryGroups ?? [],
+          }
+    entries.push({ path: 'budget/categories.json', data: categoriesData, type: 'json' })
+  } else if (resolved.budgetConfig && typeof resolved.budgetConfig === 'object') {
+    entries.push({ path: 'budget/categories.json', data: resolved.budgetConfig, type: 'json' })
+  }
+  if (resolved.allocationCustomRatios !== null && resolved.allocationCustomRatios !== undefined) {
+    entries.push({ path: 'allocation.json', data: resolved.allocationCustomRatios, type: 'json' })
+  }
+  if (resolved.fiSimulations !== null && resolved.fiSimulations !== undefined) {
+    entries.push({ path: 'fi-simulations.json', data: resolved.fiSimulations, type: 'json' })
+  }
+  if (resolved.sgtOverrides !== null && resolved.sgtOverrides !== undefined) {
+    entries.push({ path: 'savings-tracker-overrides.json', data: resolved.sgtOverrides, type: 'json' })
+  }
+  if (resolved.taxStore && typeof resolved.taxStore === 'object') {
+    entries.push(...taxStoreToEntries(resolved.taxStore as Record<string, unknown>))
+  }
+  if (resolved.taxTemplates !== null && resolved.taxTemplates !== undefined) {
+    entries.push({ path: 'taxes/templates.json', data: resolved.taxTemplates, type: 'json' })
+  }
+
+  await seedFileStore(page, entries, { onceKey: '__cross_page_filestore_seeded' })
+  await page.addInitScript(() => {
     // One-shot sentinel: addInitScript runs on EVERY navigation/reload,
     // but tests that mutate or delete keys mid-session and then trigger
     // a route change (or rely on the in-app reload after import) must
@@ -209,29 +261,11 @@ export async function seedCrossPage(page: Page, overrides: SeedOverrides = {}): 
     // navigation seed the baseline and every subsequent navigation skip.
     if (localStorage.getItem('__cross_page_seeded') === '1') return
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('__cross_page_seeded', '1')
-    localStorage.setItem('encryption-enabled', '0')
     localStorage.setItem('onboarding-dismissed', '1')
     localStorage.setItem('darkMode', '0')
-
-    const writeIf = (key: string, value: unknown) => {
-      if (value === null || value === undefined) return
-      localStorage.setItem(key, JSON.stringify(value))
-    }
-    writeIf('user-profile', data.profile)
-    writeIf('data-accounts', data.accounts)
-    writeIf('data-balances', data.balances)
-    writeIf('financialGoals', data.goals)
-    writeIf('gw-goals', data.gwGoals)
-    writeIf('budget-summary', data.budgetSummary)
-    writeIf('budget-store', data.budgetStore)
-    writeIf('budget-config', data.budgetConfig)
-    writeIf('allocation-custom-ratios', data.allocationCustomRatios)
-    writeIf('fi-simulations', data.fiSimulations)
-    writeIf('sgt-overrides', data.sgtOverrides)
-    writeIf('tax-store', data.taxStore)
-    writeIf('tax-templates', data.taxTemplates)
-  }, resolved)
+  })
 }
 
 /**
@@ -250,17 +284,18 @@ export async function mutateAccountBalance(
   newBalance: number,
 ): Promise<void> {
   await page.evaluate(
-    ({ accountId, month, newBalance }) => {
-      const raw = localStorage.getItem('data-balances') || '[]'
-      const list = JSON.parse(raw) as { id: number; accountId: number; month: string; balance: number }[]
-      const idx = list.findIndex(b => b.accountId === accountId && b.month === month)
-      if (idx >= 0) {
-        list[idx] = { ...list[idx], balance: newBalance }
-      } else {
-        const nextId = list.reduce((m, b) => Math.max(m, b.id), 0) + 1
-        list.push({ id: nextId, accountId, month, balance: newBalance })
-      }
-      localStorage.setItem('data-balances', JSON.stringify(list))
+    async ({ accountId, month, newBalance }) => {
+      const e2eStore = (window as Window & typeof globalThis & { __e2eFileStore?: any }).__e2eFileStore
+      if (!e2eStore) return
+      const year = month.slice(0, 4)
+      const path = `balances/${year}.csv`
+      const rows = await e2eStore.readCSV(path)
+      const nextRows = rows.length > 0 ? [...rows] : [['month', 'accountId', 'balance']]
+      const idx = nextRows.findIndex((row: string[], index: number) => index > 0 && row[0] === month && row[1] === String(accountId))
+      const nextRow = [month, String(accountId), String(newBalance)]
+      if (idx >= 0) nextRows[idx] = nextRow
+      else nextRows.push(nextRow)
+      await e2eStore.writeCSV(path, nextRows)
       window.dispatchEvent(new Event('data-changed'))
     },
     { accountId, month, newBalance },
@@ -344,9 +379,10 @@ export async function mutateProfile(
   page: Page,
   patch: { birthday?: string; partner?: { birthday: string } | null },
 ): Promise<void> {
-  await page.evaluate(patch => {
-    const raw = localStorage.getItem('user-profile')
-    const cur = raw ? JSON.parse(raw) : { name: '', birthday: '', avatarDataUrl: '' }
+  await page.evaluate(async patch => {
+    const e2eStore = (window as Window & typeof globalThis & { __e2eFileStore?: any }).__e2eFileStore
+    if (!e2eStore) return
+    const cur = await e2eStore.readJSON('profile.json', { name: '', birthday: '', avatarDataUrl: '' })
     if (patch.birthday !== undefined) cur.birthday = patch.birthday
     if (patch.partner === null) {
       delete cur.partner
@@ -357,46 +393,8 @@ export async function mutateProfile(
         birthday: patch.partner.birthday,
       }
     }
-    localStorage.setItem('user-profile', JSON.stringify(cur))
+    await e2eStore.writeJSON('profile.json', cur)
   }, patch)
-}
-
-/**
- * Cross-page baseline + encryption-enabled. Plants the same plaintext
- * seed as `seedCrossPage`, then drives the real Security pane to enable
- * encryption with `passphrase`. This is the ONLY supported way to put
- * the app into a "data + encryption-on" state — encryption enablement
- * requires the PBKDF2 + envelope-migration path through
- * EncryptionContext (see audit-153 adaptation B); seeding
- * `encryption-enabled='1'` alone leaves the app in a broken half-state
- * with plaintext envelopes that the unlock flow cannot decrypt.
- *
- * After this returns:
- *   - `encryption-enabled` = '1' in localStorage
- *   - all 13 SENSITIVE_KEYS hold `{ v, iv, ct }` envelopes
- *   - the Settings modal is OPEN on the Security pane (callers usually
- *     navigate away immediately, which closes the modal)
- *
- * PBKDF2 cost: ~PBKDF2_COST_MS per enable on a 2024-era laptop (see
- * e2e/fixtures/encryption.fixtures.ts). Each test that uses this helper
- * budgets ~1-2 * PBKDF2_COST_MS of overhead.
- */
-export async function seedCrossPageEncrypted(
-  page: Page,
-  passphrase: string,
-  overrides: SeedOverrides = {},
-): Promise<SecurityPage> {
-  await seedCrossPage(page, overrides)
-  const security = new SecurityPage(page)
-  await security.open()
-  await security.enable(passphrase)
-  // Belt-and-braces: confirm every sensitive key is now an envelope
-  // before any test asserts page rendering after lock/unlock. If a
-  // future regression skips a key during migration, this fails here
-  // with the exact key name — not as a mysterious "page is empty"
-  // assertion failure later.
-  await assertAllKeysAreEnvelopes(page)
-  return security
 }
 
 /**

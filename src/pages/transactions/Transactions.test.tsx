@@ -49,26 +49,28 @@ const transactionFixtures = {
 }
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => store),
-  getGlobalCategoryGroups: vi.fn(() => store.categoryGroups),
-  saveBudgetStore: vi.fn((nextStore: typeof store) => {
+  loadBudgetStore: vi.fn(() => Promise.resolve(store)),
+  saveBudgetStore: vi.fn((_fs: unknown, nextStore: typeof store) => {
     store.csvs = nextStore.csvs
     store.configs = nextStore.configs
     store.years = nextStore.years
     store.categoryGroups = nextStore.categoryGroups
     window.dispatchEvent(new Event('budget-changed'))
+    return Promise.resolve()
   }),
-  saveCSVForMonth: vi.fn((nextStore: typeof store, monthKey: string, csv: string) => ({
-    ...nextStore,
-    csvs: {
-      ...nextStore.csvs,
-      [monthKey]: {
-        month: monthKey,
-        csv,
-        uploadedAt: '2026-08-03T00:00:00.000Z',
+  saveCSVForMonth: vi.fn((_fs: unknown, nextStore: typeof store, monthKey: string, csv: string) =>
+    Promise.resolve({
+      ...nextStore,
+      csvs: {
+        ...nextStore.csvs,
+        [monthKey]: {
+          month: monthKey,
+          csv,
+          uploadedAt: '2026-08-03T00:00:00.000Z',
+        },
       },
-    },
-  })),
+    }),
+  ),
 }))
 
 vi.mock('../budget/utils/csvParser', async () => {
@@ -124,7 +126,7 @@ describe('Transactions', () => {
     renderTransactions()
 
     expect(await screen.findByRole('heading', { name: 'Transactions' })).toBeInTheDocument()
-    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(await screen.findByText('6 transactions')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'August 2, 2026' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'July 30, 2026' })).toBeInTheDocument()
     expect(screen.getByText('Book Store')).toBeInTheDocument()
@@ -171,7 +173,7 @@ describe('Transactions', () => {
     const user = userEvent.setup()
     renderTransactions()
 
-    await user.click(await screen.findByRole('button', { name: /Date/i }))
+    await user.click(await screen.findByRole('button', { name: /^Date/i }))
     fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-08-01' } })
     fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-08-02' } })
     await user.click(screen.getByRole('button', { name: 'Apply' }))
@@ -317,7 +319,7 @@ describe('Transactions', () => {
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
 
     expect(screen.getByText('Book Store')).toBeInTheDocument()
-    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(await screen.findByText('6 transactions')).toBeInTheDocument()
   })
 
   it('cancels draft search changes and allows clearing the search input', async () => {
@@ -328,7 +330,7 @@ describe('Transactions', () => {
     await user.type(searchInput, 'bonus')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(screen.getByText('6 transactions')).toBeInTheDocument()
+    expect(await screen.findByText('6 transactions')).toBeInTheDocument()
     expect(screen.queryByRole('searchbox', { name: 'Search transactions' })).not.toBeInTheDocument()
 
     const reopenedSearchInput = await openSearchPopover(user)

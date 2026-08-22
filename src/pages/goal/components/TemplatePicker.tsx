@@ -13,7 +13,7 @@ const TemplatePicker: FC<TemplatePickerProps> = ({ onSelect, onClose }) => {
   return (
     <div id="template-picker" className="template-picker">
       <div className="template-picker-header">
-        <span className="template-picker-title">Choose a template</span>
+        <span className="template-picker-title">Templates</span>
         <button type="button" className="template-picker-close" onClick={onClose} aria-label="Close template picker">
           ✕
         </button>
@@ -24,15 +24,9 @@ const TemplatePicker: FC<TemplatePickerProps> = ({ onSelect, onClose }) => {
             <span className="template-card-name">{template.name}</span>
             <span className="template-card-desc">{template.description}</span>
             <div className="template-card-stats">
-              <span className="template-card-stat">
-                <span aria-hidden="true">🎯</span> Age {template.retirementAge}
-              </span>
-              <span className="template-card-stat">
-                <span aria-hidden="true">💰</span> {dollars(template.annualExpense)}/yr
-              </span>
-              <span className="template-card-stat">
-                <span aria-hidden="true">📈</span> {template.growth}% growth
-              </span>
+              <span className="template-card-stat">Age {template.retirementAge}</span>
+              <span className="template-card-stat">{dollars(template.annualExpense)}/yr</span>
+              <span className="template-card-stat">{template.growth}% growth</span>
             </div>
           </button>
         ))}

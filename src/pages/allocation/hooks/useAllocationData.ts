@@ -6,7 +6,7 @@ import { Scope } from '../types'
 import { ALLOC_COLORS, GROUP_COLORS } from '../constants'
 
 export function useAllocationData() {
-  const { accounts, balances } = useData()
+  const { accounts, balances, allMonths } = useData()
   const { profile } = useProfile()
   const primaryName = profile.name || 'Primary'
   const partnerName = profile.partner?.name || 'Partner'
@@ -85,7 +85,7 @@ export function useAllocationData() {
     for (const b of latestBals) balMap.set(b.accountId, b.balance)
 
     const goalFilter = s === 'total' ? undefined : s
-    const result: { name: string; value: number; isDebt: boolean; owner: string; ownerName: string }[] = []
+    const result: { id: number; name: string; value: number; isDebt: boolean; owner: string; ownerName: string }[] = []
 
     for (const a of accounts) {
       if (a.status !== 'active') continue
@@ -98,7 +98,7 @@ export function useAllocationData() {
       if (nature === 'asset') {
         const alloc = a.allocation || getDefaultAllocation('asset')
         if (alloc !== cls) continue
-        result.push({ name: a.name, value: Math.abs(bal), isDebt: false, owner: a.owner, ownerName })
+        result.push({ id: a.id, name: a.name, value: Math.abs(bal), isDebt: false, owner: a.owner, ownerName })
       } else {
         // Liability: include if linked asset has this class, or own allocation matches
         let matchedAlloc: AssetAllocation
@@ -111,12 +111,59 @@ export function useAllocationData() {
           matchedAlloc = a.allocation || getDefaultAllocation('liability')
         }
         if (matchedAlloc !== cls) continue
-        result.push({ name: a.name, value: Math.abs(bal), isDebt: true, owner: a.owner, ownerName })
+        result.push({ id: a.id, name: a.name, value: Math.abs(bal), isDebt: true, owner: a.owner, ownerName })
       }
     }
 
     return result.sort((a, b) => b.value - a.value)
   }
 
-  return { allocMap, getSlices, computeRatio, getAccountsForClass }
+  const getClassHistory = (s: Scope, cls: AssetAllocation): { month: string; value: number }[] => {
+    if (balances.length === 0) return []
+    const months = [...new Set(balances.map(b => b.month))].sort()
+    const goalFilter = s === 'total' ? undefined : s
+
+    return months.map(month => {
+      const monthBals = balances.filter(b => b.month === month)
+      const balMap = new Map<number, number>()
+      for (const b of monthBals) balMap.set(b.accountId, b.balance)
+
+      let total = 0
+      for (const a of accounts) {
+        if (goalFilter && a.goalType !== goalFilter) continue
+        const bal = balMap.get(a.id)
+        if (!bal || bal === 0) continue
+        const nature = a.nature || 'asset'
+        if (nature === 'asset') {
+          const alloc = a.allocation || getDefaultAllocation('asset')
+          if (alloc === cls) total += bal
+        } else {
+          let matchedAlloc: AssetAllocation
+          if (a.linkedAccountId != null) {
+            const linked = accounts.find(la => la.id === a.linkedAccountId)
+            matchedAlloc = linked
+              ? linked.allocation || getDefaultAllocation(linked.nature || 'asset')
+              : a.allocation || getDefaultAllocation('liability')
+          } else {
+            matchedAlloc = a.allocation || getDefaultAllocation('liability')
+          }
+          if (matchedAlloc === cls) total -= Math.abs(bal)
+        }
+      }
+      return { month, value: total }
+    })
+  }
+
+  const getAccountHistory = (accountId: number): { month: string; value: number }[] => {
+    if (balances.length === 0) return []
+    const months = [...new Set(balances.map(b => b.month))].sort()
+    return months
+      .map(month => {
+        const bal = balances.find(b => b.month === month && b.accountId === accountId)
+        return { month, value: bal ? bal.balance : 0 }
+      })
+      .filter(d => d.value !== 0)
+  }
+
+  return { allocMap, getSlices, computeRatio, getAccountsForClass, getClassHistory, getAccountHistory, allMonths }
 }

@@ -2,7 +2,6 @@ import { FC, KeyboardEvent, useState, useRef, lazy, Suspense } from 'react'
 import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useSettings } from '../../contexts/SettingsContext'
-import { useGitHubSyncContext } from '../../contexts/GitHubSyncContext'
 import { useData } from '../../contexts/DataContext'
 import { Account, BalanceEntry } from './types'
 import { parseCsvImport } from './csvImport'
@@ -26,7 +25,6 @@ const DATA_VIEW_TABS = [
 const Data: FC = () => {
   const { profile } = useGoals()
   const { allowCsvImport } = useSettings()
-  const { handleDataChange: onDataChange } = useGitHubSyncContext()
   const { accounts, balances, setAccounts: ctxSetAccounts, setBalances: ctxSetBalances } = useData()
 
   const [showAccountsModal, setShowAccountsModal] = useState(false)
@@ -36,7 +34,9 @@ const Data: FC = () => {
     _focused?: number
   } | null>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
-  const [showInactive, setShowInactive] = useState(false)
+  const [isAddEntryOpen, setIsAddEntryOpen] = useState(false)
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const [addEntryForm, setAddEntryForm] = useState({ month: '', copyFrom: false, error: '' })
 
   const accountsRef = useRef(accounts)
   accountsRef.current = accounts
@@ -46,20 +46,17 @@ const Data: FC = () => {
   const saveAccounts = (updated: Account[]) => {
     ctxSetAccounts(updated)
     accountsRef.current = updated
-    onDataChange?.(updated, balancesRef.current)
   }
 
   const saveBalances = (updated: BalanceEntry[]) => {
     ctxSetBalances(updated)
     balancesRef.current = updated
-    onDataChange?.(accountsRef.current, updated)
   }
 
   // Use when updating both in the same handler to avoid stale closure
   const saveBoth = (newAccounts: Account[], newBalances: BalanceEntry[]) => {
     ctxSetAccounts(newAccounts)
     ctxSetBalances(newBalances)
-    onDataChange?.(newAccounts, newBalances)
   }
 
   /* Account CRUD */
@@ -98,24 +95,42 @@ const Data: FC = () => {
   /* Balance entry inline editing */
   const activeAccounts = accounts.filter(a => a.status === 'active')
 
+  const handleOpenAddEntry = () => {
+    const now = new Date()
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    setAddEntryForm({ month: ym, copyFrom: false, error: '' })
+    setIsAddEntryOpen(true)
+  }
+
+  const handleConfirmAddEntry = () => {
+    const { month, copyFrom } = addEntryForm
+    if (!month) {
+      setAddEntryForm(f => ({ ...f, error: 'Please select a month.' }))
+      return
+    }
+    if (allMonths.includes(month)) {
+      setAddEntryForm(f => ({ ...f, error: 'This month already exists.' }))
+      return
+    }
+    const values: Record<number, string> = {}
+    if (copyFrom && allMonths.length > 0) {
+      const lastMonth = allMonths[0]
+      for (const a of activeAccounts) {
+        const prev = balanceMap.get(`${a.id}:${lastMonth}`)
+        values[a.id] = prev !== undefined ? String(prev) : ''
+      }
+    } else {
+      for (const a of activeAccounts) values[a.id] = ''
+    }
+    setInlineEntry({ month, values })
+    setIsAddEntryOpen(false)
+  }
+
   const handleStartInlineEntry = () => {
     const now = new Date()
     const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
     const values: Record<number, string> = {}
     for (const a of activeAccounts) values[a.id] = ''
-    setInlineEntry({ month: ym, values })
-  }
-
-  const handleCopyForwardEntry = () => {
-    const now = new Date()
-    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    const lastMonth = allMonths[0]
-    if (!lastMonth) return
-    const values: Record<number, string> = {}
-    for (const a of activeAccounts) {
-      const prev = balanceMap.get(`${a.id}:${lastMonth}`)
-      values[a.id] = prev !== undefined ? String(prev) : ''
-    }
     setInlineEntry({ month: ym, values })
   }
 
@@ -166,6 +181,15 @@ const Data: FC = () => {
     saveBalances(balances.filter(b => b.month !== month))
   }
 
+  const handleEditMonth = (month: string) => {
+    const values: Record<number, string> = {}
+    for (const a of activeAccounts) {
+      const existing = balances.find(b => b.accountId === a.id && b.month === month)
+      values[a.id] = existing ? String(existing.balance) : ''
+    }
+    setInlineEntry({ month, values })
+  }
+
   /* CSV import */
   const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -183,7 +207,7 @@ const Data: FC = () => {
 
   /* Derived data */
   const hasAccounts = accounts.length > 0
-  const spreadsheetAccounts = showInactive ? accounts : activeAccounts
+  const spreadsheetAccounts = accounts
   const allMonths = [...new Set(balances.map(b => b.month))].sort((a, b) => b.localeCompare(a))
   const balanceMap = new Map<string, number>()
   for (const b of balances) balanceMap.set(`${b.accountId}:${b.month}`, b.balance)
@@ -236,31 +260,6 @@ const Data: FC = () => {
   }
   const accountsContent = (
     <>
-      {allowCsvImport && (
-        <div className="data-header-actions">
-          <button className="data-import-csv-btn" onClick={() => csvInputRef.current?.click()}>
-            Import from CSV
-          </button>
-          {hasAccounts && balances.length > 0 && (
-            <button className="data-export-csv-btn" onClick={() => exportCsv(accounts, balances)}>
-              Export CSV
-            </button>
-          )}
-          {(hasAccounts || balances.length > 0) && (
-            <button
-              className="data-reset-btn"
-              onClick={() => {
-                if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
-                  saveBoth([], [])
-                }
-              }}
-            >
-              Reset Data
-            </button>
-          )}
-        </div>
-      )}
-
       <div className="data-content">
         {!hasAccounts ? (
           <div className="data-empty">
@@ -317,8 +316,6 @@ const Data: FC = () => {
                 allMonths={allMonths}
                 balanceMap={balanceMap}
                 profile={profile}
-                showInactive={showInactive}
-                onToggleShowInactive={() => setShowInactive(v => !v)}
                 onSaveMonth={handleSaveMonth}
               />
             ) : dataView === 'manage' ? (
@@ -344,48 +341,122 @@ const Data: FC = () => {
                 profile={profile}
                 inlineEntry={inlineEntry}
                 toolbarActions={
-                  <>
-                    <button
-                      className="data-filter-toggle"
-                      aria-pressed={showInactive}
-                      onClick={() => setShowInactive(v => !v)}
-                    >
-                      {showInactive ? 'Hide inactive' : 'Show inactive'}
-                    </button>
-                    <button className="data-add-entry-btn" onClick={handleStartInlineEntry} disabled={!!inlineEntry}>
-                      + Add Entry
-                    </button>
-                    {allMonths.length > 0 && (
-                      <button
-                        className="data-copy-forward-btn"
-                        onClick={handleCopyForwardEntry}
-                        disabled={!!inlineEntry}
-                        title={`Pre-fill with balances from ${allMonths[0]}`}
-                        aria-label="Copy balances from last month"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <rect x="9" y="9" width="13" height="13" rx="2" />
-                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                        </svg>
-                        <span className="data-copy-forward-label">Copy Last Month</span>
+                  <div className="data-add-month-wrap">
+                    <div className="data-add-entry-split-btn">
+                      <button className="action-btn" onClick={handleOpenAddEntry} disabled={!!inlineEntry}>
+                        + Add Entry
                       </button>
+                      {allowCsvImport && (
+                        <button
+                          className="action-btn data-add-entry-split-btn-chevron"
+                          onClick={() => setAddMenuOpen(o => !o)}
+                          aria-label="More data actions"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M4 6l4 4 4-4"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                      {addMenuOpen && (
+                        <div className="data-add-entry-split-dropdown">
+                          {allowCsvImport && (
+                            <button
+                              className="data-add-entry-split-dropdown-item"
+                              onClick={() => {
+                                setAddMenuOpen(false)
+                                csvInputRef.current?.click()
+                              }}
+                            >
+                              Import from CSV
+                            </button>
+                          )}
+                          {allowCsvImport && hasAccounts && balances.length > 0 && (
+                            <button
+                              className="data-add-entry-split-dropdown-item"
+                              onClick={() => {
+                                setAddMenuOpen(false)
+                                exportCsv(accounts, balances)
+                              }}
+                            >
+                              Export CSV
+                            </button>
+                          )}
+                          {allowCsvImport && (hasAccounts || balances.length > 0) && (
+                            <button
+                              className="data-add-entry-split-dropdown-item data-add-entry-split-dropdown-item--danger"
+                              onClick={() => {
+                                setAddMenuOpen(false)
+                                if (confirm('Clear all accounts and balance entries? This cannot be undone.')) {
+                                  saveBoth([], [])
+                                }
+                              }}
+                            >
+                              Reset Data
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {isAddEntryOpen && (
+                      <div className="data-add-month-popover" role="dialog" aria-label="Add entry">
+                        <label className="data-add-month-field">
+                          <span>Month</span>
+                          <input
+                            type="month"
+                            value={addEntryForm.month}
+                            onChange={e => setAddEntryForm(f => ({ ...f, month: e.target.value, error: '' }))}
+                          />
+                        </label>
+                        <fieldset className="data-add-month-options">
+                          <legend>Starting point</legend>
+                          <label>
+                            <input
+                              type="radio"
+                              name="add-entry-mode"
+                              checked={!addEntryForm.copyFrom}
+                              onChange={() => setAddEntryForm(f => ({ ...f, copyFrom: false }))}
+                            />
+                            <span>Start blank</span>
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              name="add-entry-mode"
+                              checked={addEntryForm.copyFrom}
+                              onChange={() => setAddEntryForm(f => ({ ...f, copyFrom: true }))}
+                              disabled={allMonths.length === 0}
+                            />
+                            <span>Copy from last month</span>
+                          </label>
+                        </fieldset>
+                        {addEntryForm.error && <p className="data-add-month-error">{addEntryForm.error}</p>}
+                        <div className="data-add-month-actions">
+                          <button type="button" className="data-add-month-continue" onClick={handleConfirmAddEntry}>
+                            Continue
+                          </button>
+                          <button
+                            type="button"
+                            className="data-add-month-cancel"
+                            onClick={() => setIsAddEntryOpen(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     )}
-                  </>
+                  </div>
                 }
                 onInlineEntryChange={setInlineEntry}
                 onSaveInlineEntry={handleSaveInlineEntry}
                 onCancelInlineEntry={() => setInlineEntry(null)}
                 onDeleteMonth={handleDeleteMonth}
+                onEditMonth={handleEditMonth}
               />
             )}
           </>
@@ -423,24 +494,24 @@ const Data: FC = () => {
         <div className="data-header-left">
           <h1>Net Worth</h1>
         </div>
-        <nav className="nw-tab-bar" aria-label="Net Worth sections">
-          <NavLink to="/net-worth/dashboard" className={() => `nw-tab${activeTab === 'accounts' ? ' active' : ''}`}>
+        <nav className="tab-bar" aria-label="Net Worth sections">
+          <NavLink to="/net-worth/dashboard" className={() => `tab-btn${activeTab === 'accounts' ? ' active' : ''}`}>
             Dashboard
           </NavLink>
-          <NavLink to="/net-worth/allocation" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
+          <NavLink to="/net-worth/allocation" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
             Allocation
           </NavLink>
-          <NavLink to="/net-worth/growth" className={({ isActive }) => `nw-tab${isActive ? ' active' : ''}`}>
+          <NavLink to="/net-worth/growth" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
             Growth
           </NavLink>
         </nav>
         <div className="data-header-right">
           {activeTab === 'accounts' && hasAccounts && (
-            <div className="data-view-tabs" role="tablist" aria-label="Data view" onKeyDown={handleDataViewTabKeyDown}>
+            <div className="tab-bar" role="tablist" aria-label="Data view" onKeyDown={handleDataViewTabKeyDown}>
               {DATA_VIEW_TABS.map(tabDef => (
                 <button
                   key={tabDef.id}
-                  className={`data-view-tab${dataView === tabDef.id ? ' active' : ''}`}
+                  className={`tab-btn${dataView === tabDef.id ? ' active' : ''}`}
                   role="tab"
                   aria-selected={dataView === tabDef.id}
                   tabIndex={dataView === tabDef.id ? 0 : -1}
@@ -452,16 +523,16 @@ const Data: FC = () => {
             </div>
           )}
           {activeTab === 'allocation' && (
-            <div className="data-view-tabs" role="group" aria-label="Allocation view mode">
+            <div className="tab-bar" role="group" aria-label="Allocation view mode">
               <button
-                className={`data-view-tab${allocTab === 'breakdown' ? ' active' : ''}`}
+                className={`tab-btn${allocTab === 'breakdown' ? ' active' : ''}`}
                 aria-pressed={allocTab === 'breakdown'}
                 onClick={() => navigate('/net-worth/allocation')}
               >
                 Breakdown
               </button>
               <button
-                className={`data-view-tab${allocTab === 'ratios' ? ' active' : ''}`}
+                className={`tab-btn${allocTab === 'ratios' ? ' active' : ''}`}
                 aria-pressed={allocTab === 'ratios'}
                 onClick={() => navigate('/net-worth/allocation/ratios')}
               >
@@ -470,16 +541,16 @@ const Data: FC = () => {
             </div>
           )}
           {activeTab === 'growth' && (
-            <div className="data-view-tabs" role="group" aria-label="Growth view mode">
+            <div className="tab-bar" role="group" aria-label="Growth view mode">
               <button
-                className={`data-view-tab${growthTab === 'savings' ? ' active' : ''}`}
+                className={`tab-btn${growthTab === 'savings' ? ' active' : ''}`}
                 aria-pressed={growthTab === 'savings'}
                 onClick={() => navigate('/net-worth/growth/savings')}
               >
                 Savings
               </button>
               <button
-                className={`data-view-tab${growthTab === 'income' ? ' active' : ''}`}
+                className={`tab-btn${growthTab === 'income' ? ' active' : ''}`}
                 aria-pressed={growthTab === 'income'}
                 onClick={() => navigate('/net-worth/growth/income')}
               >

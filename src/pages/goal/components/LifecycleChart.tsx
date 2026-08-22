@@ -1,4 +1,4 @@
-import { FC, useId, useMemo, useState, useCallback, useRef } from 'react'
+import React, { FC, useId, useMemo, useState, useCallback, useRef } from 'react'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -29,6 +29,7 @@ interface CustomTooltipProps {
   fiGoal?: number
   fireMonth?: string
   goalLabel?: string
+  chartData?: ChartRow[]
 }
 
 const CustomTooltip: FC<CustomTooltipProps> = ({
@@ -38,47 +39,141 @@ const CustomTooltip: FC<CustomTooltipProps> = ({
   fiGoal,
   fireMonth,
   goalLabel = 'FI goal',
+  chartData,
 }) => {
   if (!active || !payload?.length) return null
-  const { expense, remaining, phase, monthlyGrowth, monthlySaved } = payload[0].payload
+  const row = payload[0].payload
+  const { expense, remaining, phase, monthlyGrowth, monthlySaved } = row
   const pctOfGoal = fiGoal && fiGoal > 0 ? ((remaining / fiGoal) * 100).toFixed(0) : null
+
+  // Compute deltas from previous data point
+  let prevRow: ChartRow | null = null
+  if (chartData) {
+    const idx = chartData.findIndex((r: ChartRow) => r.month === label)
+    if (idx > 0) prevRow = chartData[idx - 1]
+  }
+
+  const getDelta = (curr: number, prev: number | undefined) => {
+    if (prev == null || prev === 0) return null
+    const d = curr - prev
+    const pct = (d / Math.abs(prev)) * 100
+    return { d, pct }
+  }
+
+  const fmtD = (d: number, pct: number) => `${d >= 0 ? '+' : ''}${dollars(d)} (${d >= 0 ? '+' : ''}${pct.toFixed(1)}%)`
+
+  const items: { label: string; value: number; delta: { d: number; pct: number } | null }[] = []
+
+  if (phase === 'coasting') {
+    items.push({ label: 'Saving $0 (coasting)', value: 0, delta: null })
+  }
+  if (monthlySaved > 0) {
+    items.push({ label: 'Saved', value: monthlySaved, delta: getDelta(monthlySaved, prevRow?.monthlySaved) })
+  }
+  if (monthlyGrowth != null) {
+    items.push({ label: 'Growth', value: monthlyGrowth, delta: getDelta(monthlyGrowth, prevRow?.monthlyGrowth) })
+  }
+  if (expense > 0) {
+    items.push({ label: 'Expense', value: expense, delta: getDelta(expense, prevRow?.expense) })
+  }
+  items.push({ label: 'Balance', value: remaining, delta: getDelta(remaining, prevRow?.remaining) })
+
   return (
-    <div className="projection-tooltip">
-      <div className="projection-tooltip-month">{label}</div>
-      {phase === 'coasting' && (
-        <div className="projection-tooltip-row projection-tooltip-row--pct">
-          <span>Saving $0 (coasting)</span>
-        </div>
-      )}
-      {monthlySaved > 0 && (
-        <div className="projection-tooltip-row">
-          <span>Saved</span>
-          <span>{dollars(monthlySaved)}</span>
-        </div>
-      )}
-      {monthlyGrowth != null && (
-        <div className="projection-tooltip-row">
-          <span>Growth</span>
-          <span>{dollars(monthlyGrowth)}</span>
-        </div>
-      )}
-      {expense > 0 && (
-        <div className="projection-tooltip-row">
-          <span>Expense</span>
-          <span>{dollars(expense)}</span>
-        </div>
-      )}
-      <div className="projection-tooltip-row">
-        <span>Balance</span>
-        <span>{dollars(remaining)}</span>
+    <div
+      style={{
+        backgroundColor: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 8,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        padding: '6px 10px',
+      }}
+    >
+      <div style={{ color: 'var(--color-text)', fontSize: 10, fontWeight: 500, marginBottom: 2 }}>{label}</div>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr 1fr',
+          alignItems: 'baseline',
+          columnGap: 14,
+          rowGap: 4,
+        }}
+      >
+        {items.map(item =>
+          item.label === 'Saving $0 (coasting)' ? (
+            <React.Fragment key={item.label}>
+              <div
+                style={{
+                  color: 'var(--color-text-secondary, #6b7280)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  gridColumn: '1 / -1',
+                }}
+              >
+                Saving $0 (coasting)
+              </div>
+            </React.Fragment>
+          ) : (
+            <React.Fragment key={item.label}>
+              <div style={{ color: 'var(--color-text-heading)', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {item.label}
+              </div>
+              <div
+                style={{
+                  color: 'var(--color-text-heading)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  textAlign: 'right',
+                }}
+              >
+                {dollars(item.value)}
+              </div>
+              {item.delta ? (
+                <div
+                  style={{
+                    color: item.delta.d >= 0 ? '#15803d' : '#dc2626',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    textAlign: 'right',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {fmtD(item.delta.d, item.delta.pct)}
+                </div>
+              ) : (
+                <div />
+              )}
+            </React.Fragment>
+          ),
+        )}
       </div>
       {phase === 'drawdown' && label === fireMonth && (
-        <div className="projection-tooltip-row projection-tooltip-row--pct">
-          <span>🔥 FIRE month</span>
+        <div
+          style={{
+            color: 'var(--color-text-secondary, #6b7280)',
+            fontSize: 11,
+            fontWeight: 600,
+            borderTop: '1px solid var(--color-border)',
+            marginTop: 4,
+            paddingTop: 4,
+          }}
+        >
+          FIRE month
         </div>
       )}
       {pctOfGoal && (phase === 'accumulation' || phase === 'coasting') && (
-        <div className="projection-tooltip-row projection-tooltip-row--pct">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            color: 'var(--color-text-secondary, #6b7280)',
+            fontSize: 11,
+            fontWeight: 600,
+            borderTop: '1px solid var(--color-border)',
+            marginTop: 4,
+            paddingTop: 4,
+          }}
+        >
           <span>% of {goalLabel}</span>
           <span>{pctOfGoal}%</span>
         </div>
@@ -142,13 +237,13 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal, goalLabel = 'FI
         })
       }
       if (prev.primaryLocked && !row.primaryLocked) {
-        result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
+        result.push({ month: row.month, label: 'Primary', color: 'var(--color-success, #15803d)', dx: -10, dy: 0 })
       }
       if ((prev.phase === 'accumulation' || prev.phase === 'coasting') && row.phase === 'drawdown') {
         result.push({ month: row.month, label: 'F.I.R.E.', color: 'var(--accent, #0f766e)', dx: -10, dy: 0 })
       }
       if (prev.partnerLocked && !row.partnerLocked) {
-        result.push({ month: row.month, label: 'Partner', color: 'var(--color-success, #16a34a)', dx: -10, dy: 0 })
+        result.push({ month: row.month, label: 'Partner', color: 'var(--color-success, #15803d)', dx: -10, dy: 0 })
       }
     }
     const byMonth = new Map<string, number>()
@@ -232,7 +327,14 @@ const LifecycleChart: FC<LifecycleChartProps> = ({ rows, fiGoal, goalLabel = 'FI
           <XAxis dataKey="month" tick={{ fontSize: 11 }} interval="preserveStartEnd" stroke="var(--projection-axis)" />
           <YAxis tickFormatter={abbreviate} tick={{ fontSize: 11 }} stroke="var(--projection-axis)" width={72} />
           <Tooltip
-            content={<CustomTooltip fiGoal={fiGoal} fireMonth={fireMonth ?? undefined} goalLabel={goalLabel} />}
+            content={
+              <CustomTooltip
+                fiGoal={fiGoal}
+                fireMonth={fireMonth ?? undefined}
+                goalLabel={goalLabel}
+                chartData={chartData}
+              />
+            }
           />
           <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="4 2" strokeWidth={1} />
 

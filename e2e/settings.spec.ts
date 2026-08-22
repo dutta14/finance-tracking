@@ -2,16 +2,11 @@ import { test, expect } from './fixtures/base'
 import { SettingsPage } from './pages/settings.page'
 import {
   ALL_DATA_BALANCE,
-  ALL_DATA_GOAL,
-  buildV1Import,
-  buildV2ImportWithUnknown,
-  SENSITIVE_KEYS,
   seedAllData,
   seedEmpty,
   seedProfile,
-  V2_EXPORT_KEYS,
 } from './fixtures/settings.fixtures'
-import { waitForReload } from './fixtures/reload'
+import { readJsonFile } from './fixtures/filestore-helpers'
 
 test.describe('Settings — Non-Security E2E', () => {
   /* ── Settings — Profile ───────────────────────────────────────── */
@@ -149,6 +144,7 @@ test.describe('Settings — Non-Security E2E', () => {
       // (was #60 test 14) — start in dark via seed, click Light, verify revert.
       await page.addInitScript(() => {
         localStorage.clear()
+        localStorage.setItem('_e2eMode', '1')
         localStorage.setItem('encryption-enabled', '0')
         localStorage.setItem('onboarding-dismissed', '1')
         localStorage.setItem('darkMode', '1')
@@ -172,8 +168,7 @@ test.describe('Settings — Non-Security E2E', () => {
   /* ── Settings — Advanced ──────────────────────────────────────── */
 
   test.describe('Advanced', () => {
-    test('7. Advanced pane shows CSV import toggle, export, and factory reset options', async ({ page }) => {
-      // (was #60 test 21) — surface inventory only; no clicks.
+    test('7. Advanced pane shows only the CSV import toggle', async ({ page }) => {
       await seedEmpty(page)
       const settings = new SettingsPage(page)
       await settings.open()
@@ -181,74 +176,22 @@ test.describe('Settings — Non-Security E2E', () => {
 
       await expect(settings.allowCsvToggle).toBeVisible()
       await expect(settings.allowCsvToggle).toHaveAttribute('aria-checked', 'false')
-      await expect(settings.exportBtn).toBeVisible()
-      await expect(settings.importBtn).toBeVisible()
-      await expect(settings.factoryResetBtn).toBeVisible()
-      // Confirmation button is NOT mounted until the reset CTA is clicked.
-      await expect(settings.factoryResetConfirmBtn).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /export/i })).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /import/i })).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /factory reset/i })).toHaveCount(0)
     })
 
-    test('8. Factory Reset clears all data after confirmation', async ({ page }) => {
-      // (was #60 test 22) — enumerate every key we seeded, assert each is
-      // gone. The app's first-load effects WILL re-write a small set of
-      // settings defaults (darkMode='0', accentTheme='blue',
-      // allowCsvImport='0') plus a fresh schema version and a new
-      // flag-client-id; those survivors are documented below and do NOT
-      // carry pre-reset values.
+    test('8. Advanced pane does not reveal JSON import, export, or reset even with seeded data', async ({ page }) => {
       await seedAllData(page)
       const settings = new SettingsPage(page)
       await settings.open()
-
-      // Confirm at least one seeded sensitive key actually landed.
-      const seededBalances = await page.evaluate(() => localStorage.getItem('data-balances'))
-      expect(seededBalances).toContain(String(ALL_DATA_BALANCE.balance))
-
       await settings.navTo('advanced')
-      await settings.factoryResetBtn.click()
-      await expect(settings.factoryResetConfirmBtn).toBeVisible()
+      await expect(settings.dialog.locator('input[type="file"][accept=".json"]')).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /export/i })).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /factory reset/i })).toHaveCount(0)
 
-      // The reset handler calls localStorage.clear() then window.location.reload().
-      // Trigger the click and wait for the reload event before asserting state.
-      const reloadPromise = page.waitForEvent('load')
-      await settings.factoryResetConfirmBtn.click()
-      await reloadPromise
-
-      // Every seeded sensitive key is either cleared (null) or, if the
-      // app's context provider re-initialised it on cold load, holds an
-      // empty container ([] / {} / null-serialized) — never the original
-      // seeded payload. Per-key failure messages name the offender.
-      // EMPTY_REINIT_VALUES — values that count as "cleared" because providers
-      // re-emit these as their default empty state on cold load (factory reset
-      // → reload). The empty string '' is intentionally NOT admitted: no
-      // current provider serialises cleared state as "" (verified by grep
-      // across src/), and excluding it makes the test fail loudly if a future
-      // regression introduces that shape.
-      const EMPTY_REINIT_VALUES = new Set(['[]', '{}', 'null'])
-      for (const key of SENSITIVE_KEYS) {
-        const value = await page.evaluate(k => localStorage.getItem(k), key)
-        if (value === null) continue
-        expect(
-          EMPTY_REINIT_VALUES.has(value),
-          `sensitive key "${key}" must be cleared (got non-empty value ${value!.slice(0, 80)})`,
-        ).toBe(true)
-      }
-
-      // Non-sensitive seeded keys are gone too.
-      for (const key of ['goal-view-mode', 'home-card-order'] as const) {
-        const value = await page.evaluate(k => localStorage.getItem(k), key)
-        expect(value, `non-sensitive seeded key "${key}" must be cleared`).toBeNull()
-      }
-
-      // Documented survivors — keys the app re-writes on cold load with
-      // their default values (NOT the pre-reset seeded values).
-      const darkMode = await page.evaluate(() => localStorage.getItem('darkMode'))
-      expect(darkMode, 'darkMode survives reset as default "0", not seeded "1"').toBe('0')
-      const accentTheme = await page.evaluate(() => localStorage.getItem('accentTheme'))
-      expect(accentTheme, 'accentTheme survives reset as default "blue"').toBe('blue')
-      const allowCsv = await page.evaluate(() => localStorage.getItem('allowCsvImport'))
-      expect(allowCsv, 'allowCsvImport survives reset as default "0", not seeded "1"').toBe('0')
-      const schemaVer = await page.evaluate(() => localStorage.getItem('storage-schema-version'))
-      expect(schemaVer, 'storage-schema-version is re-written on cold start').not.toBeNull()
+      const balances = await readJsonFile(page, 'accounts.json', [])
+      expect(balances).toHaveLength(1)
     })
   })
 
@@ -344,107 +287,24 @@ test.describe('Settings — Non-Security E2E', () => {
   /* ── Import / Export ──────────────────────────────────────────── */
 
   test.describe('Import / Export', () => {
-    test('14. Import v1 format JSON (legacy goal array) succeeds without crash', async ({ page }) => {
-      // (was #60 test 31) — bare-array (v1) shape goes through the
-      // Array.isArray(parsed) branch of importValidator. After import the
-      // handler reloads the app; assert the seeded goal lands in
-      // localStorage and the other pages render their empty states without
-      // error.
-      const consoleErrors: string[] = []
-      page.on('pageerror', e => consoleErrors.push(e.message))
-
+    test('14. Advanced pane exposes no JSON import control', async ({ page }) => {
       await seedEmpty(page)
       const settings = new SettingsPage(page)
       await settings.open()
       await settings.navTo('advanced')
 
-      const v1 = buildV1Import()
-      // ImportExportContext.handleImport calls window.location.reload()
-      // after dispatching `data-changed`. waitForLoadState('load') is
-      // unusable here (resolves immediately when the page is already
-      // loaded; does not wait for any FUTURE navigation), letting the
-      // next page.evaluate race the reload. Use the sentinel helper
-      // extracted in #172 to gate on the actual reload landing.
-      await waitForReload(page, async () => {
-        await settings.importFileInput.setInputFiles({
-          name: v1.name,
-          mimeType: 'application/json',
-          buffer: Buffer.from(v1.content),
-        })
-      })
-
-      // Goal is in localStorage under financialGoals (survives reload).
-      const stored = await page.evaluate(() => localStorage.getItem('financialGoals'))
-      expect(stored).toContain('FI Goal')
-
-      // Goals page renders the imported goal — guards against a regression
-      // where the validator accepts the payload but the Goals page filters
-      // it out (LS substring check alone would miss that).
-      await page.goto('/finance-tracking/#/goal')
-      await expect(page.getByRole('heading', { name: 'FI Goal' })).toBeVisible()
-
-      // Net Worth, Budget, Taxes each render their empty states with no
-      // console errors. We visit each route directly.
-      await page.goto('/finance-tracking/#/net-worth')
-      await expect(page.getByRole('heading', { name: 'Net Worth' })).toBeVisible()
-      await page.goto('/finance-tracking/#/budget')
-      await expect(page.getByRole('heading', { name: /^Budget/ })).toBeVisible()
-      await page.goto('/finance-tracking/#/taxes')
-      await expect(page.getByRole('heading', { name: 'Taxes' })).toBeVisible()
-
-      expect(consoleErrors).toEqual([])
+      await expect(settings.dialog.locator('input[type="file"][accept=".json"]')).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /import/i })).toHaveCount(0)
     })
 
-    test('15. Import JSON with unknown keys ignores extras and imports known keys', async ({ page }) => {
-      // (was #60 test 32) — unknownField + futureFeature must NOT appear
-      // anywhere in localStorage (verify by enumerating keys), and the
-      // known goal must land in financialGoals.
-      const consoleErrors: string[] = []
-      page.on('pageerror', e => consoleErrors.push(e.message))
-
+    test('15. Advanced pane exposes no export or destructive reset controls', async ({ page }) => {
       await seedEmpty(page)
       const settings = new SettingsPage(page)
       await settings.open()
       await settings.navTo('advanced')
 
-      const v2 = buildV2ImportWithUnknown()
-      // Sentinel-gated reload (see #172): waitForLoadState('load') is a
-      // no-op when the page is already loaded and does not wait for the
-      // FUTURE reload that handleImport triggers.
-      await waitForReload(page, async () => {
-        await settings.importFileInput.setInputFiles({
-          name: v2.name,
-          mimeType: 'application/json',
-          buffer: Buffer.from(v2.content),
-        })
-      })
-
-      // Known goal made it through.
-      const stored = await page.evaluate(() => localStorage.getItem('financialGoals'))
-      expect(stored).toContain('V2 Imported Goal')
-
-      // Anti-leak: neither unknown key name appears as a localStorage key.
-      const keys = await page.evaluate(() => Object.keys(localStorage))
-      expect(keys).not.toContain('unknownField')
-      expect(keys).not.toContain('futureFeature')
-
-      // Anti-leak: neither unknown value substring leaked into any stored value.
-      const allValues = await page.evaluate(() =>
-        Object.keys(localStorage)
-          .map(k => localStorage.getItem(k))
-          .join('|'),
-      )
-      expect(allValues).not.toContain('"unknownField"')
-      expect(allValues).not.toContain('"futureFeature"')
-
-      // Goals page renders the imported known goal — guards against a
-      // regression where unknown-key stripping inadvertently drops the
-      // known payload too, or where the validator accepts it but the
-      // Goals page filters it out at render time.
-      await page.goto('/finance-tracking/#/goal')
-      await expect(page.getByText('V2 Imported Goal')).toBeVisible()
-
-      expect(consoleErrors).toEqual([])
+      await expect(settings.dialog.getByRole('button', { name: /export/i })).toHaveCount(0)
+      await expect(settings.dialog.getByRole('button', { name: /factory reset/i })).toHaveCount(0)
     })
   })
 
@@ -462,6 +322,7 @@ test.describe('Settings — Non-Security E2E', () => {
       // OR a colorThemes refactor will trip the assertion.
       await page.addInitScript(() => {
         localStorage.clear()
+        localStorage.setItem('_e2eMode', '1')
         localStorage.setItem('encryption-enabled', '0')
         localStorage.setItem('onboarding-dismissed', '1')
         localStorage.setItem('accentTheme', 'blue')
@@ -585,44 +446,22 @@ test.describe('Settings — Non-Security E2E', () => {
         .toBe(true)
     })
 
-    test('20. Export includes all v2 format keys when all data types are seeded', async ({ page }) => {
-      // (was #60 test 39) — capture the download via Playwright's
-      // download API (NOT blob-URL interception), parse it, and verify
-      // every one of the 15 v2 top-level keys is present with a non-null
-      // value, plus version === 2.
+    test('20. Opening Advanced leaves seeded file-store data intact', async ({ page }) => {
       await seedAllData(page)
       const settings = new SettingsPage(page)
       await settings.open()
       await settings.navTo('advanced')
 
-      const [download] = await Promise.all([page.waitForEvent('download'), settings.exportBtn.click()])
+      await expect(settings.dialog.getByRole('button', { name: /export/i })).toHaveCount(0)
+      const goals = await readJsonFile(page, 'goals.json', { financialGoals: [], gwGoals: [] })
+      const accounts = await readJsonFile(page, 'accounts.json', [])
+      expect((goals as { financialGoals: unknown[] }).financialGoals).toHaveLength(1)
+      expect(accounts).toHaveLength(1)
 
-      // Read the streamed file body into a string and JSON.parse it.
-      const stream = await download.createReadStream()
-      const chunks: Buffer[] = []
-      for await (const chunk of stream) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-      }
-      const text = Buffer.concat(chunks).toString('utf-8')
-      const exported = JSON.parse(text) as Record<string, unknown>
-
-      // version is exactly 2.
-      expect(exported.version).toBe(2)
-
-      // Per-key presence + non-null assertion (each gets its own failure message).
-      for (const key of V2_EXPORT_KEYS) {
-        expect(exported, `v2 export must contain top-level key "${key}"`).toHaveProperty(key)
-        expect(exported[key], `v2 export key "${key}" must not be null`).not.toBeNull()
-        expect(exported[key], `v2 export key "${key}" must not be undefined`).not.toBeUndefined()
-      }
-
-      // Spot-check seeded values flowed through (catches accidental
-      // value-stripping in the export pipeline).
-      const goals = exported.goals as Array<{ id: number; goalName: string }>
-      expect(goals[0]?.id).toBe(ALL_DATA_GOAL.id)
-      expect(goals[0]?.goalName).toBe(ALL_DATA_GOAL.goalName)
-      const balances = exported.dataBalances as Array<{ balance: number }>
-      expect(balances[0]?.balance).toBe(ALL_DATA_BALANCE.balance)
+      const snapshot = await page.evaluate(() => localStorage.getItem('__e2eSeedData'))
+      expect(snapshot).toContain('accounts.json')
+      expect(snapshot).toContain('goals.json')
+      expect(snapshot).toContain(String(ALL_DATA_BALANCE.balance))
     })
   })
 })

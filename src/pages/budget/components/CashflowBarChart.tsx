@@ -1,5 +1,16 @@
-import { ComponentProps, FC, useMemo } from 'react'
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid, Cell } from 'recharts'
+import { FC, useMemo } from 'react'
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  CartesianGrid,
+  Cell,
+} from 'recharts'
 import { Transaction, TimePeriod } from '../types'
 
 interface CashflowBarChartProps {
@@ -7,7 +18,7 @@ interface CashflowBarChartProps {
   yearTransactions: Record<string, Transaction[]>
   timePeriod: TimePeriod
   removedCategories: Set<string>
-  categorySums: Record<string, Record<string, number>>
+  incomeCatSet: Set<string>
   selectedPeriod: string | null
   onSelectPeriod: (label: string | null) => void
 }
@@ -24,24 +35,14 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
   yearTransactions,
   timePeriod,
   removedCategories,
-  categorySums,
+  incomeCatSet,
   selectedPeriod,
   onSelectPeriod,
 }) => {
-  // Classify categories the same way as the budget table:
-  // A category with ANY negative month value is "expense"; otherwise "income".
-  const expenseCats = useMemo(() => {
-    const set = new Set<string>()
-    Object.entries(categorySums).forEach(([cat, months]) => {
-      if (Object.values(months).some(v => v < 0)) set.add(cat)
-    })
-    return set
-  }, [categorySums])
-
   const data = useMemo(() => {
     const filter = (txns: Transaction[]) => txns.filter(t => !removedCategories.has(t.category))
-    const isExpense = (t: Transaction) => expenseCats.has(t.category)
-    const isIncome = (t: Transaction) => !expenseCats.has(t.category) && t.amount > 0
+    const isIncome = (t: Transaction) => incomeCatSet.has(t.category)
+    const isExpense = (t: Transaction) => !incomeCatSet.has(t.category)
 
     const aggregate = (txns: Transaction[]) => {
       let income = 0,
@@ -56,36 +57,44 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
     if (timePeriod === 'month') {
       return MONTHS.map((label, i) => {
         const key = `${year}-${String(i + 1).padStart(2, '0')}`
-        const { income, expense } = aggregate(filter(yearTransactions[key] || []))
-        return { label, income, expense, net: income + expense }
+        const txns = yearTransactions[key] || []
+        const { income, expense } = aggregate(filter(txns))
+        const hasData = txns.length > 0
+        return { label, income, expense, net: income + expense, netLine: hasData ? income + expense : null }
       })
     }
     if (timePeriod === 'quarter') {
       return QUARTERS.map((label, qi) => {
         let income = 0,
-          expense = 0
+          expense = 0,
+          hasData = false
         for (let m = qi * 3; m < qi * 3 + 3; m++) {
           const key = `${year}-${String(m + 1).padStart(2, '0')}`
-          const agg = aggregate(filter(yearTransactions[key] || []))
+          const txns = yearTransactions[key] || []
+          if (txns.length > 0) hasData = true
+          const agg = aggregate(filter(txns))
           income += agg.income
           expense += agg.expense
         }
-        return { label, income, expense, net: income + expense }
+        return { label, income, expense, net: income + expense, netLine: hasData ? income + expense : null }
       })
     }
     // half
     return HALVES.map((label, hi) => {
       let income = 0,
-        expense = 0
+        expense = 0,
+        hasData = false
       for (let m = hi * 6; m < hi * 6 + 6; m++) {
         const key = `${year}-${String(m + 1).padStart(2, '0')}`
-        const agg = aggregate(filter(yearTransactions[key] || []))
+        const txns = yearTransactions[key] || []
+        if (txns.length > 0) hasData = true
+        const agg = aggregate(filter(txns))
         income += agg.income
         expense += agg.expense
       }
-      return { label, income, expense, net: income + expense }
+      return { label, income, expense, net: income + expense, netLine: hasData ? income + expense : null }
     })
-  }, [year, yearTransactions, timePeriod, removedCategories, expenseCats])
+  }, [year, yearTransactions, timePeriod, removedCategories, incomeCatSet])
 
   const maxVal = Math.max(...data.map(d => d.income), 1)
   const minVal = Math.min(...data.map(d => d.expense), -1)
@@ -94,11 +103,19 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
   const domainBottom = Math.floor((minVal * 1.1) / 1000) * 1000 || -1000
   const domain: [number, number] = [domainBottom, domainTop]
 
+  const expenseValues = data.filter(d => d.netLine !== null).map(d => d.expense)
+  const avgExpense = expenseValues.length > 0 ? expenseValues.reduce((a, b) => a + b, 0) / expenseValues.length : 0
+  const medianExpense = (() => {
+    const sorted = [...expenseValues].sort((a, b) => a - b)
+    const mid = Math.floor(sorted.length / 2)
+    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+  })()
+
   return (
     <div className="cashflow-bar-wrap">
       <h3 className="cashflow-section-title">Cashflow — {year}</h3>
       <ResponsiveContainer width="100%" height={340}>
-        <BarChart
+        <ComposedChart
           data={data}
           margin={{ top: 10, right: 20, bottom: 5, left: 10 }}
           barGap={-48}
@@ -122,16 +139,87 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
             width={55}
           />
           <Tooltip
-            formatter={
-              ((value: number, name: string) => [
-                fmt(Math.abs(value)),
-                name === 'Income' ? 'Income' : 'Expense',
-              ]) as unknown as ComponentProps<typeof Tooltip>['formatter']
-            }
-            labelFormatter={
-              ((label: string) => `${label} ${year}`) as unknown as ComponentProps<typeof Tooltip>['labelFormatter']
-            }
-            contentStyle={{ fontSize: '0.82rem', borderRadius: 8 }}
+            content={({ active, label, payload }) => {
+              if (!active || !payload || payload.length === 0) return null
+              const income = (payload.find(p => p.dataKey === 'income')?.value as number) || 0
+              const expense = (payload.find(p => p.dataKey === 'expense')?.value as number) || 0
+              const net = income + expense
+              const savingsRate = income > 0 ? (net / income) * 100 : 0
+
+              // Find previous period for delta
+              const idx = data.findIndex(d => d.label === label)
+              const prev = idx > 0 ? data[idx - 1] : null
+              const prevNet = prev ? prev.income + prev.expense : null
+              const prevSavingsRate =
+                prev && prev.income > 0 ? ((prev.income + prev.expense) / prev.income) * 100 : null
+
+              const deltaIncome = prev ? income - prev.income : null
+              const deltaExpense = prev ? expense - prev.expense : null
+              const deltaNet = prevNet !== null ? net - prevNet : null
+              const deltaSavings = prevSavingsRate !== null ? savingsRate - prevSavingsRate : null
+
+              const fmtDelta = (d: number | null) => {
+                if (d === null) return null
+                const sign = d >= 0 ? '+' : ''
+                return `${sign}${fmt(d)}`
+              }
+              const fmtDeltaPct = (d: number | null) => {
+                if (d === null) return null
+                const sign = d >= 0 ? '+' : ''
+                return `${sign}${d.toFixed(1)}%`
+              }
+
+              const deltaClass = (d: number | null) => {
+                if (d === null || d === 0) return ''
+                return d > 0 ? 'cashflow-tooltip-delta--positive' : 'cashflow-tooltip-delta--negative'
+              }
+
+              return (
+                <div className="cashflow-tooltip">
+                  <div className="cashflow-tooltip-title">
+                    {label} {year}
+                  </div>
+                  <div className="cashflow-tooltip-row">
+                    <span className="cashflow-tooltip-dot" style={{ background: '#4ade80' }} />
+                    <span className="cashflow-tooltip-label">Income</span>
+                    <span className="cashflow-tooltip-value">{fmt(income)}</span>
+                    {deltaIncome !== null && (
+                      <span className={`cashflow-tooltip-delta ${deltaClass(deltaIncome)}`}>
+                        {fmtDelta(deltaIncome)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="cashflow-tooltip-row">
+                    <span className="cashflow-tooltip-dot" style={{ background: '#f87171' }} />
+                    <span className="cashflow-tooltip-label">Expenses</span>
+                    <span className="cashflow-tooltip-value">{fmt(expense)}</span>
+                    {deltaExpense !== null && (
+                      <span className={`cashflow-tooltip-delta ${deltaClass(deltaExpense)}`}>
+                        {fmtDelta(deltaExpense)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="cashflow-tooltip-row">
+                    <span className="cashflow-tooltip-dot" style={{ background: 'var(--color-text-muted)' }} />
+                    <span className="cashflow-tooltip-label">Net Income</span>
+                    <span className="cashflow-tooltip-value">{fmt(net)}</span>
+                    {deltaNet !== null && (
+                      <span className={`cashflow-tooltip-delta ${deltaClass(deltaNet)}`}>{fmtDelta(deltaNet)}</span>
+                    )}
+                  </div>
+                  <div className="cashflow-tooltip-row">
+                    <span className="cashflow-tooltip-dot" style={{ background: 'var(--color-text-muted)' }} />
+                    <span className="cashflow-tooltip-label">Savings Rate</span>
+                    <span className="cashflow-tooltip-value">{savingsRate.toFixed(1)}%</span>
+                    {deltaSavings !== null && (
+                      <span className={`cashflow-tooltip-delta ${deltaClass(deltaSavings)}`}>
+                        {fmtDeltaPct(deltaSavings)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            }}
           />
           <ReferenceLine y={0} stroke="var(--cashflow-zero, #9ca3af)" strokeWidth={1} />
           <Bar dataKey="income" name="Income" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
@@ -144,20 +232,56 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
               <Cell key={i} fill="#f87171" opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1} />
             ))}
           </Bar>
-        </BarChart>
+          <Line
+            dataKey="netLine"
+            type="monotone"
+            stroke="var(--color-text)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={false}
+            connectNulls={false}
+          />
+          <ReferenceLine
+            y={avgExpense}
+            stroke="var(--color-text-muted)"
+            strokeDasharray="4 4"
+            strokeWidth={1}
+            label={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ((props: any) => {
+                const { viewBox } = props
+                const cx = viewBox.x + viewBox.width + 8
+                const cy = viewBox.y
+                return (
+                  <g className="cashflow-line-endpoint">
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={5}
+                      fill="var(--color-text)"
+                      stroke="var(--color-surface)"
+                      strokeWidth={2}
+                    />
+                    <foreignObject x={cx - 190} y={cy - 62} width={180} height={60} className="cashflow-line-fo">
+                      <div className="cashflow-line-dot-tooltip">
+                        <div className="cashflow-line-dot-row">
+                          <span>Average</span>
+                          <span>{fmt(avgExpense)}</span>
+                        </div>
+                        <div className="cashflow-line-dot-row">
+                          <span>Median</span>
+                          <span>{fmt(medianExpense)}</span>
+                        </div>
+                      </div>
+                    </foreignObject>
+                  </g>
+                )
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              }) as any
+            }
+          />
+        </ComposedChart>
       </ResponsiveContainer>
-      {/* Net cashflow legend */}
-      <div className="cashflow-bar-legend">
-        {data.map(d => (
-          <div key={d.label} className="cashflow-bar-legend-item">
-            <span className="cashflow-bar-legend-label">{d.label}</span>
-            <span className={`cashflow-bar-legend-net ${d.net >= 0 ? 'positive' : 'negative'}`}>
-              {d.net >= 0 ? '+' : ''}
-              {fmt(d.net)}
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

@@ -3,8 +3,6 @@ import { BudgetStore, Transaction, CategoryGroup, BudgetViewMode, BudgetConfigDa
 import {
   loadBudgetStore,
   saveBudgetStore,
-  saveCSVForMonth,
-  deleteCSVForMonth,
   createYear,
   getGlobalCategoryGroups,
   getExpenseGroups,
@@ -13,6 +11,7 @@ import {
   saveBudgetSummary,
 } from '../utils/budgetStorage'
 import { parseCSV, buildMonthKey, parseCSVLine, getValidLineIndices } from '../utils/csvParser'
+import { useFileStore } from '../../../contexts/FileStoreContext'
 
 const OTHERS_GROUP_ID = 'others'
 const REMOVED_GROUP_ID = 'removed'
@@ -68,24 +67,52 @@ const updateMergedGroups = (groups: CategoryGroup[], sourceSet: Set<string>, tar
   })
 }
 
+const EMPTY_STORE: BudgetStore = { csvs: {}, configs: {}, years: [], categoryGroups: [] }
+
 export function useBudget() {
-  const [store, setStore] = useState<BudgetStore>(loadBudgetStore)
+  const { fileStore } = useFileStore()
+  const [store, setStore] = useState<BudgetStore>(EMPTY_STORE)
+  const [loaded, setLoaded] = useState(false)
   const storeRef = useRef(store)
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
   const [viewMode, setViewMode] = useState<BudgetViewMode>('spreadsheet')
   const [spreadsheetMode, setSpreadsheetMode] = useState<SpreadsheetMode>('detailed')
 
-  const persist = useCallback((next: BudgetStore) => {
-    storeRef.current = next
-    setStore(next)
-    saveBudgetStore(next)
-  }, [])
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => {
+      loadBudgetStore(fileStore)
+        .then(next => {
+          if (!cancelled) {
+            storeRef.current = next
+            setStore(next)
+            setLoaded(true)
+          }
+        })
+        .catch(console.error)
+    }
+    refresh()
+    const unsubscribe = fileStore.subscribe('budget/categories.json', refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
+  const persist = useCallback(
+    (next: BudgetStore) => {
+      storeRef.current = next
+      setStore(next)
+      saveBudgetStore(fileStore, next).catch(console.error)
+    },
+    [fileStore],
+  )
 
   useEffect(() => {
-    if (!store.years.includes(selectedYear)) {
+    if (loaded && !store.years.includes(selectedYear)) {
       persist(createYear(storeRef.current, selectedYear))
     }
-  }, [selectedYear, store.years, persist])
+  }, [selectedYear, store.years, persist, loaded])
 
   const uploadCSV = useCallback(
     (
@@ -97,7 +124,18 @@ export function useBudget() {
         if (transactions.length === 0) {
           return { ok: false, error: 'No valid transactions found. Check CSV format.' }
         }
-        let next = saveCSVForMonth(storeRef.current, monthKey, csvText)
+        // Pure in-memory update (disk write happens via persist → saveBudgetStore)
+        const year = parseInt(monthKey.split('-')[0], 10)
+        let next: BudgetStore = {
+          ...storeRef.current,
+          csvs: {
+            ...storeRef.current.csvs,
+            [monthKey]: { month: monthKey, csv: csvText, uploadedAt: '' },
+          },
+          years: storeRef.current.years.includes(year)
+            ? storeRef.current.years
+            : [...storeRef.current.years, year].sort((a, b) => a - b),
+        }
 
         // Discover new categories and add them to the right "Others" group if not already grouped
         const currentGroups = getExpenseGroups(next.categoryGroups || [])
@@ -167,7 +205,8 @@ export function useBudget() {
 
   const removeCSV = useCallback(
     (monthKey: string) => {
-      persist(deleteCSVForMonth(storeRef.current, monthKey))
+      const { [monthKey]: _, ...rest } = storeRef.current.csvs
+      persist({ ...storeRef.current, csvs: rest })
     },
     [persist],
   )
@@ -476,30 +515,27 @@ export function useBudget() {
     return sums
   }, [yearTransactions, allRemovedCategories])
 
-  // Summary totals — use same per-category classification as tables:
-  // A category with ANY negative month is "expense"; otherwise "income".
-  const summary = useMemo(() => {
-    // First determine which categories are expense vs income
-    const expenseCategories = new Set<string>()
-    const incomeCategories = new Set<string>()
-    Object.keys(categorySums).forEach(cat => {
-      const vals = Object.values(categorySums[cat] || {})
-      const hasNegative = vals.some(v => v < 0)
-      if (hasNegative) expenseCategories.add(cat)
-      else if (vals.some(v => v > 0)) incomeCategories.add(cat)
-    })
+  // Summary totals — use income group membership as source of truth.
+  // If a category is explicitly in an income group, it's income regardless of amount sign.
+  const incomeCatSet = useMemo(
+    () => new Set(incomeCategoryGroups.flatMap(g => (g.id !== REMOVED_GROUP_ID ? g.categories : []))),
+    [incomeCategoryGroups],
+  )
 
+  const summary = useMemo(() => {
     let totalIncome = 0
     let totalExpense = 0
     Object.entries(categorySums).forEach(([cat, monthMap]) => {
       const total = Object.values(monthMap).reduce((s, v) => s + v, 0)
-      if (incomeCategories.has(cat)) totalIncome += total
-      else if (expenseCategories.has(cat)) totalExpense += Math.abs(total)
+      if (incomeCatSet.has(cat)) totalIncome += total
+      else totalExpense += total // negative amounts = spending, positive = reimbursements
     })
 
-    const saveRate = totalIncome > 0 ? 1 - totalExpense / totalIncome : 0
-    return { totalIncome, totalExpense, saveRate }
-  }, [categorySums])
+    // totalExpense is typically negative (spending); flip sign for display
+    const absExpense = Math.abs(totalExpense)
+    const saveRate = totalIncome > 0 ? 1 - absExpense / totalIncome : 0
+    return { totalIncome, totalExpense: absExpense, saveRate }
+  }, [categorySums, incomeCatSet])
 
   // Which months have data
   const monthsWithData = useMemo((): Set<string> => {
@@ -511,12 +547,18 @@ export function useBudget() {
     return keys
   }, [store.csvs, selectedYear])
 
-  // Persist summary so other pages (Goals) can read savings data without this hook
+  // Persist summary so other pages (Goals, FI Calculator) can read without this hook
   useEffect(() => {
     const annualSavings =
       monthsWithData.size > 0 ? (summary.totalIncome - summary.totalExpense) * (12 / monthsWithData.size) : 0
-    saveBudgetSummary({ annualSavings, saveRate: summary.saveRate, monthsOfData: monthsWithData.size })
-  }, [summary, monthsWithData])
+    saveBudgetSummary(fileStore, {
+      annualSavings,
+      saveRate: summary.saveRate,
+      monthsOfData: monthsWithData.size,
+      totalIncome: summary.totalIncome,
+      totalExpense: summary.totalExpense,
+    }).catch(console.error)
+  }, [summary, monthsWithData, fileStore])
 
   const years = store.years
 
@@ -560,6 +602,7 @@ export function useBudget() {
     incomeCategoryGroups,
     removedCategories,
     incomeRemovedCategories,
+    incomeCatSet,
     categorySums,
     summary,
     monthsWithData,

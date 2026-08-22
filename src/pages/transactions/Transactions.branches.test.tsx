@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Transactions, { resetTransactionCache } from './Transactions'
@@ -55,7 +55,7 @@ const transactionFixtures: Record<
 }
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => store),
+  loadBudgetStore: vi.fn(() => Promise.resolve(store)),
   saveBudgetStore: (...args: unknown[]) => saveBudgetStoreSpy(...args),
   saveCSVForMonth: (...args: unknown[]) => saveCSVForMonthSpy(...args),
 }))
@@ -75,23 +75,26 @@ beforeEach(() => {
   resetTransactionCache()
   saveBudgetStoreSpy.mockReset()
   saveCSVForMonthSpy.mockReset()
-  saveBudgetStoreSpy.mockImplementation(nextStore => {
+  saveBudgetStoreSpy.mockImplementation((_fs, nextStore) => {
     store.csvs = nextStore.csvs
     store.configs = nextStore.configs
     store.years = nextStore.years
     store.categoryGroups = nextStore.categoryGroups
+    return Promise.resolve()
   })
-  saveCSVForMonthSpy.mockImplementation((nextStore, monthKey, csv) => ({
-    ...nextStore,
-    csvs: {
-      ...nextStore.csvs,
-      [monthKey]: {
-        month: monthKey,
-        csv,
-        uploadedAt: '2026-08-03T00:00:00.000Z',
+  saveCSVForMonthSpy.mockImplementation((_fs, nextStore, monthKey, csv) =>
+    Promise.resolve({
+      ...nextStore,
+      csvs: {
+        ...nextStore.csvs,
+        [monthKey]: {
+          month: monthKey,
+          csv,
+          uploadedAt: '2026-08-03T00:00:00.000Z',
+        },
       },
-    },
-  }))
+    }),
+  )
   store.csvs = {
     '2026-08': { month: '2026-08', csv: csvMap.august, uploadedAt: '2026-08-02T12:00:00.000Z' },
     '2026-07': { month: '2026-07', csv: csvMap.july, uploadedAt: '2026-07-30T12:00:00.000Z' },
@@ -112,13 +115,14 @@ beforeEach(() => {
 describe('Transactions branch coverage', () => {
   it('renders From and Until date summaries from independent URL params', async () => {
     const { unmount } = renderTransactions('/transactions?from=2026-08-01')
-    expect(await screen.findByRole('button', { name: /Date/i })).toHaveTextContent('From Aug 1')
+    expect(await screen.findByRole('button', { name: /^Date/i })).toHaveTextContent('From Aug 1')
 
     unmount()
+    cleanup()
     resetTransactionCache()
     renderTransactions('/transactions?to=2026-07-30')
 
-    expect(await screen.findByRole('button', { name: /Date/i })).toHaveTextContent('Until Jul 30')
+    expect(await screen.findByRole('button', { name: /^Date/i })).toHaveTextContent('Until Jul 30')
   })
 
   it('closes the search panel when the trigger is clicked while it is already open', async () => {
@@ -232,7 +236,8 @@ describe('Transactions branch coverage', () => {
     expect(screen.getByText('1 transaction')).toBeInTheDocument()
     expect(screen.getByText('Skipped Expense')).toBeInTheDocument()
     expect(screen.getByText('Total transactions').nextElementSibling).toHaveTextContent('0')
-    expect(screen.getByText('Largest transaction').nextElementSibling).toHaveTextContent('—')
+    expect(screen.getByText('Largest income').nextElementSibling).toHaveTextContent('—')
+    expect(screen.getByText('Largest expense').nextElementSibling).toHaveTextContent('—')
     expect(
       within(screen.getByRole('heading', { name: 'August 3, 2026' }).closest('.txn-group') as HTMLElement).getByText(
         '$0.00',
@@ -259,7 +264,7 @@ describe('Transactions branch coverage', () => {
     renderTransactions()
 
     await screen.findByText('Book Store')
-    await user.click(screen.getByRole('button', { name: /Date/i }))
+    await user.click(screen.getByRole('button', { name: /^Date/i }))
 
     fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-08-01' } })
     fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-08-02' } })
@@ -278,7 +283,7 @@ describe('Transactions branch coverage', () => {
     renderTransactions()
 
     await screen.findByText('Book Store')
-    await user.click(screen.getByRole('button', { name: /Date/i }))
+    await user.click(screen.getByRole('button', { name: /^Date/i }))
     const dateDialog = screen.getByRole('dialog', { name: 'Date range picker' })
 
     await user.click(within(dateDialog).getByRole('button', { name: 'Last 7 days' }))
@@ -350,7 +355,7 @@ describe('Transactions branch coverage', () => {
       expect(screen.queryByRole('group', { name: 'Category filters' })).not.toBeInTheDocument()
     })
 
-    await user.click(screen.getByRole('button', { name: /Date/i }))
+    await user.click(screen.getByRole('button', { name: /^Date/i }))
     fireEvent.mouseDown(screen.getByRole('heading', { name: 'Transactions' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Date range picker' })).not.toBeInTheDocument()

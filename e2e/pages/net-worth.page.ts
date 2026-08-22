@@ -12,7 +12,10 @@ export class NetWorthPage {
   readonly viewAccountsBtn: Locator
   readonly accountsTab: Locator
   readonly addEntryBtn: Locator
+  readonly addEntryDialog: Locator
   readonly copyLastMonthBtn: Locator
+  readonly addEntryContinueBtn: Locator
+  readonly moreDataActionsBtn: Locator
   readonly importCsvBtn: Locator
   readonly exportCsvBtn: Locator
   readonly resetBtn: Locator
@@ -63,11 +66,14 @@ export class NetWorthPage {
     // Header actions
     this.accountsTab = page.getByRole('tab', { name: 'Accounts' })
     this.viewAccountsBtn = this.accountsTab
-    this.addEntryBtn = page.locator('button.data-add-entry-btn').first()
-    this.copyLastMonthBtn = page.getByLabel('Copy balances from last month')
-    this.importCsvBtn = page.locator('button.data-import-csv-btn').first()
-    this.exportCsvBtn = page.locator('button.data-export-csv-btn')
-    this.resetBtn = page.locator('button.data-reset-btn')
+    this.addEntryBtn = page.getByRole('button', { name: '+ Add Entry' }).first()
+    this.addEntryDialog = page.getByRole('dialog', { name: 'Add entry' })
+    this.copyLastMonthBtn = this.addEntryDialog.getByRole('radio', { name: 'Copy from last month' })
+    this.addEntryContinueBtn = this.addEntryDialog.getByRole('button', { name: 'Continue' })
+    this.moreDataActionsBtn = page.getByRole('button', { name: 'More data actions' })
+    this.importCsvBtn = page.getByRole('button', { name: 'Import from CSV' }).last()
+    this.exportCsvBtn = page.getByRole('button', { name: 'Export CSV' })
+    this.resetBtn = page.getByRole('button', { name: 'Reset Data' })
     this.csvFileInput = page.locator('input[aria-label="Import CSV file"]')
 
     // View tabs
@@ -99,10 +105,10 @@ export class NetWorthPage {
     this.deleteRowBtns = page.locator('button.data-delete-row-btn')
 
     // Charts
-    this.chartsTypePicker = page.locator('.data-charts-type-picker')
+    this.chartsTypePicker = page.locator('.data-charts-controls .tab-bar').first()
 
     // Show inactive
-    this.showInactiveLabel = page.locator('button.data-filter-toggle')
+    this.showInactiveLabel = page.getByRole('button', { name: 'Filters' })
   }
 
   async goto() {
@@ -156,11 +162,15 @@ export class NetWorthPage {
     return this.page.locator('input.data-inline-balance-input').nth(index)
   }
 
+  getFilterCheckbox(name: string): Locator {
+    return this.page.getByRole('checkbox', { name })
+  }
+
   getChartTypeBtn(index: number): Locator {
-    return this.chartsTypePicker.locator('button.data-filter-btn').nth(index)
+    return this.chartsTypePicker.locator('button.tab-btn').nth(index)
   }
 
   getTabLink(name: string): Locator {
-    return this.tabBar.locator('.nw-tab', { hasText: name })
+    return this.tabBar.locator('.tab-btn', { hasText: name })
   }
 }

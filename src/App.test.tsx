@@ -13,6 +13,7 @@ vi.mock('./pages/transactions/Transactions', () => ({
 }))
 vi.mock('./pages/drive/Drive', () => ({ default: () => <div data-testid="page-drive">Drive Page</div> }))
 vi.mock('./pages/taxes/Taxes', () => ({ default: () => <div data-testid="page-taxes">Taxes Page</div> }))
+vi.mock('./pages/guide/Guide', () => ({ default: () => <div data-testid="page-guide">Guide Page</div> }))
 
 vi.mock('./search/searchIndex', () => ({
   buildIndex: vi.fn(() => []),
@@ -24,6 +25,38 @@ vi.mock('./search/searchIndex', () => ({
 vi.mock('./hooks/useFocusTrap', () => ({
   useFocusTrap: vi.fn(),
 }))
+
+/*
+ * The real provider blocks the app behind the folder picker until a directory
+ * handle is granted, which the jsdom environment cannot do. Swap in a ready
+ * in-memory store so the routes under test actually render.
+ */
+const { mockEnterDemo, mockExitDemo, memoryStore } = vi.hoisted(() => ({
+  mockEnterDemo: vi.fn(),
+  mockExitDemo: vi.fn(),
+  memoryStore: { current: null as unknown },
+}))
+
+vi.mock('./contexts/FileStoreContext', async () => {
+  const { MemoryFileStore } = await import('./utils/memoryFileStore')
+  const fileStore = new MemoryFileStore()
+  memoryStore.current = fileStore
+  const value = {
+    fileStore,
+    isReady: true,
+    folderName: 'test-folder',
+    disconnect: vi.fn(),
+    pickFolder: vi.fn(),
+    enterDemo: mockEnterDemo,
+    exitDemo: mockExitDemo,
+  }
+  return {
+    FileStoreProvider: ({ children }: { children: React.ReactNode }) => children,
+    useFileStore: () => value,
+    isDemoActive: () => localStorage.getItem('_demoMode') === '1',
+    FileStoreContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
+  }
+})
 
 import { search, buildIndex } from './search/searchIndex'
 const mockedSearch = vi.mocked(search)
@@ -101,6 +134,14 @@ describe('App', () => {
     })
   })
 
+  it('navigates to Guide on sidebar click', async () => {
+    renderApp()
+    await userEvent.click(screen.getByRole('button', { name: 'User Guide' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('page-guide')).toBeInTheDocument()
+    })
+  })
+
   it('opens search modal when Search button is clicked', async () => {
     renderApp()
     await userEvent.click(screen.getByRole('button', { name: /Search/ }))
@@ -118,9 +159,6 @@ describe('App', () => {
   })
 
   it('wraps pages in Suspense boundary (fallback not testable with synchronous mocks)', () => {
-    // Lazy page mocks resolve synchronously in vitest/JSDOM, so the Suspense
-    // fallback never actually renders. This verifies the main content area
-    // renders, confirming the Suspense wrapper does not break rendering.
     renderApp()
     expect(screen.getByRole('main')).toBeInTheDocument()
   })
@@ -195,6 +233,7 @@ describe('App', () => {
       ['/transactions', 'page-transactions'],
       ['/drive', 'page-drive'],
       ['/taxes', 'page-taxes'],
+      ['/guide', 'page-guide'],
     ] as const) {
       const { unmount } = render(
         <MemoryRouter initialEntries={[route]}>
@@ -227,6 +266,17 @@ describe('App', () => {
     )
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page')
+    })
+  })
+
+  it('highlights Guide in the sidebar for guide routes', async () => {
+    render(
+      <MemoryRouter initialEntries={['/guide']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'User Guide' })).toHaveAttribute('aria-current', 'page')
     })
   })
 
@@ -313,8 +363,8 @@ describe('App handleSearchAction', () => {
     expect(screen.getByRole('tab', { name: /Profile/, selected: true })).toBeInTheDocument()
   })
 
-  it('open-settings-github opens github settings section', async () => {
-    setupSearchAction('open-settings-github')
+  it('open-settings-folder opens the data folder settings section', async () => {
+    setupSearchAction('open-settings-folder')
     renderApp()
     await userEvent.keyboard('{Meta>}k{/Meta}')
     await waitFor(() => {
@@ -324,7 +374,7 @@ describe('App handleSearchAction', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
     })
-    expect(screen.getByRole('tab', { name: /GitHub Sync/, selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Data Folder/, selected: true })).toBeInTheDocument()
   })
 
   it('open-settings-appearance opens appearance settings section', async () => {
@@ -382,32 +432,36 @@ describe('App handleSearchAction', () => {
     })
   })
 
-  it('toggle-demo activates demo mode', async () => {
+  it('toggle-demo enters demo mode when it is off', async () => {
+    mockEnterDemo.mockClear()
+    mockExitDemo.mockClear()
     setupSearchAction('toggle-demo')
     renderApp()
-    expect(localStorage.getItem('_demo-backup')).toBeNull()
     await userEvent.keyboard('{Meta>}k{/Meta}')
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
     })
     await userEvent.click(screen.getByText('Test Action'))
-    // Verify demo mode was activated (backup key created)
     await waitFor(() => {
-      expect(localStorage.getItem('_demo-backup')).not.toBeNull()
+      expect(mockEnterDemo).toHaveBeenCalledOnce()
     })
+    expect(mockExitDemo).not.toHaveBeenCalled()
   })
 
-  it('export-data triggers export', async () => {
-    setupSearchAction('export-data')
+  it('toggle-demo exits demo mode when it is already on', async () => {
+    mockEnterDemo.mockClear()
+    mockExitDemo.mockClear()
+    localStorage.setItem('_demoMode', '1')
+    setupSearchAction('toggle-demo')
     renderApp()
     await userEvent.keyboard('{Meta>}k{/Meta}')
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
     })
     await userEvent.click(screen.getByText('Test Action'))
-    // Verify search dialog closes (export was triggered)
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
+      expect(mockExitDemo).toHaveBeenCalledOnce()
     })
+    expect(mockEnterDemo).not.toHaveBeenCalled()
   })
 })

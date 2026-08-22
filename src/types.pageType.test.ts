@@ -3,17 +3,13 @@ import type { PageType } from './types'
 
 describe('PageType', () => {
   it('includes the expected page identifiers (no tools)', () => {
-    // Runtime-level exhaustiveness check: every PageType value is listed here
-    const allPages: PageType[] = ['home', 'goal', 'net-worth', 'budget', 'transactions', 'drive', 'taxes']
+    const allPages: PageType[] = ['home', 'goal', 'net-worth', 'budget', 'transactions', 'drive', 'taxes', 'guide']
 
-    expect(allPages).toHaveLength(7)
+    expect(allPages).toHaveLength(8)
     expect(allPages).not.toContain('tools')
   })
 
   it('type-checks that "tools" is not assignable to PageType', () => {
-    // If 'tools' were re-added to PageType this would still pass at runtime,
-    // but the exhaustive const below would cause a TypeScript compile error
-    // because the switch wouldn't cover 'tools'.
     const assertExhaustive = (p: PageType): string => {
       switch (p) {
         case 'home':
@@ -30,11 +26,14 @@ describe('PageType', () => {
           return 'drive'
         case 'taxes':
           return 'taxes'
+        case 'guide':
+          return 'guide'
       }
     }
 
     expect(assertExhaustive('home')).toBe('home')
     expect(assertExhaustive('budget')).toBe('budget')
     expect(assertExhaustive('transactions')).toBe('transactions')
+    expect(assertExhaustive('guide')).toBe('guide')
   })
 })

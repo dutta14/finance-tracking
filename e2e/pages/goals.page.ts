@@ -137,10 +137,10 @@ export class GoalsPage {
     this.headerActions = page.locator('.goal-header-actions')
     this.newGoalBtn = page.getByRole('button', { name: 'New Goal' })
 
-    this.tabBar = page.locator('.goal-tab-bar')
-    this.plansTab = page.locator('.goal-tab', { hasText: 'Plans' })
-    this.calculatorTab = page.locator('.goal-tab', { hasText: 'Calculator' })
-    this.activeTab = page.locator('.goal-tab.active')
+    this.tabBar = page.locator('nav[aria-label="Goals sections"]')
+    this.plansTab = page.locator('.tab-btn', { hasText: 'Plans' })
+    this.calculatorTab = page.locator('.tab-btn', { hasText: 'Calculator' })
+    this.activeTab = page.locator('.tab-btn.active')
 
     this.miniGrid = page.locator('.goals-mini-grid')
     this.miniList = page.locator('.goals-mini-list')
@@ -190,7 +190,7 @@ export class GoalsPage {
     this.useRecommendedBtn = page.locator('.btn-use-recommended')
 
     this.goalDetail = page.locator('.goal-detail')
-    this.detailBackLink = page.locator('.goal-detail-back-link')
+    this.detailBackLink = page.getByRole('link', { name: /Back to Goals/i })
     this.detailTitle = page.locator('.goal-detail-title')
     this.detailStepper = page.getByRole('group', { name: 'Goal navigation' })
     this.detailPrevBtn = page.getByLabel('Previous goal')
@@ -218,7 +218,7 @@ export class GoalsPage {
     this.gwUndoBtn = page.locator('.gw-goal-undo-btn')
     this.gwEmptyState = page.locator('.gw-empty-state')
 
-    this.fiCardEditBtn = page.locator('.fi-card-edit-row .fi-card-action-btn')
+    this.fiCardEditBtn = page.getByRole('button', { name: 'Edit' }).first()
     this.fiCardEditForm = page.locator('.fi-card-edit-form')
     this.undoBtn = page.getByRole('button', { name: /undo/i })
     this.undoToast = page.locator('[role="alert"]')

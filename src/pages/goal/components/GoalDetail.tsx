@@ -7,7 +7,7 @@ import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { GwSavingsPlan } from './SavingsPlan'
-import GrowthSettingsPanel from './GrowthSettingsPanel'
+import GrowthSettingsPanel from '../../../components/GrowthSettingsPanel'
 import {
   getTotalForMonth,
   getFiBreakdown,
@@ -19,12 +19,11 @@ import {
 import { getFiTarget } from '../utils/goalCalculations'
 import { formatTimeUntilYearMonth, formatYearMonthLong, parseShortMonthYear } from '../utils/dateHelpers'
 import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
-import { useGrowthSettings } from '../hooks/useGrowthSettings'
+import { useGrowthSettings } from '../../../hooks/useGrowthSettings'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
-import '../../../styles/GrowthSettings.css'
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
@@ -98,6 +97,20 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
   const { pre: fiGrowth, post: _fiPostGrowth, hasOverride: _fiHasOverride } = growthCtx.getEffectiveFiRates(goalId)
   const gwGrowth = growthCtx.settings.gwGrowth
+  const fiTarget = useMemo(
+    () =>
+      goal
+        ? getFiTarget(
+            goal,
+            profileBirthday,
+            fiGrowth,
+            growthCtx.settings.postBoundaryGrowth,
+            growthCtx.settings.ageBoundary,
+            growthCtx.settings.inflation,
+          )
+        : 0,
+    [goal, profileBirthday, fiGrowth, growthCtx.settings],
+  )
 
   const currentIndex = goals.findIndex(g => g.id === goalId)
   const total = goals.length
@@ -138,13 +151,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
     const n = monthsBetween(currentMonth, retMonth)
 
     const fiBal = getTotalForMonth(accounts, balances, currentMonth, 'fi')
-    const fiTarget = getFiTarget(
-      goal,
-      profileBirthday,
-      fiGrowth,
-      growthCtx.settings.postBoundaryGrowth,
-      growthCtx.settings.ageBoundary,
-    )
     const fiMonthly = fiTarget > 0 ? calcMonthlySaving(fiBal, fiTarget, fiGrowth, n) : 0
 
     const gwTarget = getGwTarget(goal, gwGoals, profileBirthday, growthCtx.settings.inflation)
@@ -156,7 +162,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
     const fiBreakdown = getFiBreakdown(accounts, balances, currentMonth)
     return { totalNeeded, fiBal, currentMonth, hasGoals, fiBreakdown, gwMonthly, gwBal, gwTarget, retMonth }
-  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings])
+  }, [goal, allMonths, accounts, balances, profileBirthday, gwGoals, fiGrowth, gwGrowth, growthCtx.settings, fiTarget])
 
   // GW Projection: how much to save for GW if FIRE happens at projected FI date
   const gwProjection = useMemo(() => {
@@ -254,21 +260,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
     <div className="goal-detail">
       <div className="goal-detail-header">
         <div className="goal-detail-header-left">
-          <Link className="goal-detail-back-link" to="/goal" aria-label="Back to Goals">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M10 3L5 8l5 5" />
-            </svg>
-          </Link>
           {renameMode ? (
             <input
               ref={renameInputRef}
@@ -391,7 +382,7 @@ const GoalDetail: FC<GoalDetailProps> = ({
               onTogglePeriod={() => setShowYearly(v => !v)}
               inflation={growthCtx.settings.inflation}
             />
-            {goal.fiGoal > 0 && (
+            {fiTarget > 0 && (
               <GwSection
                 goal={goal}
                 goals={goals}

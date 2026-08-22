@@ -1,5 +1,7 @@
 # Design Spec: Unlock Screen & Settings Encryption UI
 
+> **SUPERSEDED.** This spec describes the passphrase-based encryption and unlock screen that existed before the File System Access migration. The encryption layer, unlock screen, and Settings → Security pane have been removed. This document is kept for historical reference only.
+
 **Designer:** Kai, Principal Product Designer
 **Date:** 2025-07-15
 **Status:** Ready for implementation

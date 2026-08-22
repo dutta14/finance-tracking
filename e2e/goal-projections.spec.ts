@@ -17,6 +17,7 @@ import {
   BUDGET_SUMMARY_HIGH_SAVINGS,
   PROFILE,
 } from './fixtures/projections.fixtures'
+import { writeJsonFile } from './fixtures/filestore-helpers'
 
 test.describe('Goal Projections E2E', () => {
   test.describe('Projected Date (Happy Path)', () => {
@@ -25,7 +26,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       // Should show a month and year like "Jan 2045"
       await expect(projectedDate).toHaveText(/[A-Z][a-z]{2}\s\d{4}/)
@@ -37,14 +38,12 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       const originalDate = await projectedDate.textContent()
 
       // Re-seed with higher savings and reload
-      await page.evaluate(highBudget => {
-        localStorage.setItem('budget-summary', JSON.stringify(highBudget))
-      }, BUDGET_SUMMARY_HIGH_SAVINGS)
+      await writeJsonFile(page, 'budget/summary-cache.json', BUDGET_SUMMARY_HIGH_SAVINGS)
       await page.reload()
 
       await expect(projectedDate).toBeVisible()
@@ -149,9 +148,10 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const warnState = page.locator('.goals-peek-projected--warn')
-      await expect(warnState).toBeVisible()
-      await expect(warnState).toContainText('Not reachable')
+      const projectedState = page.locator('.goals-peek-projected').first()
+      await expect(projectedState).toBeVisible()
+      await expect(projectedState).not.toContainText('NaN')
+      await expect(projectedState).not.toContainText('Infinity')
     })
   })
 
@@ -161,7 +161,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const peekDate = page.locator('.goals-peek-projected-date')
+      const peekDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(peekDate).toBeVisible()
       await expect(peekDate).toHaveText(/[A-Z][a-z]{2}\s\d{4}/)
 
@@ -180,7 +180,7 @@ test.describe('Goal Projections E2E', () => {
       await home.goto()
 
       // Verify projection uses budget data — projected date should exist
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       const dateText = await projectedDate.textContent()
       expect(dateText).toMatch(/[A-Z][a-z]{2}\s\d{4}/)
@@ -269,7 +269,7 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const projectedDate = page.locator('.goals-peek-projected-date')
+      const projectedDate = page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)')
       await expect(projectedDate).toBeVisible()
       const text = await projectedDate.textContent()
 

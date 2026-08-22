@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, FC, ReactNode } from 'react'
 import type { Account, BalanceEntry } from '../pages/data/types'
-import { appStorage } from '../utils/appStorage'
+import { useFileStore } from './FileStoreContext'
+import { loadBalances, saveBalances } from '../utils/balanceStorage'
+
+const ACCOUNTS_PATH = 'accounts.json'
 
 interface DataContextValue {
   accounts: Account[]
@@ -20,47 +23,65 @@ const DataContext = createContext<DataContextValue>({
 
 export const useData = () => useContext(DataContext)
 
-function loadAccounts(): Account[] {
-  return appStorage.getJSON<Account[]>('data-accounts', [])
-}
-function loadBalances(): BalanceEntry[] {
-  return appStorage.getJSON<BalanceEntry[]>('data-balances', [])
-}
-
 export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [accounts, setAccountsState] = useState<Account[]>(loadAccounts)
-  const [balances, setBalancesState] = useState<BalanceEntry[]>(loadBalances)
+  const { fileStore } = useFileStore()
+  const [accounts, setAccountsState] = useState<Account[]>([])
+  const [balances, setBalancesState] = useState<BalanceEntry[]>([])
 
   const allMonths = useMemo(() => [...new Set(balances.map(b => b.month))].sort(), [balances])
 
-  const setAccounts = useCallback((updated: Account[]) => {
-    setAccountsState(updated)
-    appStorage.setJSON('data-accounts', updated)
-  }, [])
+  const setAccounts = useCallback(
+    (updated: Account[]) => {
+      setAccountsState(updated)
+      fileStore.writeJSON(ACCOUNTS_PATH, updated).catch(console.error)
+    },
+    [fileStore],
+  )
 
-  const setBalances = useCallback((updated: BalanceEntry[]) => {
-    setBalancesState(updated)
-    appStorage.setJSON('data-balances', updated)
-  }, [])
+  const setBalances = useCallback(
+    (updated: BalanceEntry[]) => {
+      setBalancesState(updated)
+      saveBalances(fileStore, updated).catch(console.error)
+    },
+    [fileStore],
+  )
 
   useEffect(() => {
-    const unsub1 = appStorage.subscribe('data-accounts', () => {
-      setAccountsState(loadAccounts())
-    })
-    const unsub2 = appStorage.subscribe('data-balances', () => {
-      setBalancesState(loadBalances())
-    })
+    let cancelled = false
+
+    const refreshAccounts = () => {
+      fileStore
+        .readJSON<Account[]>(ACCOUNTS_PATH, [])
+        .then(next => {
+          if (!cancelled) setAccountsState(next)
+        })
+        .catch(console.error)
+    }
+
+    const refreshBalances = () => {
+      loadBalances(fileStore)
+        .then(next => {
+          if (!cancelled) setBalancesState(next)
+        })
+        .catch(console.error)
+    }
+
+    refreshAccounts()
+    refreshBalances()
+
+    const unsubscribe = fileStore.subscribe(ACCOUNTS_PATH, refreshAccounts)
     const handleCustom = () => {
-      setAccountsState(loadAccounts())
-      setBalancesState(loadBalances())
+      refreshAccounts()
+      refreshBalances()
     }
     window.addEventListener('data-changed', handleCustom)
+
     return () => {
-      unsub1()
-      unsub2()
+      cancelled = true
+      unsubscribe()
       window.removeEventListener('data-changed', handleCustom)
     }
-  }, [])
+  }, [fileStore])
 
   const value = useMemo<DataContextValue>(
     () => ({ accounts, balances, allMonths, setAccounts, setBalances }),

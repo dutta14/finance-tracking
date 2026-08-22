@@ -1,6 +1,9 @@
 import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
+import { getFiTarget } from '../utils/goalCalculations'
+import { useGrowthSettings } from '../../../hooks/useGrowthSettings'
+import { useData } from '../../../contexts/DataContext'
 import '../../../styles/GoalCompareView.css'
 
 const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent)
@@ -10,7 +13,6 @@ interface GoalCompareViewProps {
   goals: FinancialGoal[]
   gwGoals: GwGoal[]
   profileBirthday: string
-  inflation?: number
 }
 
 const parseDate = (dateString: string): Date => {
@@ -55,26 +57,47 @@ const FI_ROWS: FiRow[] = [
   { label: 'Growth Rate', render: p => `${p.growth}%` },
   { label: 'Annual Expense (at creation)', render: p => dollars(p.expenseValue) },
   { label: 'Annual Expense (at retirement)', render: p => dollars(p.expenseValue2047) },
-  { label: 'FI Goal', render: p => dollars(p.fiGoal) },
 ]
 
-const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday, inflation = 3 }) => {
+const GoalCompareView: FC<GoalCompareViewProps> = ({ goals, gwGoals, profileBirthday }) => {
+  const { settings: growthSettings } = useGrowthSettings()
+  const { accounts, balances } = useData()
+  const inflation = growthSettings.inflation
   const colCount = goals.length + 1
-  const { fiTotal } = useMemo(() => getLatestGoalTotals(), [])
+  const { fiTotal } = useMemo(() => getLatestGoalTotals(accounts, balances), [accounts, balances])
+  const fiTargets = useMemo(
+    () =>
+      new Map(
+        goals.map(goal => [
+          goal.id,
+          getFiTarget(
+            goal,
+            profileBirthday,
+            growthSettings.preBoundaryGrowth,
+            growthSettings.postBoundaryGrowth,
+            growthSettings.ageBoundary,
+            inflation,
+          ),
+        ]),
+      ),
+    [goals, profileBirthday, growthSettings, inflation],
+  )
 
   const fiRows: FiRow[] = useMemo(
     () => [
       ...FI_ROWS,
+      { label: 'FI Goal', render: p => ((fiTargets.get(p.id) ?? 0) > 0 ? dollars(fiTargets.get(p.id) ?? 0) : '—') },
       { label: 'Inflation Rate', render: () => `${inflation}%` },
       {
         label: 'Progress',
         render: p => {
-          if (p.fiGoal <= 0) return '0.0%'
-          return `${Math.min(100, Math.max(0, (fiTotal / p.fiGoal) * 100)).toFixed(1)}%`
+          const fiTarget = fiTargets.get(p.id) ?? 0
+          if (fiTarget <= 0) return '0.0%'
+          return `${Math.min(100, Math.max(0, (fiTotal / fiTarget) * 100)).toFixed(1)}%`
         },
       },
     ],
-    [fiTotal, inflation],
+    [fiTargets, fiTotal, inflation],
   )
 
   const gwByGoal = goals.map(goal => gwGoals.filter(g => g.fiGoalId === goal.id))

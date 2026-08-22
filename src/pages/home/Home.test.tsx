@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { FC } from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Home from './Home'
@@ -42,7 +42,7 @@ vi.mock('../../contexts/DataContext', () => ({
 }))
 
 vi.mock('../budget/utils/budgetStorage', () => ({
-  loadBudgetStore: vi.fn(() => ({ csvs: {} })),
+  loadBudgetStore: vi.fn(() => Promise.resolve({ csvs: {} })),
 }))
 
 vi.mock('../../hooks/useTouchDrag', () => ({
@@ -197,9 +197,9 @@ describe('Home card reorder via drag', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home — SetupProgress conditional rendering', () => {
-  it('shows SetupProgress when onboarding is not dismissed', () => {
+  it('shows SetupProgress when onboarding is not dismissed', async () => {
     renderHome()
-    expect(screen.getByTestId('setup-progress')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('setup-progress')).toBeInTheDocument())
   })
 
   it('hides SetupProgress when onboarding has been dismissed', () => {
@@ -338,22 +338,22 @@ describe('Home card order persistence', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home setup guide link', () => {
-  it('shows setup guide link when dismissed but not all sections complete', () => {
+  it('shows setup guide link when dismissed but not all sections complete', async () => {
     localStorage.setItem('onboarding-dismissed', '1')
     // Default mock: accounts=[1], balances=[1], goals=[], hasBudgetData=false → not allComplete
     renderHome()
 
-    expect(screen.getByText('Setup guide')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Setup guide')).toBeInTheDocument())
   })
 
-  it('does not show setup guide link when all sections are complete', () => {
+  it('does not show setup guide link when all sections are complete', async () => {
     localStorage.setItem('onboarding-dismissed', '1')
     mockedUseGoals.mockReturnValue({
       visibleGoals: [{ id: 1, goalName: 'FI' }],
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
-    vi.mocked(loadBudgetStore).mockReturnValue({
+    vi.mocked(loadBudgetStore).mockResolvedValue({
       csvs: { '2024': { csv: 'data', month: '2024', uploadedAt: '' } },
       configs: {},
       years: [],
@@ -362,7 +362,7 @@ describe('Home setup guide link', () => {
 
     renderHome()
 
-    expect(screen.queryByText('Setup guide')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Setup guide')).not.toBeInTheDocument())
   })
 
   it('restores setup progress when setup guide link is clicked', async () => {
@@ -374,10 +374,11 @@ describe('Home setup guide link', () => {
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+    vi.mocked(loadBudgetStore).mockResolvedValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
 
     renderHome()
 
+    await waitFor(() => expect(screen.getByText('Setup guide')).toBeInTheDocument())
     await user.click(screen.getByText('Setup guide'))
 
     // SetupProgress should now be visible
@@ -392,7 +393,7 @@ describe('Home setup guide link', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home SetupProgress dismiss', () => {
-  it('hides SetupProgress and persists to localStorage when onDismiss is called', () => {
+  it('hides SetupProgress and persists to localStorage when onDismiss is called', async () => {
     setupProgressImpl = ({ onDismiss }) => (
       <div data-testid="setup-progress">
         <button onClick={onDismiss}>Dismiss</button>
@@ -400,7 +401,7 @@ describe('Home SetupProgress dismiss', () => {
     )
 
     renderHome()
-    expect(screen.getByTestId('setup-progress')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('setup-progress')).toBeInTheDocument())
 
     fireEvent.click(screen.getByText('Dismiss'))
 
@@ -506,16 +507,16 @@ describe('Home accessibility — live region', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home hasBudgetData flag', () => {
-  it('shows setup guide when no budget data and dismissed', () => {
+  it('shows setup guide when no budget data and dismissed', async () => {
     localStorage.setItem('onboarding-dismissed', '1')
-    vi.mocked(loadBudgetStore).mockReturnValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
+    vi.mocked(loadBudgetStore).mockResolvedValue({ csvs: {}, configs: {}, years: [], categoryGroups: [] })
     mockedUseGoals.mockReturnValue({
       visibleGoals: [],
       gwGoals: [],
       profile: { name: '' },
     } as unknown as ReturnType<typeof useGoals>)
     renderHome()
-    expect(screen.getByText('Setup guide')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Setup guide')).toBeInTheDocument())
   })
 })
 

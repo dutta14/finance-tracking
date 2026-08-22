@@ -210,10 +210,10 @@ New section in the existing Settings modal: **"Feature Flags"** tab, positioned 
 
 ### Authentication check
 
-The app already has a decrypted GitHub PAT in memory (via `useGitHubSync`). The admin panel:
+The admin panel requires a GitHub PAT to read and write flag config. The admin panel:
 
-1. Requires GitHub Sync to be configured AND token to be unlocked
-2. On first load, calls `GET /repos/{owner}/{repo}/collaborators/{username}` to verify the token's user has `push` access
+1. Requires a valid GitHub PAT with push access to the config repo
+2. On first load, calls `GET /repos/{owner}/{repo}/collaborators/{username}` to verify push access
 3. Caches the permission check for the session (no need to re-verify until page reload)
 
 ```typescript

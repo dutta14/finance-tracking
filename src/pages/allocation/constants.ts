@@ -62,4 +62,4 @@ export const PRESETS: RatioPreset[] = [
 
 export const GROUP_COLORS = ['#6366f1', '#0ea5e9', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#84cc16']
 
-export const STORAGE_KEY = 'allocation-custom-ratios'
+export const ALLOCATION_PATH = 'allocation.json'

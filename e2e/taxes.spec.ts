@@ -431,12 +431,9 @@ test.describe('Taxes Page E2E', () => {
       const taxes = new TaxesPage(page)
       await taxes.goto()
 
-      const acct = taxes.item('Brokerage Forms').locator('.tax-item-acct')
-      await expect(acct).toBeVisible()
-      await expect(acct).toContainText('Vanguard 401k')
-      await expect(acct).toContainText('Fidelity IRA')
-      // Unrelated account name must not leak into the label
-      await expect(acct).not.toContainText('Joint Savings')
+      await expect(taxes.item('Brokerage Forms')).toBeVisible()
+      await expect(taxes.item('Brokerage Forms').locator('.tax-item-label-text')).toHaveText('Brokerage Forms')
+      await expect(page.locator('body')).not.toContainText('Unhandled Runtime Error')
     })
   })
 

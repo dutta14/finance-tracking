@@ -1,5 +1,7 @@
 ## 🏗️ Architecture Review: Exhaustive Plan for 90% Statement Coverage
 
+> **PARTIALLY SUPERSEDED.** This plan was written before the File System Access migration. Items covering `EncryptionContext`, `GitHubSyncContext`, `BudgetSyncContext`, `TaxSyncContext`, `ImportExportContext`, `appStorage`, `crypto.ts`, and IndexedDB file storage no longer apply — those modules have been removed. The current testing pattern is to seed a `MemoryFileStore` and wrap components with `FileStoreTestProvider` from `src/test/fileStoreTestUtils.tsx`. See CONTRIBUTING.md for current guidance.
+
 **Author:** Alex (Staff Architect)
 **Current:** 55.89% statements | 968 tests | 68 test files | 140 source files
 **Target:** 90% statements

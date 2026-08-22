@@ -15,8 +15,8 @@ vi.mock('../../hooks/useFocusTrap', () => ({
   useFocusTrap: vi.fn(),
 }))
 
-vi.mock('./components/GitHubSyncPane', () => ({
-  default: () => <div data-testid="github-pane">GitHub</div>,
+vi.mock('./components/DataFolderPane', () => ({
+  default: () => <div data-testid="folder-pane">Data Folder</div>,
 }))
 
 vi.mock('./components/AppearancePane', () => ({
@@ -46,7 +46,6 @@ const defaultProps = {
   onToggleDarkMode: vi.fn(),
   profile: { name: 'Test User', avatarDataUrl: '', birthday: '' },
   onUpdateProfile: vi.fn(),
-  hasPendingChanges: false,
   onClose: vi.fn(),
 }
 

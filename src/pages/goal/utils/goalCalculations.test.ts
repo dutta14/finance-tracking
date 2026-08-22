@@ -172,22 +172,20 @@ describe('getFiTarget', () => {
   it('uses the default inflation rate when no explicit inflation override is provided', () => {
     const zeroInflationTarget = getFiTarget(
       {
-        fiGoal: 1_000_000,
         birthday: '1990-01-15',
         goalEndYear: '2080-01',
         retirementAge: 60,
-        monthlyExpense2047: 5000,
+        monthlyExpenseRetirement: 5000,
       },
       '1990-01-15',
       8,
     )
     const defaultInflationTarget = getFiTarget(
       {
-        fiGoal: 1_000_000,
         birthday: '1990-01-15',
         goalEndYear: '2080-01',
         retirementAge: 60,
-        monthlyExpense2047: 5000,
+        monthlyExpenseRetirement: 5000,
       },
       '1990-01-15',
       8,
@@ -197,6 +195,11 @@ describe('getFiTarget', () => {
     )
 
     expect(zeroInflationTarget).toBe(defaultInflationTarget)
+  })
+
+  it('returns 0 when required fields are missing', () => {
+    expect(getFiTarget({ retirementAge: 60, expenseValue: 60000 }, '', 8)).toBe(0)
+    expect(getFiTarget({ birthday: '1990-01-15', retirementAge: 60, monthlyExpenseRetirement: 5000 }, '', 8)).toBe(0)
   })
 })
 

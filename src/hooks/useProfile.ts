@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { appStorage } from '../utils/appStorage'
+import { useState, useEffect, useCallback } from 'react'
+import { useFileStore } from '../contexts/FileStoreContext'
 
 export interface Profile {
   name: string
@@ -12,35 +12,44 @@ export interface Profile {
   } | null
 }
 
-const STORAGE_KEY = 'user-profile'
+export const PROFILE_PATH = 'profile.json'
 
-const loadProfile = (): Profile => {
-  try {
-    return appStorage.getJSON<Profile>(STORAGE_KEY, { name: '', avatarDataUrl: '', birthday: '' })
-  } catch {
-    /* ignore */
-  }
-  return { name: '', avatarDataUrl: '', birthday: '' }
-}
+const EMPTY_PROFILE: Profile = { name: '', avatarDataUrl: '', birthday: '' }
 
 export const useProfile = () => {
-  const [profile, setProfile] = useState<Profile>(loadProfile)
+  const { fileStore } = useFileStore()
+  const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE)
 
-  // Cross-tab sync: reload profile when another tab writes to storage
   useEffect(() => {
-    const unsub = appStorage.subscribe(STORAGE_KEY, () => {
-      setProfile(loadProfile())
-    })
-    return unsub
-  }, [])
+    let cancelled = false
 
-  const updateProfile = (updates: Partial<Profile>) => {
-    setProfile(prev => {
-      const next = { ...prev, ...updates }
-      appStorage.setJSON(STORAGE_KEY, next)
-      return next
-    })
-  }
+    const refresh = () => {
+      fileStore
+        .readJSON<Profile>(PROFILE_PATH, EMPTY_PROFILE)
+        .then(next => {
+          if (!cancelled) setProfile(next)
+        })
+        .catch(console.error)
+    }
+
+    refresh()
+    const unsubscribe = fileStore.subscribe(PROFILE_PATH, refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [fileStore])
+
+  const updateProfile = useCallback(
+    (updates: Partial<Profile>) => {
+      setProfile(prev => {
+        const next = { ...prev, ...updates }
+        fileStore.writeJSON(PROFILE_PATH, next).catch(console.error)
+        return next
+      })
+    },
+    [fileStore],
+  )
 
   return { profile, updateProfile }
 }

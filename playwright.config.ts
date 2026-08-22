@@ -14,7 +14,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.CI ? 'http://localhost:5173/finance-tracking' : 'http://localhost:5173',
     actionTimeout: 10_000,
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
@@ -26,8 +26,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: process.env.CI ? 'npx vite preview --port 5173' : 'npm run dev',
+    url: process.env.CI ? 'http://localhost:5173/finance-tracking/' : 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
   },

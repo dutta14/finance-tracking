@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Plan: Filesystem-Based Storage</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --green: #059669;
+      --red: #dc2626;
+      --orange: #d97706;
+      --code-bg: #f3f4f6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    p { margin-bottom: 0.75rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+    }
+    th {
+      background: var(--code-bg);
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #fafafa; }
+    code {
+      background: var(--code-bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      margin: 1rem 0;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin: 1rem 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge--green { background: #d1fae5; color: var(--green); }
+    .badge--orange { background: #fef3c7; color: var(--orange); }
+    .badge--red { background: #fee2e2; color: var(--red); }
+    .badge--blue { background: var(--accent-light); color: var(--accent); }
+    ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    .decision {
+      background: var(--accent-light);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .delete-list {
+      columns: 2;
+      column-gap: 2rem;
+    }
+    .delete-list li { color: var(--red); }
+    .step-grid {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Architecture Plan: Filesystem-Based Storage</h1>
+<p class="subtitle">Replace localStorage/IndexedDB with File System Access API — app becomes a viewer for a data folder.</p>
+
+<!-- ─── Overview ─── -->
+<h2>Overview</h2>
+<p>The app reads and writes data to a user-selected folder on the local filesystem. The folder can live anywhere — including a Google Drive–synced directory — making the app a pure <strong>view</strong> of data that can be shared by copying the folder.</p>
+
+<div class="decision">
+  <strong>Key principle:</strong> Data lives in the shared folder (filesystem). Settings stay in localStorage (device-local). Two people sharing the same folder see identical data but can have different themes/layouts.
+</div>
+
+<!-- ─── Technology ─── -->
+<h2>Technology: File System Access API</h2>
+<p>Browser-native API (Chrome/Edge). User picks a folder once → app gets read/write access. Handle is persisted in IndexedDB so the user doesn't re-pick every session.</p>
+<table>
+  <tr><th>Feature</th><th>Support</th></tr>
+  <tr><td>Chrome / Edge</td><td><span class="badge badge--green">Full</span></td></tr>
+  <tr><td>Safari</td><td><span class="badge badge--red">None</span></td></tr>
+  <tr><td>Firefox</td><td><span class="badge badge--red">None</span></td></tr>
+  <tr><td>Persistence across sessions</td><td><span class="badge badge--green">Yes</span> (via IndexedDB handle)</td></tr>
+  <tr><td>Permission re-grant needed</td><td><span class="badge badge--orange">Sometimes</span> (after browser restart)</td></tr>
+</table>
+
+<!-- ─── Folder Structure ─── -->
+<h2>Folder Structure</h2>
+<pre>finance-data/
+├── profile.json                     ← name, birthday, avatar filenames
+├── avatar.png                       ← profile picture (actual image file)
+├── partner-avatar.png               ← partner profile picture (if set)
+├── accounts.json                    ← account definitions
+├── goals.json                       ← FIRE goals + growth/wealth goals
+├── paydown-loans.json               ← loan &amp; credit card paydown entries
+├── leverage.json                    ← target ratio, scenarios, allocations
+├── fi-simulations.json              ← FI calculator saved simulations
+├── allocation.json                  ← custom ratios, scenarios, allocations
+├── savings-tracker-overrides.json   ← per-year income/savings overrides
+├── balances/
+│   ├── 2022.csv                     ← month,accountId,balance
+│   ├── 2023.csv
+│   └── 2024.csv
+├── budget/
+│   ├── categories.json              ← category groups (expense &amp; income)
+│   └── summary-cache.json           ← derived: annualSavings, saveRate, monthsOfData
+├── transactions/
+│   ├── 2023/
+│   │   ├── 2023-01.csv              ← bank transactions for Jan 2023
+│   │   ├── 2023-02.csv
+│   │   └── ...
+│   └── 2024/
+│       ├── 2024-01.csv
+│       ├── 2024-02.csv
+│       └── 2024-03.csv              ← re-upload replaces the file
+└── taxes/
+    ├── templates.json               ← saved templates
+    ├── 2023/
+    │   ├── 2023.json                ← checklist items per owner
+    │   └── files/
+    │       └── w2-2023.pdf
+    └── 2024/
+        ├── 2024.json                ← checklist items per owner
+        └── files/
+            ├── w2-2024.pdf
+            └── 1099-2024.pdf</pre>
+
+<div class="decision">
+  <strong>Format rule:</strong> CSV for naturally tabular data (balances, bank imports). JSON for everything else.
+</div>
+
+<!-- ─── File Formats ─── -->
+<h2>File Formats</h2>
+<h3>balances/2024.csv</h3>
+<pre>month,accountId,balance
+2024-01,1,52340.00
+2024-01,2,-245000.50
+2024-02,1,53100.00
+2024-02,2,-244200.30</pre>
+
+<h3>accounts.json</h3>
+<pre>[
+  { "id": 1, "name": "Checking", "type": "bank", "nature": "asset", "group": "Cash" },
+  { "id": 2, "name": "Mortgage", "type": "loan", "nature": "liability", "group": "Property" }
+]</pre>
+
+<h3>leverage.json</h3>
+<pre>{
+  "target": 3.5,
+  "chartStart": "2022-01",
+  "currentScenarioName": "Current plan",
+  "mainAllocations": { "real-estate": 60, "equities": 25, "cash": 15 },
+  "scenarios": [
+    {
+      "name": "Aggressive",
+      "allocations": { "real-estate": 70, "equities": 20, "cash": 10 }
+    }
+  ]
+}</pre>
+
+<h3>paydown-loans.json</h3>
+<pre>[
+  {
+    "id": 1692400000,
+    "type": "loan",
+    "name": "Home Loan",
+    "principal": 971200,
+    "annualRate": 3.25,
+    "termMonths": 360,
+    "startDate": "2022-03",
+    "linkedAccountId": 2,
+    "monthlyPayment": null
+  }
+]</pre>
+
+<!-- ─── FileStore API ─── -->
+<h2>FileStore API</h2>
+<div class="card">
+<pre>// src/utils/fileStore.ts
+
+interface FileStore {
+  init(handle: FileSystemDirectoryHandle): Promise&lt;void&gt;
+  readJSON&lt;T&gt;(path: string): Promise&lt;T&gt;
+  writeJSON(path: string, data: unknown): Promise&lt;void&gt;
+  readCSV(path: string): Promise&lt;string[][]&gt;
+  writeCSV(path: string, rows: string[][]): Promise&lt;void&gt;
+  readBinary(path: string): Promise&lt;ArrayBuffer&gt;
+  writeBinary(path: string, data: ArrayBuffer): Promise&lt;void&gt;
+  exists(path: string): Promise&lt;boolean&gt;
+  listFiles(dir: string): Promise&lt;string[]&gt;
+  delete(path: string): Promise&lt;void&gt;
+  getHandle(): FileSystemDirectoryHandle | null
+  subscribe(path: string, cb: () =&gt; void): () =&gt; void
+}</pre>
+</div>
+
+<h3>Design decisions</h3>
+<ul>
+  <li>All reads/writes are <strong>async</strong></li>
+  <li>In-memory cache for hot data (accounts, current year balances)</li>
+  <li>Writes are <strong>debounced</strong> (300ms) to batch rapid edits</li>
+  <li>Folder handle persisted in IndexedDB for session continuity</li>
+  <li>Uses <code>navigator.locks</code> to prevent concurrent writes from multiple tabs</li>
+  <li>Uses <code>BroadcastChannel</code> for cross-tab cache invalidation — when any tab writes, it broadcasts <code>{ path, timestamp }</code>; other tabs invalidate their cache for that path and re-read from disk</li>
+  <li><code>MemoryFileStore</code> — same interface backed by a Map, used for demo mode and all unit tests</li>
+</ul>
+
+<!-- ─── Context & UI ─── -->
+<h2>New Context: FileStoreContext</h2>
+<pre>FileStoreProvider
+├── state: { isReady, directoryHandle, error }
+├── on mount: try to restore handle from IndexedDB
+├── if no handle or permission denied → show FolderPicker
+├── once ready: load critical data into memory cache
+└── provides: fileStore instance + isReady flag</pre>
+
+<h3>FolderPicker Component</h3>
+<ul>
+  <li>First-run: "Select your data folder" screen</li>
+  <li>Shows folder name when connected</li>
+  <li>"Change folder" available in Settings</li>
+  <li>Validates folder: checks for <code>accounts.json</code> or creates empty structure</li>
+</ul>
+
+<!-- ─── Migration Map ─── -->
+<h2>Migration Map: Old → New</h2>
+<table>
+  <tr><th>Old (localStorage key)</th><th>New (file path)</th><th>Format</th></tr>
+  <tr><td><code>user-profile</code></td><td><code>profile.json</code></td><td>JSON</td></tr>
+  <tr><td><code>data-accounts</code></td><td><code>accounts.json</code></td><td>JSON</td></tr>
+  <tr><td><code>data-balances</code></td><td><code>balances/{year}.csv</code></td><td>CSV</td></tr>
+  <tr><td><code>budget-store</code> (csvs only)</td><td><code>transactions/{year}/{yyyy-mm}.csv</code></td><td>CSV</td></tr>
+  <tr><td><code>budget-config</code> + <code>budget-store</code> (categoryGroups, years)</td><td><code>budget/categories.json</code></td><td>JSON</td></tr>
+  <tr><td><code>budget-summary</code></td><td><code>budget/summary-cache.json</code></td><td>JSON</td></tr>
+  <tr><td><code>tax-store</code></td><td><code>taxes/{year}.json</code></td><td>JSON</td></tr>
+  <tr><td><code>tax-templates</code></td><td><code>taxes/templates.json</code></td><td>JSON</td></tr>
+  <tr><td><code>financialGoals</code> + <code>gw-goals</code></td><td><code>goals.json</code></td><td>JSON</td></tr>
+  <tr><td><code>fi-simulations</code></td><td><code>fi-simulations.json</code></td><td>JSON</td></tr>
+  <tr><td><code>allocation-custom-ratios</code></td><td><code>allocation.json</code></td><td>JSON</td></tr>
+  <tr><td><code>al-ratio-target</code>, <code>al-scenarios</code>, <code>al-main-allocations</code>, <code>al-main-name</code>, <code>al-chart-start</code></td><td><code>leverage.json</code></td><td>JSON</td></tr>
+  <tr><td><code>sgt-overrides</code></td><td><code>savings-tracker-overrides.json</code></td><td>JSON</td></tr>
+  <tr><td><code>paydown-loans</code></td><td><code>paydown-loans.json</code></td><td>JSON</td></tr>
+  <tr><td>IndexedDB tax files</td><td><code>taxes/files/*.pdf</code></td><td>Binary</td></tr>
+</table>
+
+<!-- ─── What stays in localStorage ─── -->
+<h2>What Stays in localStorage (Device-Local)</h2>
+<table>
+  <tr><th>Key</th><th>Purpose</th></tr>
+  <tr><td><code>darkMode</code></td><td>Dark mode toggle</td></tr>
+  <tr><td><code>accentTheme</code></td><td>Color theme</td></tr>
+  <tr><td><code>allowCsvImport</code></td><td>CSV import enabled</td></tr>
+  <tr><td><code>goal-view-mode</code></td><td>Grid vs list</td></tr>
+  <tr><td><code>home-card-order</code></td><td>Dashboard card order</td></tr>
+  <tr><td><code>onboarding-dismissed</code></td><td>Welcome guide state</td></tr>
+  <tr><td><code>lab-pdf-to-csv</code></td><td>Lab feature flag</td></tr>
+  <tr><td><code>flag-client-id</code></td><td>Feature flag client ID</td></tr>
+  <tr><td><code>flag-overrides</code></td><td>Feature flag overrides</td></tr>
+  <tr><td><code>flag-rollout-cache</code></td><td>Flag rollout cache</td></tr>
+</table>
+
+<!-- ─── Code to Delete ─── -->
+<h2>Code to Delete</h2>
+<ul class="delete-list">
+  <li><code>src/utils/encryptedStorage.ts</code></li>
+  <li><code>src/utils/crypto.ts</code></li>
+  <li><code>src/utils/migratePlaintext.ts</code></li>
+  <li><code>src/utils/appStorage.ts</code></li>
+  <li><code>src/hooks/useGitHubSync.ts</code></li>
+  <li><code>src/hooks/useGitHubSyncApi.ts</code></li>
+  <li><code>src/hooks/useGitHubSyncUpload.ts</code></li>
+  <li><code>src/hooks/useGitHubSyncRestore.ts</code></li>
+  <li><code>src/hooks/githubSyncConfig.ts</code></li>
+  <li><code>src/hooks/githubSyncTypes.ts</code></li>
+  <li><code>src/hooks/tokenCrypto.ts</code></li>
+  <li><code>src/contexts/GitHubSyncContext.tsx</code></li>
+  <li><code>src/contexts/BudgetSyncContext.tsx</code></li>
+  <li><code>src/contexts/TaxSyncContext.tsx</code></li>
+  <li><code>src/contexts/EncryptionContext.tsx</code></li>
+  <li><code>src/contexts/ImportExportContext.tsx</code></li>
+  <li><code>src/components/UnlockScreen.tsx</code></li>
+  <li><code>src/settings/components/SecurityPane.tsx</code></li>
+  <li><code>src/settings/components/GitHubSyncPane.tsx</code></li>
+  <li><code>src/utils/taxFileDB.ts</code> (IndexedDB)</li>
+</ul>
+
+<!-- ─── Execution Steps ─── -->
+<h2>Execution Steps</h2>
+
+<!-- Step 0 -->
+<div class="card" style="margin-bottom: 1.5rem; border-left: 3px solid var(--red);">
+<h3><span class="badge badge--red">Step 0</span> — Async migration audit</h3>
+<p><strong>What:</strong> Classify every <code>appStorage.getJSON</code> / <code>localStorage.getItem</code> call site to understand the sync→async blast radius before changing anything.</p>
+<p><strong>Why:</strong> Today <code>appStorage.getJSON()</code> is synchronous (reads from an in-memory Map). <code>fileStore.readJSON()</code> returns a Promise. Every call site that reads in a render path (not in a <code>useEffect</code> or event handler) needs a state + loading pattern. This audit prevents surprises during steps 3–6.</p>
+<p><strong>Process:</strong></p>
+<ol>
+  <li>Grep all <code>appStorage.getJSON</code> and <code>localStorage.getItem</code> calls (~300 across ~48 files)</li>
+  <li>Classify each as: <strong>(a)</strong> already in effect/handler — trivial to make async, <strong>(b)</strong> in render/initializer — needs state + effect refactor, <strong>(c)</strong> in a synchronous utility function called from render — needs the utility to become async or the caller to pre-load</li>
+  <li>Document the list of category (b) and (c) call sites — these are the migration's real work items</li>
+</ol>
+<p><strong>Known category (b)/(c) hotspots:</strong></p>
+<ul>
+  <li><code>budgetStorage.ts → getBudgetSaveRate()</code> — called synchronously from GoalDetailedCard render path</li>
+  <li><code>searchIndex.ts</code> — builds search index synchronously from appStorage reads</li>
+  <li><code>DataContext.tsx</code> — initializes state via <code>useState(loadAccounts)</code> (synchronous initializer)</li>
+  <li><code>LeverageGoal.tsx</code> — reads 5 localStorage keys inline during state initialization</li>
+  <li><code>PayDown.tsx</code> — reads <code>paydown-loans</code> in state initializer</li>
+  <li><code>FICalculator.tsx</code> — reads <code>fi-simulations</code> and <code>user-profile</code> in render path</li>
+  <li><code>demoMode.ts</code> — reads/writes all keys synchronously</li>
+</ul>
+<p><strong>Output:</strong> A categorized spreadsheet (or table in this doc) of all call sites with their migration strategy.</p>
+</div>
+
+<!-- Step 1 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--green">Step 1</span> — Create <code>fileStore.ts</code> + <code>MemoryFileStore</code> + CSV utilities</h3>
+<p><strong>What:</strong> Build the low-level filesystem abstraction that all other code will use, plus an in-memory variant for tests and demo mode.</p>
+<p><strong>Files created:</strong></p>
+<ul>
+  <li><code>src/utils/fileStore.ts</code> — Implements the <code>FileStore</code> interface (readJSON, writeJSON, readCSV, writeCSV, readBinary, writeBinary, exists, listFiles, delete, getHandle, subscribe). Includes <code>BroadcastChannel</code> integration: on every write, broadcasts <code>{ path, timestamp }</code>; listens for broadcasts from other tabs and invalidates the in-memory cache for that path + fires local subscribers.</li>
+  <li><code>src/utils/memoryFileStore.ts</code> — Same <code>FileStore</code> interface backed by a <code>Map&lt;string, string | ArrayBuffer&gt;</code>. No disk I/O, no permissions, no IndexedDB. Used for: (a) all unit tests — drop-in mock, (b) demo mode — seed fake data without touching real files.</li>
+  <li><code>src/utils/csvUtils.ts</code> — parse CSV string → <code>string[][]</code>, serialize <code>string[][]</code> → CSV string (handles quoting, commas in values, newlines)</li>
+</ul>
+<p><strong>Details:</strong></p>
+<ul>
+  <li>Path resolution: takes relative paths like <code>"balances/2024.csv"</code>, splits on <code>/</code>, navigates subdirectories via <code>getDirectoryHandle()</code>, reaches file via <code>getFileHandle()</code></li>
+  <li>Auto-creates directories on write (recursive <code>getDirectoryHandle(name, { create: true })</code>)</li>
+  <li>Write debouncing: 300ms debounce per path — rapid edits batch into one disk write</li>
+  <li>In-memory cache: Map&lt;path, data&gt; populated on read, invalidated on write. Reads hit cache first.</li>
+  <li>Write locking: uses <code>navigator.locks.request('filestore-write-' + path)</code> to prevent concurrent writes from multiple tabs</li>
+  <li>Cross-tab sync: <code>BroadcastChannel('filestore-sync')</code> — on write, broadcast path; on receive, evict cache + notify subscribers</li>
+  <li>Error handling: wraps all FS operations in try/catch, distinguishes <code>NotFoundError</code> (returns null/empty) from <code>NotAllowedError</code> (bubbles up for re-permission prompt)</li>
+</ul>
+<p><strong>Tests:</strong> Unit tests using <code>MemoryFileStore</code> — no FS API mocking needed.</p>
+</div>
+
+<!-- Step 2 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--green">Step 2</span> — Create <code>FileStoreContext</code> + <code>FolderPicker</code> component</h3>
+<p><strong>What:</strong> React context that initializes the file store and gates the app behind folder selection.</p>
+<p><strong>Files created:</strong></p>
+<ul>
+  <li><code>src/contexts/FileStoreContext.tsx</code> — Provider + <code>useFileStore()</code> hook</li>
+  <li><code>src/components/FolderPicker.tsx</code> — UI for selecting/changing the data folder</li>
+  <li><code>src/utils/handlePersistence.ts</code> — Save/restore <code>FileSystemDirectoryHandle</code> to IndexedDB (survives page refresh)</li>
+</ul>
+<p><strong>Details:</strong></p>
+<ul>
+  <li>On app mount: try to restore handle from IndexedDB → call <code>handle.requestPermission({ mode: 'readwrite' })</code></li>
+  <li>If no stored handle or permission denied → render <code>FolderPicker</code> instead of the app</li>
+  <li>FolderPicker calls <code>window.showDirectoryPicker()</code>, validates the folder (checks for <code>accounts.json</code> OR offers to create empty structure), persists handle to IndexedDB</li>
+  <li>Context provides: <code>{ fileStore, isReady, folderName, disconnect() }</code></li>
+  <li>Wraps the entire app in <code>App.tsx</code>: <code>&lt;FileStoreProvider&gt;&lt;App /&gt;&lt;/FileStoreProvider&gt;</code></li>
+  <li><code>disconnect()</code> clears IndexedDB handle + in-memory cache → returns to FolderPicker</li>
+</ul>
+<p><strong>UX:</strong> Simple full-page screen: icon, "Select your data folder", description of what it expects, a single button.</p>
+</div>
+
+<!-- Step 3 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--orange">Step 3</span> — Migrate <code>DataContext</code> (accounts + balances)</h3>
+<p><strong>What:</strong> Replace the largest localStorage consumers — account definitions and monthly balance history — with filesystem reads/writes.</p>
+<p><strong>Files modified:</strong></p>
+<ul>
+  <li><code>src/contexts/DataContext.tsx</code> — Replace <code>appStorage.getJSON('data-accounts')</code> / <code>appStorage.getJSON('data-balances')</code> with <code>fileStore.readJSON('accounts.json')</code> / <code>fileStore.readCSV('balances/{year}.csv')</code></li>
+  <li><code>src/pages/data/Data.tsx</code> — Update save handlers to write through fileStore</li>
+  <li><code>src/pages/data/BalanceSpreadsheet.tsx</code> — Update edit/save to write specific year CSV</li>
+</ul>
+<p><strong>Details:</strong></p>
+<ul>
+  <li><strong>accounts.json</strong>: Read once on context init. Writes on add/edit/delete account. Simple JSON round-trip.</li>
+  <li><strong>balances/{year}.csv</strong>: CSV format is <code>month,accountId,balance</code> (one row per account per month). On init, read current year + previous year (for YoY comparisons). Lazy-load older years on demand (e.g., when user navigates chart history).</li>
+  <li><strong>Writing balances</strong>: When user edits a cell in the spreadsheet, determine which year file to update, read it, patch the row, write it back. Only the affected year file changes.</li>
+  <li><strong>Profile</strong>: <code>profile.json</code> for name/partner name. Avatar images saved as <code>avatar.png</code> / <code>partner-avatar.png</code> (binary write from file input or canvas blob).</li>
+  <li>Remove <code>data-accounts</code> and <code>data-balances</code> from <code>encryptedStorage.ts</code> SENSITIVE_KEYS</li>
+  <li>DataContext state remains the same (accounts array, balances map) — only the persistence layer changes</li>
+</ul>
+<p><strong>Loading state:</strong> Context exposes <code>isLoading: true</code> until initial reads complete. App shows skeleton.</p>
+</div>
+
+<!-- Step 4 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--green">Step 4</span> — Migrate goals, paydown, leverage, allocation, savings tracker</h3>
+<p><strong>What:</strong> Move 6 small JSON files from localStorage to filesystem. All follow the same simple pattern.</p>
+<p><strong>Files affected:</strong></p>
+<ul>
+  <li><code>src/pages/goal/components/GoalDetailedCard.tsx</code> — reads/writes <code>goals.json</code></li>
+  <li><code>src/pages/goal/components/PayDown.tsx</code> — reads/writes <code>paydown-loans.json</code></li>
+  <li><code>src/pages/goal/components/LeverageGoal.tsx</code> — reads/writes <code>leverage.json</code> (consolidates 5 separate localStorage keys into one structured file)</li>
+  <li><code>src/pages/goal/components/FICalculator.tsx</code> — reads/writes <code>fi-simulations.json</code></li>
+  <li><code>src/hooks/useAllocation.ts</code> (or similar) — reads/writes <code>allocation.json</code></li>
+  <li><code>src/pages/goal/components/SavingsTrackerCard.tsx</code> — reads/writes <code>savings-tracker-overrides.json</code></li>
+</ul>
+<p><strong>Pattern for each:</strong></p>
+<ol>
+  <li>Replace <code>appStorage.getJSON(key)</code> / <code>localStorage.getItem(key)</code> with <code>fileStore.readJSON(path)</code></li>
+  <li>Replace <code>appStorage.setJSON(key)</code> / <code>localStorage.setItem(key)</code> with <code>fileStore.writeJSON(path, data)</code></li>
+  <li>Add async loading state (data may be <code>null</code> until read completes)</li>
+  <li>Remove key from SENSITIVE_KEYS in encryptedStorage.ts</li>
+</ol>
+<p><strong>Leverage consolidation:</strong> The 5 keys (<code>al-ratio-target</code>, <code>al-scenarios</code>, <code>al-main-allocations</code>, <code>al-main-name</code>, <code>al-chart-start</code>) become fields in a single <code>leverage.json</code> object. Read once → destructure into state. Write back the whole object on any change.</p>
+<p><strong>Tests:</strong> Update each component's tests in the same step — swap <code>appStorage</code> mocks for <code>MemoryFileStore</code>. Don't defer test updates to Step 9.</p>
+</div>
+
+<!-- Step 5 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--orange">Step 5</span> — Migrate transactions + budget categories</h3>
+<p><strong>What:</strong> Move transaction CSVs and budget category config to the filesystem.</p>
+<p><strong>Files affected:</strong></p>
+<ul>
+  <li><code>src/pages/budget/utils/budgetStorage.ts</code> — Replace localStorage reads/writes with fileStore calls</li>
+  <li><code>src/pages/budget/Budget.tsx</code> — Update to use async data loading</li>
+  <li><code>src/pages/transactions/Transactions.tsx</code> — Update CSV upload to write to <code>transactions/{year}/{yyyy-mm}.csv</code></li>
+</ul>
+<p><strong>Details:</strong></p>
+<ul>
+  <li><strong>categories.json</strong>: Read <code>budget/categories.json</code> on budget page load. Contains <code>{ years: [...], categoryGroups: [...] }</code>. Write on category add/edit/delete/reorder.</li>
+  <li><strong>Transaction CSVs</strong>: On upload, determine the month from the CSV content or filename → write to <code>transactions/{year}/{yyyy-mm}.csv</code>. On budget page load, read CSVs for the selected year (up to 12 files). <code>fileStore.listFiles('transactions/2024')</code> to discover available months.</li>
+  <li><strong>summary-cache.json</strong>: Written to <code>budget/summary-cache.json</code> whenever budget data is recomputed (annualSavings, saveRate, monthsOfData). Read synchronously by the Goals page via <code>fileStore.readJSON()</code> — avoids forcing Goals to load the full transactions module. Updated whenever transactions are uploaded or categories change.</li>
+  <li><strong>Performance</strong>: Only read CSVs for the year being viewed. Switching years triggers lazy load of that year's folder.</li>
+</ul>
+</div>
+
+<!-- Step 6 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--orange">Step 6</span> — Migrate taxes + file attachments</h3>
+<p><strong>What:</strong> Move tax checklists from localStorage and tax documents from IndexedDB to the filesystem.</p>
+<p><strong>Files affected:</strong></p>
+<ul>
+  <li><code>src/pages/taxes/Taxes.tsx</code> — Update to read/write <code>taxes/{year}.json</code></li>
+  <li><code>src/pages/taxes/components/TaxFileUpload.tsx</code> — Write PDFs to <code>taxes/{year}/files/</code> instead of IndexedDB</li>
+  <li><code>src/utils/taxFileDB.ts</code> — Will be deleted (IndexedDB storage)</li>
+</ul>
+<p><strong>Details:</strong></p>
+<ul>
+  <li><strong>taxes/{year}.json</strong>: Each year's checklist state (which items checked, amounts entered, notes). Read on year selection.</li>
+  <li><strong>taxes/templates.json</strong>: Saved user templates for checklists. Read once on taxes page mount.</li>
+  <li><strong>taxes/{year}/files/*.pdf</strong>: Binary files (W-2s, 1099s, receipts). Use <code>fileStore.writeBinary()</code> on upload, <code>fileStore.readBinary()</code> to display/download. <code>fileStore.listFiles('taxes/2024/files')</code> to show available documents.</li>
+  <li><strong>Benefit</strong>: Tax documents become real files on disk — user can see/open them directly in their OS file browser or Google Drive. No more opaque IndexedDB blobs.</li>
+</ul>
+</div>
+
+<!-- Step 6b -->
+<div class="card" style="margin-bottom: 1.5rem; border-left: 3px solid var(--red);">
+<h3><span class="badge badge--red">Step 6b</span> — One-time decrypt migration</h3>
+<p><strong>What:</strong> Before deleting <code>crypto.ts</code> and <code>encryptedStorage.ts</code>, decrypt any remaining encrypted data in localStorage/IndexedDB and write it as plaintext to the filesystem.</p>
+<p><strong>Why:</strong> If this step is skipped and Step 7 deletes the crypto module, any data still stored in encrypted form becomes permanently unreadable.</p>
+<p><strong>Process:</strong></p>
+<ol>
+  <li>Check if encryption was enabled (<code>localStorage.getItem('encryption-enabled') === '1'</code>)</li>
+  <li>If yes, prompt user for their password → derive CryptoKey</li>
+  <li>For each SENSITIVE_KEY in <code>encryptedStorage.ts</code>: read encrypted value from localStorage → decrypt → write plaintext to the corresponding filesystem path (per the migration map)</li>
+  <li>For IndexedDB tax file blobs: read each blob → decrypt if encrypted → write as <code>taxes/{year}/files/{filename}.pdf</code> via <code>fileStore.writeBinary()</code></li>
+  <li>Verify: for each migrated key, confirm the filesystem file is readable and matches expected schema</li>
+  <li>Set a migration-complete flag (<code>localStorage.setItem('fs-migration-complete', '1')</code>)</li>
+</ol>
+<p><strong>Edge cases:</strong></p>
+<ul>
+  <li>User forgot password → cannot decrypt → show "Your encrypted data cannot be migrated without your password" message. Allow proceeding with empty data (fresh start).</li>
+  <li>Encryption was never enabled → skip this step entirely, data is already plaintext in localStorage</li>
+  <li>Partial migration (user closes browser mid-step) → on next load, check flag, re-run for any missing files</li>
+</ul>
+<p><strong>This step must complete successfully before Step 7 deletes any crypto code.</strong></p>
+</div>
+
+<!-- Step 7 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--green">Step 7</span> — Delete encryption, sync, and import/export code</h3>
+<p><strong>What:</strong> Remove all infrastructure that existed because data lived in localStorage (encryption for security, GitHub sync for backup, import/export for portability). None of this is needed when data is plain files in a user-controlled folder.</p>
+<p><strong>Files deleted:</strong></p>
+<ul>
+  <li><code>src/utils/encryptedStorage.ts</code> — AES encryption layer over localStorage</li>
+  <li><code>src/utils/crypto.ts</code> — Key derivation, encrypt/decrypt functions</li>
+  <li><code>src/utils/migratePlaintext.ts</code> — Migration from unencrypted → encrypted localStorage</li>
+  <li><code>src/utils/appStorage.ts</code> — Abstraction over localStorage (replaced by fileStore)</li>
+  <li><code>src/hooks/useGitHubSync.ts</code>, <code>useGitHubSyncApi.ts</code>, <code>useGitHubSyncUpload.ts</code>, <code>useGitHubSyncRestore.ts</code> — GitHub backup sync</li>
+  <li><code>src/hooks/githubSyncConfig.ts</code>, <code>githubSyncTypes.ts</code>, <code>tokenCrypto.ts</code> — Sync configuration &amp; token handling</li>
+  <li><code>src/contexts/GitHubSyncContext.tsx</code>, <code>BudgetSyncContext.tsx</code>, <code>TaxSyncContext.tsx</code> — Sync context providers</li>
+  <li><code>src/contexts/EncryptionContext.tsx</code> — Encryption state &amp; UnlockScreen gating</li>
+  <li><code>src/contexts/ImportExportContext.tsx</code> — JSON import/export (no longer needed: data IS the files)</li>
+  <li><code>src/components/UnlockScreen.tsx</code> — Password unlock screen</li>
+  <li><code>src/utils/taxFileDB.ts</code> — IndexedDB for tax file blobs</li>
+</ul>
+<p><strong>Files modified:</strong></p>
+<ul>
+  <li><code>src/App.tsx</code> — Remove EncryptionProvider, GitHubSyncProvider, ImportExportProvider wrapping</li>
+  <li><code>src/pages/settings/Settings.tsx</code> — Remove Security and Sync pane imports/routes</li>
+  <li>Any component that imports from deleted files — update imports or remove references</li>
+</ul>
+<p><strong>Approach:</strong> Delete files, then fix all TypeScript errors that surface. The compiler becomes the checklist.</p>
+</div>
+
+<!-- Step 8 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--green">Step 8</span> — Update Settings UI</h3>
+<p><strong>What:</strong> Replace the removed Security/Sync panes with a new "Data Folder" settings pane.</p>
+<p><strong>Files modified/created:</strong></p>
+<ul>
+  <li><code>src/pages/settings/components/DataFolderPane.tsx</code> (new) — Shows connected folder path, "Change folder" button, "Disconnect" button</li>
+  <li><code>src/pages/settings/Settings.tsx</code> — Add DataFolderPane, remove SecurityPane and GitHubSyncPane</li>
+</ul>
+<p><strong>DataFolderPane shows:</strong></p>
+<ul>
+  <li>Current folder name (from <code>FileStoreContext</code>)</li>
+  <li>File count / size summary (how many files, total data size)</li>
+  <li>"Change folder" — calls <code>showDirectoryPicker()</code> again, re-validates, persists new handle</li>
+  <li>"Disconnect" — clears handle from IndexedDB, returns to FolderPicker screen</li>
+  <li>Folder structure health check: "✓ accounts.json found", "✓ 3 years of balances", etc.</li>
+</ul>
+<p><strong>Removals:</strong></p>
+<ul>
+  <li>SecurityPane (set password, change password, encryption toggle)</li>
+  <li>GitHubSyncPane (connect GitHub, sync now, restore)</li>
+  <li>Import/Export section (replaced by direct file access)</li>
+</ul>
+</div>
+
+<!-- Step 9 -->
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3><span class="badge badge--orange">Step 9</span> — End-to-end testing</h3>
+<p><strong>What:</strong> Verify every data flow works correctly with the new filesystem backend.</p>
+<p><strong>Test plan:</strong></p>
+<ul>
+  <li><strong>Cold start:</strong> Pick empty folder → app creates folder structure → all pages render with empty states</li>
+  <li><strong>Account CRUD:</strong> Add account → verify <code>accounts.json</code> written. Edit/delete → verify file updated.</li>
+  <li><strong>Balance entry:</strong> Enter balance in spreadsheet → verify correct year CSV updated with new row</li>
+  <li><strong>Transaction upload:</strong> Upload bank CSV → verify file appears in <code>transactions/{year}/{month}.csv</code></li>
+  <li><strong>Budget categories:</strong> Add/rename category group → verify <code>budget/categories.json</code> updated</li>
+  <li><strong>Tax documents:</strong> Upload PDF → verify binary file in <code>taxes/{year}/files/</code>. Download → verify content matches.</li>
+  <li><strong>Goals/Paydown/Leverage:</strong> Create entries → verify JSON files written with correct schema</li>
+  <li><strong>Multi-tab:</strong> Open two tabs, write in one → verify BroadcastChannel triggers cache invalidation + UI refresh in the other tab</li>
+  <li><strong>Permission revoke:</strong> Revoke folder permission in browser → verify graceful error + re-permission prompt</li>
+  <li><strong>Folder switch:</strong> Change folder in Settings → verify app reloads data from new folder</li>
+  <li><strong>Demo mode:</strong> Activate demo mode → verify MemoryFileStore is used, no files written to disk. Deactivate → verify real FileStore resumes.</li>
+</ul>
+<p><strong>Note:</strong> Unit tests should already be passing from steps 3–6 (each step updates its own tests using <code>MemoryFileStore</code>). Step 9 focuses on integration and manual smoke testing only.</p>
+<p><strong>Manual smoke test:</strong> Open the data folder in Finder/Explorer and verify files are human-readable, correctly formatted, and editable with a text editor.</p>
+</div>
+
+<!-- ─── Risks ─── -->
+<h2>Risks &amp; Mitigations</h2>
+<table>
+  <tr><th>Risk</th><th>Mitigation</th></tr>
+  <tr><td>User picks wrong folder</td><td>Validate: check for <code>accounts.json</code> or offer to create empty structure</td></tr>
+  <tr><td>Async reads cause render flicker</td><td>In-memory cache after first load; skeleton only on cold start</td></tr>
+  <tr><td>Two tabs writing simultaneously</td><td><code>navigator.locks</code> API for write coordination</td></tr>
+  <tr><td>Browser permission revoked mid-session</td><td>Catch <code>NotAllowedError</code>, show "Re-grant access" prompt</td></tr>
+  <tr><td>File System Access API not supported</td><td>Show "Use Chrome or Edge" message (acceptable for personal tool)</td></tr>
+  <tr><td>Google Drive sync conflict</td><td>Last-write-wins; yearly files limit blast radius</td></tr>
+  <tr><td>Corrupted JSON file</td><td>Validate on read, show error with path; user can fix in text editor</td></tr>
+</table>
+
+<!-- ─── Pros & Cons ─── -->
+<h2>Pros &amp; Cons</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+  <div class="card" style="border-left: 3px solid var(--green);">
+    <h3 style="color: var(--green); margin-top: 0;">Pros</h3>
+    <ul>
+      <li><strong>Portable</strong> — copy folder = copy all data</li>
+      <li><strong>No sync code</strong> — filesystem handles sync</li>
+      <li><strong>Inspectable</strong> — human-readable JSON/CSV</li>
+      <li><strong>No size limits</strong> — no 5-10MB localStorage cap</li>
+      <li><strong>Shareable</strong> — shared folder = shared data</li>
+      <li><strong>Backup-friendly</strong> — git, Time Machine, Drive version history</li>
+      <li><strong>Simpler codebase</strong> — delete encryption, sync, migration code</li>
+    </ul>
+  </div>
+  <div class="card" style="border-left: 3px solid var(--red);">
+    <h3 style="color: var(--red); margin-top: 0;">Cons</h3>
+    <ul>
+      <li><strong>Chromium-only</strong> — no Firefox/Safari</li>
+      <li><strong>Permission UX</strong> — folder picker on first visit</li>
+      <li><strong>Async refactor</strong> — all data reads become async</li>
+      <li><strong>No encryption at rest</strong> — folder access = data access</li>
+      <li><strong>Network drive offline</strong> — reads fail if folder unavailable</li>
+      <li><strong>Multi-device conflict</strong> — last-write-wins without resolution</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ─── What Export/Import Becomes ─── -->
+<h2>Export &amp; Import (Post-Migration)</h2>
+<div class="card">
+  <p><strong>Export:</strong> The folder <em>is</em> the export. Zip it, copy it, put it on a USB stick.</p>
+  <p><strong>Import:</strong> Point the app at a different folder. Done.</p>
+  <p><strong>Share:</strong> Give someone the folder (via Drive, AirDrop, etc.). They open the app and point to it.</p>
+  <p style="margin-bottom: 0;"><strong>No code needed</strong> for any of these operations.</p>
+</div>
+
+<hr style="margin: 3rem 0 1rem; border: none; border-top: 1px solid var(--border);">
+<p style="color: var(--muted); font-size: 0.85rem;">Generated August 19, 2025 • Finance Tracking App</p>
+
+</body>
+</html>

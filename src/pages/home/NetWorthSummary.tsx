@@ -1,5 +1,6 @@
-import { FC, useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import { FC, useState, useMemo, useCallback } from 'react'
 import { Account, BalanceEntry, formatCurrency, ACCOUNT_TYPE_LABELS } from '../data/types'
+import MonthPicker from '../../components/MonthPicker'
 
 interface NetWorthSummaryProps {
   accounts: Account[]
@@ -8,17 +9,11 @@ interface NetWorthSummaryProps {
   onNavigate: () => void
 }
 
-const LONG_PRESS_MS = 400
-
 const sumAccountBalances = (accounts: Account[], balanceMap: Map<number, number>) =>
   accounts.reduce((sum, account) => sum + (balanceMap.get(account.id) ?? 0), 0)
 
 const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMonths, onNavigate }) => {
   const [monthIdx, setMonthIdx] = useState(0) // 0 = latest
-  const [jumpOpen, setJumpOpen] = useState(false)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const didLongPress = useRef(false)
-  const jumpRef = useRef<HTMLDivElement>(null)
 
   const selectedMonth = allMonths[monthIdx] || ''
 
@@ -161,68 +156,13 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     ]
   }, [fiTotal, gwTotal, netWorth])
 
-  // Long-press helpers
-  const clearLP = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
-  }, [])
-
-  const startLP = useCallback(() => {
-    didLongPress.current = false
-    longPressTimer.current = setTimeout(() => {
-      didLongPress.current = true
-      setJumpOpen(true)
-    }, LONG_PRESS_MS)
-  }, [])
-
-  const stepMonth = useCallback(
-    (dir: 'prev' | 'next') => {
-      if (dir === 'prev') setMonthIdx(i => Math.min(i + 1, allMonths.length - 1))
-      else setMonthIdx(i => Math.max(i - 1, 0))
+  const handleMonthChange = useCallback(
+    (month: string) => {
+      const idx = allMonths.indexOf(month)
+      if (idx >= 0) setMonthIdx(idx)
     },
-    [allMonths.length],
+    [allMonths],
   )
-
-  const endLP = useCallback(() => {
-    clearLP()
-  }, [clearLP])
-
-  const handleMonthClick = useCallback(
-    (dir: 'prev' | 'next') => {
-      if (didLongPress.current) {
-        didLongPress.current = false
-        return
-      }
-      stepMonth(dir)
-    },
-    [stepMonth],
-  )
-
-  // Close jump picker on outside click
-  useEffect(() => {
-    if (!jumpOpen) return
-    const handler = (e: MouseEvent) => {
-      if (jumpRef.current && !jumpRef.current.contains(e.target as Node)) setJumpOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [jumpOpen])
-
-  // Group months by year for the jump picker
-  const monthsByYear = useMemo(() => {
-    const map = new Map<string, { month: string; idx: number }[]>()
-    for (let i = 0; i < allMonths.length; i++) {
-      const ym = allMonths[i]
-      const y = ym.split('-')[0]
-      if (!map.has(y)) map.set(y, [])
-      map.get(y)!.push({ month: ym, idx: i })
-    }
-    // sort months within each year ascending
-    for (const arr of map.values()) arr.sort((a, b) => a.month.localeCompare(b.month))
-    return map
-  }, [allMonths])
 
   if (balances.length === 0) {
     return (
@@ -230,7 +170,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
         <div className="home-card-header">
           <h3>Net Worth</h3>
           <button className="home-card-link" onClick={onNavigate}>
-            View Data →
+            View Details →
           </button>
         </div>
         <div className="home-card-cta">
@@ -262,23 +202,10 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     <div className="home-card home-card--nw">
       <div className="home-card-header">
         <button className="home-card-link" onClick={onNavigate}>
-          View Data →
+          View Details →
         </button>
       </div>
       <div className="nw-headline">
-        <button
-          className="nw-month-arrow"
-          disabled={monthIdx >= allMonths.length - 1}
-          onMouseDown={startLP}
-          onMouseUp={endLP}
-          onMouseLeave={clearLP}
-          onTouchStart={startLP}
-          onTouchEnd={endLP}
-          onClick={() => handleMonthClick('prev')}
-          aria-label="Previous month"
-        >
-          ‹
-        </button>
         <div className="nw-headline-center">
           <span className="nw-amount">
             {formatCurrency(netWorth)} <span className="nw-amount-label">net worth</span>
@@ -296,44 +223,8 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
               })()}
           </span>
         </div>
-        <button
-          className="nw-month-arrow"
-          disabled={monthIdx <= 0}
-          onMouseDown={startLP}
-          onMouseUp={endLP}
-          onMouseLeave={clearLP}
-          onTouchStart={startLP}
-          onTouchEnd={endLP}
-          onClick={() => handleMonthClick('next')}
-          aria-label="Next month"
-        >
-          ›
-        </button>
-        {jumpOpen && (
-          <div className="nw-jump-picker" ref={jumpRef}>
-            {[...monthsByYear.entries()].map(([year, months]) => (
-              <div key={year} className="nw-jump-year">
-                <div className="nw-jump-year-label">{year}</div>
-                <div className="nw-jump-months">
-                  {months.map(({ month, idx }) => (
-                    <button
-                      key={month}
-                      className={`nw-jump-month-btn${idx === monthIdx ? ' active' : ''}`}
-                      onClick={() => {
-                        setMonthIdx(idx)
-                        setJumpOpen(false)
-                      }}
-                    >
-                      {month.split('-')[1]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-      <span className="nw-date">{proseParts.monthLabel}</span>
+      <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
       <p className="nw-prose">
         {proseParts.diff !== null && proseParts.diff !== 0 && (
           <span className="nw-prose-line">
@@ -345,15 +236,16 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           </span>
         )}
         {proseParts.clauses.map(clause => (
-          <span key={clause.label} className="nw-prose-line">
-            <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel} (
-            {clause.children.map((child, childIdx) => (
-              <span key={`${clause.label}-${child.label}`}>
-                {childIdx > 0 ? ', ' : ''}
-                <strong>{child.amount}</strong> {child.label}
-              </span>
-            ))}
-            )
+          <span key={clause.label} className="nw-prose-line nw-prose-line--goal">
+            <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel}
+            <span className="nw-prose-subline">
+              {clause.children.map((child, childIdx) => (
+                <span key={`${clause.label}-${child.label}`}>
+                  {childIdx > 0 ? ', ' : ''}
+                  <strong>{child.amount}</strong> {child.label}
+                </span>
+              ))}
+            </span>
           </span>
         ))}
       </p>

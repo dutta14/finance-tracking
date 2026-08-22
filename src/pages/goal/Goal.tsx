@@ -9,11 +9,12 @@ import GoalMixer from './components/GoalMixer'
 import GoalDetail from './components/GoalDetail'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
-import { useGrowthSettings } from './hooks/useGrowthSettings'
-import '../../styles/GrowthSettings.css'
+import { useGrowthSettings } from '../../hooks/useGrowthSettings'
+import GrowthSettingsPanel from '../../components/GrowthSettingsPanel'
 
 import FICalculator from '../tools/components/FICalculator'
 import LeverageGoal from './components/LeverageGoal'
+import PayDown from './components/PayDown'
 
 const Goal: FC = () => {
   const {
@@ -85,20 +86,28 @@ const Goal: FC = () => {
           <>
             <div className="goal-header">
               <h1>Goals</h1>
-              <nav className="goal-tab-bar" aria-label="Goals sections">
+              <nav className="tab-bar" aria-label="Goals sections">
                 <NavLink
                   to="/goal/plans"
-                  className={({ isActive }) => `goal-tab${isActive || activeTab === 'plans' ? ' active' : ''}`}
+                  className={({ isActive }) => `tab-btn${isActive || activeTab === 'plans' ? ' active' : ''}`}
                 >
                   FIRE Plans
                 </NavLink>
-                <NavLink to="/goal/leverage" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
+                <NavLink to="/goal/leverage" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
                   Leverage
                 </NavLink>
-                <NavLink to="/goal/calculator" className={({ isActive }) => `goal-tab${isActive ? ' active' : ''}`}>
-                  FI Calculator
+                <NavLink to="/goal/paydown" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
+                  Pay Down
+                </NavLink>
+                <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
+                  FIRE Calculator
                 </NavLink>
               </nav>
+              {subPath === 'calculator' && (
+                <div className="goal-header-actions">
+                  <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
+                </div>
+              )}
             </div>
           </>
         )}
@@ -165,6 +174,7 @@ const Goal: FC = () => {
           />
           <Route path="leverage" element={<LeverageGoal />} />
           <Route path="calculator" element={<FICalculator />} />
+          <Route path="paydown" element={<PayDown />} />
           <Route
             path=":id"
             element={

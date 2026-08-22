@@ -223,53 +223,6 @@
 }
 
 /* Dollar view toggle */
-.gw-dollar-toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.gw-dollar-toggle-label {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.gw-dollar-toggle {
-  display: flex;
-  background: var(--color-bg-hover, #f3f4f6);
-  border-radius: var(--radius);
-  padding: 2px;
-  gap: 2px;
-}
-
-.gw-dollar-toggle-btn {
-  background: none;
-  border: none;
-  border-radius: var(--radius);
-  padding: 0.22rem 0.65rem;
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  font-weight: var(--fw-normal);
-  transition:
-    background 0.15s,
-    color 0.15s;
-  white-space: nowrap;
-}
-
-.gw-dollar-toggle-btn.active {
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-weight: var(--fw-semibold);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
 /* Undo delete bar */
 .gw-goal-undo-bar {
   position: relative;
@@ -361,30 +314,6 @@ body.dark .gw-goal-undo-msg {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-}
-
-.gw-goal-action-btn {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  padding: 0.2rem 0.4rem;
-  cursor: pointer;
-  border-radius: var(--radius);
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.gw-goal-action-btn:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover, #f3f4f6);
-}
-
-.gw-goal-action-btn--delete:hover {
-  color: var(--color-negative);
-  background: var(--color-negative-light);
 }
 
 .gw-goal-label--editing {
