@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 
 export interface GrowthSettings {
   preBoundaryGrowth: number
@@ -51,10 +51,18 @@ function loadFiOverride(goalId: number): FiGrowthOverride | null {
 export function useGrowthSettings() {
   const [settings, setSettings] = useState<GrowthSettings>(loadSettings)
 
+  // Sync across hook instances in the same tab
+  useEffect(() => {
+    const handler = () => setSettings(loadSettings())
+    window.addEventListener('growth-settings-changed', handler)
+    return () => window.removeEventListener('growth-settings-changed', handler)
+  }, [])
+
   const updateSettings = useCallback((partial: Partial<GrowthSettings>) => {
     setSettings(prev => {
       const next = { ...prev, ...partial }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      window.dispatchEvent(new Event('growth-settings-changed'))
       return next
     })
   }, [])

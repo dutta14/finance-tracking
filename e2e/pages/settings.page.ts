@@ -59,7 +59,7 @@ export class SettingsPage {
   constructor(page: Page) {
     this.page = page
 
-    this.settingsButton = page.getByRole('button', { name: 'Settings' })
+    this.settingsButton = page.getByRole('button', { name: 'Settings', exact: true })
     this.dialog = page.getByRole('dialog', { name: 'Settings' })
     // The modal backdrop is the parent of role=dialog; clicking it
     // triggers onClose via the source's stopPropagation guard.
@@ -101,8 +101,8 @@ export class SettingsPage {
     // come from the nested `<span class="settings-theme-name">` text. Use
     // class-scoped locators to avoid relying on accessible-name parsing
     // of buttons that also contain SVG preview chrome.
-    this.lightThemeBtn = this.dialog.locator('.settings-theme-option').filter({ hasText: 'Light' })
-    this.darkThemeBtn = this.dialog.locator('.settings-theme-option').filter({ hasText: 'Dark' })
+    this.lightThemeBtn = this.dialog.getByRole('button', { name: 'Light theme' })
+    this.darkThemeBtn = this.dialog.getByRole('button', { name: 'Dark theme' })
 
     // Advanced pane toggle button has role="switch" but no accessible
     // name on the button itself (the label is a sibling span). It's the

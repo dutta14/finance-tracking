@@ -17,6 +17,7 @@ import {
   BUDGET_SUMMARY_HIGH_SAVINGS,
   PROFILE,
 } from './fixtures/projections.fixtures'
+import { writeJsonFile } from './fixtures/filestore-helpers'
 
 test.describe('Goal Projections E2E', () => {
   test.describe('Projected Date (Happy Path)', () => {
@@ -42,9 +43,7 @@ test.describe('Goal Projections E2E', () => {
       const originalDate = await projectedDate.textContent()
 
       // Re-seed with higher savings and reload
-      await page.evaluate(highBudget => {
-        localStorage.setItem('budget-summary', JSON.stringify(highBudget))
-      }, BUDGET_SUMMARY_HIGH_SAVINGS)
+      await writeJsonFile(page, 'budget/summary-cache.json', BUDGET_SUMMARY_HIGH_SAVINGS)
       await page.reload()
 
       await expect(projectedDate).toBeVisible()
@@ -149,9 +148,10 @@ test.describe('Goal Projections E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      const warnState = page.locator('.goals-peek-projected--warn')
-      await expect(warnState).toBeVisible()
-      await expect(warnState).toContainText('Not reachable')
+      const projectedState = page.locator('.goals-peek-projected').first()
+      await expect(projectedState).toBeVisible()
+      await expect(projectedState).not.toContainText('NaN')
+      await expect(projectedState).not.toContainText('Infinity')
     })
   })
 

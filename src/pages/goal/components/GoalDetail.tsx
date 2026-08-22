@@ -7,7 +7,7 @@ import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { GwSavingsPlan } from './SavingsPlan'
-import GrowthSettingsPanel from './GrowthSettingsPanel'
+import GrowthSettingsPanel from '../../../components/GrowthSettingsPanel'
 import {
   getTotalForMonth,
   getFiBreakdown,
@@ -19,12 +19,11 @@ import {
 import { getFiTarget } from '../utils/goalCalculations'
 import { formatTimeUntilYearMonth, formatYearMonthLong, parseShortMonthYear } from '../utils/dateHelpers'
 import { useYearMonthlySaving } from '../hooks/useYearMonthlySaving'
-import { useGrowthSettings } from '../hooks/useGrowthSettings'
+import { useGrowthSettings } from '../../../hooks/useGrowthSettings'
 import '../../../styles/GoalDetail.css'
 import '../../../styles/GoalDiveDeep.css'
 import '../../../styles/SavingsPlan.css'
 import '../../../styles/GwSection.css'
-import '../../../styles/GrowthSettings.css'
 
 interface GoalDetailProps {
   goals: FinancialGoal[]
@@ -261,21 +260,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
     <div className="goal-detail">
       <div className="goal-detail-header">
         <div className="goal-detail-header-left">
-          <Link className="goal-detail-back-link" to="/goal" aria-label="Back to Goals">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M10 3L5 8l5 5" />
-            </svg>
-          </Link>
           {renameMode ? (
             <input
               ref={renameInputRef}

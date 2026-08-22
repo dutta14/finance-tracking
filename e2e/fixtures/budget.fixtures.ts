@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { budgetCsvsToEntries, seedFileStore } from './seed-filestore'
 
 /**
  * Seed data helpers for Budget Page E2E tests.
@@ -239,21 +240,41 @@ export function configFromStore(store: BudgetStore): BudgetConfig {
  */
 export async function seedBudget(page: Page, options: SeedOptions = {}) {
   const { store, config, summary, darkMode } = options
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
 
-  await page.addInitScript(
-    ({ store, config, summary, darkMode }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
+  if (store) {
+    entries.push(...budgetCsvsToEntries(store.csvs))
+  }
 
-      if (store) localStorage.setItem('budget-store', JSON.stringify(store))
-      if (config) localStorage.setItem('budget-config', JSON.stringify(config))
-      if (summary) localStorage.setItem('budget-summary', JSON.stringify(summary))
-      if (darkMode !== undefined) {
-        localStorage.setItem('darkMode', darkMode ? '1' : '0')
-      }
-    },
-    { store, config, summary, darkMode },
-  )
+  const resolvedConfig =
+    config === null
+      ? null
+      : config ??
+        (store
+          ? {
+              version: 1,
+              years: store.years,
+              categoryGroups: store.categoryGroups ?? DEFAULT_GROUPS,
+            }
+          : null)
+
+  if (resolvedConfig) {
+    entries.push({ path: 'budget/categories.json', data: resolvedConfig, type: 'json' })
+  }
+
+  if (summary) {
+    entries.push({ path: 'budget/summary-cache.json', data: summary, type: 'json' })
+  }
+
+  await seedFileStore(page, entries)
+  await page.addInitScript(({ darkMode }) => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    if (darkMode !== undefined) {
+      localStorage.setItem('darkMode', darkMode ? '1' : '0')
+    }
+  }, { darkMode })
 }
 
 /** Seed empty state. */

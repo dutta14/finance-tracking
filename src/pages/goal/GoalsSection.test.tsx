@@ -119,7 +119,7 @@ const defaultProps = {
   goals: [goalA, goalB, goalC],
   profileBirthday: '1990-01-01',
   gwGoals: [],
-  growthSettings: mockGrowthSettings as ReturnType<typeof import('./hooks/useGrowthSettings').useGrowthSettings>,
+  growthSettings: mockGrowthSettings as ReturnType<typeof import('../../hooks/useGrowthSettings').useGrowthSettings>,
   onUpdateGoal: vi.fn(),
   onCopyGoal: vi.fn(),
   onDeleteGoal: vi.fn(),

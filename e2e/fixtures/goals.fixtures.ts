@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { balanceEntriesToEntries, goalsToEntry, seedFileStore } from './seed-filestore'
 import { ACCOUNTS, BALANCES, PROFILE } from './home.fixtures'
 
 export { ACCOUNTS, BALANCES, PROFILE }
@@ -117,40 +118,36 @@ export async function seedGoalsData(page: Page, options: GoalsSeedOptions = {}) 
     customGwGoals,
   } = options
 
-  await page.addInitScript(
-    ({ goals, gwGoals, accounts, balances, profile, viewMode, data }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
-      localStorage.setItem('onboarding-dismissed', '1')
+  const data = {
+    accounts: ACCOUNTS,
+    balances: BALANCES,
+    goals: customGoals ?? GOALS,
+    gwGoals: customGwGoals ?? GW_GOALS,
+    profile: PROFILE,
+  }
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
 
-      if (accounts) localStorage.setItem('data-accounts', JSON.stringify(data.accounts))
-      if (balances) localStorage.setItem('data-balances', JSON.stringify(data.balances))
-      if (goals) localStorage.setItem('financialGoals', JSON.stringify(data.goals))
-      if (gwGoals) localStorage.setItem('gw-goals', JSON.stringify(data.gwGoals))
-      if (profile) localStorage.setItem('user-profile', JSON.stringify(data.profile))
-      if (viewMode) localStorage.setItem('goal-view-mode', viewMode)
-    },
-    {
-      goals,
-      gwGoals,
-      accounts,
-      balances,
-      profile,
-      viewMode,
-      data: {
-        accounts: ACCOUNTS,
-        balances: BALANCES,
-        goals: customGoals ?? GOALS,
-        gwGoals: customGwGoals ?? GW_GOALS,
-        profile: PROFILE,
-      },
-    },
-  )
+  if (accounts) entries.push({ path: 'accounts.json', data: data.accounts, type: 'json' })
+  if (balances) entries.push(...balanceEntriesToEntries(data.balances))
+  if (goals || gwGoals) {
+    entries.push(goalsToEntry(goals ? data.goals : [], gwGoals ? data.gwGoals : []))
+  }
+  if (profile) entries.push({ path: 'profile.json', data: data.profile, type: 'json' })
+
+  await seedFileStore(page, entries)
+  await page.addInitScript(({ viewMode }) => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    localStorage.setItem('onboarding-dismissed', '1')
+    if (viewMode) localStorage.setItem('goal-view-mode', viewMode)
+  }, { viewMode })
 }
 
 export async function seedEmptyGoals(page: Page) {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
     localStorage.setItem('onboarding-dismissed', '1')
   })
@@ -159,20 +156,20 @@ export async function seedEmptyGoals(page: Page) {
 export async function seedCorruptedGoals(page: Page) {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
     localStorage.setItem('onboarding-dismissed', '1')
-    localStorage.setItem('financialGoals', 'not-valid-json{{{')
   })
 }
 
 export async function seedMalformedGoal(page: Page) {
+  await seedFileStore(page, [
+    goalsToEntry([{ id: 99, createdAt: '2020-01-01T00:00:00.000Z', birthday: '1992-03-15' }], []),
+  ])
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
     localStorage.setItem('onboarding-dismissed', '1')
-    localStorage.setItem(
-      'financialGoals',
-      JSON.stringify([{ id: 99, createdAt: '2020-01-01T00:00:00.000Z', birthday: '1992-03-15' }]),
-    )
   })
 }

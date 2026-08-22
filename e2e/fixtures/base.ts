@@ -15,7 +15,16 @@ import { test as base, expect } from '@playwright/test'
  * registered AFTER this one — Playwright uses last-registered-wins order.
  */
 
-export const test = base.extend<{ featureFlagsMock: void }>({
+export const test = base.extend<{ featureFlagsMock: void; e2eMode: void }>({
+  e2eMode: [
+    async ({ page }, use) => {
+      await page.addInitScript(() => {
+        localStorage.setItem('_e2eMode', '1')
+      })
+      await use()
+    },
+    { auto: true },
+  ],
   featureFlagsMock: [
     async ({ page }, use) => {
       await page.route(

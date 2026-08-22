@@ -1,0 +1,282 @@
+/* ── Growth Settings Modal ────────────────────────────────── */
+
+.growth-settings {
+  display: inline-flex;
+}
+
+.growth-settings-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0 0.75rem;
+  height: 36px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.growth-settings-toggle:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--accent-border);
+}
+
+.growth-settings-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.growth-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.growth-modal {
+  width: min(100%, 480px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) + 2px);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.growth-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.growth-modal-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.growth-settings-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.growth-settings-section {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.growth-settings-section-title {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.growth-settings-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.growth-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.growth-settings-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.growth-settings-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  min-width: 160px;
+}
+
+.growth-numeric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.growth-settings-unit {
+  display: inline-block;
+  width: 28px;
+  text-align: left;
+  font-size: var(--fs-sm);
+  font-feature-settings: 'tnum';
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.growth-settings-input-wrap--dollar .growth-settings-unit:first-child {
+  width: auto;
+  text-align: right;
+}
+
+.growth-numeric-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s;
+  flex-shrink: 0;
+}
+
+.growth-numeric-btn:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right: none;
+}
+
+.growth-numeric-btn:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-left: none;
+}
+
+.growth-numeric-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--accent-border);
+}
+
+.growth-numeric-btn:active {
+  background: var(--color-surface-alt);
+}
+
+.growth-numeric-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+.growth-settings-input-wrap input,
+body.modern-design .growth-settings-input-wrap input:not([type='checkbox']):not([type='radio']) {
+  width: 52px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid var(--color-border);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  font-size: var(--fs-sm);
+  font-feature-settings: 'tnum';
+  text-align: center;
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color 0.15s;
+  box-shadow: none;
+}
+
+.growth-settings-input-wrap input:focus,
+body.modern-design .growth-settings-input-wrap input:not([type='checkbox']):not([type='radio']):focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--color-surface);
+  box-shadow: none;
+  z-index: 1;
+}
+
+.growth-settings-input-wrap input::-webkit-inner-spin-button,
+.growth-settings-input-wrap input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+body.modern-design .growth-settings-input-wrap input:not([type='checkbox']):not([type='radio']):hover {
+  border-color: var(--accent-border);
+}
+
+.growth-settings-input-wrap--dollar input,
+body.modern-design .growth-settings-input-wrap--dollar input:not([type='checkbox']):not([type='radio']) {
+  width: 80px;
+}
+
+.growth-settings-input-wrap--age input,
+body.modern-design .growth-settings-input-wrap--age input:not([type='checkbox']):not([type='radio']) {
+  width: 52px;
+}
+
+/* Footer */
+.growth-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.action-btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.action-btn--primary:hover {
+  background: var(--accent-dark, var(--accent));
+  border-color: var(--accent-dark, var(--accent));
+}
+
+@media (max-width: 600px) {
+  .growth-modal-backdrop {
+    padding: 0.75rem;
+  }
+
+  .growth-modal {
+    width: 100%;
+  }
+
+  .growth-settings-body {
+    padding: 1rem;
+    gap: 1rem;
+  }
+}

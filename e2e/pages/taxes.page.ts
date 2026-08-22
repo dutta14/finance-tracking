@@ -33,19 +33,19 @@ export class TaxesPage {
     this.page = page
 
     this.heading = page.locator('.tax-heading')
-    this.yearLabel = page.locator('.tax-year-label')
-    this.prevYearBtn = page.locator('.tax-year-nav .tax-year-btn').first()
-    this.nextYearBtn = page.locator('.tax-year-nav .tax-year-btn').nth(1)
+    this.yearLabel = page.locator('.budget-year-label')
+    this.prevYearBtn = page.locator('.budget-year-nav .budget-year-btn').first()
+    this.nextYearBtn = page.locator('.budget-year-nav .budget-year-btn').nth(1)
 
     this.emptyState = page.locator('.tax-empty-state')
     this.emptyStateHeading = page.locator('.tax-empty-state h2')
-    this.createYearBtn = page.locator('.tax-empty-state .tax-btn--primary')
-    this.importTemplateBtn = page.locator('.tax-empty-state .tax-btn--outline', { hasText: /Import from Template/ })
+    this.createYearBtn = page.locator('.tax-empty-state .action-btn', { hasText: /Create .* Tax Prep/ })
+    this.importTemplateBtn = page.locator('.tax-empty-state .action-btn', { hasText: /Import from Template/ })
 
     this.body = page.locator('.tax-body')
     this.templateBar = page.locator('.tax-template-bar')
-    this.saveTemplateBtn = page.locator('.tax-template-bar .tax-btn--outline', { hasText: /Save as Template/ })
-    this.deleteYearBtn = page.locator('.tax-template-bar .tax-btn--danger', { hasText: /Delete Year/ })
+    this.saveTemplateBtn = page.locator('.tax-header-actions .action-btn', { hasText: /Save as Template/ })
+    this.deleteYearBtn = page.locator('.tax-header-actions .action-btn--danger', { hasText: /Delete Year/ })
 
     this.sections = page.locator('.tax-section')
     this.items = page.locator('.tax-item')
@@ -80,7 +80,7 @@ export class TaxesPage {
 
   /** Click the section's "+ Add Item" button and wait for the modal. */
   async openAddItemModal(sectionTitle: string | RegExp) {
-    await this.section(sectionTitle).locator('.tax-btn--outline', { hasText: '+ Add Item' }).click()
+    await this.section(sectionTitle).locator('.action-btn', { hasText: '+ Add Item' }).click()
     await this.addItemInput.waitFor({ state: 'visible' })
   }
 
@@ -88,7 +88,7 @@ export class TaxesPage {
   async addCustomItem(sectionTitle: string | RegExp, label: string) {
     await this.openAddItemModal(sectionTitle)
     await this.addItemInput.fill(label)
-    await this.page.locator('.tax-modal .tax-btn--primary', { hasText: /^Add$/ }).click()
+    await this.page.locator('.tax-modal .action-btn', { hasText: /^Add$/ }).click()
     await this.modalOverlay.waitFor({ state: 'hidden' })
   }
 
@@ -113,7 +113,9 @@ export class TaxesPage {
 
   /** Click the row's × remove-item button. */
   async removeItem(label: string | RegExp) {
-    await this.item(label).locator('.tax-item-actions .tax-btn--muted').click()
+    const row = this.item(label)
+    await row.locator('.tax-item-actions .tax-btn--muted').click()
+    await row.locator('.tax-overflow-item--danger').click()
   }
 
   /** Double-click the label text to enter rename mode. */
@@ -123,7 +125,9 @@ export class TaxesPage {
 
   /** Click the pencil ✎ button to enter rename mode. */
   async startRenameByPencil(label: string | RegExp) {
-    await this.item(label).locator('.tax-rename-btn').click()
+    const row = this.item(label)
+    await row.locator('.tax-item-actions .tax-btn--muted').click()
+    await row.locator('.tax-overflow-item', { hasText: 'Rename' }).click()
   }
 
   /** The active rename input (only one can be open at a time). */
@@ -145,7 +149,7 @@ export class TaxesPage {
 
   /** Confirm deletion of the current year. */
   async confirmDeleteYear() {
-    await this.confirmDeleteModal.locator('.tax-btn--danger').click()
+    await this.confirmDeleteModal.locator('.action-btn--danger').click()
     await this.confirmDeleteModal.waitFor({ state: 'hidden' })
   }
 }

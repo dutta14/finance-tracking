@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { balanceEntriesToEntries, seedFileStore } from './seed-filestore'
 
 export const ACCOUNTS = [
   {
@@ -113,64 +114,62 @@ export async function seedNetWorthData(
 ) {
   const { accounts = ACCOUNTS, balances = BALANCES, allowCsvImport } = options
 
-  await page.addInitScript(
-    ({ data }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
-      if (data.accounts) localStorage.setItem('data-accounts', JSON.stringify(data.accounts))
-      if (data.balances) localStorage.setItem('data-balances', JSON.stringify(data.balances))
-      if (data.allowCsvImport) localStorage.setItem('allowCsvImport', '1')
-    },
-    {
-      data: {
-        accounts,
-        balances,
-        allowCsvImport: allowCsvImport ?? true,
-      },
-    },
-  )
+  await seedFileStore(page, [
+    { path: 'accounts.json', data: accounts, type: 'json' },
+    ...balanceEntriesToEntries(balances),
+  ])
+  await page.addInitScript(({ allowCsvImport }) => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    if (allowCsvImport) localStorage.setItem('allowCsvImport', '1')
+  }, { allowCsvImport: allowCsvImport ?? true })
 }
 
 export async function seedEmptyState(page: Page) {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
   })
 }
 
 export async function seedCorruptedData(page: Page, variant: 'malformed-json' | 'corrupted-balances' | 'missing-keys') {
-  await page.addInitScript(
-    ({ variant }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
 
-      if (variant === 'malformed-json') {
-        localStorage.setItem('data-accounts', '{not valid json[')
-        localStorage.setItem('data-balances', '{also broken')
-      } else if (variant === 'corrupted-balances') {
-        localStorage.setItem(
-          'data-accounts',
-          JSON.stringify([
-            {
-              id: 1,
-              name: 'Test Account',
-              type: 'retirement',
-              owner: 'primary',
-              status: 'active',
-              goalType: 'fi',
-              nature: 'asset',
-              allocation: 'us-stock',
-            },
-          ]),
-        )
-        localStorage.setItem(
-          'data-balances',
-          JSON.stringify([{ id: 1, accountId: 999, month: '2025-01', balance: 'not-a-number' }]),
-        )
-      } else if (variant === 'missing-keys') {
-        localStorage.setItem('data-accounts', JSON.stringify([{ id: 1, name: 'Partial Account' }]))
-      }
-    },
-    { variant },
-  )
+  if (variant === 'corrupted-balances') {
+    entries.push({
+      path: 'accounts.json',
+      data: [
+        {
+          id: 1,
+          name: 'Test Account',
+          type: 'retirement',
+          owner: 'primary',
+          status: 'active',
+          goalType: 'fi',
+          nature: 'asset',
+          allocation: 'us-stock',
+        },
+      ],
+      type: 'json',
+    })
+    entries.push({
+      path: 'balances/2025.csv',
+      data: [
+        ['month', 'accountId', 'balance'],
+        ['2025-01', '999', 'not-a-number'],
+      ],
+      type: 'csv',
+    })
+  } else if (variant === 'missing-keys') {
+    entries.push({ path: 'accounts.json', data: [{ id: 1, name: 'Partial Account' }], type: 'json' })
+  }
+
+  await seedFileStore(page, entries)
+  await page.addInitScript(() => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+  })
 }

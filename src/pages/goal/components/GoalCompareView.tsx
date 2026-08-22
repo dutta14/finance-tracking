@@ -2,7 +2,7 @@ import { FC, useMemo } from 'react'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { getLatestGoalTotals } from '../../data/types'
 import { getFiTarget } from '../utils/goalCalculations'
-import { useGrowthSettings } from '../hooks/useGrowthSettings'
+import { useGrowthSettings } from '../../../hooks/useGrowthSettings'
 import { useData } from '../../../contexts/DataContext'
 import '../../../styles/GoalCompareView.css'
 

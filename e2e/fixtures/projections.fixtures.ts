@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { balanceEntriesToEntries, goalsToEntry, seedFileStore } from './seed-filestore'
 
 export const MOBILE_VIEWPORT = { width: 375, height: 812 }
 
@@ -170,28 +171,28 @@ export async function seedProjectionData(page: Page, options: ProjectionSeedOpti
     darkMode,
   } = options
 
-  await page.addInitScript(
-    ({ goals, accounts, balances, budgetSummary, profile, darkMode }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
-      localStorage.setItem('onboarding-dismissed', '1')
+  const entries = [
+    goalsToEntry(goals, []),
+    { path: 'accounts.json', data: accounts, type: 'json' as const },
+    ...balanceEntriesToEntries(balances),
+  ]
+  if (budgetSummary) {
+    entries.push({ path: 'budget/summary-cache.json', data: budgetSummary, type: 'json' })
+  }
+  if (profile) {
+    entries.push({ path: 'profile.json', data: profile, type: 'json' })
+  }
 
-      localStorage.setItem('financialGoals', JSON.stringify(goals))
-      localStorage.setItem('data-accounts', JSON.stringify(accounts))
-      localStorage.setItem('data-balances', JSON.stringify(balances))
-
-      if (budgetSummary) {
-        localStorage.setItem('budget-summary', JSON.stringify(budgetSummary))
-      }
-      if (profile) {
-        localStorage.setItem('user-profile', JSON.stringify(profile))
-      }
-      if (darkMode !== undefined) {
-        localStorage.setItem('darkMode', darkMode ? '1' : '0')
-      }
-    },
-    { goals, accounts, balances, budgetSummary, profile, darkMode },
-  )
+  await seedFileStore(page, entries)
+  await page.addInitScript(({ darkMode }) => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    localStorage.setItem('onboarding-dismissed', '1')
+    if (darkMode !== undefined) {
+      localStorage.setItem('darkMode', darkMode ? '1' : '0')
+    }
+  }, { darkMode })
 }
 
 export async function seedGoalReachedState(page: Page) {

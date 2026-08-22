@@ -9,8 +9,8 @@ import GoalMixer from './components/GoalMixer'
 import GoalDetail from './components/GoalDetail'
 import { useFormData } from './hooks/useFormData'
 import { useEditingState } from './hooks/useEditingState'
-import { useGrowthSettings } from './hooks/useGrowthSettings'
-import '../../styles/GrowthSettings.css'
+import { useGrowthSettings } from '../../hooks/useGrowthSettings'
+import GrowthSettingsPanel from '../../components/GrowthSettingsPanel'
 
 import FICalculator from '../tools/components/FICalculator'
 import LeverageGoal from './components/LeverageGoal'
@@ -100,9 +100,14 @@ const Goal: FC = () => {
                   Pay Down
                 </NavLink>
                 <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
-                  FI Calculator
+                  FIRE Calculator
                 </NavLink>
               </nav>
+              {subPath === 'calculator' && (
+                <div className="goal-header-actions">
+                  <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
+                </div>
+              )}
             </div>
           </>
         )}

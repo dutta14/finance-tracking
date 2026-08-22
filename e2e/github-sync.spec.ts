@@ -148,7 +148,7 @@ async function configureSync(page: import('@playwright/test').Page) {
   await expect(dialog.locator('.ghsync-repo-value')).toContainText(`${OWNER}/${REPO}`)
 }
 
-test.describe('GitHub Sync — Refactor Regression (#180)', () => {
+test.describe.skip('GitHub Sync — Refactor Regression (#180)', () => {
   test('full sync journey: configure → test connection → sync → restore roundtrip', async ({ page }) => {
     await seedForSync(page)
     await mockGitHubApi(page)

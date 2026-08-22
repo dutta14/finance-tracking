@@ -25,9 +25,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 2rem 0 1rem 0;
+  padding: 1.25rem 0 0.5rem;
   border-bottom: 1px solid var(--color-border);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -70,8 +70,9 @@
 .goal-detail-title {
   margin: 0;
   font-size: var(--fs-2xl);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   line-height: 1.25;
+  letter-spacing: -0.3px;
   color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
@@ -212,6 +213,7 @@
 button.goal-summary-toggleable {
   all: unset;
   cursor: pointer;
+  color: inherit;
   text-decoration: underline dashed var(--color-text-secondary, #6b7280);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;

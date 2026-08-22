@@ -410,6 +410,8 @@ body.modern-design .home-greeting h1,
 body.modern-design .welcome-title,
 body.modern-design .tax-heading,
 body.modern-design .goal-header h1,
+body.modern-design .goal-detail-title,
+body.modern-design .goal-detail-rename-input,
 body.modern-design .alloc-page-title,
 body.modern-design .data-header h1,
 body.modern-design .drive-title,
@@ -441,8 +443,8 @@ body.modern-design .settings-section h3 {
   gap: 0.35rem;
 }
 .action-btn:hover {
-  background: var(--color-surface-alt);
-  border-color: var(--color-border);
+  background: var(--accent-lighter);
+  border-color: var(--accent-light);
 }
 .action-btn:disabled {
   opacity: 0.4;
