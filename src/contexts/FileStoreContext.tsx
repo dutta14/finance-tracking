@@ -10,10 +10,11 @@ const DEMO_FLAG = '_demoMode'
 const E2E_FLAG = '_e2eMode'
 const E2E_SNAPSHOT_KEY = '__e2eSeedData'
 
-type E2EWindow = Window & typeof globalThis & {
-  __e2eSeedData?: Record<string, string>
-  __e2eFileStore?: MemoryFileStore
-}
+type E2EWindow = Window &
+  typeof globalThis & {
+    __e2eSeedData?: Record<string, string>
+    __e2eFileStore?: MemoryFileStore
+  }
 
 type E2ESnapshotEntry = {
   type: 'text' | 'binary'
@@ -151,7 +152,10 @@ export const FileStoreProvider: FC<{ children: ReactNode }> = ({ children }) => 
             if (parsed && typeof parsed === 'object') snapshot = parsed
           } else if (e2eWindow.__e2eSeedData) {
             snapshot = Object.fromEntries(
-              Object.entries(e2eWindow.__e2eSeedData).map(([path, content]) => [path, { type: 'text' as const, content }]),
+              Object.entries(e2eWindow.__e2eSeedData).map(([path, content]) => [
+                path,
+                { type: 'text' as const, content },
+              ]),
             )
             localStorage.setItem(E2E_SNAPSHOT_KEY, JSON.stringify(snapshot))
           }
@@ -181,7 +185,9 @@ export const FileStoreProvider: FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
 
-        const syncTaxIndexedDB = (store: { years?: Record<string, { items?: Array<{ files?: Array<{ id?: string }> }> }> }) => {
+        const syncTaxIndexedDB = (store: {
+          years?: Record<string, { items?: Array<{ files?: Array<{ id?: string }> }> }>
+        }) => {
           void (async () => {
             try {
               const desiredIds = new Set<string>()
@@ -193,7 +199,8 @@ export const FileStoreProvider: FC<{ children: ReactNode }> = ({ children }) => 
                 const req = indexedDB.open('finance-tracking-files', 1)
                 req.onupgradeneeded = () => {
                   const next = req.result
-                  if (!next.objectStoreNames.contains('tax-files')) next.createObjectStore('tax-files', { keyPath: 'id' })
+                  if (!next.objectStoreNames.contains('tax-files'))
+                    next.createObjectStore('tax-files', { keyPath: 'id' })
                 }
                 req.onsuccess = () => resolve(req.result)
                 req.onerror = () => reject(req.error)
@@ -254,8 +261,8 @@ export const FileStoreProvider: FC<{ children: ReactNode }> = ({ children }) => 
           writeLegacy('user-profile', parseJSONText('profile.json'))
 
           const goals = parseJSONText<{ financialGoals?: unknown[]; gwGoals?: unknown[] }>('goals.json')
-          writeLegacy('financialGoals', goals ? goals.financialGoals ?? [] : null)
-          writeLegacy('gw-goals', goals ? goals.gwGoals ?? [] : null)
+          writeLegacy('financialGoals', goals ? (goals.financialGoals ?? []) : null)
+          writeLegacy('gw-goals', goals ? (goals.gwGoals ?? []) : null)
 
           const balanceFiles = Object.entries(snapshot)
             .filter(([path, entry]) => entry.type === 'text' && /^balances\/\d{4}\.csv$/.test(path))
@@ -326,7 +333,9 @@ export const FileStoreProvider: FC<{ children: ReactNode }> = ({ children }) => 
             }
             const taxStore = { years }
             writeLegacy('tax-store', taxStore)
-            syncTaxIndexedDB(taxStore as { years?: Record<string, { items?: Array<{ files?: Array<{ id?: string }> }> }> })
+            syncTaxIndexedDB(
+              taxStore as { years?: Record<string, { items?: Array<{ files?: Array<{ id?: string }> }> }> },
+            )
           } else {
             writeLegacy('tax-store', null)
             syncTaxIndexedDB({ years: {} })
