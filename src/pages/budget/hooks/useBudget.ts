@@ -76,7 +76,7 @@ export function useBudget() {
   const storeRef = useRef(store)
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
   const [viewMode, setViewMode] = useState<BudgetViewMode>('spreadsheet')
-  const [spreadsheetMode, setSpreadsheetMode] = useState<SpreadsheetMode>('detailed')
+  const [spreadsheetMode, setSpreadsheetMode] = useState<SpreadsheetMode>('aggregated')
 
   useEffect(() => {
     let cancelled = false

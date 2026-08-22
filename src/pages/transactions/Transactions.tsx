@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { loadBudgetStore, saveBudgetStore, saveCSVForMonth } from '../budget/utils/budgetStorage'
 import { parseCSV } from '../budget/utils/csvParser'
@@ -194,6 +195,7 @@ type DatePickerFlyoutProps = {
   value: string
   onSelect: (date: string) => void
   onCancel: () => void
+  style?: React.CSSProperties
 }
 
 const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -212,7 +214,7 @@ const MONTH_NAMES = [
   'December',
 ]
 
-const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel }) => {
+const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel, style }) => {
   const initialDate = new Date(`${value}T00:00:00`)
   const [viewYear, setViewYear] = useState(initialDate.getFullYear())
   const [viewMonth, setViewMonth] = useState(initialDate.getMonth())
@@ -248,6 +250,7 @@ const DatePickerFlyout: FC<DatePickerFlyoutProps> = ({ value, onSelect, onCancel
       className="txn-date-flyout"
       role="dialog"
       aria-label="Pick a date"
+      style={style}
       onKeyDown={e => {
         if (e.key === 'Escape') onCancel()
       }}
@@ -327,6 +330,8 @@ const Transactions: FC = () => {
   const datePickerRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const categoryEditorRef = useRef<HTMLDivElement>(null)
+  const [categoryEditorPos, setCategoryEditorPos] = useState<{ top: number; left: number } | null>(null)
+  const [dateEditorPos, setDateEditorPos] = useState<{ top: number; left: number } | null>(null)
   const dateEditorRef = useRef<HTMLDivElement>(null)
   const groupCheckboxRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const sectionCheckboxRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -459,7 +464,8 @@ const Transactions: FC = () => {
     if (!editingDate) return
 
     const handleOutsideClick = (event: MouseEvent) => {
-      if (dateEditorRef.current && !dateEditorRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement
+      if (dateEditorRef.current && !dateEditorRef.current.contains(target) && !target.closest('.txn-date-flyout')) {
         setEditingDate(null)
       }
     }
@@ -827,9 +833,14 @@ const Transactions: FC = () => {
     })
   }, [selectedCategories, someSelected, visibleCategoryFilterGroups, filterSections])
 
-  const openCategoryEditor = (key: string): void => {
+  const openCategoryEditor = (key: string, event: React.MouseEvent<HTMLButtonElement>): void => {
     setCategoryEditSearch('')
-    setEditingCategory(current => (current?.key === key ? null : { key }))
+    const rect = event.currentTarget.getBoundingClientRect()
+    setEditingCategory(current => {
+      if (current?.key === key) return null
+      setCategoryEditorPos({ top: rect.bottom + 8, left: rect.right })
+      return { key }
+    })
   }
 
   const reassignTransactionCategory = async (transaction: LoadedTransaction, nextCategory: string): Promise<void> => {
@@ -1326,28 +1337,33 @@ const Transactions: FC = () => {
                               type="button"
                               className={`txn-row-date-button${isEditingDateRow ? ' txn-row-date-button--active' : ''}`}
                               aria-label={`Edit date for ${description}`}
-                              onClick={() =>
-                                isEditingDateRow
-                                  ? setEditingDate(null)
-                                  : setEditingDate({ key: rowKey, value: transaction.date })
-                              }
+                              onClick={e => {
+                                if (isEditingDateRow) {
+                                  setEditingDate(null)
+                                } else {
+                                  const rect = e.currentTarget.getBoundingClientRect()
+                                  setDateEditorPos({ top: rect.bottom + 4, left: rect.left })
+                                  setEditingDate({ key: rowKey, value: transaction.date })
+                                }
+                              }}
                             >
                               {new Date(`${transaction.date}T00:00:00`).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                               })}
                             </button>
-                            {isEditingDateRow && (
+                            {isEditingDateRow && createPortal(
                               <DatePickerFlyout
                                 value={editingDate.value}
                                 onSelect={nextDate => reassignTransactionDate(transaction, nextDate)}
                                 onCancel={() => setEditingDate(null)}
-                              />
+                                style={dateEditorPos ? { top: dateEditorPos.top, left: dateEditorPos.left } : undefined}
+                              />,
+                              document.body
                             )}
                           </div>
                           <div
                             className={`txn-row-category-cell${isEditingCategory ? ' txn-row-category-cell--open' : ''}`}
-                            ref={isEditingCategory ? categoryEditorRef : undefined}
                           >
                             <button
                               type="button"
@@ -1355,7 +1371,7 @@ const Transactions: FC = () => {
                               aria-haspopup="dialog"
                               aria-expanded={isEditingCategory}
                               aria-label={`Edit category for ${description}`}
-                              onClick={() => openCategoryEditor(rowKey)}
+                              onClick={e => openCategoryEditor(rowKey, e)}
                             >
                               <span className="txn-row-category-text">{transaction.category || 'Uncategorized'}</span>
                               <span className="txn-row-category-edit-icon" aria-hidden="true">
@@ -1373,11 +1389,13 @@ const Transactions: FC = () => {
                                 </svg>
                               </span>
                             </button>
-                            {isEditingCategory && (
+                            {isEditingCategory && createPortal(
                               <div
                                 className="txn-category-editor"
+                                ref={categoryEditorRef}
                                 role="dialog"
                                 aria-label={`Edit category for ${description}`}
+                                style={categoryEditorPos ? { top: categoryEditorPos.top, left: categoryEditorPos.left } : undefined}
                               >
                                 <input
                                   className="txn-category-editor-search-input"
@@ -1411,7 +1429,8 @@ const Transactions: FC = () => {
                                     <p className="txn-category-editor-empty">No matching categories</p>
                                   )}
                                 </div>
-                              </div>
+                              </div>,
+                              document.body
                             )}
                           </div>
                           <span className={`txn-row-amount${transaction.amount > 0 ? ' txn-amount-positive' : ''}`}>
