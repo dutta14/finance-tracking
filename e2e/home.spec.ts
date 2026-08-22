@@ -392,9 +392,10 @@ test.describe('Home Dashboard E2E', () => {
 
   test.describe('Data Corruption & Resilience', () => {
     test('app renders home page when localStorage has malformed data-accounts', async ({ page }) => {
-      // C5 Test 21: Corrupted data-accounts triggers error boundary or graceful fallback
+      // Legacy localStorage keys are ignored in E2E file-store mode.
       await page.addInitScript(() => {
         localStorage.clear()
+        localStorage.setItem('_e2eMode', '1')
         localStorage.setItem('encryption-enabled', '0')
         localStorage.setItem('data-accounts', '{{{invalid json')
         localStorage.setItem('data-balances', '[]')
@@ -404,30 +405,8 @@ test.describe('Home Dashboard E2E', () => {
       const home = new HomePage(page)
       await home.goto()
 
-      // The app gracefully handles JSON parse errors for data-accounts.
-      // Page renders with fallback empty data. Verify greeting or error boundary.
-      const pageErrorBoundary = page.locator('.error-boundary[role="alert"]')
-      const cardErrorBoundary = home.errorCard
-
-      // Wait briefly for rendering to settle
-      await Promise.race([
-        pageErrorBoundary.waitFor({ state: 'visible', timeout: 5000 }),
-        cardErrorBoundary.waitFor({ state: 'visible', timeout: 5000 }),
-        home.greeting.waitFor({ state: 'visible', timeout: 5000 }),
-      ])
-
-      const pageError = await pageErrorBoundary.isVisible()
-      const cardError = await cardErrorBoundary.isVisible()
-
-      if (pageError) {
-        await expect(pageErrorBoundary).toHaveAttribute('role', 'alert')
-      } else if (cardError) {
-        await expect(cardErrorBoundary).toHaveAttribute('role', 'alert')
-      } else {
-        // Graceful fallback: contexts parsed with error fallback to defaults
-        await expect(home.greeting).toBeVisible()
-        await expect(home.cardGrid).toBeVisible()
-      }
+      await expect(home.greeting).toBeVisible()
+      await expect(home.cardGrid).toBeVisible()
     })
 
     test('app renders when budget-store is corrupted', async ({ page }) => {

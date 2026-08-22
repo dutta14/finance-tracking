@@ -18,17 +18,20 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     const rows = nw.modal.locator('tbody tr')
     await expect(rows).toHaveCount(5)
 
-    // Step 3: Filter by active → only 4 rows
-    await nw.modal.locator('button.tab-btn', { hasText: /^Active/ }).click()
-    await expect(rows).toHaveCount(4)
-
-    // Filter by inactive → only 1 row (Old Savings)
-    await nw.modal.locator('button.tab-btn', { hasText: 'Inactive' }).click()
+    // Step 3: Filter by inactive via the Status column dropdown
+    await nw.modal.locator('button[title="Filter Status"]').click()
+    await nw.modal.getByRole('checkbox', { name: 'Inactive' }).check()
     await expect(rows).toHaveCount(1)
     await expect(rows.first()).toContainText('Old Savings')
+    await nw.modal.getByRole('button', { name: 'Clear filter' }).click()
+    await expect(rows).toHaveCount(5)
 
-    // Back to all
-    await nw.modal.locator('button.tab-btn', { hasText: 'All' }).click()
+    // Filter by inactive again to prove the toggle is stable
+    await nw.modal.locator('button[title="Filter Status"]').click()
+    await nw.modal.getByRole('checkbox', { name: 'Inactive' }).check()
+    await expect(rows).toHaveCount(1)
+    await expect(rows.first()).toContainText('Old Savings')
+    await nw.modal.getByRole('button', { name: 'Clear filter' }).click()
     await expect(rows).toHaveCount(5)
 
     // Step 4: Sort by name — click sort button, verify order changes
@@ -56,7 +59,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(groupCards).toHaveCount(4)
 
     // Step 7: Create a new group
-    const newGroupBtn = nw.modal.locator('.data-group-add-btn')
+    const newGroupBtn = nw.modal.getByRole('button', { name: '+ Add Group' })
     await newGroupBtn.click()
     const groupInput = nw.modal.locator('.data-group-rename-input')
     await groupInput.fill('New Test Group')
@@ -78,7 +81,7 @@ test.describe('AccountsModal — Journey 2 (Refactored Components)', () => {
     await expect(nw.modal.locator('.data-group-card-name', { hasText: /^Retirement$/ })).toHaveCount(0)
 
     // Step 9: Leave the inline accounts manager
-    await nw.modal.locator('button.tab-btn', { hasText: /^All/ }).click()
+    await nw.modal.locator('button[role="tab"]', { hasText: /^Accounts$/ }).click()
     await nw.chartsTab.click()
     await expect(nw.modal).toBeHidden()
   })

@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { seedFileStore } from './seed-filestore'
 
 /**
  * Seed helpers for the navigation E2E suites (#141 / 61a–d).
@@ -45,18 +46,24 @@ export function hashUrl(path: string): string {
  */
 export async function seedNav(page: Page, options: NavSeedOptions = {}): Promise<void> {
   const { profileName, extra } = options
-  const profile = profileName
-    ? JSON.stringify({ name: profileName, birthday: '', avatarDataUrl: '', partner: null })
-    : null
+  if (profileName) {
+    await seedFileStore(page, [
+      {
+        path: 'profile.json',
+        data: { name: profileName, birthday: '', avatarDataUrl: '', partner: null },
+        type: 'json',
+      },
+    ])
+  }
   await page.addInitScript(
-    ({ profile, extra }) => {
+    ({ extra }) => {
       localStorage.clear()
+      localStorage.setItem('_e2eMode', '1')
       localStorage.setItem('encryption-enabled', '0')
       localStorage.setItem('onboarding-dismissed', '1')
-      if (profile) localStorage.setItem('user-profile', profile)
       if (extra) for (const [k, v] of Object.entries(extra)) localStorage.setItem(k, v)
     },
-    { profile, extra: extra ?? null },
+    { extra: extra ?? null },
   )
 }
 

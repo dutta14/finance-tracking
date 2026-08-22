@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { seedFileStore, taxStoreToEntries } from './seed-filestore'
 
 /**
  * Seed data helpers for Taxes Page E2E tests.
@@ -214,23 +215,23 @@ export const STANDARD_TEMPLATE: TaxTemplate = {
  */
 export async function seedTaxes(page: Page, options: SeedOptions = {}) {
   const { store, templates, profile, accounts, darkMode } = options
-  const storeRaw =
-    typeof store === 'string' ? store : store === undefined || store === null ? null : JSON.stringify(store)
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
 
-  await page.addInitScript(
-    ({ storeRaw, templates, profile, accounts, darkMode }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
-      localStorage.setItem('onboarding-dismissed', '1')
+  if (store && typeof store === 'object') {
+    entries.push(...taxStoreToEntries(store as Record<string, unknown>))
+  }
+  if (templates) entries.push({ path: 'taxes/templates.json', data: templates, type: 'json' })
+  if (profile) entries.push({ path: 'profile.json', data: profile, type: 'json' })
+  if (accounts) entries.push({ path: 'accounts.json', data: accounts, type: 'json' })
 
-      if (storeRaw !== null) localStorage.setItem('tax-store', storeRaw)
-      if (templates) localStorage.setItem('tax-templates', JSON.stringify(templates))
-      if (profile) localStorage.setItem('user-profile', JSON.stringify(profile))
-      if (accounts) localStorage.setItem('data-accounts', JSON.stringify(accounts))
-      if (darkMode !== undefined) localStorage.setItem('darkMode', darkMode ? '1' : '0')
-    },
-    { storeRaw, templates: templates ?? null, profile: profile ?? null, accounts: accounts ?? null, darkMode },
-  )
+  await seedFileStore(page, entries)
+  await page.addInitScript(({ darkMode }) => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    localStorage.setItem('onboarding-dismissed', '1')
+    if (darkMode !== undefined) localStorage.setItem('darkMode', darkMode ? '1' : '0')
+  }, { darkMode })
 }
 
 /**

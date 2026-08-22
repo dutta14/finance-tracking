@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { budgetCsvsToEntries, seedFileStore, taxStoreToEntries } from './seed-filestore'
 
 /**
  * Seed data helpers for Drive Page E2E tests.
@@ -198,17 +199,22 @@ export interface SeedOptions {
 
 export async function seedDrive(page: Page, options: SeedOptions = {}) {
   const { store, taxStore, profile } = options
-  await page.addInitScript(
-    ({ store, taxStore, profile }) => {
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
-      localStorage.setItem('onboarding-dismissed', '1')
-      if (store) localStorage.setItem('budget-store', JSON.stringify(store))
-      if (taxStore) localStorage.setItem('tax-store', JSON.stringify(taxStore))
-      if (profile) localStorage.setItem('user-profile', JSON.stringify(profile))
-    },
-    { store: store ?? null, taxStore: taxStore ?? null, profile: profile ?? null },
-  )
+  const entries = [] as Array<{ path: string; data: unknown; type: 'json' | 'csv' }>
+
+  if (store) {
+    entries.push(...budgetCsvsToEntries(store.csvs))
+    entries.push({ path: 'budget/categories.json', data: { version: 1, years: store.years, categoryGroups: [] }, type: 'json' })
+  }
+  if (taxStore) entries.push(...taxStoreToEntries(taxStore as Record<string, unknown>))
+  if (profile) entries.push({ path: 'profile.json', data: profile, type: 'json' })
+
+  await seedFileStore(page, entries)
+  await page.addInitScript(() => {
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    localStorage.setItem('onboarding-dismissed', '1')
+  })
 }
 
 /** Seed three months (Jan/Feb/Mar 2024) of budget data. */

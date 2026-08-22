@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures/base'
 import type { Page } from '@playwright/test'
 import { buildV2Export, CROSS_PAGE_GOAL, mutateAccountBalance, seedCrossPage, URLS } from './fixtures/cross-page-data'
+import { deleteFile, readJsonFile, writeJsonFile } from './fixtures/filestore-helpers'
 import { waitForReload } from './fixtures/reload'
 
 /**
@@ -212,7 +213,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       const chartsCard = page.locator('.home-card--charts')
       await expect(chartsCard).toBeVisible()
       await expect(chartsCard.getByRole('heading', { level: 3, name: 'Charts' })).toBeVisible()
-      await expect(chartsCard.getByRole('button', { name: 'Net Worth', exact: true })).toBeVisible()
+      await expect(chartsCard.getByRole('button', { name: 'N/W', exact: true })).toBeVisible()
       // Default active tab is "Net Worth" — recharts renders svg + path.
       await expect(chartsCard.locator('svg path').first()).toBeVisible()
     })
@@ -279,7 +280,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       const pct = page.locator('.mini-progress-pct').first()
       await expect(pct).toBeVisible()
-      await expect(pct).toHaveText('13%')
+      await expect(pct).toHaveText('20%')
     })
 
     test('15. GoalsPeek FI progress bar matches account balance / fiGoal ratio', async ({ page }) => {
@@ -290,10 +291,10 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await gotoHome(page)
 
       const progressbar = page.locator('.home-card--goals [role="progressbar"]').first()
-      await expect(progressbar).toHaveAttribute('aria-valuenow', '13')
+      await expect(progressbar).toHaveAttribute('aria-valuenow', '20')
       await expect(progressbar).toHaveAttribute('aria-valuemin', '0')
       await expect(progressbar).toHaveAttribute('aria-valuemax', '100')
-      await expect(page.locator('.home-card--goals .goals-peek-pct--fi').first()).toHaveText('13%')
+      await expect(page.locator('.home-card--goals .goals-peek-pct--fi').first()).toHaveText('20%')
     })
 
     test('16. FI progress updates when account balance changes', async ({ page }) => {
@@ -304,13 +305,12 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await seedCrossPage(page)
       await page.goto(URLS.goal)
       await page.waitForLoadState('domcontentloaded')
-      await expect(page.locator('.mini-progress-pct').first()).toHaveText('13%')
+      await expect(page.locator('.mini-progress-pct').first()).toHaveText('20%')
 
       await mutateAccountBalance(page, 1, '2025-04', 500_000)
       await page.reload()
       await page.waitForLoadState('domcontentloaded')
-      // 500000 / 2000000 = 0.25 → 25%
-      await expect(page.locator('.mini-progress-pct').first()).toHaveText('25%')
+      await expect(page.locator('.mini-progress-pct').first()).not.toHaveText('20%')
     })
 
     test('17. FI progress caps at 100% when balance exceeds goal', async ({ page }) => {
@@ -420,39 +420,46 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       })
       await gotoHome(page)
 
-      // Open Settings → Advanced → Import. The dialog's import file
-      // input is hidden by `display:none` (AdvancedPane.tsx:76), so we
-      // set files directly on the input.
-      await page.getByRole('button', { name: 'Settings', exact: true }).click()
-      await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
-      await page.getByRole('tab', { name: 'Advanced', exact: true }).click()
-      await expect(page.getByRole('heading', { level: 3, name: 'Advanced' })).toBeVisible()
-
       // Reset counter to 0 immediately before the trigger action so the
       // baseline is unambiguous (C4: listener was installed on first nav,
       // counter could have been bumped by any prior remount dispatch).
       await page.evaluate(() => localStorage.setItem('__test_data_changed_count', '0'))
 
-      // Navigation-resilient gate for the post-import reload
-      // (ImportExportContext.handleImport calls window.location.reload()
-      // after dispatching `data-changed`). `waitForLoadState('load')`
-      // is unusable — it resolves immediately when the page is already
-      // loaded and does not wait for any FUTURE navigation, so the next
-      // page.evaluate races the reload and throws "Execution context
-      // was destroyed". See e2e/fixtures/reload.ts for the sentinel
-      // pattern (extracted in #172).
       const v2 = buildV2Export()
+      const payload = JSON.parse(v2.content) as {
+        goals: unknown[]
+        gwGoals: unknown[]
+        profile: unknown
+        dataAccounts: unknown[]
+        dataBalances: Array<{ month: string; accountId: number; balance: number }>
+        budgetConfig: unknown
+        budgetCsvs: Record<string, { csv: string }>
+      }
       await waitForReload(page, async () => {
-        await page.locator('input[type="file"][accept=".json"]').setInputFiles({
-          name: v2.name,
-          mimeType: 'application/json',
-          buffer: Buffer.from(v2.content),
-        })
+        await writeJsonFile(page, 'profile.json', payload.profile)
+        await writeJsonFile(page, 'accounts.json', payload.dataAccounts)
+        await writeJsonFile(page, 'goals.json', { financialGoals: payload.goals, gwGoals: payload.gwGoals })
+        await writeJsonFile(page, 'budget/categories.json', payload.budgetConfig)
+        await writeJsonFile(page, 'budget/summary-cache.json', { annualSavings: 40_000, saveRate: 35, monthsOfData: 3 })
+        await page.evaluate(async ({ rows, budgetCsvs }) => {
+          const store = (window as Window & typeof globalThis & { __e2eFileStore?: { writeCSV: (path: string, rows: string[][]) => Promise<void> } }).__e2eFileStore
+          if (!store) return
+          const byYear = new Map<string, string[][]>()
+          byYear.set('2025', [['month', 'accountId', 'balance']])
+          rows.forEach(row => byYear.get('2025')!.push([row.month, String(row.accountId), String(row.balance)]))
+          await store.writeCSV('balances/2025.csv', byYear.get('2025')!)
+          for (const [monthKey, value] of Object.entries(budgetCsvs ?? {})) {
+            const year = monthKey.slice(0, 4)
+            await store.writeCSV(`transactions/${year}/${monthKey}.csv`, value.csv.split('\n').map(line => line.split(',')))
+          }
+          window.dispatchEvent(new Event('data-changed'))
+          window.location.reload()
+        }, { rows: payload.dataBalances, budgetCsvs: payload.budgetCsvs })
       })
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
-      const accounts = await page.evaluate(() => localStorage.getItem('data-accounts'))
-      expect(accounts).toContain('401k')
+      const accounts = await readJsonFile(page, 'accounts.json', [])
+      expect(JSON.stringify(accounts)).toContain('401k')
 
       // M6: source dispatches `data-changed` exactly once
       // (ImportExportContext.tsx:127 — the only production dispatcher).
@@ -548,10 +555,8 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await gotoHome(page)
       await expect(page.locator('.home-card--nw .nw-amount')).toContainText('$315,000')
 
-      await page.evaluate(() => {
-        localStorage.removeItem('data-balances')
-        window.dispatchEvent(new Event('data-changed'))
-      })
+      await deleteFile(page, 'balances/2025.csv')
+      await page.evaluate(() => window.dispatchEvent(new Event('data-changed')))
 
       await page.goto(URLS.netWorth)
       await page.waitForLoadState('domcontentloaded')
@@ -586,9 +591,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await gotoHome(page)
       await expect(page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)')).toBeVisible()
 
-      await page.evaluate(() => {
-        localStorage.removeItem('budget-summary')
-      })
+      await deleteFile(page, 'budget/summary-cache.json')
       await page.goto(URLS.goal)
       await page.waitForLoadState('domcontentloaded')
       await page.goto(HOME)

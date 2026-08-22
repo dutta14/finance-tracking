@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { balanceEntriesToEntries, budgetCsvsToEntries, goalsToEntry, seedFileStore, taxStoreToEntries } from './seed-filestore'
 
 /**
  * Seed helpers for Settings E2E tests (#128).
@@ -53,16 +54,19 @@ export async function seedProfile(page: Page, options: SeedProfileOptions = {}) 
     avatarDataUrl: '',
     partner: options.partner ?? null,
   }
-  await page.addInitScript(p => {
+  await seedFileStore(page, [{ path: 'profile.json', data: profile, type: 'json' }], {
+    onceKey: '__settings_e2e_filestore_seeded',
+  })
+  await page.addInitScript(() => {
     // Guard so reloads triggered by the app (factory reset, import) don't
     // re-seed and clobber in-app changes the test just made.
     if (sessionStorage.getItem('__settings_e2e_seeded')) return
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
     localStorage.setItem('onboarding-dismissed', '1')
-    localStorage.setItem('user-profile', JSON.stringify(p))
     sessionStorage.setItem('__settings_e2e_seeded', '1')
-  }, profile)
+  })
 }
 
 /**
@@ -73,6 +77,7 @@ export async function seedEmpty(page: Page) {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('__settings_e2e_seeded')) return
     localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
     localStorage.setItem('encryption-enabled', '0')
     localStorage.setItem('onboarding-dismissed', '1')
     sessionStorage.setItem('__settings_e2e_seeded', '1')
@@ -160,50 +165,53 @@ export const ALL_DATA_ALLOCATION_RATIOS = [{ name: 'Stocks', ratio: 0.7 }]
  * settings keys included in the exported `settings` block.
  */
 export async function seedAllData(page: Page) {
-  await page.addInitScript(
-    payload => {
-      if (sessionStorage.getItem('__settings_e2e_seeded')) return
-      localStorage.clear()
-      localStorage.setItem('encryption-enabled', '0')
-      localStorage.setItem('onboarding-dismissed', '1')
+  const payload = {
+    profile: ALL_DATA_PROFILE,
+    goal: ALL_DATA_GOAL,
+    gwGoal: ALL_DATA_GW_GOAL,
+    account: ALL_DATA_ACCOUNT,
+    balance: ALL_DATA_BALANCE,
+    budgetStore: ALL_DATA_BUDGET_STORE,
+    budgetConfig: ALL_DATA_BUDGET_CONFIG,
+    fiSims: ALL_DATA_FI_SIMULATIONS,
+    sgt: ALL_DATA_SGT_OVERRIDES,
+    ratios: ALL_DATA_ALLOCATION_RATIOS,
+    taxStore: ALL_DATA_TAX_STORE,
+    taxTemplate: ALL_DATA_TAX_TEMPLATE,
+  }
 
-      // Settings (non-sensitive)
-      localStorage.setItem('darkMode', '1')
-      localStorage.setItem('accentTheme', 'blue')
-      localStorage.setItem('allowCsvImport', '1')
-      localStorage.setItem('goal-view-mode', 'grid')
-      localStorage.setItem('home-card-order', JSON.stringify([2, 0, 1, 3]))
-
-      // Sensitive: plaintext (encryption disabled)
-      localStorage.setItem('user-profile', JSON.stringify(payload.profile))
-      localStorage.setItem('financialGoals', JSON.stringify([payload.goal]))
-      localStorage.setItem('gw-goals', JSON.stringify([payload.gwGoal]))
-      localStorage.setItem('data-accounts', JSON.stringify([payload.account]))
-      localStorage.setItem('data-balances', JSON.stringify([payload.balance]))
-      localStorage.setItem('budget-store', JSON.stringify(payload.budgetStore))
-      localStorage.setItem('budget-config', JSON.stringify(payload.budgetConfig))
-      localStorage.setItem('fi-simulations', JSON.stringify(payload.fiSims))
-      localStorage.setItem('sgt-overrides', JSON.stringify(payload.sgt))
-      localStorage.setItem('allocation-custom-ratios', JSON.stringify(payload.ratios))
-      localStorage.setItem('tax-store', JSON.stringify(payload.taxStore))
-      localStorage.setItem('tax-templates', JSON.stringify([payload.taxTemplate]))
-      sessionStorage.setItem('__settings_e2e_seeded', '1')
-    },
-    {
-      profile: ALL_DATA_PROFILE,
-      goal: ALL_DATA_GOAL,
-      gwGoal: ALL_DATA_GW_GOAL,
-      account: ALL_DATA_ACCOUNT,
-      balance: ALL_DATA_BALANCE,
-      budgetStore: ALL_DATA_BUDGET_STORE,
-      budgetConfig: ALL_DATA_BUDGET_CONFIG,
-      fiSims: ALL_DATA_FI_SIMULATIONS,
-      sgt: ALL_DATA_SGT_OVERRIDES,
-      ratios: ALL_DATA_ALLOCATION_RATIOS,
-      taxStore: ALL_DATA_TAX_STORE,
-      taxTemplate: ALL_DATA_TAX_TEMPLATE,
-    },
+  await seedFileStore(
+    page,
+    [
+      { path: 'profile.json', data: payload.profile, type: 'json' },
+      goalsToEntry([payload.goal], [payload.gwGoal]),
+      { path: 'accounts.json', data: [payload.account], type: 'json' },
+      ...balanceEntriesToEntries([payload.balance]),
+      ...budgetCsvsToEntries(payload.budgetStore.csvs),
+      { path: 'budget/categories.json', data: { version: 1, ...payload.budgetConfig }, type: 'json' },
+      { path: 'fi-simulations.json', data: payload.fiSims, type: 'json' },
+      { path: 'savings-tracker-overrides.json', data: payload.sgt, type: 'json' },
+      { path: 'allocation.json', data: payload.ratios, type: 'json' },
+      ...taxStoreToEntries(payload.taxStore as Record<string, unknown>),
+      { path: 'taxes/templates.json', data: [payload.taxTemplate], type: 'json' },
+    ],
+    { onceKey: '__settings_e2e_filestore_seeded' },
   )
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('__settings_e2e_seeded')) return
+    localStorage.clear()
+    localStorage.setItem('_e2eMode', '1')
+    localStorage.setItem('encryption-enabled', '0')
+    localStorage.setItem('onboarding-dismissed', '1')
+
+    // Settings (non-sensitive)
+    localStorage.setItem('darkMode', '1')
+    localStorage.setItem('accentTheme', 'blue')
+    localStorage.setItem('allowCsvImport', '1')
+    localStorage.setItem('goal-view-mode', 'grid')
+    localStorage.setItem('home-card-order', JSON.stringify([2, 0, 1, 3]))
+    sessionStorage.setItem('__settings_e2e_seeded', '1')
+  })
 }
 
 // ── Import payload builders ────────────────────────────────────────
