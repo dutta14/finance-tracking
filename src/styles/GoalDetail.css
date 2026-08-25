@@ -16,6 +16,7 @@
   flex-direction: column;
   max-width: var(--max-width);
   margin: 0 auto;
+  padding-top: 1rem;
   animation: goal-detail-fade-in 0.2s ease;
 }
 

@@ -5,6 +5,8 @@ export interface MonthPickerProps {
   allMonths: string[]
   selectedMonth: string
   onMonthChange: (month: string) => void
+  /** Compact mode: no chevrons, shows "Mon YYYY - present" label */
+  compact?: boolean
 }
 
 const MONTH_PICKER_MONTHS = [
@@ -33,11 +35,18 @@ const formatMonthLabel = (month: string) => {
   return `${MONTH_PICKER_MONTHS[monthIndex].longLabel} ${year}`
 }
 
+const formatShortMonthLabel = (month: string) => {
+  const [year, monthValue] = month.split('-')
+  const monthIndex = Number(monthValue) - 1
+  if (!year || Number.isNaN(monthIndex) || monthIndex < 0 || monthIndex >= MONTH_PICKER_MONTHS.length) return month
+  return `${MONTH_PICKER_MONTHS[monthIndex].shortLabel} ${year}`
+}
+
 const getMonthYear = (month: string | undefined) => (month ? Number(month.slice(0, 4)) : undefined)
 
 const buildMonthKey = (year: number, monthValue: string) => `${year}-${monthValue}`
 
-const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthChange }) => {
+const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthChange, compact }) => {
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [isYearGridOpen, setIsYearGridOpen] = useState(false)
   const [pickerYear, setPickerYear] = useState(
@@ -214,6 +223,135 @@ const MonthPicker: FC<MonthPickerProps> = ({ allMonths, selectedMonth, onMonthCh
       default:
         break
     }
+  }
+
+  const compactLabel = selectedMonth ? `${formatShortMonthLabel(selectedMonth)} – present` : 'No data'
+
+  if (compact) {
+    return (
+      <div className="details-month-picker-container details-month-picker-container--compact">
+        <button
+          ref={monthTriggerRef}
+          className="details-month-trigger details-month-trigger--compact"
+          type="button"
+          aria-label={
+            selectedMonth ? `Choose start month, currently ${formatMonthLabel(selectedMonth)}` : 'Choose start month'
+          }
+          aria-expanded={isMonthPickerOpen}
+          aria-haspopup="dialog"
+          disabled={isMonthNavigationDisabled}
+          onClick={() => setIsMonthPickerOpen(open => !open)}
+        >
+          {compactLabel}
+        </button>
+        {isMonthPickerOpen ? (
+          <div ref={monthPickerRef} className="details-month-picker" role="dialog" aria-label="Select start month">
+            <div className="details-month-picker-year">
+              <button
+                className="details-month-chevron"
+                type="button"
+                disabled={isAtOldestYear}
+                onClick={() => {
+                  if (!isAtOldestYear) setPickerYear(availableYears[displayedYearIndex - 1])
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 2L4 7L9 12" />
+                </svg>
+              </button>
+              <span aria-live="polite">
+                <button
+                  type="button"
+                  className="details-month-picker-year-btn"
+                  onClick={() => {
+                    setIsYearGridOpen(open => !open)
+                    if (!isYearGridOpen)
+                      requestAnimationFrame(() => {
+                        const selected = yearGridRef.current?.querySelector('[aria-pressed="true"]')
+                        if (selected) (selected as HTMLElement).scrollIntoView({ block: 'center' })
+                      })
+                  }}
+                >
+                  {displayedYear}
+                </button>
+              </span>
+              <button
+                className="details-month-chevron"
+                type="button"
+                disabled={isAtNewestYear}
+                onClick={() => {
+                  if (!isAtNewestYear) setPickerYear(availableYears[displayedYearIndex + 1])
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 2L10 7L5 12" />
+                </svg>
+              </button>
+            </div>
+            {isYearGridOpen ? (
+              <div ref={yearGridRef} className="details-year-grid" role="grid" aria-label="Select year">
+                {availableYears.map(year => (
+                  <button
+                    key={year}
+                    type="button"
+                    className={`details-year-grid-cell${year === displayedYear ? ' details-year-grid-cell--selected' : ''}`}
+                    aria-pressed={year === displayedYear}
+                    onClick={() => {
+                      setPickerYear(year)
+                      setIsYearGridOpen(false)
+                    }}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className="details-month-picker-grid" role="grid" aria-label={`Months for ${displayedYear}`}>
+              {MONTH_PICKER_MONTHS.map(({ value, shortLabel, longLabel }, monthGridIndex) => {
+                const monthKey = buildMonthKey(displayedYear, value)
+                return (
+                  <button
+                    key={monthKey}
+                    ref={el => {
+                      monthButtonRefs.current[monthGridIndex] = el
+                    }}
+                    type="button"
+                    className={`details-month-picker-cell${selectedMonth === monthKey ? ' details-month-picker-cell--selected' : ''}`}
+                    aria-label={`${longLabel} ${displayedYear}`}
+                    aria-pressed={selectedMonth === monthKey}
+                    disabled={!availableMonthSet.has(monthKey)}
+                    onClick={() => selectMonth(monthKey)}
+                    onKeyDown={event => handleMonthButtonKeyDown(event, monthGridIndex)}
+                  >
+                    {shortLabel}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    )
   }
 
   return (

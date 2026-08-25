@@ -1,13 +1,11 @@
-import { FC, useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { FC, useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { FinancialGoal, GwGoal } from '../../../types'
 import { useData } from '../../../contexts/DataContext'
 import GoalDetailedCard from './GoalDetailedCard'
-import GoalActionsMenu from './GoalActionsMenu'
 import GoalDiveDeep from './GoalDiveDeep'
 import GwSection from './GwSection'
 import { GwSavingsPlan } from './SavingsPlan'
-import GrowthSettingsPanel from '../../../components/GrowthSettingsPanel'
 import {
   getTotalForMonth,
   getFiBreakdown,
@@ -47,26 +45,21 @@ const GoalDetail: FC<GoalDetailProps> = ({
   gwGoals,
   growthSettings: growthCtx,
   onUpdateGoal,
-  onCopyGoal,
-  onDeleteGoal,
-  onRenameGoal,
   onCreateGwGoal,
   onUpdateGwGoal,
   onDeleteGwGoal,
 }) => {
-  const { id } = useParams<{ id: string }>()
+  const params = useParams()
   const navigate = useNavigate()
+  const id = params.id || params['*']
   const goalId = Number(id)
   const goal = goals.find(g => g.id === goalId)
 
-  const [renameMode, setRenameMode] = useState(false)
-  const [renameName, setRenameName] = useState('')
   const [showYearly, setShowYearly] = useState(false)
   const [fiProjectedMonth, setFiProjectedMonth] = useState<string | null>(null)
   const [fiYearOverride, setFiYearOverride] = useState<string | null>(null)
   const [chartRequiredSavings, setChartRequiredSavings] = useState<number | null>(null)
   const [gwTargetShowRetirement, setGwTargetShowRetirement] = useState(false)
-  const renameInputRef = useRef<HTMLInputElement>(null)
   const [localSavingsOverride, setLocalSavingsOverride] = useState<number | null>(null)
   const savingsOverride = localSavingsOverride
 
@@ -89,7 +82,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
 
   // Sync state when navigating between goals
   useEffect(() => {
-    setRenameMode(false)
     setFiYearOverride(null)
     setChartRequiredSavings(null)
     setLocalSavingsOverride(null)
@@ -117,14 +109,6 @@ const GoalDetail: FC<GoalDetailProps> = ({
   const prevGoal = currentIndex > 0 ? goals[currentIndex - 1] : null
   const nextGoal = currentIndex < total - 1 ? goals[currentIndex + 1] : null
 
-  useEffect(() => {
-    setRenameMode(false)
-  }, [goalId])
-
-  useEffect(() => {
-    if (renameMode) renameInputRef.current?.focus()
-  }, [renameMode])
-
   // Arrow key navigation between goals
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -134,8 +118,8 @@ const GoalDetail: FC<GoalDetailProps> = ({
         e.target instanceof HTMLSelectElement
       )
         return
-      if (e.key === 'ArrowLeft' && prevGoal) navigate(`/goal/${prevGoal.id}`)
-      if (e.key === 'ArrowRight' && nextGoal) navigate(`/goal/${nextGoal.id}`)
+      if (e.key === 'ArrowLeft' && prevGoal) navigate(`/goal/plans/${prevGoal.id}`)
+      if (e.key === 'ArrowRight' && nextGoal) navigate(`/goal/plans/${nextGoal.id}`)
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
@@ -233,104 +217,15 @@ const GoalDetail: FC<GoalDetailProps> = ({
           <path d="M18 18l12 12M30 18L18 30" />
         </svg>
         <p>This goal may have been deleted or the link is no longer valid.</p>
-        <Link className="goal-detail-not-found-btn" to="/goal">
+        <Link className="goal-detail-not-found-btn" to="/goal/plans">
           ← Back to Goals
         </Link>
       </div>
     )
   }
 
-  const enterRename = () => {
-    setRenameName(goal.goalName)
-    setRenameMode(true)
-  }
-  const commitRename = () => {
-    if (renameName.trim()) onRenameGoal(goal.id, renameName.trim())
-    setRenameMode(false)
-  }
-
-  const handleDelete = () => {
-    onDeleteGoal(goal.id)
-    if (nextGoal) navigate(`/goal/${nextGoal.id}`)
-    else if (prevGoal) navigate(`/goal/${prevGoal.id}`)
-    else navigate('/goal')
-  }
-
   return (
     <div className="goal-detail">
-      <div className="goal-detail-header">
-        <div className="goal-detail-header-left">
-          {renameMode ? (
-            <input
-              ref={renameInputRef}
-              className="goal-detail-rename-input"
-              value={renameName}
-              onChange={e => setRenameName(e.target.value)}
-              placeholder="Goal name"
-              aria-label="Rename goal"
-              onKeyDown={e => {
-                if (e.key === 'Enter') commitRename()
-                if (e.key === 'Escape') setRenameMode(false)
-              }}
-              onBlur={commitRename}
-            />
-          ) : (
-            <h1 className="goal-detail-title">{goal.goalName}</h1>
-          )}
-        </div>
-        <div className="goal-detail-header-right">
-          {total > 1 && (
-            <div className="goal-detail-stepper" role="group" aria-label="Goal navigation">
-              <button
-                className="goal-detail-step-btn"
-                onClick={() => prevGoal && navigate(`/goal/${prevGoal.id}`)}
-                disabled={!prevGoal}
-                aria-label="Previous goal"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M10 3L5 8l5 5" />
-                </svg>
-              </button>
-              <span className="goal-detail-step-label" aria-current="step">
-                Goal {currentIndex + 1} of {total}
-              </span>
-              <button
-                className="goal-detail-step-btn"
-                onClick={() => nextGoal && navigate(`/goal/${nextGoal.id}`)}
-                disabled={!nextGoal}
-                aria-label="Next goal"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </button>
-            </div>
-          )}
-          <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
-          <GoalActionsMenu onRename={enterRename} onDuplicate={() => onCopyGoal(goal)} onDelete={handleDelete} />
-        </div>
-      </div>
-
       {/* FI Row */}
       <div className="goal-detail-section">
         <h2 className="goal-detail-column-title">

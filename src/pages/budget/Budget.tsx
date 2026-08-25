@@ -244,116 +244,116 @@ const Budget: FC = () => {
                     year={selectedYear}
                   />
                   <div className="budget-agg-tabs-row">
-                  <div className="tab-bar">
-                    <button
-                      type="button"
-                      className={`tab-btn tab-btn--sm${aggTab === 'income' ? ' active' : ''}`}
-                      onClick={() => setAggTab('income')}
-                    >
-                      Income
-                    </button>
-                    <button
-                      type="button"
-                      className={`tab-btn tab-btn--sm${aggTab === 'expense' ? ' active' : ''}`}
-                      onClick={() => setAggTab('expense')}
-                    >
-                      Expenses
-                    </button>
-                  </div>
-                  <div className="budget-agg-tabs-right">
                     <div className="tab-bar">
                       <button
-                        className={`tab-btn tab-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
-                        onClick={() => setSpreadsheetMode('aggregated')}
-                        aria-pressed={spreadsheetMode === 'aggregated'}
+                        type="button"
+                        className={`tab-btn tab-btn--sm${aggTab === 'income' ? ' active' : ''}`}
+                        onClick={() => setAggTab('income')}
                       >
-                        Aggregated
+                        Income
                       </button>
                       <button
-                        className={`tab-btn tab-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
-                        onClick={() => setSpreadsheetMode('detailed')}
-                        aria-pressed={spreadsheetMode === 'detailed'}
+                        type="button"
+                        className={`tab-btn tab-btn--sm${aggTab === 'expense' ? ' active' : ''}`}
+                        onClick={() => setAggTab('expense')}
                       >
-                        Detailed
+                        Expenses
                       </button>
                     </div>
-                    <div className="budget-overflow-wrapper" ref={formatHelpRef}>
-                      <button
-                        className="budget-overflow-btn"
-                        onClick={() => setShowUploadMenu(v => !v)}
-                        aria-haspopup="menu"
-                        aria-expanded={showUploadMenu}
-                        aria-label="More actions"
-                      >
-                        ⋯
-                      </button>
-                      {showUploadMenu && (
-                        <>
-                          <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
-                          <div className="budget-upload-menu" role="menu">
-                            <button
-                              className="budget-upload-menu-item"
-                              role="menuitem"
-                              onClick={() => {
-                                setShowUploadMenu(false)
-                                setTxnFormOpen(true)
-                              }}
-                            >
-                              Add Transaction
-                            </button>
-                            <button
-                              className="budget-upload-menu-item"
-                              role="menuitem"
-                              onClick={() => {
-                                setShowUploadMenu(false)
-                                quickUploadRef.current?.click()
-                              }}
-                            >
-                              Upload CSV
-                            </button>
-                            <button
-                              className="budget-upload-menu-item"
-                              role="menuitem"
-                              onClick={() => {
-                                setShowUploadMenu(false)
-                                bulkUploadRef.current?.click()
-                              }}
-                            >
-                              Bulk Upload
-                            </button>
-                            {pdfToCsvEnabled && (
+                    <div className="budget-agg-tabs-right">
+                      <div className="tab-bar">
+                        <button
+                          className={`tab-btn tab-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
+                          onClick={() => setSpreadsheetMode('aggregated')}
+                          aria-pressed={spreadsheetMode === 'aggregated'}
+                        >
+                          Aggregated
+                        </button>
+                        <button
+                          className={`tab-btn tab-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
+                          onClick={() => setSpreadsheetMode('detailed')}
+                          aria-pressed={spreadsheetMode === 'detailed'}
+                        >
+                          Detailed
+                        </button>
+                      </div>
+                      <div className="budget-overflow-wrapper" ref={formatHelpRef}>
+                        <button
+                          className="budget-overflow-btn"
+                          onClick={() => setShowUploadMenu(v => !v)}
+                          aria-haspopup="menu"
+                          aria-expanded={showUploadMenu}
+                          aria-label="More actions"
+                        >
+                          ⋯
+                        </button>
+                        {showUploadMenu && (
+                          <>
+                            <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
+                            <div className="budget-upload-menu" role="menu">
                               <button
                                 className="budget-upload-menu-item"
                                 role="menuitem"
                                 onClick={() => {
                                   setShowUploadMenu(false)
-                                  openPdfModal()
+                                  setTxnFormOpen(true)
                                 }}
                               >
-                                PDF → CSV
+                                Add Transaction
                               </button>
-                            )}
-                            <button
-                              className="budget-upload-menu-item"
-                              role="menuitem"
-                              onClick={() => {
-                                setShowUploadMenu(false)
-                                setShowFormatHelp(v => !v)
-                              }}
-                            >
-                              CSV Format Help
-                            </button>
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  quickUploadRef.current?.click()
+                                }}
+                              >
+                                Upload CSV
+                              </button>
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  bulkUploadRef.current?.click()
+                                }}
+                              >
+                                Bulk Upload
+                              </button>
+                              {pdfToCsvEnabled && (
+                                <button
+                                  className="budget-upload-menu-item"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setShowUploadMenu(false)
+                                    openPdfModal()
+                                  }}
+                                >
+                                  PDF → CSV
+                                </button>
+                              )}
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  setShowFormatHelp(v => !v)
+                                }}
+                              >
+                                CSV Format Help
+                              </button>
+                            </div>
+                          </>
+                        )}
+                        {showFormatHelp && (
+                          <div className="budget-format-help-panel">
+                            <pre>{getCSVFormatHelp()}</pre>
                           </div>
-                        </>
-                      )}
-                      {showFormatHelp && (
-                        <div className="budget-format-help-panel">
-                          <pre>{getCSVFormatHelp()}</pre>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
                 </div>
                 {spreadsheetMode === 'detailed' ? (
                   <BudgetTable

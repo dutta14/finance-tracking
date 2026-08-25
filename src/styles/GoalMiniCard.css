@@ -43,13 +43,38 @@
   min-width: 0;
 }
 
+.mini-created-in {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.mini-created-cell {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 .mini-retire-year {
   font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-medium);
   color: var(--color-text-muted);
   white-space: nowrap;
   flex-shrink: 0;
   letter-spacing: 0.02em;
+}
+.mini-retire-original {
+  opacity: 0.55;
+  text-decoration: line-through;
+  font-weight: var(--fw-normal);
+}
+.mini-retire-arrow {
+  opacity: 0.4;
+  font-size: var(--fs-xs);
+}
+.mini-retire-projected {
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
 }
 
 /* Progress bar */
@@ -144,7 +169,7 @@
 /* List mode */
 .goal-mini-card.list {
   display: grid;
-  grid-template-columns: 2fr 60px 1.5fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 80px 60px 1.5fr 1fr 1fr 1fr;
   align-items: center;
   column-gap: 1.25rem;
   padding: 0.75rem 1.25rem;

@@ -8,6 +8,8 @@ import useLeverage, {
   type LeverageScenario,
 } from '../../../hooks/useLeverage'
 import { useData } from '../../../contexts/DataContext'
+import { useDateFilter } from '../../../hooks/useDateFilter'
+import { DateFilterBar } from '../../../components/DateFilterBar'
 import '../../../styles/Leverage.css'
 
 type AllocationType = 'loan' | 'mortgage'
@@ -28,10 +30,13 @@ interface AllocationResult {
 interface ScenarioView {
   id: string
   name: string
+  target: string
   allocations: ScenarioAllocation[]
   error: string | null
   targetValue: number | null
   totalBorrow: number | null
+  baseBorrow: number | null
+  upgradeMortgageTotal: number
   newAssets: number | null
   newLiabilities: number | null
   newRatio: number | null
@@ -128,25 +133,84 @@ const RatioTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{
   )
 }
 
+type RealEstateProperty = { accountId: number; name: string; value: number; mortgage: number; equity: number }
+
+const ALLOCATION_PRESETS = [
+  { label: 'Rental Property', type: 'mortgage' as AllocationType, downPaymentPct: '30', mortgageRate: '7' },
+  { label: 'Margin Loan', type: 'loan' as AllocationType, mortgageRate: '6' },
+]
+
 const ScenarioCard = ({
   scenario,
   onChange,
-  onRemove,
   createAllocation,
   assetBreakdown,
   liabilityBreakdown,
   currentNetWorth,
+  realEstateProperties,
+  totalAssets,
+  totalLiabilities,
 }: {
   scenario: ScenarioView
   onChange: (updates: Partial<ScenarioState>) => void
-  onRemove?: () => void
   createAllocation: (index: number) => ScenarioAllocation
   assetBreakdown: AssetBreakdown
   liabilityBreakdown: AssetBreakdown
   currentNetWorth: number
+  realEstateProperties: RealEstateProperty[]
+  totalAssets: number
+  totalLiabilities: number
 }) => {
-  const addAllocation = () => {
-    onChange({ allocations: [...scenario.allocations, createAllocation(scenario.allocations.length)] })
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const [upgradeSubOpen, setUpgradeSubOpen] = useState(false)
+  const [leverageInfoOpen, setLeverageInfoOpen] = useState(false)
+  const infoRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!leverageInfoOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(e.target as Node)) {
+        setLeverageInfoOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [leverageInfoOpen])
+
+  const addAllocation = (preset: (typeof ALLOCATION_PRESETS)[number]) => {
+    const alloc = createAllocation(scenario.allocations.length)
+    onChange({
+      allocations: [
+        ...scenario.allocations,
+        {
+          ...alloc,
+          label: preset.label,
+          type: preset.type,
+          ...(preset.downPaymentPct ? { downPaymentPct: preset.downPaymentPct } : {}),
+          ...(preset.mortgageRate ? { mortgageRate: preset.mortgageRate } : {}),
+        },
+      ],
+    })
+    setAddMenuOpen(false)
+    setUpgradeSubOpen(false)
+  }
+
+  const addUpgradeAllocation = (property: RealEstateProperty) => {
+    const alloc = createAllocation(scenario.allocations.length)
+    onChange({
+      allocations: [
+        ...scenario.allocations,
+        {
+          ...alloc,
+          label: `Upgrade ${property.name}`,
+          type: 'mortgage',
+          mortgageRate: '7',
+          upgradeFromAccountId: property.accountId,
+        },
+      ],
+    })
+    setAddMenuOpen(false)
+    setUpgradeSubOpen(false)
   }
 
   const updateAllocation = (allocationId: string, updates: Partial<ScenarioAllocation>) => {
@@ -172,17 +236,107 @@ const ScenarioCard = ({
           onChange={event => onChange({ name: event.target.value })}
           aria-label="Scenario name"
         />
-        {onRemove && (
-          <button className="action-btn action-btn--danger" type="button" onClick={onRemove}>
-            Remove
-          </button>
-        )}
+        <div className="scenario-card__target-inline">
+          <label className="scenario-card__target-label">Target</label>
+          <input
+            className="scenario-card__target-input"
+            type="text"
+            inputMode="decimal"
+            value={scenario.target}
+            onChange={e => onChange({ target: e.target.value })}
+            placeholder="—"
+          />
+          <span className="scenario-card__target-colon">: 1</span>
+        </div>
       </header>
+      {scenario.error && <p className="lever-error lever-error--compact">{scenario.error}</p>}
 
       <div className="scenario-card__summary">
-        <div className="scenario-card__summary-metric">
-          <span>Total capacity</span>
+        <div ref={infoRef} className="scenario-card__summary-metric scenario-card__summary-metric--info">
+          <span>
+            Available Leverage
+            <button
+              className="lever-info-btn"
+              type="button"
+              onClick={() => setLeverageInfoOpen(o => !o)}
+              aria-label="Leverage breakdown"
+            >
+              i
+            </button>
+          </span>
           <strong>{scenario.totalBorrow === null ? '—' : formatCurrency(scenario.totalBorrow)}</strong>
+          {leverageInfoOpen && scenario.totalBorrow !== null && (
+            <div className="lever-info-tooltip">
+              <div className="lever-info-tooltip__row">
+                <span>Current assets</span>
+                <span>{formatCurrency(totalAssets)}</span>
+              </div>
+              <div className="lever-info-tooltip__row">
+                <span>Current liabilities</span>
+                <span>{formatCurrency(totalLiabilities)}</span>
+              </div>
+              {scenario.upgradeMortgageTotal > 0 && (
+                <>
+                  <div className="lever-info-tooltip__divider" />
+                  <div className="lever-info-tooltip__row lever-info-tooltip__row--muted">
+                    <span>Mortgages paid off</span>
+                    <span>−{formatCurrency(scenario.upgradeMortgageTotal)}</span>
+                  </div>
+                  <div className="lever-info-tooltip__row">
+                    <span>Post-sale assets</span>
+                    <span>{formatCurrency(totalAssets - scenario.upgradeMortgageTotal)}</span>
+                  </div>
+                  <div className="lever-info-tooltip__row">
+                    <span>Post-sale liabilities</span>
+                    <span>{formatCurrency(totalLiabilities - scenario.upgradeMortgageTotal)}</span>
+                  </div>
+                  <div className="lever-info-tooltip__row lever-info-tooltip__row--bold">
+                    <span>Post-sale ratio</span>
+                    <span>
+                      {totalLiabilities - scenario.upgradeMortgageTotal > 0
+                        ? formatRatio(
+                            (totalAssets - scenario.upgradeMortgageTotal) /
+                              (totalLiabilities - scenario.upgradeMortgageTotal),
+                          )
+                        : '∞'}
+                    </span>
+                  </div>
+                </>
+              )}
+              <div className="lever-info-tooltip__divider" />
+              <div className="lever-info-tooltip__row">
+                <span>Base capacity</span>
+                <span>{scenario.baseBorrow !== null ? formatCurrency(scenario.baseBorrow) : '—'}</span>
+              </div>
+              {scenario.upgradeMortgageTotal > 0 && (
+                <div className="lever-info-tooltip__row lever-info-tooltip__row--muted">
+                  <span>Freed by upgrades</span>
+                  <span>+{formatCurrency(scenario.upgradeMortgageTotal)}</span>
+                </div>
+              )}
+              <div className="lever-info-tooltip__row lever-info-tooltip__row--bold">
+                <span>Total available</span>
+                <span>{formatCurrency(scenario.totalBorrow)}</span>
+              </div>
+              {scenario.newAssets !== null && scenario.newLiabilities !== null && (
+                <>
+                  <div className="lever-info-tooltip__divider" />
+                  <div className="lever-info-tooltip__row">
+                    <span>Final assets</span>
+                    <span>{formatCurrency(scenario.newAssets)}</span>
+                  </div>
+                  <div className="lever-info-tooltip__row">
+                    <span>Final liabilities</span>
+                    <span>{formatCurrency(scenario.newLiabilities)}</span>
+                  </div>
+                  <div className="lever-info-tooltip__row lever-info-tooltip__row--bold">
+                    <span>Final ratio</span>
+                    <span>{scenario.newRatio ? formatRatio(scenario.newRatio) : '—'}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="scenario-card__summary-metric">
           <span>Allocated</span>
@@ -199,118 +353,234 @@ const ScenarioCard = ({
       <div className="scenario-card__allocations">
         <div className="scenario-card__alloc-header">
           <h4>Allocations</h4>
-          <button className="action-btn" type="button" onClick={addAllocation}>
-            + Add allocation
-          </button>
+          <div className="scenario-card__add-wrap">
+            <button className="action-btn" type="button" onClick={() => setAddMenuOpen(o => !o)}>
+              + Add
+            </button>
+            {addMenuOpen && (
+              <div className="scenario-card__add-menu">
+                {ALLOCATION_PRESETS.map(preset => (
+                  <button key={preset.label} type="button" onClick={() => addAllocation(preset)}>
+                    {preset.label}
+                  </button>
+                ))}
+                {realEstateProperties.length > 0 && (
+                  <div
+                    className="scenario-card__add-submenu-wrap"
+                    onMouseEnter={() => setUpgradeSubOpen(true)}
+                    onMouseLeave={() => setUpgradeSubOpen(false)}
+                  >
+                    <button type="button" className="scenario-card__add-submenu-trigger">
+                      Upgrade Property
+                      <span aria-hidden="true">›</span>
+                    </button>
+                    {upgradeSubOpen && (
+                      <div className="scenario-card__add-submenu">
+                        {realEstateProperties.map(prop => {
+                          const used = scenario.allocations.some(a => a.upgradeFromAccountId === prop.accountId)
+                          return (
+                            <button
+                              key={prop.accountId}
+                              type="button"
+                              disabled={used}
+                              onClick={() => addUpgradeAllocation(prop)}
+                            >
+                              <span className="add-submenu__name">{prop.name}</span>
+                              <span className="add-submenu__equity">{formatCurrency(prop.equity)} equity</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {scenario.allocations.length === 0 ? (
           <p className="scenario-card__empty">No allocations yet. Add a loan or mortgage to split this capacity.</p>
         ) : (
-          <>
-            <div className="scenario-alloc-header">
-              <span>Name</span>
-              <span>Type</span>
-              <span>Allocation %</span>
-              <span>Down %</span>
-              <span />
-            </div>
+          <div className="alloc-card-grid">
             {scenario.allocations.map(allocation => {
               const derived = scenario.totalBorrow ? computeAllocationResult(allocation, scenario.totalBorrow) : null
 
               return (
-                <div className="scenario-alloc-row" key={allocation.id}>
-                  <input
-                    className="lever-input"
-                    value={allocation.label}
-                    onChange={event => updateAllocation(allocation.id, { label: event.target.value })}
-                    aria-label="Allocation label"
-                  />
-                  <button
-                    type="button"
-                    className="lever-type-toggle"
-                    onClick={() =>
-                      updateAllocation(allocation.id, {
-                        type: allocation.type === 'loan' ? 'mortgage' : 'loan',
-                      })
-                    }
-                    aria-label="Allocation type"
-                  >
-                    {allocation.type === 'loan' ? 'Loan' : 'Mortgage'}
-                  </button>
-                  <input
-                    className="lever-input"
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={allocation.sharePct}
-                    onChange={event => updateAllocation(allocation.id, { sharePct: event.target.value })}
-                    aria-label="Allocation share percentage"
-                    placeholder="% of total"
-                  />
-                  {allocation.type === 'mortgage' ? (
-                    <input
-                      className="lever-input"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      max="99"
-                      step="1"
-                      value={allocation.downPaymentPct}
-                      onChange={event => updateAllocation(allocation.id, { downPaymentPct: event.target.value })}
-                      aria-label="Mortgage down payment percentage"
-                      placeholder="Down %"
-                    />
-                  ) : (
-                    <div className="scenario-alloc-row__spacer" aria-hidden="true" />
-                  )}
-                  <button
-                    className="action-btn action-btn--danger"
-                    type="button"
-                    onClick={() => removeAllocation(allocation.id)}
-                    aria-label={`Remove ${allocation.label}`}
-                  >
-                    ×
-                  </button>
-                  {derived && (
-                    <div className="scenario-alloc-derived">
-                      Borrow {formatCurrency(derived.borrowAmount)}
-                      {derived.type === 'mortgage' &&
-                        ` · Purchase ${formatCurrency(derived.purchasePrice)} · Down ${formatCurrency(derived.downPayment)}`}
+                <div className="alloc-card" key={allocation.id}>
+                  <div className="alloc-card__top">
+                    <div className="alloc-card__icon">
+                      {allocation.type === 'mortgage' ? (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 10.5L12 3l9 7.5V21H3V10.5z" />
+                          <path d="M9 21V14h6v7" />
+                        </svg>
+                      ) : (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M2 20h20M5 20V10l4 3V20M11 20V8l4 4v8M17 20V6l4 5v9" />
+                        </svg>
+                      )}
                     </div>
-                  )}
+                    <input
+                      className="lever-input alloc-card__name"
+                      value={allocation.label}
+                      onChange={event => updateAllocation(allocation.id, { label: event.target.value })}
+                      aria-label="Allocation label"
+                    />
+                    <button
+                      className="alloc-card__remove"
+                      type="button"
+                      onClick={() => removeAllocation(allocation.id)}
+                      aria-label={`Remove ${allocation.label}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="alloc-card__fields">
+                    <label className="alloc-card__field">
+                      <span className="alloc-card__field-label">Allocation</span>
+                      <div className="alloc-card__field-input">
+                        <input
+                          className="lever-input"
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={allocation.sharePct}
+                          onChange={event => updateAllocation(allocation.id, { sharePct: event.target.value })}
+                          aria-label="Allocation share percentage"
+                        />
+                        <span className="alloc-card__unit">%</span>
+                      </div>
+                    </label>
+                    {allocation.type === 'mortgage' && (
+                      <label className="alloc-card__field">
+                        <span className="alloc-card__field-label">Down</span>
+                        <div className="alloc-card__field-input">
+                          <input
+                            className="lever-input"
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            max="99"
+                            step="1"
+                            value={allocation.downPaymentPct}
+                            onChange={event => updateAllocation(allocation.id, { downPaymentPct: event.target.value })}
+                            aria-label="Mortgage down payment percentage"
+                          />
+                          <span className="alloc-card__unit">%</span>
+                        </div>
+                      </label>
+                    )}
+                    <label className="alloc-card__field">
+                      <span className="alloc-card__field-label">Rate</span>
+                      <div className="alloc-card__field-input">
+                        <input
+                          className="lever-input"
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          max="30"
+                          step="0.1"
+                          value={allocation.mortgageRate}
+                          onChange={event => updateAllocation(allocation.id, { mortgageRate: event.target.value })}
+                          aria-label="Interest rate"
+                        />
+                        <span className="alloc-card__unit">%</span>
+                      </div>
+                    </label>
+                  </div>
+                  {derived &&
+                    (() => {
+                      const upgradeProp = allocation.upgradeFromAccountId
+                        ? realEstateProperties.find(p => p.accountId === allocation.upgradeFromAccountId)
+                        : undefined
+                      const netOutOfPocket = upgradeProp ? derived.downPayment - upgradeProp.equity : null
+
+                      return (
+                        <div className="alloc-card__derived">
+                          <div className="alloc-card__derived-row">
+                            <span className="alloc-card__derived-label">Borrow</span>
+                            <span>{formatCurrency(derived.borrowAmount)}</span>
+                          </div>
+                          {derived.type === 'mortgage' && (
+                            <>
+                              <div className="alloc-card__derived-row">
+                                <span className="alloc-card__derived-label">Purchase price</span>
+                                <span>{formatCurrency(derived.purchasePrice)}</span>
+                              </div>
+                              <div className="alloc-card__derived-row">
+                                <span className="alloc-card__derived-label">Down payment</span>
+                                <span>{formatCurrency(derived.downPayment)}</span>
+                              </div>
+                              {upgradeProp && (
+                                <>
+                                  <div className="alloc-card__derived-row alloc-card__derived-row--credit">
+                                    <span className="alloc-card__derived-label">Equity from {upgradeProp.name}</span>
+                                    <span>−{formatCurrency(upgradeProp.equity)}</span>
+                                  </div>
+                                  <div className="alloc-card__derived-row alloc-card__derived-row--net">
+                                    <span className="alloc-card__derived-label">Net out-of-pocket</span>
+                                    <span>{formatCurrency(Math.max(0, netOutOfPocket ?? 0))}</span>
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )
+                    })()}
                 </div>
               )
             })}
-          </>
+          </div>
         )}
       </div>
 
-      {scenario.error ? (
-        <p className="lever-error lever-error--compact">{scenario.error}</p>
-      ) : scenario.totalBorrow !== null ? (
+      {!scenario.error && scenario.totalBorrow !== null && (
         <>
           {scenario.allocationResults.length > 0 &&
             currentNetWorth > 0 &&
             (() => {
-              const newDownPayments = scenario.allocationResults
-                .filter(a => a.type === 'mortgage')
-                .reduce((s, a) => s + a.downPayment, 0)
+              // For upgrades, net cash into RE = down payment - equity from sold property
+              const netRECashFlow = scenario.allocations.reduce((sum, alloc) => {
+                const result = scenario.allocationResults.find(r => r.label === alloc.label)
+                if (!result || result.type !== 'mortgage') return sum
+                const upgradeEquity = alloc.upgradeFromAccountId
+                  ? (realEstateProperties.find(p => p.accountId === alloc.upgradeFromAccountId)?.equity ?? 0)
+                  : 0
+                return sum + result.downPayment - upgradeEquity
+              }, 0)
 
               const reAssets = assetBreakdown['real-estate'] || 0
               const reLiabilities = liabilityBreakdown['real-estate'] || 0
               const beforeREEquity = reAssets - reLiabilities
-              const afterREEquity = beforeREEquity + newDownPayments
+              const afterREEquity = beforeREEquity + netRECashFlow
               const beforeOtherEquity = currentNetWorth - beforeREEquity
-              const afterOtherEquity = beforeOtherEquity - newDownPayments
+              const afterOtherEquity = beforeOtherEquity - netRECashFlow
               const afterNetWorth = afterREEquity + afterOtherEquity
               const pct = (v: number, total: number) => (total > 0 ? `${((v / total) * 100).toFixed(1)}%` : '—')
 
               return (
                 <div className="scenario-card__asset-alloc">
-                  <span className="lever-field-label">Equity allocation impact</span>
+                  <h4>Impact</h4>
                   <div className="scenario-asset-table">
                     <div className="scenario-asset-row scenario-asset-row--head">
                       <span />
@@ -340,7 +610,7 @@ const ScenarioCard = ({
               )
             })()}
         </>
-      ) : null}
+      )}
     </article>
   )
 }
@@ -354,31 +624,19 @@ const LeverageGoal = () => {
     currentRatio,
     assetBreakdown,
     liabilityBreakdown,
+    realEstateProperties,
     computeAcquisition,
     getRatioHistory,
   } = useLeverage()
   const { settings, setSettings } = useLeverageSettings()
-  const { scenarios, mainAllocations, currentScenarioName } = settings
-  const targetInput = settings.target
+  const { scenarios } = settings
   const chartStartMonth = settings.chartStart || allMonths[0] || ''
-  const [debouncedTargetInput, setDebouncedTargetInput] = useState(targetInput)
+  const [trendViewMode, setTrendViewMode] = useState<'chart' | 'table'>('chart')
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string>(scenarios[0]?.id || '')
+  const [scenarioMenuOpen, setScenarioMenuOpen] = useState<string | null>(null)
+  const [scenarioRenaming, setScenarioRenaming] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
 
-  const setTargetInput = useCallback(
-    (value: string) => setSettings(prev => ({ ...prev, target: value })),
-    [setSettings],
-  )
-  const setChartStartMonth = useCallback(
-    (value: string) => setSettings(prev => ({ ...prev, chartStart: value })),
-    [setSettings],
-  )
-  const setCurrentScenarioName = useCallback(
-    (value: string) => setSettings(prev => ({ ...prev, currentScenarioName: value })),
-    [setSettings],
-  )
-  const setMainAllocations = useCallback(
-    (value: ScenarioAllocation[]) => setSettings(prev => ({ ...prev, mainAllocations: value })),
-    [setSettings],
-  )
   const setScenarios = useCallback(
     (updater: (prev: ScenarioState[]) => ScenarioState[]) =>
       setSettings(prev => ({ ...prev, scenarios: updater(prev.scenarios) })),
@@ -390,51 +648,19 @@ const LeverageGoal = () => {
   scenarioIdRef.current = Math.max(scenarioIdRef.current, scenarios.length + 1)
   allocationIdRef.current = Math.max(
     allocationIdRef.current,
-    mainAllocations.length + scenarios.reduce((sum, s) => sum + s.allocations.length, 0) + 1,
-  )
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedTargetInput(targetInput)
-    }, 150)
-
-    return () => window.clearTimeout(timer)
-  }, [targetInput])
-
-  const targetValue = useMemo(() => parseNumber(debouncedTargetInput), [debouncedTargetInput])
-
-  const plannerError = useMemo(
-    () =>
-      getPlannerError({
-        currentRatio,
-        targetValue,
-      }),
-    [currentRatio, targetValue],
-  )
-
-  const plannerResult = useMemo(
-    () => (plannerError ? null : computeAcquisition(targetValue as number, 0)),
-    [computeAcquisition, plannerError, targetValue],
+    scenarios.reduce((sum, s) => sum + s.allocations.length, 0) + 1,
   )
 
   const ratioHistory = useMemo(() => getRatioHistory(chartStartMonth || undefined), [getRatioHistory, chartStartMonth])
-  const latestMonth = allMonths[allMonths.length - 1]
-  const latestLabel = latestMonth
-    ? (() => {
-        const [y, m] = latestMonth.split('-').map(Number)
-        return new Date(y, m - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-      })()
-    : undefined
   const validHistoryCount = ratioHistory.filter(point => point.ratio !== null).length
 
-  const maxChartRatio = useMemo(() => {
-    const historyMax = ratioHistory.reduce((max, point) => {
-      if (point.ratio === null) return max
-      return Math.max(max, point.ratio)
-    }, 0)
-    const targetMax = plannerError || targetValue === null ? 0 : targetValue
-    return Math.max(historyMax, targetMax, 1.5)
-  }, [plannerError, ratioHistory, targetValue])
+  const ratioMonths = useMemo(() => ratioHistory.map(p => p.month), [ratioHistory])
+  const trendDateFilter = useDateFilter(ratioMonths)
+
+  const filteredRatioHistory = useMemo(() => {
+    const allowed = new Set(trendDateFilter.filteredMonths)
+    return ratioHistory.filter(p => allowed.has(p.month))
+  }, [ratioHistory, trendDateFilter.filteredMonths])
 
   const createAllocation = useCallback(
     (index: number): ScenarioAllocation => ({
@@ -443,19 +669,19 @@ const LeverageGoal = () => {
       type: 'loan',
       sharePct: '',
       downPaymentPct: '20',
+      mortgageRate: '',
     }),
     [],
   )
 
   const addScenario = () => {
-    if (!plannerResult || scenarios.length >= 3) return
-
     const nextId = `scenario-${scenarioIdRef.current++}`
     setScenarios(prev => [
       ...prev,
       {
         id: nextId,
-        name: `Scenario ${prev.length + 2}`,
+        name: `Scenario ${prev.length + 1}`,
+        target: '',
         allocations: [],
       },
     ])
@@ -467,10 +693,30 @@ const LeverageGoal = () => {
 
   const buildScenarioView = useCallback(
     (scenario: ScenarioState): ScenarioView => {
-      const nextTargetValue = parseNumber(debouncedTargetInput)
+      const nextTargetValue = parseNumber(scenario.target || '')
       const error = getPlannerError({ currentRatio, targetValue: nextTargetValue })
-      const result = error ? null : computeAcquisition(nextTargetValue as number, 0)
-      const totalBorrow = result?.acquisitionAmount ?? null
+
+      // Sum mortgage balances from properties being sold (upgrade allocations)
+      const upgradeMortgageTotal = scenario.allocations.reduce((sum, a) => {
+        if (!a.upgradeFromAccountId) return sum
+        const prop = realEstateProperties.find(p => p.accountId === a.upgradeFromAccountId)
+        return sum + (prop?.mortgage ?? 0)
+      }, 0)
+
+      // Base borrow from current position (without upgrades)
+      const baseResult = error ? null : computeAcquisition(nextTargetValue as number, 0)
+      const baseBorrow = baseResult?.acquisitionAmount ?? 0
+
+      // Adjusted total: selling upgrades frees capacity equal to their mortgages
+      const adjustedBorrow = baseBorrow + upgradeMortgageTotal
+      const totalBorrow = error || adjustedBorrow <= 0 ? null : adjustedBorrow
+
+      // Recompute final position accounting for upgrade sales
+      const newAssets = totalBorrow !== null ? totalAssets + totalBorrow - upgradeMortgageTotal : null
+      const newLiabilities = totalBorrow !== null ? totalLiabilities + totalBorrow - upgradeMortgageTotal : null
+      const newRatio =
+        newAssets !== null && newLiabilities !== null && newLiabilities > 0 ? newAssets / newLiabilities : null
+
       const allocationResults =
         totalBorrow !== null && totalBorrow > 0
           ? scenario.allocations
@@ -484,83 +730,57 @@ const LeverageGoal = () => {
         error,
         targetValue: nextTargetValue,
         totalBorrow,
-        newAssets: result?.newAssets ?? null,
-        newLiabilities: result?.newLiabilities ?? null,
-        newRatio: result?.newRatio ?? null,
+        baseBorrow: error ? null : baseBorrow,
+        upgradeMortgageTotal,
+        newAssets,
+        newLiabilities,
+        newRatio,
         allocationResults,
         allocatedTotal,
         remaining: totalBorrow === null ? 0 : totalBorrow - allocatedTotal,
       }
     },
-    [computeAcquisition, currentRatio, debouncedTargetInput],
+    [computeAcquisition, currentRatio, realEstateProperties, totalAssets, totalLiabilities],
   )
 
-  const scenarioViews = useMemo<ScenarioView[]>(() => {
-    if (!plannerResult) return []
+  const scenarioViews = useMemo<ScenarioView[]>(() => scenarios.map(buildScenarioView), [buildScenarioView, scenarios])
 
-    const currentPlan = buildScenarioView({
-      id: 'current-plan',
-      name: currentScenarioName,
-      allocations: mainAllocations,
-    })
+  const selectedTargetValue = useMemo(() => {
+    const selected = scenarioViews.find(s => s.id === selectedScenarioId) || scenarioViews[0]
+    return selected?.targetValue ?? null
+  }, [scenarioViews, selectedScenarioId])
 
-    return [currentPlan, ...scenarios.map(buildScenarioView)]
-  }, [buildScenarioView, currentScenarioName, mainAllocations, plannerResult, scenarios])
+  const filteredMaxRatio = useMemo(() => {
+    const historyMax = filteredRatioHistory.reduce((max, point) => {
+      if (point.ratio === null) return max
+      return Math.max(max, point.ratio)
+    }, 0)
+    const targetMax = selectedTargetValue ?? 0
+    return Math.max(historyMax, targetMax, 1.5)
+  }, [filteredRatioHistory, selectedTargetValue])
 
   return (
     <div className="goal-container">
       <div className="lever-container">
-        <section className="lever-section lever-card">
-          <div className="lever-section-head">
-            <div>
-              <p>{latestLabel ? `Based on ${latestLabel} balances` : 'Add balances to see your leverage.'}</p>
-            </div>
-            <div className="lever-ratio-pills">
-              <div className="lever-ratio-pill">
-                <span className="lever-ratio-pill-label">Current</span>
-                <span className="lever-ratio-pill-value">{formatRatio(currentRatio)}</span>
-              </div>
-              <div className="lever-ratio-pill lever-ratio-pill--target">
-                <span className="lever-ratio-pill-label">Target</span>
-                <input
-                  className="lever-ratio-pill-input"
-                  type="number"
-                  inputMode="decimal"
-                  step="0.1"
-                  min="1.01"
-                  value={targetInput}
-                  onChange={event => setTargetInput(event.target.value)}
-                  disabled={currentRatio === null}
-                  aria-label="Target ratio"
-                />
-                <span className="lever-ratio-pill-suffix">: 1</span>
-              </div>
-            </div>
-          </div>
-
-          {plannerError && <p className="lever-error">{plannerError}</p>}
-
+        <section className="lever-section">
           <div className="lever-status-grid">
             <div className="lever-stat">
-              <span>Total Assets</span>
-              <strong>{formatCurrency(totalAssets)}</strong>
-              {plannerResult && <span className="lever-stat-target">→ {formatCurrency(plannerResult.newAssets)}</span>}
+              <span className="lever-stat-label">Total Assets</span>
+              <strong className="lever-stat-value lever-stat-value--asset">{formatCurrency(totalAssets)}</strong>
             </div>
             <div className="lever-stat">
-              <span>Total Liabilities</span>
-              <strong>{formatCurrency(totalLiabilities)}</strong>
-              {plannerResult && (
-                <span className="lever-stat-target">→ {formatCurrency(plannerResult.newLiabilities)}</span>
-              )}
+              <span className="lever-stat-label">Total Liabilities</span>
+              <strong className="lever-stat-value lever-stat-value--liability">
+                {formatCurrency(totalLiabilities)}
+              </strong>
             </div>
             <div className="lever-stat">
-              <span>Net Worth</span>
-              <strong>{formatCurrency(netWorth)}</strong>
-              {plannerResult && <span className="lever-stat-target">→ {formatCurrency(plannerResult.netWorth)}</span>}
+              <span className="lever-stat-label">Net Worth</span>
+              <strong className="lever-stat-value lever-stat-value--net">{formatCurrency(netWorth)}</strong>
             </div>
             <div className="lever-stat">
-              <span>Borrow capacity</span>
-              <strong>{plannerResult ? formatCurrency(plannerResult.acquisitionAmount) : '—'}</strong>
+              <span className="lever-stat-label">Leverage Ratio</span>
+              <strong className="lever-stat-value">{formatRatio(currentRatio)}</strong>
             </div>
           </div>
 
@@ -569,27 +789,29 @@ const LeverageGoal = () => {
 
         <section className="lever-section lever-card">
           <div className="lever-section-head lever-section-head--tight">
-            <div className="lever-section-title">
-              <h3>Trend chart</h3>
-              <p>Track your asset / liability ratio over time.</p>
-            </div>
-            <label className="lever-chart-start-label">
-              <span>From</span>
-              <select
-                className="lever-chart-start-select"
-                value={chartStartMonth}
-                onChange={e => setChartStartMonth(e.target.value)}
+            <DateFilterBar
+              dateFilter={trendDateFilter.dateFilter}
+              setDateFilter={trendDateFilter.setDateFilter}
+              customFrom={trendDateFilter.customFrom}
+              customTo={trendDateFilter.customTo}
+              onFromChange={trendDateFilter.setCustomFrom}
+              onToChange={trendDateFilter.setCustomTo}
+              allMonths={ratioMonths}
+            />
+            <div className="tab-bar">
+              <button
+                className={`tab-btn tab-btn--sm${trendViewMode === 'chart' ? ' active' : ''}`}
+                onClick={() => setTrendViewMode('chart')}
               >
-                {allMonths.map(m => {
-                  const [y, mo] = m.split('-').map(Number)
-                  return (
-                    <option key={m} value={m}>
-                      {new Date(y, mo - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                    </option>
-                  )
-                })}
-              </select>
-            </label>
+                Chart
+              </button>
+              <button
+                className={`tab-btn tab-btn--sm${trendViewMode === 'table' ? ' active' : ''}`}
+                onClick={() => setTrendViewMode('table')}
+              >
+                Table
+              </button>
+            </div>
           </div>
 
           {currentRatio === null || validHistoryCount < 2 ? (
@@ -598,10 +820,10 @@ const LeverageGoal = () => {
                 ? 'Add liability balances to chart leverage history.'
                 : 'Need at least two months of leverage data.'}
             </div>
-          ) : (
+          ) : trendViewMode === 'chart' ? (
             <div className="lever-chart-wrap">
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={ratioHistory} margin={{ top: 12, right: 12, left: 8, bottom: 8 }}>
+                <LineChart data={filteredRatioHistory} margin={{ top: 12, right: 12, left: 8, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light)" />
                   <XAxis
                     dataKey="label"
@@ -615,12 +837,12 @@ const LeverageGoal = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-                    tickFormatter={value => `${Number(value).toFixed(1)}:1`}
-                    domain={[1, Number((maxChartRatio + 0.4).toFixed(1))]}
+                    tickFormatter={value => `${Number(value).toFixed(1)} : 1`}
+                    domain={[1, Number((filteredMaxRatio + 0.4).toFixed(1))]}
                   />
                   <Tooltip content={<RatioTooltip />} />
-                  {!plannerError && targetValue !== null && (
-                    <ReferenceLine y={targetValue} stroke="var(--color-text-muted)" strokeDasharray="5 4" />
+                  {selectedTargetValue !== null && (
+                    <ReferenceLine y={selectedTargetValue} stroke="var(--color-text-muted)" strokeDasharray="5 4" />
                   )}
                   <Line
                     type="monotone"
@@ -634,49 +856,152 @@ const LeverageGoal = () => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+          ) : (
+            <div className="lever-table-wrap">
+              <table className="lever-trend-table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Assets</th>
+                    <th>Liabilities</th>
+                    <th>Ratio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRatioHistory.map(point => (
+                    <tr key={point.label}>
+                      <td>{point.label}</td>
+                      <td>{formatCurrency(point.assets)}</td>
+                      <td>{formatCurrency(point.liabilities)}</td>
+                      <td>{point.ratio === null ? '—' : formatRatio(point.ratio)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 
-        {plannerResult && (
-          <section className="lever-section lever-card">
-            <div className="lever-section-head lever-section-head--tight">
-              <div className="lever-section-title">
-                <h3>Scenario comparison</h3>
-                <p>Compare up to four allocation plans side by side.</p>
-              </div>
-              <button className="action-btn" type="button" onClick={addScenario} disabled={scenarios.length >= 3}>
-                Add scenario
-              </button>
-            </div>
-
-            <div className="lever-scenarios-grid">
-              <ScenarioCard
-                scenario={scenarioViews[0]}
-                onChange={updates => {
-                  if (updates.name !== undefined) setCurrentScenarioName(updates.name)
-                  if (updates.allocations !== undefined) setMainAllocations(updates.allocations)
-                }}
-                createAllocation={createAllocation}
-                assetBreakdown={assetBreakdown}
-                liabilityBreakdown={liabilityBreakdown}
-                currentNetWorth={netWorth}
-              />
-
-              {scenarioViews.slice(1).map(scenario => (
+        <div className="lever-scenarios-layout">
+          <div className="lever-scenarios-main">
+            {(() => {
+              const selected = scenarioViews.find(s => s.id === selectedScenarioId) || scenarioViews[0]
+              if (!selected) return <p className="lever-sidebar-empty">Add a scenario to get started.</p>
+              return (
                 <ScenarioCard
-                  key={scenario.id}
-                  scenario={scenario}
-                  onChange={updates => updateScenario(scenario.id, updates)}
-                  onRemove={() => setScenarios(prev => prev.filter(item => item.id !== scenario.id))}
+                  key={selected.id}
+                  scenario={selected}
+                  onChange={updates => updateScenario(selected.id, updates)}
                   createAllocation={createAllocation}
                   assetBreakdown={assetBreakdown}
                   liabilityBreakdown={liabilityBreakdown}
                   currentNetWorth={netWorth}
+                  realEstateProperties={realEstateProperties}
+                  totalAssets={totalAssets}
+                  totalLiabilities={totalLiabilities}
                 />
-              ))}
+              )
+            })()}
+          </div>
+
+          <div className="lever-sidebar">
+            <div className="lever-sidebar-section">
+              <div className="lever-sidebar-header">
+                <h3 className="lever-sidebar-title">Scenarios</h3>
+                <button className="action-btn" type="button" onClick={addScenario}>
+                  Add
+                </button>
+              </div>
+
+              <div className="lever-sidebar-cards">
+                {scenarioViews.map((scenario, i) => {
+                  const isSelected = scenario.id === selectedScenarioId
+                  const menuKey = `${scenario.id}-${i}`
+                  return (
+                    <div
+                      key={menuKey}
+                      className={`lever-sidebar-card${isSelected ? ' lever-sidebar-card--active' : ''}`}
+                      onClick={() => setSelectedScenarioId(scenario.id)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="lever-sidebar-card-header">
+                        {scenarioRenaming === menuKey ? (
+                          <input
+                            className="lever-sidebar-rename-input"
+                            value={renameValue}
+                            onChange={e => setRenameValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                const trimmed = renameValue.trim()
+                                if (trimmed) updateScenario(scenario.id, { name: trimmed })
+                                setScenarioRenaming(null)
+                              }
+                              if (e.key === 'Escape') setScenarioRenaming(null)
+                            }}
+                            onBlur={() => {
+                              const trimmed = renameValue.trim()
+                              if (trimmed) updateScenario(scenario.id, { name: trimmed })
+                              setScenarioRenaming(null)
+                            }}
+                            onClick={e => e.stopPropagation()}
+                            autoFocus
+                          />
+                        ) : (
+                          <div className="lever-sidebar-card-name">{scenario.name || `Scenario ${i + 1}`}</div>
+                        )}
+                        <div className="lever-sidebar-overflow-wrap">
+                          <button
+                            className="lever-sidebar-overflow-btn"
+                            onClick={e => {
+                              e.stopPropagation()
+                              setScenarioMenuOpen(scenarioMenuOpen === menuKey ? null : menuKey)
+                            }}
+                            aria-label={`Options for ${scenario.name}`}
+                          >
+                            ⋯
+                          </button>
+                          {scenarioMenuOpen === menuKey && (
+                            <div className="lever-sidebar-overflow-menu">
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setScenarioRenaming(menuKey)
+                                  setRenameValue(scenario.name)
+                                  setScenarioMenuOpen(null)
+                                }}
+                              >
+                                Rename
+                              </button>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setScenarios(prev => prev.filter(item => item.id !== scenario.id))
+                                  if (isSelected) setSelectedScenarioId('')
+                                  setScenarioMenuOpen(null)
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="lever-sidebar-card-stats">
+                        <span>
+                          Capacity: {scenario.totalBorrow === null ? '—' : formatCurrency(scenario.totalBorrow)}
+                        </span>
+                        <span>Ratio: {formatRatio(scenario.newRatio)}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {scenarioViews.length === 0 && <p className="lever-sidebar-empty">Add a scenario to get started.</p>}
+              </div>
             </div>
-          </section>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   )

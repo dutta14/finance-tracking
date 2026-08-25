@@ -423,7 +423,7 @@ section.goal {
 
 .goals-list-header {
   display: grid;
-  grid-template-columns: 2fr 60px 1.5fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 80px 60px 1.5fr 1fr 1fr 1fr;
   align-items: center;
   column-gap: 1.25rem;
   padding: 0 1.25rem 0.5rem;
@@ -1234,4 +1234,141 @@ body.dark .goal-drag-item--long-press {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   color: var(--color-text-muted);
+}
+
+/* ── Goal Pill Strip (master-detail) ── */
+.goal-pill-strip {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.3s ease,
+    opacity 0.25s ease;
+}
+.goal-pill-strip--visible {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.goal-pill-strip-inner {
+  overflow: hidden;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.goal-pill-strip--visible .goal-pill-strip-inner {
+  overflow-x: auto;
+}
+.goal-pill-strip-inner::before,
+.goal-pill-strip-inner::after {
+  content: '';
+  position: sticky;
+  flex-shrink: 0;
+  width: 40px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.goal-pill-strip-inner::before {
+  left: 0;
+  margin-right: -40px;
+  background: linear-gradient(to left, transparent, var(--color-bg));
+}
+.goal-pill-strip-inner::after {
+  right: 0;
+  margin-left: -40px;
+  background: linear-gradient(to right, transparent, var(--color-bg));
+}
+.goal-pill-strip--fade-left .goal-pill-strip-inner::before {
+  opacity: 1;
+}
+.goal-pill-strip--fade-right .goal-pill-strip-inner::after {
+  opacity: 1;
+}
+.goal-pill-strip-inner::-webkit-scrollbar {
+  height: 4px;
+}
+.goal-pill-strip-inner::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+.goal-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: var(--radius-md, 6px);
+  background: transparent;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  opacity: 0.55;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    box-shadow 0.15s,
+    opacity 0.15s;
+}
+.goal-pill:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+  opacity: 0.85;
+}
+.goal-pill--active {
+  color: var(--color-text);
+  font-weight: var(--fw-semibold);
+  opacity: 1;
+  border-bottom: 2px solid var(--color-text);
+  border-radius: 0;
+  padding-bottom: calc(0.4rem - 2px);
+}
+.goal-pill--back {
+  color: var(--color-text-muted);
+}
+.goal-pill--back:hover {
+  color: var(--color-text);
+}
+
+/* Cards container — collapses when detail is open */
+.goal-cards-container {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 0.2s ease,
+    opacity 0.15s ease;
+  opacity: 1;
+}
+.goal-cards-container > .goal-container {
+  overflow: hidden;
+  max-width: none;
+  margin: 0;
+}
+.goal-cards-container--collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Detail panel — fades in when visible */
+.goal-detail-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.2s ease,
+    opacity 0.15s ease 0.05s;
+}
+.goal-detail-panel > * {
+  overflow: hidden;
+}
+.goal-detail-panel--visible {
+  grid-template-rows: 1fr;
+  opacity: 1;
 }

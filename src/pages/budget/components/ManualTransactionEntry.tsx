@@ -28,13 +28,22 @@ function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroups, years, onAdd, isOpen: controlledOpen, onToggle }) => {
+const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
+  categoryGroups,
+  years,
+  onAdd,
+  isOpen: controlledOpen,
+  onToggle,
+}) => {
   const [internalOpen, setInternalOpen] = useState(false)
   const isOpen = controlledOpen ?? internalOpen
-  const setIsOpen = (v: boolean) => {
-    if (onToggle) onToggle(v)
-    else setInternalOpen(v)
-  }
+  const setIsOpen = useCallback(
+    (v: boolean) => {
+      if (onToggle) onToggle(v)
+      else setInternalOpen(v)
+    },
+    [onToggle],
+  )
   const [date, setDate] = useState(todayISO)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -130,7 +139,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
 
   const toggle = useCallback(() => {
     setIsOpen(!isOpen)
-  }, [isOpen])
+  }, [isOpen, setIsOpen])
 
   // Focus date input when form opens
   useEffect(() => {
@@ -149,7 +158,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, catOpen])
+  }, [isOpen, catOpen, setIsOpen])
 
   useEffect(() => {
     return () => {
@@ -369,9 +378,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
                   renderCatDropdown()
                 ) : (
                   <li className="budget-cat-empty" role="presentation">
-                    {visibleGroups.length === 0
-                      ? 'No categories — upload a CSV first'
-                      : `No match for "${catQuery}"`}
+                    {visibleGroups.length === 0 ? 'No categories — upload a CSV first' : `No match for "${catQuery}"`}
                   </li>
                 )}
               </ul>
@@ -406,7 +413,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
           {formContent}
         </div>
       </div>,
-      document.body
+      document.body,
     )
   }
 

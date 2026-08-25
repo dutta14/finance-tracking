@@ -1352,15 +1352,18 @@ const Transactions: FC = () => {
                                 day: 'numeric',
                               })}
                             </button>
-                            {isEditingDateRow && createPortal(
-                              <DatePickerFlyout
-                                value={editingDate.value}
-                                onSelect={nextDate => reassignTransactionDate(transaction, nextDate)}
-                                onCancel={() => setEditingDate(null)}
-                                style={dateEditorPos ? { top: dateEditorPos.top, left: dateEditorPos.left } : undefined}
-                              />,
-                              document.body
-                            )}
+                            {isEditingDateRow &&
+                              createPortal(
+                                <DatePickerFlyout
+                                  value={editingDate.value}
+                                  onSelect={nextDate => reassignTransactionDate(transaction, nextDate)}
+                                  onCancel={() => setEditingDate(null)}
+                                  style={
+                                    dateEditorPos ? { top: dateEditorPos.top, left: dateEditorPos.left } : undefined
+                                  }
+                                />,
+                                document.body,
+                              )}
                           </div>
                           <div
                             className={`txn-row-category-cell${isEditingCategory ? ' txn-row-category-cell--open' : ''}`}
@@ -1389,49 +1392,54 @@ const Transactions: FC = () => {
                                 </svg>
                               </span>
                             </button>
-                            {isEditingCategory && createPortal(
-                              <div
-                                className="txn-category-editor"
-                                ref={categoryEditorRef}
-                                role="dialog"
-                                aria-label={`Edit category for ${description}`}
-                                style={categoryEditorPos ? { top: categoryEditorPos.top, left: categoryEditorPos.left } : undefined}
-                              >
-                                <input
-                                  className="txn-category-editor-search-input"
-                                  type="search"
-                                  aria-label="Search categories"
-                                  placeholder="Search categories"
-                                  value={categoryEditSearch}
-                                  onChange={event => setCategoryEditSearch(event.target.value)}
-                                  autoFocus
-                                />
-                                <div className="txn-category-editor-list">
-                                  {visibleCategoryEditorGroups.length > 0 ? (
-                                    visibleCategoryEditorGroups.map(categoryGroup => (
-                                      <div key={categoryGroup.id} className="txn-category-editor-group">
-                                        <div className="txn-category-editor-group-title">{categoryGroup.name}</div>
-                                        <div className="txn-category-editor-group-options">
-                                          {categoryGroup.categories.map(category => (
-                                            <button
-                                              key={category}
-                                              type="button"
-                                              className={`txn-category-editor-option${category === transaction.category ? ' txn-category-editor-option--active' : ''}`}
-                                              onClick={() => reassignTransactionCategory(transaction, category)}
-                                            >
-                                              {category}
-                                            </button>
-                                          ))}
+                            {isEditingCategory &&
+                              createPortal(
+                                <div
+                                  className="txn-category-editor"
+                                  ref={categoryEditorRef}
+                                  role="dialog"
+                                  aria-label={`Edit category for ${description}`}
+                                  style={
+                                    categoryEditorPos
+                                      ? { top: categoryEditorPos.top, left: categoryEditorPos.left }
+                                      : undefined
+                                  }
+                                >
+                                  <input
+                                    className="txn-category-editor-search-input"
+                                    type="search"
+                                    aria-label="Search categories"
+                                    placeholder="Search categories"
+                                    value={categoryEditSearch}
+                                    onChange={event => setCategoryEditSearch(event.target.value)}
+                                    autoFocus
+                                  />
+                                  <div className="txn-category-editor-list">
+                                    {visibleCategoryEditorGroups.length > 0 ? (
+                                      visibleCategoryEditorGroups.map(categoryGroup => (
+                                        <div key={categoryGroup.id} className="txn-category-editor-group">
+                                          <div className="txn-category-editor-group-title">{categoryGroup.name}</div>
+                                          <div className="txn-category-editor-group-options">
+                                            {categoryGroup.categories.map(category => (
+                                              <button
+                                                key={category}
+                                                type="button"
+                                                className={`txn-category-editor-option${category === transaction.category ? ' txn-category-editor-option--active' : ''}`}
+                                                onClick={() => reassignTransactionCategory(transaction, category)}
+                                              >
+                                                {category}
+                                              </button>
+                                            ))}
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <p className="txn-category-editor-empty">No matching categories</p>
-                                  )}
-                                </div>
-                              </div>,
-                              document.body
-                            )}
+                                      ))
+                                    ) : (
+                                      <p className="txn-category-editor-empty">No matching categories</p>
+                                    )}
+                                  </div>
+                                </div>,
+                                document.body,
+                              )}
                           </div>
                           <span className={`txn-row-amount${transaction.amount > 0 ? ' txn-amount-positive' : ''}`}>
                             {formatSignedCurrency(transaction.amount)}

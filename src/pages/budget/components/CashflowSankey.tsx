@@ -33,7 +33,7 @@ const COLORS = [
   '#0ea5e9',
 ]
 
-const SAVINGS_COLOR = '#64748b'
+const SAVINGS_COLOR = '#10b981'
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -146,7 +146,7 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
 
   const rightItems = mode === 'group' ? expenseGroups.map(g => ({ name: g.name, amount: g.total })) : expenseCatArr
   const savings = Math.max(0, totalIncome - totalExpense)
-  const rightItemsAll = savings > 0 ? [...rightItems, { name: 'Savings', amount: savings }] : rightItems
+  const rightItemsAll = savings > 0 ? [{ name: 'Savings', amount: savings }, ...rightItems] : rightItems
   const rightTotal = savings > 0 ? totalIncome : rightItemsAll.reduce((sum, item) => sum + item.amount, 0)
 
   const handleNodeClick = useCallback(
