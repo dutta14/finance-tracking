@@ -9,20 +9,30 @@ import MiniCharts from './MiniCharts'
 import GoalsPeek from './GoalsPeek'
 import AllocationBreakdown from './AllocationBreakdown'
 import SetupProgress from './SetupProgress'
+import SpendingPeek from './SpendingPeek'
 import { loadBudgetStore } from '../budget/utils/budgetStorage'
 import { useFileStore } from '../../contexts/FileStoreContext'
 import { getStorageItem, setStorageItem, removeStorageItem } from '../../utils/storage'
 import '../../styles/Home.css'
 
-const DEFAULT_ORDER = [0, 1, 2, 3]
+const DEFAULT_ORDER = [0, 1, 2, 3, 4]
 
 function loadOrder(): number[] {
   const parsed = getStorageItem('home-card-order', DEFAULT_ORDER)
-  if (Array.isArray(parsed) && parsed.length === 4) return parsed
+  if (!Array.isArray(parsed)) return DEFAULT_ORDER
+
+  const validEntries = parsed.filter(
+    (value): value is number => Number.isInteger(value) && value >= 0 && value < DEFAULT_ORDER.length,
+  )
+  const uniqueEntries = [...new Set(validEntries)]
+
+  if (uniqueEntries.length === DEFAULT_ORDER.length) return uniqueEntries
+  if (uniqueEntries.length === DEFAULT_ORDER.length - 1 && !uniqueEntries.includes(4)) return [...uniqueEntries, 4]
+
   return DEFAULT_ORDER
 }
 
-const CARD_NAMES = ['Net Worth', 'Charts', 'Goals', 'Allocation']
+const CARD_NAMES = ['Net Worth', 'Charts', 'Goals', 'Allocation', 'Spending']
 
 const Home: FC = () => {
   const navigate = useNavigate()
@@ -146,9 +156,9 @@ const Home: FC = () => {
 
   /* ── Mobile move buttons ── */
   const moveCard = useCallback((pos: number, direction: -1 | 1) => {
-    const target = pos + direction
-    if (target < 0 || target > 3) return
     setOrder(prev => {
+      const target = pos + direction
+      if (target < 0 || target > prev.length - 1) return prev
       const next = [...prev]
       const [removed] = next.splice(pos, 1)
       next.splice(target, 0, removed)
@@ -184,6 +194,14 @@ const Home: FC = () => {
         accounts={accounts}
         balances={balances}
         onNavigate={() => navigate('/net-worth/allocation')}
+      />
+    </ErrorBoundary>,
+    <ErrorBoundary key="spending" variant="card">
+      <SpendingPeek
+        fileStore={fileStore}
+        hasBudgetData={hasBudgetData}
+        budgetDataLoaded={dataLoaded}
+        onNavigate={() => navigate('/budget')}
       />
     </ErrorBoundary>,
   ]
