@@ -1,6 +1,10 @@
 body.dark .sidebar-link.active {
-  color: var(--color-text-on-accent);
+  color: var(--color-text);
   background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark .sidebar-link.active::before {
+  background: var(--accent);
 }
 
 .sidebar {

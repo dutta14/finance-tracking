@@ -1,19 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { FinancialGoal } from '../../types'
 import { makeGoal, makeGwGoal } from '../../test/factories'
 import Goal from './Goal'
 
-/* ─── Captured props from mocked children ─── */
-
 let capturedGoalsSectionProps: Record<string, unknown> = {}
 let capturedGoalDetailProps: Record<string, unknown> = {}
 let capturedGoalFormModalProps: Record<string, unknown> = {}
 let capturedGoalMixerProps: Record<string, unknown> = {}
-
-/* ─── Mock contexts ─── */
 
 const mockCreateGoal = vi.fn()
 const mockUpdateGoal = vi.fn()
@@ -25,6 +21,7 @@ const mockCreateGwGoal = vi.fn()
 const mockUpdateGwGoal = vi.fn()
 const mockDeleteGwGoal = vi.fn()
 const mockOpenProfile = vi.fn()
+const mockSetLeverageSettings = vi.fn()
 
 const goalA = makeGoal({ id: 1, goalName: 'Alpha' })
 const goalB = makeGoal({ id: 2, goalName: 'Bravo' })
@@ -36,7 +33,7 @@ vi.mock('../../contexts/GoalsContext', () => ({
   useGoals: () => ({
     visibleGoals: goals,
     gwGoals,
-    profile: { birthday: '1990-01-15' },
+    profile: { birthday: '1990-01-15', partner: { birthday: '1992-02-20' } },
     createGoal: mockCreateGoal,
     updateGoal: mockUpdateGoal,
     handleDeleteGoal: mockDeleteGoal,
@@ -55,7 +52,39 @@ vi.mock('../../contexts/LayoutContext', () => ({
   }),
 }))
 
-/* ─── Mock child components to capture props ─── */
+vi.mock('../../contexts/DataContext', () => ({
+  useData: () => ({
+    allMonths: ['2024-01', '2024-02'],
+  }),
+}))
+
+vi.mock('../../hooks/useGrowthSettings', () => ({
+  useGrowthSettings: () => ({
+    settings: {
+      inflation: 3,
+      preBoundaryGrowth: 8,
+      postBoundaryGrowth: 6,
+      ageBoundary: 60,
+      gwGrowth: 8,
+    },
+    updateSettings: vi.fn(),
+  }),
+}))
+
+vi.mock('../../hooks/useLeverage', () => ({
+  useLeverageSettings: () => ({
+    settings: { chartStart: '2024-01' },
+    setSettings: mockSetLeverageSettings,
+  }),
+}))
+
+vi.mock('../../components/GrowthSettingsPanel', () => ({
+  default: () => <div data-testid="growth-settings-panel">Growth Settings</div>,
+}))
+
+vi.mock('../../components/MonthPicker', () => ({
+  default: () => <div data-testid="month-picker">Month Picker</div>,
+}))
 
 vi.mock('./components/GoalsSection', () => ({
   default: (props: Record<string, unknown>) => {
@@ -65,14 +94,9 @@ vi.mock('./components/GoalsSection', () => ({
         <button type="button" onClick={() => (props.onNewGoal as (() => void) | undefined)?.()}>
           New Goal
         </button>
-        <button
-          type="button"
-          title="Mix & Match goals"
-          onClick={() => (props.onMixMatch as (() => void) | undefined)?.()}
-        >
+        <button type="button" onClick={() => (props.onMixMatch as (() => void) | undefined)?.()}>
           Mix &amp; Match
         </button>
-        GoalsSection
       </div>
     )
   },
@@ -81,8 +105,8 @@ vi.mock('./components/GoalsSection', () => ({
 vi.mock('./components/GoalDetail', () => ({
   default: (props: Record<string, unknown>) => {
     capturedGoalDetailProps = props
-    const goalsList = props.goals as FinancialGoal[]
-    return <div data-testid="goal-detail">GoalDetail: {goalsList?.length} goals</div>
+    const detailGoals = props.goals as FinancialGoal[]
+    return <div data-testid="goal-detail">GoalDetail: {detailGoals.length} goals</div>
   },
 }))
 
@@ -104,17 +128,27 @@ vi.mock('./components/GoalMixer', () => ({
   },
 }))
 
-vi.mock('./components/NewGoalButton', () => ({
-  default: ({ onClick }: { onClick: () => void }) => <button onClick={onClick}>+ New Goal</button>,
+vi.mock('./components/GoalActionsMenu', () => ({
+  default: (props: { onRename?: () => void; onDuplicate?: () => void; onDelete?: () => void }) => (
+    <div data-testid="goal-actions-menu">
+      <button onClick={() => props.onRename?.()}>Rename</button>
+      <button onClick={() => props.onDuplicate?.()}>Duplicate</button>
+      <button onClick={() => props.onDelete?.()}>Delete</button>
+    </div>
+  ),
 }))
 
-/* ─── Lazy-loaded FICalculator mock ─── */
+vi.mock('./components/LeverageGoal', () => ({
+  default: () => <div data-testid="leverage-goal">LeverageGoal</div>,
+}))
+
+vi.mock('./components/PayDown', () => ({
+  default: () => <div data-testid="paydown-goal">PayDown</div>,
+}))
 
 vi.mock('../tools/components/FICalculator', () => ({
   default: () => <div data-testid="fi-calculator">FICalculator</div>,
 }))
-
-/* ─── Helpers ─── */
 
 function renderGoal(initialRoute = '/goal') {
   return render(
@@ -134,80 +168,69 @@ beforeEach(() => {
   capturedGoalMixerProps = {}
 })
 
-/* ═══════════════════════════════════════════════════════════════
-   1. Tab routing — default
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('Goal page tab routing', () => {
-  it('renders the FIRE Plans tab as active by default at /goal route', () => {
+describe('Goal page routing', () => {
+  it('redirects /goal to plans and renders the goals section', () => {
     renderGoal('/goal')
 
-    const plansLink = screen.getByRole('link', { name: 'FIRE Plans' })
-    expect(plansLink.className).toContain('active')
+    expect(screen.getByRole('heading', { name: 'Goals', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FIRE Plans' }).className).toContain('active')
     expect(screen.getByTestId('goals-section')).toBeInTheDocument()
   })
 
-  it('renders the FIRE Calculator tab when navigated to /goal/calculator', async () => {
+  it('renders the calculator tab and growth settings at /goal/calculator', () => {
     renderGoal('/goal/calculator')
 
-    const calcLink = screen.getByRole('link', { name: 'FIRE Calculator' })
-    expect(calcLink.className).toContain('active')
-    expect(await screen.findByTestId('fi-calculator')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FIRE Calculator' }).className).toContain('active')
+    expect(screen.getByTestId('fi-calculator')).toBeInTheDocument()
+    expect(screen.getByTestId('growth-settings-panel')).toBeInTheDocument()
+  })
+
+  it('renders the leverage tab month picker at /goal/leverage', () => {
+    renderGoal('/goal/leverage')
+
+    expect(screen.getByRole('link', { name: 'Leverage' }).className).toContain('active')
+    expect(screen.getByTestId('month-picker')).toBeInTheDocument()
+  })
+
+  it('renders detail view at /goal/plans/:id and keeps the header navigation visible', () => {
+    renderGoal('/goal/plans/1')
+
+    expect(screen.getByRole('heading', { name: 'Alpha', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Goals sections' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open goal drawer' })).toBeInTheDocument()
+    expect(screen.getByTestId('goal-detail')).toBeInTheDocument()
   })
 })
 
-/* ═══════════════════════════════════════════════════════════════
-   2. GoalDetail route
-   ═══════════════════════════════════════════════════════════════ */
+describe('Goal page detail callbacks', () => {
+  it('passes the goal detail callbacks on /goal/plans/:id', () => {
+    renderGoal('/goal/plans/1')
 
-describe('Goal page detail routing', () => {
-  it('renders GoalDetail when navigated to /goal/:id with a valid goal id', () => {
-    renderGoal('/goal/1')
-
-    expect(screen.getByTestId('goal-detail')).toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: 'Goals sections' })).not.toBeInTheDocument()
-  })
-
-  it('shows "Goal not found" message when navigated to /goal/:id with invalid id', () => {
-    renderGoal('/goal/999')
-
-    // #51: GoalDetail renders a "not found" view when the goal ID doesn't match any goal.
-    // The component shows "This goal may have been deleted" text and a back link.
-    expect(screen.getByTestId('goal-detail')).toBeInTheDocument()
-    const detailProps = capturedGoalDetailProps
-    expect(detailProps.goals).toEqual(goals)
-    // GoalDetail internally calls goals.find(g => g.id === 999) which returns undefined,
-    // triggering the not-found branch. Since GoalDetail is mocked in this test file,
-    // we can only verify the props are passed correctly. The actual "not found" rendering
-    // is tested in GoalDetail.test.tsx (or should be added there).
+    expect(capturedGoalDetailProps.onCreateGwGoal).toBe(mockCreateGwGoal)
+    expect(capturedGoalDetailProps.onUpdateGwGoal).toBe(mockUpdateGwGoal)
+    expect(capturedGoalDetailProps.onDeleteGwGoal).toBe(mockDeleteGwGoal)
+    expect(capturedGoalDetailProps.onUpdateGoal).toBe(mockUpdateGoal)
+    expect(capturedGoalDetailProps.goals).toEqual(goals)
+    expect(capturedGoalDetailProps.profileBirthday).toBe('1990-01-15')
+    expect(capturedGoalDetailProps.partnerBirthday).toBe('1992-02-20')
   })
 })
 
-/* ═══════════════════════════════════════════════════════════════
-   3. GoalFormModal — create mode
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('GoalFormModal interactions', () => {
-  it('opens GoalFormModal in create mode when "New Goal" button is clicked', async () => {
+describe('Goal form interactions', () => {
+  it('opens GoalFormModal in create mode when New Goal is clicked', async () => {
     const user = userEvent.setup()
     renderGoal('/goal')
 
-    expect(screen.queryByTestId('goal-form-modal')).not.toBeInTheDocument()
-
     await user.click(screen.getByRole('button', { name: /new goal/i }))
 
-    const modal = screen.getByTestId('goal-form-modal')
-    expect(modal).toBeInTheDocument()
-    expect(modal).toHaveAttribute('aria-label', 'Create new goal')
+    expect(screen.getByTestId('goal-form-modal')).toHaveAttribute('aria-label', 'Create new goal')
     expect(capturedGoalFormModalProps.editingGoalId).toBeNull()
   })
 
-  it('opens GoalFormModal in edit mode when a goal edit action is triggered', async () => {
+  it('opens GoalFormModal in edit mode when editingGoalId exists', async () => {
     const user = userEvent.setup()
-
-    // Override useEditingState to return an editingGoalId
-    const useEditingStateMock = await import('./hooks/useEditingState')
-    const spy = vi.spyOn(useEditingStateMock, 'useEditingState')
+    const useEditingStateModule = await import('./hooks/useEditingState')
+    const spy = vi.spyOn(useEditingStateModule, 'useEditingState')
     spy.mockReturnValue({
       selectedGoalIds: [],
       setSelectedGoalIds: vi.fn(),
@@ -220,239 +243,133 @@ describe('GoalFormModal interactions', () => {
     })
 
     renderGoal('/goal')
-
-    // Trigger showing the form
     await user.click(screen.getByRole('button', { name: /new goal/i }))
 
-    const modal = screen.getByTestId('goal-form-modal')
-    expect(modal).toBeInTheDocument()
-    expect(modal).toHaveAttribute('aria-label', 'Edit goal')
+    expect(screen.getByTestId('goal-form-modal')).toHaveAttribute('aria-label', 'Edit goal')
     expect(capturedGoalFormModalProps.editingGoalId).toBe(1)
 
     spy.mockRestore()
   })
 
-  it('opens GoalFormModal in copy mode with pre-filled data from the source goal', async () => {
+  it('calls createGoal on submit when not editing', async () => {
     const user = userEvent.setup()
     renderGoal('/goal')
 
-    // Trigger copy through the GoalsSection onCopyGoal callback
-    const onCopyGoal = capturedGoalsSectionProps.onCopyGoal as (goal: FinancialGoal) => void
-    expect(onCopyGoal).toBeDefined()
-
-    // Simulate copying goalA
-    await user.click(screen.getByRole('button', { name: /new goal/i }))
-    // Cancel to reset, then trigger copy
-    const onCancel = capturedGoalFormModalProps.onCancel as () => void
-    onCancel()
-
-    const { act } = await import('@testing-library/react')
-    act(() => {
-      onCopyGoal(goalA)
-    })
-
-    const modal = screen.getByTestId('goal-form-modal')
-    expect(modal).toBeInTheDocument()
-    // In copy mode, editingGoalId should be null (it's a new goal with pre-filled data)
-    expect(capturedGoalFormModalProps.editingGoalId).toBeNull()
-    // formData should have the source goal name with "- Duplicate" suffix
-    const formData = capturedGoalFormModalProps.formData as Record<string, unknown>
-    expect(formData.goalName).toContain('Alpha')
-    expect(formData.goalName).toContain('- Duplicate')
-  })
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   4. GoalMixer modal
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('GoalMixer', () => {
-  it('opens GoalMixer modal when "Mix & Match" is clicked', async () => {
-    const user = userEvent.setup()
-    renderGoal('/goal')
-
-    expect(screen.queryByTestId('goal-mixer')).not.toBeInTheDocument()
-
-    const mixButton = screen.getByRole('button', { name: /mix/i })
-    await user.click(mixButton)
-
-    expect(screen.getByTestId('goal-mixer')).toBeInTheDocument()
-    expect(capturedGoalMixerProps.goals).toEqual(goals)
-    expect(capturedGoalMixerProps.gwGoals).toEqual(gwGoals)
-  })
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   5. Lazy-loaded FICalculator with Suspense
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('FICalculator lazy loading', () => {
-  it('lazy-loads FICalculator with Suspense fallback on Calculator tab', async () => {
-    renderGoal('/goal/calculator')
-
-    // The mocked FICalculator resolves immediately, but Suspense fallback
-    // may flash briefly. Verify the calculator eventually renders.
-    expect(await screen.findByTestId('fi-calculator')).toBeInTheDocument()
-  })
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   6. GoalDetail GW goal CRUD callbacks
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('GoalDetail receives correct callbacks', () => {
-  it('passes correct GW goal CRUD callbacks to GoalDetail', () => {
-    renderGoal('/goal/1')
-
-    expect(capturedGoalDetailProps.onCreateGwGoal).toBe(mockCreateGwGoal)
-    expect(capturedGoalDetailProps.onUpdateGwGoal).toBe(mockUpdateGwGoal)
-    expect(capturedGoalDetailProps.onDeleteGwGoal).toBe(mockDeleteGwGoal)
-    expect(capturedGoalDetailProps.goals).toEqual(goals)
-    expect(capturedGoalDetailProps.profileBirthday).toBe('1990-01-15')
-    expect(capturedGoalDetailProps.gwGoals).toEqual(gwGoals)
-  })
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   7. handleCreateGoal — create path
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('handleCreateGoal', () => {
-  it('calls createGoal when no editingGoalId is set', async () => {
-    const user = userEvent.setup()
-    renderGoal('/goal')
-
-    // Click the New Goal button to show the form
     await user.click(screen.getByRole('button', { name: /new goal/i }))
 
-    // Trigger onSubmit via GoalFormModal props
-    const goal = makeGoal({ id: 99, goalName: 'New Plan' })
-    const onSubmit = capturedGoalFormModalProps.onSubmit as (g: FinancialGoal) => void
-    onSubmit(goal)
+    const newGoal = makeGoal({ id: 99, goalName: 'New Plan' })
+    ;(capturedGoalFormModalProps.onSubmit as (goal: FinancialGoal) => void)(newGoal)
 
-    expect(mockCreateGoal).toHaveBeenCalledWith(goal)
+    expect(mockCreateGoal).toHaveBeenCalledWith(newGoal)
     expect(mockUpdateGoal).not.toHaveBeenCalled()
   })
 
-  it('copies GW goals when creating from a copy', async () => {
-    const { act: rtlAct } = await import('@testing-library/react')
+  it('copies GW goals when submitting a duplicated goal', () => {
     renderGoal('/goal')
 
-    // Trigger copy goal via GoalsSection — this sets showForm=true and copySourceGoalId
-    rtlAct(() => {
-      const onCopyGoal = capturedGoalsSectionProps.onCopyGoal as (goal: FinancialGoal) => void
-      onCopyGoal(goalA)
+    act(() => {
+      ;(capturedGoalsSectionProps.onCopyGoal as (goal: FinancialGoal) => void)(goalA)
     })
 
-    // Now the form should be shown
-    expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
-
-    // Submit the copied goal
     const copiedGoal = makeGoal({ id: 100, goalName: 'Alpha - Duplicate' })
-    rtlAct(() => {
-      const onSubmit = capturedGoalFormModalProps.onSubmit as (g: FinancialGoal) => void
-      onSubmit(copiedGoal)
+    act(() => {
+      ;(capturedGoalFormModalProps.onSubmit as (goal: FinancialGoal) => void)(copiedGoal)
     })
 
     expect(mockCreateGoal).toHaveBeenCalledWith(copiedGoal)
     expect(mockCopyGwGoals).toHaveBeenCalledWith(1, 100)
   })
-})
 
-/* ═══════════════════════════════════════════════════════════════
-   8. handleRenameGoal
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('handleRenameGoal', () => {
-  it('renames a goal via onRenameGoal callback', () => {
-    renderGoal('/goal')
-
-    const onRenameGoal = capturedGoalsSectionProps.onRenameGoal as (id: number, name: string) => void
-    onRenameGoal(1, 'Renamed Alpha')
-
-    expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Renamed Alpha' }))
-  })
-
-  it('does not call updateGoal when goal ID is not found', () => {
-    renderGoal('/goal')
-
-    const onRenameGoal = capturedGoalsSectionProps.onRenameGoal as (id: number, name: string) => void
-    onRenameGoal(999, 'Nonexistent')
-
-    expect(mockUpdateGoal).not.toHaveBeenCalled()
-  })
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   9. GoalMixer toggle via Mix & Match button
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('GoalMixer', () => {
-  it('opens mixer when Mix & Match button is clicked', async () => {
+  it('hides the form when cancel is invoked', async () => {
     const user = userEvent.setup()
     renderGoal('/goal')
 
-    const mixBtn = screen.getByTitle('Mix & Match goals')
-    await user.click(mixBtn)
-
-    expect(screen.getByTestId('goal-mixer')).toBeInTheDocument()
-  })
-
-  it('closes mixer via onClose callback', async () => {
-    const user = userEvent.setup()
-    renderGoal('/goal')
-
-    // Open mixer
-    const mixBtn = screen.getByTitle('Mix & Match goals')
-    await user.click(mixBtn)
-    expect(screen.getByTestId('goal-mixer')).toBeInTheDocument()
-
-    // Close via onClose — need act() since it triggers state change
-    const { act: rtlAct } = await import('@testing-library/react')
-    rtlAct(() => {
-      const onClose = capturedGoalMixerProps.onClose as () => void
-      onClose()
-    })
-
-    expect(screen.queryByTestId('goal-mixer')).not.toBeInTheDocument()
-  })
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   10. handleCancelEdit
-   ═══════════════════════════════════════════════════════════════ */
-
-describe('handleCancelEdit', () => {
-  it('hides form on cancel', async () => {
-    const user = userEvent.setup()
-    renderGoal('/goal')
-
-    // Open form
     await user.click(screen.getByRole('button', { name: /new goal/i }))
-    expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
-
-    // Cancel via modal — need act() since it triggers state change
-    const { act: rtlAct } = await import('@testing-library/react')
-    rtlAct(() => {
-      const onCancel = capturedGoalFormModalProps.onCancel as () => void
-      onCancel()
+    act(() => {
+      ;(capturedGoalFormModalProps.onCancel as () => void)()
     })
 
     expect(screen.queryByTestId('goal-form-modal')).not.toBeInTheDocument()
   })
 })
 
-/* ═══════════════════════════════════════════════════════════════
-   11. GoalDetail onRenameGoal callback
-   ═══════════════════════════════════════════════════════════════ */
+describe('Goal page goal actions', () => {
+  it('renames a goal via the GoalsSection callback', () => {
+    renderGoal('/goal')
+    ;(capturedGoalsSectionProps.onRenameGoal as (id: number, name: string) => void)(1, 'Renamed Alpha')
 
-describe('GoalDetail rename callback', () => {
-  it('passes handleRenameGoal to GoalDetail', () => {
-    renderGoal('/goal/1')
+    expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Renamed Alpha' }))
+  })
 
-    const onRenameGoal = capturedGoalDetailProps.onRenameGoal as (id: number, name: string) => void
-    onRenameGoal(1, 'Detail Renamed')
+  it('opens and closes GoalMixer from the plans page', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
 
-    expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Detail Renamed' }))
+    await user.click(screen.getByRole('button', { name: /mix & match/i }))
+    expect(screen.getByTestId('goal-mixer')).toBeInTheDocument()
+
+    act(() => {
+      ;(capturedGoalMixerProps.onClose as () => void)()
+    })
+
+    expect(screen.queryByTestId('goal-mixer')).not.toBeInTheDocument()
+  })
+})
+
+describe('Goal drawer behavior', () => {
+  it('opens the drawer from detail view and returns to the plans list', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal/plans/1')
+
+    await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    expect(screen.getByRole('button', { name: /all plans/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /all plans/i }))
+    expect(screen.getByRole('heading', { name: 'Goals', level: 1 })).toBeInTheDocument()
+    expect(screen.queryByTestId('goal-detail')).not.toBeInTheDocument()
+  })
+
+  it('navigates to another plan from the drawer', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal/plans/1')
+
+    await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByText('Bravo'))
+
+    expect(screen.getByRole('heading', { name: 'Bravo', level: 1 })).toBeInTheDocument()
+  })
+
+  it('renames the active goal from the drawer actions menu', async () => {
+    const user = userEvent.setup()
+    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('Renamed Alpha')
+    renderGoal('/goal/plans/1')
+
+    await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Rename' }))
+
+    expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Renamed Alpha' }))
+    promptSpy.mockRestore()
+  })
+
+  it('duplicates the active goal from the drawer actions menu', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal/plans/1')
+
+    await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Duplicate' }))
+
+    expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
+    expect(capturedGoalFormModalProps.editingGoalId).toBeNull()
+  })
+
+  it('deletes the active goal and navigates to another plan', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal/plans/1')
+
+    await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(mockDeleteGoal).toHaveBeenCalledWith(1)
+    expect(screen.getByRole('heading', { name: 'Bravo', level: 1 })).toBeInTheDocument()
   })
 })

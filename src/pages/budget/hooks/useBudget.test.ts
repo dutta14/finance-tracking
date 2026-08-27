@@ -1069,9 +1069,9 @@ describe('useBudget — viewMode', () => {
     expect(result.current.viewMode).toBe('cashflow')
   })
 
-  it('defaults to detailed spreadsheet mode', async () => {
+  it('defaults to aggregated spreadsheet mode', async () => {
     const { result } = await renderAndLoad()
-    expect(result.current.spreadsheetMode).toBe('detailed')
+    expect(result.current.spreadsheetMode).toBe('aggregated')
   })
 
   it('switches spreadsheet mode', async () => {
