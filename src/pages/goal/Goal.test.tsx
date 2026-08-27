@@ -10,6 +10,7 @@ let capturedGoalsSectionProps: Record<string, unknown> = {}
 let capturedGoalDetailProps: Record<string, unknown> = {}
 let capturedGoalFormModalProps: Record<string, unknown> = {}
 let capturedGoalMixerProps: Record<string, unknown> = {}
+let capturedMonthPickerProps: Record<string, unknown> = {}
 
 const mockCreateGoal = vi.fn()
 const mockUpdateGoal = vi.fn()
@@ -83,7 +84,10 @@ vi.mock('../../components/GrowthSettingsPanel', () => ({
 }))
 
 vi.mock('../../components/MonthPicker', () => ({
-  default: () => <div data-testid="month-picker">Month Picker</div>,
+  default: (props: Record<string, unknown>) => {
+    capturedMonthPickerProps = props
+    return <div data-testid="month-picker">Month Picker</div>
+  },
 }))
 
 vi.mock('./components/GoalsSection', () => ({
@@ -166,6 +170,7 @@ beforeEach(() => {
   capturedGoalDetailProps = {}
   capturedGoalFormModalProps = {}
   capturedGoalMixerProps = {}
+  capturedMonthPickerProps = {}
 })
 
 describe('Goal page routing', () => {
@@ -190,6 +195,17 @@ describe('Goal page routing', () => {
 
     expect(screen.getByRole('link', { name: 'Leverage' }).className).toContain('active')
     expect(screen.getByTestId('month-picker')).toBeInTheDocument()
+  })
+
+  it('updates leverage settings when the leverage month picker changes month', () => {
+    renderGoal('/goal/leverage')
+    ;(capturedMonthPickerProps.onMonthChange as (month: string) => void)('2024-02')
+
+    const updater = mockSetLeverageSettings.mock.calls[0][0]
+    expect(updater({ chartStart: '2024-01', compareStart: '2023-01' })).toEqual({
+      chartStart: '2024-02',
+      compareStart: '2023-01',
+    })
   })
 
   it('renders detail view at /goal/plans/:id and keeps the header navigation visible', () => {
@@ -291,6 +307,21 @@ describe('Goal form interactions', () => {
 
     expect(screen.queryByTestId('goal-form-modal')).not.toBeInTheDocument()
   })
+
+  it('merges form field updates from the goal form modal callback', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
+
+    await user.click(screen.getByRole('button', { name: /new goal/i }))
+
+    act(() => {
+      ;(capturedGoalFormModalProps.onSetFormFields as (fields: Record<string, unknown>) => void)({
+        goalName: 'Updated draft',
+      })
+    })
+
+    expect(capturedGoalFormModalProps.formData).toEqual(expect.objectContaining({ goalName: 'Updated draft' }))
+  })
 })
 
 describe('Goal page goal actions', () => {
@@ -313,6 +344,19 @@ describe('Goal page goal actions', () => {
     })
 
     expect(screen.queryByTestId('goal-mixer')).not.toBeInTheDocument()
+  })
+
+  it('navigates to a goal detail page from the GoalMixer callback', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal')
+
+    await user.click(screen.getByRole('button', { name: /mix & match/i }))
+
+    act(() => {
+      ;(capturedGoalMixerProps.onGoToGoal as (goalId: number) => void)(2)
+    })
+
+    expect(screen.getByRole('heading', { name: 'Bravo', level: 1 })).toBeInTheDocument()
   })
 })
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { FC } from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Home from './Home'
@@ -55,16 +55,49 @@ vi.mock('../../hooks/useTouchDrag', () => ({
   })),
 }))
 
-vi.mock('./NetWorthSummary', () => ({ default: () => <div data-testid="nw-card">Net Worth Card</div> }))
-vi.mock('./MiniCharts', () => ({ default: () => <div data-testid="charts-card">Charts Card</div> }))
+vi.mock('./NetWorthSummary', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="nw-card">
+      Net Worth Card
+      <button onClick={onNavigate}>Open net worth details</button>
+    </div>
+  ),
+}))
+vi.mock('./MiniCharts', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="charts-card">
+      Charts Card
+      <button onClick={onNavigate}>Open net worth dashboard</button>
+    </div>
+  ),
+}))
 vi.mock('./GoalsPeek', () => ({
-  default: () => {
+  default: ({ onNavigate }: { onNavigate: () => void }) => {
     if (goalsPeekShouldThrow) throw new Error('GoalsPeek boom')
-    return <div data-testid="goals-card">Goals Card</div>
+    return (
+      <div data-testid="goals-card">
+        Goals Card
+        <button onClick={onNavigate}>Open goals</button>
+      </div>
+    )
   },
 }))
-vi.mock('./AllocationBreakdown', () => ({ default: () => <div data-testid="alloc-card">Allocation Card</div> }))
-vi.mock('./SpendingPeek', () => ({ default: () => <div data-testid="spending-card">Spending Card</div> }))
+vi.mock('./AllocationBreakdown', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="alloc-card">
+      Allocation Card
+      <button onClick={onNavigate}>Open allocation</button>
+    </div>
+  ),
+}))
+vi.mock('./SpendingPeek', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="spending-card">
+      Spending Card
+      <button onClick={onNavigate}>Open budget</button>
+    </div>
+  ),
+}))
 
 let goalsPeekShouldThrow = false
 // Capture the SetupProgress mock so we can override it per-test
@@ -157,6 +190,25 @@ describe('Home cards', () => {
     renderHome()
     const slots = screen.getAllByTestId(/^drag-slot-/)
     expect(slots).toHaveLength(5)
+  })
+
+  it('passes the expected navigation targets to each dashboard card', async () => {
+    const user = userEvent.setup()
+    renderHome()
+
+    await user.click(screen.getByRole('button', { name: 'Open net worth details' }))
+    await user.click(screen.getByRole('button', { name: 'Open net worth dashboard' }))
+    await user.click(screen.getByRole('button', { name: 'Open goals' }))
+    await user.click(screen.getByRole('button', { name: 'Open allocation' }))
+    await user.click(screen.getByRole('button', { name: 'Open budget' }))
+
+    expect(mockNavigate.mock.calls).toEqual([
+      ['/net-worth/dashboard/details'],
+      ['/net-worth/dashboard'],
+      ['/goal'],
+      ['/net-worth/allocation'],
+      ['/budget'],
+    ])
   })
 })
 
@@ -669,7 +721,7 @@ describe('Home touch drag CSS classes', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home touch drag onDragEnd reorder', () => {
-  it('reorders cards when touch drag ends with from !== dragOver', () => {
+  it('reorders cards when touch drag ends with from !== dragOver', async () => {
     let capturedOnDragEnd: (() => void) | undefined
     let capturedOnDragStart: ((idx: number) => void) | undefined
     let capturedGetSlotFromPoint: ((x: number, y: number) => number | null) | undefined
@@ -687,30 +739,31 @@ describe('Home touch drag onDragEnd reorder', () => {
       }
     })
 
-    renderHome()
+    const { rerender } = renderHome()
 
-    // Simulate: start drag from slot 0
-    capturedOnDragStart!(0)
-
-    // Mock elementFromPoint to return a slot element
     const slots = screen.getAllByTestId(/^drag-slot-/)
     const origEFP = document.elementFromPoint
     document.elementFromPoint = vi.fn().mockReturnValue(slots[2])
 
-    // Call getSlotFromPoint to set dragOver state
-    const result = capturedGetSlotFromPoint!(100, 100)
-    expect(result).toBe(2)
+    act(() => {
+      capturedOnDragStart!(0)
+      expect(capturedGetSlotFromPoint!(100, 100)).toBe(2)
+    })
 
-    // Now end the drag — this should trigger reorder since from=0, dragOver=2
-    capturedOnDragEnd!()
+    rerender(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
 
-    // Check that order changed in localStorage
-    const stored = localStorage.getItem('home-card-order')
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      expect(parsed).toHaveLength(4)
-      expect(parsed).not.toEqual([0, 1, 2, 3])
-    }
+    act(() => {
+      capturedOnDragEnd!()
+    })
+
+    await waitFor(() => {
+      expect(localStorage.getItem('home-card-order')).toBe(JSON.stringify([1, 2, 0, 3, 4]))
+    })
+    expect(screen.getByText('Net Worth moved to position 3')).toBeInTheDocument()
 
     document.elementFromPoint = origEFP
   })

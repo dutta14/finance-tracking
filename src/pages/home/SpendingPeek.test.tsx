@@ -11,12 +11,18 @@ import SpendingPeek from './SpendingPeek'
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   ComposedChart: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Area: () => null,
-  Line: () => null,
-  XAxis: () => null,
-  YAxis: () => null,
+  Area: ({ name }: { name?: string }) => <div data-testid="area-series">{name}</div>,
+  Line: ({ name }: { name?: string }) => <div data-testid="line-series">{name}</div>,
+  XAxis: ({ ticks = [], tickFormatter }: { ticks?: number[]; tickFormatter?: (value: number) => string }) => (
+    <div
+      data-testid="x-axis"
+      data-first-tick={tickFormatter ? tickFormatter(ticks[0] ?? 1) : ''}
+      data-last-tick={tickFormatter ? tickFormatter(ticks[ticks.length - 1] ?? 1) : ''}
+    />
+  ),
+  YAxis: () => <div data-testid="y-axis" />,
   CartesianGrid: () => null,
-  Tooltip: () => null,
+  Tooltip: () => <div data-testid="chart-tooltip" />,
 }))
 
 vi.mock('../budget/utils/budgetStorage', () => ({
@@ -70,6 +76,44 @@ const mockStore: BudgetStore = {
 const emptyStore: BudgetStore = {
   ...mockStore,
   csvs: {},
+}
+
+const comparisonStore: BudgetStore = {
+  ...mockStore,
+  csvs: {
+    '2026-07': {
+      month: '2026-07',
+      csv: 'Date,Category,Amount\n2026-07-01,Groceries,-50\n2026-07-15,Rent,-2000',
+      uploadedAt: '',
+    },
+    '2026-06': {
+      month: '2026-06',
+      csv: 'Date,Category,Amount\n2026-06-01,Groceries,-100\n2026-06-15,Rent,-2000',
+      uploadedAt: '',
+    },
+    '2025-07': {
+      month: '2025-07',
+      csv: 'Date,Category,Amount\n2025-07-01,Groceries,-25\n2025-07-15,Rent,-1500',
+      uploadedAt: '',
+    },
+    '2025-06': {
+      month: '2025-06',
+      csv: 'Date,Category,Amount\n2025-06-01,Groceries,-75\n2025-06-15,Rent,-1800',
+      uploadedAt: '',
+    },
+  },
+}
+
+const currentMonthStore: BudgetStore = {
+  ...mockStore,
+  csvs: {
+    '2026-08': {
+      month: '2026-08',
+      csv: 'Date,Category,Amount\n2026-08-01,Groceries,-60\n2026-08-10,Rent,-2000\n2026-08-11,Salary,4000',
+      uploadedAt: '',
+    },
+    '2026-07': mockStore.csvs['2026-07'],
+  },
 }
 
 const mockFileStore = {} as FileStore
@@ -136,6 +180,28 @@ describe('SpendingPeek', () => {
     expect(screen.getByText(/upload budget csvs to see how your spending accumulates/i)).toBeInTheDocument()
   })
 
+  it('opens the comparison dropdown from the empty state and updates the selected mode', async () => {
+    const user = userEvent.setup()
+    mockedLoadBudgetStore.mockResolvedValueOnce(emptyStore)
+
+    renderPeek()
+
+    const trigger = await screen.findByRole('button', { name: /spending comparison mode/i })
+    await user.click(trigger)
+    await user.click(screen.getByRole('option', { name: 'Last month vs. average month' }))
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(trigger).toHaveTextContent('Last month vs. average month')
+  })
+
+  it('falls back to the CTA state when loading the budget store fails', async () => {
+    mockedLoadBudgetStore.mockRejectedValueOnce(new Error('boom'))
+
+    renderPeek()
+
+    expect(await screen.findByRole('button', { name: 'Add budget data →' })).toBeInTheDocument()
+  })
+
   it('renders the spending chart and budget link when store data exists', async () => {
     renderPeek()
 
@@ -197,5 +263,55 @@ describe('SpendingPeek', () => {
     renderPeek()
 
     await waitFor(() => expect(screen.getByText('$2,050.00 last month')).toBeInTheDocument())
+  })
+
+  it('shows current-month wording and the month-day tick labels when the latest month is in progress', async () => {
+    mockedLoadBudgetStore.mockResolvedValueOnce(currentMonthStore)
+
+    renderPeek()
+
+    await waitFor(() => expect(screen.getByText('$2,060.00 this month')).toBeInTheDocument())
+    expect(screen.getByTestId('x-axis')).toHaveAttribute('data-first-tick', 'Day 1')
+    expect(screen.getByTestId('x-axis')).toHaveAttribute('data-last-tick', 'Day 31')
+  })
+
+  it('renders the last-year comparison labels when that mode is selected', async () => {
+    const user = userEvent.setup()
+    mockedLoadBudgetStore.mockResolvedValueOnce(comparisonStore)
+
+    renderPeek()
+
+    await user.click(await screen.findByRole('button', { name: /spending comparison mode/i }))
+    await user.click(screen.getByRole('option', { name: 'Last month vs. last year' }))
+
+    expect(await screen.findAllByText('Last year')).toHaveLength(2)
+    expect(screen.getAllByText('Last month')).toHaveLength(2)
+  })
+
+  it('renders the average-month comparison labels when that mode is selected', async () => {
+    const user = userEvent.setup()
+    mockedLoadBudgetStore.mockResolvedValueOnce(comparisonStore)
+
+    renderPeek()
+
+    await user.click(await screen.findByRole('button', { name: /spending comparison mode/i }))
+    await user.click(screen.getByRole('option', { name: 'Last month vs. average month' }))
+
+    expect(await screen.findAllByText('Average month')).toHaveLength(2)
+    expect(screen.getAllByText('Last month')).toHaveLength(2)
+  })
+
+  it('renders the yearly comparison labels and subtitle when that mode is selected', async () => {
+    const user = userEvent.setup()
+    mockedLoadBudgetStore.mockResolvedValueOnce(comparisonStore)
+
+    renderPeek()
+
+    await user.click(await screen.findByRole('button', { name: /spending comparison mode/i }))
+    await user.click(screen.getByRole('option', { name: 'This year vs. last year' }))
+
+    expect(await screen.findByText('$4,150.00 this year')).toBeInTheDocument()
+    expect(screen.getAllByText('This year')).toHaveLength(2)
+    expect(screen.getAllByText('Last year')).toHaveLength(2)
   })
 })

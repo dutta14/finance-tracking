@@ -86,8 +86,8 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           bv = b.goalName.toLowerCase()
           return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : av > bv ? -1 : av < bv ? 1 : 0
         case 'retire':
-          av = am.retirementYear
-          bv = bm.retirementYear
+          av = am.projectedFIDate ? am.projectedFIDate.getTime() : Infinity
+          bv = bm.projectedFIDate ? bm.projectedFIDate.getTime() : Infinity
           break
         case 'progress':
           av = am.fiProgress

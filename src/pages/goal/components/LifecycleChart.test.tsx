@@ -1,19 +1,52 @@
-import type { ReactNode } from 'react'
+import React, { cloneElement, isValidElement, type ReactNode } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import LifecycleChart from './LifecycleChart'
 import { ProjectionRow } from '../utils/lifecycleProjection'
 
+let lastChartData: Array<{
+  month: string
+  remaining: number
+  expense: number
+  phase: string
+  monthlyGrowth?: number
+  monthlySaved?: number
+}> = []
+
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: ReactNode }) => (
     <div data-testid="responsive-container">{children}</div>
   ),
-  ComposedChart: ({ children }: { children: ReactNode }) => <div data-testid="composed-chart">{children}</div>,
+  ComposedChart: ({
+    children,
+    data,
+  }: {
+    children: ReactNode
+    data?: Array<{
+      month: string
+      remaining: number
+      expense: number
+      phase: string
+      monthlyGrowth?: number
+      monthlySaved?: number
+    }>
+  }) => {
+    lastChartData = data ?? []
+    return <div data-testid="composed-chart">{children}</div>
+  },
   Area: () => <div data-testid="area" />,
   Line: () => <div data-testid="line" />,
   XAxis: () => null,
   YAxis: () => null,
-  Tooltip: () => null,
+  Tooltip: ({ content }: { content?: ReactNode }) => {
+    const sample = lastChartData[1] ?? lastChartData[0]
+    if (!sample || !isValidElement(content)) return null
+    return cloneElement(content as React.ReactElement<any>, {
+      active: true,
+      payload: [{ value: sample.remaining, payload: sample }],
+      label: sample.month,
+    })
+  },
   CartesianGrid: () => null,
   ReferenceLine: ({ label }: { x?: string; label?: { value: string; dy: number } }) =>
     label ? <div data-testid="reference-line" data-label={label.value} data-dy={label.dy} /> : null,
@@ -119,6 +152,50 @@ describe('LifecycleChart', () => {
     const chart = screen.getByRole('img', { name: 'FI lifecycle projection chart' })
     fireEvent.keyDown(chart, { key: 'ArrowRight' })
 
-    expect(screen.getByText(/% of GW goal/)).toBeInTheDocument()
+    expect(screen.getAllByText(/% of GW goal/).length).toBeGreaterThan(0)
   })
+})
+
+it('renders tooltip details for coasting, growth, expense, and fire month states', () => {
+  const rows: ProjectionRow[] = [
+    {
+      month: 'Jan 2035',
+      expense: 0,
+      remaining: 1_000_000,
+      phase: 'accumulation',
+      monthlySaved: 2000,
+      monthlyGrowth: 3000,
+    },
+    { month: 'Feb 2035', expense: 0, remaining: 1_003_000, phase: 'coasting', monthlySaved: 0, monthlyGrowth: 3000 },
+    { month: 'Mar 2035', expense: 5000, remaining: 998_000, phase: 'drawdown', monthlySaved: 0, monthlyGrowth: 1000 },
+  ]
+
+  render(<LifecycleChart rows={rows} fiGoal={1_100_000} />)
+
+  expect(screen.getByText('Saving $0 (coasting)')).toBeInTheDocument()
+  expect(screen.getByText('Growth')).toBeInTheDocument()
+  expect(screen.getByText('Balance')).toBeInTheDocument()
+})
+
+it('supports left, home, end, and escape keyboard navigation for the live region', () => {
+  const rows: ProjectionRow[] = [
+    { month: 'Jan 2035', expense: 0, remaining: 900_000, phase: 'accumulation' },
+    { month: 'Feb 2035', expense: 0, remaining: 1_000_000, phase: 'accumulation' },
+    { month: 'Mar 2035', expense: 4_000, remaining: 995_000, phase: 'drawdown' },
+  ]
+
+  render(<LifecycleChart rows={rows} fiGoal={1_000_000} />)
+
+  const chart = screen.getByRole('img', { name: 'FI lifecycle projection chart' })
+  fireEvent.keyDown(chart, { key: 'End' })
+  expect(screen.getByText(/Mar 2035: \$995,000/)).toBeInTheDocument()
+
+  fireEvent.keyDown(chart, { key: 'ArrowLeft' })
+  expect(screen.getByText(/Feb 2035: \$1,000,000/)).toBeInTheDocument()
+
+  fireEvent.keyDown(chart, { key: 'Home' })
+  expect(screen.getByText(/Jan 2035: \$900,000/)).toBeInTheDocument()
+
+  fireEvent.keyDown(chart, { key: 'Escape' })
+  expect(screen.queryByText(/Jan 2035: \$900,000/)).not.toBeInTheDocument()
 })

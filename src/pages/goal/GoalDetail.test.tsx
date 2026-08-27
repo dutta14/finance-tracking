@@ -16,14 +16,20 @@ vi.mock('./components/GoalDetailedCard', () => ({
     inflation,
     savingsOverride,
     fiProjectedMonth,
+    fiYearOverride,
     onSavingsOverrideChange,
+    onTogglePeriod,
+    onFiYearOverrideChange,
     summaryYear,
   }: {
     goal: FinancialGoal
     inflation?: number
     savingsOverride?: number | null
     fiProjectedMonth?: string | null
+    fiYearOverride?: string | null
     onSavingsOverrideChange?: (value: number | null) => void
+    onTogglePeriod?: () => void
+    onFiYearOverrideChange?: (value: string | null) => void
     summaryYear?: number
   }) => (
     <div
@@ -31,10 +37,13 @@ vi.mock('./components/GoalDetailedCard', () => ({
       data-inflation={inflation}
       data-savings-override={savingsOverride ?? ''}
       data-fi-projected-month={fiProjectedMonth ?? ''}
+      data-fi-year-override={fiYearOverride ?? ''}
       data-summary-year={summaryYear ?? ''}
     >
       <div>{goal.goalName}</div>
       <button onClick={() => onSavingsOverrideChange?.(4321)}>Set savings override</button>
+      <button onClick={() => onTogglePeriod?.()}>Toggle period</button>
+      <button onClick={() => onFiYearOverrideChange?.('2037-09')}>Set FIRE year override</button>
     </div>
   ),
 }))
@@ -263,6 +272,54 @@ function mockSummaryCard({ monthlySaving = 5000, yearMonthlySaving = null as num
   })
 }
 
+function mockProjectedGwSummary({
+  monthlySaving = 1234,
+  gwTargetAtRetirement = 250000,
+  gwBalance = 25000,
+  monthsToFi = 24,
+  monthsFiToRetirement = 96,
+} = {}) {
+  vi.spyOn(dataContextModule, 'useData').mockReturnValue({
+    accounts: [
+      {
+        id: 1,
+        name: 'Brokerage',
+        type: 'non-retirement',
+        owner: 'primary',
+        status: 'active',
+        goalType: 'gw',
+        nature: 'asset',
+        allocation: 'us-stock',
+      },
+    ],
+    balances: [{ id: 1, accountId: 1, month: '2024-01', balance: gwBalance }],
+    allMonths: ['2024-01'],
+    setAccounts: noop,
+    setBalances: noop,
+  })
+  vi.spyOn(goalCalculationsModule, 'getFiTarget').mockReturnValue(750000)
+  vi.spyOn(goalMathModule, 'getGwTarget').mockReturnValue(gwTargetAtRetirement)
+  vi.spyOn(goalMathModule, 'getRetirementMonth').mockReturnValue('2044-08')
+  vi.spyOn(goalMathModule, 'getFiBreakdown').mockReturnValue({
+    retirementPrimary: 0,
+    retirementPartner: 0,
+    nonRetirement: 0,
+    total: 0,
+  })
+  vi.spyOn(goalMathModule, 'getTotalForMonth').mockImplementation((_accounts, _balances, _month, goalType) =>
+    goalType === 'gw' ? gwBalance : 125000,
+  )
+  vi.spyOn(goalMathModule, 'monthsBetween').mockImplementation((start, end) => {
+    if (start === '2024-01' && end === '2036-08') return monthsToFi
+    if (start === '2036-08' && end === '2044-08') return monthsFiToRetirement
+    return 12
+  })
+  vi.spyOn(goalMathModule, 'calcMonthlySaving').mockImplementation((_balance, target, _growth, n) => {
+    if (target === 750000 || n === 12) return 5000
+    return monthlySaving
+  })
+}
+
 describe('GoalDetail rendering', () => {
   it('renders the matched goal card and section headings', () => {
     renderDetail('/goal/plans/2')
@@ -377,5 +434,86 @@ describe('GoalDetail summary threading', () => {
 
     expect(screen.getByTestId('detailed-card')).toHaveAttribute('data-inflation', '3')
     expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-inflation', '3')
+  })
+
+  it('renders the projected GW card, supports yearly mode, and applies a FIRE year override', async () => {
+    const user = userEvent.setup()
+    mockProjectedGwSummary()
+
+    renderDetail('/goal/plans/1', {
+      goals: [goalA],
+      gwGoals: [
+        {
+          id: 11,
+          fiGoalId: 1,
+          label: 'Legacy',
+          disburseAmount: 1,
+          disburseAge: 67,
+          createdAt: '2024-01-01',
+          growthRate: 7,
+          currentSavings: 0,
+        },
+      ],
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Projected' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '$132,103 by Aug 2036' })).toBeInTheDocument()
+    expect(screen.getByText('$1,234/mo')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '$132,103 by Aug 2036' }))
+    expect(screen.getByRole('button', { name: '$250,000 by Aug 2044' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Toggle period' }))
+    expect(screen.getByText('$14,808/yr')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Set FIRE year override' }))
+    expect(screen.getByText(/september 2037/i)).toBeInTheDocument()
+    expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-disburse-month', '2057-01')
+  })
+
+  it('shows the achieved message when projected GW savings are no longer required', async () => {
+    mockProjectedGwSummary({ monthlySaving: 0 })
+
+    renderDetail('/goal/plans/1', {
+      goals: [goalA],
+      gwGoals: [
+        {
+          id: 12,
+          fiGoalId: 1,
+          label: 'Legacy',
+          disburseAmount: 1,
+          disburseAge: 65,
+          createdAt: '2024-01-01',
+          growthRate: 7,
+          currentSavings: 0,
+        },
+      ],
+    })
+
+    expect(await screen.findByText("You've achieved this goal 🎉")).toBeInTheDocument()
+  })
+
+  it('omits the GW disbursement month when GW goals belong to another plan', async () => {
+    mockProjectedGwSummary()
+
+    renderDetail('/goal/plans/1', {
+      goals: [goalA],
+      gwGoals: [
+        {
+          id: 13,
+          fiGoalId: 99,
+          label: 'Other',
+          disburseAmount: 1,
+          disburseAge: 70,
+          createdAt: '2024-01-01',
+          growthRate: 7,
+          currentSavings: 0,
+        },
+      ],
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dive-deep')).toHaveAttribute('data-gw-disburse-month', '')
+    })
   })
 })

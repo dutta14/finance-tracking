@@ -46,8 +46,8 @@ vi.mock('./hooks/useCSVUpload', () => ({
   useCSVUpload: () => ({
     csvPreview: null,
     toastMsg: null,
-    quickUploadRef: { current: { click: vi.fn() } },
-    bulkUploadRef: { current: { click: vi.fn() } },
+    quickUploadRef: { current: null },
+    bulkUploadRef: { current: null },
     handleQuickUpload: vi.fn(),
     handleBulkUpload: vi.fn(),
     handlePreviewConfirm: vi.fn(),
@@ -347,6 +347,42 @@ describe('Budget with data', () => {
     expect(screen.getByTestId('manual-transaction-entry')).toHaveTextContent('open')
   })
 
+  it('triggers the hidden quick-upload input from the more actions menu', async () => {
+    const user = userEvent.setup()
+    renderBudget()
+    const quickUploadInput = screen.getByTestId('quick-upload-input')
+    const clickSpy = vi.spyOn(quickUploadInput, 'click')
+
+    await openMoreActions(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Upload CSV' }))
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('triggers the hidden bulk-upload input from the more actions menu', async () => {
+    const user = userEvent.setup()
+    renderBudget()
+    const bulkUploadInput = screen.getByTestId('bulk-upload-input')
+    const clickSpy = vi.spyOn(bulkUploadInput, 'click')
+
+    await openMoreActions(user)
+    await user.click(screen.getByRole('menuitem', { name: 'Bulk Upload' }))
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('closes the more actions menu when the backdrop is clicked', async () => {
+    const user = userEvent.setup()
+    const { container } = renderBudget()
+
+    await openMoreActions(user)
+    await user.click(container.querySelector('.budget-upload-backdrop')!)
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
   it('shows the more actions button only on spreadsheet view', () => {
     renderBudget()
     expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
@@ -434,5 +470,16 @@ describe('Budget view mode toggle', () => {
 
     await user.click(screen.getByRole('button', { name: 'Detailed' }))
     expect(mockUseBudget.setSpreadsheetMode).toHaveBeenCalledWith('detailed')
+  })
+
+  it('switches the aggregate tab back to expenses when Expenses is clicked', async () => {
+    const user = userEvent.setup()
+    renderBudget()
+
+    await user.click(screen.getByRole('button', { name: 'Income' }))
+    await user.click(screen.getByRole('button', { name: 'Expenses' }))
+
+    expect(screen.getByTestId('budget-aggregated')).toHaveTextContent('aggregated:expense')
+    expect(budgetAggregatedViewSpy).toHaveBeenLastCalledWith(expect.objectContaining({ type: 'expense' }))
   })
 })
