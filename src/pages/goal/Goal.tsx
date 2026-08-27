@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useEffect, useCallback } from 'react'
+import { FC, useState, useEffect } from 'react'
 import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { FinancialGoal } from '../../types'
 import { useGoals } from '../../contexts/GoalsContext'
@@ -52,22 +52,12 @@ const Goal: FC = () => {
   const [showForm, setShowForm] = useState(false)
   const [copySourceGoalId, setCopySourceGoalId] = useState<number | null>(null)
   const [mixerOpen, setMixerOpen] = useState(false)
-  const pillStripRef = useRef<HTMLDivElement>(null)
-  const [pillFade, setPillFade] = useState<{ left: boolean; right: boolean }>({ left: false, right: false })
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const updatePillFade = useCallback(() => {
-    const el = pillStripRef.current
-    if (!el) return
-    const canScroll = el.scrollWidth > el.clientWidth + 1
-    setPillFade({
-      left: canScroll && el.scrollLeft > 2,
-      right: canScroll && el.scrollLeft < el.scrollWidth - el.clientWidth - 2,
-    })
-  }, [])
-
+  // Close drawer when leaving detail view
   useEffect(() => {
-    updatePillFade()
-  }, [isDetailView, goals, updatePillFade])
+    if (!isDetailView) setDrawerOpen(false)
+  }, [isDetailView])
 
   const handleCreateGoal = (goal: FinancialGoal): void => {
     if (editingGoalId) {
@@ -107,7 +97,11 @@ const Goal: FC = () => {
     <section className="goal">
       <div className="goal-content">
         <div className="goal-header">
-          <h1>Goals</h1>
+          <h1>
+            {isDetailView
+              ? (goals.find(g => String(g.id) === subPath.replace('plans/', ''))?.goalName ?? 'Goals')
+              : 'Goals'}
+          </h1>
           <nav className="tab-bar" aria-label="Goals sections">
             <NavLink
               to="/goal/plans"
@@ -127,6 +121,16 @@ const Goal: FC = () => {
           </nav>
           {(subPath === 'calculator' || isDetailView) && (
             <div className="goal-header-actions">
+              {isDetailView && (
+                <button
+                  type="button"
+                  className="growth-settings-toggle"
+                  onClick={() => setDrawerOpen(o => !o)}
+                  aria-label={drawerOpen ? 'Close goal drawer' : 'Open goal drawer'}
+                >
+                  Switch Plan
+                </button>
+              )}
               <GrowthSettingsPanel settings={growthCtx.settings} onUpdate={growthCtx.updateSettings} />
             </div>
           )}
@@ -148,52 +152,64 @@ const Goal: FC = () => {
             path="plans/*"
             element={
               <>
-                {/* Pill strip — visible only in detail view, animates in */}
-                <nav
-                  className={`goal-pill-strip${isDetailView ? ' goal-pill-strip--visible' : ''}${pillFade.left ? ' goal-pill-strip--fade-left' : ''}${pillFade.right ? ' goal-pill-strip--fade-right' : ''}`}
-                  aria-label="Goal selector"
-                >
-                  <div className="goal-pill-strip-inner" ref={pillStripRef} onScroll={updatePillFade}>
-                    <button
-                      type="button"
-                      className="goal-pill goal-pill--back"
-                      onClick={() => navigate('/goal/plans')}
-                      aria-label="Back to all goals"
-                    >
-                      ← All
-                    </button>
-                    {goals.map(g => {
-                      const isActive = String(g.id) === subPath.replace('plans/', '')
-                      return (
-                        <span
-                          key={g.id}
-                          className={`goal-pill${isActive ? ' goal-pill--active' : ''}`}
-                          onClick={() => navigate(`/goal/plans/${g.id}`)}
-                          role="button"
-                          tabIndex={0}
+                {/* Right-side drawer for goal navigation */}
+                {isDetailView && (
+                  <>
+                    <div
+                      className={`goal-drawer-backdrop${drawerOpen ? ' goal-drawer-backdrop--visible' : ''}`}
+                      onClick={() => setDrawerOpen(false)}
+                    />
+                    <aside className={`goal-drawer${drawerOpen ? ' goal-drawer--open' : ''}`}>
+                      <div className="goal-drawer-header">
+                        <button
+                          type="button"
+                          className="goal-drawer-back"
+                          onClick={() => {
+                            setDrawerOpen(false)
+                            navigate('/goal/plans')
+                          }}
                         >
-                          {g.goalName}
-                          {isActive && (
-                            <span onClick={e => e.stopPropagation()}>
-                              <GoalActionsMenu
-                                onRename={() => {
-                                  const name = prompt('Rename goal:', g.goalName)
-                                  if (name && name.trim()) handleRenameGoal(g.id, name.trim())
-                                }}
-                                onDuplicate={() => handleCopyGoal(g)}
-                                onDelete={() => {
-                                  deleteGoal(g.id)
-                                  const other = goals.find(x => x.id !== g.id)
-                                  navigate(other ? `/goal/plans/${other.id}` : '/goal/plans')
-                                }}
-                              />
-                            </span>
-                          )}
-                        </span>
-                      )
-                    })}
-                  </div>
-                </nav>
+                          ← All Plans
+                        </button>
+                      </div>
+                      <ul className="goal-drawer-list">
+                        {goals.map(g => {
+                          const isActive = String(g.id) === subPath.replace('plans/', '')
+                          return (
+                            <li
+                              key={g.id}
+                              className={`goal-drawer-item${isActive ? ' goal-drawer-item--active' : ''}`}
+                              onClick={() => {
+                                navigate(`/goal/plans/${g.id}`)
+                                setDrawerOpen(false)
+                              }}
+                              role="button"
+                              tabIndex={0}
+                            >
+                              <span className="goal-drawer-item-name">{g.goalName}</span>
+                              {isActive && (
+                                <span onClick={e => e.stopPropagation()}>
+                                  <GoalActionsMenu
+                                    onRename={() => {
+                                      const name = prompt('Rename goal:', g.goalName)
+                                      if (name && name.trim()) handleRenameGoal(g.id, name.trim())
+                                    }}
+                                    onDuplicate={() => handleCopyGoal(g)}
+                                    onDelete={() => {
+                                      deleteGoal(g.id)
+                                      const other = goals.find(x => x.id !== g.id)
+                                      navigate(other ? `/goal/plans/${other.id}` : '/goal/plans')
+                                    }}
+                                  />
+                                </span>
+                              )}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </aside>
+                  </>
+                )}
 
                 {/* Cards grid — visible when NOT in detail view, animates out */}
                 <div className={`goal-cards-container${isDetailView ? ' goal-cards-container--collapsed' : ''}`}>

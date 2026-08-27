@@ -92,7 +92,11 @@ describe('GoalSection', () => {
       />,
     )
 
-    expect(screen.getByText('Stocks 60% / Bonds 40%')).toBeInTheDocument()
+    expect(screen.getByText('Constant Goal')).toBeInTheDocument()
+    expect(screen.getByText('Stocks')).toBeInTheDocument()
+    expect(screen.getByText('60%')).toBeInTheDocument()
+    expect(screen.getByText('Bonds')).toBeInTheDocument()
+    expect(screen.getByText('40%')).toBeInTheDocument()
     expect(screen.getByText('Edit')).toBeInTheDocument()
     expect(screen.getByText('Rebalance')).toBeInTheDocument()
     expect(screen.getByText('Remove')).toBeInTheDocument()
@@ -120,7 +124,10 @@ describe('GoalSection', () => {
       />,
     )
 
-    expect(screen.getByText(/Age 30→60 \(primary\): Stocks 80→40% \/ Bonds 20→60%/)).toBeInTheDocument()
+    expect(screen.getByText('Gradual Goal')).toBeInTheDocument()
+    expect(screen.getByText(/Alice · Age 30→60/)).toBeInTheDocument()
+    expect(screen.getByText('80% → 40%')).toBeInTheDocument()
+    expect(screen.getByText('20% → 60%')).toBeInTheDocument()
   })
 
   it('opens the editor from the empty state and passes profile availability props', async () => {
@@ -206,6 +213,9 @@ describe('GoalSection', () => {
     )
 
     await user.click(screen.getByText('Remove'))
+    expect(onSetGoal).not.toHaveBeenCalled()
+    expect(screen.getByText('Are you sure?')).toBeInTheDocument()
+    await user.click(screen.getByText('Yes'))
     expect(onSetGoal).toHaveBeenCalledWith('total', null)
   })
 

@@ -63,7 +63,6 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
           <RatioTabs
             customRatios={customRatios}
             activeRatioId={activeRatioId}
-            confirmDeleteId={confirmDeleteId}
             createMenuOpen={createMenuOpen}
             createMenuRef={createMenuRef}
             onSelectRatio={id => {
@@ -71,9 +70,6 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
               setActivePreset(null)
               setConfirmDeleteId(null)
             }}
-            onRequestDelete={requestDeleteRatio}
-            onConfirmDelete={doDeleteRatio}
-            onCancelDelete={() => setConfirmDeleteId(null)}
             onCreateBlank={() => {
               createRatio()
               setCreateMenuOpen(false)
@@ -104,9 +100,21 @@ const Allocation: FC<AllocationProps> = ({ tab }) => {
                   </button>
                 ))}
               </div>
-              <button className="alloc-ratio-delete-btn" onClick={() => requestDeleteRatio(activeRatio.id)}>
-                Delete
-              </button>
+              {confirmDeleteId === activeRatio.id ? (
+                <span className="alloc-goal-confirm" style={{ marginLeft: 'auto' }}>
+                  Are you sure?{' '}
+                  <button className="alloc-goal-confirm-yes" onClick={() => doDeleteRatio(activeRatio.id)}>
+                    Yes
+                  </button>{' '}
+                  <button className="alloc-goal-confirm-no" onClick={() => setConfirmDeleteId(null)}>
+                    No
+                  </button>
+                </span>
+              ) : (
+                <button className="alloc-ratio-delete-btn" onClick={() => requestDeleteRatio(activeRatio.id)}>
+                  Delete
+                </button>
+              )}
             </div>
           )}
 

@@ -41,6 +41,16 @@ body.modern-design::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 3px;
 }
+html:has(body.modern-design)::-webkit-scrollbar {
+  width: 6px;
+}
+html:has(body.modern-design)::-webkit-scrollbar-track {
+  background: transparent;
+}
+html:has(body.modern-design)::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
 
 body.modern-design {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

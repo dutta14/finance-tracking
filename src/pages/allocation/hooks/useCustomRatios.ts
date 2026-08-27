@@ -67,13 +67,7 @@ export function useCustomRatios() {
   }
 
   const requestDeleteRatio = (id: string) => {
-    const ratio = customRatios.find(r => r.id === id)
-    const goalCount = ratio?.goals ? Object.keys(ratio.goals).length : 0
-    if (goalCount > 0) {
-      setConfirmDeleteId(id)
-      return
-    }
-    doDeleteRatio(id)
+    setConfirmDeleteId(id)
   }
 
   const doDeleteRatio = (id: string) => {
