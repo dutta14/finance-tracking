@@ -137,7 +137,7 @@ vi.mock('recharts', () => ({
     if (!sample || !isValidElement(content)) return <div data-testid="chart-tooltip" />
     return (
       <div data-testid="chart-tooltip">
-        {cloneElement(content as React.ReactElement<any>, { active: true, payload: [{ payload: sample }] })}
+        {cloneElement(content as React.ReactElement<Record<string, unknown>>, { active: true, payload: [{ payload: sample }] })}
       </div>
     )
   },

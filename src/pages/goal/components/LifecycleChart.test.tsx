@@ -41,7 +41,7 @@ vi.mock('recharts', () => ({
   Tooltip: ({ content }: { content?: ReactNode }) => {
     const sample = lastChartData[1] ?? lastChartData[0]
     if (!sample || !isValidElement(content)) return null
-    return cloneElement(content as React.ReactElement<any>, {
+    return cloneElement(content as React.ReactElement<Record<string, unknown>>, {
       active: true,
       payload: [{ value: sample.remaining, payload: sample }],
       label: sample.month,
