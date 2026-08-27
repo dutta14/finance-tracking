@@ -249,14 +249,14 @@ export async function seedBudget(page: Page, options: SeedOptions = {}) {
   const resolvedConfig =
     config === null
       ? null
-      : config ??
+      : (config ??
         (store
           ? {
               version: 1,
               years: store.years,
               categoryGroups: store.categoryGroups ?? DEFAULT_GROUPS,
             }
-          : null)
+          : null))
 
   if (resolvedConfig) {
     entries.push({ path: 'budget/categories.json', data: resolvedConfig, type: 'json' })
@@ -267,14 +267,17 @@ export async function seedBudget(page: Page, options: SeedOptions = {}) {
   }
 
   await seedFileStore(page, entries)
-  await page.addInitScript(({ darkMode }) => {
-    localStorage.clear()
-    localStorage.setItem('_e2eMode', '1')
-    localStorage.setItem('encryption-enabled', '0')
-    if (darkMode !== undefined) {
-      localStorage.setItem('darkMode', darkMode ? '1' : '0')
-    }
-  }, { darkMode })
+  await page.addInitScript(
+    ({ darkMode }) => {
+      localStorage.clear()
+      localStorage.setItem('_e2eMode', '1')
+      localStorage.setItem('encryption-enabled', '0')
+      if (darkMode !== undefined) {
+        localStorage.setItem('darkMode', darkMode ? '1' : '0')
+      }
+    },
+    { darkMode },
+  )
 }
 
 /** Seed empty state. */

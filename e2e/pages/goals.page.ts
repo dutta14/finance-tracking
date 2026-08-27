@@ -74,6 +74,7 @@ export class GoalsPage {
   readonly detailStepper: Locator
   readonly detailPrevBtn: Locator
   readonly detailNextBtn: Locator
+  readonly detailDrawerToggle: Locator
   readonly detailActionsTrigger: Locator
   readonly detailActionsMenu: Locator
   readonly detailEditBtn: Locator
@@ -190,11 +191,12 @@ export class GoalsPage {
     this.useRecommendedBtn = page.locator('.btn-use-recommended')
 
     this.goalDetail = page.locator('.goal-detail')
-    this.detailBackLink = page.getByRole('link', { name: /Back to Goals/i })
-    this.detailTitle = page.locator('.goal-detail-title')
+    this.detailBackLink = page.locator('.goal-drawer-back')
+    this.detailTitle = page.locator('.goal-header h1')
     this.detailStepper = page.getByRole('group', { name: 'Goal navigation' })
     this.detailPrevBtn = page.getByLabel('Previous goal')
     this.detailNextBtn = page.getByLabel('Next goal')
+    this.detailDrawerToggle = page.getByRole('button', { name: /goal drawer/i })
     this.detailActionsTrigger = page.getByLabel('Goal actions')
     this.detailActionsMenu = page.locator('.goal-actions-menu')
     this.detailEditBtn = page.locator('.goal-actions-menu-item', { hasText: 'Edit' })
@@ -245,7 +247,7 @@ export class GoalsPage {
   }
 
   async gotoDetail(goalId: number) {
-    await this.page.goto(`/finance-tracking/#/goal/${goalId}`)
+    await this.page.goto(`/finance-tracking/#/goal/plans/${goalId}`)
     await this.page.waitForLoadState('domcontentloaded')
   }
 
@@ -283,6 +285,9 @@ export class GoalsPage {
   }
 
   async openDetailActions() {
+    if (!(await this.detailActionsTrigger.isVisible())) {
+      await this.detailDrawerToggle.click()
+    }
     await this.detailActionsTrigger.click()
   }
 

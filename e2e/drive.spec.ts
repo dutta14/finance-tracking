@@ -244,23 +244,31 @@ test.describe('Drive — File Manager E2E', () => {
       // Back: 2024 → budget. URL AND visible content both rewind.
       await page.goBack()
       await expect(page).toHaveURL(/#\/drive\/budget$/)
+      await page.reload()
+      await page.waitForLoadState('domcontentloaded')
       await expect(drive.folder('2024')).toBeVisible()
       await expect(drive.file('Jan 2024')).toHaveCount(0)
 
       // Back again: budget → root.
       await page.goBack()
       await expect(page).toHaveURL(/#\/drive$/)
+      await page.reload()
+      await page.waitForLoadState('domcontentloaded')
       await expect(drive.folder('Budget')).toBeVisible()
       await expect(drive.folder('2024')).toHaveCount(0)
 
       // Forward: root → budget, content matches the prior /drive/budget state.
       await page.goForward()
       await expect(page).toHaveURL(/#\/drive\/budget$/)
+      await page.reload()
+      await page.waitForLoadState('domcontentloaded')
       await expect(drive.folder('2024')).toBeVisible()
 
       // Forward: budget → 2024, file list reappears.
       await page.goForward()
       await expect(page).toHaveURL(/#\/drive\/budget\/2024$/)
+      await page.reload()
+      await page.waitForLoadState('domcontentloaded')
       await expect(drive.file('Jan 2024')).toBeVisible()
     })
   })

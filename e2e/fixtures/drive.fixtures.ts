@@ -203,7 +203,11 @@ export async function seedDrive(page: Page, options: SeedOptions = {}) {
 
   if (store) {
     entries.push(...budgetCsvsToEntries(store.csvs))
-    entries.push({ path: 'budget/categories.json', data: { version: 1, years: store.years, categoryGroups: [] }, type: 'json' })
+    entries.push({
+      path: 'budget/categories.json',
+      data: { version: 1, years: store.years, categoryGroups: [] },
+      type: 'json',
+    })
   }
   if (taxStore) entries.push(...taxStoreToEntries(taxStore as Record<string, unknown>))
   if (profile) entries.push({ path: 'profile.json', data: profile, type: 'json' })

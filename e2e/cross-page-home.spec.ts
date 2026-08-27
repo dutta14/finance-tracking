@@ -441,20 +441,29 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
         await writeJsonFile(page, 'goals.json', { financialGoals: payload.goals, gwGoals: payload.gwGoals })
         await writeJsonFile(page, 'budget/categories.json', payload.budgetConfig)
         await writeJsonFile(page, 'budget/summary-cache.json', { annualSavings: 40_000, saveRate: 35, monthsOfData: 3 })
-        await page.evaluate(async ({ rows, budgetCsvs }) => {
-          const store = (window as Window & typeof globalThis & { __e2eFileStore?: { writeCSV: (path: string, rows: string[][]) => Promise<void> } }).__e2eFileStore
-          if (!store) return
-          const byYear = new Map<string, string[][]>()
-          byYear.set('2025', [['month', 'accountId', 'balance']])
-          rows.forEach(row => byYear.get('2025')!.push([row.month, String(row.accountId), String(row.balance)]))
-          await store.writeCSV('balances/2025.csv', byYear.get('2025')!)
-          for (const [monthKey, value] of Object.entries(budgetCsvs ?? {})) {
-            const year = monthKey.slice(0, 4)
-            await store.writeCSV(`transactions/${year}/${monthKey}.csv`, value.csv.split('\n').map(line => line.split(',')))
-          }
-          window.dispatchEvent(new Event('data-changed'))
-          window.location.reload()
-        }, { rows: payload.dataBalances, budgetCsvs: payload.budgetCsvs })
+        await page.evaluate(
+          async ({ rows, budgetCsvs }) => {
+            const store = (
+              window as Window &
+                typeof globalThis & { __e2eFileStore?: { writeCSV: (path: string, rows: string[][]) => Promise<void> } }
+            ).__e2eFileStore
+            if (!store) return
+            const byYear = new Map<string, string[][]>()
+            byYear.set('2025', [['month', 'accountId', 'balance']])
+            rows.forEach(row => byYear.get('2025')!.push([row.month, String(row.accountId), String(row.balance)]))
+            await store.writeCSV('balances/2025.csv', byYear.get('2025')!)
+            for (const [monthKey, value] of Object.entries(budgetCsvs ?? {})) {
+              const year = monthKey.slice(0, 4)
+              await store.writeCSV(
+                `transactions/${year}/${monthKey}.csv`,
+                value.csv.split('\n').map(line => line.split(',')),
+              )
+            }
+            window.dispatchEvent(new Event('data-changed'))
+            window.location.reload()
+          },
+          { rows: payload.dataBalances, budgetCsvs: payload.budgetCsvs },
+        )
       })
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
@@ -589,7 +598,9 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       await seedCrossPage(page)
       await gotoHome(page)
-      await expect(page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)')).toBeVisible()
+      await expect(
+        page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)'),
+      ).toBeVisible()
 
       await deleteFile(page, 'budget/summary-cache.json')
       await page.goto(URLS.goal)

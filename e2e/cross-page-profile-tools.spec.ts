@@ -22,8 +22,8 @@ import { writeJsonFile } from './fixtures/filestore-helpers'
  *  - C: SavingsGrowthTracker exposes NO `.sgt-year-row` / `.sgt-net-worth`
  *       /  `.sgt-income` / `.sgt-expense` class names. We use accessible
  *       `getByRole('row' | 'cell')` queries instead. Follow-up: #165.
- *  - D: `.mini-retire-year` renders the bare year string (`"2045"`), not
- *       a templated label.
+ *  - D: `.mini-retire-year` now renders the retirement month/year and, when a
+ *       projection exists, the projected FI date alongside it.
  *  - E: `.goals-peek-monthly` renders `$X,XXX/mo` (formatCurrency + '/mo')
  *       when fiMonthly > 0, empty string when 0.
  *  - F: Budget UI mutation is brittle. Test 40 mutates `budget-summary`
@@ -77,7 +77,8 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
 
       const card = page.locator('.goal-mini-card').first()
       await expect(card).toBeVisible()
-      await expect(card.locator('.mini-retire-year')).toHaveText('2045')
+      await expect(card.locator('.mini-retire-year')).toContainText('Jun 2045')
+      await expect(card.locator('.mini-retire-projected')).toHaveText('Jun 2035')
     })
 
     test('12. Changing birthday updates retirement year on Goals page', async ({ page }) => {
@@ -87,7 +88,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // after reload so the goal-tab render is fresh.
       await seedCrossPage(page)
       await gotoAndSettle(page, URLS.goal, /^goals$/i)
-      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toHaveText('2045')
+      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toContainText('Jun 2045')
 
       await mutateProfile(page, { birthday: '1985-06-15' })
       await page.reload()
@@ -95,7 +96,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await gotoAndSettle(page, URLS.goal, /^goals$/i)
 
       // 1985 + 55 = 2040.
-      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toHaveText('2040')
+      await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toContainText('Jun 2040')
     })
 
     test('13. GoalsPeek on Home uses profile birthday for retirement month calculation', async ({ page }) => {
@@ -111,7 +112,9 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // Cross-check: the projected-date pill should also render a
       // valid "MMM YYYY" string driven by the same budget-derived path,
       // confirming the full goals card committed before assertion.
-      const projected = page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()
+      const projected = page
+        .locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)')
+        .first()
       await expect(projected).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
       await expect(page.locator('.home-card--goals .goals-peek-monthly').first()).toHaveCount(1)
     })
@@ -311,7 +314,9 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await page.waitForLoadState('domcontentloaded')
       await expect(page.locator('.home-card--goals')).toBeVisible()
 
-      const projected = page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()
+      const projected = page
+        .locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)')
+        .first()
       await expect(projected).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
       const baseline = (await projected.textContent())?.trim() ?? ''
       const baselineYear = Number(baseline.split(' ')[1])
@@ -340,7 +345,9 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await page.reload()
       await page.waitForLoadState('load')
       await expect(page.locator('.home-card--goals')).toBeVisible()
-      const projectedAfter = page.locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()
+      const projectedAfter = page
+        .locator('.home-card--goals :is(.goals-peek-projected--early, .goals-peek-projected--late)')
+        .first()
       await expect(projectedAfter).toHaveText(/^[A-Z][a-z]{2} \d{4}$/)
       const after = (await projectedAfter.textContent())?.trim() ?? ''
       const afterYear = Number(after.split(' ')[1])

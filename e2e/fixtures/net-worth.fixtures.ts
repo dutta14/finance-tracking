@@ -118,12 +118,15 @@ export async function seedNetWorthData(
     { path: 'accounts.json', data: accounts, type: 'json' },
     ...balanceEntriesToEntries(balances),
   ])
-  await page.addInitScript(({ allowCsvImport }) => {
-    localStorage.clear()
-    localStorage.setItem('_e2eMode', '1')
-    localStorage.setItem('encryption-enabled', '0')
-    if (allowCsvImport) localStorage.setItem('allowCsvImport', '1')
-  }, { allowCsvImport: allowCsvImport ?? true })
+  await page.addInitScript(
+    ({ allowCsvImport }) => {
+      localStorage.clear()
+      localStorage.setItem('_e2eMode', '1')
+      localStorage.setItem('encryption-enabled', '0')
+      if (allowCsvImport) localStorage.setItem('allowCsvImport', '1')
+    },
+    { allowCsvImport: allowCsvImport ?? true },
+  )
 }
 
 export async function seedEmptyState(page: Page) {
