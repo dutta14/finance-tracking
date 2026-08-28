@@ -201,18 +201,27 @@ export async function seedHomeData(page: Page, options: SeedOptions = {}) {
   if (profile) entries.push({ path: 'profile.json', data: data.profile, type: 'json' })
 
   await seedFileStore(page, entries)
-  await page.addInitScript(({ cardOrder, onboardingDismissed, darkMode }) => {
-    localStorage.clear()
-    localStorage.setItem('_e2eMode', '1')
-    localStorage.setItem('encryption-enabled', '0')
-    if (cardOrder) localStorage.setItem('home-card-order', JSON.stringify(cardOrder))
-    if (onboardingDismissed !== undefined) {
-      localStorage.setItem('onboarding-dismissed', onboardingDismissed ? '1' : '0')
-    }
-    if (darkMode !== undefined) {
-      localStorage.setItem('darkMode', darkMode ? '1' : '0')
-    }
-  }, { cardOrder, onboardingDismissed, darkMode })
+  await page.addInitScript(
+    ({ cardOrder, onboardingDismissed, darkMode }) => {
+      try {
+        if (sessionStorage.getItem('__home_seeded') === '1') return
+        sessionStorage.setItem('__home_seeded', '1')
+        localStorage.clear()
+        localStorage.setItem('_e2eMode', '1')
+        localStorage.setItem('encryption-enabled', '0')
+        if (cardOrder) localStorage.setItem('home-card-order', JSON.stringify(cardOrder))
+        if (onboardingDismissed !== undefined) {
+          localStorage.setItem('onboarding-dismissed', onboardingDismissed ? '1' : '0')
+        }
+        if (darkMode !== undefined) {
+          localStorage.setItem('darkMode', darkMode ? '1' : '0')
+        }
+      } catch {
+        /* ignore */
+      }
+    },
+    { cardOrder, onboardingDismissed, darkMode },
+  )
 }
 
 /**

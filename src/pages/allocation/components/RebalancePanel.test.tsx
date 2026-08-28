@@ -45,12 +45,10 @@ describe('RebalancePanel', () => {
     expect(actionGroup).toHaveTextContent('Bonds')
   })
 
-  it('calls onClose when Close button is clicked', async () => {
-    const user = userEvent.setup()
+  it('accepts onClose prop without rendering close button', () => {
     const onClose = vi.fn()
     render(<RebalancePanel groups={twoGroups} actualValues={[6000, 4000]} goalPcts={[60, 40]} onClose={onClose} />)
-    await user.click(screen.getByText('Close'))
-    expect(onClose).toHaveBeenCalled()
+    expect(screen.queryByText('Close')).not.toBeInTheDocument()
   })
 
   it('renders current and target columns', () => {

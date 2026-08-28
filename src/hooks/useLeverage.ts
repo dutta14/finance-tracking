@@ -149,6 +149,30 @@ export function useLeverage() {
     return breakdown
   }, [accounts, allMonths, balances])
 
+  // Individual real-estate properties with equity for upgrade scenarios
+  const realEstateProperties = useMemo(() => {
+    const latestMonth = allMonths[allMonths.length - 1]
+    if (!latestMonth) return []
+
+    const reAssets = accounts.filter(a => a.nature === 'asset' && a.allocation === 'real-estate')
+    return reAssets.map(asset => {
+      const assetBalance = balances.find(b => b.accountId === asset.id && b.month === latestMonth)?.balance ?? 0
+      // Find linked mortgage(s)
+      const linkedLiabilities = accounts.filter(a => a.nature === 'liability' && a.linkedAccountId === asset.id)
+      const mortgageBalance = linkedLiabilities.reduce((sum, lia) => {
+        const bal = balances.find(b => b.accountId === lia.id && b.month === latestMonth)?.balance ?? 0
+        return sum + Math.abs(bal)
+      }, 0)
+      return {
+        accountId: asset.id,
+        name: asset.name,
+        value: assetBalance,
+        mortgage: mortgageBalance,
+        equity: assetBalance - mortgageBalance,
+      }
+    })
+  }, [accounts, allMonths, balances])
+
   const computeAcquisition = useCallback(
     (targetRatio: number, downPaymentPct: number): AcquisitionResult | null => {
       const { totalAssets, totalLiabilities, netWorth, currentRatio } = leverageData
@@ -199,6 +223,7 @@ export function useLeverage() {
     ...leverageData,
     assetBreakdown,
     liabilityBreakdown,
+    realEstateProperties,
     computeAcquisition,
     getRatioHistory,
   }
@@ -218,11 +243,14 @@ export interface LeverageAllocation {
   type: LeverageAllocationType
   sharePct: string
   downPaymentPct: string
+  mortgageRate: string
+  upgradeFromAccountId?: number
 }
 
 export interface LeverageScenario {
   id: string
   name: string
+  target: string
   allocations: LeverageAllocation[]
 }
 

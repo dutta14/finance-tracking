@@ -99,4 +99,55 @@ describe('Allocation', () => {
     expect(screen.getByRole('button', { name: 'FI' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'GW' })).toHaveAttribute('aria-pressed', 'false')
   })
+
+  it('updates the active ratio name from the header input', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation tab="ratios" />)
+    await user.click(screen.getByText('+'))
+    await user.click(screen.getByText('Blank'))
+
+    const nameInput = screen.getByRole('textbox', { name: 'Ratio name' })
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Retirement split')
+
+    expect(nameInput).toHaveValue('Retirement split')
+  })
+
+  it('switches the active ratio scope from the header tabs', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation tab="ratios" />)
+    await user.click(screen.getByText('+'))
+    await user.click(screen.getByText('Blank'))
+
+    await user.click(screen.getByRole('button', { name: 'FI' }))
+    expect(screen.getByRole('button', { name: 'FI' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'GW' }))
+    expect(screen.getByRole('button', { name: 'GW' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('shows and cancels the delete confirmation state for the active ratio', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation tab="ratios" />)
+    await user.click(screen.getByText('+'))
+    await user.click(screen.getByText('Blank'))
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    expect(screen.getByText('Are you sure?')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'No' }))
+    expect(screen.queryByText('Are you sure?')).not.toBeInTheDocument()
+  })
+
+  it('deletes the active ratio after confirmation', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Allocation tab="ratios" />)
+    await user.click(screen.getByText('+'))
+    await user.click(screen.getByText('Blank'))
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Yes' }))
+
+    expect(screen.getByText(/No allocations yet/)).toBeInTheDocument()
+  })
 })

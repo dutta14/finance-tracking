@@ -156,7 +156,7 @@ describe('useCustomRatios', () => {
   })
 
   describe('requestDeleteRatio', () => {
-    it('deletes a ratio without goals immediately', async () => {
+    it('sets confirmDeleteId for ratio without goals', async () => {
       await seedStorage(store, [
         {
           id: 'r1',
@@ -180,8 +180,8 @@ describe('useCustomRatios', () => {
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(2))
       act(() => result.current.requestDeleteRatio('r2'))
-      expect(result.current.customRatios).toHaveLength(1)
-      expect(result.current.customRatios[0].id).toBe('r1')
+      expect(result.current.confirmDeleteId).toBe('r2')
+      expect(result.current.customRatios).toHaveLength(2)
     })
 
     it('sets confirmDeleteId when ratio has goals', async () => {
@@ -204,7 +204,7 @@ describe('useCustomRatios', () => {
       expect(result.current.customRatios).toHaveLength(1)
     })
 
-    it('switches active ratio when deleting the active one', async () => {
+    it('switches active ratio when confirming delete of the active one', async () => {
       await seedStorage(store, [
         {
           id: 'r1',
@@ -229,10 +229,11 @@ describe('useCustomRatios', () => {
       await waitFor(() => expect(result.current.customRatios).toHaveLength(2))
       act(() => result.current.setActiveRatioId('r1'))
       act(() => result.current.requestDeleteRatio('r1'))
+      act(() => result.current.doDeleteRatio('r1'))
       expect(result.current.activeRatioId).toBe('r2')
     })
 
-    it('sets activeRatioId to null when deleting the last ratio', async () => {
+    it('sets activeRatioId to null when confirming delete of the last ratio', async () => {
       await seedStorage(store, [
         {
           id: 'r1',
@@ -247,6 +248,7 @@ describe('useCustomRatios', () => {
       const { result } = renderHook(() => useCustomRatios(), { wrapper: makeWrapper(store) })
       await waitFor(() => expect(result.current.customRatios).toHaveLength(1))
       act(() => result.current.requestDeleteRatio('r1'))
+      act(() => result.current.doDeleteRatio('r1'))
       expect(result.current.activeRatioId).toBeNull()
       expect(result.current.customRatios).toHaveLength(0)
     })

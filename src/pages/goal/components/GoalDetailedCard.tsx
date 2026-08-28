@@ -170,7 +170,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   const [editError, setEditError] = useState('')
   const [expenseDollarMode, setExpenseDollarMode] = useState<'creation' | 'current' | 'retirement'>('creation')
   const [fiResultDetail, setFiResultDetail] = useState<'time' | 'diff'>('time')
-  const [expenseOverride, setExpenseOverride] = useState<number | null>(null)
+  const [expenseOverride, setExpenseOverride] = useState<number | null>(goal.annualSpending ?? null)
   const [editingExpense, setEditingExpense] = useState(false)
   const [expenseInputValue, setExpenseInputValue] = useState('')
   const lastSavingsOverrideRef = useRef<number | null | undefined>(undefined)
@@ -206,12 +206,17 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
   }, [editing, goal])
 
   useEffect(() => {
-    setExpenseOverride(null)
+    setExpenseOverride(goal.annualSpending ?? null)
     setEditingExpense(false)
     setExpenseInputValue('')
     onFiYearOverrideChange?.(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal.id])
+
+  const updateExpenseOverride = (value: number | null) => {
+    setExpenseOverride(value)
+    onUpdateGoal?.(goal.id, { ...goal, annualSpending: value })
+  }
 
   const setEF = (k: keyof EditFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setEditFields(f => ({ ...f, [k]: e.target.value }))
@@ -529,6 +534,15 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
     onSavingsOverrideChange(nextSavingsOverride)
   }, [nextSavingsOverride, onSavingsOverrideChange])
 
+  // Persist projected FI date to goal so list cards can read it directly
+  // Use fiProjectedMonth (the displayed value from the chart) rather than projection.date
+  useEffect(() => {
+    if (goal.projectedFIDateISO !== (fiProjectedMonth ?? null)) {
+      onUpdateGoal?.(goal.id, { ...goal, projectedFIDateISO: fiProjectedMonth ?? null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fiProjectedMonth])
+
   const projectedDiffText = useMemo(
     () => (fiProjectedMonth ? getProjectedDiffText(fiProjectedMonth, retirementDate) : projection.diffText),
     [fiProjectedMonth, projection.diffText, retirementDate],
@@ -794,7 +808,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                               const raw = e.target.value.replace(/[^0-9]/g, '')
                               setExpenseInputValue(raw ? Number(raw).toLocaleString() : '')
                               const num = Number(raw)
-                              if (num > 0) setExpenseOverride(showYearly ? num : num * 12)
+                              if (num > 0) updateExpenseOverride(showYearly ? num : num * 12)
                             }}
                             onBlur={() => setEditingExpense(false)}
                             onKeyDown={e => {
@@ -818,7 +832,7 @@ const GoalDetailedCard: FC<GoalDetailedCardProps> = ({
                         </button>
                       )}
                       {expenseOverride !== null && !editingExpense && (
-                        <button className="fi-savings-reset-btn" onClick={() => setExpenseOverride(null)}>
+                        <button className="fi-savings-reset-btn" onClick={() => updateExpenseOverride(null)}>
                           Reset
                         </button>
                       )}

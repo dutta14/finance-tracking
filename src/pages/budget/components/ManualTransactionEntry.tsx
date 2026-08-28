@@ -1,4 +1,5 @@
 import { FC, useState, useRef, useEffect, useCallback, useMemo, FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { CategoryGroup } from '../types'
 import { monthKeyFromDate } from '../utils/csvParser'
 
@@ -8,6 +9,8 @@ interface ManualTransactionEntryProps {
   categoryGroups: CategoryGroup[]
   years: number[]
   onAdd: (monthKey: string, csvLine: string) => void
+  isOpen?: boolean
+  onToggle?: (open: boolean) => void
 }
 
 function csvEscape(field: string): string {
@@ -25,8 +28,22 @@ function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroups, years, onAdd }) => {
-  const [isOpen, setIsOpen] = useState(false)
+const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({
+  categoryGroups,
+  years,
+  onAdd,
+  isOpen: controlledOpen,
+  onToggle,
+}) => {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = controlledOpen ?? internalOpen
+  const setIsOpen = useCallback(
+    (v: boolean) => {
+      if (onToggle) onToggle(v)
+      else setInternalOpen(v)
+    },
+    [onToggle],
+  )
   const [date, setDate] = useState(todayISO)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -121,8 +138,8 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
   }
 
   const toggle = useCallback(() => {
-    setIsOpen(prev => !prev)
-  }, [])
+    setIsOpen(!isOpen)
+  }, [isOpen, setIsOpen])
 
   // Focus date input when form opens
   useEffect(() => {
@@ -141,7 +158,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, catOpen])
+  }, [isOpen, catOpen, setIsOpen])
 
   useEffect(() => {
     return () => {
@@ -231,6 +248,175 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
     ))
   }
 
+  const formContent = isOpen && (
+    <form className="budget-txn-form" onSubmit={handleSubmit} noValidate>
+      <div className="budget-txn-form-grid">
+        <div className="budget-txn-field">
+          <label className="budget-txn-label" htmlFor="txn-date">
+            Date
+          </label>
+          <input
+            ref={dateRef}
+            id="txn-date"
+            type="date"
+            className={`budget-txn-input${errors.date ? ' budget-txn-input--error' : ''}`}
+            value={date}
+            onChange={e => {
+              setDate(e.target.value)
+              setErrors(prev => {
+                const { date: _, ...rest } = prev
+                return rest
+              })
+            }}
+            required
+          />
+          {errors.date && (
+            <span className="budget-txn-error" role="alert">
+              {errors.date}
+            </span>
+          )}
+        </div>
+
+        <div className="budget-txn-field">
+          <label className="budget-txn-label" htmlFor="txn-desc">
+            Description
+          </label>
+          <input
+            id="txn-desc"
+            type="text"
+            className="budget-txn-input"
+            placeholder="e.g., Trader Joes"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+          />
+        </div>
+
+        <div className="budget-txn-field">
+          <label className="budget-txn-label" htmlFor="txn-amount">
+            Amount
+          </label>
+          <input
+            id="txn-amount"
+            type="text"
+            inputMode="decimal"
+            className={`budget-txn-input${errors.amount ? ' budget-txn-input--error' : ''}`}
+            placeholder="$0.00"
+            value={amount}
+            onChange={e => {
+              setAmount(e.target.value)
+              setErrors(prev => {
+                const { amount: _, ...rest } = prev
+                return rest
+              })
+            }}
+            required
+          />
+          {errors.amount && (
+            <span className="budget-txn-error" role="alert">
+              {errors.amount}
+            </span>
+          )}
+        </div>
+
+        <div className="budget-txn-field" ref={catWrapperRef}>
+          <label className="budget-txn-label" htmlFor="txn-category">
+            Category
+          </label>
+          <div className="budget-cat-combobox">
+            <input
+              ref={catInputRef}
+              id="txn-category"
+              type="text"
+              role="combobox"
+              autoComplete="off"
+              aria-expanded={catOpen}
+              aria-controls="txn-cat-listbox"
+              aria-activedescendant={catOpen && highlightIdx >= 0 ? `txn-cat-opt-${highlightIdx}` : undefined}
+              className={`budget-txn-input${errors.category ? ' budget-txn-input--error' : ''}`}
+              placeholder="e.g., Groceries"
+              value={catQuery}
+              onChange={e => {
+                const val = e.target.value
+                setCatQuery(val)
+                setCategory('')
+                setCatOpen(true)
+                setHighlightIdx(0)
+                setErrors(prev => {
+                  const { category: _, ...rest } = prev
+                  return rest
+                })
+              }}
+              onFocus={() => {
+                if (!catOpen) {
+                  setCatOpen(true)
+                  setHighlightIdx(-1)
+                }
+              }}
+              onKeyDown={handleCatKeyDown}
+              required
+            />
+            {catQuery && (
+              <button
+                type="button"
+                className="budget-cat-clear"
+                aria-label="Clear category"
+                tabIndex={-1}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  setCategory('')
+                  setCatQuery('')
+                  setCatOpen(true)
+                  catInputRef.current?.focus()
+                }}
+              >
+                ×
+              </button>
+            )}
+            {catOpen && (
+              <ul ref={catListRef} id="txn-cat-listbox" role="listbox" className="budget-cat-listbox">
+                {filteredGroups.length > 0 ? (
+                  renderCatDropdown()
+                ) : (
+                  <li className="budget-cat-empty" role="presentation">
+                    {visibleGroups.length === 0 ? 'No categories — upload a CSV first' : `No match for "${catQuery}"`}
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
+          {errors.category && (
+            <span className="budget-txn-error" role="alert">
+              {errors.category}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="budget-txn-actions">
+        <button type="submit" className={`budget-txn-save${showSuccess ? ' budget-txn-save--success' : ''}`}>
+          {showSuccess ? 'Added ✓' : 'Save'}
+        </button>
+        <button type="button" className="budget-txn-cancel" onClick={() => setIsOpen(false)}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  )
+
+  // Render as modal when controlled externally
+  if (onToggle) {
+    if (!isOpen) return null
+    return createPortal(
+      <div className="budget-txn-modal-backdrop" onClick={() => setIsOpen(false)}>
+        <div className="budget-txn-modal" onClick={e => e.stopPropagation()} ref={formRef}>
+          <h3 className="budget-txn-modal-title">Add Transaction</h3>
+          {formContent}
+        </div>
+      </div>,
+      document.body,
+    )
+  }
+
   return (
     <div className="budget-manual-entry">
       <button className="budget-action-btn" onClick={toggle} aria-expanded={isOpen}>
@@ -241,162 +427,7 @@ const ManualTransactionEntry: FC<ManualTransactionEntryProps> = ({ categoryGroup
       </button>
 
       <div ref={formRef} className={`budget-txn-form-wrapper${isOpen ? ' budget-txn-form-wrapper--open' : ''}`}>
-        {isOpen && (
-          <form className="budget-txn-form" onSubmit={handleSubmit} noValidate>
-            <div className="budget-txn-form-grid">
-              <div className="budget-txn-field">
-                <label className="budget-txn-label" htmlFor="txn-date">
-                  Date
-                </label>
-                <input
-                  ref={dateRef}
-                  id="txn-date"
-                  type="date"
-                  className={`budget-txn-input${errors.date ? ' budget-txn-input--error' : ''}`}
-                  value={date}
-                  onChange={e => {
-                    setDate(e.target.value)
-                    setErrors(prev => {
-                      const { date: _, ...rest } = prev
-                      return rest
-                    })
-                  }}
-                  required
-                />
-                {errors.date && (
-                  <span className="budget-txn-error" role="alert">
-                    {errors.date}
-                  </span>
-                )}
-              </div>
-
-              <div className="budget-txn-field">
-                <label className="budget-txn-label" htmlFor="txn-desc">
-                  Description
-                </label>
-                <input
-                  id="txn-desc"
-                  type="text"
-                  className="budget-txn-input"
-                  placeholder="e.g., Trader Joes"
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                />
-              </div>
-
-              <div className="budget-txn-field">
-                <label className="budget-txn-label" htmlFor="txn-amount">
-                  Amount
-                </label>
-                <input
-                  id="txn-amount"
-                  type="text"
-                  inputMode="decimal"
-                  className={`budget-txn-input${errors.amount ? ' budget-txn-input--error' : ''}`}
-                  placeholder="$0.00"
-                  value={amount}
-                  onChange={e => {
-                    setAmount(e.target.value)
-                    setErrors(prev => {
-                      const { amount: _, ...rest } = prev
-                      return rest
-                    })
-                  }}
-                  required
-                />
-                {errors.amount && (
-                  <span className="budget-txn-error" role="alert">
-                    {errors.amount}
-                  </span>
-                )}
-              </div>
-
-              <div className="budget-txn-field" ref={catWrapperRef}>
-                <label className="budget-txn-label" htmlFor="txn-category">
-                  Category
-                </label>
-                <div className="budget-cat-combobox">
-                  <input
-                    ref={catInputRef}
-                    id="txn-category"
-                    type="text"
-                    role="combobox"
-                    autoComplete="off"
-                    aria-expanded={catOpen}
-                    aria-controls="txn-cat-listbox"
-                    aria-activedescendant={catOpen && highlightIdx >= 0 ? `txn-cat-opt-${highlightIdx}` : undefined}
-                    className={`budget-txn-input${errors.category ? ' budget-txn-input--error' : ''}`}
-                    placeholder="e.g., Groceries"
-                    value={catQuery}
-                    onChange={e => {
-                      const val = e.target.value
-                      setCatQuery(val)
-                      setCategory('')
-                      setCatOpen(true)
-                      setHighlightIdx(0)
-                      setErrors(prev => {
-                        const { category: _, ...rest } = prev
-                        return rest
-                      })
-                    }}
-                    onFocus={() => {
-                      if (!catOpen) {
-                        setCatOpen(true)
-                        setHighlightIdx(-1)
-                      }
-                    }}
-                    onKeyDown={handleCatKeyDown}
-                    required
-                  />
-                  {catQuery && (
-                    <button
-                      type="button"
-                      className="budget-cat-clear"
-                      aria-label="Clear category"
-                      tabIndex={-1}
-                      onMouseDown={e => {
-                        e.preventDefault()
-                        setCategory('')
-                        setCatQuery('')
-                        setCatOpen(true)
-                        catInputRef.current?.focus()
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-                  {catOpen && (
-                    <ul ref={catListRef} id="txn-cat-listbox" role="listbox" className="budget-cat-listbox">
-                      {filteredGroups.length > 0 ? (
-                        renderCatDropdown()
-                      ) : (
-                        <li className="budget-cat-empty" role="presentation">
-                          {visibleGroups.length === 0
-                            ? 'No categories — upload a CSV first'
-                            : `No match for "${catQuery}"`}
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                </div>
-                {errors.category && (
-                  <span className="budget-txn-error" role="alert">
-                    {errors.category}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="budget-txn-actions">
-              <button type="submit" className={`budget-txn-save${showSuccess ? ' budget-txn-save--success' : ''}`}>
-                {showSuccess ? 'Added ✓' : 'Save'}
-              </button>
-              <button type="button" className="budget-txn-cancel" onClick={() => setIsOpen(false)}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+        {formContent}
       </div>
     </div>
   )

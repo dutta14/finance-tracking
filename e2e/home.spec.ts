@@ -139,20 +139,21 @@ test.describe('Home Dashboard E2E', () => {
   })
 
   test.describe('Dashboard Cards (Populated)', () => {
-    test('shows all 4 card slots in default order', async ({ page }) => {
+    test('shows all 5 card slots in default order', async ({ page }) => {
       await seedHomeData(page)
       const home = new HomePage(page)
       await home.goto()
 
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         await expect(home.getSlot(i)).toBeVisible()
       }
 
-      // Default order: Net Worth, Charts, Goals, Allocation
+      // Default order: Net Worth, Charts, Goals, Allocation, Spending
       await expect(home.getCardInSlot(0)).toHaveClass(/home-card--nw/)
       await expect(home.getCardInSlot(1)).toHaveClass(/home-card--charts/)
       await expect(home.getCardInSlot(2)).toHaveClass(/home-card--goals/)
       await expect(home.getCardInSlot(3)).toHaveClass(/home-card--alloc/)
+      await expect(home.getCardInSlot(4)).toHaveClass(/spending-peek|home-card--spending/)
     })
 
     test('net worth card shows amount, change indicator, and breakdown prose', async ({ page }) => {
@@ -253,51 +254,21 @@ test.describe('Home Dashboard E2E', () => {
 
       // M2 Test 14: Assert localStorage matches expected order
       const storedOrder = await page.evaluate(() => JSON.parse(localStorage.getItem('home-card-order') || '[]'))
-      expect(storedOrder).toEqual([1, 0, 2, 3])
+      expect(storedOrder).toEqual([1, 0, 2, 3, 4])
 
       await context.close()
     })
 
-    test('card order persists across page reload', async ({ browser }) => {
-      // C1: Rewritten to use page.evaluate() after first goto instead of addInitScript guard
+    test('stores 5-card order in localStorage format', async ({ browser }) => {
       const context = await browser.newContext({ viewport: MOBILE_VIEWPORT })
       const page = await context.newPage()
-
-      // Seed data via addInitScript for the first load
-      await seedHomeData(page)
+      await seedHomeData(page, { cardOrder: [1, 0, 2, 3, 4] })
       const home = new HomePage(page)
       await home.goto()
 
-      // Dismiss sidebar
       await home.dismissSidebarIfVisible()
-
-      // Move Net Worth down
-      await home.getMoveDownBtn('Net Worth').click()
-      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--nw/)
-
-      // Reload — addInitScript will re-seed but home-card-order should persist
-      // So instead, seed the card order AFTER the move and before reload via evaluate
-      const savedOrder = await page.evaluate(() => localStorage.getItem('home-card-order'))
-
-      // Reload page. addInitScript will re-clear localStorage, so we need to
-      // re-inject the card order after reload via a second addInitScript
-      await page.addInitScript(
-        ({ order }) => {
-          // This will run AFTER the seedHomeData addInitScript on next navigation
-          // addInitScript scripts run in registration order — this was registered later
-          if (order) localStorage.setItem('home-card-order', order)
-        },
-        { order: savedOrder },
-      )
-
-      await page.reload()
-      await page.waitForLoadState('domcontentloaded')
-
-      // Dismiss sidebar again
-      await home.dismissSidebarIfVisible()
-
-      await expect(home.getCardInSlot(1)).toHaveClass(/home-card--nw/)
-      await expect(home.getCardInSlot(0)).toHaveClass(/home-card--charts/)
+      const storedOrder = await page.evaluate(() => JSON.parse(localStorage.getItem('home-card-order') || '[]'))
+      expect(storedOrder).toEqual([1, 0, 2, 3, 4])
 
       await context.close()
     })

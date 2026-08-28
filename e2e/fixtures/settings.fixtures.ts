@@ -1,5 +1,11 @@
 import type { Page } from '@playwright/test'
-import { balanceEntriesToEntries, budgetCsvsToEntries, goalsToEntry, seedFileStore, taxStoreToEntries } from './seed-filestore'
+import {
+  balanceEntriesToEntries,
+  budgetCsvsToEntries,
+  goalsToEntry,
+  seedFileStore,
+  taxStoreToEntries,
+} from './seed-filestore'
 
 /**
  * Seed helpers for Settings E2E tests (#128).

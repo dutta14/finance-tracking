@@ -61,6 +61,8 @@ const Budget: FC = () => {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month')
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null)
   const [showPdfToCsv, setShowPdfToCsv] = useState(false)
+  const [aggTab, setAggTab] = useState<'income' | 'expense'>('expense')
+  const [txnFormOpen, setTxnFormOpen] = useState(false)
   const pdfToCsvEnabled = getStorageItem('lab-pdf-to-csv', '0') === '1'
   const location = useLocation()
   const navigate = useNavigate()
@@ -140,107 +142,31 @@ const Budget: FC = () => {
 
       <div className="budget-content">
         {viewMode === 'spreadsheet' && (
-          <div className="budget-action-bar">
-            <div className="tab-bar">
-              <button
-                className={`tab-btn tab-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
-                onClick={() => setSpreadsheetMode('aggregated')}
-                aria-pressed={spreadsheetMode === 'aggregated'}
-              >
-                Aggregated
-              </button>
-              <button
-                className={`tab-btn tab-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
-                onClick={() => setSpreadsheetMode('detailed')}
-                aria-pressed={spreadsheetMode === 'detailed'}
-              >
-                Detailed
-              </button>
-            </div>
-            <ManualTransactionEntry categoryGroups={categoryGroups} years={years} onAdd={addTransaction} />
-            <div className="budget-spreadsheet-actions">
-              <div className="budget-upload-dropdown">
-                <button className="budget-action-btn budget-split-main" onClick={() => quickUploadRef.current?.click()}>
-                  Upload CSV
-                </button>
-                <button
-                  className="budget-action-btn budget-split-drop"
-                  onClick={() => setShowUploadMenu(v => !v)}
-                  aria-haspopup="true"
-                  aria-expanded={showUploadMenu}
-                  aria-label="Upload options"
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path
-                      d="M2 3.5l3 3 3-3"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                {showUploadMenu && (
-                  <>
-                    <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
-                    <div className="budget-upload-menu" role="menu">
-                      <button
-                        className="budget-upload-menu-item"
-                        role="menuitem"
-                        onClick={() => {
-                          setShowUploadMenu(false)
-                          bulkUploadRef.current?.click()
-                        }}
-                      >
-                        Bulk Upload
-                      </button>
-                      {pdfToCsvEnabled && (
-                        <button
-                          className="budget-upload-menu-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowUploadMenu(false)
-                            openPdfModal()
-                          }}
-                        >
-                          PDF → CSV
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="budget-format-help-wrapper" ref={formatHelpRef}>
-                <button
-                  className="budget-action-btn budget-action-btn--subtle"
-                  onClick={() => setShowFormatHelp(v => !v)}
-                >
-                  ?
-                </button>
-                {showFormatHelp && (
-                  <div className="budget-format-help-panel">
-                    <pre>{getCSVFormatHelp()}</pre>
-                  </div>
-                )}
-              </div>
-              <input
-                ref={quickUploadRef}
-                type="file"
-                accept=".csv"
-                data-testid="quick-upload-input"
-                style={{ display: 'none' }}
-                onChange={handleQuickUpload}
-              />
-              <input
-                ref={bulkUploadRef}
-                type="file"
-                accept=".csv"
-                multiple
-                data-testid="bulk-upload-input"
-                style={{ display: 'none' }}
-                onChange={handleBulkUpload}
-              />
-            </div>
+          <div className="budget-action-bar" style={{ display: 'none' }}>
+            <ManualTransactionEntry
+              categoryGroups={categoryGroups}
+              years={years}
+              onAdd={addTransaction}
+              isOpen={txnFormOpen}
+              onToggle={setTxnFormOpen}
+            />
+            <input
+              ref={quickUploadRef}
+              type="file"
+              accept=".csv"
+              data-testid="quick-upload-input"
+              style={{ display: 'none' }}
+              onChange={handleQuickUpload}
+            />
+            <input
+              ref={bulkUploadRef}
+              type="file"
+              accept=".csv"
+              multiple
+              data-testid="bulk-upload-input"
+              style={{ display: 'none' }}
+              onChange={handleBulkUpload}
+            />
           </div>
         )}
 
@@ -287,7 +213,7 @@ const Budget: FC = () => {
           </div>
         ) : (
           <>
-            {viewMode !== 'groups' && (
+            {viewMode === 'cashflow' && (
               <BudgetSummary
                 totalIncome={summary.totalIncome}
                 totalExpense={summary.totalExpense}
@@ -310,47 +236,145 @@ const Budget: FC = () => {
               />
             ) : viewMode === 'spreadsheet' ? (
               <>
+                <div className="budget-frozen-header">
+                  <BudgetSummary
+                    totalIncome={summary.totalIncome}
+                    totalExpense={summary.totalExpense}
+                    saveRate={summary.saveRate}
+                    year={selectedYear}
+                  />
+                  <div className="budget-agg-tabs-row">
+                    <div className="tab-bar">
+                      <button
+                        type="button"
+                        className={`tab-btn tab-btn--sm${aggTab === 'income' ? ' active' : ''}`}
+                        onClick={() => setAggTab('income')}
+                      >
+                        Income
+                      </button>
+                      <button
+                        type="button"
+                        className={`tab-btn tab-btn--sm${aggTab === 'expense' ? ' active' : ''}`}
+                        onClick={() => setAggTab('expense')}
+                      >
+                        Expenses
+                      </button>
+                    </div>
+                    <div className="budget-agg-tabs-right">
+                      <div className="tab-bar">
+                        <button
+                          className={`tab-btn tab-btn--sm${spreadsheetMode === 'aggregated' ? ' active' : ''}`}
+                          onClick={() => setSpreadsheetMode('aggregated')}
+                          aria-pressed={spreadsheetMode === 'aggregated'}
+                        >
+                          Aggregated
+                        </button>
+                        <button
+                          className={`tab-btn tab-btn--sm${spreadsheetMode === 'detailed' ? ' active' : ''}`}
+                          onClick={() => setSpreadsheetMode('detailed')}
+                          aria-pressed={spreadsheetMode === 'detailed'}
+                        >
+                          Detailed
+                        </button>
+                      </div>
+                      <div className="budget-overflow-wrapper" ref={formatHelpRef}>
+                        <button
+                          className="budget-overflow-btn"
+                          onClick={() => setShowUploadMenu(v => !v)}
+                          aria-haspopup="menu"
+                          aria-expanded={showUploadMenu}
+                          aria-label="More actions"
+                        >
+                          ⋯
+                        </button>
+                        {showUploadMenu && (
+                          <>
+                            <div className="budget-upload-backdrop" onClick={() => setShowUploadMenu(false)} />
+                            <div className="budget-upload-menu" role="menu">
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  setTxnFormOpen(true)
+                                }}
+                              >
+                                Add Transaction
+                              </button>
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  quickUploadRef.current?.click()
+                                }}
+                              >
+                                Upload CSV
+                              </button>
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  bulkUploadRef.current?.click()
+                                }}
+                              >
+                                Bulk Upload
+                              </button>
+                              {pdfToCsvEnabled && (
+                                <button
+                                  className="budget-upload-menu-item"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setShowUploadMenu(false)
+                                    openPdfModal()
+                                  }}
+                                >
+                                  PDF → CSV
+                                </button>
+                              )}
+                              <button
+                                className="budget-upload-menu-item"
+                                role="menuitem"
+                                onClick={() => {
+                                  setShowUploadMenu(false)
+                                  setShowFormatHelp(v => !v)
+                                }}
+                              >
+                                CSV Format Help
+                              </button>
+                            </div>
+                          </>
+                        )}
+                        {showFormatHelp && (
+                          <div className="budget-format-help-panel">
+                            <pre>{getCSVFormatHelp()}</pre>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {spreadsheetMode === 'detailed' ? (
-                  <>
-                    <BudgetTable
-                      year={selectedYear}
-                      type="income"
-                      categoryGroups={incomeCategoryGroups}
-                      categorySums={categorySums}
-                      monthsWithData={monthsWithData}
-                      onUploadCSV={uploadCSV}
-                      onRemoveCSV={removeCSV}
-                      timePeriod={timePeriod}
-                    />
-                    <BudgetTable
-                      year={selectedYear}
-                      type="expense"
-                      categoryGroups={categoryGroups}
-                      categorySums={categorySums}
-                      monthsWithData={monthsWithData}
-                      onUploadCSV={uploadCSV}
-                      onRemoveCSV={removeCSV}
-                      timePeriod={timePeriod}
-                    />
-                  </>
+                  <BudgetTable
+                    year={selectedYear}
+                    type={aggTab}
+                    categoryGroups={aggTab === 'income' ? incomeCategoryGroups : categoryGroups}
+                    categorySums={categorySums}
+                    monthsWithData={monthsWithData}
+                    onUploadCSV={uploadCSV}
+                    onRemoveCSV={removeCSV}
+                    timePeriod={timePeriod}
+                  />
                 ) : (
-                  <>
-                    <BudgetAggregatedView
-                      year={selectedYear}
-                      type="income"
-                      categoryGroups={categoryGroups}
-                      incomeCategoryGroups={incomeCategoryGroups}
-                      categorySums={categorySums}
-                      timePeriod={timePeriod}
-                    />
-                    <BudgetAggregatedView
-                      year={selectedYear}
-                      type="expense"
-                      categoryGroups={categoryGroups}
-                      categorySums={categorySums}
-                      timePeriod={timePeriod}
-                    />
-                  </>
+                  <BudgetAggregatedView
+                    year={selectedYear}
+                    type={aggTab}
+                    categoryGroups={categoryGroups}
+                    incomeCategoryGroups={incomeCategoryGroups}
+                    categorySums={categorySums}
+                    timePeriod={timePeriod}
+                  />
                 )}
               </>
             ) : (

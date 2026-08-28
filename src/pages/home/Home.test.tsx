@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { FC } from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Home from './Home'
@@ -55,15 +55,49 @@ vi.mock('../../hooks/useTouchDrag', () => ({
   })),
 }))
 
-vi.mock('./NetWorthSummary', () => ({ default: () => <div data-testid="nw-card">Net Worth Card</div> }))
-vi.mock('./MiniCharts', () => ({ default: () => <div data-testid="charts-card">Charts Card</div> }))
+vi.mock('./NetWorthSummary', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="nw-card">
+      Net Worth Card
+      <button onClick={onNavigate}>Open net worth details</button>
+    </div>
+  ),
+}))
+vi.mock('./MiniCharts', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="charts-card">
+      Charts Card
+      <button onClick={onNavigate}>Open net worth dashboard</button>
+    </div>
+  ),
+}))
 vi.mock('./GoalsPeek', () => ({
-  default: () => {
+  default: ({ onNavigate }: { onNavigate: () => void }) => {
     if (goalsPeekShouldThrow) throw new Error('GoalsPeek boom')
-    return <div data-testid="goals-card">Goals Card</div>
+    return (
+      <div data-testid="goals-card">
+        Goals Card
+        <button onClick={onNavigate}>Open goals</button>
+      </div>
+    )
   },
 }))
-vi.mock('./AllocationBreakdown', () => ({ default: () => <div data-testid="alloc-card">Allocation Card</div> }))
+vi.mock('./AllocationBreakdown', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="alloc-card">
+      Allocation Card
+      <button onClick={onNavigate}>Open allocation</button>
+    </div>
+  ),
+}))
+vi.mock('./SpendingPeek', () => ({
+  default: ({ onNavigate }: { onNavigate: () => void }) => (
+    <div data-testid="spending-card">
+      Spending Card
+      <button onClick={onNavigate}>Open budget</button>
+    </div>
+  ),
+}))
 
 let goalsPeekShouldThrow = false
 // Capture the SetupProgress mock so we can override it per-test
@@ -143,18 +177,38 @@ describe('Home greeting', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home cards', () => {
-  it('renders all four dashboard cards with content', () => {
+  it('renders all five dashboard cards with content', () => {
     renderHome()
     expect(screen.getByTestId('nw-card')).toHaveTextContent('Net Worth Card')
     expect(screen.getByTestId('charts-card')).toHaveTextContent('Charts Card')
     expect(screen.getByTestId('goals-card')).toHaveTextContent('Goals Card')
     expect(screen.getByTestId('alloc-card')).toHaveTextContent('Allocation Card')
+    expect(screen.getByTestId('spending-card')).toHaveTextContent('Spending Card')
   })
 
-  it('renders four draggable card slots', () => {
+  it('renders five draggable card slots', () => {
     renderHome()
     const slots = screen.getAllByTestId(/^drag-slot-/)
-    expect(slots).toHaveLength(4)
+    expect(slots).toHaveLength(5)
+  })
+
+  it('passes the expected navigation targets to each dashboard card', async () => {
+    const user = userEvent.setup()
+    renderHome()
+
+    await user.click(screen.getByRole('button', { name: 'Open net worth details' }))
+    await user.click(screen.getByRole('button', { name: 'Open net worth dashboard' }))
+    await user.click(screen.getByRole('button', { name: 'Open goals' }))
+    await user.click(screen.getByRole('button', { name: 'Open allocation' }))
+    await user.click(screen.getByRole('button', { name: 'Open budget' }))
+
+    expect(mockNavigate.mock.calls).toEqual([
+      ['/net-worth/dashboard/details'],
+      ['/net-worth/dashboard'],
+      ['/goal'],
+      ['/net-worth/allocation'],
+      ['/budget'],
+    ])
   })
 })
 
@@ -176,7 +230,7 @@ describe('Home card reorder via drag', () => {
 
     // Verify actual card order: default [NW, Charts, Goals, Alloc] → [Charts, Goals, NW, Alloc]
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['charts-card', 'goals-card', 'nw-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['charts-card', 'goals-card', 'nw-card', 'alloc-card', 'spending-card'])
   })
 
   it('persists reorder to localStorage', () => {
@@ -188,7 +242,7 @@ describe('Home card reorder via drag', () => {
     fireEvent.drop(slots[1])
 
     const stored = JSON.parse(localStorage.getItem('home-card-order') || '[]')
-    expect(stored).toEqual([1, 0, 2, 3])
+    expect(stored).toEqual([1, 0, 2, 3, 4])
   })
 })
 
@@ -218,8 +272,8 @@ describe('Home mobile move buttons', () => {
     renderHome()
     const upButtons = screen.getAllByRole('button', { name: /Move .+ up/i })
     const downButtons = screen.getAllByRole('button', { name: /Move .+ down/i })
-    expect(upButtons).toHaveLength(4)
-    expect(downButtons).toHaveLength(4)
+    expect(upButtons).toHaveLength(5)
+    expect(downButtons).toHaveLength(5)
   })
 
   it('disables the up button on the first card and down button on the last', () => {
@@ -251,7 +305,7 @@ describe('Home mobile move buttons', () => {
     fireEvent.click(downButtons[0])
 
     const stored = JSON.parse(localStorage.getItem('home-card-order') || '[]')
-    expect(stored).toEqual([1, 0, 2, 3])
+    expect(stored).toEqual([1, 0, 2, 3, 4])
   })
 
   it('does not move card past top boundary', () => {
@@ -265,7 +319,7 @@ describe('Home mobile move buttons', () => {
     renderHome()
     const downButtons = screen.getAllByRole('button', { name: /Move .+ down/i })
     // Last button is disabled
-    expect(downButtons[3]).toBeDisabled()
+    expect(downButtons[4]).toBeDisabled()
   })
 })
 
@@ -318,9 +372,9 @@ describe('Home card order persistence', () => {
     localStorage.setItem('home-card-order', JSON.stringify([3, 2, 1, 0]))
     renderHome()
 
-    // Cards should be in reversed order: Allocation, Goals, Charts, Net Worth
+    // Cards should be in reversed order (with Spending appended via migration): Allocation, Goals, Charts, Net Worth, Spending
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['alloc-card', 'goals-card', 'charts-card', 'nw-card'])
+    expect(cardOrder).toEqual(['alloc-card', 'goals-card', 'charts-card', 'nw-card', 'spending-card'])
   })
 
   it('falls back to default order when localStorage has invalid data', () => {
@@ -329,7 +383,7 @@ describe('Home card order persistence', () => {
 
     // Should use default order: NW, Charts, Goals, Alloc
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 })
 
@@ -429,7 +483,7 @@ describe('Home drop on same position', () => {
     expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
     // Order unchanged
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 })
 
@@ -442,14 +496,14 @@ describe('Home card order — invalid storage values', () => {
     localStorage.setItem('home-card-order', '"not-an-array"')
     renderHome()
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 
   it('falls back to default order when localStorage is null', () => {
     localStorage.setItem('home-card-order', 'null')
     renderHome()
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 })
 
@@ -483,7 +537,7 @@ describe('Home multiple reorders', () => {
     fireEvent.click(updatedDown[0]) // Charts (now pos 0) moves to pos 1
 
     const stored = JSON.parse(localStorage.getItem('home-card-order') || '[]')
-    expect(stored).toHaveLength(4)
+    expect(stored).toHaveLength(5)
   })
 })
 
@@ -552,19 +606,19 @@ describe('Home per-card error isolation', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home moveCard out-of-bounds', () => {
-  it('moveCard does nothing when target index is out of bounds (pos=3, direction=1)', () => {
+  it('moveCard does nothing when target index is out of bounds (pos=4, direction=1)', () => {
     renderHome()
     const downButtons = screen.getAllByRole('button', { name: /Move .+ down/i })
     // Last card's down button is disabled, but let's verify the order remains unchanged
-    expect(downButtons[3]).toBeDisabled()
+    expect(downButtons[4]).toBeDisabled()
     // Force-click it anyway (aria-disabled prevents default, but let's verify no change)
-    fireEvent.click(downButtons[3])
+    fireEvent.click(downButtons[4])
 
     // No announcement should appear
     expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
     // Order unchanged
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 
   it('moveCard does nothing when target index is negative (pos=0, direction=-1)', () => {
@@ -575,7 +629,7 @@ describe('Home moveCard out-of-bounds', () => {
 
     expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 })
 
@@ -593,7 +647,7 @@ describe('Home drag-drop same position no-op', () => {
 
     // Verify order unchanged
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
     // No aria announcement
     expect(screen.queryByText(/moved to position/)).not.toBeInTheDocument()
   })
@@ -608,21 +662,21 @@ describe('Home loadOrder branch — non-array parsed value', () => {
     localStorage.setItem('home-card-order', JSON.stringify({ a: 1 }))
     renderHome()
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 
   it('falls back to default when stored value is a 5-element array', () => {
     localStorage.setItem('home-card-order', JSON.stringify([0, 1, 2, 3, 4]))
     renderHome()
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 
   it('falls back to default when stored value is a number', () => {
     localStorage.setItem('home-card-order', '42')
     renderHome()
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
-    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card'])
+    expect(cardOrder).toEqual(['nw-card', 'charts-card', 'goals-card', 'alloc-card', 'spending-card'])
   })
 })
 
@@ -667,7 +721,7 @@ describe('Home touch drag CSS classes', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Home touch drag onDragEnd reorder', () => {
-  it('reorders cards when touch drag ends with from !== dragOver', () => {
+  it('reorders cards when touch drag ends with from !== dragOver', async () => {
     let capturedOnDragEnd: (() => void) | undefined
     let capturedOnDragStart: ((idx: number) => void) | undefined
     let capturedGetSlotFromPoint: ((x: number, y: number) => number | null) | undefined
@@ -685,30 +739,31 @@ describe('Home touch drag onDragEnd reorder', () => {
       }
     })
 
-    renderHome()
+    const { rerender } = renderHome()
 
-    // Simulate: start drag from slot 0
-    capturedOnDragStart!(0)
-
-    // Mock elementFromPoint to return a slot element
     const slots = screen.getAllByTestId(/^drag-slot-/)
     const origEFP = document.elementFromPoint
     document.elementFromPoint = vi.fn().mockReturnValue(slots[2])
 
-    // Call getSlotFromPoint to set dragOver state
-    const result = capturedGetSlotFromPoint!(100, 100)
-    expect(result).toBe(2)
+    act(() => {
+      capturedOnDragStart!(0)
+      expect(capturedGetSlotFromPoint!(100, 100)).toBe(2)
+    })
 
-    // Now end the drag — this should trigger reorder since from=0, dragOver=2
-    capturedOnDragEnd!()
+    rerender(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
 
-    // Check that order changed in localStorage
-    const stored = localStorage.getItem('home-card-order')
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      expect(parsed).toHaveLength(4)
-      expect(parsed).not.toEqual([0, 1, 2, 3])
-    }
+    act(() => {
+      capturedOnDragEnd!()
+    })
+
+    await waitFor(() => {
+      expect(localStorage.getItem('home-card-order')).toBe(JSON.stringify([1, 2, 0, 3, 4]))
+    })
+    expect(screen.getByText('Net Worth moved to position 3')).toBeInTheDocument()
 
     document.elementFromPoint = origEFP
   })

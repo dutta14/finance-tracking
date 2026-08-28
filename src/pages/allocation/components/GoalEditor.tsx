@@ -217,15 +217,15 @@ const GoalEditor: FC<GoalEditorProps> = ({
       )}
 
       <div className="alloc-goal-editor-actions">
+        <button className="alloc-goal-cancel-btn" onClick={onCancel}>
+          Cancel
+        </button>
         <button
           className="alloc-goal-save-btn"
           disabled={goalType === 'constant' ? !constantValid : !gradualValid}
           onClick={handleSave}
         >
           Save Goal
-        </button>
-        <button className="alloc-goal-cancel-btn" onClick={onCancel}>
-          Cancel
         </button>
       </div>
     </div>

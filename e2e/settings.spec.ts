@@ -1,11 +1,6 @@
 import { test, expect } from './fixtures/base'
 import { SettingsPage } from './pages/settings.page'
-import {
-  ALL_DATA_BALANCE,
-  seedAllData,
-  seedEmpty,
-  seedProfile,
-} from './fixtures/settings.fixtures'
+import { ALL_DATA_BALANCE, seedAllData, seedEmpty, seedProfile } from './fixtures/settings.fixtures'
 import { readJsonFile } from './fixtures/filestore-helpers'
 
 test.describe('Settings — Non-Security E2E', () => {

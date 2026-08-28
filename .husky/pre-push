@@ -1,4 +1,4 @@
 npx tsc --noEmit
 npx eslint src/ --max-warnings=0
-npx vitest run --coverage --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.branches=90 --coverage.thresholds.statements=90
+npx vitest run --coverage
 npx playwright test

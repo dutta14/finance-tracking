@@ -41,6 +41,16 @@ body.modern-design::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 3px;
 }
+html:has(body.modern-design)::-webkit-scrollbar {
+  width: 6px;
+}
+html:has(body.modern-design)::-webkit-scrollbar-track {
+  background: transparent;
+}
+html:has(body.modern-design)::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
 
 body.modern-design {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -384,7 +394,7 @@ body.modern-design .budget-th--total {
 }
 
 body.modern-design .budget-td {
-  padding: 0.4rem 0.25rem;
+  padding: 0.65rem 0.45rem;
   font-size: var(--fs-sm);
 }
 
@@ -394,7 +404,7 @@ body.modern-design .budget-td--group-number {
 }
 
 body.modern-design .budget-th {
-  padding: 0.5rem 0.25rem;
+  padding: 0.6rem 0.45rem;
   text-align: right;
   text-transform: none;
   letter-spacing: normal;

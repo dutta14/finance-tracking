@@ -3,9 +3,15 @@ import '../../../styles/GoalMiniCard.css'
 
 const dollars = (n: number) => '$' + Math.round(n).toLocaleString()
 
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 interface GoalMiniCardProps {
   goalName: string
+  goalCreatedIn: string
   retirementYear: number
+  retirementMonth: number
+  projectedFILabel: string | null
+  projectedFIDate: Date | null
   fiTarget: number
   fiProgress: number
   gwTotal: number
@@ -17,7 +23,11 @@ interface GoalMiniCardProps {
 
 const GoalMiniCard: FC<GoalMiniCardProps> = ({
   goalName,
+  goalCreatedIn,
   retirementYear,
+  retirementMonth,
+  projectedFILabel,
+  projectedFIDate,
   fiTarget = 0,
   fiProgress = 0,
   gwTotal = 0,
@@ -51,8 +61,44 @@ const GoalMiniCard: FC<GoalMiniCardProps> = ({
       }
     >
       <div className="mini-card-top">
-        <h4>{goalName}</h4>
-        <span className="mini-retire-year">{retirementYear}</span>
+        <div className="mini-card-top-left">
+          <h4>{goalName}</h4>
+          {viewMode !== 'list' && (
+            <span className="mini-created-in">
+              {(() => {
+                const d = new Date(goalCreatedIn)
+                return isNaN(d.getTime()) ? '' : `Created in ${MONTH_SHORT[d.getMonth()]} ${d.getFullYear()}`
+              })()}
+            </span>
+          )}
+        </div>
+        {viewMode === 'list' && (
+          <span className="mini-created-cell">
+            {(() => {
+              const d = new Date(goalCreatedIn)
+              return isNaN(d.getTime()) ? '' : `${MONTH_SHORT[d.getMonth()]} ${d.getFullYear()}`
+            })()}
+          </span>
+        )}
+        <span className="mini-retire-year">
+          {projectedFIDate ? (
+            <>
+              {viewMode !== 'list' && (
+                <>
+                  <s className="mini-retire-original">
+                    {MONTH_SHORT[retirementMonth - 1]} {retirementYear}
+                  </s>
+                  <span className="mini-retire-arrow"> → </span>
+                </>
+              )}
+              <span className="mini-retire-projected">{projectedFILabel}</span>
+            </>
+          ) : (
+            <>
+              {MONTH_SHORT[retirementMonth - 1]} {retirementYear}
+            </>
+          )}
+        </span>
       </div>
       <div className="mini-progress">
         <div className="mini-progress-track">

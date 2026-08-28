@@ -31,7 +31,11 @@ function renderCard(overrides: RenderOptions = {}) {
     ...render(
       <GoalMiniCard
         goalName={goal.goalName}
+        goalCreatedIn={goal.goalCreatedIn}
         retirementYear={1990 + goal.retirementAge}
+        retirementMonth={1}
+        projectedFILabel={null}
+        projectedFIDate={null}
         fiTarget={getFiTarget(goal, profileBirthday, 8)}
         fiProgress={overrides.fiProgress ?? fiProgress}
         gwTotal={overrides.gwTotal ?? 0}

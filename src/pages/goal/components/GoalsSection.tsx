@@ -69,7 +69,7 @@ const GoalsSection: FC<GoalsSectionProps> = ({
       setSelectedGoalIds(prev => (prev.includes(goalId) ? prev.filter(id => id !== goalId) : [...prev, goalId]))
       if (!compareMode) setCompareMode(true)
     } else {
-      navigate(`/goal/${goalId}`)
+      navigate(`/goal/plans/${goalId}`)
     }
   }
 

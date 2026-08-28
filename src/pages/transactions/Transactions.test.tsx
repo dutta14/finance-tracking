@@ -372,6 +372,36 @@ describe('Transactions', () => {
     expect(store.csvs['2026-08'].csv).toContain('"2026-08-02","Dining","-125.55","Book Store"')
   })
 
+  it('reassigns a transaction date within the same month and updates the existing CSV', async () => {
+    const user = userEvent.setup()
+    renderTransactions()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit date for Book Store' }))
+    expect(screen.getByRole('dialog', { name: 'Pick a date' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '5' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Edit date for Book Store' })).toHaveTextContent('Aug 5')
+    })
+    expect(store.csvs['2026-08'].csv).toContain('"2026-08-05","Shopping","-125.55","Book Store"')
+  })
+
+  it('moves a transaction to another month when the date crosses month boundaries', async () => {
+    const user = userEvent.setup()
+    renderTransactions()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit date for Book Store' }))
+    await user.click(screen.getByRole('button', { name: 'Next month' }))
+    await user.click(screen.getByRole('button', { name: '1' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'September 1, 2026' })).toBeInTheDocument()
+    })
+    expect(store.csvs['2026-08'].csv).not.toContain('"2026-08-02","Shopping","-125.55","Book Store"')
+    expect(store.csvs['2026-09'].csv).toContain('"2026-09-01","Shopping","-125.55","Book Store"')
+  })
+
   it('closes the inline category editor when clicking outside', async () => {
     const user = userEvent.setup()
     renderTransactions()

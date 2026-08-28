@@ -36,12 +36,12 @@ export class GoalDetailPage {
 
     this.analysisToggle = page.getByRole('group', { name: 'Analysis type' }).getByRole('button', { name: 'FI' })
     this.chartViewToggle = page.getByRole('group', { name: 'View mode' }).getByRole('button', { name: 'Chart' }).first()
-    this.backLink = page.locator('.goal-detail-back-link')
+    this.backLink = page.locator('.goal-drawer-back')
     this.detailTitle = page.locator('.goal-detail-title')
   }
 
   async goto(goalId: number) {
-    await this.page.goto(`/finance-tracking/#/goal/${goalId}`)
+    await this.page.goto(`/finance-tracking/#/goal/plans/${goalId}`)
     await this.page.waitForLoadState('domcontentloaded')
   }
 

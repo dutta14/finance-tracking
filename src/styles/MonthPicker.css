@@ -277,3 +277,20 @@ body.dark .date-filter-range-flyout {
   padding: 0.3rem 0.6rem;
   font-size: var(--fs-sm);
 }
+
+/* ── Compact variant (inline text trigger) ── */
+.details-month-picker-container--compact {
+  position: relative;
+}
+.details-month-trigger--compact {
+  background: none;
+  border: none;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0;
+  white-space: nowrap;
+}
+.details-month-trigger--compact:hover {
+  color: var(--color-text);
+}

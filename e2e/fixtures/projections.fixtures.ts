@@ -184,15 +184,18 @@ export async function seedProjectionData(page: Page, options: ProjectionSeedOpti
   }
 
   await seedFileStore(page, entries)
-  await page.addInitScript(({ darkMode }) => {
-    localStorage.clear()
-    localStorage.setItem('_e2eMode', '1')
-    localStorage.setItem('encryption-enabled', '0')
-    localStorage.setItem('onboarding-dismissed', '1')
-    if (darkMode !== undefined) {
-      localStorage.setItem('darkMode', darkMode ? '1' : '0')
-    }
-  }, { darkMode })
+  await page.addInitScript(
+    ({ darkMode }) => {
+      localStorage.clear()
+      localStorage.setItem('_e2eMode', '1')
+      localStorage.setItem('encryption-enabled', '0')
+      localStorage.setItem('onboarding-dismissed', '1')
+      if (darkMode !== undefined) {
+        localStorage.setItem('darkMode', darkMode ? '1' : '0')
+      }
+    },
+    { darkMode },
+  )
 }
 
 export async function seedGoalReachedState(page: Page) {

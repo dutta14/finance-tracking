@@ -9,7 +9,7 @@ interface RebalancePanelProps {
   onClose: () => void
 }
 
-const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPcts, onClose }) => {
+const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPcts, onClose: _onClose }) => {
   const [newMoney, setNewMoney] = useState(0)
   const currentTotal = actualValues.reduce((a, b) => a + b, 0)
   const totalAfterAdd = currentTotal + newMoney
@@ -61,9 +61,6 @@ const RebalancePanel: FC<RebalancePanelProps> = ({ groups, actualValues, goalPct
     <div className="alloc-rebal-panel">
       <div className="alloc-rebal-header">
         <span className="alloc-ratio-builder-label">Rebalance</span>
-        <button className="alloc-goal-cancel-btn" onClick={onClose}>
-          Close
-        </button>
       </div>
 
       <div className="alloc-rebal-field">

@@ -254,13 +254,15 @@ test.describe('Budget Page E2E', () => {
       await budget.goto()
       await budget.setSpreadsheetMode('detailed')
 
-      await expect(budget.tableSections).toHaveCount(2)
-      await expect(budget.incomeTable).toBeVisible()
+      await expect(budget.tableSections).toHaveCount(1)
       await expect(budget.expenseTable).toBeVisible()
-      // Categories appear
-      await expect(budget.incomeTable).toContainText('Salary')
       await expect(budget.expenseTable).toContainText('Rent')
       await expect(budget.expenseTable).toContainText('Groceries')
+
+      await budget.setSpreadsheetCategory('income')
+      await expect(budget.incomeTable).toBeVisible()
+      await expect(budget.incomeTable).toContainText('Salary')
+      await expect(budget.tableSections).toHaveCount(1)
     })
 
     test('aggregated view renders summary rows for each group', async ({ page }) => {
@@ -269,14 +271,19 @@ test.describe('Budget Page E2E', () => {
       await budget.goto()
       await budget.setSpreadsheetMode('aggregated')
 
-      await expect(budget.tableSections).toHaveCount(2)
+      await expect(budget.tableSections).toHaveCount(1)
       // Aggregated rows use the budget-tr--agg-row class
       const aggRows = page.locator('tr.budget-tr--agg-row')
       await expect(aggRows.first()).toBeVisible()
       const count = await aggRows.count()
       expect(count).toBeGreaterThan(0)
-      await expect(page.locator('.budget-table-title', { hasText: 'Income' })).toBeVisible()
-      await expect(page.locator('.budget-table-title', { hasText: 'Expenses' })).toBeVisible()
+      await expect(budget.expenseTab).toHaveClass(/active/)
+
+      await budget.setSpreadsheetCategory('income')
+      await expect(budget.incomeTab).toHaveClass(/active/)
+      await expect(budget.incomeTable).toContainText('Grand Total')
+      await expect(budget.incomeTable).toContainText('$10,000')
+      await expect(budget.tableSections).toHaveCount(1)
     })
 
     test('cashflow view renders bar chart and Sankey diagram', async ({ page }) => {
@@ -556,6 +563,7 @@ test.describe('Budget Page E2E', () => {
       const budget = new BudgetPage(page)
       await budget.goto()
       await budget.setSpreadsheetMode('detailed')
+      await budget.setSpreadsheetCategory('income')
       await budget.setTimePeriod('Q')
 
       // Income table: category col + 4 quarters + total = 6 header cells
@@ -946,7 +954,9 @@ test.describe('Budget Page E2E', () => {
       await expect(projected).not.toContainText('Add budget data')
       await expect(projected).not.toContainText('Not reachable')
       // The projection renders a "FI by <Mon YYYY>" string in its date span
-      await expect(page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)').first()).toHaveText(/[A-Z][a-z]{2} \d{4}/)
+      await expect(
+        page.locator('.goals-peek-projected :is(.goals-peek-projected--early, .goals-peek-projected--late)').first(),
+      ).toHaveText(/[A-Z][a-z]{2} \d{4}/)
     })
   })
 
@@ -1037,12 +1047,13 @@ test.describe('Budget Page E2E', () => {
     })
 
     test('CSV upload menu uses appropriate ARIA semantics', async ({ page }) => {
-      await seedEmptyBudget(page)
+      await seedKnownBudget(page)
       const budget = new BudgetPage(page)
       await budget.goto()
+      await budget.setSpreadsheetMode('detailed')
 
       // The dropdown toggle has aria-haspopup and aria-expanded
-      await expect(budget.uploadDropDown).toHaveAttribute('aria-haspopup', 'true')
+      await expect(budget.uploadDropDown).toHaveAttribute('aria-haspopup', 'menu')
       await expect(budget.uploadDropDown).toHaveAttribute('aria-expanded', 'false')
 
       await budget.uploadDropDown.click()
@@ -1052,8 +1063,10 @@ test.describe('Budget Page E2E', () => {
       // Menu items are real buttons with role=menuitem
       const items = budget.uploadMenu.locator('[role="menuitem"]')
       const itemCount = await items.count()
-      expect(itemCount).toBeGreaterThanOrEqual(1)
-      await expect(items.first()).toHaveText(/Bulk Upload/)
+      expect(itemCount).toBeGreaterThanOrEqual(3)
+      await expect(budget.addTxnMenuItem).toBeVisible()
+      await expect(budget.uploadCsvMenuItem).toBeVisible()
+      await expect(budget.bulkUploadMenuItem).toBeVisible()
     })
 
     test('manual entry validation errors are announced via role="alert" (AC #35)', async ({ page }) => {

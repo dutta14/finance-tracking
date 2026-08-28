@@ -1,5 +1,11 @@
 import type { Page } from '@playwright/test'
-import { balanceEntriesToEntries, budgetCsvsToEntries, goalsToEntry, seedFileStore, taxStoreToEntries } from './seed-filestore'
+import {
+  balanceEntriesToEntries,
+  budgetCsvsToEntries,
+  goalsToEntry,
+  seedFileStore,
+  taxStoreToEntries,
+} from './seed-filestore'
 
 /**
  * Shared seed for the cross-page integration suites (#151 + future
@@ -204,7 +210,9 @@ export async function seedCrossPage(page: Page, overrides: SeedOverrides = {}): 
     entries.push({ path: 'accounts.json', data: resolved.accounts, type: 'json' })
   }
   if (resolved.balances !== null && resolved.balances !== undefined) {
-    entries.push(...balanceEntriesToEntries(resolved.balances as Array<{ month: string; accountId: number; balance: number }>))
+    entries.push(
+      ...balanceEntriesToEntries(resolved.balances as Array<{ month: string; accountId: number; balance: number }>),
+    )
   }
   if (resolved.goals !== null || resolved.gwGoals !== null) {
     entries.push(
@@ -291,7 +299,9 @@ export async function mutateAccountBalance(
       const path = `balances/${year}.csv`
       const rows = await e2eStore.readCSV(path)
       const nextRows = rows.length > 0 ? [...rows] : [['month', 'accountId', 'balance']]
-      const idx = nextRows.findIndex((row: string[], index: number) => index > 0 && row[0] === month && row[1] === String(accountId))
+      const idx = nextRows.findIndex(
+        (row: string[], index: number) => index > 0 && row[0] === month && row[1] === String(accountId),
+      )
       const nextRow = [month, String(accountId), String(newBalance)]
       if (idx >= 0) nextRows[idx] = nextRow
       else nextRows.push(nextRow)
@@ -359,7 +369,7 @@ export const URLS = {
   base: '/finance-tracking/',
   home: '/finance-tracking/#/',
   goal: '/finance-tracking/#/goal',
-  goalDetail: (id: number | string) => `/finance-tracking/#/goal/${id}`,
+  goalDetail: (id: number | string) => `/finance-tracking/#/goal/plans/${id}`,
   goalCalculator: '/finance-tracking/#/goal/calculator',
   netWorth: '/finance-tracking/#/net-worth',
   netWorthGrowth: '/finance-tracking/#/net-worth/growth',

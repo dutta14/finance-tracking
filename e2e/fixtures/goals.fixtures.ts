@@ -135,13 +135,16 @@ export async function seedGoalsData(page: Page, options: GoalsSeedOptions = {}) 
   if (profile) entries.push({ path: 'profile.json', data: data.profile, type: 'json' })
 
   await seedFileStore(page, entries)
-  await page.addInitScript(({ viewMode }) => {
-    localStorage.clear()
-    localStorage.setItem('_e2eMode', '1')
-    localStorage.setItem('encryption-enabled', '0')
-    localStorage.setItem('onboarding-dismissed', '1')
-    if (viewMode) localStorage.setItem('goal-view-mode', viewMode)
-  }, { viewMode })
+  await page.addInitScript(
+    ({ viewMode }) => {
+      localStorage.clear()
+      localStorage.setItem('_e2eMode', '1')
+      localStorage.setItem('encryption-enabled', '0')
+      localStorage.setItem('onboarding-dismissed', '1')
+      if (viewMode) localStorage.setItem('goal-view-mode', viewMode)
+    },
+    { viewMode },
+  )
 }
 
 export async function seedEmptyGoals(page: Page) {

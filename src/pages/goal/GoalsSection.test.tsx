@@ -319,13 +319,13 @@ describe('Cmd+Click auto-enters compare mode', () => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Single click navigates outside compare mode', () => {
-  it('plain click on a card navigates to /goal/:id', async () => {
+  it('plain click on a card navigates to /goal/plans/:id', async () => {
     const user = userEvent.setup()
     renderGoalsSection()
 
     await user.click(screen.getByTestId('card-2'))
 
-    expect(mockNavigate).toHaveBeenCalledWith('/goal/2')
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/plans/2')
   })
 
   it('plain click does not enter compare mode', async () => {

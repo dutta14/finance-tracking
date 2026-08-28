@@ -177,4 +177,51 @@ describe('MonthPicker', () => {
     expect(screen.getByRole('dialog', { name: 'Select month' })).toBeVisible()
     expect(mayButton).toBeDisabled()
   })
+
+  it('opens the year grid in the standard picker and switches to another year', async () => {
+    const user = userEvent.setup()
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+
+    render(
+      <MonthPicker allMonths={['2025-07', '2024-12', '2024-05']} selectedMonth="2025-07" onMonthChange={vi.fn()} />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Choose month, currently July 2025' }))
+    await user.click(screen.getByRole('button', { name: 'Select year, currently 2025' }))
+
+    expect(screen.getByRole('grid', { name: 'Select year' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '2024' }))
+
+    expect(screen.queryByRole('grid', { name: 'Select year' })).not.toBeInTheDocument()
+    expect(screen.getByRole('grid', { name: 'Months for 2024' })).toBeInTheDocument()
+    expect(scrollIntoView).toHaveBeenCalled()
+  })
+
+  it('supports compact mode month and year selection', async () => {
+    const user = userEvent.setup()
+    const onMonthChange = vi.fn()
+
+    render(
+      <MonthPicker
+        compact
+        allMonths={['2025-07', '2024-12', '2024-05']}
+        selectedMonth="2025-07"
+        onMonthChange={onMonthChange}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Choose start month, currently July 2025' }))
+    expect(screen.getByRole('dialog', { name: 'Select start month' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '2025' }))
+    await user.click(screen.getByRole('button', { name: '2024' }))
+    await user.click(screen.getByRole('button', { name: 'December 2024' }))
+
+    expect(onMonthChange).toHaveBeenCalledWith('2024-12')
+  })
 })

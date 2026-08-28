@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import CashflowBarChart from './CashflowBarChart'
 import type { Transaction } from '../types'
 
+let lastBarData: Array<{ label: string; income: number; expense: number }> = []
+
 vi.mock('recharts', async () => {
   return {
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
@@ -15,16 +17,19 @@ vi.mock('recharts', async () => {
       onClick,
     }: {
       children: React.ReactNode
-      data?: Array<{ label: string }>
+      data?: Array<{ label: string; income: number; expense: number }>
       onClick?: (e: { activeLabel?: string }) => void
-    }) => (
-      <div>
-        <button type="button" data-testid="bar-chart" onClick={() => onClick?.({ activeLabel: data?.[0]?.label })}>
-          {children}
-        </button>
-        <button type="button" data-testid="bar-chart-empty-click" onClick={() => onClick?.({})} />
-      </div>
-    ),
+    }) => {
+      lastBarData = data ?? []
+      return (
+        <div>
+          <button type="button" data-testid="bar-chart" onClick={() => onClick?.({ activeLabel: data?.[0]?.label })}>
+            {children}
+          </button>
+          <button type="button" data-testid="bar-chart-empty-click" onClick={() => onClick?.({})} />
+        </div>
+      )
+    },
     Bar: ({ children, name }: { children: React.ReactNode; name?: string }) => (
       <div data-testid={`bar-${String(name).toLowerCase()}`}>{children}</div>
     ),
@@ -37,8 +42,39 @@ vi.mock('recharts', async () => {
         <span data-testid="y-axis-small">{tickFormatter?.(250)}</span>
       </div>
     ),
-    Tooltip: () => null,
-    ReferenceLine: () => null,
+    Tooltip: ({
+      content,
+    }: {
+      content?: (args: {
+        active?: boolean
+        label?: string
+        payload?: Array<{ dataKey: string; value: number }>
+      }) => React.ReactNode
+    }) => {
+      const sample = lastBarData[1] ?? lastBarData[0]
+      if (!sample || !content) return null
+      return (
+        <div data-testid="tooltip-content">
+          {content({
+            active: true,
+            label: sample.label,
+            payload: [
+              { dataKey: 'income', value: sample.income },
+              { dataKey: 'expense', value: sample.expense },
+            ],
+          })}
+        </div>
+      )
+    },
+    ReferenceLine: ({
+      label,
+    }: {
+      label?: ((props: { viewBox: { x: number; y: number; width: number } }) => React.ReactNode) | { value?: string }
+    }) => {
+      if (typeof label === 'function')
+        return <div data-testid="reference-label">{label({ viewBox: { x: 10, y: 20, width: 100 } })}</div>
+      return null
+    },
     ReferenceDot: () => null,
     CartesianGrid: () => null,
   }
@@ -186,5 +222,23 @@ describe('CashflowBarChart', () => {
     render(<CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} />)
 
     expect(screen.getByTestId('bar-chart')).toBeInTheDocument()
+  })
+
+  it('renders tooltip deltas and average-vs-median reference content', () => {
+    const yearTransactions: Record<string, Transaction[]> = {
+      '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
+      '2024-02': [makeTx({ category: 'Salary', amount: 4500 }), makeTx({ category: 'Rent', amount: -2000 })],
+    }
+
+    render(
+      <CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />,
+    )
+
+    expect(screen.getByText('Income')).toBeInTheDocument()
+    expect(screen.getByText('Expenses')).toBeInTheDocument()
+    expect(screen.getByText('Net Income')).toBeInTheDocument()
+    expect(screen.getByText('Savings Rate')).toBeInTheDocument()
+    expect(screen.getByText('Average')).toBeInTheDocument()
+    expect(screen.getByText('Median')).toBeInTheDocument()
   })
 })

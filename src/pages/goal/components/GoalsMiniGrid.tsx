@@ -4,7 +4,7 @@ import { useTouchDrag } from '../../../hooks/useTouchDrag'
 import GoalMiniCard from './GoalMiniCard'
 import { useGoalMetrics } from '../hooks/useGoalMetrics'
 
-type SortField = 'name' | 'retire' | 'progress' | 'fi' | 'gw' | 'total'
+type SortField = 'name' | 'retire' | 'progress' | 'fi' | 'gw' | 'total' | 'created'
 type SortDir = 'asc' | 'desc'
 
 interface ContextMenuState {
@@ -86,8 +86,8 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           bv = b.goalName.toLowerCase()
           return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : av > bv ? -1 : av < bv ? 1 : 0
         case 'retire':
-          av = am.retirementYear
-          bv = bm.retirementYear
+          av = am.projectedFIDate ? am.projectedFIDate.getTime() : Infinity
+          bv = bm.projectedFIDate ? bm.projectedFIDate.getTime() : Infinity
           break
         case 'progress':
           av = am.fiProgress
@@ -105,6 +105,10 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           av = am.fiTarget + am.gwTotal
           bv = bm.fiTarget + bm.gwTotal
           break
+        case 'created':
+          av = a.goalCreatedIn || ''
+          bv = b.goalCreatedIn || ''
+          return sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : av > bv ? -1 : av < bv ? 1 : 0
       }
       return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number)
     })
@@ -322,6 +326,7 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
           {(
             [
               ['name', 'Name'],
+              ['created', 'Created'],
               ['retire', 'Retire'],
               ['progress', 'Progress'],
               ['fi', 'FI Goal'],
@@ -472,7 +477,11 @@ const GoalsMiniGrid: FC<GoalsMiniGridProps> = ({
               ) : (
                 <GoalMiniCard
                   goalName={goal.goalName}
+                  goalCreatedIn={goal.goalCreatedIn}
                   retirementYear={metricsMap.get(goal.id)!.retirementYear}
+                  retirementMonth={metricsMap.get(goal.id)!.retirementMonth}
+                  projectedFILabel={metricsMap.get(goal.id)!.projectedFILabel}
+                  projectedFIDate={metricsMap.get(goal.id)!.projectedFIDate}
                   fiTarget={metricsMap.get(goal.id)!.fiTarget}
                   fiProgress={metricsMap.get(goal.id)!.fiProgress}
                   gwTotal={metricsMap.get(goal.id)!.gwTotal}

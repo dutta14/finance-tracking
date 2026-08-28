@@ -238,7 +238,7 @@ test.describe('Goals Page E2E', () => {
 
       await goals.miniCards.first().click()
 
-      await expect(page).toHaveURL(/#\/goal\/1/)
+      await expect(page).toHaveURL(/#\/goal\/plans\/1/)
       await expect(goals.goalDetail).toBeVisible()
     })
 
@@ -369,13 +369,13 @@ test.describe('Goals Page E2E', () => {
 
       await expect(goals.detailTitle).toHaveText(GOALS[0].goalName)
 
-      // Navigate to next goal via stepper button
-      await goals.detailNextBtn.click()
+      await page.keyboard.press('ArrowRight')
       await expect(goals.detailTitle).toHaveText(GOALS[1].goalName)
+      await expect(page).toHaveURL(/#\/goal\/plans\/2/)
 
-      // Navigate back
-      await goals.detailPrevBtn.click()
+      await page.keyboard.press('ArrowLeft')
       await expect(goals.detailTitle).toHaveText(GOALS[0].goalName)
+      await expect(page).toHaveURL(/#\/goal\/plans\/1/)
     })
 
     test('detail page shows GwSection with GW goals linked to FI goal', async ({ page }) => {
@@ -526,14 +526,14 @@ test.describe('Goals Page E2E', () => {
 
       // Press Enter to navigate
       await page.keyboard.press('Enter')
-      await expect(page).toHaveURL(/#\/goal\/1/)
+      await expect(page).toHaveURL(/#\/goal\/plans\/1/)
 
       // Go back and test Space
       await goals.goto()
       const card = goals.miniCards.first()
       await card.focus()
       await page.keyboard.press('Space')
-      await expect(page).toHaveURL(/#\/goal\/1/)
+      await expect(page).toHaveURL(/#\/goal\/plans\/1/)
     })
 
     test('template picker navigates via arrow keys and selects on Enter', async ({ page }) => {

@@ -168,6 +168,7 @@ function makeGoal(overrides: Partial<FinancialGoal> = {}): FinancialGoal {
     retirement: 'Jan 2050',
     fiGoal: 2_000_000,
     progress: 25,
+    projectedFIDateISO: '2051-01',
     ...overrides,
   }
 }

@@ -23,6 +23,9 @@ export class BudgetPage {
   // Upload
   readonly uploadDropDown: Locator
   readonly uploadMenu: Locator
+  readonly addTxnMenuItem: Locator
+  readonly uploadCsvMenuItem: Locator
+  readonly bulkUploadMenuItem: Locator
   readonly quickUploadInput: Locator
   readonly bulkUploadInput: Locator
 
@@ -55,6 +58,8 @@ export class BudgetPage {
 
   // Budget Tables
   readonly tableSections: Locator
+  readonly incomeTab: Locator
+  readonly expenseTab: Locator
   readonly incomeTable: Locator
   readonly expenseTable: Locator
 
@@ -79,8 +84,11 @@ export class BudgetPage {
     })
     this.groupsBtn = page.locator('.budget-header-left .tab-bar .tab-btn', { hasText: /^Groups$/ })
 
-    this.uploadDropDown = page.locator('.budget-split-drop')
+    this.uploadDropDown = page.locator('.budget-overflow-btn')
     this.uploadMenu = page.locator('.budget-upload-menu')
+    this.addTxnMenuItem = this.uploadMenu.getByRole('menuitem', { name: 'Add Transaction' })
+    this.uploadCsvMenuItem = this.uploadMenu.getByRole('menuitem', { name: 'Upload CSV' })
+    this.bulkUploadMenuItem = this.uploadMenu.getByRole('menuitem', { name: 'Bulk Upload' })
     this.quickUploadInput = page.locator('input[data-testid="quick-upload-input"]')
     this.bulkUploadInput = page.locator('input[data-testid="bulk-upload-input"]')
 
@@ -89,7 +97,7 @@ export class BudgetPage {
     this.previewCancel = page.locator('.csv-preview-btn--cancel')
     this.previewConfirm = page.locator('.csv-preview-btn--confirm')
 
-    this.addTxnBtn = page.locator('.budget-manual-entry > .budget-action-btn', { hasText: /^Add Transaction$/ })
+    this.addTxnBtn = this.addTxnMenuItem
     this.txnForm = page.locator('form.budget-txn-form')
     this.txnDate = page.locator('#txn-date')
     this.txnDesc = page.locator('#txn-desc')
@@ -108,6 +116,8 @@ export class BudgetPage {
     this.groupManager = page.locator('.budget-group-manager')
 
     this.tableSections = page.locator('.budget-table-section')
+    this.incomeTab = page.locator('.budget-agg-tabs-row > .tab-bar').getByRole('button', { name: 'Income' })
+    this.expenseTab = page.locator('.budget-agg-tabs-row > .tab-bar').getByRole('button', { name: 'Expenses' })
     this.incomeTable = page
       .locator('.budget-table-section')
       .filter({ has: page.locator('.budget-table-title', { hasText: /^Income/ }) })
@@ -134,24 +144,22 @@ export class BudgetPage {
       spreadsheet: 'Spreadsheet',
       groups: 'Groups',
     }
-    await this.page
-      .locator('.budget-header-left .tab-bar')
-      .locator('.tab-btn', { hasText: labels[mode] })
-      .click()
+    await this.page.locator('.budget-header-left .tab-bar').locator('.tab-btn', { hasText: labels[mode] }).click()
   }
 
   async setSpreadsheetMode(mode: 'aggregated' | 'detailed') {
     await this.page
-      .locator('.budget-action-bar > .tab-bar')
+      .locator('.budget-agg-tabs-right .tab-bar')
       .locator('.tab-btn', { hasText: mode === 'aggregated' ? 'Aggregated' : 'Detailed' })
       .click()
   }
 
+  async setSpreadsheetCategory(category: 'income' | 'expense') {
+    await (category === 'income' ? this.incomeTab : this.expenseTab).click()
+  }
+
   async setTimePeriod(period: 'M' | 'Q' | 'H') {
-    await this.page
-      .locator('.budget-header-right .tab-bar')
-      .locator('.tab-btn', { hasText: period })
-      .click()
+    await this.page.locator('.budget-header-right .tab-bar').locator('.tab-btn', { hasText: period }).click()
   }
 
   /** Upload a single CSV via the quick upload input and wait for preview. */
@@ -174,6 +182,9 @@ export class BudgetPage {
   /** Open the manual transaction entry form. */
   async openManualEntry() {
     if (await this.txnForm.isVisible()) return
+    if (!(await this.uploadMenu.isVisible())) {
+      await this.uploadDropDown.click()
+    }
     await this.addTxnBtn.click()
     await this.txnForm.waitFor({ state: 'visible' })
   }
@@ -213,6 +224,7 @@ export class BudgetPage {
 
   /** Right-click a month header in the expense table to open context menu. */
   async openMonthContextMenu(monthIndex: number) {
+    await this.setSpreadsheetCategory('expense')
     const monthHeader = this.expenseTable.locator('th.budget-th--month').nth(monthIndex)
     await monthHeader.click({ button: 'right' })
     await this.page.locator('.budget-ctx-menu').waitFor({ state: 'visible' })

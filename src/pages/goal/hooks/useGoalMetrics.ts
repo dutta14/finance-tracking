@@ -127,7 +127,7 @@ export function useGoalMetrics(
       const gwProgress = gwTarget > 0 ? Math.min(100, Math.max(0, (gwBal / gwTarget) * 100)) : 0
       const gwMonthly = gwTarget > 0 && n > 0 ? calcMonthlySaving(gwBal, gwTarget, gwGrowth, n) : 0
 
-      // Projected FI date — same logic as GoalDetailedCard
+      // Use projected FI date persisted by GoalDetailedCard
       let projectedFILabel: string | null = null
       let projectedFIDate: Date | null = null
       let projectedState: GoalMetrics['projectedState'] = 'no-goal'
@@ -139,14 +139,23 @@ export function useGoalMetrics(
         } else if (!annualSavings || annualSavings <= 0) {
           projectedState = annualSavings === null ? 'no-budget' : 'not-reachable'
           projectedFILabel = annualSavings === null ? 'Add budget data →' : 'Not reachable at current rate'
+        } else if (goal.projectedFIDateISO) {
+          projectedState = 'projected'
+          const [yr, mo] = goal.projectedFIDateISO.split('-').map(Number)
+          projectedFIDate = new Date(yr, mo - 1)
+          projectedFILabel = projectedFIDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
         } else {
-          const fiAnnualSavings = Math.max(0, annualSavings - gwMonthly * 12)
+          // Fallback: calculate if detail page hasn't been visited yet
+          const effectiveAnnualSavings =
+            goal.annualSpending != null && budgetSaveRate?.totalIncome
+              ? Math.max(0, budgetSaveRate.totalIncome - goal.annualSpending)
+              : annualSavings
+          const fiAnnualSavings = Math.max(0, effectiveAnnualSavings - gwMonthly * 12)
           if (fiAnnualSavings <= 0) {
             projectedState = 'not-reachable'
             projectedFILabel = 'Not reachable at current rate'
           } else {
             const endOfLife = goal.goalEndYear ? new Date(goal.goalEndYear) : null
-            // Monthly expense in today's dollars (same deflation as GoalDetailedCard)
             let monthlyExpenseNow: number
             if (goal.monthlyExpenseRetirement && goal.monthlyExpenseRetirement > 0) {
               const retYear = by + goal.retirementAge
