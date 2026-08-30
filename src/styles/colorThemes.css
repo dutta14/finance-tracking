@@ -54,6 +54,11 @@
   --color-positive-border: #bbf7d0;
   --color-tooltip-bg: #1e2228;
 
+  /* Chart bar / line colors (shared across all charts) */
+  --chart-positive: #4ade80;
+  --chart-negative: #f87171;
+  --chart-nw-line: #10b981;
+
   /* Typography scale (1.125x ratio — data-dense) */
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
@@ -107,11 +112,11 @@ body.dark {
   --color-text-heading: #d1d5db;
   --color-text-secondary: #9ca3af;
   --color-surface: #1e1e1e;
-  --color-surface-alt: #252830;
-  --color-surface-hover: #2d3348;
-  --color-bg: #141820;
-  --color-border: #2d3139;
-  --color-border-light: #374151;
+  --color-surface-alt: #262626;
+  --color-surface-hover: #2e2e2e;
+  --color-bg: #161616;
+  --color-border: #303030;
+  --color-border-light: #3a3a3a;
 
   /* Utility / contrast tokens */
   --color-text-on-accent: #ffffff;
@@ -119,7 +124,12 @@ body.dark {
   --color-negative-hover: #b91c1c;
   --color-warning-text: #fbbf24;
   --color-positive-border: #064e3b;
-  --color-tooltip-bg: #1e2228;
+  --color-tooltip-bg: #222222;
+
+  /* Chart bar / line colors — softer for dark mode */
+  --chart-positive: #6ee7a0;
+  --chart-negative: #fca5a5;
+  --chart-nw-line: #34d399;
 }
 
 /* Dark-mode native control overrides */

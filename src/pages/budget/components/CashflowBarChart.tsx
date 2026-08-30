@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useRef, useState, useEffect } from 'react'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -39,6 +39,19 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
   selectedPeriod,
   onSelectPeriod,
 }) => {
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [incomeColor, setIncomeColor] = useState('#4ade80')
+  const [expenseColor, setExpenseColor] = useState('#f87171')
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs every render to detect theme changes
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const styles = getComputedStyle(el)
+    setIncomeColor(styles.getPropertyValue('--chart-positive').trim() || '#4ade80')
+    setExpenseColor(styles.getPropertyValue('--chart-negative').trim() || '#f87171')
+  })
+
   const data = useMemo(() => {
     const filter = (txns: Transaction[]) => txns.filter(t => !removedCategories.has(t.category))
     const isIncome = (t: Transaction) => incomeCatSet.has(t.category)
@@ -112,7 +125,7 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
   })()
 
   return (
-    <div className="cashflow-bar-wrap">
+    <div className="cashflow-bar-wrap" ref={wrapRef}>
       <h3 className="cashflow-section-title">Cashflow — {year}</h3>
       <ResponsiveContainer width="100%" height={340}>
         <ComposedChart
@@ -180,7 +193,7 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
                     {label} {year}
                   </div>
                   <div className="cashflow-tooltip-row">
-                    <span className="cashflow-tooltip-dot" style={{ background: '#4ade80' }} />
+                    <span className="cashflow-tooltip-dot" style={{ background: incomeColor }} />
                     <span className="cashflow-tooltip-label">Income</span>
                     <span className="cashflow-tooltip-value">{fmt(income)}</span>
                     {deltaIncome !== null && (
@@ -190,7 +203,7 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
                     )}
                   </div>
                   <div className="cashflow-tooltip-row">
-                    <span className="cashflow-tooltip-dot" style={{ background: '#f87171' }} />
+                    <span className="cashflow-tooltip-dot" style={{ background: expenseColor }} />
                     <span className="cashflow-tooltip-label">Expenses</span>
                     <span className="cashflow-tooltip-value">{fmt(expense)}</span>
                     {deltaExpense !== null && (
@@ -224,12 +237,20 @@ const CashflowBarChart: FC<CashflowBarChartProps> = ({
           <ReferenceLine y={0} stroke="var(--cashflow-zero, #9ca3af)" strokeWidth={1} />
           <Bar dataKey="income" name="Income" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
             {data.map((_, i) => (
-              <Cell key={i} fill="#4ade80" opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1} />
+              <Cell
+                key={i}
+                fill={incomeColor}
+                opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1}
+              />
             ))}
           </Bar>
           <Bar dataKey="expense" name="Expense" radius={[4, 4, 0, 0]} maxBarSize={48} cursor="pointer">
             {data.map((_, i) => (
-              <Cell key={i} fill="#f87171" opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1} />
+              <Cell
+                key={i}
+                fill={expenseColor}
+                opacity={selectedPeriod && data[i].label !== selectedPeriod ? 0.35 : 1}
+              />
             ))}
           </Bar>
           <Line

@@ -16,6 +16,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
   const { darkMode, onToggleDarkMode, profile, onUpdateProfile, onClose = () => {}, initialSection = 'profile' } = props
 
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
+  const [mobileDetail, setMobileDetail] = useState(initialSection !== 'profile')
   const modalRef = useRef<HTMLDivElement>(null)
   const { isAdmin } = useFlagContext()
   const { accentTheme, setAccentTheme } = useSettings()
@@ -35,11 +36,16 @@ const SettingsModal: FC<SettingsModalProps> = props => {
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
+  const handleNavClick = (section: SettingsSection) => {
+    setActiveSection(section)
+    setMobileDetail(true)
+  }
+
   return createPortal(
     <div className="settings-modal-backdrop" onClick={onClose}>
       <div
         ref={modalRef}
-        className="settings-modal"
+        className={`settings-modal${mobileDetail ? ' settings-modal--detail-open' : ''}`}
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -63,7 +69,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               role="tab"
               id="settings-tab-profile"
               aria-selected={activeSection === 'profile'}
-              onClick={() => setActiveSection('profile')}
+              onClick={() => handleNavClick('profile')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <circle cx="8" cy="5" r="2.5" />
@@ -76,7 +82,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               role="tab"
               id="settings-tab-folder"
               aria-selected={activeSection === 'folder'}
-              onClick={() => setActiveSection('folder')}
+              onClick={() => handleNavClick('folder')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M1.5 4a1 1 0 0 1 1-1h3l1.2 1.5H13.5a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V4z" />
@@ -88,7 +94,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               role="tab"
               id="settings-tab-appearance"
               aria-selected={activeSection === 'appearance'}
-              onClick={() => setActiveSection('appearance')}
+              onClick={() => handleNavClick('appearance')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 {darkMode ? (
@@ -113,7 +119,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               role="tab"
               id="settings-tab-advanced"
               aria-selected={activeSection === 'advanced'}
-              onClick={() => setActiveSection('advanced')}
+              onClick={() => handleNavClick('advanced')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 1a1 1 0 0 1 1 1v1.5h2a1 1 0 0 1 1 1v1h1.5a1 1 0 0 1 0 2H13v3h1.5a1 1 0 0 1 0 2H13v1a1 1 0 0 1-1 1h-2v1.5a1 1 0 0 1-2 0V14H6v1.5a1 1 0 0 1-2 0V14H2a1 1 0 0 1-1-1v-2H.5a1 1 0 0 1 0-2H1V7H.5a1 1 0 0 1 0-2H1V4a1 1 0 0 1 1-1h2V1.5a1 1 0 0 1 2 0V3h2V1.5a1 1 0 0 1 1-1z" />
@@ -125,7 +131,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               role="tab"
               id="settings-tab-labs"
               aria-selected={activeSection === 'labs'}
-              onClick={() => setActiveSection('labs')}
+              onClick={() => handleNavClick('labs')}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M6 1h4v1H9v4.2l3.7 5.5c.4.6 0 1.3-.7 1.3H4c-.7 0-1.1-.7-.7-1.3L7 6.2V2H6V1zm2 5.5L5.2 11h5.6L8 6.5z" />
@@ -138,7 +144,7 @@ const SettingsModal: FC<SettingsModalProps> = props => {
                 role="tab"
                 id="settings-tab-flags"
                 aria-selected={activeSection === 'flags'}
-                onClick={() => setActiveSection('flags')}
+                onClick={() => handleNavClick('flags')}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M3 1v14h1V9h8l-2-4 2-4H4V1H3zm1 1.5h6.5L9 6l1.5 2.5H4V2.5z" />
@@ -149,6 +155,13 @@ const SettingsModal: FC<SettingsModalProps> = props => {
           </div>
 
           <div className="settings-modal-detail" role="tabpanel" aria-labelledby={`settings-tab-${activeSection}`}>
+            <button
+              className="settings-mobile-back"
+              onClick={() => setMobileDetail(false)}
+              aria-label="Back to settings menu"
+            >
+              ← Back
+            </button>
             {activeSection === 'profile' && <ProfilePane profile={profile} onUpdateProfile={onUpdateProfile} />}
             {activeSection === 'folder' && <DataFolderPane />}
             {activeSection === 'appearance' && (

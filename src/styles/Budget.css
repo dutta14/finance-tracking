@@ -1615,8 +1615,8 @@ body.dark .csv-preview-btn--confirm {
 :root {
   --cashflow-grid: var(--color-border);
   --cashflow-zero: var(--color-text-muted);
-  --cashflow-income: var(--color-positive);
-  --cashflow-expense: var(--color-negative);
+  --cashflow-income: var(--chart-positive);
+  --cashflow-expense: var(--chart-negative);
   --cashflow-text: var(--color-text-heading);
   --cashflow-subtext: var(--color-text-muted);
   --cashflow-pct: var(--color-text-muted);
@@ -1624,7 +1624,9 @@ body.dark .csv-preview-btn--confirm {
 body.dark {
   --cashflow-grid: var(--color-surface-hover);
   --cashflow-zero: var(--color-text-secondary);
-  --cashflow-income: var(--color-positive);
+  --cashflow-income: var(--chart-positive);
+  --cashflow-expense: var(--chart-negative);
+  --cashflow-text: var(--color-text);
   --cashflow-subtext: var(--color-text-muted);
   --cashflow-pct: var(--color-text-secondary);
 }

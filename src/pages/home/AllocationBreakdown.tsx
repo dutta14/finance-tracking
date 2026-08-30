@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo, useState, useEffect } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import {
   Account,
@@ -16,19 +16,40 @@ interface AllocationBreakdownProps {
   onNavigate?: () => void
 }
 
-const ALLOC_COLORS: Record<AssetAllocation, string> = {
-  cash: '#6b7280',
-  'us-stock': '#6366f1',
-  'intl-stock': '#8b5cf6',
-  bonds: '#0ea5e9',
-  'real-estate': '#f59e0b',
-  others: '#84cc16',
-  debt: '#ef4444',
+const ALLOC_COLOR_VARS: Record<AssetAllocation, string> = {
+  'us-stock': '--accent',
+  'intl-stock': '--accent-track',
+  bonds: '_#7db8c9',
+  'real-estate': '_#d4a86a',
+  cash: '_#b0b8c1',
+  others: '_#8db580',
+  debt: '_#d98c8c',
+}
+
+function resolveAllocColors(): Record<AssetAllocation, string> {
+  const s = getComputedStyle(document.body)
+  const resolved = {} as Record<AssetAllocation, string>
+  for (const [key, val] of Object.entries(ALLOC_COLOR_VARS)) {
+    if (val.startsWith('--')) {
+      resolved[key as AssetAllocation] = s.getPropertyValue(val).trim() || val
+    } else {
+      resolved[key as AssetAllocation] = val.slice(1)
+    }
+  }
+  return resolved
 }
 
 const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances, onNavigate }) => {
   const [legendMode, setLegendMode] = useState<'pct' | 'val'>('pct')
   const [chartMode, setChartMode] = useState<'pie' | 'bar'>('pie')
+  const [ALLOC_COLORS, setAllocColors] = useState(resolveAllocColors)
+
+  useEffect(() => {
+    setAllocColors(resolveAllocColors())
+    const observer = new MutationObserver(() => setAllocColors(resolveAllocColors()))
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   const { fiData, gwData, totalData } = useMemo(() => {
     if (balances.length === 0) return { fiData: [], gwData: [], totalData: [] }
@@ -81,7 +102,7 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
     }
 
     return { fiData: buildAlloc('fi'), gwData: buildAlloc('gw'), totalData: buildAlloc() }
-  }, [accounts, balances])
+  }, [accounts, balances, ALLOC_COLORS])
 
   const tooltipBg = 'var(--color-surface)'
   const tooltipBorder = 'var(--color-border)'
@@ -168,7 +189,9 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                     padding: '6px 10px',
                     fontSize: 11,
+                    color: 'var(--color-text)',
                   }}
+                  itemStyle={{ color: 'var(--color-text)' }}
                   formatter={(v: number | string | ReadonlyArray<number | string> | undefined) =>
                     formatCurrency(Number(v))
                   }

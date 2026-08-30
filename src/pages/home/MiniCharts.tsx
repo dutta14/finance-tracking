@@ -17,6 +17,7 @@ import type { Props as LegendContentProps } from 'recharts/types/component/Defau
 import { Account, BalanceEntry, formatMonth, formatCurrency } from '../data/types'
 import { useDateFilter } from '../../hooks/useDateFilter'
 import { DateFilterBar } from '../../components/DateFilterBar'
+import { useChartColors } from '../../hooks/useChartColors'
 
 type MiniChartType = 'fi-gw' | 'net-worth' | 'assets-liabilities'
 
@@ -57,6 +58,7 @@ const CHART_OPTIONS: { key: MiniChartType; label: string }[] = [
 ]
 
 const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMonths, onNavigate }) => {
+  const [chartRef, chartColors] = useChartColors()
   const [chartType, setChartType] = useState<MiniChartType>('net-worth')
   const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } = useDateFilter(
     allMonths,
@@ -315,7 +317,7 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
   }
 
   return (
-    <div className="home-card home-card--charts">
+    <div className="home-card home-card--charts" ref={chartRef}>
       <div className="home-card-header">
         <h3>Charts</h3>
         <button className="home-card-link" onClick={onNavigate}>
@@ -421,8 +423,8 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
             <ComposedChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="miniGradNw" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="0%" stopColor={chartColors.nwLine} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={chartColors.nwLine} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
@@ -456,10 +458,10 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 type="natural"
                 dataKey="netWorth"
                 name="Net Worth"
-                stroke="#10b981"
+                stroke={chartColors.nwLine}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 3, strokeWidth: 0, fill: '#10b981' }}
+                activeDot={{ r: 3, strokeWidth: 0, fill: chartColors.nwLine }}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -485,8 +487,14 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
               <Tooltip content={renderTooltip} />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
-              <Bar dataKey="assets" name="Assets" stackId="al" fill="#4ade80" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="liabilities" name="Liabilities" stackId="al" fill="#f87171" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="assets" name="Assets" stackId="al" fill={chartColors.positive} radius={[3, 3, 0, 0]} />
+              <Bar
+                dataKey="liabilities"
+                name="Liabilities"
+                stackId="al"
+                fill={chartColors.negative}
+                radius={[3, 3, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

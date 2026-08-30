@@ -374,7 +374,7 @@ describe('GoalsPeek navigation', () => {
     renderPeek([goal])
     const goalButton = screen.getByRole('button', { name: /Coast FIRE/i })
     await user.click(goalButton)
-    expect(mockNavigate).toHaveBeenCalledWith('/goal/42')
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/plans/42')
   })
 
   it('navigates to the correct detail page for each goal', async () => {
@@ -383,12 +383,12 @@ describe('GoalsPeek navigation', () => {
     renderPeek(goals)
 
     await user.click(screen.getByRole('button', { name: /Early Retirement/i }))
-    expect(mockNavigate).toHaveBeenCalledWith('/goal/7')
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/plans/7')
 
     mockNavigate.mockClear()
 
     await user.click(screen.getByRole('button', { name: /Lean FIRE/i }))
-    expect(mockNavigate).toHaveBeenCalledWith('/goal/13')
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/plans/13')
   })
 
   it('header "View Goals" link still calls onNavigate (list page)', async () => {
@@ -443,7 +443,7 @@ describe('GoalsPeek summary cards and progress', () => {
 
     const goalCard = screen.getByRole('button', { name: /Fat FIRE/i })
     await user.click(goalCard)
-    expect(mockNavigate).toHaveBeenCalledWith('/goal/99')
+    expect(mockNavigate).toHaveBeenCalledWith('/goal/plans/99')
   })
 
   it('displays the correct FI progress percentage based on current totals', () => {

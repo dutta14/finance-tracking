@@ -1333,6 +1333,39 @@ body.dark .goal-drag-item--long-press {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.goal-drawer-rename {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.goal-drawer-rename-input {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 6px;
+  font-size: var(--fs-sm);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+}
+.goal-drawer-rename-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: var(--radius);
+}
+.goal-drawer-rename-confirm {
+  color: var(--accent);
+}
+.goal-drawer-rename-cancel {
+  color: var(--color-text-muted);
+}
 
 /* Cards container — collapses when detail is open */
 .goal-cards-container {
