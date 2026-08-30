@@ -743,6 +743,7 @@
 .spending-peek-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
@@ -755,26 +756,29 @@
 
 .spending-peek-dropdown {
   position: relative;
-  margin-left: auto;
 }
 
 .spending-peek-dropdown-trigger {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.75rem;
+  background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-surface);
-  color: var(--color-text);
+  padding: 0.2rem 0.5rem;
   font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   white-space: nowrap;
-  transition: border-color 0.15s;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
 }
 
 .spending-peek-dropdown-trigger:hover {
-  border-color: var(--accent);
+  border-color: var(--color-text-muted);
+  background: var(--color-surface-hover);
 }
 
 .spending-peek-dropdown-trigger:focus-visible {
@@ -788,41 +792,44 @@
 }
 
 .spending-peek-chevron {
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
+  font-size: 0.85em;
+  transform: rotate(90deg);
+  display: inline-block;
 }
 
 .spending-peek-dropdown-menu {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  min-width: 100%;
-  padding: 0.3rem 0;
-  margin: 0;
-  list-style: none;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 20;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 140px;
+  padding: 0.3rem;
+  z-index: 500;
+  white-space: nowrap;
+  list-style: none;
+  margin: 0;
 }
 
 .spending-peek-dropdown-item {
-  padding: 0.55rem 0.85rem;
-  font-size: var(--fs-sm);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: var(--fs-md);
   color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.1s;
+  transition: background 0.15s;
 }
 
 .spending-peek-dropdown-item:hover {
-  background: var(--color-bg);
+  background: var(--color-surface-hover);
 }
 
 .spending-peek-dropdown-item--active {
-  color: var(--accent);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-semibold);
+  background: var(--color-surface-hover);
 }
 
 .spending-peek-chart {
@@ -981,7 +988,7 @@
   }
   .spending-peek-dropdown-trigger {
     font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
+    padding: 0.2rem 0.4rem;
   }
   .reorder-move-btn {
     width: 32px;

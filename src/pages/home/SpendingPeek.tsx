@@ -459,7 +459,7 @@ const SpendingPeek: FC<SpendingPeekProps> = ({ fileStore, hasBudgetData, budgetD
           <div className="spending-peek-dropdown">
             <button className="spending-peek-dropdown-trigger" disabled>
               {MODE_OPTIONS[0].label}
-              <span className="spending-peek-chevron">▾</span>
+              <span className="spending-peek-chevron">›</span>
             </button>
           </div>
         </div>
@@ -482,7 +482,7 @@ const SpendingPeek: FC<SpendingPeekProps> = ({ fileStore, hasBudgetData, budgetD
               aria-label="Spending comparison mode"
             >
               {MODE_OPTIONS.find(o => o.value === mode)?.label}
-              <span className="spending-peek-chevron">▾</span>
+              <span className="spending-peek-chevron">›</span>
             </button>
             {dropdownOpen && (
               <ul className="spending-peek-dropdown-menu" role="listbox">
@@ -544,7 +544,7 @@ const SpendingPeek: FC<SpendingPeekProps> = ({ fileStore, hasBudgetData, budgetD
             aria-label="Spending comparison mode"
           >
             {MODE_OPTIONS.find(o => o.value === mode)?.label}
-            <span className="spending-peek-chevron">▾</span>
+            <span className="spending-peek-chevron">›</span>
           </button>
           {dropdownOpen && (
             <ul className="spending-peek-dropdown-menu" role="listbox">
