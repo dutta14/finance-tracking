@@ -369,10 +369,9 @@ describe('Home drag leave', () => {
 
 describe('Home card order persistence', () => {
   it('loads card order from localStorage', () => {
-    localStorage.setItem('home-card-order', JSON.stringify([3, 2, 1, 0]))
+    localStorage.setItem('home-card-order', JSON.stringify([3, 2, 1, 0, 4]))
     renderHome()
 
-    // Cards should be in reversed order (with Spending appended via migration): Allocation, Goals, Charts, Net Worth, Spending
     const cardOrder = screen.getAllByTestId(/-card$/).map(el => el.getAttribute('data-testid'))
     expect(cardOrder).toEqual(['alloc-card', 'goals-card', 'charts-card', 'nw-card', 'spending-card'])
   })

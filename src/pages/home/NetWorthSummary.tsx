@@ -201,6 +201,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
   return (
     <div className="home-card home-card--nw">
       <div className="home-card-header">
+        <h3>Net Worth</h3>
         <button className="home-card-link" onClick={onNavigate}>
           View Details →
         </button>
@@ -208,7 +209,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       <div className="nw-headline">
         <div className="nw-headline-center">
           <span className="nw-amount">
-            {formatCurrency(netWorth)} <span className="nw-amount-label">net worth</span>
+            {formatCurrency(netWorth)}
             {prevNw !== null &&
               (() => {
                 const diff = netWorth - prevNw
