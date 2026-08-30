@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback } from 'react'
+import { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Account, BalanceEntry, formatCurrency, ACCOUNT_TYPE_LABELS } from '../data/types'
 import MonthPicker from '../../components/MonthPicker'
 
@@ -25,6 +25,19 @@ const sumAccountBalances = (accounts: Account[], balanceMap: Map<number, number>
 const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMonths, onNavigate }) => {
   const [monthIdx, setMonthIdx] = useState(0) // 0 = latest
   const [compPeriod, setCompPeriod] = useState<ComparisonPeriod>('1m')
+  const [periodOpen, setPeriodOpen] = useState(false)
+  const periodRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!periodOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (periodRef.current && !periodRef.current.contains(e.target as Node)) {
+        setPeriodOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [periodOpen])
 
   const selectedMonth = allMonths[monthIdx] || ''
 
@@ -287,18 +300,36 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
               )
             })()}
         </div>
-        <select
-          className="nw-period-select"
-          value={compPeriod}
-          onChange={e => setCompPeriod(e.target.value as ComparisonPeriod)}
-          aria-label="Comparison period"
-        >
-          {COMPARISON_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="nw-period-menu" ref={periodRef}>
+          <button
+            className="nw-period-trigger"
+            onClick={() => setPeriodOpen(o => !o)}
+            aria-haspopup="listbox"
+            aria-expanded={periodOpen}
+            aria-label="Comparison period"
+          >
+            {COMPARISON_OPTIONS.find(o => o.value === compPeriod)?.label} <span className="nw-period-chevron">›</span>
+          </button>
+          {periodOpen && (
+            <div className="nw-period-dropdown" role="listbox" aria-label="Comparison period">
+              {COMPARISON_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  className={`nw-period-item${opt.value === compPeriod ? ' nw-period-item--active' : ''}`}
+                  role="option"
+                  aria-selected={opt.value === compPeriod}
+                  onClick={() => {
+                    setCompPeriod(opt.value)
+                    setPeriodOpen(false)
+                  }}
+                >
+                  {opt.value === compPeriod && <span className="nw-period-check">✓</span>}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
       <p className="nw-prose">
