@@ -121,17 +121,15 @@
 }
 .nw-headline {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
-  position: relative;
 }
-.nw-headline-center {
+.nw-headline-left {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
+  align-items: baseline;
+  gap: 0.4rem;
   min-width: 0;
 }
 .nw-month-arrow {
@@ -162,13 +160,6 @@
 }
 
 /* Change indicator */
-.nw-change-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 0.25rem;
-}
 .nw-change {
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);

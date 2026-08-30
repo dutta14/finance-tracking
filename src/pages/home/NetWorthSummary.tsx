@@ -272,7 +272,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
         </button>
       </div>
       <div className="nw-headline">
-        <div className="nw-headline-center">
+        <div className="nw-headline-left">
           <span className="nw-amount">{formatCurrency(netWorth)}</span>
           {compNw !== null &&
             (() => {
@@ -281,42 +281,24 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
               const cls = diff > 0 ? 'nw-change up' : diff < 0 ? 'nw-change down' : 'nw-change flat'
               const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : ''
               return (
-                <span className="nw-change-row">
-                  <span className={cls}>
-                    {arrow} {formatCurrency(Math.abs(diff))} ({pct}%)
-                  </span>
-                  <select
-                    className="nw-period-select"
-                    value={compPeriod}
-                    onChange={e => setCompPeriod(e.target.value as ComparisonPeriod)}
-                    aria-label="Comparison period"
-                  >
-                    {COMPARISON_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                <span className={cls}>
+                  {arrow} {formatCurrency(Math.abs(diff))} ({pct}%)
                 </span>
               )
             })()}
-          {compNw === null && (
-            <span className="nw-change-row">
-              <select
-                className="nw-period-select"
-                value={compPeriod}
-                onChange={e => setCompPeriod(e.target.value as ComparisonPeriod)}
-                aria-label="Comparison period"
-              >
-                {COMPARISON_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </span>
-          )}
         </div>
+        <select
+          className="nw-period-select"
+          value={compPeriod}
+          onChange={e => setCompPeriod(e.target.value as ComparisonPeriod)}
+          aria-label="Comparison period"
+        >
+          {COMPARISON_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
       <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
       <p className="nw-prose">
