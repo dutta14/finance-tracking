@@ -222,18 +222,6 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     gwTotal,
   ])
 
-  const breakdownBars = useMemo(() => {
-    const toPct = (value: number) => {
-      if (netWorth === 0) return 0
-      return Math.max(0, Math.min(100, (value / netWorth) * 100))
-    }
-
-    return [
-      { label: 'FI', value: fiTotal, pct: toPct(fiTotal), fillClass: 'nw-bar-fill--fi' },
-      { label: 'GW', value: gwTotal, pct: toPct(gwTotal), fillClass: 'nw-bar-fill--gw' },
-    ]
-  }, [fiTotal, gwTotal, netWorth])
-
   const handleMonthChange = useCallback(
     (month: string) => {
       const idx = allMonths.indexOf(month)
@@ -346,30 +334,6 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
           </span>
         ))}
       </p>
-      {breakdownBars.length === 2 && (
-        <div className="nw-stacked-bar" aria-label="Net worth goal breakdown">
-          <div
-            className="nw-stacked-fill nw-stacked-fill--fi"
-            style={{ width: `${breakdownBars[0].pct.toFixed(1)}%` }}
-            title={`FI: ${breakdownBars[0].pct.toFixed(1)}%`}
-          />
-          <div
-            className="nw-stacked-fill nw-stacked-fill--gw"
-            style={{ width: `${breakdownBars[1].pct.toFixed(1)}%` }}
-            title={`GW: ${breakdownBars[1].pct.toFixed(1)}%`}
-          />
-        </div>
-      )}
-      {breakdownBars.length === 2 && (
-        <div className="nw-stacked-legend">
-          <span className="nw-stacked-legend-item">
-            <span className="nw-stacked-dot nw-stacked-dot--fi" /> FI {breakdownBars[0].pct.toFixed(1)}%
-          </span>
-          <span className="nw-stacked-legend-item">
-            <span className="nw-stacked-dot nw-stacked-dot--gw" /> GW {breakdownBars[1].pct.toFixed(1)}%
-          </span>
-        </div>
-      )}
     </div>
   )
 }
