@@ -216,6 +216,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             amount: formatCurrency(fiRetirementTotal),
             label: ACCOUNT_TYPE_LABELS.retirement,
             diff: compFiRetirement !== null ? fiRetirementTotal - compFiRetirement : null,
+            compBase: compFiRetirement,
           }
         : null,
       fiNonRetirementTotal > 0
@@ -223,9 +224,10 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             amount: formatCurrency(fiNonRetirementTotal),
             label: ACCOUNT_TYPE_LABELS['non-retirement'],
             diff: compFiNonRetirement !== null ? fiNonRetirementTotal - compFiNonRetirement : null,
+            compBase: compFiNonRetirement,
           }
         : null,
-    ].filter(Boolean) as Array<{ amount: string; label: string; diff: number | null }>
+    ].filter(Boolean) as Array<{ amount: string; label: string; diff: number | null; compBase: number | null }>
 
     const gwChildren = [
       gwLiquidTotal > 0
@@ -233,6 +235,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             amount: formatCurrency(gwLiquidTotal),
             label: ACCOUNT_TYPE_LABELS.liquid,
             diff: compGwLiquid !== null ? gwLiquidTotal - compGwLiquid : null,
+            compBase: compGwLiquid,
           }
         : null,
       gwIlliquidTotal > 0
@@ -240,9 +243,10 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             amount: formatCurrency(gwIlliquidTotal),
             label: ACCOUNT_TYPE_LABELS.illiquid,
             diff: compGwIlliquid !== null ? gwIlliquidTotal - compGwIlliquid : null,
+            compBase: compGwIlliquid,
           }
         : null,
-    ].filter(Boolean) as Array<{ amount: string; label: string; diff: number | null }>
+    ].filter(Boolean) as Array<{ amount: string; label: string; diff: number | null; compBase: number | null }>
 
     const clauses = [
       fiChildren.length > 0
@@ -270,7 +274,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       shortLabel: string
       total: number
       diff: number | null
-      children: Array<{ amount: string; label: string; diff: number | null }>
+      children: Array<{ amount: string; label: string; diff: number | null; compBase: number | null }>
       includeIsIn: boolean
     }>
 
@@ -399,14 +403,26 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
             </span>
             <strong className="nw-goal-amount">{formatCurrency(clause.total)}</strong>
             <span className={`nw-goal-trend ${clause.diff !== null && clause.diff >= 0 ? 'nw-up' : 'nw-down'}`}>
-              {clause.diff !== null ? `${clause.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(clause.diff))}` : ''}
+              {clause.diff !== null
+                ? (() => {
+                    const base = clause.shortLabel === 'FI' ? compFi : compGw
+                    const pct = base && base !== 0 ? ((clause.diff! / Math.abs(base)) * 100).toFixed(1) : null
+                    return `${clause.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(clause.diff))}${pct !== null ? ` (${pct}%)` : ''}`
+                  })()
+                : ''}
             </span>
             {clause.children.map(child => (
               <React.Fragment key={`${clause.label}-${child.label}`}>
                 <span className="nw-goal-sublabel">{child.label}</span>
                 <strong className="nw-goal-subamount">{child.amount}</strong>
                 <span className={`nw-goal-subtrend ${child.diff !== null && child.diff >= 0 ? 'nw-up' : 'nw-down'}`}>
-                  {child.diff !== null ? `${child.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(child.diff))}` : ''}
+                  {child.diff !== null
+                    ? (() => {
+                        const base = child.compBase
+                        const pct = base && base !== 0 ? ((child.diff! / Math.abs(base)) * 100).toFixed(1) : null
+                        return `${child.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(child.diff))}${pct !== null ? ` (${pct}%)` : ''}`
+                      })()
+                    : ''}
                 </span>
               </React.Fragment>
             ))}
