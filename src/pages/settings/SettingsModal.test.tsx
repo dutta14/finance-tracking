@@ -132,6 +132,11 @@ describe('SettingsModal tab navigation', () => {
     expect(screen.queryByTestId('profile-pane')).not.toBeInTheDocument()
   })
 
+  it('starts in mobile detail state when the initial section is not profile', () => {
+    render(<SettingsModal {...defaultProps} initialSection="appearance" />)
+    expect(screen.getByRole('dialog')).toHaveClass('settings-modal--detail-open')
+  })
+
   // E2E load-bearing: e2e/settings.spec.ts asserts the active nav item via
   // aria-current="page" rather than the brittle .active class. If this
   // attribute disappears, settings test 12 will silently start passing on
@@ -219,6 +224,26 @@ describe('SettingsModal structure', () => {
 /* ── Tab navigation (coverage for uncovered onClick callbacks) ─── */
 
 describe('SettingsModal tab navigation coverage', () => {
+  it('enters mobile detail state when a non-profile tab is selected', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} />)
+
+    await user.click(screen.getByRole('tab', { name: /appearance/i }))
+
+    expect(screen.getByRole('dialog')).toHaveClass('settings-modal--detail-open')
+  })
+
+  it('returns to the settings menu when the mobile back button is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SettingsModal {...defaultProps} initialSection="appearance" />)
+
+    expect(screen.getByRole('dialog')).toHaveClass('settings-modal--detail-open')
+
+    await user.click(screen.getByLabelText(/back to settings menu/i))
+
+    expect(screen.getByRole('dialog')).not.toHaveClass('settings-modal--detail-open')
+  })
+
   it('switches back to Profile pane after navigating away', async () => {
     const user = userEvent.setup()
     render(<SettingsModal {...defaultProps} />)

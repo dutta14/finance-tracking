@@ -66,13 +66,13 @@ body.modern-design {
 body.modern-design {
   --color-border: rgba(0, 0, 0, 0.06);
   --color-border-light: rgba(0, 0, 0, 0.04);
-  --accent-border: rgba(59, 130, 246, 0.2);
+  --accent-border: var(--accent-focus-ring, rgba(59, 130, 246, 0.2));
 }
 
 body.modern-design.dark {
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-light: rgba(255, 255, 255, 0.04);
-  --accent-border: rgba(59, 130, 246, 0.25);
+  --accent-border: var(--accent-focus-ring, rgba(59, 130, 246, 0.25));
 }
 
 /* ── #22: Composite shadow system ─────────────────────────────── */
@@ -147,18 +147,18 @@ body.modern-design.dark input:not([type='checkbox']):not([type='radio']):focus,
 body.modern-design.dark select:focus,
 body.modern-design.dark textarea:focus {
   box-shadow:
-    0 0 0 3px rgba(59, 130, 246, 0.2),
-    0 0 20px rgba(59, 130, 246, 0.15);
+    0 0 0 3px var(--accent-focus-ring),
+    0 0 20px var(--accent-shadow);
 }
 
 /* ── #24: Dark mode surface layering + glow ───────────────────── */
 
 body.modern-design.dark {
-  --color-bg: #0f172a;
-  --color-surface-sunken: #0d1322;
-  --color-surface: #1e293b;
-  --color-surface-alt: #1a2332;
-  --color-surface-raised: #263347;
+  --color-bg: #111111;
+  --color-surface-sunken: #0d0d0d;
+  --color-surface: #1a1a1a;
+  --color-surface-alt: #1e1e1e;
+  --color-surface-raised: #252525;
   --color-surface-hover: rgba(255, 255, 255, 0.05);
   --color-text: #e2e8f0;
   --color-text-muted: #94a3b8;
@@ -167,20 +167,20 @@ body.modern-design.dark {
   --color-positive: #34d399;
   --color-negative: #f87171;
   --color-warning: #fbbf24;
-  --accent-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+  --accent-glow: 0 0 20px var(--accent-shadow);
 }
 
 body.modern-design.dark {
-  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.06), transparent), var(--color-bg);
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-shadow), transparent), var(--color-bg);
 }
 
 body.modern-design.dark .home-card:hover,
 body.modern-design.dark .fi-card:hover,
 body.modern-design.dark .goal-card:hover {
-  border-color: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent-border);
   box-shadow:
     var(--shadow-md),
-    0 0 30px rgba(59, 130, 246, 0.05);
+    0 0 30px var(--accent-shadow);
 }
 
 body.modern-design.dark .settings-modal,
@@ -231,7 +231,7 @@ body.modern-design .sidebar {
 }
 
 body.modern-design.dark .sidebar {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(17, 17, 17, 0.85);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   border-right: 1px solid rgba(255, 255, 255, 0.04);
@@ -244,9 +244,9 @@ body.modern-design .sidebar-link.active {
 }
 
 body.modern-design.dark .sidebar-link.active {
-  background: rgba(59, 130, 246, 0.1);
-  color: #60a5fa;
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.1);
+  background: var(--accent-light);
+  color: var(--accent-text-mid);
+  box-shadow: 0 0 16px var(--accent-shadow);
 }
 
 body.modern-design .sidebar-menu {

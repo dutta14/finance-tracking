@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useEffect } from 'react'
+import { FC, useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import type { SettingsModalProps, SettingsSection } from './types'
 import ProfilePane from './components/ProfilePane'
@@ -16,10 +16,19 @@ const SettingsModal: FC<SettingsModalProps> = props => {
   const { darkMode, onToggleDarkMode, profile, onUpdateProfile, onClose = () => {}, initialSection = 'profile' } = props
 
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection)
+  const [mobileDetail, setMobileDetail] = useState(initialSection !== 'profile')
   const modalRef = useRef<HTMLDivElement>(null)
+  const navTabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const { isAdmin } = useFlagContext()
   const { accentTheme, setAccentTheme } = useSettings()
   useFocusTrap(modalRef, true)
+  const visibleSections = useMemo<SettingsSection[]>(
+    () =>
+      isAdmin
+        ? ['profile', 'folder', 'appearance', 'advanced', 'labs', 'flags']
+        : ['profile', 'folder', 'appearance', 'advanced', 'labs'],
+    [isAdmin],
+  )
 
   useEffect(() => {
     if (!isAdmin && activeSection === 'flags') {
@@ -35,11 +44,52 @@ const SettingsModal: FC<SettingsModalProps> = props => {
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
+  const handleNavClick = (section: SettingsSection) => {
+    setActiveSection(section)
+    setMobileDetail(true)
+  }
+
+  const focusSectionTab = useCallback((index: number) => {
+    requestAnimationFrame(() => {
+      navTabRefs.current[index]?.focus()
+    })
+  }, [])
+
+  const activateSectionTab = useCallback(
+    (index: number) => {
+      const nextSection = visibleSections[index]
+      if (!nextSection) return
+      handleNavClick(nextSection)
+      focusSectionTab(index)
+    },
+    [focusSectionTab, visibleSections],
+  )
+
+  const handleSectionTabKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+      const lastIndex = visibleSections.length - 1
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+        event.preventDefault()
+        activateSectionTab(index === lastIndex ? 0 : index + 1)
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        event.preventDefault()
+        activateSectionTab(index === 0 ? lastIndex : index - 1)
+      } else if (event.key === 'Home') {
+        event.preventDefault()
+        activateSectionTab(0)
+      } else if (event.key === 'End') {
+        event.preventDefault()
+        activateSectionTab(lastIndex)
+      }
+    },
+    [activateSectionTab, visibleSections.length],
+  )
+
   return createPortal(
     <div className="settings-modal-backdrop" onClick={onClose}>
       <div
         ref={modalRef}
-        className="settings-modal"
+        className={`settings-modal${mobileDetail ? ' settings-modal--detail-open' : ''}`}
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -59,11 +109,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
         <div className="settings-modal-container">
           <div className="settings-modal-nav" role="tablist" aria-label="Settings sections">
             <button
+              ref={node => {
+                navTabRefs.current[0] = node
+              }}
+              type="button"
               className={`settings-modal-nav-item${activeSection === 'profile' ? ' active' : ''}`}
               role="tab"
               id="settings-tab-profile"
               aria-selected={activeSection === 'profile'}
-              onClick={() => setActiveSection('profile')}
+              aria-controls="settings-modal-panel"
+              tabIndex={activeSection === 'profile' ? 0 : -1}
+              onClick={() => handleNavClick('profile')}
+              onKeyDown={event => handleSectionTabKeyDown(event, 0)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <circle cx="8" cy="5" r="2.5" />
@@ -72,11 +129,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               Profile
             </button>
             <button
+              ref={node => {
+                navTabRefs.current[1] = node
+              }}
+              type="button"
               className={`settings-modal-nav-item${activeSection === 'folder' ? ' active' : ''}`}
               role="tab"
               id="settings-tab-folder"
               aria-selected={activeSection === 'folder'}
-              onClick={() => setActiveSection('folder')}
+              aria-controls="settings-modal-panel"
+              tabIndex={activeSection === 'folder' ? 0 : -1}
+              onClick={() => handleNavClick('folder')}
+              onKeyDown={event => handleSectionTabKeyDown(event, 1)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M1.5 4a1 1 0 0 1 1-1h3l1.2 1.5H13.5a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V4z" />
@@ -84,11 +148,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               Data Folder
             </button>
             <button
+              ref={node => {
+                navTabRefs.current[2] = node
+              }}
+              type="button"
               className={`settings-modal-nav-item${activeSection === 'appearance' ? ' active' : ''}`}
               role="tab"
               id="settings-tab-appearance"
               aria-selected={activeSection === 'appearance'}
-              onClick={() => setActiveSection('appearance')}
+              aria-controls="settings-modal-panel"
+              tabIndex={activeSection === 'appearance' ? 0 : -1}
+              onClick={() => handleNavClick('appearance')}
+              onKeyDown={event => handleSectionTabKeyDown(event, 2)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 {darkMode ? (
@@ -109,11 +180,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               Appearance
             </button>
             <button
+              ref={node => {
+                navTabRefs.current[3] = node
+              }}
+              type="button"
               className={`settings-modal-nav-item${activeSection === 'advanced' ? ' active' : ''}`}
               role="tab"
               id="settings-tab-advanced"
               aria-selected={activeSection === 'advanced'}
-              onClick={() => setActiveSection('advanced')}
+              aria-controls="settings-modal-panel"
+              tabIndex={activeSection === 'advanced' ? 0 : -1}
+              onClick={() => handleNavClick('advanced')}
+              onKeyDown={event => handleSectionTabKeyDown(event, 3)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 1a1 1 0 0 1 1 1v1.5h2a1 1 0 0 1 1 1v1h1.5a1 1 0 0 1 0 2H13v3h1.5a1 1 0 0 1 0 2H13v1a1 1 0 0 1-1 1h-2v1.5a1 1 0 0 1-2 0V14H6v1.5a1 1 0 0 1-2 0V14H2a1 1 0 0 1-1-1v-2H.5a1 1 0 0 1 0-2H1V7H.5a1 1 0 0 1 0-2H1V4a1 1 0 0 1 1-1h2V1.5a1 1 0 0 1 2 0V3h2V1.5a1 1 0 0 1 1-1z" />
@@ -121,11 +199,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
               Advanced
             </button>
             <button
+              ref={node => {
+                navTabRefs.current[4] = node
+              }}
+              type="button"
               className={`settings-modal-nav-item${activeSection === 'labs' ? ' active' : ''}`}
               role="tab"
               id="settings-tab-labs"
               aria-selected={activeSection === 'labs'}
-              onClick={() => setActiveSection('labs')}
+              aria-controls="settings-modal-panel"
+              tabIndex={activeSection === 'labs' ? 0 : -1}
+              onClick={() => handleNavClick('labs')}
+              onKeyDown={event => handleSectionTabKeyDown(event, 4)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M6 1h4v1H9v4.2l3.7 5.5c.4.6 0 1.3-.7 1.3H4c-.7 0-1.1-.7-.7-1.3L7 6.2V2H6V1zm2 5.5L5.2 11h5.6L8 6.5z" />
@@ -134,11 +219,18 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             </button>
             {isAdmin && (
               <button
+                ref={node => {
+                  navTabRefs.current[5] = node
+                }}
+                type="button"
                 className={`settings-modal-nav-item${activeSection === 'flags' ? ' active' : ''}`}
                 role="tab"
                 id="settings-tab-flags"
                 aria-selected={activeSection === 'flags'}
-                onClick={() => setActiveSection('flags')}
+                aria-controls="settings-modal-panel"
+                tabIndex={activeSection === 'flags' ? 0 : -1}
+                onClick={() => handleNavClick('flags')}
+                onKeyDown={event => handleSectionTabKeyDown(event, 5)}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M3 1v14h1V9h8l-2-4 2-4H4V1H3zm1 1.5h6.5L9 6l1.5 2.5H4V2.5z" />
@@ -148,7 +240,20 @@ const SettingsModal: FC<SettingsModalProps> = props => {
             )}
           </div>
 
-          <div className="settings-modal-detail" role="tabpanel" aria-labelledby={`settings-tab-${activeSection}`}>
+          <div
+            className="settings-modal-detail"
+            id="settings-modal-panel"
+            role="tabpanel"
+            aria-labelledby={`settings-tab-${activeSection}`}
+          >
+            <button
+              type="button"
+              className="settings-mobile-back"
+              onClick={() => setMobileDetail(false)}
+              aria-label="Back to settings menu"
+            >
+              ← Back
+            </button>
             {activeSection === 'profile' && <ProfilePane profile={profile} onUpdateProfile={onUpdateProfile} />}
             {activeSection === 'folder' && <DataFolderPane />}
             {activeSection === 'appearance' && (

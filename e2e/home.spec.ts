@@ -164,9 +164,14 @@ test.describe('Home Dashboard E2E', () => {
       await expect(home.nwAmount).toBeVisible()
       // m1: Content assertion — verify currency amount contains $
       await expect(home.nwAmount).toContainText('$')
-      await expect(home.nwProse).toBeVisible()
-      await expect(home.nwProse).toContainText('saved towards FI')
-      await expect(home.nwLegendItems).toHaveCount(2)
+      // Updated: Grid layout now shows FI and GW labels instead of prose
+      const nwGrid = page.locator('.home-card--nw .nw-goal-grid')
+      await expect(nwGrid).toBeVisible()
+      await expect(nwGrid).toContainText('FI')
+      await expect(nwGrid).toContainText('GW')
+      // Verify FI/GW breakdown rows exist (2 main items)
+      const goalLabels = page.locator('.home-card--nw .nw-goal-label')
+      await expect(goalLabels).toHaveCount(2)
 
       // Change indicator (up since last month: 382000 vs 371000)
       await expect(home.nwChangeUp).toBeVisible()

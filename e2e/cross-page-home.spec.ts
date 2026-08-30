@@ -159,8 +159,10 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await expect(nwCard).toBeVisible()
       const nwAmount = nwCard.locator('.nw-amount')
       await expect(nwAmount).toContainText('$315,000')
-      await expect(nwCard.locator('.nw-prose')).toContainText('$260,000')
-      await expect(nwCard.locator('.nw-prose')).toContainText('$55,000')
+      // Updated: Check grid layout for FI/GW subtotals instead of prose
+      const nwGrid = nwCard.locator('.nw-goal-grid')
+      await expect(nwGrid).toContainText('$260,000')
+      await expect(nwGrid).toContainText('$55,000')
 
       // Enhanced cross-page assertion (#151 spec): the Net Worth page
       // must read the same data from localStorage. The Net Worth page
@@ -189,18 +191,20 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await seedCrossPage(page)
       await gotoHome(page)
 
-      const prose = page.locator('.home-card--nw .nw-prose')
-      await expect(prose).toContainText('saved towards FI')
-      await expect(prose).toContainText('$260,000')
-      await expect(prose).toContainText('Retirement')
-      await expect(prose).toContainText('GW')
-      await expect(prose).toContainText('$55,000')
-      await expect(prose).toContainText('Liquid')
+      // Updated: Check grid layout instead of prose
+      const nwGrid = page.locator('.home-card--nw .nw-goal-grid')
+      await expect(nwGrid).toContainText('FI')
+      await expect(nwGrid).toContainText('$260,000')
+      await expect(nwGrid).toContainText('Retirement')
+      await expect(nwGrid).toContainText('GW')
+      await expect(nwGrid).toContainText('$55,000')
+      await expect(nwGrid).toContainText('Liquid')
 
-      const legendItems = page.locator('.home-card--nw .nw-stacked-legend-item')
-      await expect(legendItems).toHaveCount(2)
-      await expect(legendItems.nth(0)).toContainText('FI 82.5%')
-      await expect(legendItems.nth(1)).toContainText('GW 17.5%')
+      // Updated: Check goal labels instead of legend items
+      const goalLabels = page.locator('.home-card--nw .nw-goal-label')
+      await expect(goalLabels).toHaveCount(2)
+      await expect(goalLabels.nth(0)).toContainText('Financial Independence (FI)')
+      await expect(goalLabels.nth(1)).toContainText('Generational Wealth (GW)')
     })
 
     test('8. Mini Charts card renders net worth line chart with SVG data points', async ({ page }) => {
@@ -379,12 +383,9 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await gotoHome(page)
 
       const nwCard = page.locator('.home-card--nw')
+      await expect(nwCard).toBeVisible()
+      // Verify the card shows $0 for zero balances
       await expect(nwCard.locator('.nw-amount')).toContainText('$0')
-
-      const legendItems = nwCard.locator('.nw-stacked-legend-item')
-      await expect(legendItems).toHaveCount(2)
-      await expect(legendItems.nth(0)).toContainText('FI 0.0%')
-      await expect(legendItems.nth(1)).toContainText('GW 0.0%')
     })
   })
 

@@ -17,6 +17,7 @@ import type { Props as LegendContentProps } from 'recharts/types/component/Defau
 import { Account, BalanceEntry, formatMonth, formatCurrency } from './types'
 import { useDateFilter } from '../../hooks/useDateFilter'
 import { DateFilterBar } from '../../components/DateFilterBar'
+import { useChartColors } from '../../hooks/useChartColors'
 
 type ChartType = 'fi-gw' | 'net-worth' | 'assets-liabilities'
 
@@ -54,8 +55,11 @@ const CHART_OPTIONS: { key: ChartType; label: string }[] = [
   { key: 'fi-gw', label: 'FI vs GW' },
   { key: 'assets-liabilities', label: 'Assets vs Liabilities' },
 ]
+const FI_CHART_COLOR = '#4f46e5'
+const GW_CHART_COLOR = '#b45309'
 
 const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, allMonths, balanceMap }) => {
+  const [chartRef, chartColors] = useChartColors()
   const [chartType, setChartType] = useState<ChartType>('net-worth')
   const { dateFilter, setDateFilter, customFrom, customTo, setCustomFrom, setCustomTo, filteredMonths } =
     useDateFilter(allMonths)
@@ -280,7 +284,7 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
   }
 
   return (
-    <div className="data-charts">
+    <div className="data-charts" ref={chartRef}>
       <div className="data-charts-controls">
         <div className="tab-bar">
           {CHART_OPTIONS.map(opt => (
@@ -313,12 +317,12 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
             <ComposedChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }}>
               <defs>
                 <linearGradient id="gradFi" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="0%" stopColor={FI_CHART_COLOR} stopOpacity={0.15} />
+                  <stop offset="100%" stopColor={FI_CHART_COLOR} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradGw" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                  <stop offset="0%" stopColor={GW_CHART_COLOR} stopOpacity={0.15} />
+                  <stop offset="100%" stopColor={GW_CHART_COLOR} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
@@ -363,19 +367,19 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 type="natural"
                 dataKey="fi"
                 name="FI"
-                stroke="#6366f1"
+                stroke={FI_CHART_COLOR}
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 0, fill: '#6366f1' }}
+                activeDot={{ r: 4, strokeWidth: 0, fill: FI_CHART_COLOR }}
               />
               <Line
                 type="natural"
                 dataKey="gw"
                 name="GW"
-                stroke="#f59e0b"
+                stroke={GW_CHART_COLOR}
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 0, fill: '#f59e0b' }}
+                activeDot={{ r: 4, strokeWidth: 0, fill: GW_CHART_COLOR }}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -384,8 +388,8 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
             <ComposedChart data={chartData} margin={{ top: 10, right: 24, bottom: 0, left: 10 }}>
               <defs>
                 <linearGradient id="gradNw" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="0%" stopColor={chartColors.nwLine} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={chartColors.nwLine} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
@@ -419,10 +423,10 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
                 type="natural"
                 dataKey="netWorth"
                 name="Net Worth"
-                stroke="#10b981"
+                stroke={chartColors.nwLine}
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 0, fill: '#10b981' }}
+                activeDot={{ r: 4, strokeWidth: 0, fill: chartColors.nwLine }}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -453,12 +457,19 @@ const BalanceCharts: FC<BalanceChartsProps> = ({ accounts, balances: _balances, 
               <Tooltip content={renderTooltip} />
               <Legend content={renderLegend} />
               <ReferenceLine y={0} stroke="var(--color-border-light)" strokeWidth={1} />
-              <Bar dataKey="assets" name="Assets" stackId="al" fill="#4ade80" radius={[4, 4, 0, 0]} maxBarSize={48} />
+              <Bar
+                dataKey="assets"
+                name="Assets"
+                stackId="al"
+                fill={chartColors.positive}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={48}
+              />
               <Bar
                 dataKey="liabilities"
                 name="Liabilities"
                 stackId="al"
-                fill="#f87171"
+                fill={chartColors.negative}
                 radius={[4, 4, 0, 0]}
                 maxBarSize={48}
               />

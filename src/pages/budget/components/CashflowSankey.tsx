@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback } from 'react'
+import { FC, useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { CategoryGroup, TimePeriod, Transaction } from '../types'
 
@@ -34,19 +34,25 @@ const COLORS = [
 ]
 
 const SAVINGS_COLOR = '#10b981'
+const MIN_SVG_WIDTH = 550
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
-/** Rank-based heights: items are assumed sorted descending by amount.
- *  First item gets maxH, last gets minH, linearly interpolated. */
+/** Proportional heights that always fit within the available column height. */
 const proportionalHeights = (items: { amount: number }[], totalAvailH: number, gap: number, minH: number) => {
   if (items.length === 0) return []
   const totalAmt = items.reduce((s, it) => s + it.amount, 0)
-  if (totalAmt === 0) return items.map(() => minH)
   const gapSpace = Math.max(items.length - 1, 0) * gap
-  const drawH = totalAvailH - gapSpace
-  return items.map(it => Math.max(minH, (it.amount / totalAmt) * drawH))
+  const minSpace = items.length * minH
+  const variableSpace = Math.max(totalAvailH - gapSpace - minSpace, 0)
+
+  if (totalAmt === 0) {
+    const extraPerItem = items.length > 0 ? variableSpace / items.length : 0
+    return items.map(() => minH + extraPerItem)
+  }
+
+  return items.map(it => minH + (it.amount / totalAmt) * variableSpace)
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -63,6 +69,9 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   const navigate = useNavigate()
   const location = useLocation()
   const [mode, setMode] = useState<SankeyMode>('group')
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const modeTabRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const [fixedScrollHeight, setFixedScrollHeight] = useState<number | null>(null)
   const filteredCategorySums = useMemo(() => {
     if (!selectedPeriod) return categorySums
 
@@ -147,6 +156,8 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   const rightItems = mode === 'group' ? expenseGroups.map(g => ({ name: g.name, amount: g.total })) : expenseCatArr
   const savings = Math.max(0, totalIncome - totalExpense)
   const rightItemsAll = savings > 0 ? [{ name: 'Savings', amount: savings }, ...rightItems] : rightItems
+  const groupRightItems = expenseGroups.map(g => ({ name: g.name, amount: g.total }))
+  const groupRightItemsAll = savings > 0 ? [{ name: 'Savings', amount: savings }, ...groupRightItems] : groupRightItems
   const rightTotal = savings > 0 ? totalIncome : rightItemsAll.reduce((sum, item) => sum + item.amount, 0)
 
   const handleNodeClick = useCallback(
@@ -219,9 +230,32 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
   const NODE_GAP = 8
   const NODE_H_MIN = 6
 
+  const groupNodeCount = Math.max(incomeCategories.length, groupRightItemsAll.length, 3)
   const nodeCount = Math.max(incomeCategories.length, rightItemsAll.length, 3)
-  const H = PAD_TOP * 2 + nodeCount * 46
-  const availH = H - PAD_TOP * 2
+  const PAD_BOT = 36
+  const groupH = PAD_TOP + groupNodeCount * 46 + PAD_BOT
+  const H = PAD_TOP + nodeCount * 46 + PAD_BOT
+  const availH = H - PAD_TOP - PAD_BOT
+  const fallbackScrollHeight = (MIN_SVG_WIDTH * groupH) / W
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl) return
+
+    const updateFixedScrollHeight = () => {
+      const renderedWidth = Math.max(scrollEl.clientWidth, MIN_SVG_WIDTH)
+      setFixedScrollHeight((renderedWidth * groupH) / W)
+    }
+
+    updateFixedScrollHeight()
+
+    if (typeof ResizeObserver === 'undefined') return
+
+    const observer = new ResizeObserver(updateFixedScrollHeight)
+    observer.observe(scrollEl)
+
+    return () => observer.disconnect()
+  }, [groupH, W])
 
   // Build node positions with proportional heights
   const layoutNodes = (items: { name: string; amount: number }[], x: number, colorOffset: number) => {
@@ -256,6 +290,47 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
     leftNodes.length > 0 ? leftNodes[leftNodes.length - 1].y + leftNodes[leftNodes.length - 1].h : PAD_TOP,
     rightNodes.length > 0 ? rightNodes[rightNodes.length - 1].y + rightNodes[rightNodes.length - 1].h : PAD_TOP,
   )
+
+  const focusModeTab = useCallback((index: number) => {
+    requestAnimationFrame(() => {
+      modeTabRefs.current[index]?.focus()
+    })
+  }, [])
+
+  const activateModeTab = useCallback(
+    (index: number) => {
+      const nextMode = index === 0 ? 'group' : 'category'
+      setMode(nextMode)
+      focusModeTab(index)
+    },
+    [focusModeTab],
+  )
+
+  const handleModeTabKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault()
+        activateModeTab((index + 1) % 2)
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        activateModeTab((index - 1 + 2) % 2)
+      } else if (event.key === 'Home') {
+        event.preventDefault()
+        activateModeTab(0)
+      } else if (event.key === 'End') {
+        event.preventDefault()
+        activateModeTab(1)
+      }
+    },
+    [activateModeTab],
+  )
+
+  const handleSvgActionKeyDown = useCallback((event: React.KeyboardEvent<SVGGElement>, action: () => void) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      action()
+    }
+  }, [])
 
   // Left → band links: each income node flows into the central band, stacking proportionally
   const leftLinks = useMemo(() => {
@@ -301,181 +376,267 @@ const CashflowSankey: FC<CashflowSankeyProps> = ({
 
   if (totalIncome === 0 && totalExpense === 0) {
     return (
-      <div id="sankey" className="cashflow-sankey-wrap">
+      <div id="sankey">
         <h3 className="cashflow-section-title">Breakdown{selectedPeriod ? ` — ${selectedPeriod}` : ''}</h3>
-        <p className="cashflow-empty">No transaction data for this year.</p>
+        <div className="cashflow-sankey-wrap">
+          <p className="cashflow-empty">No transaction data for this year.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div id="sankey" className="cashflow-sankey-wrap">
+    <div id="sankey">
       <div className="cashflow-sankey-header">
         <h3 className="cashflow-section-title cashflow-section-title--flush">
           Breakdown{selectedPeriod ? ` — ${selectedPeriod}` : ''}
         </h3>
-        <div className="tab-bar">
+        <div className="tab-bar" role="tablist" aria-label="Breakdown views">
           <button
+            ref={node => {
+              modeTabRefs.current[0] = node
+            }}
+            type="button"
             className={`tab-btn tab-btn--sm${mode === 'group' ? ' active' : ''}`}
+            role="tab"
+            id="cashflow-sankey-tab-group"
+            aria-selected={mode === 'group'}
+            aria-controls="cashflow-sankey-panel"
+            tabIndex={mode === 'group' ? 0 : -1}
             onClick={() => setMode('group')}
+            onKeyDown={event => handleModeTabKeyDown(event, 0)}
           >
             Group
           </button>
           <button
+            ref={node => {
+              modeTabRefs.current[1] = node
+            }}
+            type="button"
             className={`tab-btn tab-btn--sm${mode === 'category' ? ' active' : ''}`}
+            role="tab"
+            id="cashflow-sankey-tab-category"
+            aria-selected={mode === 'category'}
+            aria-controls="cashflow-sankey-panel"
+            tabIndex={mode === 'category' ? 0 : -1}
             onClick={() => setMode('category')}
+            onKeyDown={event => handleModeTabKeyDown(event, 1)}
           >
             Category
           </button>
         </div>
       </div>
-      <div className="cashflow-sankey-scroll">
-        <svg viewBox={`0 0 ${W} ${H}`} className="cashflow-sankey-svg" preserveAspectRatio="xMidYMid meet">
-          {/* Column headers */}
-          <text
-            x={COL_LEFT + NODE_W / 2}
-            y={20}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight={700}
-            fill="var(--cashflow-subtext, #9ca3af)"
-            className="cashflow-sankey-label"
+      <div
+        className="cashflow-sankey-wrap"
+        id="cashflow-sankey-panel"
+        role="tabpanel"
+        aria-labelledby={mode === 'group' ? 'cashflow-sankey-tab-group' : 'cashflow-sankey-tab-category'}
+      >
+        <div
+          ref={scrollRef}
+          className="cashflow-sankey-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label={`Cashflow breakdown diagram for ${selectedPeriod ?? year}. Scroll horizontally to review the ${mode} view.`}
+          style={{ height: `${fixedScrollHeight ?? fallbackScrollHeight}px` }}
+        >
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="cashflow-sankey-svg"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={`Cashflow breakdown showing income and ${mode === 'group' ? 'expense groups' : 'expense categories'} for ${selectedPeriod ?? year}.`}
           >
-            INCOME ({fmt(totalIncome)})
-          </text>
-          <text
-            x={COL_RIGHT + NODE_W / 2}
-            y={20}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight={700}
-            fill="var(--cashflow-subtext, #9ca3af)"
-            className="cashflow-sankey-label"
-          >
-            {mode === 'group' ? 'EXPENSE GROUPS' : 'EXPENSE CATEGORIES'} ({fmt(totalExpense)})
-          </text>
-          {/* Left → band links (income colors) */}
-          {leftLinks.map(l => (
-            <path
-              key={l.key}
-              d={l.d}
-              fill={l.color}
-              opacity={0.18}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleNodeClick(l.key.slice(2), 'left')}
-            />
-          ))}
-          {/* Band → right links (expense colors) */}
-          {rightLinks.map(l => {
-            const name = l.key.slice(2)
-            const isSavings = name === 'Savings'
-            return (
+            {/* Column headers */}
+            <text
+              x={COL_LEFT + NODE_W / 2}
+              y={20}
+              textAnchor="middle"
+              fontSize={11}
+              fontWeight={700}
+              fill="var(--cashflow-subtext, #9ca3af)"
+              className="cashflow-sankey-label"
+            >
+              INCOME ({fmt(totalIncome)})
+            </text>
+            <text
+              x={COL_RIGHT + NODE_W / 2}
+              y={20}
+              textAnchor="middle"
+              fontSize={11}
+              fontWeight={700}
+              fill="var(--cashflow-subtext, #9ca3af)"
+              className="cashflow-sankey-label"
+            >
+              {mode === 'group' ? 'EXPENSE GROUPS' : 'EXPENSE CATEGORIES'} ({fmt(totalExpense)})
+            </text>
+            {/* Left → band links (income colors) */}
+            {leftLinks.map(l => (
               <path
                 key={l.key}
                 d={l.d}
                 fill={l.color}
                 opacity={0.18}
-                style={{ cursor: isSavings ? 'default' : 'pointer' }}
-                onClick={isSavings ? undefined : () => handleNodeClick(name, 'right')}
+                aria-hidden="true"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleNodeClick(l.key.slice(2), 'left')}
               />
-            )
-          })}
-          {/* Central band */}
-          {leftNodes.length > 0 && rightNodes.length > 0 && (
-            <rect
-              x={BAND_X}
-              y={bandTop}
-              width={BAND_W}
-              height={bandBot - bandTop}
-              rx={4}
-              fill="var(--cashflow-subtext, #9ca3af)"
-              opacity={0.18}
-            />
-          )}
-          {/* Left nodes (income) */}
-          {leftNodes.map(n => {
-            const pct = totalIncome > 0 ? ((n.amount / totalIncome) * 100).toFixed(1) : '0.0'
-            return (
-              <g key={n.name} onClick={() => handleNodeClick(n.name, 'left')} style={{ cursor: 'pointer' }}>
-                {/* Invisible hit area spanning labels + node */}
-                <rect
-                  x={0}
-                  y={n.y - 2}
-                  width={COL_LEFT + NODE_W + LABEL_PAD}
-                  height={Math.max(n.h + 4, 16)}
-                  fill="transparent"
+            ))}
+            {/* Band → right links (expense colors) */}
+            {rightLinks.map(l => {
+              const name = l.key.slice(2)
+              const isSavings = name === 'Savings'
+              return (
+                <path
+                  key={l.key}
+                  d={l.d}
+                  fill={l.color}
+                  opacity={0.18}
+                  aria-hidden="true"
+                  style={{ cursor: isSavings ? 'default' : 'pointer' }}
+                  onClick={isSavings ? undefined : () => handleNodeClick(name, 'right')}
                 />
-                <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />
-                <text
-                  x={n.x - 8}
-                  y={n.y + n.h / 2}
-                  textAnchor="end"
-                  dominantBaseline="central"
-                  fontSize={9.5}
-                  fill="var(--cashflow-text, #374151)"
-                  className="cashflow-sankey-label"
+              )
+            })}
+            {/* Central band */}
+            {leftNodes.length > 0 && rightNodes.length > 0 && (
+              <rect
+                x={BAND_X}
+                y={bandTop}
+                width={BAND_W}
+                height={bandBot - bandTop}
+                rx={4}
+                fill="var(--cashflow-subtext, #9ca3af)"
+                opacity={0.18}
+              />
+            )}
+            {/* Left nodes (income) */}
+            {leftNodes.map(n => {
+              const pct = totalIncome > 0 ? ((n.amount / totalIncome) * 100).toFixed(1) : '0.0'
+              return (
+                <g
+                  key={n.name}
+                  className="cashflow-sankey-node"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${n.name} income transactions totaling ${fmt(n.amount)}, ${pct}% of income.`}
+                  onClick={() => handleNodeClick(n.name, 'left')}
+                  onKeyDown={event => handleSvgActionKeyDown(event, () => handleNodeClick(n.name, 'left'))}
+                  style={{ cursor: 'pointer' }}
                 >
-                  {n.name}
-                </text>
-                <text
-                  x={n.x + NODE_W + 6}
-                  y={n.y + n.h / 2}
-                  textAnchor="start"
-                  dominantBaseline="central"
-                  fontSize={8}
-                  fill="var(--cashflow-subtext, #9ca3af)"
-                  className="cashflow-sankey-label"
+                  {/* Invisible hit area spanning labels + node */}
+                  <rect
+                    className="cashflow-sankey-node-hit"
+                    x={0}
+                    y={n.y - 2}
+                    width={COL_LEFT + NODE_W + LABEL_PAD}
+                    height={Math.max(n.h + 4, 16)}
+                    rx={6}
+                    fill="transparent"
+                  />
+                  <rect
+                    className="cashflow-sankey-node-bar"
+                    x={n.x}
+                    y={n.y}
+                    width={NODE_W}
+                    height={n.h}
+                    rx={4}
+                    fill={n.color}
+                  />
+                  <text
+                    x={n.x - 8}
+                    y={n.y + n.h / 2}
+                    textAnchor="end"
+                    dominantBaseline="central"
+                    fontSize={9.5}
+                    fill="var(--cashflow-text, #374151)"
+                    className="cashflow-sankey-label"
+                  >
+                    {n.name}
+                  </text>
+                  <text
+                    x={n.x + NODE_W + 6}
+                    y={n.y + n.h / 2}
+                    textAnchor="start"
+                    dominantBaseline="central"
+                    fontSize={8}
+                    fill="var(--cashflow-subtext, #9ca3af)"
+                    className="cashflow-sankey-label"
+                  >
+                    {fmt(n.amount)} <tspan fill="var(--cashflow-pct, #b0b8c4)">({pct}%)</tspan>
+                  </text>
+                </g>
+              )
+            })}
+            {/* Right nodes */}
+            {rightNodes.map(n => {
+              const isSavings = n.name === 'Savings'
+              const pct = rightTotal > 0 ? ((n.amount / rightTotal) * 100).toFixed(1) : '0.0'
+              return (
+                <g
+                  key={n.name}
+                  className={isSavings ? undefined : 'cashflow-sankey-node'}
+                  role={isSavings ? undefined : 'button'}
+                  tabIndex={isSavings ? undefined : 0}
+                  aria-label={
+                    isSavings
+                      ? undefined
+                      : `View ${n.name} transactions totaling ${fmt(n.amount)}, ${pct}% of ${mode === 'group' ? 'the breakdown' : 'expenses'}.`
+                  }
+                  onClick={isSavings ? undefined : () => handleNodeClick(n.name, 'right')}
+                  onKeyDown={
+                    isSavings
+                      ? undefined
+                      : event => handleSvgActionKeyDown(event, () => handleNodeClick(n.name, 'right'))
+                  }
+                  style={{ cursor: isSavings ? 'default' : 'pointer' }}
                 >
-                  {fmt(n.amount)} <tspan fill="var(--cashflow-pct, #b0b8c4)">({pct}%)</tspan>
-                </text>
-              </g>
-            )
-          })}
-          {/* Right nodes */}
-          {rightNodes.map(n => {
-            const isSavings = n.name === 'Savings'
-            const pct = rightTotal > 0 ? ((n.amount / rightTotal) * 100).toFixed(1) : '0.0'
-            return (
-              <g
-                key={n.name}
-                onClick={isSavings ? undefined : () => handleNodeClick(n.name, 'right')}
-                style={{ cursor: isSavings ? 'default' : 'pointer' }}
-              >
-                {/* Invisible hit area spanning labels + node */}
-                <rect
-                  x={COL_RIGHT - LABEL_PAD}
-                  y={n.y - 2}
-                  width={LABEL_PAD + NODE_W + LABEL_PAD}
-                  height={Math.max(n.h + 4, 16)}
-                  fill="transparent"
-                />
-                <rect x={n.x} y={n.y} width={NODE_W} height={n.h} rx={4} fill={n.color} />
-                <text
-                  x={n.x + NODE_W + 8}
-                  y={n.y + n.h / 2}
-                  textAnchor="start"
-                  dominantBaseline="central"
-                  fontSize={9.5}
-                  fill="var(--cashflow-text, #374151)"
-                  className="cashflow-sankey-label"
-                >
-                  {n.name}
-                </text>
-                <text
-                  x={n.x - 6}
-                  y={n.y + n.h / 2}
-                  textAnchor="end"
-                  dominantBaseline="central"
-                  fontSize={8}
-                  fill="var(--cashflow-subtext, #9ca3af)"
-                  className="cashflow-sankey-label"
-                >
-                  {fmt(n.amount)} <tspan fill="var(--cashflow-pct, #b0b8c4)">({pct}%)</tspan>
-                </text>
-              </g>
-            )
-          })}
-        </svg>
+                  {/* Invisible hit area spanning labels + node */}
+                  <rect
+                    className={isSavings ? undefined : 'cashflow-sankey-node-hit'}
+                    x={COL_RIGHT - LABEL_PAD}
+                    y={n.y - 2}
+                    width={LABEL_PAD + NODE_W + LABEL_PAD}
+                    height={Math.max(n.h + 4, 16)}
+                    rx={6}
+                    fill="transparent"
+                  />
+                  <rect
+                    className={isSavings ? undefined : 'cashflow-sankey-node-bar'}
+                    x={n.x}
+                    y={n.y}
+                    width={NODE_W}
+                    height={n.h}
+                    rx={4}
+                    fill={n.color}
+                  />
+                  <text
+                    x={n.x + NODE_W + 8}
+                    y={n.y + n.h / 2}
+                    textAnchor="start"
+                    dominantBaseline="central"
+                    fontSize={9.5}
+                    fill="var(--cashflow-text, #374151)"
+                    className="cashflow-sankey-label"
+                  >
+                    {n.name}
+                  </text>
+                  <text
+                    x={n.x - 6}
+                    y={n.y + n.h / 2}
+                    textAnchor="end"
+                    dominantBaseline="central"
+                    fontSize={8}
+                    fill="var(--cashflow-subtext, #9ca3af)"
+                    className="cashflow-sankey-label"
+                  >
+                    {fmt(n.amount)} <tspan fill="var(--cashflow-pct, #b0b8c4)">({pct}%)</tspan>
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
       </div>
     </div>
   )

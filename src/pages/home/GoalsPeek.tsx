@@ -67,7 +67,7 @@ const GoalsPeek: FC<GoalsPeekProps> = ({ goals, gwGoals, onNavigate }) => {
           if (!m) return null
 
           return (
-            <button key={goal.id} className="goals-peek-item" onClick={() => navigate(`/goal/${goal.id}`)}>
+            <button key={goal.id} className="goals-peek-item" onClick={() => navigate(`/goal/plans/${goal.id}`)}>
               <div className="goals-peek-item-top">
                 <span className="goals-peek-name">{goal.goalName}</span>
                 {m.projectedFILabel &&

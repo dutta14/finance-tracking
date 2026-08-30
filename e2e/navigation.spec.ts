@@ -109,6 +109,8 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     await nav.expandSidebar()
 
     await expect(nav.sidebar).toBeVisible()
+    // Wait for links to render after sidebar transition
+    await expect(nav.link(PRIMARY_NAV_LINKS[0])).toBeVisible({ timeout: 5000 })
     for (const name of PRIMARY_NAV_LINKS) {
       await expect(nav.link(name)).toBeVisible()
     }

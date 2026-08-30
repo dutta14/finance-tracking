@@ -268,4 +268,87 @@ describe('CashflowSankey', () => {
     expect(textContents.some(t => t?.includes('EXPENSE GROUPS') && t?.includes('$1,000'))).toBe(true)
     expect(textContents.some(t => t?.includes('Bonus'))).toBe(false)
   })
+
+  it('keeps the last category node within the svg bounds when many small categories are shown', async () => {
+    const user = userEvent.setup()
+    const tinyExpenses = Object.fromEntries(
+      Array.from({ length: 30 }, (_, index) => [`Tiny ${index + 1}`, -(index === 0 ? 3000 : 1)]),
+    )
+    const yearTransactions = {
+      '2024-01': [
+        makeTx({ category: 'Salary', amount: 5000 }),
+        ...Object.entries(tinyExpenses).map(([category, amount]) => makeTx({ category, amount })),
+      ],
+    }
+    const props = {
+      ...baseProps,
+      yearTransactions,
+      categorySums: deriveCategorySums(yearTransactions),
+    }
+
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByText('Category'))
+
+    const svg = container.querySelector('svg')
+    expect(svg).not.toBeNull()
+
+    const viewBox = svg?.getAttribute('viewBox')?.split(' ').map(Number)
+    expect(viewBox).toBeDefined()
+
+    const viewBoxHeight = viewBox?.[3] ?? 0
+    const rightNodeRects = Array.from(container.querySelectorAll('rect[x="642"][width="18"]'))
+    expect(rightNodeRects.length).toBeGreaterThan(0)
+
+    const lastRightNode = rightNodeRects[rightNodeRects.length - 1]
+    const lastBottom =
+      Number(lastRightNode?.getAttribute('y') ?? 0) + Number(lastRightNode?.getAttribute('height') ?? 0)
+
+    expect(lastBottom).toBeLessThanOrEqual(viewBoxHeight - 36 + 0.001)
+  })
+
+  it('keeps the scroll container height fixed when switching to category mode', async () => {
+    const user = userEvent.setup()
+    const tinyExpenses = Object.fromEntries(
+      Array.from({ length: 30 }, (_, index) => [`Tiny ${index + 1}`, -(index === 0 ? 3000 : 1)]),
+    )
+    const yearTransactions = {
+      '2024-01': [
+        makeTx({ category: 'Salary', amount: 5000 }),
+        ...Object.entries(tinyExpenses).map(([category, amount]) => makeTx({ category, amount })),
+      ],
+    }
+    const props = {
+      ...baseProps,
+      yearTransactions,
+      categorySums: deriveCategorySums(yearTransactions),
+    }
+
+    const { container } = render(
+      <MemoryRouter>
+        <CashflowSankey {...props} />
+      </MemoryRouter>,
+    )
+
+    const scrollContainer = container.querySelector('.cashflow-sankey-scroll')
+    const svg = container.querySelector('svg')
+
+    expect(scrollContainer).not.toBeNull()
+    expect(svg).not.toBeNull()
+
+    const groupHeight = scrollContainer?.getAttribute('style') ?? ''
+    const groupViewBoxHeight = Number(svg?.getAttribute('viewBox')?.split(' ')[3] ?? 0)
+
+    await user.click(screen.getByText('Category'))
+
+    const categoryHeight = scrollContainer?.getAttribute('style') ?? ''
+    const categoryViewBoxHeight = Number(svg?.getAttribute('viewBox')?.split(' ')[3] ?? 0)
+
+    expect(groupHeight).toBe(categoryHeight)
+    expect(categoryViewBoxHeight).toBeGreaterThan(groupViewBoxHeight)
+  })
 })
