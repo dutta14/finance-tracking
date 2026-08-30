@@ -227,15 +227,6 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       </div>
       <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
       <p className="nw-prose">
-        {proseParts.diff !== null && proseParts.diff !== 0 && (
-          <span className="nw-prose-line">
-            {proseParts.diff > 0 ? 'Up' : 'Down'}{' '}
-            <strong className={proseParts.diff > 0 ? 'nw-change up' : 'nw-change down'}>
-              {formatCurrency(Math.abs(proseParts.diff))}
-            </strong>{' '}
-            from last month.
-          </span>
-        )}
         {proseParts.clauses.map(clause => (
           <span key={clause.label} className="nw-prose-line nw-prose-line--goal">
             <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel}
