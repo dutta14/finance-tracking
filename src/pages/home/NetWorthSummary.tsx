@@ -402,30 +402,45 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
               {clause.shortLabel === 'FI' ? 'Financial Independence (FI)' : 'Generational Wealth (GW)'}
             </span>
             <strong className="nw-goal-amount">{formatCurrency(clause.total)}</strong>
-            <span className={`nw-goal-trend ${clause.diff !== null && clause.diff >= 0 ? 'nw-up' : 'nw-down'}`}>
-              {clause.diff !== null
-                ? (() => {
-                    const base = clause.shortLabel === 'FI' ? compFi : compGw
-                    const pct = base && base !== 0 ? ((clause.diff! / Math.abs(base)) * 100).toFixed(1) : null
-                    return `${clause.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(clause.diff))}${pct !== null ? ` (${pct}%)` : ''}`
-                  })()
-                : ''}
-            </span>
-            {clause.children.map(child => (
-              <React.Fragment key={`${clause.label}-${child.label}`}>
-                <span className="nw-goal-sublabel">{child.label}</span>
-                <strong className="nw-goal-subamount">{child.amount}</strong>
-                <span className={`nw-goal-subtrend ${child.diff !== null && child.diff >= 0 ? 'nw-up' : 'nw-down'}`}>
-                  {child.diff !== null
-                    ? (() => {
-                        const base = child.compBase
-                        const pct = base && base !== 0 ? ((child.diff! / Math.abs(base)) * 100).toFixed(1) : null
-                        return `${child.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(child.diff))}${pct !== null ? ` (${pct}%)` : ''}`
-                      })()
-                    : ''}
+            {(() => {
+              const cls = `nw-goal-trend ${clause.diff !== null && clause.diff >= 0 ? 'nw-up' : 'nw-down'}`
+              if (clause.diff === null) return <span className={cls} />
+              const base = clause.shortLabel === 'FI' ? compFi : compGw
+              const pct = base && base !== 0 ? ((clause.diff / Math.abs(base)) * 100).toFixed(1) : null
+              return (
+                <span className={`nw-trend-wrap ${cls}`}>
+                  <span className="nw-trend-val">
+                    {clause.diff >= 0 ? '↗' : '↘'} {formatCurrency(Math.abs(clause.diff))}
+                  </span>
+                  <span className="nw-trend-pct">{pct !== null ? `(${pct}%)` : ''}</span>
                 </span>
-              </React.Fragment>
-            ))}
+              )
+            })()}
+            {clause.children.map(child => {
+              const cls = `nw-goal-subtrend ${child.diff !== null && child.diff >= 0 ? 'nw-up' : 'nw-down'}`
+              if (child.diff === null)
+                return (
+                  <React.Fragment key={`${clause.label}-${child.label}`}>
+                    <span className="nw-goal-sublabel">{child.label}</span>
+                    <strong className="nw-goal-subamount">{child.amount}</strong>
+                    <span className={cls} />
+                  </React.Fragment>
+                )
+              const base = child.compBase
+              const pct = base && base !== 0 ? ((child.diff! / Math.abs(base)) * 100).toFixed(1) : null
+              return (
+                <React.Fragment key={`${clause.label}-${child.label}`}>
+                  <span className="nw-goal-sublabel">{child.label}</span>
+                  <strong className="nw-goal-subamount">{child.amount}</strong>
+                  <span className={`nw-trend-wrap ${cls}`}>
+                    <span className="nw-trend-val">
+                      {child.diff >= 0 ? '↗' : '↘'} {formatCurrency(Math.abs(child.diff))}
+                    </span>
+                    <span className="nw-trend-pct">{pct !== null ? `(${pct}%)` : ''}</span>
+                  </span>
+                </React.Fragment>
+              )
+            })}
           </React.Fragment>
         ))}
       </div>
