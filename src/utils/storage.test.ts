@@ -91,8 +91,8 @@ describe('getStorageItem (JSON keys)', () => {
   })
 
   it('returns parsed value when valid', () => {
-    localStorage.setItem('home-card-order', JSON.stringify([3, 2, 1, 0]))
-    expect(getStorageItem('home-card-order', [0, 1, 2, 3])).toEqual([3, 2, 1, 0])
+    localStorage.setItem('home-card-order', JSON.stringify([3, 2, 1, 0, 4]))
+    expect(getStorageItem('home-card-order', [0, 1, 2, 3, 4])).toEqual([3, 2, 1, 0, 4])
   })
 
   it('returns fallback for corrupt JSON', () => {

@@ -60,7 +60,7 @@ function isNonEmptyString(v: unknown): boolean {
 }
 
 function isCardOrder(v: unknown): boolean {
-  return Array.isArray(v) && v.length === 4 && v.every((n: unknown) => typeof n === 'number' && n >= 0 && n <= 3)
+  return Array.isArray(v) && v.length === 5 && v.every((n: unknown) => typeof n === 'number' && n >= 0 && n <= 4)
 }
 
 function isRecord(v: unknown): boolean {
