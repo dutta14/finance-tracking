@@ -333,10 +333,15 @@
 }
 
 .nw-prose-subline {
-  display: block;
+  display: flex;
+  flex-direction: column;
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
   margin-top: 0.15rem;
+}
+
+.nw-prose-subline-item {
+  display: block;
 }
 
 .nw-prose-subline strong {
