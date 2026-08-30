@@ -33,7 +33,7 @@ vi.mock('recharts', async () => {
     Bar: ({ children, name }: { children: React.ReactNode; name?: string }) => (
       <div data-testid={`bar-${String(name).toLowerCase()}`}>{children}</div>
     ),
-    Line: () => null,
+    Line: ({ dataKey }: { dataKey?: string }) => <div data-testid={`line-${String(dataKey)}`} />,
     Cell: ({ opacity = 1 }: { opacity?: number }) => <div data-testid="bar-cell" data-opacity={opacity} />,
     XAxis: () => null,
     YAxis: ({ tickFormatter }: { tickFormatter?: (value: number) => string }) => (
@@ -234,10 +234,57 @@ describe('CashflowBarChart', () => {
       <CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />,
     )
 
-    expect(screen.getByText('Income')).toBeInTheDocument()
-    expect(screen.getByText('Expenses')).toBeInTheDocument()
+    expect(screen.getByText('Income', { selector: '.cashflow-tooltip-label' })).toBeInTheDocument()
+    expect(screen.getByText('Expenses', { selector: '.cashflow-tooltip-label' })).toBeInTheDocument()
     expect(screen.getByText('Net Income')).toBeInTheDocument()
     expect(screen.getByText('Savings Rate')).toBeInTheDocument()
+    expect(screen.getByText('Average')).toBeInTheDocument()
+    expect(screen.getByText('Median')).toBeInTheDocument()
+  })
+
+  it('renders only income bars and the average income marker in the Income view', async () => {
+    const user = userEvent.setup()
+    const yearTransactions: Record<string, Transaction[]> = {
+      '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
+      '2024-02': [makeTx({ category: 'Salary', amount: 4500 }), makeTx({ category: 'Rent', amount: -2000 })],
+    }
+
+    render(
+      <CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />,
+    )
+
+    await user.click(screen.getByRole('tab', { name: 'Income' }))
+
+    expect(screen.getByTestId('bar-income')).toBeInTheDocument()
+    expect(screen.queryByTestId('bar-expense')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('line-netLine')).not.toBeInTheDocument()
+    expect(screen.getByText('Avg Income')).toBeInTheDocument()
+    expect(screen.getByText('Income', { selector: '.cashflow-tooltip-label' })).toBeInTheDocument()
+    expect(screen.queryByText('Expenses', { selector: '.cashflow-tooltip-label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Net Income')).not.toBeInTheDocument()
+    expect(screen.queryByText('Savings Rate')).not.toBeInTheDocument()
+  })
+
+  it('renders only expense bars and hides combined-only tooltip rows in the Expenses view', async () => {
+    const user = userEvent.setup()
+    const yearTransactions: Record<string, Transaction[]> = {
+      '2024-01': [makeTx({ category: 'Salary', amount: 5000 }), makeTx({ category: 'Groceries', amount: -1200 })],
+      '2024-02': [makeTx({ category: 'Salary', amount: 4500 }), makeTx({ category: 'Rent', amount: -2000 })],
+    }
+
+    render(
+      <CashflowBarChart {...defaultProps} yearTransactions={yearTransactions} incomeCatSet={new Set(['Salary'])} />,
+    )
+
+    await user.click(screen.getByRole('tab', { name: 'Expenses' }))
+
+    expect(screen.queryByTestId('bar-income')).not.toBeInTheDocument()
+    expect(screen.getByTestId('bar-expense')).toBeInTheDocument()
+    expect(screen.queryByTestId('line-netLine')).not.toBeInTheDocument()
+    expect(screen.queryByText('Income', { selector: '.cashflow-tooltip-label' })).not.toBeInTheDocument()
+    expect(screen.getByText('Expenses', { selector: '.cashflow-tooltip-label' })).toBeInTheDocument()
+    expect(screen.queryByText('Net Income')).not.toBeInTheDocument()
+    expect(screen.queryByText('Savings Rate')).not.toBeInTheDocument()
     expect(screen.getByText('Average')).toBeInTheDocument()
     expect(screen.getByText('Median')).toBeInTheDocument()
   })

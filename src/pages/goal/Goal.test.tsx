@@ -133,13 +133,29 @@ vi.mock('./components/GoalMixer', () => ({
 }))
 
 vi.mock('./components/GoalActionsMenu', () => ({
-  default: (props: { onRename?: () => void; onDuplicate?: () => void; onDelete?: () => void }) => (
-    <div data-testid="goal-actions-menu">
-      <button onClick={() => props.onRename?.()}>Rename</button>
-      <button onClick={() => props.onDuplicate?.()}>Duplicate</button>
-      <button onClick={() => props.onDelete?.()}>Delete</button>
-    </div>
-  ),
+  default: (props: { onRename?: () => void; onDuplicate?: () => void; onDelete?: () => void }) => {
+    // Use a simple DOM toggle instead of useState to satisfy eslint rules-of-hooks
+    const id = 'goal-actions-panel'
+    return (
+      <div data-testid="goal-actions-menu">
+        <button
+          type="button"
+          aria-label="Goal actions"
+          onClick={e => {
+            const panel = (e.currentTarget.parentElement as HTMLElement).querySelector(`#${id}`) as HTMLElement
+            panel.hidden = !panel.hidden
+          }}
+        >
+          Actions
+        </button>
+        <div id={id} hidden>
+          <button onClick={() => props.onRename?.()}>Rename</button>
+          <button onClick={() => props.onDuplicate?.()}>Duplicate</button>
+          <button onClick={() => props.onDelete?.()}>Delete</button>
+        </div>
+      </div>
+    )
+  },
 }))
 
 vi.mock('./components/LeverageGoal', () => ({
@@ -383,16 +399,36 @@ describe('Goal drawer behavior', () => {
     expect(screen.getByRole('heading', { name: 'Bravo', level: 1 })).toBeInTheDocument()
   })
 
-  it('renames the active goal from the drawer actions menu', async () => {
+  it('renames the active goal from the drawer actions menu when Enter is pressed', async () => {
     const user = userEvent.setup()
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('Renamed Alpha')
     renderGoal('/goal/plans/1')
 
     await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Goal actions' }))
     await user.click(screen.getByRole('button', { name: 'Rename' }))
 
+    const input = screen.getByDisplayValue('Alpha')
+    await user.clear(input)
+    await user.type(input, 'Renamed Alpha{Enter}')
+
     expect(mockUpdateGoal).toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Renamed Alpha' }))
-    promptSpy.mockRestore()
+    expect(screen.queryByDisplayValue('Renamed Alpha')).not.toBeInTheDocument()
+  })
+
+  it('closes inline rename without saving when Escape is pressed', async () => {
+    const user = userEvent.setup()
+    renderGoal('/goal/plans/1')
+
+    await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Goal actions' }))
+    await user.click(screen.getByRole('button', { name: 'Rename' }))
+
+    const input = screen.getByDisplayValue('Alpha')
+    await user.clear(input)
+    await user.type(input, 'Discarded Rename{Escape}')
+
+    expect(mockUpdateGoal).not.toHaveBeenCalledWith(1, expect.objectContaining({ goalName: 'Discarded Rename' }))
+    expect(screen.queryByDisplayValue('Discarded Rename')).not.toBeInTheDocument()
   })
 
   it('duplicates the active goal from the drawer actions menu', async () => {
@@ -400,6 +436,7 @@ describe('Goal drawer behavior', () => {
     renderGoal('/goal/plans/1')
 
     await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Goal actions' }))
     await user.click(screen.getByRole('button', { name: 'Duplicate' }))
 
     expect(screen.getByTestId('goal-form-modal')).toBeInTheDocument()
@@ -411,6 +448,7 @@ describe('Goal drawer behavior', () => {
     renderGoal('/goal/plans/1')
 
     await user.click(screen.getByRole('button', { name: 'Open goal drawer' }))
+    await user.click(screen.getByRole('button', { name: 'Goal actions' }))
     await user.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(mockDeleteGoal).toHaveBeenCalledWith(1)

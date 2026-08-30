@@ -62,6 +62,14 @@ const Goal: FC = () => {
     if (!isDetailView) setDrawerOpen(false)
   }, [isDetailView])
 
+  useEffect(() => {
+    if (renamingGoalId === null) return
+    const frame = requestAnimationFrame(() => {
+      renameInputRef.current?.select()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [renamingGoalId])
+
   const handleCreateGoal = (goal: FinancialGoal): void => {
     if (editingGoalId) {
       updateGoal(editingGoalId, goal)
@@ -179,23 +187,14 @@ const Goal: FC = () => {
                         {goals.map(g => {
                           const isActive = String(g.id) === subPath.replace('plans/', '')
                           return (
-                            <li
-                              key={g.id}
-                              className={`goal-drawer-item${isActive ? ' goal-drawer-item--active' : ''}`}
-                              onClick={() => {
-                                if (renamingGoalId !== g.id) {
-                                  navigate(`/goal/plans/${g.id}`)
-                                  setDrawerOpen(false)
-                                }
-                              }}
-                              role="button"
-                              tabIndex={0}
-                            >
+                            <li key={g.id} className={`goal-drawer-item${isActive ? ' goal-drawer-item--active' : ''}`}>
                               {renamingGoalId === g.id ? (
                                 <span className="goal-drawer-rename" onClick={e => e.stopPropagation()}>
                                   <input
                                     ref={renameInputRef}
+                                    autoFocus
                                     className="goal-drawer-rename-input"
+                                    aria-label={`Rename ${g.goalName}`}
                                     value={renameValue}
                                     onChange={e => setRenameValue(e.target.value)}
                                     onKeyDown={e => {
@@ -208,25 +207,38 @@ const Goal: FC = () => {
                                     }}
                                   />
                                   <button
+                                    type="button"
                                     className="goal-drawer-rename-btn goal-drawer-rename-confirm"
                                     onClick={() => {
                                       if (renameValue.trim()) handleRenameGoal(g.id, renameValue.trim())
                                       setRenamingGoalId(null)
                                     }}
-                                    title="Confirm"
+                                    aria-label={`Confirm rename for ${g.goalName}`}
                                   >
                                     ✓
                                   </button>
                                   <button
+                                    type="button"
                                     className="goal-drawer-rename-btn goal-drawer-rename-cancel"
                                     onClick={() => setRenamingGoalId(null)}
-                                    title="Cancel"
+                                    aria-label={`Cancel rename for ${g.goalName}`}
                                   >
                                     ✕
                                   </button>
                                 </span>
                               ) : (
-                                <span className="goal-drawer-item-name">{g.goalName}</span>
+                                <button
+                                  type="button"
+                                  className="goal-drawer-item-trigger"
+                                  aria-current={isActive ? 'page' : undefined}
+                                  aria-label={isActive ? `${g.goalName}, current plan` : `Open ${g.goalName}`}
+                                  onClick={() => {
+                                    navigate(`/goal/plans/${g.id}`)
+                                    setDrawerOpen(false)
+                                  }}
+                                >
+                                  <span className="goal-drawer-item-name">{g.goalName}</span>
+                                </button>
                               )}
                               {isActive && renamingGoalId !== g.id && (
                                 <span onClick={e => e.stopPropagation()}>
@@ -234,7 +246,6 @@ const Goal: FC = () => {
                                     onRename={() => {
                                       setRenamingGoalId(g.id)
                                       setRenameValue(g.goalName)
-                                      setTimeout(() => renameInputRef.current?.select(), 0)
                                     }}
                                     onDuplicate={() => handleCopyGoal(g)}
                                     onDelete={() => {

@@ -27,6 +27,32 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
   const [compPeriod, setCompPeriod] = useState<ComparisonPeriod>('1m')
   const [periodOpen, setPeriodOpen] = useState(false)
   const periodRef = useRef<HTMLDivElement>(null)
+  const periodTriggerRef = useRef<HTMLButtonElement>(null)
+  const periodOptionRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const selectedCompPeriodIndex = COMPARISON_OPTIONS.findIndex(option => option.value === compPeriod)
+
+  const focusPeriodOption = useCallback((index: number) => {
+    requestAnimationFrame(() => {
+      periodOptionRefs.current[index]?.focus()
+    })
+  }, [])
+
+  const closePeriodMenu = useCallback((returnFocus = false) => {
+    setPeriodOpen(false)
+    if (returnFocus) {
+      requestAnimationFrame(() => {
+        periodTriggerRef.current?.focus()
+      })
+    }
+  }, [])
+
+  const selectComparisonPeriod = useCallback(
+    (period: ComparisonPeriod) => {
+      setCompPeriod(period)
+      closePeriodMenu(true)
+    },
+    [closePeriodMenu],
+  )
 
   useEffect(() => {
     if (!periodOpen) return
@@ -38,6 +64,54 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [periodOpen])
+
+  useEffect(() => {
+    if (!periodOpen) return
+    focusPeriodOption(selectedCompPeriodIndex >= 0 ? selectedCompPeriodIndex : 0)
+  }, [focusPeriodOption, periodOpen, selectedCompPeriodIndex])
+
+  const handlePeriodTriggerKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        setPeriodOpen(true)
+        focusPeriodOption(selectedCompPeriodIndex >= 0 ? selectedCompPeriodIndex : 0)
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        setPeriodOpen(true)
+        focusPeriodOption(selectedCompPeriodIndex >= 0 ? selectedCompPeriodIndex : COMPARISON_OPTIONS.length - 1)
+      } else if (event.key === 'Escape' && periodOpen) {
+        event.preventDefault()
+        closePeriodMenu()
+      }
+    },
+    [closePeriodMenu, focusPeriodOption, periodOpen, selectedCompPeriodIndex],
+  )
+
+  const handlePeriodOptionKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        focusPeriodOption((index + 1) % COMPARISON_OPTIONS.length)
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        focusPeriodOption((index - 1 + COMPARISON_OPTIONS.length) % COMPARISON_OPTIONS.length)
+      } else if (event.key === 'Home') {
+        event.preventDefault()
+        focusPeriodOption(0)
+      } else if (event.key === 'End') {
+        event.preventDefault()
+        focusPeriodOption(COMPARISON_OPTIONS.length - 1)
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        closePeriodMenu(true)
+      } else if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        selectComparisonPeriod(COMPARISON_OPTIONS[index].value)
+      }
+    },
+    [closePeriodMenu, focusPeriodOption, selectComparisonPeriod],
+  )
 
   const selectedMonth = allMonths[monthIdx] || ''
 
@@ -365,26 +439,39 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
         </div>
         <div className="nw-period-menu" ref={periodRef}>
           <button
+            ref={periodTriggerRef}
+            type="button"
             className="nw-period-trigger"
             onClick={() => setPeriodOpen(o => !o)}
+            onKeyDown={handlePeriodTriggerKeyDown}
             aria-haspopup="listbox"
             aria-expanded={periodOpen}
-            aria-label="Comparison period"
+            aria-controls="nw-comparison-period-listbox"
+            aria-label={`Comparison period, ${COMPARISON_OPTIONS.find(o => o.value === compPeriod)?.label ?? ''}`}
           >
             {COMPARISON_OPTIONS.find(o => o.value === compPeriod)?.label} <span className="nw-period-chevron">›</span>
           </button>
           {periodOpen && (
-            <div className="nw-period-dropdown" role="listbox" aria-label="Comparison period">
-              {COMPARISON_OPTIONS.map(opt => (
+            <div
+              className="nw-period-dropdown"
+              id="nw-comparison-period-listbox"
+              role="listbox"
+              aria-label="Comparison period"
+            >
+              {COMPARISON_OPTIONS.map((opt, index) => (
                 <button
                   key={opt.value}
+                  ref={node => {
+                    periodOptionRefs.current[index] = node
+                  }}
+                  type="button"
+                  id={`nw-comparison-period-option-${opt.value}`}
                   className={`nw-period-item${opt.value === compPeriod ? ' nw-period-item--active' : ''}`}
                   role="option"
                   aria-selected={opt.value === compPeriod}
-                  onClick={() => {
-                    setCompPeriod(opt.value)
-                    setPeriodOpen(false)
-                  }}
+                  tabIndex={0}
+                  onClick={() => selectComparisonPeriod(opt.value)}
+                  onKeyDown={event => handlePeriodOptionKeyDown(event, index)}
                 >
                   {opt.label}
                 </button>

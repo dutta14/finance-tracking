@@ -7,9 +7,9 @@ interface ChartColors {
 }
 
 const DEFAULTS: ChartColors = {
-  positive: '#4ade80',
-  negative: '#f87171',
-  nwLine: '#10b981',
+  positive: '#15803d',
+  negative: '#b91c1c',
+  nwLine: '#0f766e',
 }
 
 function read(el: Element): ChartColors {

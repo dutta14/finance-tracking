@@ -84,12 +84,12 @@ export class HomePage {
 
     this.nwCard = page.locator('.home-card--nw')
     this.nwAmount = this.nwCard.locator('.nw-amount').first()
-    this.nwChange = this.nwCard.locator('.nw-prose .nw-change')
-    this.nwChangeUp = this.nwCard.locator('.nw-prose .nw-change.up')
-    this.nwChangeDown = this.nwCard.locator('.nw-prose .nw-change.down')
-    this.nwProse = page.locator('.nw-prose')
-    this.nwLegendItems = page.locator('.nw-stacked-legend-item')
-    this.nwDate = this.nwProse
+    this.nwChange = this.nwCard.locator('.nw-headline .nw-change')
+    this.nwChangeUp = this.nwCard.locator('.nw-headline .nw-change.up')
+    this.nwChangeDown = this.nwCard.locator('.nw-headline .nw-change.down')
+    this.nwProse = page.locator('.nw-goal-grid')
+    this.nwLegendItems = page.locator('.nw-goal-label')
+    this.nwDate = this.nwCard.locator('.nw-goal-grid')
     this.nwViewLink = this.nwCard.locator('.home-card-link')
 
     this.goalsCard = page.locator('.home-card--goals')

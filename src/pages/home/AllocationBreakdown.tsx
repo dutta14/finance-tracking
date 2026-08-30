@@ -18,12 +18,12 @@ interface AllocationBreakdownProps {
 
 const ALLOC_COLOR_VARS: Record<AssetAllocation, string> = {
   'us-stock': '--accent',
-  'intl-stock': '--accent-track',
-  bonds: '_#7db8c9',
-  'real-estate': '_#d4a86a',
-  cash: '_#b0b8c1',
-  others: '_#8db580',
-  debt: '_#d98c8c',
+  'intl-stock': '--accent-text-mid',
+  bonds: '_#0f766e',
+  'real-estate': '_#92400e',
+  cash: '_#475569',
+  others: '_#3f6212',
+  debt: '_#b91c1c',
 }
 
 function resolveAllocColors(): Record<AssetAllocation, string> {
@@ -218,9 +218,11 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
       <div className="alloc-toggles">
         <div className="tab-bar">
           <button
+            type="button"
             className={`tab-btn tab-btn--sm${chartMode === 'bar' ? ' active' : ''}`}
             onClick={() => setChartMode('bar')}
-            title="Stacked bar"
+            aria-label="Show allocation as stacked bar chart"
+            aria-pressed={chartMode === 'bar'}
           >
             <svg width="14" height="14" viewBox="0 0 14 14">
               <rect x="1" y="3" width="12" height="3" rx="1" fill="currentColor" opacity=".6" />
@@ -228,9 +230,11 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
             </svg>
           </button>
           <button
+            type="button"
             className={`tab-btn tab-btn--sm${chartMode === 'pie' ? ' active' : ''}`}
             onClick={() => setChartMode('pie')}
-            title="Donut chart"
+            aria-label="Show allocation as donut chart"
+            aria-pressed={chartMode === 'pie'}
           >
             <svg width="14" height="14" viewBox="0 0 14 14">
               <circle
@@ -259,14 +263,20 @@ const AllocationBreakdown: FC<AllocationBreakdownProps> = ({ accounts, balances,
         </div>
         <div className="tab-bar">
           <button
+            type="button"
             className={`tab-btn tab-btn--sm${legendMode === 'pct' ? ' active' : ''}`}
             onClick={() => setLegendMode('pct')}
+            aria-label="Show allocation legend as percentages"
+            aria-pressed={legendMode === 'pct'}
           >
             %
           </button>
           <button
+            type="button"
             className={`tab-btn tab-btn--sm${legendMode === 'val' ? ' active' : ''}`}
             onClick={() => setLegendMode('val')}
+            aria-label="Show allocation legend as currency values"
+            aria-pressed={legendMode === 'val'}
           >
             $
           </button>

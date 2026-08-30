@@ -655,11 +655,13 @@ test.describe('Goals Page E2E', () => {
       await goals.completeWizardStep1('Zero Goal')
 
       // Step 1: Fill timeline
+      await goals.wizardEndYearInput.waitFor({ state: 'visible' })
       await goals.wizardEndYearInput.fill('2055-01-01')
       await goals.wizardRetirementAgeInput.fill('60')
       await goals.wizardNextBtn.click()
 
       // Step 2: Set expense to 0
+      await goals.wizardExpenseInput.waitFor({ state: 'visible' })
       await goals.wizardExpenseInput.fill('0')
       await goals.wizardNextBtn.click()
 
@@ -676,11 +678,13 @@ test.describe('Goals Page E2E', () => {
       await goals.completeWizardStep1('Big Goal')
 
       // Step 1: Timeline
+      await goals.wizardEndYearInput.waitFor({ state: 'visible' })
       await goals.wizardEndYearInput.fill('2060-01-01')
       await goals.wizardRetirementAgeInput.fill('65')
       await goals.wizardNextBtn.click()
 
       // Step 2: Large expense
+      await goals.wizardExpenseInput.waitFor({ state: 'visible' })
       await goals.wizardExpenseInput.fill('500000')
       await goals.wizardNextBtn.click()
 

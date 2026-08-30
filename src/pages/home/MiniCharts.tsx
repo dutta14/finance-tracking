@@ -56,6 +56,8 @@ const CHART_OPTIONS: { key: MiniChartType; label: string }[] = [
   { key: 'fi-gw', label: 'FI vs GW' },
   { key: 'assets-liabilities', label: 'A/L' },
 ]
+const FI_CHART_COLOR = '#4f46e5'
+const GW_CHART_COLOR = '#b45309'
 
 const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMonths, onNavigate }) => {
   const [chartRef, chartColors] = useChartColors()
@@ -352,12 +354,12 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
             <ComposedChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="miniGradFi" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="0%" stopColor={FI_CHART_COLOR} stopOpacity={0.15} />
+                  <stop offset="100%" stopColor={FI_CHART_COLOR} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="miniGradGw" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                  <stop offset="0%" stopColor={GW_CHART_COLOR} stopOpacity={0.15} />
+                  <stop offset="100%" stopColor={GW_CHART_COLOR} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={gridColor} />
@@ -402,19 +404,19 @@ const MiniCharts: FC<MiniChartsProps> = ({ accounts, balances, balanceMap, allMo
                 type="natural"
                 dataKey="fi"
                 name="FI"
-                stroke="#6366f1"
+                stroke={FI_CHART_COLOR}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 3, strokeWidth: 0, fill: '#6366f1' }}
+                activeDot={{ r: 3, strokeWidth: 0, fill: FI_CHART_COLOR }}
               />
               <Line
                 type="natural"
                 dataKey="gw"
                 name="GW"
-                stroke="#f59e0b"
+                stroke={GW_CHART_COLOR}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 3, strokeWidth: 0, fill: '#f59e0b' }}
+                activeDot={{ r: 3, strokeWidth: 0, fill: GW_CHART_COLOR }}
               />
             </ComposedChart>
           </ResponsiveContainer>

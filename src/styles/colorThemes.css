@@ -55,9 +55,9 @@
   --color-tooltip-bg: #1e2228;
 
   /* Chart bar / line colors (shared across all charts) */
-  --chart-positive: #4ade80;
-  --chart-negative: #f87171;
-  --chart-nw-line: #10b981;
+  --chart-positive: #15803d;
+  --chart-negative: #b91c1c;
+  --chart-nw-line: #0f766e;
 
   /* Typography scale (1.125x ratio — data-dense) */
   --fs-xs: 0.75rem;
@@ -129,7 +129,7 @@ body.dark {
   /* Chart bar / line colors — softer for dark mode */
   --chart-positive: #6ee7a0;
   --chart-negative: #fca5a5;
-  --chart-nw-line: #34d399;
+  --chart-nw-line: #5eead4;
 }
 
 /* Dark-mode native control overrides */
