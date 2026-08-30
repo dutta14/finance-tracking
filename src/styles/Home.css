@@ -317,9 +317,9 @@
 
 .nw-goal-grid {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto auto auto;
+  justify-content: space-between;
   gap: 0.1rem 1rem;
-  justify-content: start;
   margin: 0.75rem 0 0;
   font-size: var(--fs-md);
   line-height: 1.7;
@@ -350,6 +350,27 @@
   color: var(--color-text-muted);
   font-weight: var(--fw-medium);
   text-align: right;
+}
+
+.nw-goal-trend {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  text-align: right;
+}
+
+.nw-goal-subtrend {
+  font-size: var(--fs-xs);
+  text-align: right;
+}
+
+.nw-goal-trend.nw-up,
+.nw-goal-subtrend.nw-up {
+  color: var(--color-positive);
+}
+
+.nw-goal-trend.nw-down,
+.nw-goal-subtrend.nw-down {
+  color: var(--color-negative);
 }
 
 .nw-prose .nw-change {

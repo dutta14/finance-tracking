@@ -57,6 +57,12 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
   const {
     netWorth,
     compNw,
+    compFi,
+    compGw,
+    compFiRetirement,
+    compFiNonRetirement,
+    compGwLiquid,
+    compGwIlliquid,
     fiTotal,
     fiRetirementTotal,
     fiNonRetirementTotal,
@@ -68,6 +74,12 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       return {
         netWorth: 0,
         compNw: null as number | null,
+        compFi: null as number | null,
+        compGw: null as number | null,
+        compFiRetirement: null as number | null,
+        compFiNonRetirement: null as number | null,
+        compGwLiquid: null as number | null,
+        compGwIlliquid: null as number | null,
         fiTotal: 0,
         fiRetirementTotal: 0,
         fiNonRetirementTotal: 0,
@@ -135,12 +147,6 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     }
 
     const compMonthKey = findCompMonth()
-    let compNwVal: number | null = null
-    if (compMonthKey && compMonthKey !== selectedMonth) {
-      const compMap = balanceMapsByMonth.get(compMonthKey) ?? new Map<number, number>()
-      compNwVal = sumAccountBalances(accounts, compMap)
-    }
-
     const fiAccounts = accounts.filter(a => a.goalType === 'fi')
     const gwAccounts = accounts.filter(a => a.goalType === 'gw')
 
@@ -148,6 +154,24 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     const fiNonRetirement = fiAccounts.filter(a => a.type === 'non-retirement')
     const gwLiquid = gwAccounts.filter(a => a.type === 'liquid')
     const gwIlliquid = gwAccounts.filter(a => a.type === 'illiquid')
+
+    let compNwVal: number | null = null
+    let compFi: number | null = null
+    let compGw: number | null = null
+    let compFiRetirement: number | null = null
+    let compFiNonRetirement: number | null = null
+    let compGwLiquid: number | null = null
+    let compGwIlliquid: number | null = null
+    if (compMonthKey && compMonthKey !== selectedMonth) {
+      const compMap = balanceMapsByMonth.get(compMonthKey) ?? new Map<number, number>()
+      compNwVal = sumAccountBalances(accounts, compMap)
+      compFi = sumAccountBalances(fiAccounts, compMap)
+      compGw = sumAccountBalances(gwAccounts, compMap)
+      compFiRetirement = sumAccountBalances(fiRetirement, compMap)
+      compFiNonRetirement = sumAccountBalances(fiNonRetirement, compMap)
+      compGwLiquid = sumAccountBalances(gwLiquid, compMap)
+      compGwIlliquid = sumAccountBalances(gwIlliquid, compMap)
+    }
 
     const fiTotal = sumAccountBalances(fiAccounts, balMap)
     const gwTotal = sumAccountBalances(gwAccounts, balMap)
@@ -160,6 +184,12 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     return {
       netWorth: nw,
       compNw: compNwVal,
+      compFi,
+      compGw,
+      compFiRetirement,
+      compFiNonRetirement,
+      compGwLiquid,
+      compGwIlliquid,
       fiTotal,
       fiRetirementTotal,
       fiNonRetirementTotal,
@@ -182,30 +212,65 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
     const fiChildren = [
       fiRetirementTotal > 0
-        ? { amount: formatCurrency(fiRetirementTotal), label: ACCOUNT_TYPE_LABELS.retirement }
+        ? {
+            amount: formatCurrency(fiRetirementTotal),
+            label: ACCOUNT_TYPE_LABELS.retirement,
+            diff: compFiRetirement !== null ? fiRetirementTotal - compFiRetirement : null,
+          }
         : null,
       fiNonRetirementTotal > 0
-        ? { amount: formatCurrency(fiNonRetirementTotal), label: ACCOUNT_TYPE_LABELS['non-retirement'] }
+        ? {
+            amount: formatCurrency(fiNonRetirementTotal),
+            label: ACCOUNT_TYPE_LABELS['non-retirement'],
+            diff: compFiNonRetirement !== null ? fiNonRetirementTotal - compFiNonRetirement : null,
+          }
         : null,
-    ].filter(Boolean) as Array<{ amount: string; label: string }>
+    ].filter(Boolean) as Array<{ amount: string; label: string; diff: number | null }>
 
     const gwChildren = [
-      gwLiquidTotal > 0 ? { amount: formatCurrency(gwLiquidTotal), label: ACCOUNT_TYPE_LABELS.liquid } : null,
-      gwIlliquidTotal > 0 ? { amount: formatCurrency(gwIlliquidTotal), label: ACCOUNT_TYPE_LABELS.illiquid } : null,
-    ].filter(Boolean) as Array<{ amount: string; label: string }>
+      gwLiquidTotal > 0
+        ? {
+            amount: formatCurrency(gwLiquidTotal),
+            label: ACCOUNT_TYPE_LABELS.liquid,
+            diff: compGwLiquid !== null ? gwLiquidTotal - compGwLiquid : null,
+          }
+        : null,
+      gwIlliquidTotal > 0
+        ? {
+            amount: formatCurrency(gwIlliquidTotal),
+            label: ACCOUNT_TYPE_LABELS.illiquid,
+            diff: compGwIlliquid !== null ? gwIlliquidTotal - compGwIlliquid : null,
+          }
+        : null,
+    ].filter(Boolean) as Array<{ amount: string; label: string; diff: number | null }>
 
     const clauses = [
       fiChildren.length > 0
-        ? { label: 'FI accounts', shortLabel: 'FI', total: fiTotal, children: fiChildren, includeIsIn: true }
+        ? {
+            label: 'FI accounts',
+            shortLabel: 'FI',
+            total: fiTotal,
+            diff: compFi !== null ? fiTotal - compFi : null,
+            children: fiChildren,
+            includeIsIn: true,
+          }
         : null,
       gwChildren.length > 0
-        ? { label: 'GW', shortLabel: 'GW', total: gwTotal, children: gwChildren, includeIsIn: false }
+        ? {
+            label: 'GW',
+            shortLabel: 'GW',
+            total: gwTotal,
+            diff: compGw !== null ? gwTotal - compGw : null,
+            children: gwChildren,
+            includeIsIn: false,
+          }
         : null,
     ].filter(Boolean) as Array<{
       label: string
       shortLabel: string
       total: number
-      children: Array<{ amount: string; label: string }>
+      diff: number | null
+      children: Array<{ amount: string; label: string; diff: number | null }>
       includeIsIn: boolean
     }>
 
@@ -220,6 +285,12 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     gwIlliquidTotal,
     fiTotal,
     gwTotal,
+    compFi,
+    compGw,
+    compFiRetirement,
+    compFiNonRetirement,
+    compGwLiquid,
+    compGwIlliquid,
   ])
 
   const handleMonthChange = useCallback(
@@ -327,10 +398,16 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
               {clause.shortLabel === 'FI' ? 'Financial Independence (FI)' : 'Generational Wealth (GW)'}
             </span>
             <strong className="nw-goal-amount">{formatCurrency(clause.total)}</strong>
+            <span className={`nw-goal-trend ${clause.diff !== null && clause.diff >= 0 ? 'nw-up' : 'nw-down'}`}>
+              {clause.diff !== null ? `${clause.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(clause.diff))}` : ''}
+            </span>
             {clause.children.map(child => (
               <React.Fragment key={`${clause.label}-${child.label}`}>
                 <span className="nw-goal-sublabel">{child.label}</span>
                 <strong className="nw-goal-subamount">{child.amount}</strong>
+                <span className={`nw-goal-subtrend ${child.diff !== null && child.diff >= 0 ? 'nw-up' : 'nw-down'}`}>
+                  {child.diff !== null ? `${child.diff >= 0 ? '↗' : '↘'} ${formatCurrency(Math.abs(child.diff))}` : ''}
+                </span>
               </React.Fragment>
             ))}
           </React.Fragment>
