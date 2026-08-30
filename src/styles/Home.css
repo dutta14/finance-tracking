@@ -315,45 +315,41 @@
   margin: 0.25rem 0 0;
 }
 
-.nw-prose {
+.nw-goal-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.1rem 1rem;
+  justify-content: start;
+  margin: 0.75rem 0 0;
   font-size: var(--fs-md);
   line-height: 1.7;
   color: var(--color-text);
-  margin: 0.75rem 0 0;
 }
 
-.nw-prose-line {
-  display: block;
-  margin-bottom: 0.5rem;
+.nw-goal-spacer {
+  grid-column: 1 / -1;
+  height: 0.75rem;
 }
 
-.nw-prose-line--goal {
-  display: block;
-  margin-bottom: 1.25rem;
+.nw-goal-label {
+  font-weight: var(--fw-semibold);
 }
 
-.nw-prose-subline {
-  display: flex;
-  flex-direction: column;
+.nw-goal-amount {
+  font-weight: var(--fw-semibold);
+  text-align: right;
+}
+
+.nw-goal-sublabel {
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
-  margin-top: 0.15rem;
 }
 
-.nw-prose-subline-item {
-  display: block;
-}
-
-.nw-prose-subline strong {
+.nw-goal-subamount {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
   font-weight: var(--fw-medium);
-}
-
-.nw-prose-line:last-child {
-  margin-bottom: 0;
-}
-
-.nw-prose strong {
-  font-weight: var(--fw-semibold);
+  text-align: right;
 }
 
 .nw-prose .nw-change {

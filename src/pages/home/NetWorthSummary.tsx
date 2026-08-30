@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import React, { FC, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Account, BalanceEntry, formatCurrency, ACCOUNT_TYPE_LABELS } from '../data/types'
 import MonthPicker from '../../components/MonthPicker'
 
@@ -319,20 +319,23 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
         </div>
       </div>
       <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
-      <p className="nw-prose">
-        {proseParts.clauses.map(clause => (
-          <span key={clause.label} className="nw-prose-line nw-prose-line--goal">
-            <strong>{formatCurrency(clause.total)}</strong> saved towards {clause.shortLabel}
-            <span className="nw-prose-subline">
-              {clause.children.map(child => (
-                <span key={`${clause.label}-${child.label}`} className="nw-prose-subline-item">
-                  <strong>{child.amount}</strong> {child.label}
-                </span>
-              ))}
+      <div className="nw-goal-grid">
+        {proseParts.clauses.map((clause, clauseIdx) => (
+          <React.Fragment key={clause.label}>
+            {clauseIdx > 0 && <div className="nw-goal-spacer" />}
+            <span className="nw-goal-label">
+              {clause.shortLabel === 'FI' ? 'Financial Independence (FI)' : 'Generational Wealth (GW)'}
             </span>
-          </span>
+            <strong className="nw-goal-amount">{formatCurrency(clause.total)}</strong>
+            {clause.children.map(child => (
+              <React.Fragment key={`${clause.label}-${child.label}`}>
+                <span className="nw-goal-sublabel">{child.label}</span>
+                <strong className="nw-goal-subamount">{child.amount}</strong>
+              </React.Fragment>
+            ))}
+          </React.Fragment>
         ))}
-      </p>
+      </div>
     </div>
   )
 }
