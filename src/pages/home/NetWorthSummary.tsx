@@ -2,6 +2,16 @@ import { FC, useState, useMemo, useCallback } from 'react'
 import { Account, BalanceEntry, formatCurrency, ACCOUNT_TYPE_LABELS } from '../data/types'
 import MonthPicker from '../../components/MonthPicker'
 
+type ComparisonPeriod = '1m' | '3m' | '6m' | 'ytd' | '1y' | 'all'
+const COMPARISON_OPTIONS: { value: ComparisonPeriod; label: string }[] = [
+  { value: '1m', label: '1 month' },
+  { value: '3m', label: '3 months' },
+  { value: '6m', label: '6 months' },
+  { value: 'ytd', label: 'Year to date' },
+  { value: '1y', label: '1 year' },
+  { value: 'all', label: 'All time' },
+]
+
 interface NetWorthSummaryProps {
   accounts: Account[]
   balances: BalanceEntry[]
@@ -14,6 +24,7 @@ const sumAccountBalances = (accounts: Account[], balanceMap: Map<number, number>
 
 const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMonths, onNavigate }) => {
   const [monthIdx, setMonthIdx] = useState(0) // 0 = latest
+  const [compPeriod, setCompPeriod] = useState<ComparisonPeriod>('1m')
 
   const selectedMonth = allMonths[monthIdx] || ''
 
@@ -32,7 +43,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
   const {
     netWorth,
-    prevNw,
+    compNw,
     fiTotal,
     fiRetirementTotal,
     fiNonRetirementTotal,
@@ -43,7 +54,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     if (!selectedMonth) {
       return {
         netWorth: 0,
-        prevNw: null as number | null,
+        compNw: null as number | null,
         fiTotal: 0,
         fiRetirementTotal: 0,
         fiNonRetirementTotal: 0,
@@ -55,12 +66,66 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
     const balMap = balanceMapsByMonth.get(selectedMonth) ?? new Map<number, number>()
 
-    // Previous month net worth
-    const prevMonthKey = allMonths[monthIdx + 1] || null
-    let prevNwVal: number | null = null
-    if (prevMonthKey) {
-      const prevMap = balanceMapsByMonth.get(prevMonthKey) ?? new Map<number, number>()
-      prevNwVal = sumAccountBalances(accounts, prevMap)
+    // Find comparison month based on period
+    const findCompMonth = (): string | null => {
+      const [selY, selM] = selectedMonth.split('-').map(Number)
+      let targetY: number
+      let targetM: number
+
+      switch (compPeriod) {
+        case '1m':
+          targetM = selM - 1
+          targetY = selY
+          if (targetM < 1) {
+            targetM = 12
+            targetY--
+          }
+          break
+        case '3m':
+          targetM = selM - 3
+          targetY = selY
+          while (targetM < 1) {
+            targetM += 12
+            targetY--
+          }
+          break
+        case '6m':
+          targetM = selM - 6
+          targetY = selY
+          while (targetM < 1) {
+            targetM += 12
+            targetY--
+          }
+          break
+        case 'ytd': {
+          // January of the same year (or December of prior year if currently January)
+          if (selM === 1) return null
+          targetY = selY - 1
+          targetM = 12
+          break
+        }
+        case '1y':
+          targetY = selY - 1
+          targetM = selM
+          break
+        case 'all':
+          // Earliest available month
+          return allMonths[allMonths.length - 1] === selectedMonth ? null : allMonths[allMonths.length - 1]
+      }
+
+      const target = `${targetY}-${String(targetM).padStart(2, '0')}`
+      // Find exact match or nearest earlier month
+      if (balanceMapsByMonth.has(target)) return target
+      const sorted = [...allMonths].sort()
+      const earlier = sorted.filter(m => m <= target)
+      return earlier.length > 0 ? earlier[earlier.length - 1] : null
+    }
+
+    const compMonthKey = findCompMonth()
+    let compNwVal: number | null = null
+    if (compMonthKey && compMonthKey !== selectedMonth) {
+      const compMap = balanceMapsByMonth.get(compMonthKey) ?? new Map<number, number>()
+      compNwVal = sumAccountBalances(accounts, compMap)
     }
 
     const fiAccounts = accounts.filter(a => a.goalType === 'fi')
@@ -81,7 +146,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
     return {
       netWorth: nw,
-      prevNw: prevNwVal,
+      compNw: compNwVal,
       fiTotal,
       fiRetirementTotal,
       fiNonRetirementTotal,
@@ -89,7 +154,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       gwLiquidTotal,
       gwIlliquidTotal,
     }
-  }, [accounts, selectedMonth, allMonths, monthIdx, balanceMapsByMonth])
+  }, [accounts, selectedMonth, allMonths, compPeriod, balanceMapsByMonth])
 
   const formatMonth = (ym: string) => {
     if (!ym) return ''
@@ -100,7 +165,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
 
   const proseParts = useMemo(() => {
     const monthLabel = formatMonth(selectedMonth)
-    const diff = prevNw === null ? null : netWorth - prevNw
+    const diff = compNw === null ? null : netWorth - compNw
 
     const fiChildren = [
       fiRetirementTotal > 0
@@ -134,7 +199,7 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
     return { monthLabel, diff, clauses }
   }, [
     selectedMonth,
-    prevNw,
+    compNw,
     netWorth,
     fiRetirementTotal,
     fiNonRetirementTotal,
@@ -208,21 +273,49 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
       </div>
       <div className="nw-headline">
         <div className="nw-headline-center">
-          <span className="nw-amount">
-            {formatCurrency(netWorth)}
-            {prevNw !== null &&
-              (() => {
-                const diff = netWorth - prevNw
-                const pct = prevNw !== 0 ? ((diff / prevNw) * 100).toFixed(1) : '0.0'
-                const cls = diff > 0 ? 'nw-change up' : diff < 0 ? 'nw-change down' : 'nw-change flat'
-                const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : ''
-                return (
+          <span className="nw-amount">{formatCurrency(netWorth)}</span>
+          {compNw !== null &&
+            (() => {
+              const diff = netWorth - compNw
+              const pct = compNw !== 0 ? ((diff / compNw) * 100).toFixed(1) : '0.0'
+              const cls = diff > 0 ? 'nw-change up' : diff < 0 ? 'nw-change down' : 'nw-change flat'
+              const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : ''
+              return (
+                <span className="nw-change-row">
                   <span className={cls}>
                     {arrow} {formatCurrency(Math.abs(diff))} ({pct}%)
                   </span>
-                )
-              })()}
-          </span>
+                  <select
+                    className="nw-period-select"
+                    value={compPeriod}
+                    onChange={e => setCompPeriod(e.target.value as ComparisonPeriod)}
+                    aria-label="Comparison period"
+                  >
+                    {COMPARISON_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              )
+            })()}
+          {compNw === null && (
+            <span className="nw-change-row">
+              <select
+                className="nw-period-select"
+                value={compPeriod}
+                onChange={e => setCompPeriod(e.target.value as ComparisonPeriod)}
+                aria-label="Comparison period"
+              >
+                {COMPARISON_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </span>
+          )}
         </div>
       </div>
       <MonthPicker allMonths={allMonths} selectedMonth={selectedMonth} onMonthChange={handleMonthChange} />
