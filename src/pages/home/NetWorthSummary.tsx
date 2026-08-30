@@ -323,7 +323,6 @@ const NetWorthSummary: FC<NetWorthSummaryProps> = ({ accounts, balances, allMont
                     setPeriodOpen(false)
                   }}
                 >
-                  {opt.value === compPeriod && <span className="nw-period-check">✓</span>}
                   {opt.label}
                 </button>
               ))}

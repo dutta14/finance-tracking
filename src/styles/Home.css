@@ -227,12 +227,7 @@
 }
 .nw-period-item--active {
   font-weight: var(--fw-semibold);
-}
-.nw-period-check {
-  font-size: var(--fs-sm);
-  color: var(--color-text);
-  width: 1rem;
-  flex-shrink: 0;
+  background: var(--color-surface-hover);
 }
 .nw-change.up {
   color: var(--color-positive);
