@@ -374,15 +374,17 @@ const BalanceDetails: FC<BalanceDetailsProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isAddMonthOpen])
 
+  const isEditingMode = editMode !== null
+
   useEffect(() => {
-    if (!editMode) return
+    if (!isEditingMode) return
 
     const frameId = window.requestAnimationFrame(() => {
       detailsRef.current?.querySelector<HTMLInputElement>('.account-card__value-input')?.focus()
     })
 
     return () => window.cancelAnimationFrame(frameId)
-  }, [editMode])
+  }, [isEditingMode])
 
   const selectedMonthIndex = selectedMonth ? allMonths.indexOf(selectedMonth) : -1
   const previousMonth = selectedMonthIndex >= 0 ? allMonths[selectedMonthIndex + 1] : undefined
