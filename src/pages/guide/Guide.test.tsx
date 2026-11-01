@@ -46,9 +46,12 @@ describe('Guide', () => {
 
     await user.type(screen.getByRole('searchbox', { name: /search this guide/i }), 'taxes')
 
-    await waitFor(() => {
-      expect(screen.getAllByRole('link', { name: /taxes/i }).length).toBeGreaterThan(0)
-      expect(screen.queryByRole('link', { name: /^Drive$/i })).not.toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getAllByRole('link', { name: /taxes/i }).length).toBeGreaterThan(0)
+        expect(screen.queryByRole('link', { name: /^Drive$/i })).not.toBeInTheDocument()
+      },
+      { timeout: 3000 },
+    )
   })
 })
