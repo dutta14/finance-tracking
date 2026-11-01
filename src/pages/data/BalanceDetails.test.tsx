@@ -802,6 +802,34 @@ describe('BalanceDetails', () => {
     expect(screen.queryByText('Old Savings')).not.toBeInTheDocument()
   })
 
+  it('keeps focus on the balance input being typed into instead of jumping to the first field', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <BalanceDetails
+        accounts={[
+          makeAccount({ id: 1, name: 'Checking', owner: 'primary', status: 'active' }),
+          makeAccount({ id: 2, name: 'Brokerage', owner: 'partner', status: 'active' }),
+        ]}
+        balances={[]}
+        allMonths={[]}
+        balanceMap={new Map()}
+        profile={baseProfile}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: '+ Add Entry' }))
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    const brokerageInput = await screen.findByRole('textbox', { name: 'Brokerage balance' })
+    await user.click(brokerageInput)
+    await user.type(brokerageInput, '5000')
+    await new Promise(resolve => window.requestAnimationFrame(resolve))
+
+    expect(brokerageInput).toHaveValue('5000')
+    expect(brokerageInput).toHaveFocus()
+  })
+
   it('validates duplicate months and cancels month creation from the popover and edit mode', async () => {
     const user = userEvent.setup()
 
