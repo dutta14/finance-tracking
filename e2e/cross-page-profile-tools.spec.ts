@@ -72,6 +72,8 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // GoalMiniCard.tsx:29-32 → `birthYear + retirementAge`. With
       // birthday "1990-06-15" and retirementAge 55 → year 2045.
       // Adaptation D: `.mini-retire-year` is the bare year text.
+      // The projected FI date depends on today's date, so pin the clock.
+      await page.clock.setFixedTime(new Date('2026-08-15T12:00:00Z'))
       await seedCrossPage(page)
       await gotoAndSettle(page, URLS.goal, /^goals$/i)
 
