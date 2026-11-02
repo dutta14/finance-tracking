@@ -13,8 +13,8 @@ test.describe('Smoke tests', () => {
     await expect(nav).toBeVisible()
 
     await expect(nav.getByRole('button', { name: 'Home' })).toBeVisible()
-    await expect(nav.getByRole('button', { name: 'Goals' })).toBeVisible()
-    await expect(nav.getByRole('button', { name: 'Net Worth' })).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Planning' })).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Wealth' })).toBeVisible()
     await expect(nav.getByRole('button', { name: 'Cashflow' })).toBeVisible()
   })
 

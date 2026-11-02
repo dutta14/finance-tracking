@@ -28,13 +28,13 @@ describe('buildIndex', () => {
       'Allocation',
       'Cashflow',
       'Drive',
-      'Goals',
       'Growth',
       'Home',
-      'Net Worth',
+      'Planning',
       'Taxes',
       'Transactions',
       'User Guide',
+      'Wealth',
     ])
 
     // No dynamic items without supplied data
@@ -270,11 +270,11 @@ describe('search', () => {
     expect(pageGroup.items[0].label).toBe('Cashflow')
   })
 
-  it('keyword matches work (e.g., searching "fire" matches Goals page)', () => {
+  it('keyword matches work (e.g., searching "fire" matches Planning page)', () => {
     const groups = search(index, 'fire')
     const allItems = groups.flatMap(g => g.items)
 
-    // Goals page has 'fire' in keywords
+    // Planning page has 'fire' in keywords
     const goalsPage = allItems.find(i => i.id === 'page-goals')
     expect(goalsPage).toBeDefined()
   })

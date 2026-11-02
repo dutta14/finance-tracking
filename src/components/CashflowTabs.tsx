@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef } from 'react'
-import '../styles/CashflowTabs.css'
+import '../styles/SectionTabs.css'
 
 export type CashflowTab = 'cashflow' | 'spreadsheet' | 'groups' | 'transactions'
 
@@ -30,7 +30,7 @@ const CashflowTabs: FC<CashflowTabsProps> = ({ active, onSelect, focusActiveOnMo
   }, [focusActiveOnMount])
 
   return (
-    <div className="tab-bar cashflow-tabs">
+    <div className="tab-bar section-tabs">
       {TABS.map(tab => (
         <button
           key={tab.id}

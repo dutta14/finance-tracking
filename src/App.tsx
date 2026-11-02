@@ -61,7 +61,7 @@ const AppShell: FC = () => {
     useLayout()
   const searchIndexData = useSearchIndexData(searchOpen)
   const currentPage: PageType =
-    location.pathname === '/goal' || location.pathname.startsWith('/goal/')
+    location.pathname === '/goal' || location.pathname.startsWith('/goal/') || location.pathname === '/taxes'
       ? 'goal'
       : location.pathname.startsWith('/net-worth')
         ? 'net-worth'
@@ -69,11 +69,9 @@ const AppShell: FC = () => {
           ? 'budget'
           : location.pathname.startsWith('/drive')
             ? 'drive'
-            : location.pathname === '/taxes'
-              ? 'taxes'
-              : location.pathname === '/guide'
-                ? 'guide'
-                : 'home'
+            : location.pathname === '/guide'
+              ? 'guide'
+              : 'home'
   const setCurrentPage = (page: PageType): void => {
     navigate(
       {

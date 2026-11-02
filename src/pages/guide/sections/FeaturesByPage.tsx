@@ -42,8 +42,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
     </section>
 
     <section className="guide-subsection" id="feature-goals">
-      <h3>Goals</h3>
-      <GuideFigure src={screenshots.goals} alt="Goals page with plans and FI calculator" />
+      <h3>Planning</h3>
+      <GuideFigure src={screenshots.goals} alt="Planning page with goals and FI calculator" />
       <p>
         Two modes live here: concrete plans and a more abstract FI calculator. One keeps you honest about named goals.
         The other answers the older, quieter question of when work becomes optional.
@@ -63,8 +63,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
     </section>
 
     <section className="guide-subsection" id="feature-net-worth">
-      <h3>Net Worth</h3>
-      <GuideFigure src={screenshots.netWorth} alt="Net Worth page with accounts and growth chart" />
+      <h3>Wealth</h3>
+      <GuideFigure src={screenshots.netWorth} alt="Wealth page with accounts and growth chart" />
       <p>
         This is the spine of the app. The Accounts tab gives you the raw history, Allocation turns it into portfolio
         shape, and Growth lets you connect balances to income, expenses, and savings rate.

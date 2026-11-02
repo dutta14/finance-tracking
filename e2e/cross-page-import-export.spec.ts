@@ -271,13 +271,13 @@ test.describe.skip('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', (
       await page.goto(HOME + route)
       await page.waitForLoadState('domcontentloaded')
       const name = route.includes('goal')
-        ? /^Goals$/
+        ? /^Planning$/
         : route.includes('net-worth')
-          ? /^Net Worth$/
+          ? /^Wealth$/
           : route.includes('budget')
             ? /^Cashflow$/
             : route.includes('taxes')
-              ? /^Taxes$/
+              ? /^Planning$/
               : /^Drive$/
       await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
     }
@@ -566,10 +566,10 @@ test.describe.skip('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', (
 
     const routes: { path: string; heading: RegExp }[] = [
       { path: '#/', heading: /Good (morning|afternoon|evening)/ },
-      { path: '#/goal', heading: /^Goals$/ },
-      { path: '#/net-worth', heading: /^Net Worth$/ },
+      { path: '#/goal', heading: /^Planning$/ },
+      { path: '#/net-worth', heading: /^Wealth$/ },
       { path: '#/budget', heading: /^Cashflow$/ },
-      { path: '#/taxes', heading: /^Taxes$/ },
+      { path: '#/taxes', heading: /^Planning$/ },
       { path: '#/drive', heading: /^Drive$/ },
     ]
     for (const { path, heading } of routes) {

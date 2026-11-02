@@ -94,9 +94,9 @@ describe('App', () => {
     })
   })
 
-  it('navigates to Goals on sidebar click', async () => {
+  it('navigates to Planning on sidebar click', async () => {
     renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Goals' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Planning' }))
     await waitFor(() => {
       expect(screen.getByTestId('page-goal')).toBeInTheDocument()
     })
@@ -110,17 +110,9 @@ describe('App', () => {
     })
   })
 
-  it('navigates to Taxes on sidebar click', async () => {
+  it('navigates to Wealth on sidebar click', async () => {
     renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Taxes' }))
-    await waitFor(() => {
-      expect(screen.getByTestId('page-taxes')).toBeInTheDocument()
-    })
-  })
-
-  it('navigates to Net Worth on sidebar click', async () => {
-    renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Net Worth' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Wealth' }))
     await waitFor(() => {
       expect(screen.getByTestId('page-data')).toBeInTheDocument()
     })
@@ -261,6 +253,17 @@ describe('App', () => {
     })
   })
 
+  it('highlights Planning in the sidebar for the Taxes route, which is a Planning tab', async () => {
+    render(
+      <MemoryRouter initialEntries={['/taxes']}>
+        <App />
+      </MemoryRouter>,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Planning' })).toHaveAttribute('aria-current', 'page')
+    })
+  })
+
   it('highlights Guide in the sidebar for guide routes', async () => {
     render(
       <MemoryRouter initialEntries={['/guide']}>
@@ -340,7 +343,7 @@ describe('App', () => {
     it('moves focus to the main content after choosing a nav item at 479px and below', async () => {
       setWidth(479)
       renderApp()
-      await userEvent.click(screen.getByRole('button', { name: 'Goals' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Planning' }))
 
       await waitFor(() => {
         expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()

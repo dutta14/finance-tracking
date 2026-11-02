@@ -68,25 +68,23 @@ export async function seedNav(page: Page, options: NavSeedOptions = {}): Promise
 }
 
 /** The ordered list of sidebar nav buttons covered by 61a. */
-export const PRIMARY_NAV_LINKS = ['Home', 'Goals', 'Net Worth', 'Cashflow', 'Taxes'] as const
+export const PRIMARY_NAV_LINKS = ['Home', 'Planning', 'Wealth', 'Cashflow'] as const
 export type PrimaryNavLink = (typeof PRIMARY_NAV_LINKS)[number]
 
 /** Hash path each nav link routes to. */
 export const NAV_PATHS: Record<PrimaryNavLink | 'Drive', string> = {
   Home: '/',
-  Goals: '/goal/plans',
-  'Net Worth': '/net-worth/dashboard',
+  Planning: '/goal/plans',
+  Wealth: '/net-worth/dashboard',
   Cashflow: '/budget',
-  Taxes: '/taxes',
   Drive: '/drive',
 }
 
 /** The h1 text rendered on each route (regex tolerates the dynamic Home greeting). */
 export const PAGE_HEADINGS: Record<PrimaryNavLink | 'Drive', RegExp> = {
   Home: /^Good (morning|afternoon|evening)/,
-  Goals: /^Goals$/,
-  'Net Worth': /^Net Worth$/,
+  Planning: /^Planning$/,
+  Wealth: /^Wealth$/,
   Cashflow: /^Cashflow$/,
-  Taxes: /^Taxes$/,
   Drive: /^Drive$/,
 }

@@ -75,7 +75,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // The projected FI date depends on today's date, so pin the clock.
       await page.clock.setFixedTime(new Date('2026-08-15T12:00:00Z'))
       await seedCrossPage(page)
-      await gotoAndSettle(page, URLS.goal, /^goals$/i)
+      await gotoAndSettle(page, URLS.goal, /^planning$/i)
 
       const card = page.locator('.goal-mini-card').first()
       await expect(card).toBeVisible()
@@ -89,13 +89,13 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // page.reload() before re-asserting. We re-navigate to `/goal`
       // after reload so the goal-tab render is fresh.
       await seedCrossPage(page)
-      await gotoAndSettle(page, URLS.goal, /^goals$/i)
+      await gotoAndSettle(page, URLS.goal, /^planning$/i)
       await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toContainText('Jun 2045')
 
       await mutateProfile(page, { birthday: '1985-06-15' })
       await page.reload()
       await page.waitForLoadState('load')
-      await gotoAndSettle(page, URLS.goal, /^goals$/i)
+      await gotoAndSettle(page, URLS.goal, /^planning$/i)
 
       // 1985 + 55 = 2040.
       await expect(page.locator('.goal-mini-card').first().locator('.mini-retire-year')).toContainText('Jun 2040')
@@ -136,7 +136,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await seedCrossPage(page, {
         budgetStore: seedBudgetCsvsForYear(lastYear, 10_000, 5_000),
       })
-      await gotoAndSettle(page, URLS.goalCalculator, /^goals$/i)
+      await gotoAndSettle(page, URLS.goalCalculator, /^planning$/i)
 
       const heroInput = page.locator('.fi-calc-hero-input')
       await expect(heroInput).toBeVisible()
@@ -157,7 +157,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       await page.goto(HOME)
       await page.waitForLoadState('domcontentloaded')
       await mutateProfile(page, { partner: { birthday: '1992-03-10' } })
-      await gotoAndSettle(page, URLS.goalCalculator, /^goals$/i)
+      await gotoAndSettle(page, URLS.goalCalculator, /^planning$/i)
 
       // "Plan until" stepper renders defaultLastYear in `.fi-calc-step-val`.
       const stepVals = page.locator('.fi-calc-year-val')
@@ -178,7 +178,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
       // (2025-04), Savings (gw/liquid/primary) latest = $55,000.
       // FICalculator renders the holdings summary with these.
       await seedCrossPage(page)
-      await gotoAndSettle(page, URLS.goalCalculator, /^goals$/i)
+      await gotoAndSettle(page, URLS.goalCalculator, /^planning$/i)
 
       const holdings = page.getByRole('table', { name: 'Holdings summary' })
       await expect(holdings).toBeVisible()
@@ -212,7 +212,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
           { id: 2, accountId: 1, month: '2024-12', balance: 260_000 },
         ],
       })
-      await gotoAndSettle(page, URLS.netWorthGrowth, /^net worth$/i)
+      await gotoAndSettle(page, URLS.netWorthGrowth, /^wealth$/i)
 
       const row2023 = page.locator('[data-sgt-year="2023"]')
       const row2024 = page.locator('[data-sgt-year="2024"]')
@@ -242,7 +242,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
           ],
         },
       })
-      await gotoAndSettle(page, URLS.netWorthGrowth, /^net worth$/i)
+      await gotoAndSettle(page, URLS.netWorthGrowth, /^wealth$/i)
 
       const row2024 = page.locator('[data-sgt-year="2024"]')
       await expect(row2024).toBeVisible()
@@ -266,7 +266,7 @@ test.describe('Cross-page: Profile + Tools Integration (#152)', () => {
 
       const thisYear = new Date().getFullYear()
       await seedCrossPage(page, { profile: null })
-      await gotoAndSettle(page, URLS.goalCalculator, /^goals$/i)
+      await gotoAndSettle(page, URLS.goalCalculator, /^planning$/i)
 
       const stepVals = page.locator('.fi-calc-year-val')
       // DOM order (see test 19): 0=inflation, 1=growth, 2=retire,

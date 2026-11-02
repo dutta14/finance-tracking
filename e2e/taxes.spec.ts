@@ -45,7 +45,7 @@ test.describe('Taxes Page E2E', () => {
       const taxes = new TaxesPage(page)
       await taxes.goto()
 
-      await expect(taxes.heading).toHaveText('Taxes')
+      await expect(taxes.heading).toHaveText('Planning')
       await expect(taxes.yearLabel).toHaveText(String(CURRENT_YEAR))
       // Forward button is disabled at the current year boundary
       await expect(taxes.nextYearBtn).toBeDisabled()

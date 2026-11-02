@@ -12,14 +12,14 @@ interface Step {
 
 const steps: Step[] = [
   {
-    title: 'Net Worth',
+    title: 'Wealth',
     desc: 'Add your accounts and record monthly balances. This is the foundation everything else builds on.',
     route: '/net-worth',
     cta: 'Add accounts',
     icon: DataIcon,
   },
   {
-    title: 'Goals',
+    title: 'Planning',
     desc: 'Set financial independence and general wealth targets with timelines. Track progress toward each.',
     route: '/goal',
     cta: 'Create a goal',

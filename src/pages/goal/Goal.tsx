@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react'
-import { NavLink, useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
+import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom'
 import { FinancialGoal } from '../../types'
 import { useGoals } from '../../contexts/GoalsContext'
 import { useLayout } from '../../contexts/LayoutContext'
@@ -13,6 +13,7 @@ import { useEditingState } from './hooks/useEditingState'
 import { useGrowthSettings } from '../../hooks/useGrowthSettings'
 import GrowthSettingsPanel from '../../components/GrowthSettingsPanel'
 import MonthPicker from '../../components/MonthPicker'
+import PlanningTabs from '../../components/PlanningTabs'
 import { useLeverageSettings } from '../../hooks/useLeverage'
 import { useData } from '../../contexts/DataContext'
 
@@ -110,26 +111,10 @@ const Goal: FC = () => {
         <div className="goal-header">
           <h1>
             {isDetailView
-              ? (goals.find(g => String(g.id) === subPath.replace('plans/', ''))?.goalName ?? 'Goals')
-              : 'Goals'}
+              ? (goals.find(g => String(g.id) === subPath.replace('plans/', ''))?.goalName ?? 'Planning')
+              : 'Planning'}
           </h1>
-          <nav className="tab-bar" aria-label="Goals sections">
-            <NavLink
-              to="/goal/plans"
-              className={({ isActive }) => `tab-btn${isActive || activeTab === 'plans' ? ' active' : ''}`}
-            >
-              FIRE Plans
-            </NavLink>
-            <NavLink to="/goal/leverage" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
-              Leverage
-            </NavLink>
-            <NavLink to="/goal/paydown" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
-              Pay Down
-            </NavLink>
-            <NavLink to="/goal/calculator" className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}>
-              FIRE Calculator
-            </NavLink>
-          </nav>
+          <PlanningTabs goalsActive={activeTab === 'plans'} />
           {(subPath === 'calculator' || isDetailView) && (
             <div className="goal-header-actions">
               {isDetailView && (

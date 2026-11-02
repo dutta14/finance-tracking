@@ -1,21 +1,21 @@
-.tab-bar.cashflow-tabs,
-body.modern-design .tab-bar.cashflow-tabs {
+.tab-bar.section-tabs,
+body.modern-design .tab-bar.section-tabs {
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.tab-bar.cashflow-tabs::-webkit-scrollbar {
+.tab-bar.section-tabs::-webkit-scrollbar {
   display: none;
 }
 
-.tab-bar.cashflow-tabs .tab-btn {
+.tab-bar.section-tabs .tab-btn {
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 @media (max-width: 479px) {
-  .tab-bar.cashflow-tabs .tab-btn {
+  .tab-bar.section-tabs .tab-btn {
     padding: 0.35rem 0.5rem;
     font-size: var(--fs-sm);
   }

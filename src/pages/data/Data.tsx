@@ -492,9 +492,9 @@ const Data: FC = () => {
 
       <div className="data-header">
         <div className="data-header-left">
-          <h1>Net Worth</h1>
+          <h1>Wealth</h1>
         </div>
-        <nav className="tab-bar" aria-label="Net Worth sections">
+        <nav className="tab-bar" aria-label="Wealth sections">
           <NavLink to="/net-worth/dashboard" className={() => `tab-btn${activeTab === 'accounts' ? ' active' : ''}`}>
             Dashboard
           </NavLink>

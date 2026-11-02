@@ -82,7 +82,7 @@ export class NetWorthPage {
     this.spreadsheetTab = page.getByRole('tab', { name: 'Spreadsheet' })
 
     // Tab navigation
-    this.tabBar = page.locator('nav[aria-label="Net Worth sections"]')
+    this.tabBar = page.locator('nav[aria-label="Wealth sections"]')
 
     // AccountsModal
     this.modal = page.locator('.data-modal').first()

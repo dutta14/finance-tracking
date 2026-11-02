@@ -55,14 +55,6 @@ export const CashflowIcon: FC = () => (
   </SidebarIcon>
 )
 
-export const TaxesIcon: FC = () => (
-  <SidebarIcon>
-    <path d="M19 5 5 19" />
-    <circle cx="7" cy="7" r="2.2" />
-    <circle cx="17" cy="17" r="2.2" />
-  </SidebarIcon>
-)
-
 export const DriveIcon: FC = () => (
   <SidebarIcon>
     <rect x="3" y="13" width="18" height="7" rx="2" />

@@ -33,7 +33,6 @@ export class KeyboardNavPage {
   readonly goalsLink: Locator
   readonly netWorthLink: Locator
   readonly budgetLink: Locator
-  readonly taxesLink: Locator
   readonly driveLink: Locator
   readonly settingsLink: Locator
 
@@ -42,17 +41,16 @@ export class KeyboardNavPage {
     this.sidebar = page.getByRole('navigation', { name: 'Main navigation' })
     this.main = page.locator('main.main-content')
     // Sidebar primary nav links are `<button>` elements (not `<a>`).
-    // Accessible-name selectors with `exact: true` keep "Net Worth"
-    // from matching the "Net Worth" footer / dashboard text. Drive
+    // Accessible-name selectors with `exact: true` keep "Wealth"
+    // from matching the "Wealth" footer / dashboard text. Drive
     // and Settings live in the sidebar footer (role="group"
     // aria-label="Utilities") and use aria-label for their accessible
-    // name; they are still in Tab order after Taxes.
+    // name; they are still in Tab order after Cashflow.
     this.homeLink = this.sidebar.getByRole('button', { name: 'Home', exact: true })
     this.searchLink = this.sidebar.getByRole('button', { name: 'Search', exact: true })
-    this.goalsLink = this.sidebar.getByRole('button', { name: 'Goals', exact: true })
-    this.netWorthLink = this.sidebar.getByRole('button', { name: 'Net Worth', exact: true })
+    this.goalsLink = this.sidebar.getByRole('button', { name: 'Planning', exact: true })
+    this.netWorthLink = this.sidebar.getByRole('button', { name: 'Wealth', exact: true })
     this.budgetLink = this.sidebar.getByRole('button', { name: 'Cashflow', exact: true })
-    this.taxesLink = this.sidebar.getByRole('button', { name: 'Taxes', exact: true })
     this.driveLink = this.sidebar.getByRole('button', { name: 'Drive', exact: true })
     this.settingsLink = this.sidebar.getByRole('button', { name: 'Settings', exact: true })
   }
@@ -129,11 +127,11 @@ export class KeyboardNavPage {
 
 /**
  * Sidebar Tab order, used by the Tab-sequence assertion in test 21.
- * Home → Goals → Net Worth → Budget → Taxes are primary nav buttons.
+ * Home → Planning → Wealth → Cashflow are primary nav buttons.
  * Drive and Settings live in the sidebar footer group but are still
- * in natural Tab order after Taxes. Matches DOM order in
+ * in natural Tab order after Cashflow. Matches DOM order in
  * SidebarNavigation.tsx. The Settings menu trigger is a `<button>`
  * (SettingsMenu.tsx:82) with aria-label="Settings".
  */
-export const SIDEBAR_NAV_ORDER = ['Home', 'Goals', 'Net Worth', 'Cashflow', 'Taxes', 'Drive', 'Settings'] as const
+export const SIDEBAR_NAV_ORDER = ['Home', 'Planning', 'Wealth', 'Cashflow', 'Drive', 'Settings'] as const
 export type SidebarNavName = (typeof SIDEBAR_NAV_ORDER)[number]

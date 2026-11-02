@@ -39,18 +39,18 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
 
   /* ── Per-link navigation ────────────────────────────────────── */
 
-  test('2. clicking "Goals" navigates to /goal and marks it active', async ({ page }) => {
+  test('2. clicking "Planning" navigates to /goal and marks it active', async ({ page }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
-    await nav.navTo('Goals')
-    await nav.expectActive('Goals')
+    await nav.navTo('Planning')
+    await nav.expectActive('Planning')
   })
 
-  test('3. clicking "Net Worth" navigates to /net-worth and marks it active', async ({ page }) => {
+  test('3. clicking "Wealth" navigates to /net-worth and marks it active', async ({ page }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
-    await nav.navTo('Net Worth')
-    await nav.expectActive('Net Worth')
+    await nav.navTo('Wealth')
+    await nav.expectActive('Wealth')
   })
 
   test('4. clicking "Cashflow" navigates to /budget and marks it active', async ({ page }) => {
@@ -78,11 +78,19 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeFocused()
   })
 
-  test('5. clicking "Taxes" navigates to /taxes and the toggle has an aria-label', async ({ page }) => {
+  test('5. Taxes is a tab inside Planning and keeps Planning active in the sidebar', async ({ page }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
-    await nav.navTo('Taxes')
-    await nav.expectActive('Taxes')
+    await nav.navTo('Planning')
+
+    const taxesTab = page.getByRole('navigation', { name: 'Planning sections' }).getByRole('link', { name: 'Taxes' })
+    await taxesTab.click()
+
+    await expect(page).toHaveURL(/#\/taxes/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
+    await nav.expectActive('Planning')
+    await expect(taxesTab).toHaveAttribute('aria-current', 'page')
+    await expect(taxesTab).toBeFocused()
 
     // Spec 5 (enhanced): the sidebar toggle's accessible name must flip
     // when the sidebar collapses. Asserting toggleExpand becomes visible
@@ -181,13 +189,13 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
 
     await nav.goto('/net-worth/allocation')
     await expect(page).toHaveURL(/#\/net-worth\/allocation$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeVisible()
-    // The Net Worth section nav should mark Allocation as active.
+    await expect(page.getByRole('heading', { level: 1, name: 'Wealth' })).toBeVisible()
+    // The Wealth section nav should mark Allocation as active.
     await expect(page.getByRole('link', { name: 'Allocation' })).toHaveAttribute('aria-current', 'page')
 
     await nav.goto('/goal/calculator')
     await expect(page).toHaveURL(/#\/goal\/calculator$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
 
     await nav.goto('/drive')
     await expect(page).toHaveURL(/#\/drive$/)
@@ -224,7 +232,7 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
 
-    for (const name of ['Goals', 'Net Worth', 'Cashflow', 'Taxes', 'Home'] as const) {
+    for (const name of ['Planning', 'Wealth', 'Cashflow', 'Home'] as const) {
       await nav.navTo(name)
       await nav.expectActive(name)
     }
@@ -233,13 +241,13 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
   /* ── Edge cases ────────────────────────────────────────────── */
 
   test('26. rapid navigation between pages leaves the final page in a consistent state', async ({ page }) => {
-    // Click Home → Goals → Net Worth → Budget in quick succession. Only
+    // Click Home → Planning → Wealth → Cashflow in quick succession. Only
     // the final state is asserted — intermediate URLs are a race.
     const nav = new NavigationPage(page)
     await nav.goto('/')
 
-    await nav.link('Goals').click()
-    await nav.link('Net Worth').click()
+    await nav.link('Planning').click()
+    await nav.link('Wealth').click()
     await nav.link('Cashflow').click()
 
     await expect(page).toHaveURL(routeRegex('/budget'))
@@ -250,14 +258,14 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
   test('27. browser refresh on a sub-route preserves the page and active link', async ({ page }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
-    await nav.navTo('Goals')
+    await nav.navTo('Planning')
 
     await page.reload()
     await page.waitForLoadState('domcontentloaded')
 
     await expect(page).toHaveURL(routeRegex('/goal/plans'))
-    await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
-    await nav.expectActive('Goals')
+    await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
+    await nav.expectActive('Planning')
   })
 
   test('38. a non-existent route falls back to Home with Home marked active', async ({ page }) => {

@@ -48,7 +48,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    // After each Tab, the next sidebar Tab-order button (Goals → Net Worth → Cashflow → Taxes → Drive →
+    // After each Tab, the next sidebar Tab-order button (Planning → Wealth → Cashflow → Drive →
     // Settings) should hold focus.
     // Drive and Settings live in the sidebar-footer group; their
     // accessible name comes from aria-label but the visible span text
@@ -68,14 +68,14 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    // Search lives in the sidebar header, so Goals follows Home in the tab order.
+    // Search lives in the sidebar header, so Planning follows Home in the tab order.
     await kb.homeLink.focus()
     await page.keyboard.press('Tab')
     await expect(kb.goalsLink).toBeFocused()
 
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/#\/goal$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
     await expect(kb.goalsLink).toHaveAttribute('aria-current', 'page')
   })
 
@@ -128,13 +128,13 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
 
     await kb.goalsLink.click()
     await expect(page).toHaveURL(/#\/goal$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
 
     const info = await kb.getActiveElementInfo()
     expect(info.tag).not.toBe('BODY')
 
     const onClickedLink =
-      info.inSidebar && info.tag === 'BUTTON' && info.text === 'Goals' && info.ariaCurrent === 'page'
+      info.inSidebar && info.tag === 'BUTTON' && info.text === 'Planning' && info.ariaCurrent === 'page'
     const onHeading = info.tag === 'H1'
     // Tighten: if focus is inside <main>, only accept it on an
     // interactive element (button / link / input / heading). A random
@@ -168,7 +168,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     })
 
     await kb.goto('/goal')
-    await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
 
     const alert = page.locator('[role="alert"]', { hasText: 'Retry' })
     const errorRendered = await alert.count()
@@ -196,7 +196,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
         '[#144 test 33] ErrorBoundary did not render under storage corruption; ' +
           'contexts catch JSON.parse internally. Documented as a known gap.',
       )
-      await expect(page.getByRole('heading', { level: 1, name: 'Goals' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Planning' })).toBeVisible()
     }
   })
 
@@ -231,12 +231,12 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    // Walk Home → Goals → Net Worth → Budget via Tab (Search lives in the sidebar header), verifying focus
+    // Walk Home → Planning → Wealth → Cashflow via Tab (Search lives in the sidebar header), verifying focus
     // and a focus indicator at each step.
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    for (const expected of ['Goals', 'Net Worth', 'Cashflow'] as const) {
+    for (const expected of ['Planning', 'Wealth', 'Cashflow'] as const) {
       await page.keyboard.press('Tab')
       const info = await kb.getActiveElementInfo()
       expect(info.inSidebar).toBe(true)
@@ -262,15 +262,15 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    const transitions: Array<{ from: string; to: 'Net Worth' | 'Cashflow' | 'Goals'; heading: RegExp }> = [
-      { from: 'Home', to: 'Net Worth', heading: /^Net Worth$/ },
-      { from: 'Net Worth', to: 'Cashflow', heading: /^Cashflow$/ },
-      { from: 'Cashflow', to: 'Goals', heading: /^Goals$/ },
+    const transitions: Array<{ from: string; to: 'Wealth' | 'Cashflow' | 'Planning'; heading: RegExp }> = [
+      { from: 'Home', to: 'Wealth', heading: /^Wealth$/ },
+      { from: 'Wealth', to: 'Cashflow', heading: /^Cashflow$/ },
+      { from: 'Cashflow', to: 'Planning', heading: /^Planning$/ },
     ]
 
     const elapsed: number[] = []
     for (const t of transitions) {
-      const link = t.to === 'Net Worth' ? kb.netWorthLink : t.to === 'Cashflow' ? kb.budgetLink : kb.goalsLink
+      const link = t.to === 'Wealth' ? kb.netWorthLink : t.to === 'Cashflow' ? kb.budgetLink : kb.goalsLink
       const heading = page.getByRole('heading', { level: 1, name: t.heading })
 
       const start = Date.now()

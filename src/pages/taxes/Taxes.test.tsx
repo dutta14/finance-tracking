@@ -59,10 +59,10 @@ async function seedTemplates(templates: object[]) {
   await store.writeJSON('taxes/templates.json', templates)
 }
 
-function renderTaxes() {
+function renderTaxes(initialPath = '/') {
   return render(
     <FileStoreTestProvider store={store}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialPath]}>
         <Taxes />
       </MemoryRouter>
     </FileStoreTestProvider>,
@@ -92,6 +92,16 @@ afterEach(() => {
    ═══════════════════════════════════════════════════════════════ */
 
 describe('Taxes', () => {
+  describe('Planning tabs', () => {
+    it('shows the Planning heading with Taxes as the active tab', async () => {
+      renderTaxes('/taxes')
+
+      expect(await screen.findByRole('heading', { level: 1, name: 'Planning' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Taxes' })).toHaveAttribute('aria-current', 'page')
+      expect(screen.getByRole('link', { name: 'Goals' })).toHaveAttribute('href', '/goal/plans')
+    })
+  })
+
   describe('empty state', () => {
     it('renders empty state when no year data exists', async () => {
       const user = userEvent.setup()
