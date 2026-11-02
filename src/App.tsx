@@ -65,17 +65,15 @@ const AppShell: FC = () => {
       ? 'goal'
       : location.pathname.startsWith('/net-worth')
         ? 'net-worth'
-        : location.pathname.startsWith('/budget')
+        : location.pathname.startsWith('/budget') || location.pathname.startsWith('/transactions')
           ? 'budget'
-          : location.pathname.startsWith('/transactions')
-            ? 'transactions'
-            : location.pathname.startsWith('/drive')
-              ? 'drive'
-              : location.pathname === '/taxes'
-                ? 'taxes'
-                : location.pathname === '/guide'
-                  ? 'guide'
-                  : 'home'
+          : location.pathname.startsWith('/drive')
+            ? 'drive'
+            : location.pathname === '/taxes'
+              ? 'taxes'
+              : location.pathname === '/guide'
+                ? 'guide'
+                : 'home'
   const setCurrentPage = (page: PageType): void => {
     navigate(
       {

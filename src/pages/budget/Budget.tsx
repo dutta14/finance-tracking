@@ -4,6 +4,7 @@ import { useBudget } from './hooks/useBudget'
 import { useCSVUpload } from './hooks/useCSVUpload'
 import { BudgetViewMode, TimePeriod } from './types'
 import BudgetHeader from './components/BudgetHeader'
+import { CASHFLOW_TAB_FOCUS_STATE, shouldFocusCashflowTab } from '../../components/CashflowTabs'
 import ManualTransactionEntry from './components/ManualTransactionEntry'
 import BudgetSummary from './components/BudgetSummary'
 import BudgetTable from './components/BudgetTable'
@@ -137,6 +138,8 @@ const Budget: FC = () => {
         onPrevYear={() => setSelectedYear(y => y - 1)}
         onNextYear={() => setSelectedYear(y => y + 1)}
         onSetViewMode={mode => navigate(`/budget/${mode}`)}
+        onOpenTransactions={() => navigate('/transactions', { state: CASHFLOW_TAB_FOCUS_STATE })}
+        focusTabsOnMount={shouldFocusCashflowTab(location.state)}
         onSetTimePeriod={setTimePeriod}
       />
 

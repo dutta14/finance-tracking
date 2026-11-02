@@ -12,6 +12,7 @@ function defaultProps(overrides: Partial<React.ComponentProps<typeof BudgetHeade
     onPrevYear: vi.fn(),
     onNextYear: vi.fn(),
     onSetViewMode: vi.fn(),
+    onOpenTransactions: vi.fn(),
     onSetTimePeriod: vi.fn(),
     ...overrides,
   }
@@ -24,9 +25,9 @@ function renderHeader(overrides: Partial<React.ComponentProps<typeof BudgetHeade
 }
 
 describe('BudgetHeader', () => {
-  it('renders the Budget title', () => {
+  it('renders the Cashflow title', () => {
     renderHeader()
-    expect(screen.getByText('Budget')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cashflow' })).toBeInTheDocument()
   })
 
   it('displays the selected year', () => {
@@ -53,8 +54,31 @@ describe('BudgetHeader', () => {
   it('renders the primary view mode buttons', () => {
     renderHeader()
     expect(screen.getByText('Spreadsheet')).toBeInTheDocument()
-    expect(screen.getByText('Cashflow')).toBeInTheDocument()
+    expect(screen.getByText('Overview')).toBeInTheDocument()
     expect(screen.getByText('Groups')).toBeInTheDocument()
+    expect(screen.getByText('Transactions')).toBeInTheDocument()
+  })
+
+  it('moves focus to the active tab when focusTabsOnMount is set', () => {
+    renderHeader({ viewMode: 'groups', focusTabsOnMount: true })
+
+    expect(screen.getByRole('button', { name: 'Groups' })).toHaveFocus()
+  })
+
+  it('does not steal focus on mount by default', () => {
+    renderHeader()
+
+    expect(document.body).toHaveFocus()
+  })
+
+  it('opens the transactions page instead of changing view mode when clicking the Transactions tab', async () => {
+    const user = userEvent.setup()
+    const { props } = renderHeader()
+
+    await user.click(screen.getByRole('button', { name: 'Transactions' }))
+
+    expect(props.onOpenTransactions).toHaveBeenCalledOnce()
+    expect(props.onSetViewMode).not.toHaveBeenCalled()
   })
 
   it('calls onSetViewMode with the correct mode when clicking a view button', async () => {
@@ -64,7 +88,7 @@ describe('BudgetHeader', () => {
     await user.click(screen.getByText('Spreadsheet'))
     expect(props.onSetViewMode).toHaveBeenCalledWith('spreadsheet')
 
-    await user.click(screen.getByText('Cashflow'))
+    await user.click(screen.getByText('Overview'))
     expect(props.onSetViewMode).toHaveBeenCalledWith('cashflow')
 
     await user.click(screen.getByText('Groups'))
@@ -102,7 +126,7 @@ describe('BudgetHeader', () => {
     renderHeader({ viewMode: 'groups' })
 
     expect(screen.getByText('Groups')).toHaveClass('active')
-    expect(screen.getByText('Cashflow')).not.toHaveClass('active')
+    expect(screen.getByText('Overview')).not.toHaveClass('active')
     expect(screen.queryByText('M')).not.toBeInTheDocument()
     expect(screen.queryByText('Q')).not.toBeInTheDocument()
     expect(screen.queryByText('H')).not.toBeInTheDocument()
@@ -111,7 +135,7 @@ describe('BudgetHeader', () => {
   it('marks the active cashflow view and half-year period buttons', () => {
     renderHeader({ viewMode: 'cashflow', timePeriod: 'half' })
 
-    expect(screen.getByText('Cashflow')).toHaveClass('active')
+    expect(screen.getByText('Overview')).toHaveClass('active')
     expect(screen.getByText('Spreadsheet')).not.toHaveClass('active')
     expect(screen.getByText('H')).toHaveClass('active')
     expect(screen.getByText('M')).not.toHaveClass('active')

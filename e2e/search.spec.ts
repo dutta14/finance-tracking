@@ -61,11 +61,11 @@ test.describe('SearchModal — Cmd+K lifecycle and focus trap (#142)', () => {
 
     await search.input.fill('budget')
 
-    // Wait for at least one option to appear, then assert the Budget
+    // Wait for at least one option to appear, then assert the Cashflow
     // page row is among them. Label match scores higher than keywords,
-    // so the "Budget" page is guaranteed to be present.
+    // so the Cashflow page (via its "budget" keyword) is present.
     await search.results().first().waitFor()
-    await expect(search.result('Budget')).toBeVisible()
+    await expect(search.result('Cashflow')).toBeVisible()
   })
 
   /* ── Selection + navigation ─────────────────────────────────── */

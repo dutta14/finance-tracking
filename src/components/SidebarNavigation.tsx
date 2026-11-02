@@ -9,8 +9,7 @@ import {
   SearchIcon,
   GoalsIcon,
   NetWorthIcon,
-  BudgetIcon,
-  TransactionsIcon,
+  CashflowIcon,
   TaxesIcon,
   DriveIcon,
   GuideIcon,
@@ -71,8 +70,7 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
         <NavItem page="home" label="Home" icon={<HomeIcon />} {...itemProps} />
         <NavItem page="goal" label="Goals" icon={<GoalsIcon />} {...itemProps} />
         <NavItem page="net-worth" label="Net Worth" icon={<NetWorthIcon />} {...itemProps} />
-        <NavItem page="budget" label="Budget" icon={<BudgetIcon />} {...itemProps} />
-        <NavItem page="transactions" label="Transactions" icon={<TransactionsIcon />} {...itemProps} />
+        <NavItem page="budget" label="Cashflow" icon={<CashflowIcon />} {...itemProps} />
         <NavItem page="taxes" label="Taxes" icon={<TaxesIcon />} {...itemProps} />
       </ul>
       <ul className="sidebar-menu sidebar-footer-menu" role="group" aria-label="Utilities">

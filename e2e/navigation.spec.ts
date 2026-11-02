@@ -53,11 +53,29 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     await nav.expectActive('Net Worth')
   })
 
-  test('4. clicking "Budget" navigates to /budget and marks it active', async ({ page }) => {
+  test('4. clicking "Cashflow" navigates to /budget and marks it active', async ({ page }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
-    await nav.navTo('Budget')
-    await nav.expectActive('Budget')
+    await nav.navTo('Cashflow')
+    await nav.expectActive('Cashflow')
+  })
+
+  test('4b. Transactions is a tab inside Cashflow and keeps Cashflow active in the sidebar', async ({ page }) => {
+    const nav = new NavigationPage(page)
+    await nav.goto('/')
+    await nav.navTo('Cashflow')
+
+    await expect(page.getByRole('button', { name: 'Transactions', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Transactions', exact: true }).click()
+
+    await expect(page).toHaveURL(/#\/transactions/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Cashflow' })).toBeVisible()
+    await nav.expectActive('Cashflow')
+    await expect(page.getByRole('button', { name: 'Transactions', exact: true })).toBeFocused()
+
+    await page.getByRole('button', { name: 'Overview', exact: true }).click()
+    await expect(page).toHaveURL(/#\/budget\/cashflow/)
+    await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeFocused()
   })
 
   test('5. clicking "Taxes" navigates to /taxes and the toggle has an aria-label', async ({ page }) => {
@@ -192,9 +210,9 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
   test('24. the active page link has aria-current="page" and the visual active class', async ({ page }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
-    await nav.navTo('Budget')
+    await nav.navTo('Cashflow')
 
-    const budget = nav.link('Budget')
+    const budget = nav.link('Cashflow')
     await expect(budget).toHaveAttribute('aria-current', 'page')
     // Visual indicator uses the `active` className suffix on .sidebar-link.
     // This is a defense-in-depth check: aria-current is the contract,
@@ -206,7 +224,7 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
 
-    for (const name of ['Goals', 'Net Worth', 'Budget', 'Taxes', 'Home'] as const) {
+    for (const name of ['Goals', 'Net Worth', 'Cashflow', 'Taxes', 'Home'] as const) {
       await nav.navTo(name)
       await nav.expectActive(name)
     }
@@ -222,11 +240,11 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
 
     await nav.link('Goals').click()
     await nav.link('Net Worth').click()
-    await nav.link('Budget').click()
+    await nav.link('Cashflow').click()
 
     await expect(page).toHaveURL(routeRegex('/budget'))
-    await expect(page.getByRole('heading', { level: 1, name: 'Budget' })).toBeVisible()
-    await nav.expectActive('Budget')
+    await expect(page.getByRole('heading', { level: 1, name: 'Cashflow' })).toBeVisible()
+    await nav.expectActive('Cashflow')
   })
 
   test('27. browser refresh on a sub-route preserves the page and active link', async ({ page }) => {

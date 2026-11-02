@@ -275,7 +275,7 @@ test.describe.skip('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', (
         : route.includes('net-worth')
           ? /^Net Worth$/
           : route.includes('budget')
-            ? /^Budget$/
+            ? /^Cashflow$/
             : route.includes('taxes')
               ? /^Taxes$/
               : /^Drive$/
@@ -568,7 +568,7 @@ test.describe.skip('Cross-page: Import/Export + Cross-tab + Dark Mode (#154)', (
       { path: '#/', heading: /Good (morning|afternoon|evening)/ },
       { path: '#/goal', heading: /^Goals$/ },
       { path: '#/net-worth', heading: /^Net Worth$/ },
-      { path: '#/budget', heading: /^Budget$/ },
+      { path: '#/budget', heading: /^Cashflow$/ },
       { path: '#/taxes', heading: /^Taxes$/ },
       { path: '#/drive', heading: /^Drive$/ },
     ]

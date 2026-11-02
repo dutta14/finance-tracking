@@ -530,7 +530,7 @@ const SpendingPeek: FC<SpendingPeekProps> = ({ fileStore, hasBudgetData, budgetD
       <div className="home-card-header">
         <h3>Spending</h3>
         <button className="home-card-link" onClick={onNavigate}>
-          View Budget →
+          View Cashflow →
         </button>
       </div>
       <div className="spending-peek-controls">

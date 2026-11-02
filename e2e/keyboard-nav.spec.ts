@@ -48,7 +48,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    // After each Tab, the next sidebar Tab-order button (Goals → Net Worth → Budget → Transactions → Taxes → Drive →
+    // After each Tab, the next sidebar Tab-order button (Goals → Net Worth → Cashflow → Taxes → Drive →
     // Settings) should hold focus.
     // Drive and Settings live in the sidebar-footer group; their
     // accessible name comes from aria-label but the visible span text
@@ -236,7 +236,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    for (const expected of ['Goals', 'Net Worth', 'Budget'] as const) {
+    for (const expected of ['Goals', 'Net Worth', 'Cashflow'] as const) {
       await page.keyboard.press('Tab')
       const info = await kb.getActiveElementInfo()
       expect(info.inSidebar).toBe(true)
@@ -252,7 +252,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await page.keyboard.press('Enter')
 
     await expect(page).toHaveURL(/#\/budget(?:\/cashflow)?$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Budget' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Cashflow' })).toBeVisible()
     await expect(kb.budgetLink).toHaveAttribute('aria-current', 'page')
   })
 
@@ -262,15 +262,15 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    const transitions: Array<{ from: string; to: 'Net Worth' | 'Budget' | 'Goals'; heading: RegExp }> = [
+    const transitions: Array<{ from: string; to: 'Net Worth' | 'Cashflow' | 'Goals'; heading: RegExp }> = [
       { from: 'Home', to: 'Net Worth', heading: /^Net Worth$/ },
-      { from: 'Net Worth', to: 'Budget', heading: /^Budget$/ },
-      { from: 'Budget', to: 'Goals', heading: /^Goals$/ },
+      { from: 'Net Worth', to: 'Cashflow', heading: /^Cashflow$/ },
+      { from: 'Cashflow', to: 'Goals', heading: /^Goals$/ },
     ]
 
     const elapsed: number[] = []
     for (const t of transitions) {
-      const link = t.to === 'Net Worth' ? kb.netWorthLink : t.to === 'Budget' ? kb.budgetLink : kb.goalsLink
+      const link = t.to === 'Net Worth' ? kb.netWorthLink : t.to === 'Cashflow' ? kb.budgetLink : kb.goalsLink
       const heading = page.getByRole('heading', { level: 1, name: t.heading })
 
       const start = Date.now()

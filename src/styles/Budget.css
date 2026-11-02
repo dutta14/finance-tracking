@@ -24,6 +24,9 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 .budget-header-right {
   display: flex;

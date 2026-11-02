@@ -102,9 +102,9 @@ describe('App', () => {
     })
   })
 
-  it('navigates to Budget on sidebar click', async () => {
+  it('navigates to Cashflow on sidebar click', async () => {
     renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Budget' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cashflow' }))
     await waitFor(() => {
       expect(screen.getByTestId('page-budget')).toBeInTheDocument()
     })
@@ -115,14 +115,6 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Taxes' }))
     await waitFor(() => {
       expect(screen.getByTestId('page-taxes')).toBeInTheDocument()
-    })
-  })
-
-  it('navigates to Transactions on sidebar click', async () => {
-    renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Transactions' }))
-    await waitFor(() => {
-      expect(screen.getByTestId('page-transactions')).toBeInTheDocument()
     })
   })
 
@@ -247,25 +239,25 @@ describe('App', () => {
     }
   })
 
-  it('highlights Budget in the sidebar for nested budget routes', async () => {
+  it('highlights Cashflow in the sidebar for nested budget routes', async () => {
     render(
       <MemoryRouter initialEntries={['/budget/cashflow']}>
         <App />
       </MemoryRouter>,
     )
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Budget' })).toHaveAttribute('aria-current', 'page')
+      expect(screen.getByRole('button', { name: 'Cashflow' })).toHaveAttribute('aria-current', 'page')
     })
   })
 
-  it('highlights Transactions in the sidebar for transactions routes', async () => {
+  it('highlights Cashflow in the sidebar for the Transactions route, which is a Cashflow tab', async () => {
     render(
       <MemoryRouter initialEntries={['/transactions']}>
         <App />
       </MemoryRouter>,
     )
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page')
+      expect(screen.getByRole('button', { name: 'Cashflow' })).toHaveAttribute('aria-current', 'page')
     })
   })
 

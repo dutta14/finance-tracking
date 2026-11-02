@@ -19,7 +19,7 @@ describe('WelcomeGuide', () => {
     const titles = steps.map(h => h.textContent)
 
     expect(titles).toHaveLength(5)
-    expect(titles).toEqual(['Net Worth', 'Goals', 'Allocation', 'Budget', 'Drive'])
+    expect(titles).toEqual(['Net Worth', 'Goals', 'Allocation', 'Cashflow', 'Drive'])
     expect(titles).not.toContain('Tools')
   })
 

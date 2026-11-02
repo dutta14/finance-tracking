@@ -182,9 +182,9 @@ test.describe('Responsive / mobile viewport (#143)', () => {
     await expect(resp.sidebar).toBeHidden()
 
     // Default `viewMode` from useBudget is 'aggregated', which doesn't
-    // render the Sankey. Switch to Cashflow view via the in-page
+    // render the Sankey. Switch to the Overview view via the in-page
     // button (BudgetHeader.tsx:90) to mount CashflowSankey.
-    await page.getByRole('button', { name: 'Cashflow', exact: true }).click()
+    await page.getByRole('button', { name: 'Overview', exact: true }).click()
 
     const scroll = page.locator('.cashflow-sankey-scroll')
     await expect(scroll).toBeVisible()

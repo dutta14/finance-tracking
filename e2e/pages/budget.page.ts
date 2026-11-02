@@ -77,7 +77,7 @@ export class BudgetPage {
     this.yearLabel = page.locator('.budget-year-label')
 
     this.cashflowBtn = page.locator('.budget-header-left .tab-bar .tab-btn', {
-      hasText: /^Cashflow$/,
+      hasText: /^Overview$/,
     })
     this.spreadsheetBtn = page.locator('.budget-header-left .tab-bar .tab-btn', {
       hasText: /^Spreadsheet$/,
@@ -140,7 +140,7 @@ export class BudgetPage {
 
   async setViewMode(mode: 'cashflow' | 'spreadsheet' | 'groups') {
     const labels: Record<typeof mode, string> = {
-      cashflow: 'Cashflow',
+      cashflow: 'Overview',
       spreadsheet: 'Spreadsheet',
       groups: 'Groups',
     }

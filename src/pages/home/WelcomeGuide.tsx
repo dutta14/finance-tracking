@@ -33,10 +33,10 @@ const steps: Step[] = [
     icon: AllocationIcon,
   },
   {
-    title: 'Budget',
+    title: 'Cashflow',
     desc: 'Import monthly bank CSVs, categorize spending, and track income vs. expenses over time.',
     route: '/budget',
-    cta: 'Start budgeting',
+    cta: 'Open Cashflow',
     icon: BudgetIcon,
   },
   {

@@ -15,7 +15,7 @@ test.describe('Smoke tests', () => {
     await expect(nav.getByRole('button', { name: 'Home' })).toBeVisible()
     await expect(nav.getByRole('button', { name: 'Goals' })).toBeVisible()
     await expect(nav.getByRole('button', { name: 'Net Worth' })).toBeVisible()
-    await expect(nav.getByRole('button', { name: 'Budget' })).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Cashflow' })).toBeVisible()
   })
 
   test('navigates to home page by default', async ({ page }) => {

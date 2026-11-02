@@ -115,7 +115,7 @@ const STATIC_PAGES: SearchItem[] = [
   {
     id: 'page-budget',
     category: 'page',
-    label: 'Budget',
+    label: 'Cashflow',
     hint: 'Annual spending & cashflow',
     icon: 'dollar',
     keywords: ['budget', 'spending', 'expenses', 'income', 'cashflow'],

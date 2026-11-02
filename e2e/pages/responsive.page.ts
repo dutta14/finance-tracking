@@ -93,6 +93,6 @@ export const MAIN_PAGE_ROUTES: ReadonlyArray<{ path: string; heading: RegExp }> 
   { path: '/', heading: /^Good (morning|afternoon|evening)/ },
   { path: '/goal', heading: /^Goals$/ },
   { path: '/net-worth', heading: /^Net Worth$/ },
-  { path: '/budget', heading: /^Budget$/ },
+  { path: '/budget', heading: /^Cashflow$/ },
   { path: '/taxes', heading: /^Taxes$/ },
 ]

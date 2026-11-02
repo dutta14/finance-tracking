@@ -38,8 +38,8 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Home')).toBeInTheDocument()
     expect(screen.getByText('Goals')).toBeInTheDocument()
     expect(screen.getByText('Net Worth')).toBeInTheDocument()
-    expect(screen.getByText('Budget')).toBeInTheDocument()
-    expect(screen.getByText('Transactions')).toBeInTheDocument()
+    expect(screen.getByText('Cashflow')).toBeInTheDocument()
+    expect(screen.queryByText('Transactions')).not.toBeInTheDocument()
     expect(screen.getByText('Taxes')).toBeInTheDocument()
 
     expect(screen.getByRole('button', { name: 'Drive' })).toBeInTheDocument()
@@ -134,10 +134,10 @@ describe('SidebarNavigation', () => {
     expect(netWorthBtn).toHaveAttribute('aria-current', 'page')
   })
 
-  it('applies aria-current to Budget button when currentPage is "budget"', () => {
+  it('applies aria-current to Cashflow button when currentPage is "budget"', () => {
     renderSidebar({ currentPage: 'budget' })
 
-    const budgetBtn = screen.getByRole('button', { name: 'Budget' })
+    const budgetBtn = screen.getByRole('button', { name: 'Cashflow' })
     expect(budgetBtn).toHaveAttribute('aria-current', 'page')
   })
 
@@ -148,11 +148,10 @@ describe('SidebarNavigation', () => {
     expect(taxesBtn).toHaveAttribute('aria-current', 'page')
   })
 
-  it('applies aria-current to Transactions button when currentPage is "transactions"', () => {
-    renderSidebar({ currentPage: 'transactions' })
+  it('has no separate Transactions row, since it lives under Cashflow', () => {
+    renderSidebar({ currentPage: 'budget' })
 
-    const transactionsBtn = screen.getByRole('button', { name: 'Transactions' })
-    expect(transactionsBtn).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryByRole('button', { name: 'Transactions' })).not.toBeInTheDocument()
   })
 
   it('renders the footer group with correct ARIA attributes', () => {
@@ -192,7 +191,7 @@ describe('SidebarNavigation', () => {
 
       await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
 
-      for (const name of ['Home', 'Goals', 'Net Worth', 'Budget', 'Transactions', 'Taxes', 'Drive', 'Settings']) {
+      for (const name of ['Home', 'Goals', 'Net Worth', 'Cashflow', 'Taxes', 'Drive', 'Settings']) {
         const button = screen.getByRole('button', { name })
         expect(button).toHaveAttribute('title', name)
       }
@@ -237,7 +236,7 @@ describe('SidebarNavigation', () => {
       renderSidebar({ setCurrentPage })
 
       await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
-      await user.click(screen.getByRole('button', { name: 'Budget' }))
+      await user.click(screen.getByRole('button', { name: 'Cashflow' }))
 
       expect(setCurrentPage).toHaveBeenCalledWith('budget')
     })
@@ -310,8 +309,8 @@ describe('SidebarNavigation', () => {
       expect(screen.getByText('Home')).toBeInTheDocument()
       expect(screen.getByText('Goals')).toBeInTheDocument()
       expect(screen.getByText('Net Worth')).toBeInTheDocument()
-      expect(screen.getByText('Budget')).toBeInTheDocument()
-      expect(screen.getByText('Transactions')).toBeInTheDocument()
+      expect(screen.getByText('Cashflow')).toBeInTheDocument()
+      expect(screen.queryByText('Transactions')).not.toBeInTheDocument()
       expect(screen.getByText('Taxes')).toBeInTheDocument()
       expect(screen.getByText('User Guide')).toBeInTheDocument()
     })
