@@ -17,6 +17,7 @@ function LayoutConsumer() {
     <div>
       <span data-testid="sidebarOpen">{String(ctx.sidebarOpen)}</span>
       <span data-testid="isMobile">{String(ctx.isMobile)}</span>
+      <span data-testid="isNarrow">{String(ctx.isNarrow)}</span>
       <span data-testid="searchOpen">{String(ctx.searchOpen)}</span>
       <span data-testid="settingsSection">{ctx.settingsOpenSection ?? 'none'}</span>
       <button data-testid="toggle-sidebar" onClick={() => ctx.setSidebarOpen(v => !v)} />
@@ -95,6 +96,27 @@ describe('LayoutContext', () => {
     expect(screen.getByTestId('isMobile').textContent).toBe('true')
   })
 
+  it('flags narrow viewports at 479px and below only', () => {
+    render(
+      <LayoutProvider>
+        <LayoutConsumer />
+      </LayoutProvider>,
+    )
+
+    expect(screen.getByTestId('isNarrow').textContent).toBe('false')
+
+    for (const [width, expected] of [
+      [479, 'true'],
+      [480, 'false'],
+    ] as const) {
+      act(() => {
+        Object.defineProperty(window, 'innerWidth', { value: width, writable: true, configurable: true })
+        window.dispatchEvent(new Event('resize'))
+      })
+      expect(screen.getByTestId('isNarrow').textContent).toBe(expected)
+    }
+  })
+
   it('re-opens sidebar when resizing back to desktop', () => {
     render(
       <LayoutProvider>
@@ -121,6 +143,27 @@ describe('LayoutContext', () => {
     })
 
     expect(screen.getByTestId('sidebarOpen').textContent).toBe('true')
+  })
+
+  it('keeps a collapsed sidebar collapsed when resizing within desktop widths', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1200, writable: true, configurable: true })
+    render(
+      <LayoutProvider>
+        <LayoutConsumer />
+      </LayoutProvider>,
+    )
+
+    act(() => {
+      screen.getByTestId('toggle-sidebar').click()
+    })
+    expect(screen.getByTestId('sidebarOpen').textContent).toBe('false')
+
+    act(() => {
+      Object.defineProperty(window, 'innerWidth', { value: 1300, writable: true, configurable: true })
+      window.dispatchEvent(new Event('resize'))
+    })
+
+    expect(screen.getByTestId('sidebarOpen').textContent).toBe('false')
   })
 
   it('toggles search via Cmd+K keyboard shortcut', () => {

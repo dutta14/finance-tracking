@@ -2,6 +2,7 @@ import { FC, useState, useEffect } from 'react'
 import { Profile } from '../../hooks/useProfile'
 import SettingsModal from './SettingsModal'
 import type { SettingsSection } from './types'
+import { SettingsIcon } from '../../components/SidebarIcons'
 
 interface SettingsMenuProps {
   darkMode: boolean
@@ -12,6 +13,8 @@ interface SettingsMenuProps {
   onToggleAllowCsvImport?: () => void
   externalOpen?: boolean
   externalSection?: SettingsSection
+  /** Hide the text label (kept for screen readers) when the sidebar is an icon rail. */
+  iconOnly?: boolean
   onExternalClose?: () => void
 }
 
@@ -25,6 +28,7 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
   externalOpen,
   externalSection,
   onExternalClose,
+  iconOnly = false,
   ...rest
 }) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
@@ -48,12 +52,14 @@ const SettingsMenu: FC<SettingsMenuProps> = ({
         className="sidebar-link"
         aria-label="Settings"
         aria-haspopup="dialog"
+        title={iconOnly ? 'Settings' : undefined}
         onClick={() => {
           setInitialSection('profile')
           setSettingsModalOpen(true)
         }}
       >
-        Settings
+        <SettingsIcon />
+        <span className="sidebar-label">Settings</span>
       </button>
       {settingsModalOpen && (
         <SettingsModal

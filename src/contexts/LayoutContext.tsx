@@ -1,10 +1,23 @@
-import { createContext, useContext, useState, useEffect, useMemo, FC, ReactNode, Dispatch, SetStateAction } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  FC,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from 'react'
 import { isDemoActive, useFileStore } from './FileStoreContext'
 
 export interface LayoutContextValue {
   sidebarOpen: boolean
   setSidebarOpen: Dispatch<SetStateAction<boolean>>
   isMobile: boolean
+  /** Viewport at or below 479px, where a collapsed sidebar is fully hidden instead of an icon rail. */
+  isNarrow: boolean
   settingsOpenSection: string | undefined
   setSettingsOpenSection: Dispatch<SetStateAction<string | undefined>>
   searchOpen: boolean
@@ -28,15 +41,19 @@ export const LayoutProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { enterDemo, exitDemo } = useFileStore()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900)
+  const [isNarrow, setIsNarrow] = useState(() => window.innerWidth <= 479)
   const [settingsOpenSection, setSettingsOpenSection] = useState<string | undefined>()
   const [searchOpen, setSearchOpen] = useState(false)
+  const wasMobileRef = useRef(window.innerWidth <= 900)
   const handleOpenProfile = (): void => setSettingsOpenSection('profile')
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 900
       setIsMobile(mobile)
-      if (!mobile) setSidebarOpen(true)
+      setIsNarrow(window.innerWidth <= 479)
+      if (wasMobileRef.current && !mobile) setSidebarOpen(true)
+      wasMobileRef.current = mobile
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -62,13 +79,14 @@ export const LayoutProvider: FC<{ children: ReactNode }> = ({ children }) => {
       sidebarOpen,
       setSidebarOpen,
       isMobile,
+      isNarrow,
       settingsOpenSection,
       setSettingsOpenSection,
       searchOpen,
       setSearchOpen,
       handleOpenProfile,
     }),
-    [sidebarOpen, isMobile, settingsOpenSection, searchOpen],
+    [sidebarOpen, isMobile, isNarrow, settingsOpenSection, searchOpen],
   )
 
   return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>

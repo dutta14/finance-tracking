@@ -1,4 +1,4 @@
-import { FC, lazy, Suspense, useCallback } from 'react'
+import { FC, lazy, Suspense, useCallback, useEffect, useRef } from 'react'
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { PageType } from './types'
 import SidebarNavigation from './components/SidebarNavigation'
@@ -57,7 +57,8 @@ const AppShell: FC = () => {
   const { setDarkMode } = useSettings()
   const { pendingDelete, handleUndoDelete, dismissPendingDelete } = useGoals()
   const { enterDemo, exitDemo } = useFileStore()
-  const { sidebarOpen, setSidebarOpen, isMobile, searchOpen, setSearchOpen, setSettingsOpenSection } = useLayout()
+  const { sidebarOpen, setSidebarOpen, isMobile, isNarrow, searchOpen, setSearchOpen, setSettingsOpenSection } =
+    useLayout()
   const searchIndexData = useSearchIndexData(searchOpen)
   const currentPage: PageType =
     location.pathname === '/goal' || location.pathname.startsWith('/goal/')
@@ -122,26 +123,42 @@ const AppShell: FC = () => {
     },
     [navigate, setDarkMode, setSettingsOpenSection, enterDemo, exitDemo],
   )
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const prevSidebarOpenRef = useRef(sidebarOpen)
+  const focusMainOnCloseRef = useRef(false)
+  const handleNavigate = (page: PageType): void => {
+    setCurrentPage(page)
+    if (isMobile) {
+      focusMainOnCloseRef.current = isNarrow
+      setSidebarOpen(false)
+    }
+  }
+
+  // At 479px and below the focused control unmounts when the sidebar toggles, so hand focus to its successor.
+  useEffect(() => {
+    if (prevSidebarOpenRef.current === sidebarOpen) return
+    prevSidebarOpenRef.current = sidebarOpen
+    const focusMain = focusMainOnCloseRef.current
+    focusMainOnCloseRef.current = false
+    if (!isNarrow) return
+    if (focusMain && !sidebarOpen) {
+      document.getElementById('main-content')?.focus()
+    } else {
+      layoutRef.current?.querySelector<HTMLButtonElement>('.sidebar-toggle')?.focus()
+    }
+  }, [sidebarOpen, isNarrow])
   return (
-    <div className="app-layout">
+    <div className="app-layout" ref={layoutRef}>
       <SkipLink />
       <ModernDesignToggle />
-      {sidebarOpen && (
-        <SidebarNavigation
-          currentPage={currentPage}
-          setCurrentPage={page => {
-            setCurrentPage(page)
-            if (isMobile) setSidebarOpen(false)
-          }}
-        />
-      )}
+      {(sidebarOpen || !isNarrow) && <SidebarNavigation currentPage={currentPage} setCurrentPage={handleNavigate} />}
       {isMobile && sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="sidebar-overlay" />}
       <main
         id="main-content"
         tabIndex={-1}
         className={`main-content${!sidebarOpen ? ' sidebar-closed' : ''}${!isMobile && sidebarOpen ? ' sidebar-open' : ''}`}
       >
-        {!sidebarOpen && (
+        {!sidebarOpen && isNarrow && (
           <div className="sidebar-toggle-wrapper">
             <SidebarToggle expanded={false} onToggle={() => setSidebarOpen(true)} />
           </div>

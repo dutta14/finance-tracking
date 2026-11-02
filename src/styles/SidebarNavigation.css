@@ -3,35 +3,71 @@ body.dark .sidebar-link.active {
   background: rgba(255, 255, 255, 0.06);
 }
 
-body.dark .sidebar-link.active::before {
-  background: var(--accent);
-}
-
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   width: 220px;
   background: var(--color-surface-hover);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 1.25rem 0.75rem 0.75rem 0.75rem;
+  padding: 1.25rem 0.75rem 0.75rem 14.5px;
   transition: width 0.2s;
   z-index: 200;
 }
 
+/* Only the width changes between states, so icons keep their position while labels are clipped. */
 .sidebar.collapsed {
   width: 56px;
+}
+
+.sidebar-header-actions {
+  display: flex;
   align-items: center;
-  padding-left: 0.75rem;
+  gap: 0.25rem;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.sidebar.collapsed .sidebar-header-actions {
+  transform: translateX(-11.6px);
+}
+
+.sidebar-search-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.sidebar-search-btn:hover {
+  color: var(--color-text);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-search-btn:focus-visible {
+  outline: 2px solid var(--accent);
 }
 
 .sidebar-top-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.35rem;
   width: 100%;
   margin-bottom: 1.25rem;
@@ -39,6 +75,8 @@ body.dark .sidebar-link.active::before {
 }
 
 .sidebar-logo {
+  min-width: 0;
+  overflow: hidden;
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   color: var(--color-text);
@@ -69,7 +107,7 @@ body.dark .sidebar-link.active::before {
   color: var(--color-text-muted);
   font-size: var(--fs-md);
   cursor: pointer;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem 0.5rem 4px;
   border-radius: var(--radius);
   width: 100%;
   text-align: left;
@@ -80,23 +118,18 @@ body.dark .sidebar-link.active::before {
     color 0.15s;
   font-weight: var(--fw-medium);
   position: relative;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-icon {
+  flex-shrink: 0;
 }
 
 .sidebar-link.active {
   color: var(--color-text);
   background: rgba(0, 0, 0, 0.05);
-}
-
-.sidebar-link.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 16px;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: var(--accent);
 }
 
 .sidebar-link:hover {
@@ -143,14 +176,25 @@ body.dark .sidebar-link.active::before {
   fill: var(--sidebar-toggle-color);
 }
 
+/* Panel icon at 480px and above, hamburger at 479px and below */
+.sidebar-toggle-icon--panel {
+  display: block;
+}
+.sidebar-toggle-icon--hamburger {
+  display: none;
+}
+@media (max-width: 479px) {
+  .sidebar-toggle-icon--panel {
+    display: none;
+  }
+  .sidebar-toggle-icon--hamburger {
+    display: block;
+  }
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 260px;
     z-index: 200;
-  }
-  .sidebar.collapsed {
-    width: 0;
-    padding: 0;
-    overflow: hidden;
   }
 }

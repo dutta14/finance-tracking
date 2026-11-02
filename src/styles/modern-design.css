@@ -255,7 +255,7 @@ body.modern-design .sidebar-menu {
 
 body.modern-design .sidebar-link {
   border-radius: var(--radius);
-  padding: 8px 12px;
+  padding: 8px 12px 8px 4px;
 }
 
 body.modern-design .main-content {

@@ -139,7 +139,6 @@ export class KeyboardNavPage {
  */
 export const SIDEBAR_NAV_ORDER = [
   'Home',
-  'Search',
   'Goals',
   'Net Worth',
   'Budget',

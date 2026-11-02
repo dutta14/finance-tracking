@@ -48,8 +48,7 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    // After each Tab, the next sidebar Tab-order button (Search →
-    // Goals → Net Worth → Budget → Transactions → Taxes → Drive →
+    // After each Tab, the next sidebar Tab-order button (Goals → Net Worth → Budget → Transactions → Taxes → Drive →
     // Settings) should hold focus.
     // Drive and Settings live in the sidebar-footer group; their
     // accessible name comes from aria-label but the visible span text
@@ -69,10 +68,8 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    // Search now sits between Home and Goals in the sidebar tab order.
+    // Search lives in the sidebar header, so Goals follows Home in the tab order.
     await kb.homeLink.focus()
-    await page.keyboard.press('Tab')
-    await expect(kb.searchLink).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(kb.goalsLink).toBeFocused()
 
@@ -234,12 +231,12 @@ test.describe('Keyboard navigation, focus, ErrorBoundary, perf (#144)', () => {
     const kb = new KeyboardNavPage(page)
     await kb.goto('/')
 
-    // Walk Home → Goals → Net Worth → Budget via Tab, verifying focus
+    // Walk Home → Goals → Net Worth → Budget via Tab (Search lives in the sidebar header), verifying focus
     // and a focus indicator at each step.
     await kb.homeLink.focus()
     await expect(kb.homeLink).toBeFocused()
 
-    for (const expected of ['Search', 'Goals', 'Net Worth', 'Budget'] as const) {
+    for (const expected of ['Goals', 'Net Worth', 'Budget'] as const) {
       await page.keyboard.press('Tab')
       const info = await kb.getActiveElementInfo()
       expect(info.inSidebar).toBe(true)

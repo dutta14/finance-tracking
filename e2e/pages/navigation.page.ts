@@ -21,9 +21,9 @@ export class NavigationPage {
     this.page = page
     this.sidebar = page.getByRole('navigation', { name: 'Main navigation' })
     this.utilities = page.getByRole('group', { name: 'Utilities' })
-    // Two toggle buttons exist in the DOM (one inside the sidebar, one in
-    // the main-content rail when collapsed); their accessible names differ
-    // by state so each locator resolves to exactly one element at a time.
+    // The toggle sits inside the sidebar (or floats above main content when the
+    // sidebar is unmounted at 479px and below); its accessible name flips with
+    // state so each locator resolves to exactly one element at a time.
     this.toggleCollapse = page.getByRole('button', { name: 'Collapse sidebar' })
     this.toggleExpand = page.getByRole('button', { name: 'Expand sidebar' })
   }
@@ -65,10 +65,12 @@ export class NavigationPage {
     }
   }
 
-  /** Click the sidebar collapse button and wait for the sidebar to disappear. */
+  /**
+   * Click the sidebar collapse button and wait for the toggle to read "Expand sidebar".
+   * At 480px and above the nav stays mounted as an icon rail; at 479px and below it unmounts.
+   */
   async collapseSidebar(): Promise<void> {
     await this.toggleCollapse.click()
-    await expect(this.sidebar).toBeHidden()
     await expect(this.toggleExpand).toBeVisible()
   }
 

@@ -82,23 +82,37 @@ test.describe('Sidebar navigation, routing, and active state (#141)', () => {
 
   /* ── Sidebar collapse / expand ─────────────────────────────── */
 
-  test('7. collapsing the sidebar removes the nav links and shows only the expand toggle', async ({ page }) => {
-    // Adaptation: AppShell unmounts <SidebarNavigation /> when sidebarOpen
-    // is false (App.tsx:131), so the sidebar nav region is *removed* from
-    // the DOM rather than just receiving a `collapsed` class. The user-
-    // visible contract — nav links are gone, the expand toggle is the
-    // only thing left — still holds, which is what we assert.
+  test('7. collapsing the sidebar at desktop width leaves a 56px icon rail with accessible nav buttons', async ({
+    page,
+  }) => {
     const nav = new NavigationPage(page)
     await nav.goto('/')
 
     await nav.collapseSidebar()
 
-    await expect(nav.sidebar).toBeHidden()
+    await expect(nav.sidebar).toBeVisible()
+    await expect(nav.sidebar).toHaveClass(/\bcollapsed\b/)
+    await expect.poll(async () => (await nav.sidebar.boundingBox())?.width).toBeCloseTo(56, 0)
     for (const name of PRIMARY_NAV_LINKS) {
-      await expect(nav.link(name)).toBeHidden()
+      await expect(nav.link(name)).toBeVisible()
+      await expect(nav.link(name)).toHaveAttribute('title', name)
     }
-    await expect(nav.link('Drive')).toBeHidden()
+    await expect(nav.link('Drive')).toBeVisible()
     await expect(nav.toggleExpand).toBeVisible()
+    await expect(nav.toggleExpand).toHaveAttribute('aria-label', 'Expand sidebar')
+  })
+
+  test('7b. collapsing the sidebar at 375px removes the nav and shows the floating expand button', async ({ page }) => {
+    const nav = new NavigationPage(page)
+    await page.setViewportSize({ width: 375, height: 667 })
+    await nav.goto('/')
+    await expect(nav.sidebar).toBeVisible()
+
+    await nav.collapseSidebar()
+
+    await expect(nav.sidebar).toHaveCount(0)
+    await expect(nav.toggleExpand).toBeVisible()
+    await expect(nav.toggleExpand).toBeFocused()
   })
 
   test('8. expanding the sidebar after collapse restores all nav links', async ({ page }) => {

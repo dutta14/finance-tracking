@@ -286,6 +286,94 @@ describe('App', () => {
     expect(main).toHaveClass('main-content')
   })
 
+  describe('collapsed sidebar by viewport width', () => {
+    const originalWidth = window.innerWidth
+    const setWidth = (value: number) =>
+      Object.defineProperty(window, 'innerWidth', { value, writable: true, configurable: true })
+    afterEach(() => setWidth(originalWidth))
+
+    it('keeps an icon rail visible when collapsed at 480px and above', async () => {
+      setWidth(480)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
+      expect(nav).toHaveClass('collapsed')
+      expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
+      expect(screen.getAllByRole('button', { name: 'Expand sidebar' })).toHaveLength(1)
+    })
+
+    it('hides the sidebar completely when collapsed at 479px and below', async () => {
+      setWidth(479)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()
+      })
+      expect(screen.getAllByRole('button', { name: 'Expand sidebar' })).toHaveLength(1)
+    })
+
+    it('brings the full sidebar back from the hamburger at 479px and below', async () => {
+      setWidth(479)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Expand sidebar' }))
+
+      const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
+      expect(nav).not.toHaveClass('collapsed')
+    })
+
+    it('moves focus to the floating expand button after collapsing at 479px and below', async () => {
+      setWidth(479)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Expand sidebar' })).toHaveFocus()
+      })
+    })
+
+    it('moves focus to the collapse button after expanding at 479px and below', async () => {
+      setWidth(479)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Expand sidebar' }))
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toHaveFocus()
+      })
+    })
+
+    it('moves focus to the main content after choosing a nav item at 479px and below', async () => {
+      setWidth(479)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Goals' }))
+
+      await waitFor(() => {
+        expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()
+      })
+      expect(document.getElementById('main-content')).toHaveFocus()
+    })
+
+    it('does not move focus on initial render at 479px and below', async () => {
+      setWidth(479)
+      renderApp()
+      await screen.findByRole('navigation', { name: 'Main navigation' })
+
+      expect(document.body).toHaveFocus()
+    })
+
+    it('keeps focus on the toggle when collapsing at 480px and above', async () => {
+      setWidth(480)
+      renderApp()
+      await userEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      expect(await screen.findByRole('button', { name: 'Expand sidebar' })).toHaveFocus()
+      expect(document.getElementById('main-content')).not.toHaveFocus()
+    })
+  })
+
   it('expands sidebar when expand button is clicked', async () => {
     renderApp()
     const collapseBtn = screen.getByRole('button', { name: 'Collapse sidebar' })

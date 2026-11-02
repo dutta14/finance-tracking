@@ -175,13 +175,71 @@ describe('SidebarNavigation', () => {
       expect(button).toBeInTheDocument()
     })
 
-    it('is not rendered when the sidebar is collapsed', async () => {
+    it('stays available as an icon-only button when the sidebar is collapsed', async () => {
       const user = userEvent.setup()
       renderSidebar()
 
       await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
 
-      expect(screen.queryByRole('button', { name: /user guide/i })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /user guide/i })).toBeInTheDocument()
+    })
+  })
+
+  describe('Collapsed icon rail', () => {
+    it('keeps every nav button reachable by name and adds a tooltip', async () => {
+      const user = userEvent.setup()
+      renderSidebar()
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      for (const name of ['Home', 'Goals', 'Net Worth', 'Budget', 'Transactions', 'Taxes', 'Drive', 'Settings']) {
+        const button = screen.getByRole('button', { name })
+        expect(button).toHaveAttribute('title', name)
+      }
+    })
+
+    it('shows Search in the header beside the toggle and drops it from the rail', async () => {
+      const user = userEvent.setup()
+      renderSidebar()
+
+      expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      expect(screen.queryByRole('button', { name: 'Search' })).not.toBeInTheDocument()
+    })
+
+    it('marks the nav collapsed and offers an Expand sidebar button', async () => {
+      const user = userEvent.setup()
+      renderSidebar()
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+
+      expect(screen.getByRole('navigation', { name: 'Main navigation' })).toHaveClass('collapsed')
+      expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
+    })
+
+    it('restores labels and the wordmark when expanded again', async () => {
+      const user = userEvent.setup()
+      renderSidebar()
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+      await user.click(screen.getByRole('button', { name: 'Expand sidebar' }))
+
+      expect(screen.getByText('Worth')).toBeInTheDocument()
+      expect(screen.getByRole('navigation', { name: 'Main navigation' })).not.toHaveClass('collapsed')
+      expect(screen.getByRole('button', { name: 'Goals' })).not.toHaveAttribute('title')
+    })
+
+    it('still navigates when a rail icon is clicked', async () => {
+      const setCurrentPage = vi.fn()
+      const user = userEvent.setup()
+      renderSidebar({ setCurrentPage })
+
+      await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+      await user.click(screen.getByRole('button', { name: 'Budget' }))
+
+      expect(setCurrentPage).toHaveBeenCalledWith('budget')
     })
   })
 
