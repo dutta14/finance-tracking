@@ -206,7 +206,7 @@ describe('SpendingPeek', () => {
     renderPeek()
 
     await waitFor(() => expect(screen.getByRole('heading', { level: 3, name: /spending/i })).toBeInTheDocument())
-    expect(screen.getByRole('button', { name: 'View Budget →' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'View Cashflow →' })).toBeInTheDocument()
   })
 
   it('opens the dropdown menu on click and shows four options', async () => {
@@ -249,13 +249,13 @@ describe('SpendingPeek', () => {
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument())
   })
 
-  it('calls onNavigate when clicking the View Budget link', async () => {
+  it('calls onNavigate when clicking the View Cashflow link', async () => {
     const user = userEvent.setup()
     renderPeek()
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'View Budget →' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'View Cashflow →' })).toBeInTheDocument())
 
-    await user.click(screen.getByRole('button', { name: 'View Budget →' }))
+    await user.click(screen.getByRole('button', { name: 'View Cashflow →' }))
     expect(mockNavigate).toHaveBeenCalledTimes(1)
   })
 

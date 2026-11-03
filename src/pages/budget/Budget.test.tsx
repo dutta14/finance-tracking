@@ -331,7 +331,7 @@ describe('Budget with data', () => {
 
     await openMoreActions(user)
     await user.click(screen.getByRole('menuitem', { name: 'CSV Format Help' }))
-    await user.click(screen.getByText('Budget'))
+    await user.click(screen.getByText('Cashflow'))
 
     expect(document.querySelector('.budget-format-help-panel')).not.toBeInTheDocument()
   })
@@ -438,11 +438,11 @@ describe('Budget view mode toggle', () => {
     expect(await screen.findByTestId('budget-aggregated')).toBeInTheDocument()
   })
 
-  it('navigates to the cashflow route when clicking Cashflow button', async () => {
+  it('navigates to the cashflow route when clicking Overview button', async () => {
     const user = userEvent.setup()
     renderBudget('/budget/spreadsheet')
 
-    await user.click(screen.getByRole('button', { name: 'Cashflow' }))
+    await user.click(screen.getByRole('button', { name: 'Overview' }))
 
     expect(await screen.findByTestId('cashflow-bar-chart')).toBeInTheDocument()
   })

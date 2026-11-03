@@ -4,17 +4,7 @@ import { useGoals } from '../contexts/GoalsContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useLayout } from '../contexts/LayoutContext'
 import SidebarToggle from './SidebarToggle'
-import {
-  HomeIcon,
-  SearchIcon,
-  GoalsIcon,
-  NetWorthIcon,
-  BudgetIcon,
-  TransactionsIcon,
-  TaxesIcon,
-  DriveIcon,
-  GuideIcon,
-} from './SidebarIcons'
+import { HomeIcon, SearchIcon, GoalsIcon, NetWorthIcon, CashflowIcon, DriveIcon, GuideIcon } from './SidebarIcons'
 import { SettingsMenu } from '../pages/settings'
 import type { SettingsSection } from '../pages/settings/types'
 import '../styles/SidebarNavigation.css'
@@ -69,11 +59,9 @@ const SidebarNavigation: FC<NavigationProps> = ({ currentPage, setCurrentPage })
       </div>
       <ul className="sidebar-menu">
         <NavItem page="home" label="Home" icon={<HomeIcon />} {...itemProps} />
-        <NavItem page="goal" label="Goals" icon={<GoalsIcon />} {...itemProps} />
-        <NavItem page="net-worth" label="Net Worth" icon={<NetWorthIcon />} {...itemProps} />
-        <NavItem page="budget" label="Budget" icon={<BudgetIcon />} {...itemProps} />
-        <NavItem page="transactions" label="Transactions" icon={<TransactionsIcon />} {...itemProps} />
-        <NavItem page="taxes" label="Taxes" icon={<TaxesIcon />} {...itemProps} />
+        <NavItem page="goal" label="Planning" icon={<GoalsIcon />} {...itemProps} />
+        <NavItem page="net-worth" label="Wealth" icon={<NetWorthIcon />} {...itemProps} />
+        <NavItem page="budget" label="Cashflow" icon={<CashflowIcon />} {...itemProps} />
       </ul>
       <ul className="sidebar-menu sidebar-footer-menu" role="group" aria-label="Utilities">
         <NavItem page="drive" label="Drive" icon={<DriveIcon />} {...itemProps} />

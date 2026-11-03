@@ -47,27 +47,11 @@ export const NetWorthIcon: FC = () => (
   </SidebarIcon>
 )
 
-export const BudgetIcon: FC = () => (
+export const CashflowIcon: FC = () => (
   <SidebarIcon>
-    <path d="M21 12a9 9 0 1 1-9-9" />
-    <path d="M12 3a9 9 0 0 1 9 9h-9z" />
-  </SidebarIcon>
-)
-
-export const TransactionsIcon: FC = () => (
-  <SidebarIcon>
-    <path d="M4 8h15" />
-    <path d="m15 4 4 4-4 4" />
-    <path d="M20 16H5" />
-    <path d="m9 12-4 4 4 4" />
-  </SidebarIcon>
-)
-
-export const TaxesIcon: FC = () => (
-  <SidebarIcon>
-    <path d="M19 5 5 19" />
-    <circle cx="7" cy="7" r="2.2" />
-    <circle cx="17" cy="17" r="2.2" />
+    <rect x="2" y="6" width="20" height="12" rx="2" />
+    <circle cx="12" cy="12" r="2.5" />
+    <path d="M6 12h.01M18 12h.01" />
   </SidebarIcon>
 )
 

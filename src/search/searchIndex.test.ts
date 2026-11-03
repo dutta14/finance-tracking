@@ -26,15 +26,15 @@ describe('buildIndex', () => {
     // Verify known static pages — exhaustive list (no Tools page)
     expect(pages.map(p => p.label).sort()).toEqual([
       'Allocation',
-      'Budget',
+      'Cashflow',
       'Drive',
-      'Goals',
       'Growth',
       'Home',
-      'Net Worth',
+      'Planning',
       'Taxes',
       'Transactions',
       'User Guide',
+      'Wealth',
     ])
 
     // No dynamic items without supplied data
@@ -264,17 +264,17 @@ describe('search', () => {
   })
 
   it('starts-with ranks higher than contains', () => {
-    // "Budget" starts with "bud"; other items may contain "bud" in hints/keywords
+    // the Cashflow page has a "budget" keyword; other items may contain "bud" in hints
     const groups = search(index, 'bud')
     const pageGroup = groups.find(g => g.category === 'page')!
-    expect(pageGroup.items[0].label).toBe('Budget')
+    expect(pageGroup.items[0].label).toBe('Cashflow')
   })
 
-  it('keyword matches work (e.g., searching "fire" matches Goals page)', () => {
+  it('keyword matches work (e.g., searching "fire" matches Planning page)', () => {
     const groups = search(index, 'fire')
     const allItems = groups.flatMap(g => g.items)
 
-    // Goals page has 'fire' in keywords
+    // Planning page has 'fire' in keywords
     const goalsPage = allItems.find(i => i.id === 'page-goals')
     expect(goalsPage).toBeDefined()
   })

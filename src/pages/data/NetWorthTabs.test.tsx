@@ -47,15 +47,15 @@ beforeEach(() => {
 /* ─── Tab bar rendering ─── */
 
 describe('Net Worth tab bar', () => {
-  it('renders a nav element with aria-label "Net Worth sections"', () => {
+  it('renders a nav element with aria-label "Wealth sections"', () => {
     renderData()
-    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
+    const nav = screen.getByRole('navigation', { name: 'Wealth sections' })
     expect(nav).toBeInTheDocument()
   })
 
   it('renders a "Dashboard" tab inside the nav', () => {
     renderData()
-    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
+    const nav = screen.getByRole('navigation', { name: 'Wealth sections' })
     const accountsLink = nav.querySelector('a')
     expect(accountsLink).toBeInTheDocument()
     expect(accountsLink).toHaveTextContent('Dashboard')
@@ -69,7 +69,7 @@ describe('Net Worth tab bar', () => {
 
   it('renders an "Allocation" tab inside the nav', () => {
     renderData()
-    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
+    const nav = screen.getByRole('navigation', { name: 'Wealth sections' })
     const links = nav.querySelectorAll('a')
     const allocationLink = Array.from(links).find(a => a.textContent === 'Allocation')
     expect(allocationLink).toBeInTheDocument()
@@ -83,7 +83,7 @@ describe('Net Worth tab bar', () => {
 
   it('renders a "Growth" tab inside the nav', () => {
     renderData()
-    const nav = screen.getByRole('navigation', { name: 'Net Worth sections' })
+    const nav = screen.getByRole('navigation', { name: 'Wealth sections' })
     const links = nav.querySelectorAll('a')
     const growthLink = Array.from(links).find(a => a.textContent === 'Growth')
     expect(growthLink).toBeInTheDocument()

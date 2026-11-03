@@ -193,8 +193,8 @@ describe('Goal page routing', () => {
   it('redirects /goal to plans and renders the goals section', () => {
     renderGoal('/goal')
 
-    expect(screen.getByRole('heading', { name: 'Goals', level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'FIRE Plans' }).className).toContain('active')
+    expect(screen.getByRole('heading', { name: 'Planning', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Goals' }).className).toContain('active')
     expect(screen.getByTestId('goals-section')).toBeInTheDocument()
   })
 
@@ -228,7 +228,7 @@ describe('Goal page routing', () => {
     renderGoal('/goal/plans/1')
 
     expect(screen.getByRole('heading', { name: 'Alpha', level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Goals sections' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Planning sections' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open goal drawer' })).toBeInTheDocument()
     expect(screen.getByTestId('goal-detail')).toBeInTheDocument()
   })
@@ -385,7 +385,7 @@ describe('Goal drawer behavior', () => {
     expect(screen.getByRole('button', { name: /all plans/i })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /all plans/i }))
-    expect(screen.getByRole('heading', { name: 'Goals', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Planning', level: 1 })).toBeInTheDocument()
     expect(screen.queryByTestId('goal-detail')).not.toBeInTheDocument()
   })
 

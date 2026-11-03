@@ -350,19 +350,19 @@ describe('Transactions branch coverage', () => {
     renderTransactions()
 
     await user.click((await screen.findByText('All Categories')).closest('button') as HTMLButtonElement)
-    fireEvent.mouseDown(screen.getByRole('heading', { name: 'Transactions' }))
+    fireEvent.mouseDown(screen.getByRole('heading', { name: 'Cashflow' }))
     await waitFor(() => {
       expect(screen.queryByRole('group', { name: 'Category filters' })).not.toBeInTheDocument()
     })
 
     await user.click(screen.getByRole('button', { name: /^Date/i }))
-    fireEvent.mouseDown(screen.getByRole('heading', { name: 'Transactions' }))
+    fireEvent.mouseDown(screen.getByRole('heading', { name: 'Cashflow' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Date range picker' })).not.toBeInTheDocument()
     })
 
     await user.click(screen.getByRole('button', { name: /Sort/i }))
-    fireEvent.mouseDown(screen.getByRole('heading', { name: 'Transactions' }))
+    fireEvent.mouseDown(screen.getByRole('heading', { name: 'Cashflow' }))
     await waitFor(() => {
       expect(screen.queryByRole('listbox', { name: 'Sort options' })).not.toBeInTheDocument()
     })

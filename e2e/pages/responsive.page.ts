@@ -91,8 +91,8 @@ export class ResponsivePage {
  */
 export const MAIN_PAGE_ROUTES: ReadonlyArray<{ path: string; heading: RegExp }> = [
   { path: '/', heading: /^Good (morning|afternoon|evening)/ },
-  { path: '/goal', heading: /^Goals$/ },
-  { path: '/net-worth', heading: /^Net Worth$/ },
-  { path: '/budget', heading: /^Budget$/ },
-  { path: '/taxes', heading: /^Taxes$/ },
+  { path: '/goal', heading: /^Planning$/ },
+  { path: '/net-worth', heading: /^Wealth$/ },
+  { path: '/budget', heading: /^Cashflow$/ },
+  { path: '/taxes', heading: /^Planning$/ },
 ]

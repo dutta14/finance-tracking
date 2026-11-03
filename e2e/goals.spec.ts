@@ -486,14 +486,14 @@ test.describe('Goals Page E2E', () => {
 
       // Step 1: Timeline — fill end year and retirement age, Enter from input advances
       await goals.wizardEndYearInput.fill('2060-01-01')
-      await goals.wizardRetirementAgeInput.focus()
-      await page.keyboard.type('65')
-      await page.keyboard.press('Enter')
+      // fill() + locator.press() target the field directly; the wizard auto-focuses the first input on each step,
+      // which can steal focus from focus() + keyboard.type() and drop the typed value.
+      await goals.wizardRetirementAgeInput.fill('65')
+      await goals.wizardRetirementAgeInput.press('Enter')
 
       // Step 2: Expenses — fill and Enter to advance
-      await goals.wizardExpenseInput.focus()
-      await page.keyboard.type('60000')
-      await page.keyboard.press('Enter')
+      await goals.wizardExpenseInput.fill('60000')
+      await goals.wizardExpenseInput.press('Enter')
 
       // Step 3: Parameters — use recommended if available, else advance via Next
       const useRec = goals.useRecommendedBtn

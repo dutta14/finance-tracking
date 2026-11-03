@@ -30,7 +30,7 @@ const QuickStart: FC<QuickStartProps> = ({ screenshots }) => {
     {
       id: 'quick-start-first-account',
       title: 'Add your first account',
-      body: 'Go to Net Worth → Accounts and add an account you actually look at every month, a checking account or retirement account works well. Give it a name, pick a type, and save. This is the foundation the dashboard, allocation planner, and goals all build on.',
+      body: 'Go to Wealth → Accounts and add an account you actually look at every month, a checking account or retirement account works well. Give it a name, pick a type, and save. This is the foundation the dashboard, allocation planner, and goals all build on.',
       image: screenshots.step3,
       alt: 'Add account form',
     },

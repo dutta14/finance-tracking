@@ -154,9 +154,9 @@ describe('SavingsGrowthTracker', () => {
     expect(within(card).getByText('Expenses')).toBeInTheDocument()
     expect(within(card).getByText('Savings')).toBeInTheDocument()
     expect(within(card).getByText('Growth')).toBeInTheDocument()
-    expect(within(card).getByText('$5,000')).toBeInTheDocument()
-    expect(within(card).getByText('$2,000')).toBeInTheDocument()
-    expect(within(card).getByText('$3,000')).toBeInTheDocument()
+    expect(await within(card).findByText('$5,000')).toBeInTheDocument()
+    expect(await within(card).findByText('$2,000')).toBeInTheDocument()
+    expect(await within(card).findByText('$3,000')).toBeInTheDocument()
   })
 
   it('renders income metrics on the income route', async () => {

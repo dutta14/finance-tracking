@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Goal from './Goal'
+import PlanningTabs from '../../components/PlanningTabs'
 
 vi.mock('../../contexts/GoalsContext', () => ({
   useGoals: () => ({
@@ -39,21 +40,26 @@ function renderGoal(initialRoute = '/goal') {
 /* ─── Tab bar rendering ─── */
 
 describe('Goal tab bar', () => {
-  it('renders a nav element with aria-label "Goals sections"', () => {
+  it('renders a nav element with aria-label "Planning sections"', () => {
     renderGoal()
-    const nav = screen.getByRole('navigation', { name: 'Goals sections' })
+    const nav = screen.getByRole('navigation', { name: 'Planning sections' })
     expect(nav).toBeInTheDocument()
   })
 
-  it('renders a "FIRE Plans" tab inside the nav', () => {
+  it('renders a "Goals" tab inside the nav', () => {
     renderGoal()
-    expect(screen.getByRole('link', { name: 'FIRE Plans' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Goals' })).toBeInTheDocument()
   })
 
-  it('the "FIRE Plans" tab links to /goal/plans', () => {
+  it('the "Goals" tab links to /goal/plans', () => {
     renderGoal()
-    const link = screen.getByRole('link', { name: 'FIRE Plans' })
+    const link = screen.getByRole('link', { name: 'Goals' })
     expect(link).toHaveAttribute('href', '/goal/plans')
+  })
+
+  it('renders a "Taxes" tab that links to /taxes', () => {
+    renderGoal()
+    expect(screen.getByRole('link', { name: 'Taxes' })).toHaveAttribute('href', '/taxes')
   })
 
   it('renders a "FIRE Calculator" tab inside the nav', () => {
@@ -68,12 +74,38 @@ describe('Goal tab bar', () => {
   })
 })
 
+describe('PlanningTabs focus handling', () => {
+  it('focuses the active tab when arriving from another Planning tab', async () => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/taxes', state: { focusPlanningTab: true } }]}>
+        <Routes>
+          <Route path="/taxes" element={<PlanningTabs />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Taxes' })).toHaveFocus())
+  })
+
+  it('does not steal focus on a plain visit', () => {
+    render(
+      <MemoryRouter initialEntries={['/taxes']}>
+        <Routes>
+          <Route path="/taxes" element={<PlanningTabs />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(document.body).toHaveFocus()
+  })
+})
+
 /* ─── Active state ─── */
 
 describe('Goal tab active state', () => {
-  it('sets aria-current="page" on the active FIRE Plans tab', () => {
+  it('sets aria-current="page" on the active Goals tab', () => {
     renderGoal('/goal')
-    const link = screen.getByRole('link', { name: 'FIRE Plans' })
+    const link = screen.getByRole('link', { name: 'Goals' })
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
@@ -83,9 +115,9 @@ describe('Goal tab active state', () => {
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 
-  it('does not mark "FIRE Plans" as active when on /goal/calculator', () => {
+  it('does not mark "Goals" as active when on /goal/calculator', () => {
     renderGoal('/goal/calculator')
-    const link = screen.getByRole('link', { name: 'FIRE Plans' })
+    const link = screen.getByRole('link', { name: 'Goals' })
     expect(link).not.toHaveAttribute('aria-current')
   })
 

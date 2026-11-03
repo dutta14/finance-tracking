@@ -172,7 +172,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       //   2. confirming it equals the Home `.nw-amount` value.
       await page.goto(URLS.netWorth)
       await page.waitForLoadState('domcontentloaded')
-      await expect(page.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Wealth' })).toBeVisible()
 
       const total = await page.evaluate(() => {
         const bs = JSON.parse(localStorage.getItem('data-balances') || '[]') as {
@@ -263,7 +263,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       await page.waitForLoadState('domcontentloaded')
       await mutateAccountBalance(page, 1, '2025-04', 300_000)
       // Wait a tick for React state to settle from the dispatched event.
-      await expect(page.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Wealth' })).toBeVisible()
 
       await page.goto(HOME)
       await page.waitForLoadState('domcontentloaded')
@@ -570,7 +570,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
 
       await page.goto(URLS.netWorth)
       await page.waitForLoadState('domcontentloaded')
-      await expect(page.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Wealth' })).toBeVisible()
 
       await page.goto(HOME)
       await page.waitForLoadState('domcontentloaded')
@@ -666,7 +666,7 @@ test.describe('Cross-page: Home Dashboard Integration (#151)', () => {
       // Cross-page isolation: Net Worth always renders normally.
       await page.goto(URLS.netWorth)
       await page.waitForLoadState('domcontentloaded')
-      await expect(page.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Wealth' })).toBeVisible()
     })
   })
 })

@@ -42,8 +42,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
     </section>
 
     <section className="guide-subsection" id="feature-goals">
-      <h3>Goals</h3>
-      <GuideFigure src={screenshots.goals} alt="Goals page with plans and FI calculator" />
+      <h3>Planning</h3>
+      <GuideFigure src={screenshots.goals} alt="Planning page with goals and FI calculator" />
       <p>
         Two modes live here: concrete plans and a more abstract FI calculator. One keeps you honest about named goals.
         The other answers the older, quieter question of when work becomes optional.
@@ -63,8 +63,8 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
     </section>
 
     <section className="guide-subsection" id="feature-net-worth">
-      <h3>Net Worth</h3>
-      <GuideFigure src={screenshots.netWorth} alt="Net Worth page with accounts and growth chart" />
+      <h3>Wealth</h3>
+      <GuideFigure src={screenshots.netWorth} alt="Wealth page with accounts and growth chart" />
       <p>
         This is the spine of the app. The Accounts tab gives you the raw history, Allocation turns it into portfolio
         shape, and Growth lets you connect balances to income, expenses, and savings rate.
@@ -85,10 +85,10 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
     </section>
 
     <section className="guide-subsection" id="feature-budget">
-      <h3>Budget</h3>
-      <GuideFigure src={screenshots.budget} alt="Budget page with categorized transactions" />
+      <h3>Cashflow</h3>
+      <GuideFigure src={screenshots.budget} alt="Cashflow page with categorized transactions" />
       <p>
-        A year-based budgeting workspace that is more interested in patterns than ceremony. Import bank CSVs, clean them
+        A year-based cash flow workspace that is more interested in patterns than ceremony. Import bank CSVs, clean them
         up, and look at spending from different distances.
       </p>
       <h4>How to use it</h4>
@@ -96,7 +96,7 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
         <li>Pick a year and import bank or card CSVs, or enter transactions manually.</li>
         <li>Use the Detailed view for category-by-category breakdowns inside each group.</li>
         <li>Switch to Aggregated when you only want group totals.</li>
-        <li>Use Cashflow to read income against expenses over time.</li>
+        <li>Use Overview to read income against expenses over time.</li>
         <li>Change the period between monthly, quarterly, and half-yearly views.</li>
         <li>Use the built-in PDF → CSV converter when the bank only gives you a statement PDF.</li>
       </ul>
@@ -110,19 +110,20 @@ const FeaturesByPage: FC<FeaturesByPageProps> = ({ screenshots }) => (
       <h3>Transactions</h3>
       <GuideFigure src={screenshots.transactions} alt="Transactions page with filtering and categorization" />
       <p>
-        Transaction management lives on its own page now, separate from Budget. It is for the raw stream of money in and
-        out, with filtering and categorization that helps you clean things up before they become a reporting habit.
+        Transactions is a tab inside Cashflow, next to Overview, Spreadsheet, and Groups. It is for the raw stream of
+        money in and out, with filtering and categorization that helps you clean things up before they become a
+        reporting habit.
       </p>
       <h4>How to use it</h4>
       <ul className="guide-bullet-list">
-        <li>Review transactions separately from annual budget rollups.</li>
+        <li>Open the Transactions tab to review the raw list apart from the yearly rollups.</li>
         <li>Filter the list when you want to isolate one account, merchant, or category pattern.</li>
         <li>Categorize or recategorize items before they pollute your longer-term summaries.</li>
         <li>Use it as the place for cleanup work, not just for reading totals.</li>
       </ul>
       <p>
-        <strong>One tip:</strong> Treat Transactions as the inbox and Budget as the monthly summary. One is where you
-        fix the raw data, the other is where you look for meaning.
+        <strong>One tip:</strong> Treat the Transactions tab as the inbox and the other Cashflow tabs as the monthly
+        summary. One is where you fix the raw data, the other is where you look for meaning.
       </p>
     </section>
 

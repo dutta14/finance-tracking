@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Transactions, { resetTransactionCache } from './Transactions'
 import type { CategoryGroup } from '../budget/types'
 
@@ -122,10 +122,46 @@ beforeEach(() => {
 })
 
 describe('Transactions', () => {
+  it('shows the Cashflow tab bar with Transactions as the active tab', async () => {
+    renderTransactions()
+
+    expect(await screen.findByRole('heading', { name: 'Cashflow' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page')
+    for (const name of ['Overview', 'Spreadsheet', 'Groups']) {
+      expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-current')
+    }
+  })
+
+  it('focuses the Transactions tab when arriving from another Cashflow tab', async () => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/transactions', state: { focusCashflowTab: true } }]}>
+        <Transactions />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Transactions' })).toHaveFocus())
+  })
+
+  it('navigates to the matching Cashflow view when clicking another tab', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/transactions']}>
+        <Routes>
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/budget/:view" element={<div>Budget view</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Spreadsheet' }))
+
+    expect(await screen.findByText('Budget view')).toBeInTheDocument()
+  })
+
   it('renders grouped transactions with daily totals, result count, and a download link', async () => {
     renderTransactions()
 
-    expect(await screen.findByRole('heading', { name: 'Transactions' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Cashflow' })).toBeInTheDocument()
     expect(await screen.findByText('6 transactions')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'August 2, 2026' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'July 30, 2026' })).toBeInTheDocument()
@@ -201,7 +237,7 @@ describe('Transactions', () => {
   it('preselects categories from the URL query param', async () => {
     renderTransactions('/transactions?categories=Groceries%2CDining')
 
-    expect(await screen.findByRole('heading', { name: 'Transactions' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Cashflow' })).toBeInTheDocument()
     expect(await screen.findByText('2 transactions')).toBeInTheDocument()
     expect(screen.getByText('2 selected')).toBeInTheDocument()
     expect(screen.getByText('Whole Foods Market')).toBeInTheDocument()
@@ -409,7 +445,7 @@ describe('Transactions', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit category for Book Store' }))
     expect(screen.getByRole('dialog', { name: 'Edit category for Book Store' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('heading', { name: 'Transactions' }))
+    await user.click(screen.getByRole('heading', { name: 'Cashflow' }))
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Edit category for Book Store' })).not.toBeInTheDocument()

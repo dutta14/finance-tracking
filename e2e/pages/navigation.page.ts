@@ -58,9 +58,7 @@ export class NavigationPage {
    */
   async expectActive(name: NavName): Promise<void> {
     await expect(this.link(name)).toHaveAttribute('aria-current', 'page')
-    for (const other of (['Home', 'Goals', 'Net Worth', 'Budget', 'Taxes', 'Drive'] as NavName[]).filter(
-      n => n !== name,
-    )) {
+    for (const other of (['Home', 'Planning', 'Wealth', 'Cashflow', 'Drive'] as NavName[]).filter(n => n !== name)) {
       await expect(this.link(other)).not.toHaveAttribute('aria-current', /.*/)
     }
   }

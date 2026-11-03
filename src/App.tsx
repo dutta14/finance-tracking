@@ -61,21 +61,17 @@ const AppShell: FC = () => {
     useLayout()
   const searchIndexData = useSearchIndexData(searchOpen)
   const currentPage: PageType =
-    location.pathname === '/goal' || location.pathname.startsWith('/goal/')
+    location.pathname === '/goal' || location.pathname.startsWith('/goal/') || location.pathname === '/taxes'
       ? 'goal'
       : location.pathname.startsWith('/net-worth')
         ? 'net-worth'
-        : location.pathname.startsWith('/budget')
+        : location.pathname.startsWith('/budget') || location.pathname.startsWith('/transactions')
           ? 'budget'
-          : location.pathname.startsWith('/transactions')
-            ? 'transactions'
-            : location.pathname.startsWith('/drive')
-              ? 'drive'
-              : location.pathname === '/taxes'
-                ? 'taxes'
-                : location.pathname === '/guide'
-                  ? 'guide'
-                  : 'home'
+          : location.pathname.startsWith('/drive')
+            ? 'drive'
+            : location.pathname === '/guide'
+              ? 'guide'
+              : 'home'
   const setCurrentPage = (page: PageType): void => {
     navigate(
       {

@@ -36,11 +36,11 @@ describe('SidebarNavigation', () => {
     renderSidebar()
 
     expect(screen.getByText('Home')).toBeInTheDocument()
-    expect(screen.getByText('Goals')).toBeInTheDocument()
-    expect(screen.getByText('Net Worth')).toBeInTheDocument()
-    expect(screen.getByText('Budget')).toBeInTheDocument()
-    expect(screen.getByText('Transactions')).toBeInTheDocument()
-    expect(screen.getByText('Taxes')).toBeInTheDocument()
+    expect(screen.getByText('Planning')).toBeInTheDocument()
+    expect(screen.getByText('Wealth')).toBeInTheDocument()
+    expect(screen.getByText('Cashflow')).toBeInTheDocument()
+    expect(screen.queryByText('Transactions')).not.toBeInTheDocument()
+    expect(screen.queryByText('Taxes')).not.toBeInTheDocument()
 
     expect(screen.getByRole('button', { name: 'Drive' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
@@ -130,29 +130,27 @@ describe('SidebarNavigation', () => {
   it('applies aria-current to Net Worth button when currentPage is "net-worth"', () => {
     renderSidebar({ currentPage: 'net-worth' })
 
-    const netWorthBtn = screen.getByRole('button', { name: 'Net Worth' })
+    const netWorthBtn = screen.getByRole('button', { name: 'Wealth' })
     expect(netWorthBtn).toHaveAttribute('aria-current', 'page')
   })
 
-  it('applies aria-current to Budget button when currentPage is "budget"', () => {
+  it('applies aria-current to Cashflow button when currentPage is "budget"', () => {
     renderSidebar({ currentPage: 'budget' })
 
-    const budgetBtn = screen.getByRole('button', { name: 'Budget' })
+    const budgetBtn = screen.getByRole('button', { name: 'Cashflow' })
     expect(budgetBtn).toHaveAttribute('aria-current', 'page')
   })
 
-  it('applies aria-current to Taxes button when currentPage is "taxes"', () => {
-    renderSidebar({ currentPage: 'taxes' })
+  it('has no separate Taxes row, since it lives under Planning', () => {
+    renderSidebar({ currentPage: 'goal' })
 
-    const taxesBtn = screen.getByRole('button', { name: 'Taxes' })
-    expect(taxesBtn).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryByRole('button', { name: 'Taxes' })).not.toBeInTheDocument()
   })
 
-  it('applies aria-current to Transactions button when currentPage is "transactions"', () => {
-    renderSidebar({ currentPage: 'transactions' })
+  it('has no separate Transactions row, since it lives under Cashflow', () => {
+    renderSidebar({ currentPage: 'budget' })
 
-    const transactionsBtn = screen.getByRole('button', { name: 'Transactions' })
-    expect(transactionsBtn).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryByRole('button', { name: 'Transactions' })).not.toBeInTheDocument()
   })
 
   it('renders the footer group with correct ARIA attributes', () => {
@@ -192,7 +190,7 @@ describe('SidebarNavigation', () => {
 
       await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
 
-      for (const name of ['Home', 'Goals', 'Net Worth', 'Budget', 'Transactions', 'Taxes', 'Drive', 'Settings']) {
+      for (const name of ['Home', 'Planning', 'Wealth', 'Cashflow', 'Drive', 'Settings']) {
         const button = screen.getByRole('button', { name })
         expect(button).toHaveAttribute('title', name)
       }
@@ -228,7 +226,7 @@ describe('SidebarNavigation', () => {
 
       expect(screen.getByText('Worth')).toBeInTheDocument()
       expect(screen.getByRole('navigation', { name: 'Main navigation' })).not.toHaveClass('collapsed')
-      expect(screen.getByRole('button', { name: 'Goals' })).not.toHaveAttribute('title')
+      expect(screen.getByRole('button', { name: 'Planning' })).not.toHaveAttribute('title')
     })
 
     it('still navigates when a rail icon is clicked', async () => {
@@ -237,35 +235,35 @@ describe('SidebarNavigation', () => {
       renderSidebar({ setCurrentPage })
 
       await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
-      await user.click(screen.getByRole('button', { name: 'Budget' }))
+      await user.click(screen.getByRole('button', { name: 'Cashflow' }))
 
       expect(setCurrentPage).toHaveBeenCalledWith('budget')
     })
   })
 
-  describe('Goals is a plain sidebar link (no accordion)', () => {
-    it('renders Goals as a plain button with sidebar-link class', () => {
+  describe('Planning is a plain sidebar link (no accordion)', () => {
+    it('renders Planning as a plain button with sidebar-link class', () => {
       renderSidebar()
 
-      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      const goalsBtn = screen.getByRole('button', { name: 'Planning' })
       expect(goalsBtn).toHaveClass('sidebar-link')
       expect(goalsBtn.tagName).toBe('BUTTON')
     })
 
-    it('does not render a chevron or aria-expanded on the Goals button', () => {
+    it('does not render a chevron or aria-expanded on the Planning button', () => {
       renderSidebar()
 
-      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      const goalsBtn = screen.getByRole('button', { name: 'Planning' })
       expect(goalsBtn).not.toHaveAttribute('aria-expanded')
       expect(goalsBtn.querySelector('.sidebar-chevron')).toBeNull()
     })
 
-    it('calls setCurrentPage("goal") when Goals is clicked', async () => {
+    it('calls setCurrentPage("goal") when Planning is clicked', async () => {
       const setCurrentPage = vi.fn()
       const user = userEvent.setup()
       renderSidebar({ setCurrentPage })
 
-      await user.click(screen.getByRole('button', { name: 'Goals' }))
+      await user.click(screen.getByRole('button', { name: 'Planning' }))
 
       expect(setCurrentPage).toHaveBeenCalledTimes(1)
       expect(setCurrentPage).toHaveBeenCalledWith('goal')
@@ -274,14 +272,14 @@ describe('SidebarNavigation', () => {
     it('applies aria-current when currentPage is "goal"', () => {
       renderSidebar({ currentPage: 'goal' })
 
-      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      const goalsBtn = screen.getByRole('button', { name: 'Planning' })
       expect(goalsBtn).toHaveAttribute('aria-current', 'page')
     })
 
     it('does not apply aria-current when currentPage is not "goal"', () => {
       renderSidebar({ currentPage: 'home' })
 
-      const goalsBtn = screen.getByRole('button', { name: 'Goals' })
+      const goalsBtn = screen.getByRole('button', { name: 'Planning' })
       expect(goalsBtn).not.toHaveAttribute('aria-current')
     })
   })
@@ -308,11 +306,11 @@ describe('SidebarNavigation', () => {
       renderSidebar()
 
       expect(screen.getByText('Home')).toBeInTheDocument()
-      expect(screen.getByText('Goals')).toBeInTheDocument()
-      expect(screen.getByText('Net Worth')).toBeInTheDocument()
-      expect(screen.getByText('Budget')).toBeInTheDocument()
-      expect(screen.getByText('Transactions')).toBeInTheDocument()
-      expect(screen.getByText('Taxes')).toBeInTheDocument()
+      expect(screen.getByText('Planning')).toBeInTheDocument()
+      expect(screen.getByText('Wealth')).toBeInTheDocument()
+      expect(screen.getByText('Cashflow')).toBeInTheDocument()
+      expect(screen.queryByText('Transactions')).not.toBeInTheDocument()
+      expect(screen.queryByText('Taxes')).not.toBeInTheDocument()
       expect(screen.getByText('User Guide')).toBeInTheDocument()
     })
   })

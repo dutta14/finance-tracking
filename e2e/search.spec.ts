@@ -61,11 +61,11 @@ test.describe('SearchModal — Cmd+K lifecycle and focus trap (#142)', () => {
 
     await search.input.fill('budget')
 
-    // Wait for at least one option to appear, then assert the Budget
+    // Wait for at least one option to appear, then assert the Cashflow
     // page row is among them. Label match scores higher than keywords,
-    // so the "Budget" page is guaranteed to be present.
+    // so the Cashflow page (via its "budget" keyword) is present.
     await search.results().first().waitFor()
-    await expect(search.result('Budget')).toBeVisible()
+    await expect(search.result('Cashflow')).toBeVisible()
   })
 
   /* ── Selection + navigation ─────────────────────────────────── */
@@ -81,7 +81,7 @@ test.describe('SearchModal — Cmd+K lifecycle and focus trap (#142)', () => {
 
     await expect(search.dialog).toBeHidden()
     await expect(page).toHaveURL(/#\/net-worth$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Wealth' })).toBeVisible()
   })
 
   /* ── Escape close ───────────────────────────────────────────── */
@@ -144,12 +144,12 @@ test.describe('SearchModal — Cmd+K lifecycle and focus trap (#142)', () => {
     await search.goto('/')
 
     // The sidebar renders nav items as <button>, not <a>. Focus the
-    // Goals button so useFocusTrap captures it as previousFocus on open.
-    const goalsBtn = page
+    // Planning button so useFocusTrap captures it as previousFocus on open.
+    const planningBtn = page
       .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('button', { name: 'Goals', exact: true })
-    await goalsBtn.focus()
-    await expect(goalsBtn).toBeFocused()
+      .getByRole('button', { name: 'Planning', exact: true })
+    await planningBtn.focus()
+    await expect(planningBtn).toBeFocused()
 
     await page.keyboard.press('Control+k')
     await expect(search.dialog).toBeVisible()
@@ -158,7 +158,7 @@ test.describe('SearchModal — Cmd+K lifecycle and focus trap (#142)', () => {
     await page.keyboard.press('Escape')
     await expect(search.dialog).toBeHidden()
 
-    await expect(goalsBtn).toBeFocused()
+    await expect(planningBtn).toBeFocused()
   })
 
   /* ── Tab focus trap + restoration ──────────────────────────── */

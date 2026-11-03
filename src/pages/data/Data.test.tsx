@@ -546,7 +546,7 @@ describe('Data page integration', () => {
 
   it('renders the page title', () => {
     renderData()
-    expect(screen.getByRole('heading', { level: 1, name: 'Net Worth' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Wealth' })).toBeInTheDocument()
   })
 
   // --- Branch coverage: id generation when empty accounts (line 60) ---

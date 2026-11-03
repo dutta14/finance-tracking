@@ -11,6 +11,7 @@ import SaveTemplateModal from './components/SaveTemplateModal'
 import ImportTemplateModal from './components/ImportTemplateModal'
 import TaxReturnSection from './components/TaxReturnSection'
 import YearNav from '../../components/YearNav'
+import PlanningTabs from '../../components/PlanningTabs'
 import '../../styles/Taxes.css'
 import '../../styles/Budget.css'
 
@@ -187,7 +188,8 @@ const Taxes: FC = () => {
   return (
     <div className="tax-page">
       <div className="tax-header">
-        <h1 className="tax-heading">Taxes</h1>
+        <h1 className="tax-heading">Planning</h1>
+        <PlanningTabs />
         <YearNav
           selectedYear={selectedYear}
           onPrevYear={() => setSelectedYear(y => y - 1)}

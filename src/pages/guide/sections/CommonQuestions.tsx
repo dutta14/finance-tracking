@@ -37,9 +37,9 @@ const questions = [
   },
   {
     id: 'faq-budget-vs-transactions',
-    question: "What's the difference between Budget and Transactions?",
+    question: "What's the difference between the Transactions tab and the rest of Cashflow?",
     answer:
-      'Transactions is for the raw list: filter, inspect, correct, categorize. Budget is for the roll-up: detailed, aggregated, or cashflow views across a whole year. If you are fixing individual entries, start in Transactions. If you are asking where the money went, start in Budget.',
+      'The Transactions tab is for the raw list: filter, inspect, correct, categorize. Overview, Spreadsheet, and Groups are for the roll-up across a whole year. If you are fixing individual entries, open Transactions. If you are asking where the money went, start with Overview.',
   },
   {
     id: 'faq-use-every-page',
