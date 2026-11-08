@@ -5,16 +5,12 @@ const More: FC = () => (
     <h2>More</h2>
     <ul className="guide-link-list">
       <li>
-        <a
-          href="https://github.com/dutta14/finance-tracking/blob/main/CONTRIBUTING.md"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a href="https://github.com/dutta14/worth/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">
           Self-host or contribute
         </a>
       </li>
       <li>
-        <a href="https://github.com/dutta14/finance-tracking" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/dutta14/worth" target="_blank" rel="noopener noreferrer">
           Source code
         </a>
       </li>
@@ -24,11 +20,7 @@ const More: FC = () => (
         </a>
       </li>
       <li>
-        <a
-          href="https://github.com/dutta14/finance-tracking/blob/main/LICENSE"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a href="https://github.com/dutta14/worth/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
           License
         </a>
       </li>

@@ -27,7 +27,7 @@ This app is continuously deployed from `main`. Only the latest deployed version 
 
 Use GitHub's private vulnerability reporting:
 
-1. Go to [github.com/dutta14/finance-tracking/security](https://github.com/dutta14/finance-tracking/security)
+1. Go to [github.com/dutta14/worth/security](https://github.com/dutta14/worth/security)
 2. Click **Report a vulnerability**
 3. Describe the issue, steps to reproduce, and potential impact
 

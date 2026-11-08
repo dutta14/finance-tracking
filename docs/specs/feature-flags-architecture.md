@@ -11,7 +11,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  GitHub Repository (dutta14/finance-tracking)                │
+│  GitHub Repository (dutta14/worth)                │
 │                                                             │
 │  feature-flags.json  ← single source of truth               │
 │  (committed to main branch)                                 │
@@ -391,7 +391,7 @@ function detectEnvironment(): Environment {
 - No need for a "flag to control flags" chicken-and-egg problem
 
 **How this ties to #42:** Issue #42 proposes PR preview deploys. Once those exist:
-- Preview URL (e.g., `dutta14.github.io/finance-tracking/pr-42/`) → detected as `staging`
+- Preview URL (e.g., `dutta14.github.io/worth/pr-42/`) → detected as `staging`
 - Flags with `staging` overrides automatically apply on previews
 - You can test flag-gated features on preview deploys before merging
 

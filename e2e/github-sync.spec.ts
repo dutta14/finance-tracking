@@ -117,7 +117,7 @@ async function mockGitHubApi(page: import('@playwright/test').Page) {
 /** Open Settings modal and navigate to the GitHub Sync tab. */
 async function openGitHubSyncTab(page: import('@playwright/test').Page) {
   const settings = new SettingsPage(page)
-  await page.goto('/finance-tracking/')
+  await page.goto('/worth/')
   await page.waitForLoadState('domcontentloaded')
   await settings.settingsButton.click()
   await expect(settings.dialog).toBeVisible()

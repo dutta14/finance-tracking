@@ -34,7 +34,7 @@ import { waitForReload } from './fixtures/reload'
  *    event fires and Home re-renders cleanly.
  */
 
-const HOME = '/finance-tracking/'
+const HOME = '/worth/'
 
 async function gotoHome(page: Page): Promise<void> {
   await page.goto(HOME)

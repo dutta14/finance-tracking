@@ -366,15 +366,15 @@ export function buildV2Export(
 
 /** Convenience URLs under the Vite dev base + HashRouter. */
 export const URLS = {
-  base: '/finance-tracking/',
-  home: '/finance-tracking/#/',
-  goal: '/finance-tracking/#/goal',
-  goalDetail: (id: number | string) => `/finance-tracking/#/goal/plans/${id}`,
-  goalCalculator: '/finance-tracking/#/goal/calculator',
-  netWorth: '/finance-tracking/#/net-worth',
-  netWorthGrowth: '/finance-tracking/#/net-worth/growth',
-  allocation: '/finance-tracking/#/net-worth/allocation',
-  budget: '/finance-tracking/#/budget',
+  base: '/worth/',
+  home: '/worth/#/',
+  goal: '/worth/#/goal',
+  goalDetail: (id: number | string) => `/worth/#/goal/plans/${id}`,
+  goalCalculator: '/worth/#/goal/calculator',
+  netWorth: '/worth/#/net-worth',
+  netWorthGrowth: '/worth/#/net-worth/growth',
+  allocation: '/worth/#/net-worth/allocation',
+  budget: '/worth/#/budget',
 } as const
 
 /**

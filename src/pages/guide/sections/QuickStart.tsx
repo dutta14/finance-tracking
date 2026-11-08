@@ -16,7 +16,7 @@ const QuickStart: FC<QuickStartProps> = ({ screenshots }) => {
     {
       id: 'quick-start-open',
       title: 'Open the app',
-      body: 'Go to anindya.dev/finance-tracking in any modern browser. Nothing to install. No signup screen. You land on Home, and from there the rest of the app opens up gradually as you add real data.',
+      body: 'Go to anindya.dev/worth in any modern browser. Nothing to install. No signup screen. You land on Home, and from there the rest of the app opens up gradually as you add real data.',
       image: screenshots.step1,
       alt: 'Landing page on first open',
     },

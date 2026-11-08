@@ -10,7 +10,7 @@ import { hashUrl, NAV_PATHS, PAGE_HEADINGS, PRIMARY_NAV_LINKS, seedNav } from '.
  * browser refresh, invalid route fallback, and hash fragment behavior.
  *
  * The app uses HashRouter (see src/main.tsx) under the Vite base
- * `/finance-tracking/`. URLs are matched against the trailing `#/<path>`.
+ * `/worth/`. URLs are matched against the trailing `#/<path>`.
  * Invalid routes are caught by `<Route path="*" element={<Navigate to="/"
  * replace />} />` in App.tsx — there is no 404 component.
  */

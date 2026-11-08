@@ -1,10 +1,10 @@
 /**
  * Capture-screenshots.ts
  *
- * Renders the finance-tracking app under Playwright with a fixed fake persona
+ * Renders the worth app under Playwright with a fixed fake persona
  * ("Avery Chen") and writes 12 PNGs into docs/screenshots/ used by the user README.
  *
- * Assumes the Vite dev server is already running at http://localhost:5173/finance-tracking/
+ * Assumes the Vite dev server is already running at http://localhost:5173/worth/
  * (run `npm run dev` in another terminal first). The npm script `npm run screenshots`
  * is the canonical entry point.
  *
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const OUT_DIR = join(__dirname, '..', 'docs', 'screenshots')
-const APP_URL = 'http://localhost:5173/finance-tracking/'
+const APP_URL = 'http://localhost:5173/worth/'
 const VIEWPORT = { width: 1440, height: 900 }
 const DEVICE_SCALE_FACTOR = 2
 

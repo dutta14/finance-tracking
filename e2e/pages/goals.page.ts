@@ -242,17 +242,17 @@ export class GoalsPage {
   }
 
   async goto() {
-    await this.page.goto('/finance-tracking/#/goal')
+    await this.page.goto('/worth/#/goal')
     await this.page.waitForLoadState('domcontentloaded')
   }
 
   async gotoDetail(goalId: number) {
-    await this.page.goto(`/finance-tracking/#/goal/plans/${goalId}`)
+    await this.page.goto(`/worth/#/goal/plans/${goalId}`)
     await this.page.waitForLoadState('domcontentloaded')
   }
 
   async gotoCalculator() {
-    await this.page.goto('/finance-tracking/#/goal/calculator')
+    await this.page.goto('/worth/#/goal/calculator')
     await this.page.waitForLoadState('domcontentloaded')
   }
 

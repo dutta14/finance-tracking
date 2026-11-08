@@ -1,6 +1,6 @@
 # Docs
 
-Internal documentation for finance-tracking. The user-facing README lives at the repo root.
+Internal documentation for worth. The user-facing README lives at the repo root.
 
 ## Layout
 

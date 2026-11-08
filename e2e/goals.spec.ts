@@ -163,7 +163,7 @@ test.describe('Goals Page E2E', () => {
       await goals.openDetailActions()
       await goals.detailDeleteBtn.click()
 
-      await page.goto('/finance-tracking/#/goal')
+      await page.goto('/worth/#/goal')
       await page.waitForLoadState('domcontentloaded')
       await expect(goals.miniCards).toHaveCount(2)
       await expect(goals.getMiniCardByName(GOALS[0].goalName)).not.toBeVisible()
@@ -637,7 +637,7 @@ test.describe('Goals Page E2E', () => {
       await goals.miniCards.first().click()
       await expect(goals.goalDetail).toBeVisible()
 
-      await page.goto('/finance-tracking/#/goal')
+      await page.goto('/worth/#/goal')
       await page.waitForLoadState('domcontentloaded')
 
       // Should still be in list mode

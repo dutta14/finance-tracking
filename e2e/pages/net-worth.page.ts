@@ -112,17 +112,17 @@ export class NetWorthPage {
   }
 
   async goto() {
-    await this.page.goto('/finance-tracking/#/net-worth/dashboard')
+    await this.page.goto('/worth/#/net-worth/dashboard')
     await this.page.waitForLoadState('domcontentloaded')
   }
 
   async gotoAllocation() {
-    await this.page.goto('/finance-tracking/#/net-worth/allocation')
+    await this.page.goto('/worth/#/net-worth/allocation')
     await this.page.waitForLoadState('domcontentloaded')
   }
 
   async gotoGrowth() {
-    await this.page.goto('/finance-tracking/#/net-worth/growth')
+    await this.page.goto('/worth/#/net-worth/growth')
     await this.page.waitForLoadState('domcontentloaded')
   }
 

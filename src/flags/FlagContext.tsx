@@ -145,16 +145,13 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children, adminToken = nul
         setIsLoading(true)
         setError(null)
         try {
-          const adminRes = await fetch(
-            'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
-            {
-              headers: {
-                Authorization: `Bearer ${activeToken}`,
-                Accept: 'application/vnd.github+json',
-                'X-GitHub-Api-Version': '2022-11-28',
-              },
+          const adminRes = await fetch('https://api.github.com/repos/dutta14/worth/contents/feature-flags.json', {
+            headers: {
+              Authorization: `Bearer ${activeToken}`,
+              Accept: 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
             },
-          )
+          })
 
           if (adminRes.ok) {
             const data = await adminRes.json()
@@ -193,16 +190,13 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children, adminToken = nul
     if (activeToken) {
       // Authenticated fetch — gives both config content AND SHA (no race condition)
       try {
-        const adminRes = await fetch(
-          'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
-          {
-            headers: {
-              Authorization: `Bearer ${activeToken}`,
-              Accept: 'application/vnd.github+json',
-              'X-GitHub-Api-Version': '2022-11-28',
-            },
+        const adminRes = await fetch('https://api.github.com/repos/dutta14/worth/contents/feature-flags.json', {
+          headers: {
+            Authorization: `Bearer ${activeToken}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
           },
-        )
+        })
 
         if (adminRes.ok) {
           const data = await adminRes.json()
@@ -258,7 +252,7 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children, adminToken = nul
   }, [activeToken])
 
   async function fetchPublicConfig(): Promise<void> {
-    const publicRes = await fetch('https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json', {
+    const publicRes = await fetch('https://api.github.com/repos/dutta14/worth/contents/feature-flags.json', {
       headers: {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
@@ -368,7 +362,7 @@ export const FlagProvider: FC<FlagProviderProps> = ({ children, adminToken = nul
         body.sha = configSha
       }
 
-      const res = await fetch('https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json', {
+      const res = await fetch('https://api.github.com/repos/dutta14/worth/contents/feature-flags.json', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${activeToken}`,

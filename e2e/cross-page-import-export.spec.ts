@@ -103,7 +103,7 @@ import { SettingsPage } from './pages/settings.page'
  * ──────────────────────────────────────────────────────────────────────
  */
 
-const HOME = '/finance-tracking/'
+const HOME = '/worth/'
 
 interface SeedOverrides {
   goals?: unknown[]

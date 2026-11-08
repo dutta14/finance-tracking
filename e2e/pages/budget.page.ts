@@ -127,13 +127,13 @@ export class BudgetPage {
   }
 
   async goto() {
-    await this.page.goto('/finance-tracking/#/budget/spreadsheet')
+    await this.page.goto('/worth/#/budget/spreadsheet')
     await this.page.waitForLoadState('domcontentloaded')
     await this.title.waitFor({ state: 'visible' })
   }
 
   async gotoCashflow() {
-    await this.page.goto('/finance-tracking/#/budget')
+    await this.page.goto('/worth/#/budget')
     await this.page.waitForLoadState('domcontentloaded')
     await this.title.waitFor({ state: 'visible' })
   }

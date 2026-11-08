@@ -124,7 +124,7 @@ export class SettingsPage {
 
   /** Navigate to the app root and open the Settings modal. */
   async open(): Promise<void> {
-    await this.page.goto('/finance-tracking/')
+    await this.page.goto('/worth/')
     await this.page.waitForLoadState('domcontentloaded')
     await this.settingsButton.click()
     await expect(this.dialog).toBeVisible()

@@ -117,6 +117,8 @@ export const FileStoreProvider: FC<{ children: ReactNode }> = ({ children }) => 
     if (typeof window === 'undefined' || typeof window.showDirectoryPicker !== 'function') {
       throw new Error('unsupported-browser')
     }
+    // The 'finance-tracking-*' names here and in the IndexedDB open below predate the rename to worth.
+    // They are storage identifiers, not the repo name: changing them would orphan saved data.
     const handle = await window.showDirectoryPicker({ id: 'finance-tracking-root', mode: 'readwrite' })
     await saveHandle(handle)
     await connect(handle)
