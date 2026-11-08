@@ -27,9 +27,9 @@ export interface NavSeedOptions {
 }
 
 /** App base path under Vite dev server. */
-export const APP_BASE = '/finance-tracking/'
+export const APP_BASE = '/worth/'
 
-/** Build a hash-router URL: `hashUrl('/goal')` → `/finance-tracking/#/goal`. */
+/** Build a hash-router URL: `hashUrl('/goal')` → `/worth/#/goal`. */
 export function hashUrl(path: string): string {
   const clean = path.startsWith('/') ? path : `/${path}`
   return `${APP_BASE}#${clean}`

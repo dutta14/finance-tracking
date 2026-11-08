@@ -118,7 +118,7 @@ export class HomePage {
   }
 
   async goto() {
-    await this.page.goto('/finance-tracking/')
+    await this.page.goto('/worth/')
     await this.page.waitForLoadState('domcontentloaded')
   }
 

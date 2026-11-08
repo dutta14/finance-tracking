@@ -1,4 +1,4 @@
-# finance-tracking
+# worth
 
 **Your money, on your own disk, and nowhere else.**
 
@@ -54,7 +54,7 @@ The other constraint: this uses the File System Access API, which is available i
 
 ### 1. Open the app
 
-Go to [anindya.dev/finance-tracking](https://anindya.dev/finance-tracking) in Chrome or Edge. Nothing to install. No signup screen.
+Go to [anindya.dev/worth](https://anindya.dev/worth) in Chrome or Edge. Nothing to install. No signup screen.
 
 ![Landing page on first open](./docs/screenshots/quickstart-1.png)
 
@@ -265,7 +265,7 @@ You shouldn't blindly trust anything with your financial data. Here's what's tru
 
 ### Is this open source?
 
-Yes. MIT license. Source is at [github.com/dutta14/finance-tracking](https://github.com/dutta14/finance-tracking). Read it, fork it, run it yourself.
+Yes. MIT license. Source is at [github.com/dutta14/worth](https://github.com/dutta14/worth). Read it, fork it, run it yourself.
 
 ### What's the difference between Budget and Transactions?
 
@@ -283,8 +283,8 @@ The web app works on mobile browsers, though the File System Access API is not a
 
 ## More
 
-- **Self-host or contribute:** see [CONTRIBUTING.md](https://github.com/dutta14/finance-tracking/blob/main/CONTRIBUTING.md)
-- **Source code:** [github.com/dutta14/finance-tracking](https://github.com/dutta14/finance-tracking)
+- **Self-host or contribute:** see [CONTRIBUTING.md](https://github.com/dutta14/worth/blob/main/CONTRIBUTING.md)
+- **Source code:** [github.com/dutta14/worth](https://github.com/dutta14/worth)
 - **Anindya's blog:** [anindya.dev/blog](https://anindya.dev/blog)
 - **License:** MIT
 

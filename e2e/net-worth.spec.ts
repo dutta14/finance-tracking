@@ -226,7 +226,7 @@ test.describe('Net Worth — Tab Navigation', () => {
 test.describe('Net Worth — Home Card Month Arrows', () => {
   test('navigates between months using arrow buttons on Home card', async ({ page }) => {
     await seedNetWorthData(page)
-    await page.goto('/finance-tracking/')
+    await page.goto('/worth/')
     await page.waitForLoadState('domcontentloaded')
     const prevBtn = page.getByLabel('Previous month')
     const nwAmount = page.locator('.home-card--nw .nw-amount')

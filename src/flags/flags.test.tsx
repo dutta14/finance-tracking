@@ -952,7 +952,7 @@ describe('error handling and edge cases', () => {
       })
 
       const putCall = mockFetch.mock.calls[1]
-      expect(putCall[0]).toBe('https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json')
+      expect(putCall[0]).toBe('https://api.github.com/repos/dutta14/worth/contents/feature-flags.json')
       expect(putCall[1].method).toBe('PUT')
       expect(putCall[1].headers['Authorization']).toBe('Bearer test-token')
       expect(putCall[1].headers['Content-Type']).toBe('application/json')

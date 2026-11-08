@@ -946,7 +946,7 @@ test.describe('Budget Page E2E', () => {
       // "Add budget data →". With non-positive savings it renders
       // "Not reachable at current rate". With our $3000/mo savings the projection
       // produces a date like "Jan 2058".
-      await page.goto('/finance-tracking/#/')
+      await page.goto('/worth/#/')
       await page.waitForLoadState('domcontentloaded')
 
       const projected = page.locator('.goals-peek-projected').first()

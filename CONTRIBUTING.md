@@ -8,8 +8,8 @@
 ## Getting Started
 
 ```bash
-git clone https://github.com/<your-username>/finance-tracking.git
-cd finance-tracking
+git clone https://github.com/<your-username>/worth.git
+cd worth
 npm install
 npm run dev
 ```

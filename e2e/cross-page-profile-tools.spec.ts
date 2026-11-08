@@ -38,7 +38,7 @@ import { writeJsonFile } from './fixtures/filestore-helpers'
  *       `/net-worth/growth` (SavingsGrowthTracker).
  */
 
-const HOME = '/finance-tracking/'
+const HOME = '/worth/'
 
 async function gotoAndSettle(page: Page, url: string, heading: RegExp): Promise<void> {
   await page.goto(url)

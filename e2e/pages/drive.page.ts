@@ -45,7 +45,7 @@ export class DrivePage {
 
   async goto(subPath = '') {
     const clean = subPath.replace(/^\/+/, '')
-    const url = clean ? `/finance-tracking/#/drive/${clean}` : '/finance-tracking/#/drive'
+    const url = clean ? `/worth/#/drive/${clean}` : '/worth/#/drive'
     await this.page.goto(url)
     await this.page.waitForLoadState('domcontentloaded')
     await expect(this.heading).toBeVisible()

@@ -59,7 +59,7 @@ export class TaxesPage {
   }
 
   async goto() {
-    await this.page.goto('/finance-tracking/#/taxes')
+    await this.page.goto('/worth/#/taxes')
     await this.page.waitForLoadState('domcontentloaded')
     await this.heading.waitFor({ state: 'visible' })
   }

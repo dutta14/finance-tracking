@@ -27,7 +27,7 @@ const questions = [
   {
     id: 'faq-open-source',
     question: 'Is this open source?',
-    answer: 'Yes. MIT license. Source is at github.com/dutta14/finance-tracking. Read it, fork it, run it yourself.',
+    answer: 'Yes. MIT license. Source is at github.com/dutta14/worth. Read it, fork it, run it yourself.',
   },
   {
     id: 'faq-offline',

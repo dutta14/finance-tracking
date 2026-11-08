@@ -41,12 +41,12 @@ export class GoalDetailPage {
   }
 
   async goto(goalId: number) {
-    await this.page.goto(`/finance-tracking/#/goal/plans/${goalId}`)
+    await this.page.goto(`/worth/#/goal/plans/${goalId}`)
     await this.page.waitForLoadState('domcontentloaded')
   }
 
   async gotoHome() {
-    await this.page.goto('/finance-tracking/')
+    await this.page.goto('/worth/')
     await this.page.waitForLoadState('domcontentloaded')
   }
 }

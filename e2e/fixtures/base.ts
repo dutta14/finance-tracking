@@ -5,7 +5,7 @@ import { test as base, expect } from '@playwright/test'
  *
  * Every e2e test automatically intercepts the GitHub Contents API call
  * that FlagContext makes on mount:
- *   GET https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json
+ *   GET https://api.github.com/repos/dutta14/worth/contents/feature-flags.json
  *
  * Without this mock, anonymous GitHub API rate-limits (403) leak into
  * console-error assertions and slow down CI with real network calls.
@@ -28,7 +28,7 @@ export const test = base.extend<{ featureFlagsMock: void; e2eMode: void }>({
   featureFlagsMock: [
     async ({ page }, use) => {
       await page.route(
-        'https://api.github.com/repos/dutta14/finance-tracking/contents/feature-flags.json',
+        'https://api.github.com/repos/dutta14/worth/contents/feature-flags.json',
         async route => {
           const content = Buffer.from(JSON.stringify({ flags: {} })).toString('base64')
           await route.fulfill({

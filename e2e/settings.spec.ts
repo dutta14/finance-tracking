@@ -322,7 +322,7 @@ test.describe('Settings — Non-Security E2E', () => {
         localStorage.setItem('onboarding-dismissed', '1')
         localStorage.setItem('accentTheme', 'blue')
       })
-      await page.goto('/finance-tracking/')
+      await page.goto('/worth/')
       await page.waitForLoadState('domcontentloaded')
 
       // Persistence half.
@@ -359,7 +359,7 @@ test.describe('Settings — Non-Security E2E', () => {
 
       // Reload + visit Net Worth: Import button is visible (header + empty-state both render).
       await page.reload()
-      await page.goto('/finance-tracking/#/net-worth')
+      await page.goto('/worth/#/net-worth')
       const importBtn = page.getByRole('button', { name: 'Import from CSV' })
       await expect(importBtn.first()).toBeVisible()
 
@@ -373,7 +373,7 @@ test.describe('Settings — Non-Security E2E', () => {
       await settings.closeButton.click()
 
       // Net Worth no longer renders the Import button.
-      await page.goto('/finance-tracking/#/net-worth')
+      await page.goto('/worth/#/net-worth')
       await expect(page.getByRole('button', { name: 'Import from CSV' })).toHaveCount(0)
     })
 
