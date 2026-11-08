@@ -7,10 +7,7 @@ import { getIncomeGroups, loadBudgetStore, type BudgetStore } from '../budget/ut
 import type { FileStore } from '../../utils/fileStoreTypes'
 
 type SpendingMode =
-  | 'last-month-vs-prior-month'
-  | 'last-month-vs-last-year'
-  | 'last-month-vs-average-month'
-  | 'this-year-vs-last-year'
+  'last-month-vs-prior-month' | 'last-month-vs-last-year' | 'last-month-vs-average-month' | 'this-year-vs-last-year'
 
 interface SpendingPeekProps {
   fileStore: FileStore

@@ -10,15 +10,7 @@ import type { CategoryGroup } from '../pages/budget/types'
 /* ─── Types ─── */
 
 export type SearchCategory =
-  | 'page'
-  | 'command'
-  | 'goal'
-  | 'account'
-  | 'budget'
-  | 'tax'
-  | 'allocation'
-  | 'tool'
-  | 'settings'
+  'page' | 'command' | 'goal' | 'account' | 'budget' | 'tax' | 'allocation' | 'tool' | 'settings'
 
 export interface SearchItem {
   id: string
