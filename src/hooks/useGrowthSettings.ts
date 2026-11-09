@@ -32,10 +32,37 @@ const DEFAULTS: GrowthSettings = {
   partnerRetirementAccessAge: 59.5,
 }
 
+const LIMITS: Record<keyof GrowthSettings, readonly [min: number, max: number]> = {
+  preBoundaryGrowth: [0, 30],
+  postBoundaryGrowth: [0, 30],
+  ageBoundary: [40, 80],
+  gwGrowth: [0, 30],
+  inflation: [0, 15],
+  retirementCap: [0, 100000],
+  nonRetirementBase: [0, 100000],
+  primaryRetirementAccessAge: [40, 80],
+  partnerRetirementAccessAge: [40, 80],
+}
+
+// Out-of-range numbers are clamped; anything that is not a finite number takes the fallback.
+function clamp(value: unknown, [min, max]: readonly [number, number], fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.max(min, Math.min(max, value))
+}
+
+function sanitizeSettings(input: unknown, fallback: GrowthSettings): GrowthSettings {
+  const source = typeof input === 'object' && input !== null && !Array.isArray(input) ? input : {}
+  const result = { ...fallback }
+  for (const key of Object.keys(LIMITS) as (keyof GrowthSettings)[]) {
+    result[key] = clamp((source as Record<string, unknown>)[key], LIMITS[key], fallback[key])
+  }
+  return result
+}
+
 function loadSettings(): GrowthSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return { ...DEFAULTS, ...JSON.parse(raw) }
+    if (raw) return sanitizeSettings(JSON.parse(raw), DEFAULTS)
   } catch {}
   return { ...DEFAULTS }
 }
@@ -60,7 +87,8 @@ export function useGrowthSettings() {
 
   const updateSettings = useCallback((partial: Partial<GrowthSettings>) => {
     setSettings(prev => {
-      const next = { ...prev, ...partial }
+      // Invalid values keep the current setting rather than resetting it to a default.
+      const next = sanitizeSettings({ ...prev, ...partial }, prev)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       window.dispatchEvent(new Event('growth-settings-changed'))
       return next
