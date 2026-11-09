@@ -105,4 +105,91 @@ describe('useGrowthSettings', () => {
     expect(rate).toBe(5)
     expect(hasOverride).toBe(true)
   })
+
+  describe('validation', () => {
+    const DEFAULT_INFLATION = 3
+
+    const loadWith = (stored: unknown) => {
+      localStorage.setItem('goal-growth-settings', JSON.stringify(stored))
+      return renderHook(() => useGrowthSettings()).result.current.settings
+    }
+
+    it.each([
+      ['null', null],
+      ['a numeric string', '5'],
+      ['a non-numeric string', 'abc'],
+      ['an object', {}],
+      ['a boolean', true],
+    ])('falls back to the default when a stored value is %s', (_label, value) => {
+      expect(loadWith({ inflation: value }).inflation).toBe(DEFAULT_INFLATION)
+    })
+
+    it('falls back to the default when a stored field is missing', () => {
+      expect(loadWith({ gwGrowth: 7 }).inflation).toBe(DEFAULT_INFLATION)
+    })
+
+    it('clamps negative and oversized stored values into range', () => {
+      const settings = loadWith({
+        preBoundaryGrowth: -5,
+        postBoundaryGrowth: 500,
+        ageBoundary: 10,
+        inflation: 99,
+        retirementCap: 1e12,
+        nonRetirementBase: -1,
+        primaryRetirementAccessAge: 120,
+        partnerRetirementAccessAge: 0,
+      })
+      expect(settings).toMatchObject({
+        preBoundaryGrowth: 0,
+        postBoundaryGrowth: 30,
+        ageBoundary: 40,
+        inflation: 15,
+        retirementCap: 100000,
+        nonRetirementBase: 0,
+        primaryRetirementAccessAge: 80,
+        partnerRetirementAccessAge: 40,
+      })
+    })
+
+    it('keeps valid stored values unchanged', () => {
+      expect(loadWith({ inflation: 4.5, primaryRetirementAccessAge: 62 })).toMatchObject({
+        inflation: 4.5,
+        primaryRetirementAccessAge: 62,
+      })
+    })
+
+    it.each([
+      ['an array', [1, 2, 3]],
+      ['a number', 42],
+      ['null', null],
+    ])('returns all defaults when the stored value is %s', (_label, stored) => {
+      expect(loadWith(stored).inflation).toBe(DEFAULT_INFLATION)
+    })
+
+    it('returns defaults when the stored value is not valid JSON', () => {
+      localStorage.setItem('goal-growth-settings', '{not json')
+      const { result } = renderHook(() => useGrowthSettings())
+      expect(result.current.settings.inflation).toBe(DEFAULT_INFLATION)
+    })
+
+    it.each([
+      ['NaN', NaN],
+      ['Infinity', Infinity],
+      ['-Infinity', -Infinity],
+    ])('keeps the current value when an update passes %s', (_label, value) => {
+      const { result } = renderHook(() => useGrowthSettings())
+      act(() => result.current.updateSettings({ inflation: 5 }))
+      act(() => result.current.updateSettings({ inflation: value }))
+      expect(result.current.settings.inflation).toBe(5)
+      expect(JSON.parse(localStorage.getItem('goal-growth-settings')!).inflation).toBe(5)
+    })
+
+    it('clamps out-of-range updates before persisting them', () => {
+      const { result } = renderHook(() => useGrowthSettings())
+      act(() => result.current.updateSettings({ preBoundaryGrowth: 1000, ageBoundary: -3 }))
+      expect(result.current.settings).toMatchObject({ preBoundaryGrowth: 30, ageBoundary: 40 })
+      const stored = JSON.parse(localStorage.getItem('goal-growth-settings')!)
+      expect(stored).toMatchObject({ preBoundaryGrowth: 30, ageBoundary: 40 })
+    })
+  })
 })
